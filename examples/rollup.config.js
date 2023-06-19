@@ -121,15 +121,16 @@ const builds = [
         input: 'src/iframe/index.mjs',
         output: {
             name: 'bundle',
-            format: 'umd',
+            format: 'es',
             dir: 'dist/iframe',
-            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false,
+            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
         },
         plugins: [
             alias({
                 entries: {
                     'playcanvas': ENGINE_PATH,
-                    '../../../build/playcanvas.js': ENGINE_PATH
+                    '../../../build/playcanvas.js': ENGINE_PATH,
+                    'pc-alias': ENGINE_PATH.includes('.mjs') ? './pc-es6.mjs' : './pc-es5.mjs'
                 }
             }),
             commonjs(),

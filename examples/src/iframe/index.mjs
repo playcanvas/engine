@@ -7,13 +7,10 @@ import '../../lib/objectValuesPolyfill.js';
 import * as observer from '@playcanvas/observer';
 import * as pcui from '@playcanvas/pcui/react';
 import React from 'react';
-import * as pc from '../../../build/playcanvas.js';
+import 'pc-alias';
 import * as pcx from '../../../build/playcanvas-extras.mjs/index.js';
 
 window.observer = observer;
 window.pcui = window.top.pcui || pcui;
 window.React = window.top.React || React;
-window.pc = pc;
-// make pc available outside of the iframe
-window.top.pc = pc;
 window.pcx = pcx;

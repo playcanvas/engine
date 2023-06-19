@@ -119,6 +119,7 @@ class PostEffectQueue {
         rt.destroyFrameBuffers();
         rt.destroyTextureBuffers();
         rt._colorBuffer = this._allocateColorBuffer(format, name);
+        rt._colorBuffers = [rt._colorBuffer];
     }
 
     _destroyOffscreenTarget(rt) {
