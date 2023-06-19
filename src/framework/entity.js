@@ -520,8 +520,13 @@ class Entity extends GraphNode {
         }
 
         // Detach from parent
-        if (this._parent)
-            this._parent.removeChild(this);
+        this._parent?.removeChild(this);
+
+        // If an Entity is in a GraphNode, recursive destroy'ing will never get to them.
+        // Therefore we have to find these special cases and destroy iteratively.
+        const isEntityChildOfGraphNode = _ => _ instanceof Entity && _.parent?.constructor === GraphNode;
+        const entitiesInGraphNodes = this.find(isEntityChildOfGraphNode);
+        entitiesInGraphNodes.forEach(e => e.destroy());
 
         // recursively destroy all children
         const children = this._children;
