@@ -66,6 +66,7 @@ class AnimClip {
 
     set speed(speed) {
         this._speed = speed;
+        this.alignCursorToCurrentTime();
     }
 
     get speed() {
@@ -104,35 +105,98 @@ class AnimClip {
         return this._eventCursor;
     }
 
-    alignCursorToCurrentTime() {
-        this._eventCursor = 0;
-        // move the event cursor to the event that should fire after the current time
-        while (this._track.events[this._eventCursor] && this._track.events[this._eventCursor].time < this.time) {
-            this._eventCursor++;
+    get eventCursorEnd() {
+        return this.isReverse ? 0 : this._track.events.length - 1;
+    }
+
+    get nextEvent() {
+        return this._track.events[this._eventCursor];
+    }
+
+    get isReverse() {
+        return this._speed < 0;
+    }
+
+    nextEventAheadOfTime(time) {
+        if (!this.nextEvent) return false;
+        return this.isReverse ? this.nextEvent.time < time : this.nextEvent.time > time;
+    }
+
+    nextEventBehindTime(time) {
+        if (!this.nextEvent) return false;
+        if (time === this.track.duration) {
+            return this.isReverse ? this.nextEvent.time >= time : this.nextEvent.time <= time;
+        }
+        return this.isReverse ? this.nextEvent.time > time : this.nextEvent.time < time;
+    }
+
+    resetEventCursor() {
+        this._eventCursor = this.isReverse ? this._track.events.length - 1 : 0;
+    }
+
+    moveEventCursor() {
+        this._eventCursor += (this.isReverse ? -1 : 1);
+        if (this._eventCursor >= this.track.events.length) {
+            this._eventCursor = 0;
+        } else if (this._eventCursor < 0) {
+            this._eventCursor = this.track.events.length - 1;
         }
     }
 
-    activeEventsForFrame(frameStartTime, frameEndTime) {
-        if (frameStartTime === 0) {
-            this.eventCursor = 0;
-        }
-        let clippedFrameDuration;
+    clipFrameTime(frameEndTime) {
+        const result = {
+            startTime: 0,
+            endTime: frameEndTime,
+            duration: 0
+        };
+
         // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
-        if (frameEndTime > this.track.duration) {
-            clippedFrameDuration = frameEndTime - this.track.duration;
-            frameEndTime = this.track.duration;
+        if (this.isReverse) {
+            if (frameEndTime < 0) {
+                result.duration = frameEndTime + this.track.duration;
+                result.startTime = this.track.duration;
+                result.endTime = 0;
+            }
+        } else {
+            if (frameEndTime > this.track.duration) {
+                result.duration = frameEndTime - this.track.duration;
+                result.startTime = 0;
+                result.endTime = this.track.duration;
+            }
         }
+        return result;
+    }
 
-        // check whether the next event occurs during the current frame. If the frame end time is at the end of the track then test that inclusively too
-        while (this.track.events[this.eventCursor] && this.track.events[this.eventCursor].time >= frameStartTime && (frameEndTime === this.track.duration ? this.track.events[this.eventCursor].time <= frameEndTime : this.track.events[this.eventCursor].time < frameEndTime)) {
-            const event = this.track.events[this.eventCursor];
-            this._eventHandler.fire(event.name, { track: this.track, ...event });
-            this.eventCursor++;
+    alignCursorToCurrentTime() {
+        this.resetEventCursor();
+        while (this.nextEventBehindTime(this._time) && this._eventCursor !== this.eventCursorEnd) {
+            this.moveEventCursor();
         }
+    }
 
-        // if we had to clip the current frame, then we should check the start of the track for events during that clipped duration
-        if (Number.isFinite(clippedFrameDuration)) {
-            this.activeEventsForFrame(0, clippedFrameDuration);
+    fireNextEvent() {
+        this._eventHandler.fire(this.nextEvent.name, { track: this.track, ...this.nextEvent });
+        this.moveEventCursor();
+    }
+
+    fireNextEventInFrame(frameStartTime, frameEndTime) {
+        if (this.nextEventAheadOfTime(frameStartTime) && this.nextEventBehindTime(frameEndTime)) {
+            this.fireNextEvent();
+            return true;
+        }
+        return false;
+    }
+
+    activeEventsForFrame(frameStartTime, frameEndTime) {
+        // get frame start and end times clipped to the track duration with the residual duration stored
+        const clippedFrame = this.clipFrameTime(frameEndTime);
+        // fire all events that should fire during this clipped frame
+        while (this.fireNextEventInFrame(frameStartTime, clippedFrame.endTime)) {
+            // do nothing
+        }
+        // recurse the process until the residual duration is 0
+        if (Math.abs(clippedFrame.duration) > 0) {
+            this.activeEventsForFrame(clippedFrame.startTime, clippedFrame.duration);
         }
     }
 
