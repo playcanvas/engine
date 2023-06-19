@@ -536,7 +536,6 @@ class Scene extends EventHandler {
                     target: this._internalEnvAtlas
                 });
 
-                // user hasn't set an envAtlas already, set it to the internal one
                 this._envAtlas = this._internalEnvAtlas;
             } else {
                 if (this._internalEnvAtlas) {
