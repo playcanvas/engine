@@ -40,7 +40,7 @@ class ReflectionPlanarExample {
     example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
-            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/dancing-hall-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/planar-renderer.js' })
         };
@@ -91,7 +91,7 @@ class ReflectionPlanarExample {
                 // setup skydome
                 app.scene.envAtlas = assets.envatlas.resource;
                 app.scene.skyboxMip = 1;
-                app.scene.skyboxIntensity = 1.2;  // make it brighter
+                app.scene.skyboxIntensity = 1.7;  // make it brighter
 
                 // helper function to create a primitive with shape type, position, scale, color and layer
                 function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color, layer: number[], material: pc.Material | pc.StandardMaterial = null) {
