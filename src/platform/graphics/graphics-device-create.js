@@ -27,6 +27,14 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
  * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
  * compatible graphics adapter for an immersive XR device.
+ * @param {'default'|'high-performance'|'low-power'} [options.powerPreference='default'] - A
+ * hint indicating what configuration of GPU would be selected. Possible values are:
+ *
+ * - 'default': Let the user agent decide which GPU configuration is most suitable. This is the
+ * default value.
+ * - 'high-performance': Prioritizes rendering performance over power consumption.
+ * - 'low-power': Prioritizes power saving over rendering performance.
+ *
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
