@@ -58,8 +58,17 @@ class ShaderUtils {
         Debug.assert(options);
 
         const getDefines = (gpu, gl2, gl1, isVertex) => {
-            return device.isWebGPU ? gpu :
+
+            const deviceIntro = device.isWebGPU ? gpu :
                 (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+
+            // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
+            let attachmentsDefine = '';
+            for (let i = 0; i < device.maxColorAttachments; i++) {
+                attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+            }
+
+            return attachmentsDefine + deviceIntro;
         };
 
         const name = options.name ?? 'Untitled';
@@ -76,8 +85,8 @@ class ShaderUtils {
         const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
-            ShaderUtils.precisionCode(device) + '\n' +
             fragDefines +
+            ShaderUtils.precisionCode(device) + '\n' +
             sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             (options.fragmentCode || ShaderUtils.dummyFragmentCode());
@@ -113,6 +122,10 @@ class ShaderUtils {
             if (device.extTextureLod) {
                 code += "#extension GL_EXT_shader_texture_lod : enable\n";
                 code += "#define SUPPORTS_TEXLOD\n";
+            }
+            if (device.extDrawBuffers) {
+                code += "#extension GL_EXT_draw_buffers : require\n";
+                code += "#define SUPPORTS_MRT\n";
             }
         }
 

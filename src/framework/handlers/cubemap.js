@@ -1,6 +1,6 @@
 import {
     ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
@@ -115,22 +115,28 @@ class CubemapHandler {
             // prelit asset changed
             if (assets[0]) {
                 tex = assets[0].resource;
-                for (i = 0; i < 6; ++i) {
-                    resources[i + 1] = new Texture(this._device, {
-                        name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
-                        cubemap: true,
-                        // assume prefiltered data has same encoding as the faces asset
-                        type: getType() || tex.type,
-                        width: tex.width >> i,
-                        height: tex.height >> i,
-                        format: tex.format,
-                        levels: [tex._levels[i]],
-                        fixCubemapSeams: true,
-                        addressU: ADDRESS_CLAMP_TO_EDGE,
-                        addressV: ADDRESS_CLAMP_TO_EDGE,
-                        // generate cubemaps on the top level only
-                        mipmaps: i === 0
-                    });
+                if (tex.cubemap) {
+                    for (i = 0; i < 6; ++i) {
+                        resources[i + 1] = new Texture(this._device, {
+                            name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
+                            cubemap: true,
+                            // assume prefiltered data has same encoding as the faces asset
+                            type: getType() || tex.type,
+                            width: tex.width >> i,
+                            height: tex.height >> i,
+                            format: tex.format,
+                            levels: [tex._levels[i]],
+                            fixCubemapSeams: true,
+                            addressU: ADDRESS_CLAMP_TO_EDGE,
+                            addressV: ADDRESS_CLAMP_TO_EDGE,
+                            // generate cubemaps on the top level only
+                            mipmaps: i === 0
+                        });
+                    }
+                } else {
+                    // prefiltered data is an env atlas
+                    tex.type = TEXTURETYPE_RGBP;
+                    resources[1] = tex;
                 }
             }
         } else {

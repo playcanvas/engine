@@ -44,7 +44,6 @@ class AnimState {
         this._speed = speed;
         this._loop = loop;
         this._hasAnimations = false;
-        const findParameter = this._controller.findParameter.bind(this._controller);
         if (blendTree) {
             this._blendTree = this._createTree(
                 blendTree.type,
@@ -56,7 +55,7 @@ class AnimState {
                 blendTree.children,
                 blendTree.syncAnimations,
                 this._createTree,
-                findParameter
+                this._controller.findParameter
             );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);

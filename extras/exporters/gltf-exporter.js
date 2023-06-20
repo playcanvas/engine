@@ -461,13 +461,27 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    convertTextures(textures, json, options) {
+    convertTextures(srcTextures, options) {
 
         const textureOptions = {
             maxTextureSize: options.maxTextureSize
         };
 
-        for (let i = 0; i < textures.length; i++) {
+        const promises = [];
+        srcTextures.forEach((srcTexture) => {
+            const promise = this.textureToCanvas(srcTexture, textureOptions);
+            promise.then((canvas) => {
+                // eslint-disable-next-line no-promise-executor-return
+                return new Promise(resolve => resolve(canvas));
+            });
+            promises.push(promise);
+        });
+        return promises;
+    }
+
+    writeTextures(textures, textureCanvases, json, options) {
+
+        for (let i = 0; i < textureCanvases.length; i++) {
 
             // for now store all textures as png
             // TODO: consider jpg if the alpha channel is not used
@@ -476,7 +490,7 @@ class GltfExporter extends CoreExporter {
 
             // convert texture data to uri
             const texture = textures[i];
-            const canvas = this.textureToCanvas(texture, textureOptions);
+            const canvas = textureCanvases[i];
 
             // if texture format is supported
             if (canvas) {
@@ -506,41 +520,46 @@ class GltfExporter extends CoreExporter {
     }
 
     buildJson(resources, options) {
-        const json = {
-            asset: {
-                version: "2.0",
-                generator: "PlayCanvas GltfExporter"
-            },
-            scenes: [
-                {
-                    nodes: [
-                        0
-                    ]
-                }
-            ],
-            images: [
-            ],
-            samplers: [
-            ],
-            textures: [
-            ],
-            scene: 0
-        };
 
-        this.writeBuffers(resources, json);
-        this.writeBufferViews(resources, json);
-        this.writeCameras(resources, json);
-        this.writeNodes(resources, json);
-        this.writeMaterials(resources, json);
-        this.writeMeshes(resources, json);
-        this.convertTextures(resources.textures, json, options);
+        const promises = this.convertTextures(resources.textures, options);
+        return Promise.all(promises).then((textureCanvases) => {
 
-        // delete unused properties
-        if (!json.images.length) delete json.images;
-        if (!json.samplers.length) delete json.samplers;
-        if (!json.textures.length) delete json.textures;
+            const json = {
+                asset: {
+                    version: "2.0",
+                    generator: "PlayCanvas GltfExporter"
+                },
+                scenes: [
+                    {
+                        nodes: [
+                            0
+                        ]
+                    }
+                ],
+                images: [
+                ],
+                samplers: [
+                ],
+                textures: [
+                ],
+                scene: 0
+            };
 
-        return json;
+            this.writeBuffers(resources, json);
+            this.writeBufferViews(resources, json);
+            this.writeCameras(resources, json);
+            this.writeNodes(resources, json);
+            this.writeMaterials(resources, json);
+            this.writeMeshes(resources, json);
+            this.writeTextures(resources.textures, textureCanvases, json, options);
+
+            // delete unused properties
+            if (!json.images.length) delete json.images;
+            if (!json.samplers.length) delete json.samplers;
+            if (!json.textures.length) delete json.textures;
+
+            return json;
+        });
     }
 
     /**
@@ -549,82 +568,84 @@ class GltfExporter extends CoreExporter {
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
-     * @returns {ArrayBuffer} - The GLB file content.
+     * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {
         const resources = this.collectResources(entity);
 
-        const json = this.buildJson(resources, options);
-        const jsonText = JSON.stringify(json);
+        return this.buildJson(resources, options).then((json) => {
 
-        const headerLength = 12;
+            const jsonText = JSON.stringify(json);
 
-        const jsonHeaderLength = 8;
-        const jsonDataLength = jsonText.length;
-        const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
+            const headerLength = 12;
 
-        const binaryHeaderLength = 8;
-        let binaryDataLength = 0;
-        resources.buffers.forEach((buffer) => {
-            binaryDataLength += buffer.lock().byteLength;
-        });
-        binaryDataLength = math.roundUp(binaryDataLength, 4);
+            const jsonHeaderLength = 8;
+            const jsonDataLength = jsonText.length;
+            const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
 
-        let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
-        if (binaryDataLength > 0) {
-            totalLength += binaryHeaderLength + binaryDataLength;
-        }
-
-        const glbBuffer = new ArrayBuffer(totalLength);
-        const glbView = new DataView(glbBuffer);
-
-        // GLB header
-        glbView.setUint32(0, 0x46546C67, true);
-        glbView.setUint32(4, 2, true);
-        glbView.setUint32(8, totalLength, true);
-
-        // JSON chunk header
-        glbView.setUint32(12, jsonDataLength + jsonPaddingLength, true);
-        glbView.setUint32(16, 0x4E4F534A, true);
-
-        let offset = headerLength + jsonHeaderLength;
-
-        // JSON data
-        for (let i = 0; i < jsonDataLength; i++) {
-            glbView.setUint8(offset + i, jsonText.charCodeAt(i));
-        }
-
-        offset += jsonDataLength;
-
-        for (let i = 0; i < jsonPaddingLength; i++) {
-            glbView.setUint8(offset + i, 0x20);
-        }
-
-        offset += jsonPaddingLength;
-
-        if (binaryDataLength > 0) {
-            // Binary chunk header
-            glbView.setUint32(offset, binaryDataLength, true);
-            glbView.setUint32(offset + 4, 0x004E4942, true);
-
-            offset += binaryHeaderLength;
-
+            const binaryHeaderLength = 8;
+            let binaryDataLength = 0;
             resources.buffers.forEach((buffer) => {
-                const srcBuffer = buffer.lock();
-                let src;
-                if (srcBuffer instanceof ArrayBuffer) {
-                    src = new Uint8Array(srcBuffer);
-                } else {
-                    src = new Uint8Array(srcBuffer.buffer, srcBuffer.byteOffset, srcBuffer.byteLength);
-                }
-                const dst = new Uint8Array(glbBuffer, offset, srcBuffer.byteLength);
-                dst.set(src);
-
-                offset += srcBuffer.byteLength;
+                binaryDataLength += buffer.lock().byteLength;
             });
-        }
+            binaryDataLength = math.roundUp(binaryDataLength, 4);
 
-        return Promise.resolve(glbBuffer);
+            let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
+            if (binaryDataLength > 0) {
+                totalLength += binaryHeaderLength + binaryDataLength;
+            }
+
+            const glbBuffer = new ArrayBuffer(totalLength);
+            const glbView = new DataView(glbBuffer);
+
+            // GLB header
+            glbView.setUint32(0, 0x46546C67, true);
+            glbView.setUint32(4, 2, true);
+            glbView.setUint32(8, totalLength, true);
+
+            // JSON chunk header
+            glbView.setUint32(12, jsonDataLength + jsonPaddingLength, true);
+            glbView.setUint32(16, 0x4E4F534A, true);
+
+            let offset = headerLength + jsonHeaderLength;
+
+            // JSON data
+            for (let i = 0; i < jsonDataLength; i++) {
+                glbView.setUint8(offset + i, jsonText.charCodeAt(i));
+            }
+
+            offset += jsonDataLength;
+
+            for (let i = 0; i < jsonPaddingLength; i++) {
+                glbView.setUint8(offset + i, 0x20);
+            }
+
+            offset += jsonPaddingLength;
+
+            if (binaryDataLength > 0) {
+                // Binary chunk header
+                glbView.setUint32(offset, binaryDataLength, true);
+                glbView.setUint32(offset + 4, 0x004E4942, true);
+
+                offset += binaryHeaderLength;
+
+                resources.buffers.forEach((buffer) => {
+                    const srcBuffer = buffer.lock();
+                    let src;
+                    if (srcBuffer instanceof ArrayBuffer) {
+                        src = new Uint8Array(srcBuffer);
+                    } else {
+                        src = new Uint8Array(srcBuffer.buffer, srcBuffer.byteOffset, srcBuffer.byteLength);
+                    }
+                    const dst = new Uint8Array(glbBuffer, offset, srcBuffer.byteLength);
+                    dst.set(src);
+
+                    offset += srcBuffer.byteLength;
+                });
+            }
+
+            return Promise.resolve(glbBuffer);
+        });
     }
 }
 

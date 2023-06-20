@@ -67,12 +67,12 @@ const SideBar = () => {
                     }
                     const updatedCategories: any = {};
                     Object.keys(defaultCategories).forEach((category: string) => {
-                        if (defaultCategories[category].name.search(reg) !== -1) {
+                        if (category.search(reg) !== -1) {
                             updatedCategories[category] = defaultCategories[category];
                             return null;
                         }
                         Object.keys(defaultCategories[category].examples).forEach((example: string) => {
-                            if (defaultCategories[category].examples[example].constructor.NAME.search(reg) !== -1) {
+                            if (defaultCategories[category].examples[example].search(reg) !== -1) {
                                 if (!updatedCategories[category]) {
                                     updatedCategories[category] = {
                                         name: defaultCategories[category].name,
@@ -94,7 +94,7 @@ const SideBar = () => {
                 <Container id='sideBar-contents'>
                     {
                         Object.keys(categories).sort((a: string, b: string) => (a > b ? 1 : -1)).map((category: string) => {
-                            return <Panel key={category} class="categoryPanel" headerText={categories[category].name} collapsible={true} collapsed={false}>
+                            return <Panel key={category} class="categoryPanel" headerText={category.split('-').join(' ').toUpperCase()} collapsible={true} collapsed={false}>
                                 <ul className="category-nav">
                                     {
                                         Object.keys(categories[category].examples).sort((a: string, b: string) => (a > b ? 1 : -1)).map((example: string) => {
@@ -108,7 +108,7 @@ const SideBar = () => {
                                                 <div className={className} id={`link-${category}-${example}`}>
                                                     <img className='small-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_small.png`} />
                                                     <img className='large-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_large.png`} />
-                                                    <div className='nav-item-text'>{categories[category].examples[example].constructor.NAME.toUpperCase()}</div>
+                                                    <div className='nav-item-text'>{example.split('-').join(' ').toUpperCase()}</div>
                                                 </div>
                                             </Link>;
                                         })
