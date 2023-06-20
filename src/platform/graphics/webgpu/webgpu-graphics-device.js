@@ -165,11 +165,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wasmPath = twgslUrl.replace('.js', '.wasm');
         this.twgsl = await twgsl(wasmPath);
 
+        /** @type {GPURequestAdapterOptions} */
+        const adapterOptions = {
+            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined
+        };
+
         /**
          * @type {GPUAdapter}
          * @private
          */
-        this.gpuAdapter = await window.navigator.gpu.requestAdapter();
+        this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
         // optional features:
         //      "depth-clip-control",
@@ -196,17 +201,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
 
-        /**
-         * @type {GPUDevice}
-         * @private
-         */
-        this.wgpu = await this.gpuAdapter.requestDevice({
+        /** @type {GPUDeviceDescriptor} */
+        const deviceDescr = {
             requiredFeatures,
 
             // Note that we can request limits, but it does not seem to be supported at the moment
             requiredLimits: {
+            },
+
+            defaultQueue: {
+                label: 'Default Queue'
             }
-        });
+        };
+
+        /**
+         * @type {GPUDevice}
+         * @private
+         */
+        this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
         this.initDeviceCaps();
 
