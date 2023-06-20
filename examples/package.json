@@ -5,19 +5,17 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run build:example:data && npm run build:directory && npm run build:iframes && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run build:example:data && npm run build:directory && cross-env NODE_ENV=production rollup -c",
     "build:directory": "node --es-module-specifier-resolution=node ./scripts/example-directory/index.mjs",
     "build:example:data": "node --es-module-specifier-resolution=node ./scripts/example-data.mjs",
-    "build:iframes": "node --es-module-specifier-resolution=node ./scripts/iframe/index.mjs",
     "build:thumbnails": "node --es-module-specifier-resolution=node ./scripts/thumbnails.mjs",
-    "rollup:watch": "rollup -c -w",
+    "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npm run build:example:data && npm run build:directory && npm run build:iframes && cross-env concurrently --kill-others \"npm run rollup:watch\"",
-    "watch:iframes": "nodemon -e js,mjs,json,tsx --watch ../build --watch ./src/examples --watch ../scripts --exec npm run build:iframes",
-    "watch:iframes:debug": "ENGINE_PATH=/build/playcanvas.dbg.js npm run watch:iframes",
-    "watch:iframes:profiler": "ENGINE_PATH=/build/playcanvas.prf.js npm run watch:iframes",
-    "develop": "cross-env ENGINE_PATH=/build/playcanvas.dbg.js concurrently --kill-others \"npm run watch:iframes:debug\" \"npm run serve\""
+    "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
+    "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
+    "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
+    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve\""
   },
   "eslintConfig": {
     "root": true,
@@ -60,6 +58,7 @@
     "@typescript-eslint/parser": "^5.26.0",
     "concurrently": "^7.2.1",
     "cross-env": "^7.0.2",
+    "date-and-time": "^3.0.0",
     "eslint": "^8.16.0",
     "fs-extra": "^10.1.0",
     "handlebars": "^4.7.7",
@@ -74,7 +73,6 @@
     "react-router-dom": "^5.2.0",
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^2.74.1",
-    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.31.2",
     "serve": "^13.0.2",
@@ -85,8 +83,5 @@
     "whatwg-fetch": "^3.6.2"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
-  "license": "MIT",
-  "dependencies": {
-    "rollup-plugin-string": "^3.0.0"
-  }
+  "license": "MIT"
 }

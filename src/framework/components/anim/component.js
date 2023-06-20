@@ -290,10 +290,10 @@ class AnimComponent extends Component {
             animEvaluator,
             states,
             transitions,
-            this._parameters,
             this._activate,
             this,
-            this._consumedTriggers
+            this.findParameter,
+            this.consumeTrigger
         );
         this._layers.push(new AnimComponentLayer(name, controller, this, weight, blendType));
         this._layerIndices[name] = layerIndex;
@@ -322,6 +322,18 @@ class AnimComponent extends Component {
         ];
         const transitions = [];
         return this._addLayer({ name, states, transitions, weight, mask, blendType });
+    }
+
+    _assignParameters(stateGraph) {
+        this._parameters = {};
+        const paramKeys = Object.keys(stateGraph.parameters);
+        for (let i = 0; i < paramKeys.length; i++) {
+            const paramKey = paramKeys[i];
+            this._parameters[paramKey] = {
+                type: stateGraph.parameters[paramKey].type,
+                value: stateGraph.parameters[paramKey].value
+            };
+        }
     }
 
     /**
@@ -359,15 +371,7 @@ class AnimComponent extends Component {
      */
     loadStateGraph(stateGraph) {
         this._stateGraph = stateGraph;
-        this._parameters = {};
-        const paramKeys = Object.keys(stateGraph.parameters);
-        for (let i = 0; i < paramKeys.length; i++) {
-            const paramKey = paramKeys[i];
-            this._parameters[paramKey] = {
-                type: stateGraph.parameters[paramKey].type,
-                value: stateGraph.parameters[paramKey].value
-            };
-        }
+        this._assignParameters(stateGraph);
         this._layers = [];
 
         let containsBlendTree = false;
@@ -458,7 +462,7 @@ class AnimComponent extends Component {
      * playing before it will continue playing.
      */
     reset() {
-        this._parameters = Object.assign({}, this._stateGraph.parameters);
+        this._assignParameters(this._stateGraph);
         for (let i = 0; i < this._layers.length; i++) {
             const layerPlaying = this._layers[i].playing;
             this._layers[i].reset();
@@ -626,6 +630,29 @@ class AnimComponent extends Component {
         }
         Debug.log(`Cannot set parameter value. No parameter found in anim controller named "${name}" of type "${type}"`);
     }
+
+    /**
+     * Returns the parameter object for the specified parameter name. This function is anonymous so that it can be passed to the AnimController
+     * while still being called in the scope of the AnimComponent.
+     *
+     * @param {string} name - The name of the parameter to return the value of.
+     * @returns {object} The parameter object.
+     * @private
+     */
+    findParameter = (name) => {
+        return this._parameters[name];
+    };
+
+    /**
+     * Sets a trigger parameter as having been used by a transition. This function is anonymous so that it can be passed to the AnimController
+     * while still being called in the scope of the AnimComponent.
+     *
+     * @param {string} name - The name of the trigger to set as consumed.
+     * @private
+     */
+    consumeTrigger = (name) => {
+        this._consumedTriggers.add(name);
+    };
 
     /**
      * Returns a float parameter value by name.

@@ -138,7 +138,7 @@ void normalOffsetPointShadow(vec4 shadowParams, vec3 lightPos, inout vec3 lightD
     #if defined(CLUSTER_SHADOW_TYPE_PCF5)
 
     float getShadowSpotClusteredPCF5(SHADOWMAP_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams) {
-        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams.xyz);
+        return getShadowPCF5x5(SHADOWMAP_PASS(shadowMap), shadowCoord, shadowParams);
     }
     #endif
 

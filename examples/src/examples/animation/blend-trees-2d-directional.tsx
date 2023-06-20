@@ -9,13 +9,13 @@ class BlendTrees2DDirectionalExample {
     controls() {
         useEffect(() => {
             // @ts-ignore engine-tsd
-            const pc = document.getElementById('exampleIframe')?.contentWindow?.pc;
+            const pc = window.top?.pc;
             if (!pc) return;
             pc.app.on('start', () => {
-                const canvas : any = document.getElementById('2d-blend-control');
+                const canvas : any = window.top.document.getElementById('2d-blend-control');
                 // @ts-ignore engine-tsd
                 const modelEntity: pc.Entity = pc.app.root.findByName('model');
-                const width = (window as any).controlPanel.offsetWidth;
+                const width = (window as any).top.controlPanel.offsetWidth;
                 const height = width;
                 const halfWidth = Math.floor(width / 2);
                 const halfHeight = Math.floor(height / 2);

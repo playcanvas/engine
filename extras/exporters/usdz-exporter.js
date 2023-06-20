@@ -130,7 +130,7 @@ class UsdzExporter extends CoreExporter {
      * @param {Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
-     * @returns {ArrayBuffer} - The USDZ file content.
+     * @returns {Promise<ArrayBuffer>} - The USDZ file content.
      */
     build(entity, options = {}) {
 
@@ -175,21 +175,25 @@ class UsdzExporter extends CoreExporter {
 
             // convert texture data to canvas
             const texture = textureArray[i];
-            const canvas = this.textureToCanvas(texture, textureOptions);
+            const texturePromise = this.textureToCanvas(texture, textureOptions).then((canvas) => {
 
-            // if texture format is supported
-            if (canvas) {
+                // if texture format is supported
+                if (canvas) {
 
-                // async convert them to blog and then to array buffer
+                    // async convert them to blog and then to array buffer
+                    // eslint-disable-next-line no-promise-executor-return
+                    return new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
+                        blob => blob.arrayBuffer()
+                    );
+                }
+
+                // ignore it if we cannot convert it
+                console.warn(`Export of texture ${texture.name} is not currently supported.`);
+
                 // eslint-disable-next-line no-promise-executor-return
-                promises.push(new Promise(resolve => canvas.toBlob(resolve, mimeType, 1)).then(
-                    blob => blob.arrayBuffer()
-                ));
-
-            } else {
-                // ignore it
-                console.log(`Export of texture ${texture.name} is not currently supported.`);
-            }
+                return new Promise(resolve => resolve(null));
+            });
+            promises.push(texturePromise);
         }
 
         // when all textures are converted
