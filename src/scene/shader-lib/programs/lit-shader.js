@@ -1252,7 +1252,7 @@ class LitShader {
                     }
 
                     if (shadowReadMode !== null) {
-                        if (light._normalOffsetBias) {
+                        if (light._normalOffsetBias && !light._isVsm) {
                             func.append("#define SHADOW_SAMPLE_NORMAL_OFFSET");
                         }
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
