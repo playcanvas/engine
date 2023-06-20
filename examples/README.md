@@ -13,15 +13,17 @@ Ensure you have Node.js installed. Then, install all of the required Node.js dep
 ```
 npm install
 ```
-Now run the following two commands in two separate terminals:
+Now run the following command:
 ```
-npm run watch
+npm run develop
 ```
-and
+Visit the url mentioned in your terminal to view the examples browser.
+
+You can also run the examples browser with a specific version of the engine by running the following command:
 ```
-npm run serve
+ENGINE_PATH=../build/playcanvas.mjs/index.js npm run develop
 ```
-Visit [http://localhost:5000]() to view the examples browser.
+Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the engine.
 
 To create the side bar thumbnails run the following script:
 ```
@@ -117,17 +119,11 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
 ### Testing your example
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
 
-You can view the full collection of example iframes by visiting [http://localhost:5000/iframe/]() in your browser. Viewing the iframes individually like this allows you to rebuild and test your examples without having the rebuild the full examples browser.
-
-Example files can be rebuilt using the `npm run build:iframes` command, which only rebuilds example code rather than the full application. You can also run the `npm run watch:iframes` command to rebuild these examples any time an example file is edited or the local playcanvas engine is rebuilt.
-
-You can also provide the category and example name of a specific example you are editing to these commands as environment variables to speed up the rebuilding process. For example if you are editing the `./src/examples/misc/hello-world.tsx` example you can run the following command:
-```
-CATEGORY=misc EXAMPLE=hello-world npm run watch:iframes
+You can view the full collection of example iframes by visiting [http://localhost:5000/iframe/]() in your browser.
 ```
 
 ### Debug and performance engine development
-By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:iframes:debug` or `npm run watch:iframes:profiler` commands.
+By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:debug` or `npm run watch:profiler` commands.
 
 ## Deployment
 

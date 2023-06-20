@@ -1,4 +1,5 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
+import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
@@ -367,8 +368,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
-        const isChrome = platform.browser && !!window.chrome;
-        const isSafari = platform.browser && !!window.safari;
+        const isChrome = platform.browserName === 'chrome';
+        const isSafari = platform.browserName === 'safari';
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
@@ -854,6 +855,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.webgl2) {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
+            this.drawBuffers = gl.drawBuffers.bind(gl);
             this.extInstancing = true;
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
@@ -865,8 +867,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extDepthTexture = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = this.getExtension('EXT_draw_buffers');
+            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
             this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
+            this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
                 const ext = this.extInstancing;
@@ -919,6 +922,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         let ext;
 
+        const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : "";
+
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
@@ -940,10 +945,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
             this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
             this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            this.supportsMrt = true;
+            this.supportsVolumeTextures = true;
         } else {
             ext = this.extDrawBuffers;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            this.supportsMrt = !!ext;
+            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
+            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
             this.maxVolumeSize = 1;
         }
 
@@ -954,7 +962,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // Mali-G52 has rendering issues with GPU particles including
         // SM-A225M, M2003J15SC and KFRAWI (Amazon Fire HD 8 2022)
         const maliRendererRegex = /\bMali-G52+/;
-        this.supportsGpuParticles = !(this.unmaskedRenderer.match(maliRendererRegex));
+
+        // Samsung devices with Exynos (ARM) either crash or render incorrectly when using GPU for particles. See:
+        // https://github.com/playcanvas/engine/issues/3967
+        // https://github.com/playcanvas/engine/issues/3415
+        // https://github.com/playcanvas/engine/issues/4514
+        // Example UA matches: Starting 'SM' and any combination of letters or numbers:
+        // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
+        const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
+        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex)) &&
+            !(this.unmaskedRenderer.match(maliRendererRegex));
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
@@ -1352,17 +1369,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unbindVertexArray();
 
         const target = this.renderTarget;
+        const colorBufferCount = renderPass.colorArrayOps.length;
         if (target) {
 
-            // invalidate buffers to stop them being written to on tiled architextures
+            // invalidate buffers to stop them being written to on tiled architectures
             if (this.webgl2) {
                 invalidateAttachments.length = 0;
                 const gl = this.gl;
 
-                // invalidate color only if we don't need to resolve it
-                if (!(renderPass.colorOps?.store || renderPass.colorOps?.resolve)) {
-                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                // color buffers
+                for (let i = 0; i < colorBufferCount; i++) {
+                    const colorOps = renderPass.colorArrayOps[i];
+
+                    // invalidate color only if we don't need to resolve it
+                    if (!(colorOps.store || colorOps.resolve)) {
+                        invalidateAttachments.push(gl.COLOR_ATTACHMENT0 + i);
+                    }
                 }
+
                 if (!renderPass.depthStencilOps.storeDepth) {
                     invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
                 }
@@ -1380,7 +1404,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // resolve the color buffer
+            // resolve the color buffer (this resolves all MRT color buffers at once)
             if (renderPass.colorOps?.resolve) {
                 if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
@@ -1388,12 +1412,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
 
             // generate mipmaps
-            if (renderPass.colorOps?.mipmaps) {
-                const colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
-                    this.activeTexture(this.maxCombinedTextures - 1);
-                    this.bindTexture(colorBuffer);
-                    this.gl.generateMipmap(colorBuffer.impl._glTarget);
+            for (let i = 0; i < colorBufferCount; i++) {
+                const colorOps = renderPass.colorArrayOps[i];
+                if (colorOps.mipmaps) {
+                    const colorBuffer = target._colorBuffers[i];
+                    if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+
+                        DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
+
+                        this.activeTexture(this.maxCombinedTextures - 1);
+                        this.bindTexture(colorBuffer);
+                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+
+                        DebugGraphics.popGpuMarker(this);
+                    }
                 }
             }
         }
@@ -1570,7 +1602,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTextureParameters(texture) {
         const gl = this.gl;
-        const flags = texture._parameterFlags;
+        const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
         if (flags & 1) {
@@ -1621,7 +1653,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (flags & 128) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
+                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
             }
         }
     }
@@ -1635,10 +1667,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTexture(texture, textureUnit) {
 
-        if (!texture.impl._glTexture)
-            texture.impl.initialize(this, texture);
+        const impl = texture.impl;
+        if (!impl._glTexture)
+            impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+        if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
@@ -1646,13 +1679,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
-            if (texture._parameterFlags) {
+            if (impl.dirtyParameterFlags) {
                 this.setTextureParameters(texture);
-                texture._parameterFlags = 0;
+                impl.dirtyParameterFlags = 0;
             }
 
             if (texture._needsUpload || texture._needsMipmapsUpload) {
-                texture.impl.upload(this, texture);
+                impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
             }

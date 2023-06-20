@@ -305,6 +305,7 @@ class StandardMaterialOptionsBuilder {
         if (stdMat.envAtlas && stdMat.cubeMap && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
+            options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
         } else if (stdMat.envAtlas && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
@@ -317,6 +318,7 @@ class StandardMaterialOptionsBuilder {
         } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
+            options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
         } else if (stdMat.useSkybox && scene.envAtlas && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlas';

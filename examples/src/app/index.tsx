@@ -1,6 +1,6 @@
 import React, { useEffect, useState, createRef } from 'react';
 import ReactDOM from 'react-dom';
-import { Container } from '@playcanvas/pcui/react';
+import * as pcui from '@playcanvas/pcui/react';
 import '@playcanvas/pcui/styles';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
@@ -8,6 +8,9 @@ import SideBar from './sidebar';
 import CodeEditor from './code-editor';
 import Menu from './menu';
 import Example from './example';
+
+(window as any).pcui = pcui;
+(window as any).React = React;
 
 const MainLayout = () => {
     const emptyFiles = [{
@@ -54,9 +57,9 @@ const MainLayout = () => {
                     </Route>
                     <Route path='/:category/:example'>
                         <SideBar/>
-                        <Container id='main-view-wrapper'>
+                        <pcui.Container id='main-view-wrapper'>
                             <Menu useTypeScript={useTypeScript} setShowMiniStats={updateShowMiniStats} />
-                            <Container id='main-view'>
+                            <pcui.Container id='main-view'>
                                 <CodeEditor
                                     lintErrors={lintErrors}
                                     setLintErrors={setLintErrors}
@@ -67,8 +70,8 @@ const MainLayout = () => {
                                     setFiles={setFiles}
                                 />
                                 <Example files={files} setFiles={setFiles} useTypeScript={useTypeScript} />
-                            </Container>
-                        </Container>
+                            </pcui.Container>
+                        </pcui.Container>
                     </Route>
                 </Switch>
             </Router>

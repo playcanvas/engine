@@ -106,9 +106,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxTextureSize = limits.maxTextureDimension2D;
         this.maxCubeMapSize = limits.maxTextureDimension2D;
         this.maxVolumeSize = limits.maxTextureDimension3D;
+        this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
+        this.maxAnisotropy = 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
+        this.supportsVolumeTextures = true;
         this.supportsBoneTextures = true;
         this.supportsMorphTargetTexturesCore = true;
         this.supportsAreaLights = true;
@@ -171,9 +174,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // optional features:
         //      "depth-clip-control",
         //      "depth32float-stencil8",
-        //      "texture-compression-bc",
-        //      "texture-compression-etc2",
-        //      "texture-compression-astc",
         //      "timestamp-query",
         //      "indirect-first-instance",
         //      "shader-f16",
@@ -192,6 +192,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             return false;
         };
         this.floatFilterable = requireFeature('float32-filterable');
+        this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
+        this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
+        this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
 
         /**
          * @type {GPUDevice}

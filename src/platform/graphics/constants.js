@@ -618,49 +618,49 @@ export const PIXELFORMAT_ATC_RGBA = 30;
  */
 export const PIXELFORMAT_BGRA8 = 31;
 
-// map of engine PIXELFORMAT_*** enums to the pixel byte size
-export const pixelFormatByteSizes = new Map([
-    [PIXELFORMAT_A8, 1],
-    [PIXELFORMAT_L8, 1],
-    [PIXELFORMAT_LA8, 2],
-    [PIXELFORMAT_RGB565, 2],
-    [PIXELFORMAT_RGBA5551, 2],
-    [PIXELFORMAT_RGBA4, 2],
-    [PIXELFORMAT_RGB8, 4],
-    [PIXELFORMAT_RGBA8, 4],
-    [PIXELFORMAT_RGB16F, 8],
-    [PIXELFORMAT_RGBA16F, 8],
-    [PIXELFORMAT_RGB32F, 16],
-    [PIXELFORMAT_RGBA32F, 16],
-    [PIXELFORMAT_R32F, 4],
-    [PIXELFORMAT_DEPTH, 4], // can be smaller using WebGL1 extension?
-    [PIXELFORMAT_DEPTHSTENCIL, 4],
-    [PIXELFORMAT_111110F, 4],
-    [PIXELFORMAT_SRGB, 4],
-    [PIXELFORMAT_SRGBA, 4]
-]);
+// map of engine PIXELFORMAT_*** enums to information about the format
+export const pixelFormatInfo = new Map([
 
-// map of PIXELFORMAT_*** enums to the compressed pixel block size
-export const pixelFormatBlockSizes = new Map([
-    [PIXELFORMAT_ETC1, 8],
-    [PIXELFORMAT_ETC2_RGB, 8],
-    [PIXELFORMAT_PVRTC_2BPP_RGB_1, 8],
-    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, 8],
-    [PIXELFORMAT_PVRTC_4BPP_RGB_1, 8],
-    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, 8],
-    [PIXELFORMAT_DXT1, 8],
-    [PIXELFORMAT_ATC_RGB, 8],
-    [PIXELFORMAT_ETC2_RGBA, 16],
-    [PIXELFORMAT_DXT3, 16],
-    [PIXELFORMAT_DXT5, 16],
-    [PIXELFORMAT_ASTC_4x4, 16],
-    [PIXELFORMAT_ATC_RGBA, 16]
+    // uncompressed formats
+    [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
+    [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
+    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
+    [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2 }],
+    [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2 }],
+    [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
+    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4 }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4 }],
+    [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
+    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
+    [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
+    [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
+    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
+    [PIXELFORMAT_SRGB,          { name: 'SRGB', size: 4 }],
+    [PIXELFORMAT_SRGBA,         { name: 'SRGBA', size: 4 }],
+    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4 }],
+
+    // compressed formats
+    [PIXELFORMAT_DXT1, { name: 'DXT1', blockSize: 8 }],
+    [PIXELFORMAT_DXT3, { name: 'DXT3', blockSize: 16 }],
+    [PIXELFORMAT_DXT5, { name: 'DXT5', blockSize: 16 }],
+    [PIXELFORMAT_ETC1, { name: 'ETC1', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGB, { name: 'ETC2_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGBA, { name: 'ETC2_RGBA', blockSize: 16 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1, { name: 'PVRTC_2BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1, { name: 'PVRTC_4BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_ASTC_4x4, { name: 'ASTC_4x4', blockSize: 16 }],
+    [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
 export const isCompressedPixelFormat = (format) => {
-    return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
-           (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
+    return pixelFormatInfo.get(format).blockSize !== undefined;
 };
 
 // get the pixel format array type
@@ -1246,11 +1246,11 @@ export const SHADERSTAGE_COMPUTE = 4;
 export const BINDGROUP_MESH = 0;
 export const BINDGROUP_VIEW = 1;
 
+// names of bind groups
+export const bindGroupNames = ['mesh', 'view'];
+
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
-
-// names of bind groups
-export const bindGroupNames = ['view', 'mesh'];
 
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];

@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8, ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -209,7 +209,7 @@ class Scene extends EventHandler {
          * @type {import('../platform/graphics/texture.js').Texture[]}
          * @private
          */
-        this._prefilteredCubemaps = [null, null, null, null, null, null];
+        this._prefilteredCubemaps = [];
 
         /**
          * Environment lighting atlas
@@ -398,14 +398,20 @@ class Scene extends EventHandler {
 
             // make sure required options are set up on the texture
             if (value) {
-                value.addressU = ADDRESS_REPEAT;
+                value.addressU = ADDRESS_CLAMP_TO_EDGE;
                 value.addressV = ADDRESS_CLAMP_TO_EDGE;
                 value.minFilter = FILTER_LINEAR;
                 value.magFilter = FILTER_LINEAR;
                 value.mipmaps = false;
             }
 
-            this.updateShaders = true;
+            this._prefilteredCubemaps = [];
+            if (this._internalEnvAtlas) {
+                this._internalEnvAtlas.destroy();
+                this._internalEnvAtlas = null;
+            }
+
+            this._resetSky();
         }
     }
 
@@ -517,41 +523,30 @@ class Scene extends EventHandler {
      * @type {import('../platform/graphics/texture.js').Texture[]}
      */
     set prefilteredCubemaps(value) {
-        const cubemaps = this._prefilteredCubemaps;
-
         value = value || [];
-
-        let changed = false;
-        let complete = true;
-        for (let i = 0; i < 6; ++i) {
-            const v = value[i] || null;
-            if (cubemaps[i] !== v) {
-                cubemaps[i] = v;
-                changed = true;
-            }
-            complete = complete && (!!cubemaps[i]);
-        }
+        const cubemaps = this._prefilteredCubemaps;
+        const changed = cubemaps.length !== value.length || cubemaps.some((c, i) => c !== value[i]);
 
         if (changed) {
-            this._resetSky();
+            const complete = value.length === 6 && value.every(c => !!c);
 
             if (complete) {
                 // update env atlas
-                this._internalEnvAtlas = EnvLighting.generatePrefilteredAtlas(cubemaps, {
+                this._internalEnvAtlas = EnvLighting.generatePrefilteredAtlas(value, {
                     target: this._internalEnvAtlas
                 });
 
-                if (!this._envAtlas) {
-                    // user hasn't set an envAtlas already, set it to the internal one
-                    this.envAtlas = this._internalEnvAtlas;
+                this._envAtlas = this._internalEnvAtlas;
+            } else {
+                if (this._internalEnvAtlas) {
+                    this._internalEnvAtlas.destroy();
+                    this._internalEnvAtlas = null;
                 }
-            } else if (this._internalEnvAtlas) {
-                if (this._envAtlas === this._internalEnvAtlas) {
-                    this.envAtlas = null;
-                }
-                this._internalEnvAtlas.destroy();
-                this._internalEnvAtlas = null;
+                this._envAtlas = null;
             }
+
+            this._prefilteredCubemaps = value.slice();
+            this._resetSky();
         }
     }
 
@@ -786,10 +781,16 @@ class Scene extends EventHandler {
     setSkybox(cubemaps) {
         if (!cubemaps) {
             this.skybox = null;
-            this.prefilteredCubemaps = [null, null, null, null, null, null];
+            this.envAtlas = null;
         } else {
             this.skybox = cubemaps[0] || null;
-            this.prefilteredCubemaps = cubemaps.slice(1);
+            if (cubemaps[1] && !cubemaps[1].cubemap) {
+                // prefiltered data is an env atlas
+                this.envAtlas = cubemaps[1];
+            } else {
+                // prefiltered data is a set of cubemaps
+                this.prefilteredCubemaps = cubemaps.slice(1);
+            }
         }
     }
 
