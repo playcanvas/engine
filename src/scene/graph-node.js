@@ -480,6 +480,37 @@ class GraphNode extends EventHandler {
         return this;
     }
 
+
+    /**
+     * Detach it from the hierarchy. Then recursively destroy all ancestors.
+     *
+     * @example
+     * const firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    destroy() {
+        // Detach from parent
+        this._parent?.removeChild(this);
+
+        // Recursively destroy all children
+        const children = this._children;
+        while (children.length) {
+            // Remove last child from the array
+            const child = children.pop();
+            // Disconnect it from the parent: this is only an optimisation step, to prevent calling
+            // GraphNode#removeChild which would try to refind it via this._children.indexOf (which
+            // will fail, because we just removed it).
+            child._parent = null;
+            child.destroy();
+        }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        this.off();
+    }
+
     /**
      * Search the graph node and all of its descendants for the nodes that satisfy some search
      * criteria.
@@ -1347,6 +1378,7 @@ class GraphNode extends EventHandler {
      * this.entity.removeChild(child);
      */
     removeChild(child) {
+        console.log("trying to find child...", child);
         const index = this._children.indexOf(child);
         if (index === -1) {
             return;
