@@ -17,11 +17,11 @@ import { Material } from '../materials/material.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -637,22 +637,59 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewBindGroupFormat() {
+    initViewBindGroupFormat(isClustered) {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
-            this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
-            ]);
+            const uniforms = [
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
+                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
+                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
+                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
+                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
+                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                uniforms.push(...[
+                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
+                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
+                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
+                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                ]);
+            }
+
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+            const buffers = [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
+            ];
+
+            const textures = [
                 new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            ]);
+                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+
+                new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                textures.push(...[
+                    new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                ]);
+            }
+
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
         }
     }
 
@@ -1178,7 +1215,7 @@ class Renderer {
 
         this.clustersDebugRendered = false;
 
-        this.initViewBindGroupFormat();
+        this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
     }
 }
 
