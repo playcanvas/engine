@@ -59,6 +59,8 @@ class WebglTexture {
 
     _glPixelType;
 
+    dirtyParameterFlags = 0;
+
     destroy(device) {
         if (this._glTexture) {
 
@@ -80,6 +82,10 @@ class WebglTexture {
 
     loseContext() {
         this._glTexture = null;
+    }
+
+    propertyChanged(flag) {
+        this.dirtyParameterFlags |= flag;
     }
 
     initialize(device, texture) {

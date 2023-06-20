@@ -9,7 +9,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
@@ -118,6 +118,7 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
@@ -176,6 +177,7 @@ class Light {
         // Shadow mapping resources
         this._shadowMap = null;
         this._shadowRenderParams = [];
+        this._shadowCameraParams = [];
 
         // Shadow mapping properties
         this.shadowDistance = 40;
@@ -185,6 +187,7 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
+        this._lightSize = 1.0;
         this._isVsm = false;
         this._isPcf = true;
 
@@ -319,11 +322,11 @@ class Light {
 
         const device = this.device;
 
-        if (this._type === LIGHTTYPE_OMNI)
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
-        const supportsPCF5 = device.supportsDepthShadow;
-        if (value === SHADOW_PCF5 && !supportsPCF5) {
+        const supportsDepthShadow = device.supportsDepthShadow;
+        if (value === SHADOW_PCF5 && !supportsDepthShadow) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }
 
@@ -454,6 +457,14 @@ class Light {
         return this._outerConeAngle;
     }
 
+    set lightSize(value) {
+        this._lightSize = value;
+    }
+
+    get lightSize() {
+        return this._lightSize;
+    }
+
     _updateOuterAngle(angle) {
         const radAngle = angle * Math.PI / 180;
         this._outerConeAngleCos = Math.cos(radAngle);
@@ -469,6 +480,17 @@ class Light {
 
     get intensity() {
         return this._intensity;
+    }
+
+    set affectSpecularity(value) {
+        if (this._type === LIGHTTYPE_DIRECTIONAL) {
+            this._affectSpecularity = value;
+            this.updateKey();
+        }
+    }
+
+    get affectSpecularity() {
+        return this._affectSpecularity;
     }
 
     set luminance(value) {
@@ -640,6 +662,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.affectSpecularity = this._affectSpecularity;
         clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
@@ -652,6 +675,7 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
+        clone.lightSize = this.lightSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 
@@ -863,6 +887,7 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
+        //  7 : disable specular
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -874,7 +899,8 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8);
+               ((this.numCascades - 1)                    <<  8) |
+               ((this.affectSpecularity ? 1 : 0)           <<  7);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);

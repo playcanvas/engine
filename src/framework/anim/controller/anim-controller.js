@@ -29,20 +29,21 @@ class AnimController {
      * @param {object[]} states - The list of states used to form the controller state graph.
      * @param {object[]} transitions - The list of transitions used to form the controller state
      * graph.
-     * @param {object[]} parameters - The anim components parameters.
      * @param {boolean} activate - Determines whether the anim controller should automatically play
      * once all {@link AnimNodes} are assigned animations.
      * @param {import('../../../core/event-handler.js').EventHandler} eventHandler - The event
      * handler which should be notified with anim events.
-     * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
+     * @param {Function} findParameter - Retrieves a parameter which is used to control the transition between states.
+     * @param {Function} consumeTrigger - Used to set triggers back to their default state after they
      * have been consumed by a transition.
      */
-    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
+    constructor(animEvaluator, states, transitions, activate, eventHandler, findParameter, consumeTrigger) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
-        this._consumedTriggers = consumedTriggers;
+        this._findParameter = findParameter;
+        this._consumeTrigger = consumeTrigger;
         for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -60,7 +61,6 @@ class AnimController {
         });
         this._findTransitionsFromStateCache = {};
         this._findTransitionsBetweenStatesCache = {};
-        this._parameters = parameters;
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
         this._playing = false;
@@ -227,7 +227,7 @@ class AnimController {
         const conditions = transition.conditions;
         for (let i = 0; i < conditions.length; i++) {
             const condition = conditions[i];
-            const parameter = this.findParameter(condition.parameterName);
+            const parameter = this._findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
                     if (!(parameter.value > condition.value)) return false;
@@ -339,9 +339,9 @@ class AnimController {
         // turn off any triggers which were required to activate this transition
         for (let i = 0; i < transition.conditions.length; i++) {
             const condition = transition.conditions[i];
-            const parameter = this.findParameter(condition.parameterName);
+            const parameter = this._findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
-                this._consumedTriggers.add(condition.parameterName);
+                this._consumeTrigger(condition.parameterName);
             }
         }
 
@@ -583,9 +583,9 @@ class AnimController {
         this._animEvaluator.update(dt, this.activeState.hasAnimations);
     }
 
-    findParameter(name) {
-        return this._parameters[name];
-    }
+    findParameter = (name) => {
+        return this._findParameter(name);
+    };
 }
 
 export { AnimController };

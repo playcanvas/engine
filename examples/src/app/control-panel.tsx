@@ -49,6 +49,8 @@ const ControlPanel = (props: any) => {
         }
     });
 
+    const controls = props.controls ? props.controls((window as any).observerData) : null;
+
     return <Container id='controls-wrapper' class={props.controls ? 'has-controls' : null}>
         { window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
             <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>
@@ -56,7 +58,7 @@ const ControlPanel = (props: any) => {
         </Container>
         }
         <Container id='controlPanel-controls'>
-            { props.controls }
+            { controls }
         </Container>
         { window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && <MonacoEditor
             options={{

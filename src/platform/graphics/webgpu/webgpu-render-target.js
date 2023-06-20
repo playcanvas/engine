@@ -315,7 +315,7 @@ class WebgpuRenderTarget {
                 size: [width, height, 1],
                 dimension: '2d',
                 sampleCount: samples,
-                format: this.colorAttachments[index].format,
+                format: this.colorAttachments[index]?.format ?? colorBuffer.impl.format,
                 usage: GPUTextureUsage.RENDER_ATTACHMENT
             };
 
