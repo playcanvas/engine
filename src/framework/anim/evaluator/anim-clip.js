@@ -119,7 +119,7 @@ class AnimClip {
 
     nextEventAheadOfTime(time) {
         if (!this.nextEvent) return false;
-        return this.isReverse ? this.nextEvent.time < time : this.nextEvent.time > time;
+        return this.isReverse ? this.nextEvent.time <= time : this.nextEvent.time >= time;
     }
 
     nextEventBehindTime(time) {
@@ -181,6 +181,7 @@ class AnimClip {
 
     fireNextEventInFrame(frameStartTime, frameEndTime) {
         if (this.nextEventAheadOfTime(frameStartTime) && this.nextEventBehindTime(frameEndTime)) {
+            console.log('here');
             this.fireNextEvent();
             return true;
         }
@@ -198,7 +199,7 @@ class AnimClip {
             }
         }
         // recurse the process until the residual duration is 0
-        if (Math.abs(clippedFrame.duration) > 0) {
+        if (this.loop && Math.abs(clippedFrame.duration) > 0) {
             this.activeEventsForFrame(clippedFrame.startTime, clippedFrame.duration);
         }
     }
