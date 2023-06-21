@@ -381,11 +381,6 @@ class SceneRegistry {
             while (children.length) {
                 children[0].destroy();
             }
-            Debug.assert(
-                Object.keys(app._entityIndex).length === 0,
-                "Destroyed all entities but these entities survived:",
-                app._entityIndex
-            );
             app.applySceneSettings(sceneItem.data.settings);
         };
 
