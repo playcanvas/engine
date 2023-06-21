@@ -9,6 +9,13 @@ import { AnimSnapshot } from './anim-snapshot.js';
  * @ignore
  */
 class AnimClip {
+
+    static eventFrame = {
+        start: 0,
+        end: 0,
+        residual: 0
+    };
+
     /**
      * Create a new animation clip.
      *
@@ -144,27 +151,24 @@ class AnimClip {
     }
 
     clipFrameTime(frameEndTime) {
-        const result = {
-            startTime: 0,
-            endTime: frameEndTime,
-            duration: 0
-        };
+        AnimClip.eventFrame.start = 0;
+        AnimClip.eventFrame.end = frameEndTime;
+        AnimClip.eventFrame.residual = 0;
 
         // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
         if (this.isReverse) {
             if (frameEndTime < 0) {
-                result.duration = frameEndTime + this.track.duration;
-                result.startTime = this.track.duration;
-                result.endTime = 0;
+                AnimClip.eventFrame.start = this.track.duration;
+                AnimClip.eventFrame.end = 0;
+                AnimClip.eventFrame.residual = frameEndTime + this.track.duration;
             }
         } else {
             if (frameEndTime > this.track.duration) {
-                result.duration = frameEndTime - this.track.duration;
-                result.startTime = 0;
-                result.endTime = this.track.duration;
+                AnimClip.eventFrame.start = 0;
+                AnimClip.eventFrame.end = this.track.duration;
+                AnimClip.eventFrame.residual = frameEndTime - this.track.duration;
             }
         }
-        return result;
     }
 
     alignCursorToCurrentTime() {
@@ -181,7 +185,6 @@ class AnimClip {
 
     fireNextEventInFrame(frameStartTime, frameEndTime) {
         if (this.nextEventAheadOfTime(frameStartTime) && this.nextEventBehindTime(frameEndTime)) {
-            console.log('here');
             this.fireNextEvent();
             return true;
         }
@@ -190,17 +193,17 @@ class AnimClip {
 
     activeEventsForFrame(frameStartTime, frameEndTime) {
         // get frame start and end times clipped to the track duration with the residual duration stored
-        const clippedFrame = this.clipFrameTime(frameEndTime);
+        this.clipFrameTime(frameEndTime);
         // fire all events that should fire during this clipped frame
         const initialCursor = this.eventCursor;
-        while (this.fireNextEventInFrame(frameStartTime, clippedFrame.endTime)) {
+        while (this.fireNextEventInFrame(frameStartTime, AnimClip.eventFrame.end)) {
             if (initialCursor === this.eventCursor) {
                 break;
             }
         }
         // recurse the process until the residual duration is 0
-        if (this.loop && Math.abs(clippedFrame.duration) > 0) {
-            this.activeEventsForFrame(clippedFrame.startTime, clippedFrame.duration);
+        if (this.loop && Math.abs(AnimClip.eventFrame.residual) > 0) {
+            this.activeEventsForFrame(AnimClip.eventFrame.start, AnimClip.eventFrame.residual);
         }
     }
 
