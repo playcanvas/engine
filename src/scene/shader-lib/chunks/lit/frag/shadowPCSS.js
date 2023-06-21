@@ -147,12 +147,12 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
     float receiverDepth = length(lightDir) * shadowParams.w + shadowParams.z;
     vec3 lightDirNorm = normalize(lightDir);
     
-    float averageBlocker = PCSSCubeBlockerDistance(shadowMap, lightDirNorm, samplePoints, receiverDepth, lightSize * 2.0);
+    float averageBlocker = PCSSCubeBlockerDistance(shadowMap, lightDirNorm, samplePoints, receiverDepth, lightSize);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
 
-        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize * 2.0;
+        float filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * lightSize;
 
         float shadow = 0.0;
         for (int i = 0; i < PCSS_SAMPLE_COUNT; i++)
