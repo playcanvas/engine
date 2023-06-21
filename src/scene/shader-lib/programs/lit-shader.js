@@ -644,10 +644,12 @@ class LitShader {
             const lightShape = (hasAreaLights && light._shape) ? light._shape : LIGHTSHAPE_PUNCTUAL;
 
             decl.append("uniform vec3 light" + i + "_color;");
+
             if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
                 decl.append(`uniform float light${i}_size;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
             }
+
             if (lightType === LIGHTTYPE_DIRECTIONAL) {
                 decl.append("uniform vec3 light" + i + "_direction;");
             } else {
