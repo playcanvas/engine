@@ -1,4 +1,4 @@
-import { TRACEID_RENDER_QUEUE } from '../../core/constants.js';
+import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
