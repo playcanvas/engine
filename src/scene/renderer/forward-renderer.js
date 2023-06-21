@@ -1140,7 +1140,7 @@ class ForwardRenderer extends Renderer {
 
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {
-                renderAction.lightClusters.activate(this.lightTextureAtlas);
+                renderAction.lightClusters.activate();
 
                 // debug rendering of clusters
                 if (!this.clustersDebugRendered && this.scene.lighting.debugLayer === layer.id) {
