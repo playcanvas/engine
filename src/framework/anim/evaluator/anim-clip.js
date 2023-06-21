@@ -191,8 +191,11 @@ class AnimClip {
         // get frame start and end times clipped to the track duration with the residual duration stored
         const clippedFrame = this.clipFrameTime(frameEndTime);
         // fire all events that should fire during this clipped frame
+        const initialCursor = this.eventCursor;
         while (this.fireNextEventInFrame(frameStartTime, clippedFrame.endTime)) {
-            // do nothing
+            if (initialCursor === this.eventCursor) {
+                break;
+            }
         }
         // recurse the process until the residual duration is 0
         if (Math.abs(clippedFrame.duration) > 0) {
