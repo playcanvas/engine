@@ -1342,45 +1342,47 @@ class LitShader {
                 }
 
                 // specular / clear coat
-                if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
+                if (light.affectSpecularity) {
+                    if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
 
-                    // area light
-                    if (options.useClearCoat) {
-                        backend.append(`    ccSpecularLight += ccLTCSpecFres * get${shapeString}LightSpecular(litShaderArgs.clearcoat.worldNormal, dViewDirW) * dAtten * light${i}_color` + (usesCookieNow ? " * dAtten3" : "") + ";");
-                    }
-                    if (options.useSpecular) {
-                        backend.append(`    dSpecularLight += dLTCSpecFres * get${shapeString}LightSpecular(litShaderArgs.worldNormal, dViewDirW) * dAtten * light${i}_color` + (usesCookieNow ? " * dAtten3" : "") + ";");
-                    }
+                        // area light
+                        if (options.useClearCoat) {
+                            backend.append(`    ccSpecularLight += ccLTCSpecFres * get${shapeString}LightSpecular(litShaderArgs.clearcoat.worldNormal, dViewDirW) * dAtten * light${i}_color` + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        }
+                        if (options.useSpecular) {
+                            backend.append(`    dSpecularLight += dLTCSpecFres * get${shapeString}LightSpecular(litShaderArgs.worldNormal, dViewDirW) * dAtten * light${i}_color` + (usesCookieNow ? " * dAtten3" : "") + ";");
+                        }
 
-                } else {
-                    var calcFresnel = false;
-                    if (lightType === LIGHTTYPE_DIRECTIONAL && options.fresnelModel > 0) {
-                        calcFresnel = true;
-                    }
+                    } else {
+                        var calcFresnel = false;
+                        if (lightType === LIGHTTYPE_DIRECTIONAL && options.fresnelModel > 0) {
+                            calcFresnel = true;
+                        }
 
-                    // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
-                    if (options.useClearCoat) {
-                        backend.append(`    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.clearcoat.gloss, dTBN) * dAtten * light${i}_color` +
-                            (usesCookieNow ? " * dAtten3" : "") +
-                            (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
-                    }
-                    if (options.useSheen) {
-                        backend.append(`    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.sheen.gloss) * dAtten * light${i}_color` +
-                            (usesCookieNow ? " * dAtten3;" : ";"));
-                    }
-                    if (options.useSpecular) {
-                        backend.append(`    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.gloss, dTBN) * dAtten * light${i}_color` +
-                            (usesCookieNow ? " * dAtten3" : "") +
-                            (calcFresnel ? ` 
-                                * getFresnel(
-                                    dot(dViewDirW, dHalfDirW), 
-                                    litShaderArgs.gloss, 
-                                    litShaderArgs.specularity
-                                #if defined(LIT_IRIDESCENCE)
-                                    , iridescenceFresnel, 
-                                    litShaderArgs.iridescence
-                                #endif
-                                );` : `* litShaderArgs.specularity;`));
+                        // if LTC lights are present, specular must be accumulated with specularity (specularity is pre multiplied by punctual light fresnel)
+                        if (options.useClearCoat) {
+                            backend.append(`    ccSpecularLight += getLightSpecular(dHalfDirW, ccReflDirW, litShaderArgs.clearcoat.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.clearcoat.gloss, dTBN) * dAtten * light${i}_color` +
+                                (usesCookieNow ? " * dAtten3" : "") +
+                                (calcFresnel ? " * getFresnelCC(dot(dViewDirW, dHalfDirW));" : ";"));
+                        }
+                        if (options.useSheen) {
+                            backend.append(`    sSpecularLight += getLightSpecularSheen(dHalfDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.sheen.gloss) * dAtten * light${i}_color` +
+                                (usesCookieNow ? " * dAtten3;" : ";"));
+                        }
+                        if (options.useSpecular) {
+                            backend.append(`    dSpecularLight += getLightSpecular(dHalfDirW, dReflDirW, litShaderArgs.worldNormal, dViewDirW, dLightDirNormW, litShaderArgs.gloss, dTBN) * dAtten * light${i}_color` +
+                                (usesCookieNow ? " * dAtten3" : "") +
+                                (calcFresnel ? ` 
+                                    * getFresnel(
+                                        dot(dViewDirW, dHalfDirW), 
+                                        litShaderArgs.gloss, 
+                                        litShaderArgs.specularity
+                                    #if defined(LIT_IRIDESCENCE)
+                                        , iridescenceFresnel, 
+                                        litShaderArgs.iridescence
+                                    #endif
+                                    );` : `* litShaderArgs.specularity;`));
+                        }
                     }
                 }
 
