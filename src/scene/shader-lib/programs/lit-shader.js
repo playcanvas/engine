@@ -1298,11 +1298,11 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let lightSizeArg = `vec2(light${i}_shadowSearchArea)`;
+                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                                lightSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
+                                penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }
-                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${lightSizeArg}, dLightDirW`;
+                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${penumbraSizeArg}, dLightDirW`;
                         }
 
                         if (lightType === LIGHTTYPE_OMNI) {
