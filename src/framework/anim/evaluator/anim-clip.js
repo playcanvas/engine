@@ -9,7 +9,6 @@ import { AnimSnapshot } from './anim-snapshot.js';
  * @ignore
  */
 class AnimClip {
-
     static eventFrame = {
         start: 0,
         end: 0,
