@@ -111,7 +111,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
-        this.lightSizeId = [];
+        this.lightShadowSearchAreaId = [];
         this.lightCameraParamsId = [];
 
         // shadow cascades
@@ -174,6 +174,7 @@ class ForwardRenderer extends Renderer {
         this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
         this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
         this.lightShadowIntensity[i] = scope.resolve(light + '_shadowIntensity');
+        this.lightShadowSearchAreaId[i] = scope.resolve(light + '_shadowSearchArea');
         this.lightRadiusId[i] = scope.resolve(light + '_radius');
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + '_position');
@@ -187,7 +188,6 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
         this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
         this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
-        this.lightSizeId[i] = scope.resolve(light + '_size');
         this.lightCameraParamsId[i] = scope.resolve(light + '_cameraParams');
 
         // shadow cascades
@@ -259,7 +259,7 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.lightSize);
-                this.lightSizeId[cnt].setValue(pixelsPerMeter);
+                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
@@ -333,7 +333,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
 
             const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / omni.lightSize);
-            this.lightSizeId[cnt].setValue(pixelsPerMeter);
+            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
@@ -401,7 +401,7 @@ class ForwardRenderer extends Renderer {
             const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / spot.lightSize);
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
-            this.lightSizeId[cnt].setValue(pixelsPerMeter * fovRatio);
+            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
 
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
