@@ -89,9 +89,9 @@ const _lightPropsDefault = [];
  * angle is specified in degrees. Affects spot lights only. Defaults to 40.
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
- * @property {number} lightSize Size of the light used for contact hardening shadows. For area lights
- * acts as a size multiplier with the area light dimensions. For punctual and directional lights
- * acts as the actual size of the light. Defaults to 1.0.
+ * @property {number} penumbraSize Size of penumbra for contact hardening shadows. For area lights
+ * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
+ * it's the area size of the light. Defaults to 1.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *
@@ -337,12 +337,12 @@ class LightComponent extends Component {
         return this.light.shadowUpdateOverrides;
     }
 
-    set lightSize(value) {
-        this.light.lightSize = value;
+    set penumbraSize(value) {
+        this.light.penumbraSize = value;
     }
 
-    get lightSize() {
-        return this.light.lightSize;
+    get penumbraSize() {
+        return this.light.penumbraSize;
     }
 }
 
@@ -567,7 +567,7 @@ function _defineProps() {
         }
     });
 
-    _lightProps.push("lightSize");
+    _lightProps.push("penumbraSize");
     _lightPropsDefault.push(1);
 }
 
