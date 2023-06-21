@@ -153,22 +153,23 @@ class AnimClip {
     }
 
     clipFrameTime(frameEndTime) {
-        AnimClip.eventFrame.start = 0;
-        AnimClip.eventFrame.end = frameEndTime;
-        AnimClip.eventFrame.residual = 0;
+        const eventFrame = AnimClip.eventFrame;
+        eventFrame.start = 0;
+        eventFrame.end = frameEndTime;
+        eventFrame.residual = 0;
 
         // if this frame overlaps with the end of the track, we should clip off the end of the frame time then check that clipped time later
         if (this.isReverse) {
             if (frameEndTime < 0) {
-                AnimClip.eventFrame.start = this.track.duration;
-                AnimClip.eventFrame.end = 0;
-                AnimClip.eventFrame.residual = frameEndTime + this.track.duration;
+                eventFrame.start = this.track.duration;
+                eventFrame.end = 0;
+                eventFrame.residual = frameEndTime + this.track.duration;
             }
         } else {
             if (frameEndTime > this.track.duration) {
-                AnimClip.eventFrame.start = 0;
-                AnimClip.eventFrame.end = this.track.duration;
-                AnimClip.eventFrame.residual = frameEndTime - this.track.duration;
+                eventFrame.start = 0;
+                eventFrame.end = this.track.duration;
+                eventFrame.residual = frameEndTime - this.track.duration;
             }
         }
     }
@@ -195,17 +196,18 @@ class AnimClip {
 
     activeEventsForFrame(frameStartTime, frameEndTime) {
         // get frame start and end times clipped to the track duration with the residual duration stored
+        const eventFrame = AnimClip.eventFrame;
         this.clipFrameTime(frameEndTime);
         // fire all events that should fire during this clipped frame
         const initialCursor = this.eventCursor;
-        while (this.fireNextEventInFrame(frameStartTime, AnimClip.eventFrame.end)) {
+        while (this.fireNextEventInFrame(frameStartTime, eventFrame.end)) {
             if (initialCursor === this.eventCursor) {
                 break;
             }
         }
         // recurse the process until the residual duration is 0
-        if (this.loop && Math.abs(AnimClip.eventFrame.residual) > 0) {
-            this.activeEventsForFrame(AnimClip.eventFrame.start, AnimClip.eventFrame.residual);
+        if (this.loop && Math.abs(eventFrame.residual) > 0) {
+            this.activeEventsForFrame(eventFrame.start, eventFrame.residual);
         }
     }
 
