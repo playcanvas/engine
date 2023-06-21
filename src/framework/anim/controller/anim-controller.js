@@ -63,6 +63,8 @@ class AnimController {
         this._findTransitionsBetweenStatesCache = {};
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
+        this._activeStateDuration = 0.0;
+        this._activeStateDurationDirty = true;
         this._playing = false;
         this._activate = activate;
 
@@ -131,17 +133,21 @@ class AnimController {
     }
 
     get activeStateDuration() {
-        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
-            return 0.0;
+        if (this._activeStateDurationDirty) {
+            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
+                return 0.0;
 
-        let maxDuration = 0.0;
-        for (let i = 0; i < this.activeStateAnimations.length; i++) {
-            const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
-            if (activeClip) {
-                maxDuration = Math.max(maxDuration, activeClip.track.duration);
+            let maxDuration = 0.0;
+            for (let i = 0; i < this.activeStateAnimations.length; i++) {
+                const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+                if (activeClip) {
+                    maxDuration = Math.max(maxDuration, activeClip.track.duration);
+                }
             }
+            this._activeStateDuration = maxDuration;
+            this._activeStateDurationDirty = false;
         }
-        return maxDuration;
+        return this._activeStateDuration;
     }
 
     set activeStateCurrentTime(time) {
@@ -340,6 +346,8 @@ class AnimController {
         // Otherwise the previousState is cleared.
         this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
+        // when transitioning to a new state, we need to recalculate the duration of the active state based on its animations
+        this._activeStateDurationDirty = true;
 
         // turn off any triggers which were required to activate this transition
         for (let i = 0; i < transition.conditions.length; i++) {
@@ -471,6 +479,9 @@ class AnimController {
         if (!this._playing && this._activate && this.playable) {
             this.play();
         }
+
+        // when a new animation is added, the active state duration needs to be recalculated
+        this._activeStateDurationDirty = true;
     }
 
     removeNodeAnimations(nodeName) {
