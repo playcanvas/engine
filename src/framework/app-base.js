@@ -1192,6 +1192,10 @@ class AppBase extends EventHandler {
         this.graphicsDevice.frameStart();
     }
 
+    frameEnd() {
+        this.graphicsDevice.frameEnd();
+    }
+
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -2212,6 +2216,7 @@ const makeTick = function (_app) {
                 application.updateCanvasSize();
                 application.frameStart();
                 application.render();
+                application.frameEnd();
                 application.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);

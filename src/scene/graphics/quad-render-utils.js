@@ -35,8 +35,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
         }
     });
 
-    DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
-
     device.setCullMode(CULLFACE_NONE);
     device.setDepthState(DepthState.NODEPTH);
     device.setStencilState(null, null);
@@ -55,7 +53,9 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     // prepare a render pass to render the quad to the render target
     const renderPass = new RenderPass(device, () => {
+        DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
         quad.render(rect, scissorRect);
+        DebugGraphics.popGpuMarker(device);
     });
     DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : 'Framebuffer'}`);
     renderPass.init(target);
@@ -74,9 +74,12 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     }
 
     renderPass.render();
-    quad.destroy();
 
-    DebugGraphics.popGpuMarker(device);
+    // TODO: remove this submission, when UB allocates from per frame buffers. For now, we need to submit the command buffer,
+    // as we're destroying the UB buffer on the next line, and the command buffer needs to be submitted before that.
+    device.submit();
+
+    quad.destroy();
 }
 
 /**

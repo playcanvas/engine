@@ -124,3 +124,10 @@ export const TRACE_ID_ELEMENT = "Element";
  * @type {string}
  */
 export const TRACEID_TEXTURES = 'Textures';
+
+/**
+ * Logs the render queue commands.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_QUEUE = 'RenderQueue';
