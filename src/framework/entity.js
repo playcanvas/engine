@@ -514,12 +514,12 @@ class Entity extends GraphNode {
             this.c[name].enabled = false;
         }
 
-        super.destroy();
-
         // Remove all components
         for (const name in this.c) {
             this.c[name].system.removeComponent(this);
         }
+
+        super.destroy();
 
         // remove from entity index
         if (this._guid) {
