@@ -187,7 +187,7 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
-        this._lightSize = 1.0;
+        this._penumbraSize = 1.0;
         this._isVsm = false;
         this._isPcf = true;
 
@@ -457,12 +457,12 @@ class Light {
         return this._outerConeAngle;
     }
 
-    set lightSize(value) {
-        this._lightSize = value;
+    set penumbraSize(value) {
+        this._penumbraSize = value;
     }
 
-    get lightSize() {
-        return this._lightSize;
+    get penumbraSize() {
+        return this._penumbraSize;
     }
 
     _updateOuterAngle(angle) {
@@ -675,7 +675,7 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
-        clone.lightSize = this.lightSize;
+        clone.penumbraSize = this.penumbraSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 

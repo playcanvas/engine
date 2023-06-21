@@ -646,7 +646,7 @@ class LitShader {
             decl.append("uniform vec3 light" + i + "_color;");
 
             if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
-                decl.append(`uniform float light${i}_size;`);
+                decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
             }
 
@@ -1298,11 +1298,11 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let lightSizeArg = `vec2(light${i}_size)`;
+                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                                lightSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_size`;
+                                penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }
-                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${lightSizeArg}, dLightDirW`;
+                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${penumbraSizeArg}, dLightDirW`;
                         }
 
                         if (lightType === LIGHTTYPE_OMNI) {
