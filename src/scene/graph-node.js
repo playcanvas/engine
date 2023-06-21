@@ -1378,7 +1378,6 @@ class GraphNode extends EventHandler {
      * this.entity.removeChild(child);
      */
     removeChild(child) {
-        console.log("trying to find child...", child);
         const index = this._children.indexOf(child);
         if (index === -1) {
             return;
