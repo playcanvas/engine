@@ -482,7 +482,7 @@ class GraphNode extends EventHandler {
 
 
     /**
-     * Detach a GraphNode from the hierarchy. Then recursively destroy all ancestors.
+     * Detach a GraphNode from the hierarchy and recursively destroy all children.
      *
      * @example
      * const firstChild = this.entity.children[0];
