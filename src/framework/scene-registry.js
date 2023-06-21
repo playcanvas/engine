@@ -376,14 +376,16 @@ class SceneRegistry {
         const app = this._app;
 
         const onBeforeAddHierarchy = (sceneItem) => {
-            // Destroy/Remove all nodes on the app.root
-            const rootChildren = app.root.children;
-            while (rootChildren.length > 0) {
-                const child = rootChildren[0];
-                child.reparent(null);
-                child.destroy?.();
+            // Destroy all nodes on the app.root
+            const { children } = app.root;
+            while (children.length) {
+                children[0].destroy();
             }
-
+            Debug.assert(
+                Object.keys(app._entityIndex).length === 0,
+                "Destroyed all entities but these entities survived:",
+                app._entityIndex
+            );
             app.applySceneSettings(sceneItem.data.settings);
         };
 
