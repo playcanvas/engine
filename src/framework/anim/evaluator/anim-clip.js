@@ -72,8 +72,11 @@ class AnimClip {
     }
 
     set speed(speed) {
+        const signChanged = Math.sign(speed) !== Math.sign(this._speed);
         this._speed = speed;
-        this.alignCursorToCurrentTime();
+        if (signChanged) {
+            this.alignCursorToCurrentTime();
+        }
     }
 
     get speed() {
