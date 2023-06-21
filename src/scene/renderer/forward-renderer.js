@@ -257,11 +257,13 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-                this.lightSizeId[cnt].setValue(directional.lightSize);
+
+                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.lightSize);
+                this.lightSizeId[cnt].setValue(pixelsPerMeter);
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 2.0;
+                cameraParams[0] = 0;
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -329,12 +331,13 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
-            this.lightSizeId[cnt].setValue(omni.lightSize);
 
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / omni.lightSize);
+            this.lightSizeId[cnt].setValue(pixelsPerMeter);
             const cameraParams = omni._shadowCameraParams;
+
             cameraParams.length = 4;
-            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
+            cameraParams[0] = 0;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -394,12 +397,15 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
-            this.lightSizeId[cnt].setValue(spot.lightSize);
 
+            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / spot.lightSize);
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const fovRatio = 1.0 / Math.tan(fov / 2.0);
+            this.lightSizeId[cnt].setValue(pixelsPerMeter * fovRatio);
+
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
+            cameraParams[0] = 0;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
