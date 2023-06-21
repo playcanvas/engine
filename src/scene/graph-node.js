@@ -497,7 +497,7 @@ class GraphNode extends EventHandler {
         while (children.length) {
             // Remove last child from the array
             const child = children.pop();
-            // Disconnect it from the parent: this is only an optimisation step, to prevent calling
+            // Disconnect it from the parent: this is only an optimization step, to prevent calling
             // GraphNode#removeChild which would try to refind it via this._children.indexOf (which
             // will fail, because we just removed it).
             child._parent = null;
