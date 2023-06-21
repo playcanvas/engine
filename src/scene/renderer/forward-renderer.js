@@ -258,7 +258,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
-                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / penumbraSize);
+                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.penumbraSize);
                 this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
 
                 const cameraParams = directional._shadowCameraParams;
