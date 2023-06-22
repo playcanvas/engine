@@ -134,9 +134,6 @@ class AnimController {
 
     get activeStateDuration() {
         if (this._activeStateDurationDirty) {
-            if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
-                return 0.0;
-
             let maxDuration = 0.0;
             for (let i = 0; i < this.activeStateAnimations.length; i++) {
                 const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
