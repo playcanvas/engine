@@ -133,9 +133,7 @@ class WebgpuClearRenderer {
             device.setShader(this.shader);
 
             const bindGroup = this.bindGroup;
-            if (bindGroup.defaultUniformBuffer) {
-                bindGroup.defaultUniformBuffer.update();
-            }
+            bindGroup.defaultUniformBuffer.update();
             bindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, bindGroup);
 

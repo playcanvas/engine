@@ -696,6 +696,15 @@ class GraphicsDevice extends EventHandler {
             }
         });
     }
+
+    /**
+     * Function which executes at the end of the frame. This should not be called manually, as it is
+     * handled by the AppBase instance.
+     *
+     * @ignore
+     */
+    frameEnd() {
+    }
 }
 
 export { GraphicsDevice };
