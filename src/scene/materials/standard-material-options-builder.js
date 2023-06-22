@@ -16,6 +16,7 @@ import {
     SPECULAR_PHONG
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
+import { collectLights } from './lit-material-common.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -390,9 +391,9 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
             if (sortedLights) {
-                this._collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                this._collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
-                this._collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
+                collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
+                collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
             }
             options.litOptions.lights = lightsFiltered;
         } else {
@@ -401,31 +402,6 @@ class StandardMaterialOptionsBuilder {
 
         if (options.litOptions.lights.length === 0) {
             options.litOptions.noShadow = true;
-        }
-    }
-
-    _collectLights(lType, lights, lightsFiltered, mask, staticLightList) {
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            if (light.enabled) {
-                if (light.mask & mask) {
-                    if (lType !== LIGHTTYPE_DIRECTIONAL) {
-                        if (light.isStatic) {
-                            continue;
-                        }
-                    }
-                    lightsFiltered.push(light);
-                }
-            }
-        }
-
-        if (staticLightList) {
-            for (let i = 0; i < staticLightList.length; i++) {
-                const light = staticLightList[i];
-                if (light._type === lType) {
-                    lightsFiltered.push(light);
-                }
-            }
         }
     }
 
