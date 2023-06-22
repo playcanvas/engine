@@ -519,28 +519,7 @@ class Entity extends GraphNode {
             this.c[name].system.removeComponent(this);
         }
 
-        // Detach from parent
-        if (this._parent)
-            this._parent.removeChild(this);
-
-        // recursively destroy all children
-        const children = this._children;
-        while (children.length) {
-
-            // remove a child from the array and disconnect it from the parent
-            const child = children.pop();
-            child._parent = null;
-
-            if (child instanceof Entity) {
-                child.destroy();
-            }
-        }
-
-        // fire destroy event
-        this.fire('destroy', this);
-
-        // clear all events
-        this.off();
+        super.destroy();
 
         // remove from entity index
         if (this._guid) {
