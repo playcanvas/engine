@@ -175,28 +175,6 @@ class LitShader {
         return result;
     }
 
-    // handles directional map shadow coordinate generation, including cascaded shadows
-    _directionalShadowMapProjection(light, shadowMatArg, shadowParamArg, lightArgs, lightIndex, coordsFunctionName) {
-
-        // for shadow cascades
-        let code = "";
-        const lightParams = lightArgs ? ", " + lightArgs : "";
-        let shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg}${lightParams});`;
-        if (light.numCascades > 1) {
-            // compute which cascade matrix needs to be used
-            code += `getShadowCascadeMatrix(light${lightIndex}_shadowMatrixPalette, light${lightIndex}_shadowCascadeDistances, light${lightIndex}_shadowCascadeCount);\n`;
-            shadowCoordArgs = `(cascadeShadowMat, ${shadowParamArg}${lightParams});\n`;
-        }
-
-        // shadow coordinate generation
-        code += coordsFunctionName + shadowCoordArgs;
-
-        // stop shadow at the far distance
-        code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
-
-        return code;
-    }
-
     _getLightSourceShapeString(shape) {
         switch (shape) {
             case LIGHTSHAPE_RECT:
@@ -1277,18 +1255,16 @@ class LitShader {
                         func.append("#undef SHADOW_SAMPLE_POINT");
 
                         let shadowMatrix = `light${i}_shadowMatrix`;
-                        let hasCascades = false;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && light.numCascades > 1) {
                             // compute which cascade matrix needs to be used
                             backend.append(`    getShadowCascadeMatrix(light${i}_shadowMatrixPalette, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
                             shadowMatrix = `cascadeShadowMat`;
-                            hasCascades = true;
                         }
 
                         backend.append(`    dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
 
                         // If cascades are used, fade between them
-                        if (hasCascades) {
+                        if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
 
