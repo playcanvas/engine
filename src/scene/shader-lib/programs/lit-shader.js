@@ -1264,7 +1264,7 @@ class LitShader {
 
                         backend.append(`    dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
 
-                        // If cascades are used, fade between them
+                        // Fade shadow at edges
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
