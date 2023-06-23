@@ -1942,6 +1942,7 @@ class AppBase extends EventHandler {
      */
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
+        material.cull = CULLFACE_NONE;
         material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();
 
