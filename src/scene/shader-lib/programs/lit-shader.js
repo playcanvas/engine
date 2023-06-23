@@ -474,7 +474,8 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const usePackedDepth = (!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS);
+        const usePackedDepth = ((!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS)) ||
+            (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
