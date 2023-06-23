@@ -277,7 +277,7 @@ class GroundFogExample {
                     material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
 
                     // debug rendering of the deptht texture in the corner
-                    app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+                    app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
                 });
             });
         });
