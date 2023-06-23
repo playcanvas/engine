@@ -123,6 +123,7 @@ class MrtExample {
                     name: `MRT`,
                     colorBuffers: colorBuffers,
                     depth: true,
+                    flipY: true,
                     samples: 2
                 });
 
