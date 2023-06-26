@@ -75,10 +75,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     renderPass.render();
 
-    // TODO: remove this submission, when UB allocates from per frame buffers. For now, we need to submit the command buffer,
-    // as we're destroying the UB buffer on the next line, and the command buffer needs to be submitted before that.
-    device.submit();
-
     quad.destroy();
 }
 

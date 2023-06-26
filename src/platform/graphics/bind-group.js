@@ -20,6 +20,17 @@ class BindGroup {
      */
     renderVersionUpdated = -1;
 
+    /** @type {import('./uniform-buffer.js').UniformBuffer[]} */
+    uniformBuffers;
+
+    /**
+     * An array of offsets for each uniform buffer in the bind group. This is the offset in the
+     * buffer where the uniform buffer data starts.
+     *
+     * @type {number[]}
+     */
+    uniformBufferOffsets = [];
+
     /**
      * Create a new Bind Group.
      *
@@ -106,6 +117,20 @@ class BindGroup {
             const value = textureFormat.scopeId.value;
             Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
             this.setTexture(textureFormat.name, value);
+        }
+
+        // update uniform buffer offsets
+        this.uniformBufferOffsets.length = this.uniformBuffers.length;
+        for (let i = 0; i < this.uniformBuffers.length; i++) {
+            const uniformBuffer = this.uniformBuffers[i];
+
+            // offset
+            this.uniformBufferOffsets[i] = uniformBuffer.offset;
+
+            // test if any of the uniform buffers have changed (not their content, but the buffer container itself)
+            if (this.renderVersionUpdated < uniformBuffer.renderVersionDirty) {
+                this.dirty = true;
+            }
         }
 
         if (this.dirty) {
