@@ -120,7 +120,6 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
 Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
 
 You can view the full collection of example iframes by visiting [http://localhost:5000/iframe/]() in your browser.
-```
 
 ### Debug and performance engine development
 By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:debug` or `npm run watch:profiler` commands.
@@ -144,6 +143,10 @@ npm run serve
 3) **Generate thumbnails** by first ensuring the examples browser is running on [http://localhost:5000]() then running the following command. This step will create the thumbnails directory for the browser and may take a while depending on the number of new examples or if this is first time it has been run locally.
 ```
 npm run build:thumbnails
+```
+If you are serving the examples browser from a different port, you can specify the port using the `PORT` environment variable:
+```
+PORT=5001 npm run build:thumbnails
 ```
 
 4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
