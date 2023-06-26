@@ -73,7 +73,6 @@
                 categoryHeader.innerText = category;
                 examplesContainer.append(categoryHeader);
                 Object.keys(examples[category]).forEach(function(example) {
-                    console.log(example);
                     const exampleLink = document.createElement('a');
                     exampleLink.href = `?category=${category}&example=${example.replace('Example', '')}`;
                     exampleLink.innerText = example.replace('Example', '');
