@@ -65,8 +65,8 @@ class LightRenderData {
         // scissor rectangle for the shadow rendering to the texture (x, y, width, height)
         this.shadowScissor = new Vec4(0, 0, 1, 1);
 
-        // depth range for cascaded shadows
-        this.depthRange = new Vec2(0, 0);
+        // depth range compensation for PCSS with directional lights
+        this.depthRangeCompensation = 0;
 
         // face index, value is based on light type:
         // - spot: always 0
