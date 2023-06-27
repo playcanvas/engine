@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 import { Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
-class GltfExportExample {
+export class GltfExportExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLTF Export';
     static WEBGPU_ENABLED = true;
@@ -146,5 +146,3 @@ class GltfExportExample {
         }
     }
 }
-
-export default GltfExportExample;

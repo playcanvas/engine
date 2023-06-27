@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 import { ScriptLoader } from '../../app/helpers/loader';
 
 
-class LoadersGlExample {
+export class LoadersGlExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Loaders.gl';
     static FILES = {
@@ -129,5 +129,3 @@ void main(void)
         });
     }
 }
-
-export default LoadersGlExample;

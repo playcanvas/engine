@@ -1,9 +1,9 @@
 import React from 'react';
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 import { Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
-class UsdzExportExample {
+export class UsdzExportExample {
     static CATEGORY = 'Loaders';
     static NAME = 'USDZ Export';
     static WEBGPU_ENABLED = true;
@@ -116,5 +116,3 @@ class UsdzExportExample {
         });
     }
 }
-
-export default UsdzExportExample;

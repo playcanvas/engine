@@ -1,6 +1,6 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class DracoGlbExample {
+export class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Draco GLB';
     static WEBGPU_ENABLED = true;
@@ -95,5 +95,3 @@ class DracoGlbExample {
         }
     }
 }
-
-export default DracoGlbExample;

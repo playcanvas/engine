@@ -1,6 +1,6 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class ObjExample {
+export class ObjExample {
     static CATEGORY = 'Loaders';
     static NAME = 'OBJ';
 
@@ -69,5 +69,3 @@ class ObjExample {
         });
     }
 }
-
-export default ObjExample;

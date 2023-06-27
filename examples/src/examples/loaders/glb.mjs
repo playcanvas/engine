@@ -1,6 +1,6 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class GlbExample {
+export class GlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
     static WEBGPU_ENABLED = true;
@@ -103,5 +103,3 @@ class GlbExample {
         });
     }
 }
-
-export default GlbExample;
