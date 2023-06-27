@@ -1,16 +1,21 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
 class CompoundCollisionExample {
     static CATEGORY = 'Physics';
     static NAME = 'Compound Collision';
     static WEBGPU_ENABLED = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         pc.WasmModule.setConfig('Ammo', {
-            glueUrl: '/static/lib/ammo/ammo.wasm.js',
-            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
-            fallbackUrl: '/static/lib/ammo/ammo.js'
+            glueUrl: '/playcanvas-engine/examples/src/lib/ammo/ammo.wasm.js',
+            wasmUrl: '/playcanvas-engine/examples/src/lib/ammo/ammo.wasm.wasm',
+            fallbackUrl: '/playcanvas-engine/examples/src/lib/ammo/ammo.js'
         });
 
         pc.WasmModule.getInstance('Ammo', demo);
@@ -23,7 +28,7 @@ class CompoundCollisionExample {
                 twgslUrl: '/static/lib/twgsl/twgsl.js'
             };
 
-            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -67,12 +72,14 @@ class CompoundCollisionExample {
                 app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
                 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
-
-                function createMaterial(color: pc.Color) {
+                /**
+                 * @param {pc.Color} color 
+                 * @returns {pc.StandardMaterial}
+                 */
+                function createMaterial(color) {
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
                     material.update();
-
                     return material;
                 }
 
@@ -340,7 +347,12 @@ class CompoundCollisionExample {
                 ];
 
                 // Convert an entity definition in the structure above to a pc.Entity object
-                function parseEntity(e: any) {
+                /**
+                 * 
+                 * @param {typeof scene} e 
+                 * @returns 
+                 */
+                function parseEntity(e) {
                     const entity = new pc.Entity(e.name);
 
                     if (e.pos) {
@@ -354,13 +366,13 @@ class CompoundCollisionExample {
                     }
 
                     if (e.components) {
-                        e.components.forEach(function (c: any) {
+                        e.components.forEach(function (c) {
                             entity.addComponent(c.type, c.options);
                         });
                     }
 
                     if (e.children) {
-                        e.children.forEach(function (child: pc.Entity) {
+                        e.children.forEach(function (/** @type {typeof scene} */ child) {
                             entity.addChild(parseEntity(child));
                         });
                     }
@@ -369,8 +381,8 @@ class CompoundCollisionExample {
                 }
 
                 // Parse the scene data above into entities and add them to the scene's root entity
-                function parseScene(s: any) {
-                    s.forEach(function (e: any) {
+                function parseScene(s) {
+                    s.forEach(function (e) {
                         app.root.addChild(parseEntity(e));
                     });
                 }
@@ -381,7 +393,8 @@ class CompoundCollisionExample {
 
                 // Clone the chair entity hierarchy and add it to the scene root
                 function spawnChair() {
-                    const chair: pc.Entity = app.root.findByName('Chair') as pc.Entity;
+                    /** @type {pc.Entity} */
+                    const chair = app.root.findByName('Chair');
                     const clone = chair.clone();
                     clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
                     app.root.addChild(clone);
@@ -399,8 +412,8 @@ class CompoundCollisionExample {
                     }
 
                     // Show active bodies in red and frozen bodies in gray
-                    app.root.findComponents('rigidbody').forEach(function (body: pc.RigidBodyComponent) {
-                        body.entity.findComponents('render').forEach(function (render: pc.RenderComponent) {
+                    app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
+                        body.entity.findComponents('render').forEach(function (/** @type {pc.RenderComponent} */ render) {
                             render.material = body.isActive() ? red : gray;
                         });
                     });
@@ -409,5 +422,6 @@ class CompoundCollisionExample {
         }
     }
 }
-
-export default CompoundCollisionExample;
+export {
+    CompoundCollisionExample
+};

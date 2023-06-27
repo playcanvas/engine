@@ -1,11 +1,17 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
+import { assetPath } from '../../assetPath.mjs';
 
 class FallingShapesExample {
     static CATEGORY = 'Physics';
     static NAME = 'Falling Shapes';
     static WEBGPU_ENABLED = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         pc.WasmModule.setConfig('Ammo', {
             glueUrl: '/static/lib/ammo/ammo.wasm.js',
@@ -17,7 +23,7 @@ class FallingShapesExample {
         function demo() {
 
             const assets = {
-                'torus': new pc.Asset('torus', 'container', { url: '/static/assets/models/torus.glb' })
+                torus: new pc.Asset('torus', 'container', { url: assetPath + 'models/torus.glb' })
             };
 
             const gfxOptions = {
@@ -26,7 +32,7 @@ class FallingShapesExample {
                 twgslUrl: '/static/lib/twgsl/twgsl.js'
             };
 
-            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -77,8 +83,11 @@ class FallingShapesExample {
 
                     // Set the gravity for our rigid bodies
                     app.systems.rigidbody.gravity.set(0, -9.81, 0);
-
-                    function createMaterial(color: pc.Color) {
+                    /**
+                     * @param {pc.Color} color 
+                     * @returns {pc.StandardMaterial}
+                     */
+                    function createMaterial(color) {
                         const material = new pc.StandardMaterial();
                         material.diffuse = color;
                         // we need to call material.update when we change its properties
@@ -152,8 +161,15 @@ class FallingShapesExample {
                     camera.translate(0, 10, 15);
                     camera.lookAt(0, 2, 0);
 
-                    // helper function which creates a template for a collider
-                    const createTemplate = function (type: any, collisionOptions: any, template?: any) {
+                    /**
+                     * helper function which creates a template for a collider
+                     * 
+                     * @param {any} type 
+                     * @param {any} collisionOptions 
+                     * @param {any} [template] 
+                     * @returns 
+                     */
+                    const createTemplate = function (type, collisionOptions, template) {
 
                         // add a render component (visible mesh)
                         if (!template) {
@@ -252,7 +268,7 @@ class FallingShapesExample {
                         }
 
                         // Show active bodies in red and frozen bodies in gray
-                        app.root.findComponents('rigidbody').forEach(function (body: pc.RigidBodyComponent) {
+                        app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
                             body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
                         });
                     });
@@ -261,5 +277,6 @@ class FallingShapesExample {
         }
     }
 }
-
-export default FallingShapesExample;
+export {
+    FallingShapesExample
+};
