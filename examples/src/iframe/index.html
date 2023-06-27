@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="/iframe/index.js"></script>
-    <script src="/examples/index.js"></script>
+    <script src="../importmap.js"></script>
     <link rel="stylesheet" href="/styles.css">
     <style>
         body {
@@ -29,7 +28,18 @@
             <canvas id='application-canvas'></canvas>
         </div>
     </div>
-    <script>
+    <script type="module">
+        import * as moduleIndex from "./index.mjs";
+        import * as moduleExamples from "../examples/index.mjs";
+        import * as pcx from "playcanvas-extras";
+        import * as pc from "playcanvas";
+        window.pc = pc;
+        // make pc available outside of the iframe
+        window.top.pc = window.pc;
+
+        Object.assign(window, {moduleIndex, moduleExamples});
+        window.examples = moduleExamples;
+        console.log({moduleIndex, moduleExamples});
     (function loadIFrame() {
         // polyfill slice on UInt8Array
         if (!Uint8Array.prototype.slice) {
@@ -48,9 +58,14 @@
         var event = new CustomEvent("exampleLoading");
         window.top.dispatchEvent(event);
 
+        let found = false;
         if (urlParams.get('category') && urlParams.get('example')) {
             window.Example = examples[urlParams.get('category')][`${urlParams.get('example')}Example`];
-        } else {
+            if (window.Example) {
+                found = true;
+            }
+        }
+        if (!found) {
             console.warn('No example specified, displaying a list of all examples instead.')
             const examplesContainer = document.createElement('div');
             Object.keys(examples).forEach(function(category) {
@@ -151,7 +166,10 @@
             // stub out the react create element function
             window.stubbedReact =  {
                 default: {
-                    createElement:  function(type, props) { if (props && props.name && props.url) window.assets.push(props); }
+                    createElement:  function(type, props) {
+                        console.log("omg remove this")
+                        if (props && props.name && props.url) window.assets.push(props);
+                    }
                 }
             };
             window.stubbedScriptLoader = {};
@@ -190,7 +208,9 @@
             function replaceAll(str, find, replace) {
                 return str.replace(new RegExp(escapeRegExp(find), 'g'), replace);
             }
-            var argsString = window.exampleFunction.toString().match(/function\s.*?\(([^)]*)\)/)[1];
+            ("function " + window.exampleFunction.toString()).match(/function\s.*?\(([^)]*)\)/)[1]
+            var argsString = ("function " + window.exampleFunction.toString()).match(/function\s.*?\(([^)]*)\)/)[1];
+            //var argsString = window.exampleFunction.toString().match(/function\s.*?\(([^)]*)\)/)[1];
             argsString = replaceAll(argsString, ' ', '');
             argsString = replaceAll(argsString, '\n', '');
             var argNames = argsString.split(',');
@@ -206,8 +226,10 @@
                 } else if (arg === 'pcx') {
                     return pcx;
                 } else if (arg === 'deviceType') {
+                    //debugger;
                     if (Example.WEBGPU_ENABLED) {
-                        return window.top.preferredGraphicsDevice || 'webgpu';
+                        //return window.top.preferredGraphicsDevice || 'webgpu';
+                        return window.top.preferredGraphicsDevice || 'webgl2';
                     } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
                         return window.top.preferredGraphicsDevice;
                     } else {
@@ -220,10 +242,22 @@
 
             const pollHandler = setInterval(appCreationPoll, 50);
             function appCreationPoll() {
+                //debugger;
                 if (pc.app && pc.app.graphicsDevice.canvas) {
                     clearInterval(pollHandler);
                     setupApplication(pc.app);
-                    var event = new CustomEvent("exampleLoad");
+                    class ExampleLoadEvent extends CustomEvent {
+                        /** @type {string} */
+                        deviceType;
+                        /**
+                         * @param {string} deviceType
+                         */
+                        constructor(deviceType) {
+                            super("exampleLoad");
+                            this.deviceType = deviceType;
+                        }
+                    }
+                    var event = new ExampleLoadEvent(pc.app.graphicsDevice.deviceType);
                     window.top.dispatchEvent(event);
                 }
             }
