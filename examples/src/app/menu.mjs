@@ -1,15 +1,19 @@
 import React, { useEffect } from 'react';
 import { Button, Container } from '@playcanvas/pcui/react';
-
-interface MenuProps {
-    useTypeScript: boolean,
-    setShowMiniStats: (value: boolean) => void
-}
-const Menu = (props: MenuProps) => {
-
-    let mouseTimeout: any = null;
-    let clickFullscreenListener: EventListener = null;
-
+/**
+ * @typedef {object} MenuProps
+ * @property {boolean} useTypeScript
+ * @property {(value: boolean) => void} setShowMiniStats
+ */
+/**
+ * 
+ * @param {MenuProps} props 
+ * @returns 
+ */
+const Menu = (props) => {
+    let mouseTimeout = null;
+    /** @type {EventListener | null} */
+    let clickFullscreenListener = null;
     const toggleFullscreen = () => {
         if (clickFullscreenListener) {
             document.querySelector('iframe').contentDocument.removeEventListener('mousemove', clickFullscreenListener);
@@ -33,7 +37,7 @@ const Menu = (props: MenuProps) => {
     };
 
     useEffect(() => {
-        const escapeKeyEvent = (e: any) => {
+        const escapeKeyEvent = (e) => {
             if (e.keyCode === 27 && document.querySelector('#canvas-container').classList.contains('fullscreen')) {
                 toggleFullscreen();
             }
@@ -41,7 +45,7 @@ const Menu = (props: MenuProps) => {
         document.querySelector('iframe').contentDocument.addEventListener('keydown', escapeKeyEvent);
         document.addEventListener('keydown', escapeKeyEvent);
     });
-
+/*
     return <Container id='menu'>
         <Container id='menu-buttons'>
             <img id='playcanvas-icon' src='https://playcanvas.com/viewer/static/playcanvas-logo.png' onClick={() => {
@@ -58,6 +62,21 @@ const Menu = (props: MenuProps) => {
             <Button icon='E127' text='' id='fullscreen-button' onClick={toggleFullscreen}/>
         </Container>
     </Container>;
+    */
+    return React.createElement(Container, { id: 'menu' },
+    React.createElement(Container, { id: 'menu-buttons' },
+        React.createElement("img", { id: 'playcanvas-icon', src: 'https://playcanvas.com/viewer/static/playcanvas-logo.png', onClick: () => {
+                window.open("https://github.com/playcanvas/engine");
+            } }),
+        React.createElement(Button, { icon: 'E256', text: '', onClick: () => {
+                const tweetText = encodeURI(`Check out this @playcanvas engine example! ${location.href.replace('#/', '')}`);
+                window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
+            } }),
+        React.createElement(Button, { icon: 'E149', id: 'showMiniStatsButton', class: 'selected', text: '', onClick: () => {
+                document.getElementById('showMiniStatsButton').classList.toggle('selected');
+                props.setShowMiniStats(document.getElementById('showMiniStatsButton').classList.contains('selected'));
+            } }),
+        React.createElement(Button, { icon: 'E127', text: '', id: 'fullscreen-button', onClick: toggleFullscreen })));   
 };
 
 export default Menu;

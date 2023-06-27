@@ -4,13 +4,15 @@ import * as pcui from '@playcanvas/pcui/react';
 import '@playcanvas/pcui/styles';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
-import SideBar from './sidebar';
-import CodeEditor from './code-editor';
-import Menu from './menu';
-import Example from './example';
+import SideBar from './sidebar.mjs';
+import CodeEditor from './code-editor.mjs';
+import Menu from './menu.mjs';
+import Example from './example.mjs';
+import { ErrorBoundary } from './error-boundary.mjs';
+import { jsx } from '../examples/animation/jsx.mjs';
 
-(window as any).pcui = pcui;
-(window as any).React = React;
+window.pcui = pcui;
+window.React = React;
 
 const MainLayout = () => {
     const emptyFiles = [{
@@ -20,9 +22,12 @@ const MainLayout = () => {
     const [files, setFiles] = useState(emptyFiles);
     const [lintErrors, setLintErrors] = useState(false);
     const [useTypeScript, setUseTypeScript] = useState(localStorage.getItem('useTypeScript') === 'true');
-
-    const updateShowMiniStats = (value: boolean) => {
-        (window as any)._showMiniStats = value;
+    /**
+     * 
+     * @param {boolean} value 
+     */
+    const updateShowMiniStats = (value) => {
+        window._showMiniStats = value;
     };
 
     const playButtonRef = createRef();
@@ -47,7 +52,7 @@ const MainLayout = () => {
             });
         }
     });
-
+/*
     return (
         <div id='appInner'>
             <Router>
@@ -77,10 +82,36 @@ const MainLayout = () => {
             </Router>
         </div>
     );
+*/
+return (React.createElement("div", { id: 'appInner' },
+    React.createElement(Router, null,
+        React.createElement(Switch, null,
+            React.createElement(Route, { exact: true, path: '/' },
+                React.createElement(Redirect, { to: "/misc/hello-world" })),
+            React.createElement(Route, { path: '/:category/:example' },
+                React.createElement(SideBar, null),
+                React.createElement(pcui.Container, { id: 'main-view-wrapper' },
+                    React.createElement(Menu, { useTypeScript: useTypeScript, setShowMiniStats: updateShowMiniStats }),
+                    React.createElement(pcui.Container, { id: 'main-view' },
+                        jsx(ErrorBoundary, null,
+                            React.createElement(CodeEditor, {
+                                lintErrors,
+                                setLintErrors,
+                                playButtonRef,
+                                languageButtonRef,
+                                useTypeScript,
+                                files,
+                                setFiles
+                            }),
+                            React.createElement(Example, {
+                                files,
+                                setFiles,
+                                useTypeScript
+                            })))))))));
 };
-
 // render out the app
-ReactDOM.render(
-    <MainLayout />,
-    document.getElementById('app')
-);
+//ReactDOM.render(
+//    <MainLayout />,
+//    document.getElementById('app')
+//);
+ReactDOM.render(React.createElement(MainLayout, null), document.getElementById('app'));

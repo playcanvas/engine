@@ -93,11 +93,11 @@ const retrieveStaticObject = (text, name) => {
 };
 
 export default {
-    getTypeScriptFunctionFromText: getTypeScriptFunctionFromText,
-    getInnerFunctionText: getInnerFunctionText,
-    getExampleClassFromTextFile: getExampleClassFromTextFile,
-    getEngineTypeFromClass: getEngineTypeFromClass,
-    getWebgpuEnabledFromClass: getWebgpuEnabledFromClass,
-    retrieveStaticObject: retrieveStaticObject,
-    classIncludesMiniStats: classIncludesMiniStats
+    getTypeScriptFunctionFromText,
+    getInnerFunctionText,
+    getExampleClassFromTextFile,
+    getEngineTypeFromClass,
+    getWebgpuEnabledFromClass,
+    retrieveStaticObject,
+    classIncludesMiniStats
 };

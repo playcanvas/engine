@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container } from '@playcanvas/pcui/react';
-import { MIN_DESKTOP_WIDTH } from './constants';
-
-const ControlPanel = (props: any) => {
+import { MIN_DESKTOP_WIDTH } from './constants.mjs';
+/**
+ * @param {} props 
+ * @returns 
+ */
+const ControlPanel = (props) => {
     const [state, setState] = useState({
         showParameters: false,
         showCode: true,
@@ -49,8 +52,8 @@ const ControlPanel = (props: any) => {
         }
     });
 
-    const controls = props.controls ? props.controls((window as any).observerData) : null;
-
+    //const controls = ;
+/*
     return <Container id='controls-wrapper' class={props.controls ? 'has-controls' : null}>
         { window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
             <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>
@@ -69,6 +72,20 @@ const ControlPanel = (props: any) => {
         />
         }
     </Container>;
+    */
+    return React.createElement(Container, { id: 'controls-wrapper', class: props.controls ? 'has-controls' : null },
+    window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && React.createElement(Container, { id: 'controlPanel-tabs', class: 'tabs-container' },
+        React.createElement(Button, { text: 'CODE', id: 'codeButton', class: state.showCode ? 'selected' : null, onClick: onClickCodeTab }),
+        React.createElement(Button, { text: 'PARAMETERS', class: state.showParameters ? 'selected' : null, id: 'paramButton', onClick: onClickParametersTab })),
+    React.createElement(Container, { id: 'controlPanel-controls' },
+React.createElement(
+    //props.controls ? props.controls(window.observerData) : null
+    props.controls || null, {observer: window.observerData}
+)
+    ),
+    window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && React.createElement(MonacoEditor, { options: {
+            readOnly: true
+        }, defaultLanguage: "typescript", value: props.files ? props.files[0].text : '' }));
 };
 
 export default ControlPanel;
