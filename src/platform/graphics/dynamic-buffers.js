@@ -118,8 +118,8 @@ class DynamicBuffers {
      * Create the system of dynamic buffers.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {*} bufferSize - The size of the underlying large buffers.
-     * @param {*} bufferAlignment - Alignment of each allocation.
+     * @param {number} bufferSize - The size of the underlying large buffers.
+     * @param {number} bufferAlignment - Alignment of each allocation.
      */
     constructor(device, bufferSize, bufferAlignment) {
         this.device = device;
