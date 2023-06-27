@@ -1,39 +1,50 @@
-import React from 'react';
-import * as pc from '../../../../';
-
-import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
+import * as pc from 'playcanvas';
+import { BindingTwoWay, LabelGroup, SliderInput, Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-
-class BlendTrees1DExample {
+import { fragment, jsx } from './jsx.mjs';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
+import React from 'react';
+class JsxControls extends React.Component {
+    render() {
+        //console.log("props", this.props);
+        const { observer } = this.props;
+        const binding = new BindingTwoWay();
+        const link = {
+            observer,
+            path: 'blend'
+        };
+        return jsx(LabelGroup, { text: 'blend' },
+            jsx(SliderInput, { binding, link })
+        );
+    }
+}
+class BlendTrees1DExample extends React.Component {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
     static WEBGPU_ENABLED = true;
-
-    controls(data: Observer) {
-        return <>
-            <LabelGroup text='blend'>
-                <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'blend' }}/>
-            </LabelGroup>
-        </>;
-    }
-
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
-
+    static controls = JsxControls;
+    /**
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @param {any} data 
+     * @returns {void}
+     */
+    example(canvas, deviceType, data) {
         const assets = {
-            'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-            'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
-            'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
+            model:     new pc.Asset('model',             'container', { url: assetPath   + 'models/bitmoji.glb' }),
+            idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath   + 'animations/bitmoji/idle.glb' }),
+            danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath   + 'animations/bitmoji/win-dance.glb' }),
+            helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
         };
 
         const gfxOptions = {
             deviceTypes: [deviceType],
-            glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
+            glslangUrl: '../../../lib/glslang/glslang.js',
+            twgslUrl: '../../../lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -179,12 +190,13 @@ class BlendTrees1DExample {
 
                 app.root.addChild(modelEntity);
 
-                data.on('blend:set', (blend: number) => {
+                data.on('blend:set', (/** @type {number} */ blend) => {
                     modelEntity.anim.setFloat('blend', blend);
                 });
             });
         });
     }
 }
-
-export default BlendTrees1DExample;
+export {
+    BlendTrees1DExample
+};

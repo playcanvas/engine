@@ -1,23 +1,20 @@
-import React from 'react';
-import * as pc from '../../../../';
-import { ScriptLoader } from '../../app/helpers/loader';
-
-class TweenExample {
+import * as pc from 'playcanvas';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
+import "https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js";
+export class TweenExample {
     static CATEGORY = 'Animation';
     static NAME = 'Tween';
     static WEBGPU_ENABLED = true;
-
-    load() {
-        return <>
-            <ScriptLoader name='TWEEN' url='https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js' />
-        </>;
-    }
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         const assets = {
-            'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/animation/tween.js' })
+            font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),
+            script: new pc.Asset('script', 'script', { url: scriptsPath + 'animation/tween.js' })
         };
 
         const gfxOptions = {
@@ -26,7 +23,7 @@ class TweenExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then(( /** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -66,8 +63,17 @@ class TweenExample {
 
                 app.start();
 
-                // Utility function to create a text element-based entity
-                const createText = function (fontAsset: pc.Asset, message: string, x: number, y: number, z: number, rot: number) {
+                /**
+                 * Utility function to create a text element-based entity
+                 *
+                 * @param {pc.Asset} fontAsset 
+                 * @param {string} message 
+                 * @param {number} x 
+                 * @param {number} y 
+                 * @param {number} z 
+                 * @param {number} rot 
+                 */
+                const createText = function (fontAsset, message, x, y, z, rot) {
                     const text = new pc.Entity();
                     text.addComponent("element", {
                         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -95,8 +101,10 @@ class TweenExample {
                     'Back',
                     'Bounce'
                 ];
-                const points: Array<pc.Vec3> = [];
-                const colors: Array<pc.Color> = [];
+                /** @type {Array<pc.Vec3>} */
+                const points = [];
+                /** @type {Array<pc.Color>} */
+                const colors = [];
 
                 for (let i = 0; i < easingFunctions.length; i++) {
                     // Create an entity with a sphere render component
@@ -105,7 +113,7 @@ class TweenExample {
                     sphere.addComponent("render", {
                         type: "sphere"
                     });
-                    const material = sphere.render.material as pc.StandardMaterial;
+                    const material = sphere.render.material /*as pc.StandardMaterial*/;
                     material.diffuse.set(1, 0, 0);
                     material.specular.set(0.6, 0.6, 0.6);
                     material.gloss = 0.2;
@@ -163,5 +171,3 @@ class TweenExample {
         });
     }
 }
-
-export default TweenExample;

@@ -1,17 +1,23 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
 
 class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
     static WEBGPU_ENABLED = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         const assets = {
-            'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-            'walkAnim': new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
+            model:    new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
+            walkAnim: new pc.Asset('walkAnim',          'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
+            helipad:  new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            bloom:    new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
         };
         const gfxOptions = {
             deviceTypes: [deviceType],
@@ -19,7 +25,7 @@ class EventsExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -88,8 +94,9 @@ class EventsExample {
                 });
                 app.root.addChild(cameraEntity);
 
-                const boxes: any = {};
-                const highlightedBoxes: pc.Entity[] = [];
+                const boxes = {};
+                /** @type {pc.Entity[]} */
+                const highlightedBoxes = [];
 
                 // create a floor made up of box models
                 for (let i = -5; i <= 5; i++) {
@@ -114,8 +121,11 @@ class EventsExample {
                     }
                 }
 
-                // light up a box at the given position with a random color using the emissive material property
-                const highlightBox = (pos: pc.Vec3) => {
+                /**
+                 * light up a box at the given position with a random color using the emissive material property
+                 * @param {pc.Vec3} pos 
+                 */
+                const highlightBox = (pos) => {
                     const i = Math.floor(pos.x + 0.5);
                     const j = Math.floor(pos.z + 0.5);
                     const colorVec = new pc.Vec3(Math.random(), Math.random(), Math.random());
@@ -141,7 +151,7 @@ class EventsExample {
                 app.root.addChild(modelEntityParent);
 
                 // rotate the model in a circle around the center of the scene
-                app.on('update', (dt: number) => {
+                app.on('update', (/** @type {number} */ dt) => {
                     modelEntityParent.rotate(0, 13.8 * dt, 0);
                 });
 
@@ -164,15 +174,15 @@ class EventsExample {
                 // add the animation track to the anim component, with a defined speed
                 modelEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
-                modelEntity.anim.on('foot_step', (event: any) => {
+                modelEntity.anim.on('foot_step', (event) => {
                     // highlight the box that is under the foot's bone position
                     highlightBox(modelEntity.findByName(event.bone).getPosition());
                 });
 
                 app.on('update', () => {
                     // on update, iterate over any currently highlighted boxes and reduce their emissive property
-                    highlightedBoxes.forEach((box: pc.Entity) => {
-                        const material = box.render.material as pc.StandardMaterial;
+                    highlightedBoxes.forEach((box) => {
+                        const material = box.render.material /*as pc.StandardMaterial*/;
                         const emissive = material.emissive;
                         emissive.lerp(emissive, pc.Color.BLACK, 0.08);
                         material.update();
@@ -192,4 +202,6 @@ class EventsExample {
         });
     }
 }
-export default EventsExample;
+export {
+    EventsExample
+};

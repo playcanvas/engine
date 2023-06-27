@@ -1,29 +1,45 @@
-import React from 'react';
-import * as pc from '../../../../';
+import * as React from 'react';
+import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, Button, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
+import { ammoPath, assetPath } from '../../assetPath.mjs';
 
 class LocomotionExample {
     static CATEGORY = 'Animation';
     static NAME = 'Locomotion';
     static WEBGPU_ENABLED = true;
-
-    controls(data: Observer) {
+    /**
+     * 
+     * @param {Observer} data 
+     * @returns 
+     */
+    static controls({observer}) {
+        /*
         return <>
             <Button text='Jump' onClick={() => data.emit('jump')}/>
             <LabelGroup text='Run: '>
                 <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'jogToggle' }} />
             </LabelGroup>
         </>;
+        */
+        return React.createElement(React.Fragment, null,
+            React.createElement(Button, { text: 'Jump', onClick: () => observer.emit('jump') }),
+            React.createElement(LabelGroup, { text: 'Run: ' },
+                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'jogToggle' } })));
     }
-
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
-
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @param {any} data 
+     * @returns {void}
+     */
+    example(canvas, deviceType, data) {
         pc.WasmModule.setConfig('Ammo', {
-            glueUrl: '/static/lib/ammo/ammo.wasm.js',
-            wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
-            fallbackUrl: '/static/lib/ammo/ammo.js'
+            glueUrl:     ammoPath + 'ammo.wasm.js',
+            wasmUrl:     ammoPath + 'ammo.wasm.wasm',
+            fallbackUrl: ammoPath + 'ammo.js'
         });
 
         pc.WasmModule.getInstance('Ammo', run);
@@ -31,13 +47,13 @@ class LocomotionExample {
         function run() {
 
             const assets = {
-                'playcanvasGreyTexture': new pc.Asset('playcanvasGreyTexture', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' }),
-                'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-                'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
-                'walkAnim': new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-                'jogAnim': new pc.Asset('jogAnim', 'container', { url: '/static/assets/animations/bitmoji/run.glb' }),
-                'jumpAnim': new pc.Asset('jumpAnim', 'container', { url: '/static/assets/animations/bitmoji/jump-flip.glb' }),
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+                playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture',   { url: assetPath + 'textures/playcanvas-grey.png' }),
+                model:                 new pc.Asset('model',                 'container', { url: assetPath + 'models/bitmoji.glb' }),
+                idleAnim:              new pc.Asset('idleAnim',              'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
+                walkAnim:              new pc.Asset('walkAnim',              'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
+                jogAnim:               new pc.Asset('jogAnim',               'container', { url: assetPath + 'animations/bitmoji/run.glb' }),
+                jumpAnim:              new pc.Asset('jumpAnim',              'container', { url: assetPath + 'animations/bitmoji/jump-flip.glb' }),
+                helipad:               new pc.Asset('helipad-env-atlas',     'texture',   { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             };
 
             const gfxOptions = {
@@ -46,7 +62,7 @@ class LocomotionExample {
                 twgslUrl: '/static/lib/twgsl/twgsl.js'
             };
 
-            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -318,7 +334,8 @@ class LocomotionExample {
                     const Locomotion = pc.createScript('Locomotion');
 
                     let characterDirection;
-                    let targetPosition: pc.Vec3;
+                    /** @type {pc.Vec3} */
+                    let targetPosition;
 
                     // initialize code called once per entity
                     Locomotion.prototype.initialize = function () {
@@ -328,10 +345,10 @@ class LocomotionExample {
                     };
 
                     // @ts-ignore engine-tsd
-                    Locomotion.prototype.onMouseDown = function (event: any) {
+                    Locomotion.prototype.onMouseDown = function (event) {
                         if (event.button !== 0) return;
                         // Set the character target position to a position on the plane that the user has clicked
-                        const cameraEntity = app.root.findByName('Camera') as pc.Entity;
+                        const cameraEntity = app.root.findByName('Camera') /*as pc.Entity*/;
                         const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
                         const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
                         const result = app.systems.rigidbody.raycastFirst(far, near);
@@ -341,8 +358,12 @@ class LocomotionExample {
                         }
                     };
 
-                    // defines how many units the character should move per second given its current animation state
-                    function speedForState(state: any) {
+                    /**
+                     * defines how many units the character should move per second given its current animation state
+                     * @param {string} state 
+                     * @returns {number}
+                     */
+                    function speedForState(state) {
                         switch (state) {
                             case 'Walk':
                                 return 1.0;
@@ -358,7 +379,7 @@ class LocomotionExample {
                     const currentPosition = new pc.Vec3(0, 0, 0);
 
                     // update code called every frame
-                    Locomotion.prototype.update = function (dt: number) {
+                    Locomotion.prototype.update = function (/** @type {number} */ dt) {
                         if (characterEntity.anim.getInteger('speed')) {
                             // Update position if target position is not the same as entity position. Base the movement speed on the current state
                             // Move the character along X & Z axis based on click target position & make character face click direction
@@ -392,5 +413,6 @@ class LocomotionExample {
         }
     }
 }
-
-export default LocomotionExample;
+export {
+    LocomotionExample
+};

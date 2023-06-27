@@ -1,15 +1,19 @@
-import React from 'react';
-import * as pc from '../../../../';
+import * as React from 'react';
+import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
 
 class LayerMasksExample {
     static CATEGORY = 'Animation';
     static NAME = 'Layer Masks';
     static WEBGPU_ENABLED = true;
-
-    controls(data: Observer) {
+    /**
+     * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
+     * @returns {JSX.Element}
+     */
+    static controls({observer}) {
+        /*
         return <>
             <Panel headerText='Full Body Layer'>
                 <LabelGroup text='active state'>
@@ -36,19 +40,42 @@ class LayerMasksExample {
                 </LabelGroup>
             </Panel>
         </>;
+        */
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Full Body Layer' },
+                React.createElement(LabelGroup, { text: 'active state' },
+                    React.createElement(SelectInput, { options: [{ v: 'Idle', t: 'Idle' }, { v: 'Walk', t: 'Walk' }], binding: new BindingTwoWay(), link: { observer, path: 'fullBodyLayer.state' } }))),
+            React.createElement(Panel, { headerText: 'Upper Body Layer' },
+                React.createElement(LabelGroup, { text: 'active state' },
+                    React.createElement(SelectInput, { options: [{ v: 'Eager', t: 'Eager' }, { v: 'Idle', t: 'Idle' }, { v: 'Dance', t: 'Dance' }], binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.state' } })),
+                React.createElement(LabelGroup, { text: 'blend type' },
+                    React.createElement(SelectInput, { options: [{ v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' }, { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }], value: pc.ANIM_LAYER_ADDITIVE, binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.blendType' } })),
+                React.createElement(LabelGroup, { text: 'use mask' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.useMask' } }))),
+            React.createElement(Panel, { headerText: 'Options' },
+                React.createElement(LabelGroup, { text: 'blend' },
+                    React.createElement(SliderInput, { min: 0.01, max: 0.99, binding: new BindingTwoWay(), link: { observer, path: 'options.blend' }, value: 0.5 })),
+                React.createElement(LabelGroup, { text: 'skeleton' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'options.skeleton' } }))));       
     }
 
-
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @param {any} data 
+     * @returns {void}
+     */
+    example(canvas, deviceType, data) {
 
         const assets = {
-            'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-            'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
-            'idleEagerAnim': new pc.Asset('idleEagerAnim', 'container', { url: '/static/assets/animations/bitmoji/idle-eager.glb' }),
-            'walkAnim': new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-            'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
+            model        : new pc.Asset('model'            , 'container', { url: assetPath + 'models/bitmoji.glb' }),
+            idleAnim     : new pc.Asset('idleAnim'         , 'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
+            idleEagerAnim: new pc.Asset('idleEagerAnim'    , 'container', { url: assetPath + 'animations/bitmoji/idle-eager.glb' }),
+            walkAnim     : new pc.Asset('walkAnim'         , 'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
+            danceAnim    : new pc.Asset('danceAnim'        , 'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
+            helipad      : new pc.Asset('helipad-env-atlas', 'texture'  , { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            bloom        : new pc.Asset('bloom'            , 'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
         };
 
         const gfxOptions = {
@@ -57,7 +84,7 @@ class LayerMasksExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -190,7 +217,7 @@ class LayerMasksExample {
                 upperBodyLayer.assignAnimation('Dance', danceTrack);
 
                 // respond to changes in the data object made by the control panel
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, /** @type {any} */ value) => {
                     if (path === 'fullBodyLayer.state') {
                         modelEntity.anim.baseLayer.transition(value, 0.4);
                     }
@@ -215,9 +242,13 @@ class LayerMasksExample {
                         upperBodyLayer.weight = value;
                     }
                 });
-
-                const drawSkeleton = (entity: pc.Entity, color: pc.Color) => {
-                    entity.children.forEach((c: pc.Entity) => {
+                /**
+                 * 
+                 * @param {pc.Entity} entity 
+                 * @param {pc.Color} color 
+                 */
+                const drawSkeleton = (entity, color) => {
+                    entity.children.forEach((/** @type {pc.Entity} */ c) => {
                         const target = modelEntity.anim._targets[entity.path + '/graph/localPosition'];
                         if (target) {
                             app.drawLine(entity.getPosition(), c.getPosition(), new pc.Color(target.getWeight(0), 0, target.getWeight(1), 1), false);
@@ -237,4 +268,6 @@ class LayerMasksExample {
         });
     }
 }
-export default LayerMasksExample;
+export {
+    LayerMasksExample
+};

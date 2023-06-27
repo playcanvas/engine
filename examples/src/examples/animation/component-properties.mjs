@@ -1,5 +1,5 @@
-import React from 'react';
-import * as pc from '../../../../';
+import * as React from 'react';
+import * as pc from 'playcanvas';
 
 import { Button } from '@playcanvas/pcui/react';
 
@@ -8,16 +8,36 @@ class ComponentPropertiesExample {
     static NAME = 'Component Properties';
     static WEBGPU_ENABLED = true;
 
-    controls(data: any) {
+    /**
+     * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
+     * @returns {JSX.Element}
+     */
+    static controls({observer}) {
+        /*
         return <>
             <Button text='Flash' onClick={() => {
                 data.set('flash', !data.get('flash'));
             }}/>
         </>;
+        */
+        return React.createElement(React.Fragment, null,
+            React.createElement(Button, {
+                text: 'Flash',
+                onClick: () => {
+                    observer.set('flash', !observer.get('flash'));
+                }
+            })
+        );
     }
 
-
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @param {any} data 
+     * @returns {void}
+     */
+    example(canvas, deviceType, data) {
 
         const assets = {
             'playcanvasGreyTexture': new pc.Asset('playcanvasGreyTexture', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
@@ -28,7 +48,7 @@ class ComponentPropertiesExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -289,4 +309,6 @@ class ComponentPropertiesExample {
     }
 }
 
-export default ComponentPropertiesExample;
+export {
+    ComponentPropertiesExample
+};

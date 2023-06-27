@@ -1,114 +1,154 @@
-import React, { useEffect } from 'react';
-import * as pc from '../../../../';
-
+import React, { createRef, Component } from 'react';
+import * as pc from 'playcanvas';
+import { fragment, jsx } from './jsx.mjs';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
+/**
+ * @todo Add props
+ */
+export class JsxControls extends Component {
+    position = new pc.Vec2();
+    /** @type {React.RefObject<HTMLCanvasElement>} */
+    refCanvas = createRef();
+    //constructor(props) {
+    //    console.log("constructor(props)", app)
+    //    super(props)
+    //}
+    mouseEvent(e) {
+        //console.log("mouseEvent", e);
+        const { position, modelEntity, width } = this;
+        if (e.targetTouches) {
+            const offset = canvas.getBoundingClientRect();
+            position.set(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
+        } else {
+            if (e.buttons) {
+                position.set(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
+            } else {
+                return;
+            }
+        }
+        position.y *= -1.0;
+        modelEntity.anim.setFloat('posX', position.x);
+        modelEntity.anim.setFloat('posY', position.y);
+        this.drawPosition();
+    }
+    get canvas() {
+        return this.refCanvas.current;
+    }
+    /** @type {pc.Entity} */
+    get modelEntity() {
+        return this.app.root.findByName('model');
+    }
+    /** @type {pc.Application | undefined} */
+    get app() {
+        return window.top?.pc.app;
+    }
+    /** @type {number} */
+    get width() {
+        return window.top.controlPanel.offsetWidth;
+    }
+    /** @type {number} */
+    get height() {
+        return this.width;
+    }
+    drawPosition() {
+        const { canvas, modelEntity, width, height } = this;
+        const ctx = canvas.getContext('2d');
+        const halfWidth = Math.floor(width / 2);
+        const halfHeight = Math.floor(height / 2);
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#B1B8BA';
+        ctx.fillRect(halfWidth, 0, 1, height);
+        ctx.fillRect(0, halfHeight, width, 1);
+        ctx.fillStyle = '#232e30';
+        // @ts-ignore engine-tsd
+        modelEntity.anim.baseLayer._controller._states.Emote.animations.forEach((animNode) => {
+            if (animNode.point) {
+                const posX = (animNode.point.x + 1) * halfWidth;
+                const posY = (animNode.point.y * -1 + 1) * halfHeight;
+                const width = 8;
+                const height = 8;
+                ctx.fillStyle = "#ffffff80";
+                ctx.beginPath();
+                ctx.arc(posX, posY, halfWidth * 0.5 * animNode.weight, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.fillStyle = '#283538';
+                ctx.beginPath();
+                ctx.moveTo(posX, posY - height / 2);
+                ctx.lineTo(posX - width / 2, posY);
+                ctx.lineTo(posX, posY + height / 2);
+                ctx.lineTo(posX + width / 2, posY);
+                ctx.closePath();
+                ctx.fill();
+            }
+        });
+        ctx.fillStyle = '#F60';
+        ctx.beginPath();
+        ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * -1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#283538';
+        ctx.stroke();
+    }
+    onAppStart() {
+        const { canvas } = this;
+        // @ts-ignore engine-tsd
+        const dim = window.top.controlPanel.offsetWidth + "px";
+        canvas.setAttribute('style', 'width: ' + dim + '; height: ' + dim + ';');
+        canvas.setAttribute('width', dim);
+        canvas.setAttribute('height', dim);
+        this.drawPosition();
+    }
+    componentDidMount() {
+        const { canvas, app } = this;
+        // console.log("componentDidMount()", { canvas, app });
+        canvas.addEventListener('mousemove',  this.mouseEvent.bind(this));
+        canvas.addEventListener('mousedown',  this.mouseEvent.bind(this));
+        canvas.addEventListener('touchmove',  this.mouseEvent.bind(this));
+        canvas.addEventListener('touchstart', this.mouseEvent.bind(this));
+        if (!app) {
+            console.warn("no app");
+            return;
+        }
+        this.app.on('start', this.onAppStart.bind(this));
+    }
+    render() {
+        return fragment(
+            jsx("canvas", {id: "2d-blend-control", ref: this.refCanvas})
+        );
+    }
+}
 class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
     static WEBGPU_ENABLED = true;
-
-    controls() {
-        useEffect(() => {
-            // @ts-ignore engine-tsd
-            const pc = window.top?.pc;
-            if (!pc) return;
-            pc.app.on('start', () => {
-                const canvas : any = window.top.document.getElementById('2d-blend-control');
-                // @ts-ignore engine-tsd
-                const modelEntity: pc.Entity = pc.app.root.findByName('model');
-                const width = (window as any).top.controlPanel.offsetWidth;
-                const height = width;
-                const halfWidth = Math.floor(width / 2);
-                const halfHeight = Math.floor(height / 2);
-                canvas.setAttribute('style', 'width: ' + width + 'px; height: ' + height + 'px;');
-                canvas.setAttribute('width', width);
-                canvas.setAttribute('height', height);
-                const ctx = canvas.getContext('2d');
-                let position = new pc.Vec2(0);
-                const drawPosition = (ctx: any) => {
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.fillStyle = '#B1B8BA';
-                    ctx.fillRect(halfWidth, 0, 1, height);
-                    ctx.fillRect(0, halfHeight, width, 1);
-                    ctx.fillStyle = '#232e30';
-                    // @ts-ignore engine-tsd
-                    modelEntity.anim.baseLayer._controller._states.Emote.animations.forEach((animNode: any) => {
-                        if (animNode.point) {
-                            const posX = (animNode.point.x + 1) * halfWidth;
-                            const posY = (animNode.point.y * -1 + 1) * halfHeight;
-                            const width = 8;
-                            const height = 8;
-
-                            ctx.fillStyle = "#ffffff80";
-                            ctx.beginPath();
-                            ctx.arc(posX, posY, halfWidth * 0.5 * animNode.weight, 0, 2 * Math.PI);
-                            ctx.fill();
-
-                            ctx.fillStyle = '#283538';
-                            ctx.beginPath();
-                            ctx.moveTo(posX, posY - height / 2);
-                            ctx.lineTo(posX - width / 2, posY);
-                            ctx.lineTo(posX, posY + height / 2);
-                            ctx.lineTo(posX + width / 2, posY);
-                            ctx.closePath();
-                            ctx.fill();
-                        }
-                    });
-                    ctx.fillStyle = '#F60';
-                    ctx.beginPath();
-                    ctx.arc((modelEntity.anim.getFloat('posX') + 1) * halfWidth, (modelEntity.anim.getFloat('posY') * -1 + 1) * halfHeight, 5, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.fillStyle = '#283538';
-                    ctx.stroke();
-                };
-                drawPosition(ctx);
-                const mouseEvent = (e: any) => {
-                    if (e.targetTouches) {
-                        const offset = canvas.getBoundingClientRect();
-                        position = new pc.Vec2(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
-                    } else {
-                        if (e.buttons) {
-                            position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
-                        } else {
-                            return;
-                        }
-                    }
-                    position.y *= -1.0;
-                    modelEntity.anim.setFloat('posX', position.x);
-                    modelEntity.anim.setFloat('posY', position.y);
-                    drawPosition(ctx);
-                };
-                canvas.addEventListener('mousemove', mouseEvent);
-                canvas.addEventListener('mousedown', mouseEvent);
-                canvas.addEventListener('touchmove', mouseEvent);
-                canvas.addEventListener('touchstart', mouseEvent);
-            });
-        });
-        return <>
-            <canvas id='2d-blend-control' />
-        </>;
-    }
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    static controls = JsxControls;
+    /**
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType
+     * @returns {void}
+     */
+    async example(canvas, deviceType) {
+        console.log("pc.ap", pc.app);
+        //await import("http://127.0.0.1/playcanvas-engine/scripts/posteffects/posteffect-bloom.js");
 
         const assets = {
-            'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-            'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
-            'walkAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-            'eagerAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle-eager.glb' }),
-            'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
+            model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
+            idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
+            walkAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
+            eagerAnim: new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle-eager.glb' }),
+            danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
+            helipad:   new pc.Asset('helipad-env-atlas', 'texture'  , { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            bloom:     new pc.Asset('bloom',             'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
         };
 
         const gfxOptions = {
             deviceTypes: [deviceType],
-            glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
+            glslangUrl: '../../../lib/glslang/glslang.js',
+            twgslUrl: '../../../lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -275,4 +315,6 @@ class BlendTrees2DCartesianExample {
     }
 }
 
-export default BlendTrees2DCartesianExample;
+export {
+    BlendTrees2DCartesianExample
+};

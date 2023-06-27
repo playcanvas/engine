@@ -1,21 +1,23 @@
-import React, { useEffect } from 'react';
-import * as pc from '../../../../';
-
+import * as React from 'react';
+import * as pc from 'playcanvas';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
+const { useEffect } = React;
 class BlendTrees2DDirectionalExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Directional';
     static WEBGPU_ENABLED = true;
-
-    controls() {
+    static controls() {
         useEffect(() => {
             // @ts-ignore engine-tsd
             const pc = window.top?.pc;
             if (!pc) return;
             pc.app.on('start', () => {
-                const canvas : any = window.top.document.getElementById('2d-blend-control');
+                const canvas /*: any*/ = document.getElementById('2d-blend-control');
                 // @ts-ignore engine-tsd
-                const modelEntity: pc.Entity = pc.app.root.findByName('model');
-                const width = (window as any).top.controlPanel.offsetWidth;
+                /** @type {pc.Entity} */
+                const modelEntity = pc.app.root.findByName('model');
+                console.log({modelEntity});
+                const width = window.top.controlPanel.offsetWidth;
                 const height = width;
                 const halfWidth = Math.floor(width / 2);
                 const halfHeight = Math.floor(height / 2);
@@ -24,7 +26,7 @@ class BlendTrees2DDirectionalExample {
                 canvas.setAttribute('height', height);
                 const ctx = canvas.getContext('2d');
                 let position = new pc.Vec2(0);
-                const drawPosition = (ctx: any) => {
+                const drawPosition = (ctx) => {
                     ctx.clearRect(0, 0, width, height);
                     ctx.fillStyle = "rgba(128, 128, 128, 0.5)";
                     ctx.fillRect(0, 0, width, height);
@@ -33,7 +35,7 @@ class BlendTrees2DDirectionalExample {
                     ctx.fillRect(0, halfHeight, width, 1);
                     ctx.fillStyle = '#232e30';
                     // @ts-ignore engine-tsd
-                    modelEntity.anim.baseLayer._controller._states.Travel.animations.forEach((animNode: any) => {
+                    modelEntity.anim?.baseLayer._controller._states.Travel.animations.forEach((animNode) => {
                         if (animNode.point) {
                             const posX = (animNode.point.x + 1) * halfWidth;
                             const posY = (animNode.point.y * -1 + 1) * halfHeight;
@@ -63,7 +65,7 @@ class BlendTrees2DDirectionalExample {
                     ctx.stroke();
                 };
                 drawPosition(ctx);
-                const mouseEvent = (e: any) => {
+                const mouseEvent = (e) => {
                     if (e.buttons) {
                         position = new pc.Vec2(e.offsetX, e.offsetY).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
                         position.y *= -1.0;
@@ -76,21 +78,28 @@ class BlendTrees2DDirectionalExample {
                 canvas.addEventListener('mousedown', mouseEvent);
             });
         });
-        return <>
-            <canvas id='2d-blend-control' />
-        </>;
+        //return <>
+        //    <canvas id='2d-blend-control' />
+        //</>;
+        return React.createElement(React.Fragment, null,
+            React.createElement("canvas", { id: '2d-blend-control' }));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
-
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
         const assets = {
-            'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-            'idleAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
-            'walkAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
-            'jogAnim': new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/run.glb' }),
-            'danceAnim': new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
+            model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
+            idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
+            walkAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
+            jogAnim:   new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/run.glb' }),
+            danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
+            helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
         };
 
         const gfxOptions = {
@@ -99,7 +108,7 @@ class BlendTrees2DDirectionalExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -269,4 +278,6 @@ class BlendTrees2DDirectionalExample {
     }
 }
 
-export default BlendTrees2DDirectionalExample;
+export {
+    BlendTrees2DDirectionalExample
+};
