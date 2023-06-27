@@ -1,8 +1,8 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class TextAutoFontSizeExample {
+class LayoutGroupExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text Auto Font Size';
+    static NAME = 'Layout Group';
     static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
@@ -39,9 +39,7 @@ class TextAutoFontSizeExample {
                 // @ts-ignore
                 pc.LayoutGroupComponentSystem,
                 // @ts-ignore
-                pc.ScrollViewComponentSystem,
-                // @ts-ignore
-                pc.ScrollbarComponentSystem
+                pc.LayoutChildComponentSystem
             ];
             createOptions.resourceHandlers = [
                 // @ts-ignore
@@ -83,46 +81,66 @@ class TextAutoFontSizeExample {
                 });
                 app.root.addChild(screen);
 
-                // Create a container entity with an image component
-                const autoFontSizeContainer = new pc.Entity();
-                autoFontSizeContainer.addComponent("element", {
-                    pivot: new pc.Vec2(0.5, 0.5),
-                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-                    width: 220,
-                    height: 50,
-                    color: new pc.Color(60 / 255, 60 / 255, 60 / 255),
-                    type: pc.ELEMENTTYPE_IMAGE
+                // Create Layout Group Entity
+                const group = new pc.Entity();
+                group.addComponent("element", {
+                    // a Layout Group needs a 'group' element component
+                    type: pc.ELEMENTTYPE_GROUP,
+                    anchor: [0.5, 0.5, 0.5, 0.5],
+                    pivot: [0.5, 0.5],
+                    // the element's width and height dictate the group's bounds
+                    width: 350,
+                    height: 150
                 });
-                // Create a text element with auto font size, and place it inside the container
-                const autoFontSizeText = new pc.Entity();
-                autoFontSizeText.addComponent("element", {
-                    // place the text taking the entire parent space
-                    pivot: new pc.Vec2(0.5, 0.5),
-                    anchor: new pc.Vec4(0, 0, 1, 1),
-                    margin: new pc.Vec4(0, 0, 0, 0),
-                    fontAsset: assets.font.id,
-                    autoWidth: false,
-                    autoHeight: false,
-                    autoFitWidth: true,
-                    autoFitHeight: true,
-                    minFontSize: 10,
-                    maxFontSize: 100,
-                    text: "Auto font size!",
-                    type: pc.ELEMENTTYPE_TEXT
+                group.addComponent("layoutgroup", {
+                    orientation: pc.ORIENTATION_HORIZONTAL,
+                    spacing: new pc.Vec2(10, 10),
+                    // fit_both for width and height, making all child elements take the entire space
+                    widthFitting: pc.FITTING_BOTH,
+                    heightFitting: pc.FITTING_BOTH,
+                    // wrap children
+                    wrap: true
                 });
-                screen.addChild(autoFontSizeContainer);
-                autoFontSizeContainer.addChild(autoFontSizeText);
+                screen.addChild(group);
 
-                // update the container's size to showcase the auto-sizing feature
-                let time = 0;
-                app.on('update', (dt) => {
-                    time += dt;
-                    autoFontSizeContainer.element.width = 280 + (Math.sin(time) * 80);
-                    autoFontSizeContainer.element.height = 60 + (Math.sin(time * 0.5) * 50);
-                });
+                // create 15 children to show off the layout group
+                for (let i = 0; i < 15; ++i) {
+                    // create a random-colored panel
+                    const child = new pc.Entity();
+                    child.addComponent("element", {
+                        anchor: [0.5, 0.5, 0.5, 0.5],
+                        pivot: [0.5, 0.5],
+                        color: new pc.Color(Math.random(), Math.random(), Math.random()),
+                        type: pc.ELEMENTTYPE_IMAGE
+                    });
+                    child.addComponent("layoutchild", {
+                        excludeFromLayout: false
+                    });
+                    group.addChild(child);
+
+                    // add a text label
+                    const childLabel = new pc.Entity();
+                    childLabel.addComponent("element", {
+                        // center-position and attach to the borders of parent
+                        // meaning this text element will scale along with parent
+                        anchor: [0, 0, 1, 1],
+                        margin: [0, 0, 0, 0],
+                        pivot: [0.5, 0.5],
+                        color: new pc.Color(1, 1, 1),
+                        fontAsset: assets.font.id,
+                        text: `${i + 1}`,
+                        type: pc.ELEMENTTYPE_TEXT,
+                        // auto font size
+                        autoWidth: false,
+                        autoHeight: false,
+                        autoFitWidth: true,
+                        autoFitHeight: true
+                    });
+                    child.addChild(childLabel);
+                }
             });
         });
     }
 }
 
-export default TextAutoFontSizeExample;
+export default LayoutGroupExample;

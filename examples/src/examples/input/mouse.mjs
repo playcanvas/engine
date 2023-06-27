@@ -1,12 +1,12 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class KeyboardExample {
+
+class MouseExample {
     static CATEGORY = 'Input';
-    static NAME = 'Keyboard';
+    static NAME = 'Mouse';
     static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
-
         const assets = {
             'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
@@ -65,13 +65,16 @@ class KeyboardExample {
                 const entity = assets.statue.resource.instantiateRenderEntity();
                 app.root.addChild(entity);
 
-                const keyboard = new pc.Keyboard(document.body);
-                app.on("update", function () {
-                    if (keyboard.isPressed(pc.KEY_LEFT)) {
-                        entity.rotate(0, -1, 0);
-                    }
-                    if (keyboard.isPressed(pc.KEY_RIGHT)) {
-                        entity.rotate(0, 1, 0);
+                const mouse = new pc.Mouse(document.body);
+
+                let x = 0;
+                const y = 0;
+
+                mouse.on('mousemove', function (event) {
+                    if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
+                        x += event.dx;
+
+                        entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
                     }
                 });
             });
@@ -79,4 +82,4 @@ class KeyboardExample {
     }
 }
 
-export default KeyboardExample;
+export default MouseExample;

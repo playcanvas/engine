@@ -1,8 +1,8 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
-class ArHitTestExample {
+class ArBasicExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Hit Test';
+    static NAME = 'AR Basic';
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
@@ -20,12 +20,6 @@ class ArHitTestExample {
             touch: new pc.TouchDevice(canvas),
             keyboard: new pc.Keyboard(window),
             graphicsDeviceOptions: { alpha: true }
-        });
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
         });
 
         // use device pixel ratio
@@ -49,12 +43,24 @@ class ArHitTestExample {
         l.translate(0, 10, 0);
         app.root.addChild(l);
 
-        const target = new pc.Entity();
-        target.addComponent("render", {
-            type: "cylinder"
-        });
-        target.setLocalScale(0.5, 0.01, 0.5);
-        app.root.addChild(target);
+
+        const createCube = function (x: number, y: number, z: number) {
+            const cube = new pc.Entity();
+            cube.addComponent("render", {
+                type: "box"
+            });
+            cube.setLocalScale(0.5, 0.5, 0.5);
+            cube.translate(x * 0.5, y, z * 0.5);
+            app.root.addChild(cube);
+        };
+
+        // create a grid of cubes
+        const SIZE = 4;
+        for (let x = 0; x < SIZE; x++) {
+            for (let y = 0; y < SIZE; y++) {
+                createCube(2 * x - SIZE, 0.25, 2 * y - SIZE);
+            }
+        }
 
         if (app.xr.supported) {
             const activate = function () {
@@ -98,46 +104,16 @@ class ArHitTestExample {
 
             app.xr.on('start', function () {
                 message("Immersive AR session has started");
-
-                if (!app.xr.hitTest.supported)
-                    return;
-
-                app.xr.hitTest.start({
-                    entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
-                    callback: function (err, hitTestSource) {
-                        if (err) {
-                            message("Failed to start AR hit test");
-                            return;
-                        }
-
-                        hitTestSource.on('result', function (position, rotation) {
-                            target.setPosition(position);
-                            target.setRotation(rotation);
-                        });
-                    }
-                });
             });
             app.xr.on('end', function () {
                 message("Immersive AR session has ended");
             });
             app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-                if (available) {
-                    if (app.xr.hitTest.supported) {
-                        message("Touch screen to start AR session and look at the floor or walls");
-                    } else {
-                        message("AR Hit Test is not supported");
-                    }
-                } else {
-                    message("Immersive AR is unavailable");
-                }
+                message("Immersive AR is " + (available ? 'available' : 'unavailable'));
             });
 
             if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
                 message("Immersive AR is not available");
-            } else if (!app.xr.hitTest.supported) {
-                message("AR Hit Test is not supported");
-            } else {
-                message("Touch screen to start AR session and look at the floor or walls");
             }
         } else {
             message("WebXR is not supported");
@@ -145,4 +121,4 @@ class ArHitTestExample {
     }
 }
 
-export default ArHitTestExample;
+export default ArBasicExample;

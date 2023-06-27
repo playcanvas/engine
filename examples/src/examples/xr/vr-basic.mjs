@@ -1,4 +1,4 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
 class VrBasicExample {
     static CATEGORY = 'XR';

@@ -1,4 +1,4 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
 class TextLocalizationExample {
     static CATEGORY = 'User Interface';
