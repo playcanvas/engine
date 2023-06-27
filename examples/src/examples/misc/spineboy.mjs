@@ -1,17 +1,44 @@
-import * as pc from '../../../../';
+import * as pc_es6 from 'playcanvas';
+import { assetPath } from '../../assetPath.mjs';
+
+const pc = { ...pc_es6 };
+
+pc.ComponentSystem = function(...args) {
+    const self = new pc_es6.ComponentSystem(...args);
+    Object.assign(this, self);
+    //Object.setPrototypeOf(this, pc_es6.ComponentSystem.prototype);
+    Object.setPrototypeOf(this, self);
+    //debugger;
+    //return self;
+}
+pc.Component = function(...args) {
+    const self = new pc_es6.Component(...args);
+    Object.assign(this, self);
+    //Object.setPrototypeOf(this, pc_es6.Component.prototype);
+    Object.setPrototypeOf(this, self);
+    //return self;
+}
+globalThis.pc = pc;
+//debugger;
 
 class SpineboyExample {
     static CATEGORY = 'Misc';
     static NAME = 'Spineboy';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         const assets = {
-            'skeleton': new pc.Asset('skeleton', 'json', { url: '/static/assets/spine/spineboy-pro.json' }),
-            'atlas': new pc.Asset('atlas', 'text', { url: '/static/assets/spine/spineboy-pro.atlas' }),
-            'texture': new pc.Asset('spineboy-pro.png', 'texture', { url: '/static/assets/spine/spineboy-pro.png' }),
-            'spinescript': new pc.Asset('spinescript', 'script', { url: '/static/scripts/spine/playcanvas-spine.3.8.js' })
+            'skeleton'   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
+            'atlas'      : new pc.Asset('atlas'           , 'text'   , { url: assetPath + '/spine/spineboy-pro.atlas' }),
+            'texture'    : new pc.Asset('spineboy-pro.png', 'texture', { url: assetPath + '/spine/spineboy-pro.png' }),
+            //'spinescript': new pc.Asset('spinescript'     , 'script' , { url:             '/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js' })
         };
 
         const gfxOptions = {
@@ -20,7 +47,7 @@ class SpineboyExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -50,9 +77,12 @@ class SpineboyExample {
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
             const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-            assetListLoader.load(() => {
+            assetListLoader.load(async () => {
 
                 app.start();
+
+                globalThis.pc = pc;
+                await import("/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js");
 
                 // create camera entity
                 const camera = new pc.Entity('camera');
@@ -61,8 +91,13 @@ class SpineboyExample {
                 });
                 app.root.addChild(camera);
                 camera.translateLocal(0, 7, 20);
-
-                const createSpineInstance = (position: pc.Vec3, scale: pc.Vec3, timeScale: number) => {
+                /**
+                 * 
+                 * @param {pc.Vec3} position 
+                 * @param {pc.Vec3} scale 
+                 * @param {number} timeScale 
+                 */
+                const createSpineInstance = (position, scale, timeScale) => {
 
                     const spineEntity = new pc.Entity();
                     spineEntity.addComponent("spine", {
@@ -76,6 +111,7 @@ class SpineboyExample {
 
                     // play spine animation
                     // @ts-ignore
+                    debugger;
                     spineEntity.spine.state.setAnimation(0, "portal", true);
 
                     // @ts-ignore
@@ -91,5 +127,6 @@ class SpineboyExample {
         });
     }
 }
-
-export default SpineboyExample;
+export {
+    SpineboyExample
+};

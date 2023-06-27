@@ -1,13 +1,18 @@
-import * as pc from '../../../../';
-
+import * as pc from 'playcanvas';
 
 class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
     static ENGINE = 'PERFORMANCE';
     static MINISTATS = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string, pcx: any): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     * @param {any} pcx 
+     * @returns {void}
+     */
+    example(canvas, deviceType, pcx) {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
@@ -126,8 +131,14 @@ class MiniStatsExample {
         camera.setLocalPosition(20, 10, 10);
         camera.lookAt(pc.Vec3.ZERO);
 
-        // helper function to create a primitive with shape type, position, scale
-        function createPrimitive(primitiveType: string, position: number | pc.Vec3, scale: number | pc.Vec3) {
+        /**
+         * helper function to create a primitive with shape type, position, scale
+         * @param {string} primitiveType 
+         * @param {number | pc.Vec3} position 
+         * @param {number | pc.Vec3} scale 
+         * @returns {pc.Entity}
+         */
+        function createPrimitive(primitiveType, position, scale) {
             // create material of random color
             const material = new pc.StandardMaterial();
             material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
@@ -148,14 +159,22 @@ class MiniStatsExample {
         }
 
         // list of all created engine resources
-        const entities: any[] = [];
-        const vertexBuffers: any[] = [];
-        const textures: any[] = [];
+        /** @type {any[]} */
+        const entities = [];
+        /** @type {any[]} */
+        const vertexBuffers = [];
+        /** @type {any[]} */
+        const textures = [];
 
         // update function called every frame
         let adding = true;
         const step = 10, max = 2000;
-        let entity: pc.GraphNode, vertexBuffer: pc.VertexBuffer, texture: { destroy: () => void; };
+        /** @type {pc.GraphNode} */
+        let entity;
+        /** @type {pc.VertexBuffer} */
+        let vertexBuffer;
+        /** @type {{ destroy: () => void}} */
+        let texture;
         app.on("update", function () {
 
             // execute some tasks multiple times per frame
@@ -226,5 +245,6 @@ class MiniStatsExample {
         });
     }
 }
-
-export default MiniStatsExample;
+export {
+    MiniStatsExample
+};

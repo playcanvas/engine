@@ -1,11 +1,16 @@
-import * as pc from '../../../../';
+import * as pc from 'playcanvas';
 
 class HelloWorldExample {
     static CATEGORY = 'Misc';
     static NAME = 'Hello World';
     static WEBGPU_ENABLED = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType
+     * @returns {void}
+     */
+    example(canvas, deviceType) {
 
         const gfxOptions = {
             deviceTypes: [deviceType],
@@ -13,7 +18,7 @@ class HelloWorldExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */ device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -63,9 +68,10 @@ class HelloWorldExample {
             light.setEulerAngles(45, 0, 0);
 
             // rotate the box according to the delta time since the last frame
-            app.on('update', (dt: number) => box.rotate(10 * dt, 20 * dt, 30 * dt));
+            app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
         });
     }
 }
-
-export default HelloWorldExample;
+export {
+    HelloWorldExample
+};
