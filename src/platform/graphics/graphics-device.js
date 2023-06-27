@@ -244,6 +244,14 @@ class GraphicsDevice extends EventHandler {
      */
     stencilBack = new StencilParameters();
 
+    /**
+     * The dynamic buffer manager.
+     *
+     * @type {import('./dynamic-buffers.js').DynamicBuffers}
+     * @ignore
+     */
+    dynamicBuffers;
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -355,6 +363,9 @@ class GraphicsDevice extends EventHandler {
 
         this.quadVertexBuffer?.destroy();
         this.quadVertexBuffer = null;
+
+        this.dynamicBuffers?.destroy();
+        this.dynamicBuffers = null;
     }
 
     onDestroyShader(shader) {

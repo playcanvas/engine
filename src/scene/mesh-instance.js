@@ -442,7 +442,7 @@ class MeshInstance {
             // mesh uniform buffer
             const ubFormat = shader.meshUniformBufferFormat;
             Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
 
             // mesh bind group
             const bindGroupFormat = shader.meshBindGroupFormat;

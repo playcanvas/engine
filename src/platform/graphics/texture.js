@@ -47,6 +47,13 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    /**
+     * A render version used to track the last time the texture properties requiring bind group
+     * to be updated were changed.
+     *
+     * @type {number}
+     * @ignore
+     */
     renderVersionDirty = 0;
 
     /**

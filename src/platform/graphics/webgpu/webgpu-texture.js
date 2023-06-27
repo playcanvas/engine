@@ -408,10 +408,10 @@ class WebgpuTexture {
             depthOrArrayLayers: 1   // single layer
         };
 
-        // submit existing commands before copying to preserve order
+        // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
 
-        Debug.trace(TRACEID_RENDER_QUEUE, `CopyImage2Tex: mip:${mipLevel} face:${face} ${this.texture.name}`);
+        Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
@@ -457,10 +457,10 @@ class WebgpuTexture {
             depthOrArrayLayers: 1
         };
 
-        // submit existing commands before copying to preserve order
+        // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
 
-        Debug.trace(TRACEID_RENDER_QUEUE, `writeTex: mip:${mipLevel} face:${face} ${this.texture.name}`);
+        Debug.trace(TRACEID_RENDER_QUEUE, `WRITE-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         wgpu.queue.writeTexture(dest, data, dataLayout, size);
     }
 }
