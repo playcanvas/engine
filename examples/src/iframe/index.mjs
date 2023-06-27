@@ -2,7 +2,6 @@ import * as observer from '@playcanvas/observer';
 import * as pcuiReal from '@playcanvas/pcui';
 import * as pcui from '@playcanvas/pcui/react';
 import React from 'react';
-//import 'pc-alias';
 import * as pcx from 'playcanvas-extras';
 window.pcuiReal = pcuiReal;
 window.observer = observer;

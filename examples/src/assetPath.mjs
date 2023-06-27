@@ -25,3 +25,18 @@ export function getPlayCanvasTypes() {
     return assetPath;
 }
 export const pcTypes = getPlayCanvasTypes();
+/**
+ * @example
+ * console.log(getScriptsPath());
+ * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/../scripts/'
+ * @returns {string}
+ */
+export function getScriptsPath() {
+    const { href } = location;
+    const i = href.lastIndexOf("/src/");
+    const assetPath = href.substring(0, i) + "/../scripts/";
+    return assetPath;
+}
+export const scriptsPath = getScriptsPath();
+// todo
+export const ammoPath = "http://127.0.0.1/playcanvas-engine/examples/src/lib/ammo/";
