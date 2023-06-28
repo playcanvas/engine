@@ -520,10 +520,10 @@ class LitShader {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (!isVsm) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
-            const useDepthComponent = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 ||
+            const exportDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 ||
                 (lightType === LIGHTTYPE_OMNI && options.clusteredLightingEnabled);
 
-            if (useDepthComponent) {
+            if (exportDepth) {
                 code += "    gl_FragDepth = depth;\n";
             } else {
                 code += "    gl_FragColor.r = depth;\n";
