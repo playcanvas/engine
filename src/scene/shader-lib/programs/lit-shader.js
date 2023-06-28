@@ -520,9 +520,16 @@ class LitShader {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (!isVsm) {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
+            const useDepthComponent = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 ||
+                (lightType === LIGHTTYPE_OMNI && options.clusteredLightingEnabled);
 
+            if (useDepthComponent) {
+                code += "    gl_FragDepth = depth;\n";
+            } else {
+                code += "    gl_FragColor.r = depth;\n";
+            }
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (shadowType === SHADOW_PCSS || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled)) {
+            if (shadowType === SHADOW_PCSS && (lightType !== LIGHTTYPE_OMNI && options.clusteredLightingEnabled)) {
                 code += "   gl_FragColor.r = depth;\n";
             } else if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.supportsDepthShadow) {
                 code += "    gl_FragDepth = depth;\n";
