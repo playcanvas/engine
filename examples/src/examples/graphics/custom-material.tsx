@@ -113,7 +113,7 @@ class CustomMaterialExample {
                 options.clusteredLightingEnabled = app.scene.clusteredLightingEnabled;
                 material.litOptions = options;
 
-                const customLitArguments = `
+                const argumentsChunk = `
                 LitShaderArguments evaluateFrontend() {
                     LitShaderArguments args;
                     args.emission = vec3(0, 0, 0);
@@ -127,7 +127,7 @@ class CustomMaterialExample {
                     args.opacity = 1.0;
                     return args;
                 }`;
-                material.customLitArguments = customLitArguments;
+                material.argumentsChunk = argumentsChunk;
                 material.update();
 
                 // create primitive

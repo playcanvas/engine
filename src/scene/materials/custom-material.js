@@ -21,7 +21,7 @@ class CustomMaterial extends Material {
         super();
 
         this._litOptions = new LitOptions();
-        this._customLitArguments = "";
+        this._argumentsChunk = "";
     }
 
     set litOptions(value) {
@@ -32,12 +32,12 @@ class CustomMaterial extends Material {
         return this._litOptions;
     }
 
-    set customLitArguments(value) {
-        this._customLitArguments = value;
+    set argumentsChunk(value) {
+        this._argumentsChunk = value;
     }
 
-    get customLitArguments() {
-        return this._customLitArguments;
+    get argumentsChunk() {
+        return this._argumentsChunk;
     }
 
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
@@ -63,7 +63,7 @@ class CustomMaterial extends Material {
         collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
 
         this._litOptions.lights = lightsFiltered;
-        options.customLitArguments = this._customLitArguments;
+        options.customLitArguments = this._argumentsChunk;
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 
