@@ -197,7 +197,7 @@ class ContactHardeningShadowsExample {
                         range: 150,
                         shadowResolution: 2048,
                         shadowDistance: 100,
-                        lightSize: data.get('script.area.size'),
+                        penumbraSize: data.get('script.area.size'),
                         shadowType: data.get('script.area.shadowType'),
                         intensity: data.get('script.area.intensity'),
                         falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
@@ -233,7 +233,7 @@ class ContactHardeningShadowsExample {
                         color: new pc.Color(1, 1, 1),
                         castShadows: true,
                         numCascades: 1,
-                        lightSize: data.get('script.directional.size'),
+                        penumbraSize: data.get('script.directional.size'),
                         shadowType: data.get('script.directional.shadowType'),
                         intensity: data.get('script.directional.intensity'),
                         shadowBias: 0.5,
@@ -249,7 +249,7 @@ class ContactHardeningShadowsExample {
                         type: "omni",
                         color: new pc.Color(1, 0.25, 0.25),
                         range: 25,
-                        lightSize: data.get('script.point.size'),
+                        penumbraSize: data.get('script.point.size'),
                         shadowType: data.get('script.point.shadowType'),
                         intensity: data.get('script.point.intensity'),
                         castShadows: true,
@@ -308,7 +308,7 @@ class ContactHardeningShadowsExample {
                                 brightMaterial.update();
                                 break;
                             case 'script.area.size':
-                                areaLight.light.lightSize = value;
+                                areaLight.light.penumbraSize = value;
                                 break;
                             case 'script.area.shadowType':
                                 areaLight.light.shadowType = parseInt(value);
@@ -320,7 +320,7 @@ class ContactHardeningShadowsExample {
                                 directionalLight.light.intensity = value;
                                 break;
                             case 'script.directional.size':
-                                directionalLight.light.lightSize = value;
+                                directionalLight.light.penumbraSize = value;
                                 break;
                             case 'script.directional.shadowType':
                                 directionalLight.light.shadowType = parseInt(value);
@@ -332,7 +332,7 @@ class ContactHardeningShadowsExample {
                                 lightOmni.light.intensity = value;
                                 break;
                             case 'script.point.size':
-                                lightOmni.light.lightSize = value;
+                                lightOmni.light.penumbraSize = value;
                                 break;
                             case 'script.point.shadowType':
                                 lightOmni.light.shadowType = parseInt(value);

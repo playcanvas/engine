@@ -173,6 +173,7 @@ class ShadowRendererDirectional {
             // calculate depth range of the caster's AABB from the point of view of the shadow camera
             shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
             const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
+            lightRenderData.depthRangeCompensation = (depthRange.max - depthRange.min) / light.shadowDistance;
 
             // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
             // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.

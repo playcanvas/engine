@@ -194,6 +194,8 @@ class ResourceLoader {
     _onSuccess(key, result, extra) {
         if (result !== null) {
             this._cache[key] = result;
+        } else {
+            delete this._cache[key];
         }
         for (let i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);

@@ -1,3 +1,4 @@
+import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 
@@ -5,7 +6,9 @@ import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
+import { DebugGraphics } from '../debug-graphics.js';
 import { RenderTarget } from '../render-target.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
@@ -18,9 +21,8 @@ import { WebgpuUniformBuffer } from './webgpu-uniform-buffer.js';
 import { WebgpuVertexBuffer } from './webgpu-vertex-buffer.js';
 import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
 import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
-import { DebugGraphics } from '../debug-graphics.js';
 import { WebgpuDebug } from './webgpu-debug.js';
-import { StencilParameters } from '../stencil-parameters.js';
+import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -72,6 +74,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     commandEncoder;
 
+    /**
+     * Command buffers scheduled for execution on the GPU.
+     *
+     * @type {GPUCommandBuffer[]}
+     * @private
+     */
+    commandBuffers = [];
+
+    /**
+     * @type {GPUSupportedLimits}
+     * @private
+     */
+    limits;
+
     constructor(canvas, options = {}) {
         super(canvas, options);
         options = this.initOptions;
@@ -98,6 +114,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.disableParticleSystem = true;
 
         const limits = this.gpuAdapter.limits;
+        this.limits = limits;
 
         this.precision = 'highp';
         this.maxPrecision = 'highp';
@@ -165,11 +182,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         const wasmPath = twgslUrl.replace('.js', '.wasm');
         this.twgsl = await twgsl(wasmPath);
 
+        /** @type {GPURequestAdapterOptions} */
+        const adapterOptions = {
+            powerPreference: this.initOptions.powerPreference !== 'default' ? this.initOptions.powerPreference : undefined
+        };
+
         /**
          * @type {GPUAdapter}
          * @private
          */
-        this.gpuAdapter = await window.navigator.gpu.requestAdapter();
+        this.gpuAdapter = await window.navigator.gpu.requestAdapter(adapterOptions);
 
         // optional features:
         //      "depth-clip-control",
@@ -196,17 +218,24 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
 
-        /**
-         * @type {GPUDevice}
-         * @private
-         */
-        this.wgpu = await this.gpuAdapter.requestDevice({
+        /** @type {GPUDeviceDescriptor} */
+        const deviceDescr = {
             requiredFeatures,
 
             // Note that we can request limits, but it does not seem to be supported at the moment
             requiredLimits: {
+            },
+
+            defaultQueue: {
+                label: 'Default Queue'
             }
-        });
+        };
+
+        /**
+         * @type {GPUDevice}
+         * @private
+         */
+        this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
         this.initDeviceCaps();
 
@@ -251,6 +280,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return this;
     }
 
+    postInit() {
+        super.postInit();
+
+        // init dynamic buffer using 1MB allocation
+        this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
+    }
+
     createFramebuffer() {
         this.supportsStencil = this.initOptions.stencil;
         this.frameBufferDimensions = new Vec2();
@@ -278,6 +314,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     frameStart() {
 
         super.frameStart();
+
+        // submit any commands collected before the frame rendering
+        this.submit();
 
         WebgpuDebug.memory(this);
         WebgpuDebug.validate(this);
@@ -310,6 +349,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);
+    }
+
+    frameEnd() {
+        super.frameEnd();
+        this.submit();
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -354,7 +398,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (this.passEncoder) {
 
             // set it on the device
-            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup);
+            this.passEncoder.setBindGroup(index, bindGroup.impl.bindGroup, bindGroup.uniformBufferOffsets);
 
             // store the active formats, used by the pipeline creation
             this.bindGroupFormats[index] = bindGroup.format.impl;
@@ -494,6 +538,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     startPass(renderPass) {
 
+        WebgpuDebug.internal(this);
+        WebgpuDebug.validate(this);
+
         const rt = renderPass.renderTarget || this.frameBuffer;
         Debug.assert(rt);
 
@@ -502,8 +549,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
 
-        WebgpuDebug.internal(this);
-        WebgpuDebug.validate(this);
+        // create a new encoder for each pass
+        this.commandEncoder = this.wgpu.createCommandEncoder();
+        DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
 
         // framebuffer is initialized at the start of the frame
         if (rt !== this.frameBuffer) {
@@ -512,10 +560,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
-
-        // create a new encoder for each pass to keep the GPU busy with commands
-        this.commandEncoder = this.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(this.commandEncoder, renderPass.name);
 
         // clear cached encoder state
         this.pipeline = null;
@@ -545,26 +589,62 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     endPass(renderPass) {
 
+        // end the render pass
         this.passEncoder.end();
         this.passEncoder = null;
-
-        this.wgpu.queue.submit([this.commandEncoder.finish()]);
-        this.commandEncoder = null;
-
-        WebgpuDebug.end(this, { renderPass });
-        WebgpuDebug.end(this, { renderPass });
+        this.insideRenderPass = false;
 
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
-        this.insideRenderPass = false;
-
-        // generate mipmaps
+        // generate mipmaps using the same command buffer encoder
         for (let i = 0; i < renderPass.colorArrayOps.length; i++) {
             const colorOps = renderPass.colorArrayOps[i];
             if (colorOps.mipmaps) {
                 this.mipmapRenderer.generate(renderPass.renderTarget._colorBuffers[i].impl);
             }
+        }
+
+        // schedule command buffer submission
+        const cb = this.commandEncoder.finish();
+        DebugHelper.setLabel(cb, `${renderPass.name}-CommandBuffer`);
+
+        this.addCommandBuffer(cb);
+        this.commandEncoder = null;
+
+        WebgpuDebug.end(this, { renderPass });
+        WebgpuDebug.end(this, { renderPass });
+    }
+
+    addCommandBuffer(commandBuffer, front = false) {
+        if (front) {
+            this.commandBuffers.unshift(commandBuffer);
+        } else {
+            this.commandBuffers.push(commandBuffer);
+        }
+    }
+
+    submit() {
+        if (this.commandBuffers.length > 0) {
+
+            // copy dynamic buffers data to the GPU (this schedules the copy CB to run before all other CBs)
+            this.dynamicBuffers.submit();
+
+            // trace all scheduled command buffers
+            Debug.call(() => {
+                if (this.commandBuffers.length > 0) {
+                    Debug.trace(TRACEID_RENDER_QUEUE, `SUBMIT (${this.commandBuffers.length})`);
+                    for (let i = 0; i < this.commandBuffers.length; i++) {
+                        Debug.trace(TRACEID_RENDER_QUEUE, `  CB: ${this.commandBuffers[i].label}`);
+                    }
+                }
+            });
+
+            this.wgpu.queue.submit(this.commandBuffers);
+            this.commandBuffers.length = 0;
+
+            // notify dynamic buffers
+            this.dynamicBuffers.onCommandBuffersSubmitted();
         }
     }
 
@@ -644,10 +724,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             depthOrArrayLayers: 1
         };
 
-        DebugGraphics.pushGpuMarker(this, 'COPY-RT');
-
-        // use existing or create new encoder if between render passes
+        // use existing or create new encoder if not in a render pass
         const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+        DebugHelper.setLabel(commandEncoder, 'CopyRenderTarget-Encoder');
+
+        DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
         if (color) {
 
@@ -696,12 +777,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             commandEncoder.copyTextureToTexture(copySrc, copyDst, copySize);
         }
 
-        // submit the encoded commands if we created the encoder
-        if (!this.commandEncoder) {
-            this.wgpu.queue.submit([commandEncoder.finish()]);
-        }
-
         DebugGraphics.popGpuMarker(this);
+
+        // if we created the encoder
+        if (!this.commandEncoder) {
+
+            // copy operation runs next
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'CopyRenderTarget-CommandBuffer');
+            this.addCommandBuffer(cb);
+        }
 
         return true;
     }

@@ -701,7 +701,7 @@ class Renderer {
         Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
         while (viewBindGroups.length < viewCount) {
-            const ub = new UniformBuffer(device, viewUniformFormat);
+            const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
             DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
             viewBindGroups.push(bg);

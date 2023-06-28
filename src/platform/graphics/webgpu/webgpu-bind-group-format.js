@@ -100,7 +100,8 @@ class WebgpuBindGroupFormat {
                     type: 'uniform', // "uniform", "storage", "read-only-storage"
 
                     // whether this binding requires a dynamic offset
-                    hasDynamicOffset: false
+                    // currently all UBs are dynamic and need the offset
+                    hasDynamicOffset: true
 
                     // defaults to 0 meaning no validation, can do early size validation using it
                     // minBindingSize

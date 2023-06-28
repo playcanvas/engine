@@ -2078,6 +2078,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    submit() {
+        this.gl.flush();
+    }
+
     /**
      * Reads a block of pixels from a specified rectangle of the current color framebuffer into an
      * ArrayBufferView object.
@@ -2117,7 +2121,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const clientWaitAsync = (flags, interval_ms) => {
             const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gl.flush();
+            this.submit();
 
             return new Promise((resolve, reject) => {
                 function test() {
