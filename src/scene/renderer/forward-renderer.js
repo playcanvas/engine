@@ -606,6 +606,7 @@ class ForwardRenderer extends Renderer {
         const scene = this.scene;
         const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // Render the scene
         let skipMaterial = false;
@@ -647,7 +648,10 @@ class ForwardRenderer extends Renderer {
 
                     if (lightMaskChanged) {
                         const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
-                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+
+                        if (!clusteredLightingEnabled) {
+                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+                        }
                     }
 
                     this.alphaTestId.setValue(material.alphaTest);
