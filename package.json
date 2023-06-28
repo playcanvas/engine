@@ -36,6 +36,7 @@
       "glslang": "readonly",
       "GPUBufferUsage": "readonly",
       "GPUColorWrite": "readonly",
+      "GPUMapMode": "readonly",
       "GPUShaderStage": "readonly",
       "GPUTextureUsage": "readonly",
       "opentype": "readonly",

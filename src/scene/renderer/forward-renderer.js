@@ -111,7 +111,7 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId = [];
         this.lightCookieMatrixId = [];
         this.lightCookieOffsetId = [];
-        this.lightSizeId = [];
+        this.lightShadowSearchAreaId = [];
         this.lightCameraParamsId = [];
 
         // shadow cascades
@@ -174,6 +174,7 @@ class ForwardRenderer extends Renderer {
         this.lightShadowMatrixId[i] = scope.resolve(light + '_shadowMatrix');
         this.lightShadowParamsId[i] = scope.resolve(light + '_shadowParams');
         this.lightShadowIntensity[i] = scope.resolve(light + '_shadowIntensity');
+        this.lightShadowSearchAreaId[i] = scope.resolve(light + '_shadowSearchArea');
         this.lightRadiusId[i] = scope.resolve(light + '_radius');
         this.lightPos[i] = new Float32Array(3);
         this.lightPosId[i] = scope.resolve(light + '_position');
@@ -187,7 +188,6 @@ class ForwardRenderer extends Renderer {
         this.lightCookieIntId[i] = scope.resolve(light + '_cookieIntensity');
         this.lightCookieMatrixId[i] = scope.resolve(light + '_cookieMatrix');
         this.lightCookieOffsetId[i] = scope.resolve(light + '_cookieOffset');
-        this.lightSizeId[i] = scope.resolve(light + '_size');
         this.lightCameraParamsId[i] = scope.resolve(light + '_cameraParams');
 
         // shadow cascades
@@ -257,11 +257,13 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeDistancesId[cnt].setValue(directional._shadowCascadeDistances);
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
-                this.lightSizeId[cnt].setValue(directional.lightSize);
+
+                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.penumbraSize);
+                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 2.0;
+                cameraParams[0] = lightRenderData.depthRangeCompensation;
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -329,12 +331,13 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / omni.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
-            this.lightSizeId[cnt].setValue(omni.lightSize);
 
-            const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / omni.penumbraSize);
+            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
             const cameraParams = omni._shadowCameraParams;
+
             cameraParams.length = 4;
-            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
+            cameraParams[0] = 1;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -394,12 +397,15 @@ class ForwardRenderer extends Renderer {
             params[3] = 1.0 / spot.attenuationEnd;
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
-            this.lightSizeId[cnt].setValue(spot.lightSize);
 
+            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / spot.penumbraSize);
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
+            const fovRatio = 1.0 / Math.tan(fov / 2.0);
+            this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
+
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = 1.0 / Math.tan(fov / 2.0);
+            cameraParams[0] = 1;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
