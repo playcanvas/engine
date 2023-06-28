@@ -111,7 +111,7 @@ class CustomMaterialExample {
                 options.ambientSource = 'envAtlas';
                 options.ambientEncoding = assets.helipad.resource.encoding;
                 options.clusteredLightingEnabled = app.scene.clusteredLightingEnabled;
-                material.options = options;
+                material.litOptions = options;
 
                 const customLitArguments = `
                 LitShaderArguments evaluateFrontend() {

@@ -20,16 +20,16 @@ class CustomMaterial extends Material {
     constructor() {
         super();
 
-        this._options = new LitOptions();
+        this._litOptions = new LitOptions();
         this._customLitArguments = "";
     }
 
-    set options(value) {
-        this._options = value;
+    set litOptions(value) {
+        this._litOptions = value;
     }
 
-    get options() {
-        return this._options;
+    get litOptions() {
+        return this._litOptions;
     }
 
     set customLitArguments(value) {
@@ -51,18 +51,18 @@ class CustomMaterial extends Material {
             useMorphTextureBased: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0,
 
             pass: pass,
-            litOptions: this._options
+            litOptions: this._litOptions
         };
 
         const lightsFiltered = [];
         const mask = objDefs ? (objDefs >> 16) : MASK_AFFECT_DYNAMIC;
-        this._options.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
+        this._litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
         collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
         collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
         collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
 
-        this._options.lights = lightsFiltered;
+        this._litOptions.lights = lightsFiltered;
         options.customLitArguments = this._customLitArguments;
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
