@@ -329,7 +329,7 @@ class PostEffectsExample {
                     // display the depth texture if it was rendered
                     if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
                         // @ts-ignore engine-tsd
-                        app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+                        app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
                     }
                 });
 

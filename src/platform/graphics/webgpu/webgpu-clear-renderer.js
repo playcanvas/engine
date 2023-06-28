@@ -75,7 +75,7 @@ class WebgpuClearRenderer {
         this.uniformBuffer = new UniformBuffer(device, new UniformBufferFormat(device, [
             new UniformFormat('color', UNIFORMTYPE_VEC4),
             new UniformFormat('depth', UNIFORMTYPE_FLOAT)
-        ]));
+        ]), false);
 
         // format of the bind group
         const bindGroupFormat = new BindGroupFormat(device, [
@@ -129,13 +129,11 @@ class WebgpuClearRenderer {
 
             device.setCullMode(CULLFACE_NONE);
 
-            // render 4 verticies without vertex buffer
+            // render 4 vertices without vertex buffer
             device.setShader(this.shader);
 
             const bindGroup = this.bindGroup;
-            if (bindGroup.defaultUniformBuffer) {
-                bindGroup.defaultUniformBuffer.update();
-            }
+            bindGroup.defaultUniformBuffer.update();
             bindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, bindGroup);
 

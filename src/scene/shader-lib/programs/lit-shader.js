@@ -175,28 +175,6 @@ class LitShader {
         return result;
     }
 
-    // handles directional map shadow coordinate generation, including cascaded shadows
-    _directionalShadowMapProjection(light, shadowMatArg, shadowParamArg, lightArgs, lightIndex, coordsFunctionName) {
-
-        // for shadow cascades
-        let code = "";
-        const lightParams = lightArgs ? ", " + lightArgs : "";
-        let shadowCoordArgs = `(${shadowMatArg}, ${shadowParamArg}${lightParams});`;
-        if (light.numCascades > 1) {
-            // compute which cascade matrix needs to be used
-            code += `getShadowCascadeMatrix(light${lightIndex}_shadowMatrixPalette, light${lightIndex}_shadowCascadeDistances, light${lightIndex}_shadowCascadeCount);\n`;
-            shadowCoordArgs = `(cascadeShadowMat, ${shadowParamArg}${lightParams});\n`;
-        }
-
-        // shadow coordinate generation
-        code += coordsFunctionName + shadowCoordArgs;
-
-        // stop shadow at the far distance
-        code += `fadeShadow(light${lightIndex}_shadowCascadeDistances);\n`;
-
-        return code;
-    }
-
     _getLightSourceShapeString(shape) {
         switch (shape) {
             case LIGHTSHAPE_RECT:
@@ -496,7 +474,8 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const usePackedDepth = (!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS);
+        const usePackedDepth = ((!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS)) ||
+            (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -543,7 +522,7 @@ class LitShader {
             code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
 
             // clustered omni light is using shadow sampler and needs to write custom depth
-            if (shadowType === SHADOW_PCSS || (lightType === LIGHTTYPE_OMNI && !options.clusteeredLightingEnabled)) {
+            if (shadowType === SHADOW_PCSS || (lightType === LIGHTTYPE_OMNI && !options.clusteredLightingEnabled)) {
                 code += "   gl_FragColor.r = depth;\n";
             } else if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.supportsDepthShadow) {
                 code += "    gl_FragDepth = depth;\n";
@@ -646,7 +625,7 @@ class LitShader {
             decl.append("uniform vec3 light" + i + "_color;");
 
             if (light._shadowType === SHADOW_PCSS && light.castShadows && !options.noShadow) {
-                decl.append(`uniform float light${i}_size;`);
+                decl.append(`uniform float light${i}_shadowSearchArea;`);
                 decl.append(`uniform vec4 light${i}_cameraParams;`);
             }
 
@@ -1252,7 +1231,7 @@ class LitShader {
                     }
 
                     if (shadowReadMode !== null) {
-                        if (light._normalOffsetBias) {
+                        if (light._normalOffsetBias && !light._isVsm) {
                             func.append("#define SHADOW_SAMPLE_NORMAL_OFFSET");
                         }
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
@@ -1277,18 +1256,16 @@ class LitShader {
                         func.append("#undef SHADOW_SAMPLE_POINT");
 
                         let shadowMatrix = `light${i}_shadowMatrix`;
-                        let hasCascades = false;
                         if (lightType === LIGHTTYPE_DIRECTIONAL && light.numCascades > 1) {
                             // compute which cascade matrix needs to be used
                             backend.append(`    getShadowCascadeMatrix(light${i}_shadowMatrixPalette, light${i}_shadowCascadeDistances, light${i}_shadowCascadeCount);`);
                             shadowMatrix = `cascadeShadowMat`;
-                            hasCascades = true;
                         }
 
                         backend.append(`    dShadowCoord = getShadowSampleCoord${i}(${shadowMatrix}, light${i}_shadowParams, vPositionW, dLightPosW, dLightDirW, dLightDirNormW, dVertexNormalW);`);
 
-                        // If cascades are used, fade between them
-                        if (hasCascades) {
+                        // Fade shadow at edges
+                        if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             backend.append(`    fadeShadow(light${i}_shadowCascadeDistances);`);
                         }
 
@@ -1298,11 +1275,11 @@ class LitShader {
                             // VSM
                             shadowCoordArgs = `${shadowCoordArgs}, ${evsmExp}, dLightDirW`;
                         } else if (pcssShadows) {
-                            let lightSizeArg = `vec2(light${i}_size)`;
+                            let penumbraSizeArg = `vec2(light${i}_shadowSearchArea)`;
                             if (lightShape !== LIGHTSHAPE_PUNCTUAL) {
-                                lightSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_size`;
+                                penumbraSizeArg = `vec2(length(light${i}_halfWidth), length(light${i}_halfHeight)) * light${i}_shadowSearchArea`;
                             }
-                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${lightSizeArg}, dLightDirW`;
+                            shadowCoordArgs = `${shadowCoordArgs}, light${i}_cameraParams, ${penumbraSizeArg}, dLightDirW`;
                         }
 
                         if (lightType === LIGHTTYPE_OMNI) {

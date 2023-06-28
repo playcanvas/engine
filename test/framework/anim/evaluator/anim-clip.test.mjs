@@ -19,7 +19,9 @@ describe('AnimClip', function () {
             { name: 'event3', time: 1.5 }
         ]);
         const animTrack = new AnimTrack('track', 2, inputs, outputs, curves, animEvents);
-        animClip = new AnimClip(animTrack, 0, 1, true, false);
+        animClip = new AnimClip(animTrack, 0, 1, true, true, {
+            fire: () => {}
+        });
     });
 
     describe('#constructor', function () {
@@ -30,7 +32,7 @@ describe('AnimClip', function () {
             expect(animClip.track.name).to.equal('track');
             expect(animClip.snapshot._name).to.equal('trackSnapshot');
             expect(animClip.time).to.equal(0);
-            expect(animClip.loop).to.equal(false);
+            expect(animClip.loop).to.equal(true);
             expect(animClip.eventCursor).to.equal(0);
         });
 
@@ -102,7 +104,7 @@ describe('AnimClip', function () {
 
     describe('#time', function () {
 
-        it('updates the clips eventCursor property', function () {
+        it('aligns the clips eventCursor property when setting the time', function () {
             expect(animClip.eventCursor).to.equal(0);
             animClip.time = 1.1;
             expect(animClip.eventCursor).to.equal(2);
@@ -110,6 +112,42 @@ describe('AnimClip', function () {
             expect(animClip.eventCursor).to.equal(1);
             animClip.time = 0.1;
             expect(animClip.eventCursor).to.equal(0);
+        });
+
+        it('updates the clips eventCursor property as the clip updates forwards', function () {
+            expect(animClip.time).to.equal(0);
+            expect(animClip.eventCursor).to.equal(0);
+            animClip._update(0.55);
+            expect(animClip.time).to.equal(0.55);
+            expect(animClip.eventCursor).to.equal(1);
+            animClip._update(0.5);
+            expect(animClip.time).to.equal(1.05);
+            expect(animClip.eventCursor).to.equal(2);
+            animClip._update(0.5);
+            expect(animClip.time).to.equal(1.55);
+            expect(animClip.eventCursor).to.equal(0);
+            animClip._update(0.45);
+            expect(animClip.time).to.equal(2);
+            expect(animClip.eventCursor).to.equal(0);
+        });
+
+        it('updates the clips eventCursor property as the clip updates backwards', function () {
+            animClip.speed = -1;
+            animClip.time = 2;
+            expect(animClip.time).to.equal(2);
+            expect(animClip.eventCursor).to.equal(2);
+            animClip._update(0.45);
+            expect(animClip.time).to.equal(1.55);
+            expect(animClip.eventCursor).to.equal(2);
+            animClip._update(0.5);
+            expect(animClip.time).to.equal(1.05);
+            expect(animClip.eventCursor).to.equal(1);
+            animClip._update(0.5);
+            expect(animClip.time).to.equal(0.55);
+            expect(animClip.eventCursor).to.equal(0);
+            animClip._update(0.55);
+            expect(animClip.time).to.equal(0);
+            expect(animClip.eventCursor).to.equal(2);
         });
 
     });
