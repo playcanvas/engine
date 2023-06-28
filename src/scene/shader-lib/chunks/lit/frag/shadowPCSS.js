@@ -87,13 +87,12 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
         samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
     }
 
-    // Calculate the ratio of FOV between 45.0 degrees (tan(45) == 1) and the FOV of the camera    
     float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
 
-        vec2 filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * shadowSearchArea;
+        vec2 filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * shadowSearchArea * cameraParams.x;
 
         float shadow = 0.0;
 
