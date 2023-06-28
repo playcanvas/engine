@@ -61,7 +61,7 @@ class WebgpuBindGroup {
         // uniform buffers
         let index = 0;
         bindGroup.uniformBuffers.forEach((ub) => {
-            const buffer = ub.impl.buffer;
+            const buffer = ub.persistent ? ub.impl.buffer : ub.allocation.gpuBuffer.buffer;
             Debug.assert(buffer, 'NULL uniform buffer cannot be used by the bind group');
             Debug.call(() => {
                 this.debugFormat += `${index}: UB\n`;
@@ -70,7 +70,9 @@ class WebgpuBindGroup {
             entries.push({
                 binding: index++,
                 resource: {
-                    buffer: buffer
+                    buffer: buffer,
+                    offset: 0,
+                    size: ub.format.byteSize
                 }
             });
         });

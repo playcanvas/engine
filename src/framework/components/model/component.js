@@ -300,7 +300,7 @@ class ModelComponent extends Component {
             this._model._immutable = false;
 
             this.removeModelFromLayers();
-            this.entity.removeChild(this._model.getGraph());
+            this._model.getGraph().destroy();
             delete this._model._entity;
 
             if (this._clonedModel) {
