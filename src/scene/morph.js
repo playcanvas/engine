@@ -29,19 +29,19 @@ class Morph extends RefCountedObject {
      * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this morph target.
-     * @param {object} options - Object for passing optional arguments.
-     * @param {boolean} options.preferHighPrecision - True if high precision storage should be
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.preferHighPrecision] - True if high precision storage should be
      * prefered. This is faster to create and allows higher precision, but takes more memory and
      * might be slower to render. Defaults to false.
      */
-    constructor(targets, graphicsDevice, { preferHighPrecision = false }) {
+    constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
         Debug.assertDeprecated(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
         this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
         this.preferHighPrecision = preferHighPrecision;
-debugger;
+
         // validation
         Debug.assert(targets.every(target => !target.used), 'A specified target has already been used to create a Morph, use its clone instead.');
         this._targets = targets.slice();
