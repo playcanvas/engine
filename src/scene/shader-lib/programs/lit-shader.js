@@ -450,7 +450,7 @@ class LitShader {
 
         // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
         if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
-            if (shadowType !== SHADOW_PCF1 || shadowType !== SHADOW_PCF3 || shadowType !== SHADOW_PCF5) {
+            if (shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32 || shadowType === SHADOW_PCSS) {
                 shadowType = SHADOW_PCF3;
             }
         }
