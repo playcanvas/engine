@@ -11,6 +11,7 @@ import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
+import lit from './lit.js';
 
 const _matTex2D = [];
 
@@ -21,60 +22,28 @@ const standard = {
 
     /** @type { Function } */
     generateKey: function (options) {
-        const buildPropertiesList = function (options) {
-            const props = [];
-            for (const prop in options) {
-                if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
-                    props.push(prop);
-            }
-            return props.sort();
-        };
-        let props;
-        if (options === this.optionsContextMin) {
-            if (!this.propsMin) this.propsMin = buildPropertiesList(options);
-            props = this.propsMin;
-        } else if (options === this.optionsContext) {
-            if (!this.props) this.props = buildPropertiesList(options);
-            props = this.props;
-        } else {
-            props = buildPropertiesList(options);
-        }
 
         let key = "standard";
 
-        for (let i = 0; i < props.length; i++) {
-            if (options[props[i]])
-                key += props[i] + options[props[i]];
+        let props;
+        if (options === this.optionsContextMin) {
+            if (!this.propsMin) this.propsMin = lit.buildPropertiesList(options);
+            props = this.propsMin;
+        } else if (options === this.optionsContext) {
+            if (!this.props) this.props = lit.buildPropertiesList(options);
+            props = this.props;
+        } else {
+            props = lit.buildPropertiesList(options);
         }
 
+        key += lit.propertiesKey(props);
+
         if (options.chunks) {
-            const chunks = [];
-            for (const p in options.chunks) {
-                if (options.chunks.hasOwnProperty(p)) {
-                    chunks.push(p + options.chunks[p]);
-                }
-            }
-            chunks.sort();
-            key += chunks;
+            key += lit.chunksKey(options.chunks);
         }
 
         if (options.litOptions) {
-
-            for (const m in options.litOptions) {
-
-                // handle lights in a custom way
-                if (m === 'lights') {
-                    const isClustered = options.litOptions.clusteredLightingEnabled;
-                    for (let i = 0; i < options.litOptions.lights.length; i++) {
-                        const light = options.litOptions.lights[i];
-                        if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                            key += light.key;
-                        }
-                    }
-                } else {
-                    key += m + options.litOptions[m];
-                }
-            }
+            key += lit.litOptionsKey(options.litOptions);
         }
 
         return hashCode(key);

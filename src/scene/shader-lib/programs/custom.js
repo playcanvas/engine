@@ -1,49 +1,28 @@
-import { LIGHTTYPE_DIRECTIONAL } from '../../../scene/constants.js';
 import { hashCode } from '../../../core/hash.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
+import lit from './lit.js';
 
 const custom  = {
 
     /** @type { Function } */
     generateKey: function (options) {
-        const props = [];
-        for (const prop in options) {
-            if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
-                props.push(prop);
-        }
 
         let key = "custom";
 
+        const props = lit.buildPropertiesList(options);
+
+        key += lit.propertiesKey(props);
+
         if (options.chunks) {
-            const chunks = [];
-            for (const p in options.chunks) {
-                if (options.chunks.hasOwnProperty(p)) {
-                    chunks.push(p + options.chunks[p]);
-                }
-            }
-            chunks.sort();
-            key += chunks;
+            key += lit.chunksKey(options.chunks);
         }
 
         if (options.litOptions) {
-
-            for (const m in options.litOptions) {
-
-                // handle lights in a custom way
-                if (m === 'lights') {
-                    const isClustered = options.litOptions.clusteredLightingEnabled;
-                    for (let i = 0; i < options.litOptions.lights.length; i++) {
-                        const light = options.litOptions.lights[i];
-                        if (!isClustered || light._type === LIGHTTYPE_DIRECTIONAL) {
-                            key += light.key;
-                        }
-                    }
-                } else {
-                    key += m + options.litOptions[m];
-                }
-            }
+            key += lit.litOptionsKey(options.litOptions);
         }
+
+        key += options.customLitArguments;
 
         return hashCode(key);
     },
