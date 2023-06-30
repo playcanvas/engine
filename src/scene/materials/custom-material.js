@@ -12,17 +12,10 @@ import { custom } from '../shader-lib/programs/custom.js';
  * @augments Material
  */
 
-
 class CustomMaterial extends Material {
-    /**
-     * Create a new custom material instance.
-     */
-    constructor() {
-        super();
+    _litOptions = new LitOptions();
 
-        this._litOptions = new LitOptions();
-        this._argumentsChunk = "";
-    }
+    _argumentsChunk = "";
 
     set litOptions(value) {
         this._litOptions = value;
