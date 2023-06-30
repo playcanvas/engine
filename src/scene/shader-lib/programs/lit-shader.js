@@ -512,23 +512,30 @@ class LitShader {
         // Spot: If not using VSM
         // Point: Never
         const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+
+        // Flag if we are using non-standard depth, i.e gl_FragCoord.z
+        let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
             if (needsLinearizedDepth) {
                 code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
+                hasModifiedDepth = true;
             } else {
                 code += "    float depth = gl_FragCoord.z;\n";
             }
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
+            hasModifiedDepth = true;
         }
 
         if (applySlopeScaleBias) {
             code += "    float minValue = 2.3374370500153186e-10; //(1.0 / 255.0) / (256.0 * 256.0 * 256.0);\n";
             code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
+            hasModifiedDepth = true;
         }
 
         if (usePerspectiveDepth && needsLinearizedDepth && usePackedDepth) {
             code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
+            hasModifiedDepth = true;
         }
 
         if (usePackedDepth) {
@@ -539,7 +546,11 @@ class LitShader {
             if (exportR32) {
                 code += "    gl_FragColor.r = depth;\n";
             } else {
-                code += "    gl_FragDepth = depth;\n";
+
+                // If we end up using modified depth, it needs to be explicitly written to gl_FragDepth
+                if (hasModifiedDepth) {
+                    code += "    gl_FragDepth = depth;\n";
+                }
                 code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
             }
         } else if (shadowType === SHADOW_VSM8) {
