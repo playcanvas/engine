@@ -91,7 +91,7 @@ class CustomMaterialExample {
                 const light = new pc.Entity();
                 light.addComponent("light", {
                     type: "omni",
-                    color: new pc.Color(1, 1, 1),
+                    color: pc.Color.WHITE,
                     intensity: 1,
                     range: 100
                 });
