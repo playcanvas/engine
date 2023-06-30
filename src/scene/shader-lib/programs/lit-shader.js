@@ -446,7 +446,14 @@ class LitShader {
         const varyings = this.varyings;
 
         const lightType = this.shaderPassInfo.lightType;
-        const shadowType = this.shaderPassInfo.shadowType;
+        let shadowType = this.shaderPassInfo.shadowType;
+
+        // If not a directional light and using clustered, fall back to using PCF3x3 if shadow type isn't supported
+        if (lightType !== LIGHTTYPE_DIRECTIONAL && options.clusteredLightingEnabled) {
+            if (shadowType !== SHADOW_PCF1 || shadowType !== SHADOW_PCF3 || shadowType !== SHADOW_PCF5) {
+                shadowType = SHADOW_PCF3;
+            }
+        }
 
         let code = this._fsGetBeginCode();
 
@@ -474,8 +481,9 @@ class LitShader {
         code += this.frontendDecl;
         code += this.frontendCode;
 
-        const usePackedDepth = ((!device.supportsDepthShadow) && (shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS)) ||
-            (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
+        const mayPackDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 || shadowType === SHADOW_PCSS;
+        const mustPackDepth = (lightType === LIGHTTYPE_OMNI && shadowType !== SHADOW_PCSS && !options.clusteredLightingEnabled);
+        const usePackedDepth = mayPackDepth && !device.supportsDepthShadow || mustPackDepth;
         if (usePackedDepth) {
             code += chunks.packDepthPS;
         } else if (shadowType === SHADOW_VSM8) {
@@ -497,18 +505,21 @@ class LitShader {
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
         const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
-        const customDepth = (isVsm && lightType !== LIGHTTYPE_DIRECTIONAL) || lightType === LIGHTTYPE_OMNI;
+        const needsLinearizedDepth = shadowType === SHADOW_PCSS;
 
-        if (customDepth) {
-            code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
-        } else if (shadowType === SHADOW_PCSS) {
-            code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
-            if (usePackedDepth) {
-                // After linearizing, make sure to pack the range between [0..1]
-                code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
+        // Use perspective depth for:
+        // Directional: Always since light has no position
+        // Spot: If not using VSM
+        // Point: Never
+        const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+        if (usePerspectiveDepth) {
+            if (needsLinearizedDepth) {
+                code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
+            } else {
+                code += "    float depth = gl_FragCoord.z;\n";
             }
         } else {
-            code += "    float depth = gl_FragCoord.z;\n";
+            code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
         }
 
         if (applySlopeScaleBias) {
@@ -516,23 +527,20 @@ class LitShader {
             code += "    depth += polygonOffset.x * max(abs(dFdx(depth)), abs(dFdy(depth))) + minValue * polygonOffset.y;\n";
         }
 
+        if (usePerspectiveDepth && needsLinearizedDepth && usePackedDepth) {
+            code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
+        }
+
         if (usePackedDepth) {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (!isVsm) {
-            code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
-            const exportDepth = shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCF5 ||
-                (lightType === LIGHTTYPE_OMNI && options.clusteredLightingEnabled);
+            const exportR32 = shadowType === SHADOW_PCSS;
 
-            if (exportDepth) {
-                code += "    gl_FragDepth = depth;\n";
-            } else {
+            if (exportR32) {
                 code += "    gl_FragColor.r = depth;\n";
-            }
-            // clustered omni light is using shadow sampler and needs to write custom depth
-            if (shadowType === SHADOW_PCSS && (lightType !== LIGHTTYPE_OMNI && options.clusteredLightingEnabled)) {
-                code += "   gl_FragColor.r = depth;\n";
-            } else if (options.clusteredLightingEnabled && lightType === LIGHTTYPE_OMNI && device.supportsDepthShadow) {
+            } else {
                 code += "    gl_FragDepth = depth;\n";
+                code += "    gl_FragColor = vec4(1.0);\n"; // just the simplest code, color is not written anyway
             }
         } else if (shadowType === SHADOW_VSM8) {
             code += "    gl_FragColor = vec4(encodeFloatRG(depth), encodeFloatRG(depth*depth));\n";
