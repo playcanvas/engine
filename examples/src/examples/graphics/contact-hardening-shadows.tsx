@@ -178,7 +178,7 @@ class ContactHardeningShadowsExample {
                         directional: {
                             enabled: true,
                             intensity: 2.0,
-                            size: 20,
+                            size: 9,
                             shadowType: pc.SHADOW_PCSS
                         }
                     });

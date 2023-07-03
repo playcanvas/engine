@@ -21,7 +21,7 @@ const aabbPoints = [
 ];
 
 // evaluate depth range the aabb takes in the space of the camera
-const _depthRange = { min: 0, max: 0, maxAxis: 0 };
+const _depthRange = { min: 0, max: 0 };
 function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
     aabbPoints[0].x = aabbPoints[1].x = aabbPoints[2].x = aabbPoints[3].x = aabbMin.x;
     aabbPoints[1].y = aabbPoints[3].y = aabbPoints[7].y = aabbPoints[5].y = aabbMin.y;
@@ -32,19 +32,16 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
 
     let minz = 9999999999;
     let maxz = -9999999999;
-    let maxAxis = -9999999999;
 
     for (let i = 0; i < 8; ++i) {
         cameraViewMatrix.transformPoint(aabbPoints[i], aabbPoints[i]);
         const z = aabbPoints[i].z;
         if (z < minz) minz = z;
         if (z > maxz) maxz = z;
-        maxAxis = Math.max(maxAxis, new Vec3(aabbPoints[i].x, aabbPoints[i].y, aabbPoints[i].z).length());
     }
 
     _depthRange.min = minz;
     _depthRange.max = maxz;
-    _depthRange.maxAxis = maxAxis;
     return _depthRange;
 }
 
@@ -150,13 +147,9 @@ class ShadowRendererDirectional {
 
             // look at the center from far away to include all casters during culling
             shadowCamNode.setPosition(center);
-            shadowCam.nearClip = frustumNearDist;
-            shadowCam.farClip = frustumFarDist;
-            
-            shadowCamNode.translateLocal(0, 0, shadowCam.farClip / 2);
-
-            //shadowCam.nearClip = 0.01;
-            //shadowCam.farClip = 2000000;
+            shadowCamNode.translateLocal(0, 0, 1000000);
+            shadowCam.nearClip = 0.01;
+            shadowCam.farClip = 2000000;
             shadowCam.orthoHeight = radius;
 
             // cull shadow casters
@@ -180,15 +173,14 @@ class ShadowRendererDirectional {
             // calculate depth range of the caster's AABB from the point of view of the shadow camera
             shadowCamView.copy(shadowCamNode.getWorldTransform()).invert();
             const depthRange = getDepthRange(shadowCamView, visibleSceneAabb.getMin(), visibleSceneAabb.getMax());
-            const projectionMin = Math.min(visibleSceneAabb.getMin().x, visibleSceneAabb.getMin().z);
-            const projectionMax = Math.max(visibleSceneAabb.getMax().x, visibleSceneAabb.getMax().z);
-            lightRenderData.depthRangeCompensation = (depthRange.max - depthRange.min);
-            lightRenderData.projectionCompensation = (projectionMax - projectionMin);
 
             // adjust shadow camera's near and far plane to the depth range of casters to maximize precision
             // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
-            //shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
-            //shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
+            shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
+            shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
+
+            lightRenderData.depthRangeCompensation = shadowCam.farClip;
+            lightRenderData.projectionCompensation = radius;
         }
     }
 
