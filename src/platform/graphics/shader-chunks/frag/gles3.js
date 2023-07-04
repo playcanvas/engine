@@ -57,7 +57,12 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 // clustered lighting) - as DirectX shader compiler tries to unroll the loops and takes long time
 // to compile the shader. Using textureLod would be even better, but WebGl does not translate it to
 // lod instruction for DirectX correctly and uses SampleCmp instead of SampleCmpLevelZero or similar.
+#if defined(ANDROID)
+// Disable on Android where we have seen artifacts with textureGrad
+#define textureShadow(res, uv) texture(res, uv)
+#else
 #define textureShadow(res, uv) textureGrad(res, uv, vec2(1, 1), vec2(1, 1))
+#endif
 
 // pass / accept shadow map or texture as a function parameter, on webgl this is simply passed as is
 // but this is needed for WebGPU

@@ -11,6 +11,7 @@ import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
 import sharedFS from './shader-chunks/frag/shared.js';
+import { platform } from "../../core/platform.js";
 
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -68,7 +69,12 @@ class ShaderUtils {
                 attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
             }
 
-            return attachmentsDefine + deviceIntro;
+            let deviceOverrides = '';
+            if (platform.android) {
+                deviceOverrides += '#define ANDROID\n';
+            }
+
+            return deviceOverrides + attachmentsDefine + deviceIntro;
         };
 
         const name = options.name ?? 'Untitled';
