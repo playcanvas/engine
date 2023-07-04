@@ -236,7 +236,7 @@ class AssetRegistry extends EventHandler {
 
         this._idToAsset.set(asset.id, asset);
 
-        if (asset.file) {
+        if (asset.file?.url) {
             this._urlToAsset.set(asset.file.url, asset);
         }
 
@@ -249,8 +249,9 @@ class AssetRegistry extends EventHandler {
 
         this.fire('add', asset);
         this.fire('add:' + asset.id, asset);
-        if (asset.file?.url)
+        if (asset.file?.url) {
             this.fire('add:url:' + asset.file.url, asset);
+        }
 
         if (asset.preload)
             this.load(asset);
@@ -284,8 +285,9 @@ class AssetRegistry extends EventHandler {
         asset.fire('remove', asset);
         this.fire('remove', asset);
         this.fire('remove:' + asset.id, asset);
-        if (asset.file)
+        if (asset.file?.url) {
             this.fire('remove:url:' + asset.file.url, asset);
+        }
 
         return true;
     }
