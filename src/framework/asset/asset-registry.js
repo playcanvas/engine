@@ -432,7 +432,7 @@ class AssetRegistry extends EventHandler {
      * @param {LoadAssetCallback} callback - Function called when asset is loaded, passed (err,
      * asset), where err is null if no errors were encountered.
      * @example
-     * const file = magicallyAttainAFile();
+     * const file = magicallyObtainAFile();
      * app.assets.loadFromUrlAndFilename(URL.createObjectURL(file), "texture.png", "texture", function (err, asset) {
      *     const texture = asset.resource;
      * });
@@ -617,10 +617,8 @@ class AssetRegistry extends EventHandler {
      * Return `true` to include an asset in the returned array.
      * @returns {Asset[]} A list of all Assets found.
      * @example
-     * const assets = app.assets.filter(function (asset) {
-     *     return asset.name.indexOf('monster') !== -1;
-     * });
-     * console.log("Found " + assets.length + " assets, where names contains 'monster'");
+     * const assets = app.assets.filter(asset => asset.name.includes('monster'));
+     * console.log(`Found ${assets.length} assets with a name containing 'monster'`);
      */
     filter(callback) {
         return Array.from(this._assets).filter(asset => callback(asset));
@@ -646,8 +644,8 @@ class AssetRegistry extends EventHandler {
      * @param {string} [type] - The type of the Assets to find.
      * @returns {Asset[]} A list of all Assets found.
      * @example
-     * const assets = app.assets.findAll("myTextureAsset", "texture");
-     * console.log("Found " + assets.length + " assets called " + name);
+     * const assets = app.assets.findAll('brick', 'texture');
+     * console.log(`Found ${assets.length} texture assets named 'brick'`);
      */
     findAll(name, type) {
         return Array.from(this._assets).filter(asset => asset.name === name && (!type || asset.type === type));
