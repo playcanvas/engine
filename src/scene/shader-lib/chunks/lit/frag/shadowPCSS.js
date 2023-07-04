@@ -120,7 +120,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
         sampleDir = normalize(sampleDir);
 
     #ifdef GL2
-        float blocker = texture2DLodEXT(shadowMap, sampleDir, 0.0).r;
+        float blocker = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
     #else // GL1
         float blocker = unpackFloat(textureCube(shadowMap, sampleDir));
     #endif
@@ -161,7 +161,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
             sampleDir = normalize(sampleDir);
 
             #ifdef GL2
-                float depth = texture2DLodEXT(shadowMap, sampleDir, 0.0).r;
+                float depth = textureCubeLodEXT(shadowMap, sampleDir, 0.0).r;
             #else // GL1
                 float depth = unpackFloat(textureCube(shadowMap, sampleDir));
             #endif
