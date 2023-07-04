@@ -86,7 +86,7 @@ class Shader {
 
         // pre-process shader sources
         definition.vshader = Preprocessor.run(definition.vshader);
-        definition.fshader = Preprocessor.run(definition.fshader);
+        definition.fshader = Preprocessor.run(definition.fshader, graphicsDevice.webgl2);
 
         this.init();
 
