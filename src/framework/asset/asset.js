@@ -145,7 +145,7 @@ class Asset extends EventHandler {
         /**
          * The asset registry that this Asset belongs to.
          *
-         * @type {import('./asset-registry.js').AssetRegistry}
+         * @type {import('./asset-registry.js').AssetRegistry|null}
          */
         this.registry = null;
 
