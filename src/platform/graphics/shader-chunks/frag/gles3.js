@@ -59,6 +59,7 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 // lod instruction for DirectX correctly and uses SampleCmp instead of SampleCmpLevelZero or similar.
 #if defined(ANDROID)
 // Disable on Android where we have seen artifacts with textureGrad
+#define texelFetch(res, uv, mip) vec2 res ## _size = vec2(textureSize(res, mip)); texture(res, vec2(uv) / res ## _size)
 #define textureShadow(res, uv) texture(res, uv)
 #define textureLod(res, uv, lod) texture(res, uv)
 #else
