@@ -70,8 +70,8 @@ class ShaderUtils {
             }
 
             let deviceOverrides = '';
-            if (platform.android) {
-                deviceOverrides += '#define ANDROID\n';
+            if (device.avoidNonstandardTextureSampling) {
+                deviceOverrides += '#define DISABLE_NONSTANDARD_TEXTURE_SAMPLING\n';
             }
 
             return deviceOverrides + attachmentsDefine + deviceIntro;

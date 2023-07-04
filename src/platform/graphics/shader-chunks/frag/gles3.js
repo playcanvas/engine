@@ -46,10 +46,8 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 #define texture2DBias texture
 #define textureCube texture
 #define texture2DProj textureProj
-#define texture2DLodEXT textureLod
 #define texture2DProjLodEXT textureProjLod
 #define textureCubeLodEXT textureLod
-#define texture2DGradEXT textureGrad
 #define texture2DProjGradEXT textureProjGrad
 #define textureCubeGradEXT textureGrad
 
@@ -57,12 +55,14 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 // clustered lighting) - as DirectX shader compiler tries to unroll the loops and takes long time
 // to compile the shader. Using textureLod would be even better, but WebGl does not translate it to
 // lod instruction for DirectX correctly and uses SampleCmp instead of SampleCmpLevelZero or similar.
-#if defined(ANDROID)
-// Disable on Android where we have seen artifacts with textureGrad
-#define texelFetch(res, uv, mip) vec2 res ## _size = vec2(textureSize(res, mip)); texture(res, vec2(uv) / res ## _size)
+#if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
+// Disable the textureShadow and textureLod functions on devices that don't support it
 #define textureShadow(res, uv) texture(res, uv)
-#define textureLod(res, uv, lod) texture(res, uv)
+#define texture2DLodEXT(res, uv, lod) texture(res, uv)
+#define texture2DGradEXT texture
 #else
+#define texture2DLodEXT textureLod
+#define texture2DGradEXT textureGrad
 #define textureShadow(res, uv) textureGrad(res, uv, vec2(1, 1), vec2(1, 1))
 #endif
 

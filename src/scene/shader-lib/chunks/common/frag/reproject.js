@@ -130,7 +130,7 @@ vec2 octEncode(in vec3 v) {
 }
 
     vec4 sampleCubemap(vec3 dir, float mipLevel) {
-        return textureLod(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+        return texture2DLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
     }
 
     vec4 sampleCubemap(vec2 sph, float mipLevel) {
@@ -149,7 +149,7 @@ vec2 octEncode(in vec3 v) {
 
     vec4 sampleEquirect(vec2 sph, float mipLevel) {
         vec2 uv = sph / vec2(PI * 2.0, PI) + 0.5;
-        return textureLod(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
     }
 
     vec4 sampleEquirect(vec3 dir, float mipLevel) {
@@ -167,7 +167,7 @@ vec2 octEncode(in vec3 v) {
 
     vec4 sampleOctahedral(vec3 dir, float mipLevel) {
         vec2 uv = octEncode(dir) * 0.5 + 0.5;
-        return textureLod(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
+        return texture2DLodEXT(sourceTex, vec2(uv.x, 1.0 - uv.y), mipLevel);
     }
 
     vec4 sampleOctahedral(vec2 sph, float mipLevel) {

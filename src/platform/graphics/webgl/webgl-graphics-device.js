@@ -675,6 +675,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.boneLimit = 34;
         }
 
+        if (this.unmaskedRenderer === 'Adreno (TM) 610' || this.unmaskedRenderer === 'Adreno (TM) 618') {
+            this.avoidNonstandardTextureSampling = true;
+        } else {
+            this.avoidNonstandardTextureSampling = false;
+        }
+
         this.constantTexSource = this.scope.resolve("source");
 
         if (this.extTextureFloat) {

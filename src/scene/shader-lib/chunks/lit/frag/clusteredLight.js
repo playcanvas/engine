@@ -154,21 +154,32 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
 #ifdef GL2
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
-        return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
+        #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
+            vec2 size = vec2(textureSize(lightsTexture8, 0));
+            return texture(lightsTexture8, vec2(index, clusterLightData.lightIndex) / size);  
+        #else
+            return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
+        #endif
+        
     }
 
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
-        return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
+        #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
+            vec2 size = vec2(textureSize(lightsTextureFloat, 0));
+            return texture(lightsTextureFloat, vec2(index, clusterLightData.lightIndex) / size);  
+        #else
+            return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
+        #endif
     }
 
 #else
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-        return textureLod(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
+        return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
     }
 
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-        return textureLod(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
+        return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
     }
 
 #endif
@@ -691,7 +702,12 @@ void addClusteredLights(
             for (int lightCellIndex = 0; lightCellIndex < clusterMaxCells; lightCellIndex++) {
 
                 // using a single channel texture with data in alpha channel
-                float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+                #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
+                    vec2 size = vec2(textureSize(clusterWorldTexture, 0));
+                    float lightIndex = texture(clusterWorldTexture, vec2(int(clusterU) + lightCellIndex, clusterV) / size).x;
+                #else
+                    float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
+                #endif
 
                 if (lightIndex <= 0.0)
                         return;
@@ -725,7 +741,7 @@ void addClusteredLights(
             const float maxLightCells = 256.0;
             for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-                float lightIndex = textureLod(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
+                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
 
                 if (lightIndex <= 0.0)
                     return;

@@ -39,7 +39,7 @@ void addRefraction(
         // Use IOR and roughness to select mip
         float iorToRoughness = (1.0 - gloss) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
         float refractionLod = log2(uScreenSize.x) * iorToRoughness;
-        vec3 refraction = textureLod(uSceneColorMap, uv, refractionLod).rgb;
+        vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
     #else
         vec3 refraction = texture2D(uSceneColorMap, uv).rgb;
     #endif

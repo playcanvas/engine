@@ -59,7 +59,7 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
         vec2 sampleUV = shadowCoords + offset;
 
     #ifdef GL2
-        float blocker = textureLod(shadowMap, sampleUV, 0.0).r;
+        float blocker = texture2DLodEXT(shadowMap, sampleUV, 0.0).r;
     #else // GL1
         float blocker = unpackFloat(texture2D(shadowMap, sampleUV));
     #endif        
@@ -102,7 +102,7 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
             sampleUV = shadowCoords.xy + sampleUV;
 
         #ifdef GL2
-            float depth = textureLod(shadowMap, sampleUV, 0.0).r;
+            float depth = texture2DLodEXT(shadowMap, sampleUV, 0.0).r;
         #else // GL1
             float depth = unpackFloat(texture2D(shadowMap, sampleUV));
         #endif
@@ -120,7 +120,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
         sampleDir = normalize(sampleDir);
 
     #ifdef GL2
-        float blocker = textureLod(shadowMap, sampleDir, 0.0).r;
+        float blocker = texture2DLodEXT(shadowMap, sampleDir, 0.0).r;
     #else // GL1
         float blocker = unpackFloat(textureCube(shadowMap, sampleDir));
     #endif
@@ -161,7 +161,7 @@ float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4
             sampleDir = normalize(sampleDir);
 
             #ifdef GL2
-                float depth = textureLod(shadowMap, sampleDir, 0.0).r;
+                float depth = texture2DLodEXT(shadowMap, sampleDir, 0.0).r;
             #else // GL1
                 float depth = unpackFloat(textureCube(shadowMap, sampleDir));
             #endif
