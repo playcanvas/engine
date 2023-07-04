@@ -42,14 +42,16 @@ export default /* glsl */`
 #ifndef SUPPORTS_TEXLOD
 
     // fallback for lod instructions
-    #define texture2DLodEXT texture2D
-    #define texture2DProjLodEXT textureProj
+    #define textureLod(res, uv, mip) texture2D(res, uv)
+    #define textureProjLod(res, uv, mip) textureProj(res, uv)
+    
     #define textureCubeLodEXT textureCube
     #define textureShadow texture2D
 
 #else
 
     #define textureShadow(res, uv) texture2DGradEXT(res, uv, vec2(1, 1), vec2(1, 1))
+    #define textureLod(res, uv, mip) texture2DLodEXT(res, uv, mip)
 
 #endif
 

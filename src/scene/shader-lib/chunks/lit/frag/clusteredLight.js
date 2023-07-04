@@ -164,11 +164,11 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
 #else
 
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, float index) {
-        return texture2DLodEXT(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
+        return textureLod(lightsTexture8, vec2(index * lightsTextureInvSize.z, clusterLightData.lightV), 0.0);
     }
 
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, float index) {
-        return texture2DLodEXT(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
+        return textureLod(lightsTextureFloat, vec2(index * lightsTextureInvSize.x, clusterLightData.lightV), 0.0);
     }
 
 #endif
@@ -725,7 +725,7 @@ void addClusteredLights(
             const float maxLightCells = 256.0;
             for (float lightCellIndex = 0.5; lightCellIndex < maxLightCells; lightCellIndex++) {
 
-                float lightIndex = texture2DLodEXT(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
+                float lightIndex = textureLod(clusterWorldTexture, vec2(clusterTextureSize.y * (clusterU + lightCellIndex), clusterV), 0.0).x;
 
                 if (lightIndex <= 0.0)
                     return;

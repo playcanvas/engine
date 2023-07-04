@@ -60,6 +60,7 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 #if defined(ANDROID)
 // Disable on Android where we have seen artifacts with textureGrad
 #define textureShadow(res, uv) texture(res, uv)
+#define textureLod(res, uv, lod) texture(res, uv)
 #else
 #define textureShadow(res, uv) textureGrad(res, uv, vec2(1, 1), vec2(1, 1))
 #endif
