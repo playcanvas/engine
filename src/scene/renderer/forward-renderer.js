@@ -258,7 +258,7 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
-                const projectionCompensation = (10.0 / lightRenderData.projectionCompensation);
+                const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
                 const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.penumbraSize);
                 this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
 
@@ -338,7 +338,7 @@ class ForwardRenderer extends Renderer {
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
-            cameraParams[0] = 1;
+            cameraParams[0] = lightRenderData.depthRangeCompensation;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -406,7 +406,7 @@ class ForwardRenderer extends Renderer {
 
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = 1;
+            cameraParams[0] = lightRenderData.depthRangeCompensation;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;

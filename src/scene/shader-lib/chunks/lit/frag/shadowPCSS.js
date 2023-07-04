@@ -49,7 +49,6 @@ float viewSpaceDepth(float depth, mat4 invProjection) {
     return viewSpace.z;
 }
 
-
 float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z) {
 
     float blockers = 0.0;
@@ -74,7 +73,7 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
-    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
+    float receiverDepth = shadowCoords.z;
 #ifndef GL2
     // If using packed depth on GL1, we need to normalize to get the correct receiver depth
     receiverDepth *= 1.0 / (cameraParams.y - cameraParams.z);

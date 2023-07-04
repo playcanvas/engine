@@ -505,7 +505,6 @@ class LitShader {
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
         const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
-        const needsLinearizedDepth = shadowType === SHADOW_PCSS;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -516,12 +515,7 @@ class LitShader {
         // Flag if we are using non-standard depth, i.e gl_FragCoord.z
         let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
-            if (needsLinearizedDepth) {
-                code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
-                hasModifiedDepth = true;
-            } else {
-                code += "    float depth = gl_FragCoord.z;\n";
-            }
+            code += "    float depth = gl_FragCoord.z;\n";
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
             hasModifiedDepth = true;
@@ -533,7 +527,7 @@ class LitShader {
             hasModifiedDepth = true;
         }
 
-        if (usePerspectiveDepth && needsLinearizedDepth && usePackedDepth) {
+        if (usePerspectiveDepth && usePackedDepth) {
             code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
             hasModifiedDepth = true;
         }
