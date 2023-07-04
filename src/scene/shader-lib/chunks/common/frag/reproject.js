@@ -130,7 +130,7 @@ vec2 octEncode(in vec3 v) {
 }
 
     vec4 sampleCubemap(vec3 dir, float mipLevel) {
-        return texture2DLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
+        return textureCubeLodEXT(sourceCube, modifySeams(dir, 1.0 - exp2(mipLevel) * sourceCubeSeamScale()), mipLevel);
     }
 
     vec4 sampleCubemap(vec2 sph, float mipLevel) {
