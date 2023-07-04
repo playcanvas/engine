@@ -37,13 +37,13 @@ class AssetRegistry extends EventHandler {
      * @type {Set<Asset>}
      * @private
      */
-   _assets = new Set();
+    _assets = new Set();
 
     /**
      * @type {Map<number, Asset>}
      * @private
      */
-   _idToAsset = new Map();
+    _idToAsset = new Map();
 
     /**
      * @type {Map<string, Asset>}
