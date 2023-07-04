@@ -338,7 +338,7 @@ class ForwardRenderer extends Renderer {
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
-            cameraParams[0] = lightRenderData.depthRangeCompensation;
+            cameraParams[0] = 1;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
