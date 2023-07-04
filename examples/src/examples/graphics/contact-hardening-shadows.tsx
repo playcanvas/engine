@@ -18,7 +18,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -32,7 +32,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -46,7 +46,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -81,7 +81,7 @@ class ContactHardeningShadowsExample {
                 helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
                 cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
                 luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
-                asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/old_tree.glb' })
+                asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/robot-arm.glb' })
             };
 
             const gfxOptions = {
@@ -166,19 +166,19 @@ class ContactHardeningShadowsExample {
                         area: {
                             enabled: true,
                             intensity: 16.0,
-                            size: 8,
+                            size: 2,
                             shadowType: pc.SHADOW_PCSS
                         },
                         point: {
                             enabled: true,
                             intensity: 4.0,
-                            size: 8,
+                            size: 2,
                             shadowType: pc.SHADOW_PCSS
                         },
                         directional: {
                             enabled: true,
                             intensity: 2.0,
-                            size: 9,
+                            size: 1,
                             shadowType: pc.SHADOW_PCSS
                         }
                     });
