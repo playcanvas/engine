@@ -272,7 +272,7 @@ class AssetRegistry extends EventHandler {
 
         this._idToAsset.delete(asset.id);
 
-        if (asset.file) {
+        if (asset.file?.url) {
             this._urlToAsset.delete(asset.file.url);
         }
 
