@@ -249,7 +249,7 @@ class AssetRegistry extends EventHandler {
 
         this.fire('add', asset);
         this.fire('add:' + asset.id, asset);
-        if (asset.file)
+        if (asset.file?.url)
             this.fire('add:url:' + asset.file.url, asset);
 
         if (asset.preload)
