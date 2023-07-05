@@ -301,7 +301,8 @@ class AssetRegistry extends EventHandler {
      * const asset = app.assets.get(100);
      */
     get(id) {
-        return this._idToAsset.get(id);
+        // Since some apps incorrectly pass the id as a string, force a conversion to a number
+        return this._idToAsset.get(Number(id));
     }
 
     /**
