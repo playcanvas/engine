@@ -365,13 +365,17 @@ class ContactHardeningShadowsExample {
                             directionalLight.enabled = index === 1;
                             lightOmni.enabled = index === 2;
 
-                            areaLightElement.ui.enabled = false;
-                            pointLightElement.ui.enabled = false;
-                            directionalLightElement.ui.enabled = false;
+                            if (areaLightElement) {
+                                areaLightElement.ui.enabled = false;
+                                pointLightElement.ui.enabled = false;
+                                directionalLightElement.ui.enabled = false;
+                            }
                         } else {
-                            areaLightElement.ui.enabled = true;
-                            pointLightElement.ui.enabled = true;
-                            directionalLightElement.ui.enabled = true;
+                            if (areaLightElement) {
+                                areaLightElement.ui.enabled = true;
+                                pointLightElement.ui.enabled = true;
+                                directionalLightElement.ui.enabled = true;
+                            }
 
                             areaLight.enabled = data.get('script.area.enabled');
                             directionalLight.enabled = data.get('script.directional.enabled');
