@@ -98,7 +98,8 @@ class Preprocessor {
      *
      * @param {string} source - The source code to work on.
      * @param {Map<string, string>} defines - Supplied defines which are used in addition to those
-     * defined in the source code. Maps a define name to its value.
+     * defined in the source code. Maps a define name to its value. Note that the map is modified
+     * by the function.
      * @returns {string} Returns preprocessed source code.
      */
     static _preprocess(source, defines = new Map()) {
@@ -110,7 +111,6 @@ class Preprocessor {
 
         // true if the function encounter a problem
         let error = false;
-        defines = new Map(defines);
 
         let match;
         while ((match = KEYWORD.exec(source)) !== null) {
