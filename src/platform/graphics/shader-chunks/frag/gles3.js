@@ -57,7 +57,7 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 // lod instruction for DirectX correctly and uses SampleCmp instead of SampleCmpLevelZero or similar.
 #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
 // Disable the textureShadow and textureLod functions on devices that don't support it
-#define textureShadow(res, uv) texture(res, uv)
+#define textureShadow texture
 #define texture2DLodEXT(res, uv, lod) texture(res, uv)
 #define texture2DGradEXT texture
 #else

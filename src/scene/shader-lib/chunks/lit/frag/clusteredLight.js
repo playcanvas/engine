@@ -156,7 +156,7 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     vec4 sampleLightsTexture8(const ClusterLightData clusterLightData, int index) {
         #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
             vec2 size = vec2(textureSize(lightsTexture8, 0));
-            return texture(lightsTexture8, vec2(index, clusterLightData.lightIndex) / size);  
+            return texture(lightsTexture8, (vec2(index, clusterLightData.lightIndex) + vec2(0.5)) / size);  
         #else
             return texelFetch(lightsTexture8, ivec2(index, clusterLightData.lightIndex), 0);
         #endif
@@ -166,7 +166,7 @@ vec4 decodeClusterLowRange4Vec4(vec4 d0, vec4 d1, vec4 d2, vec4 d3) {
     vec4 sampleLightTextureF(const ClusterLightData clusterLightData, int index) {
         #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
             vec2 size = vec2(textureSize(lightsTextureFloat, 0));
-            return texture(lightsTextureFloat, vec2(index, clusterLightData.lightIndex) / size);  
+            return texture(lightsTextureFloat, (vec2(index, clusterLightData.lightIndex) + vec2(0.5)) / size);  
         #else
             return texelFetch(lightsTextureFloat, ivec2(index, clusterLightData.lightIndex), 0);
         #endif
@@ -704,7 +704,7 @@ void addClusteredLights(
                 // using a single channel texture with data in alpha channel
                 #if defined(DISABLE_NONSTANDARD_TEXTURE_SAMPLING)
                     vec2 size = vec2(textureSize(clusterWorldTexture, 0));
-                    float lightIndex = texture(clusterWorldTexture, vec2(int(clusterU) + lightCellIndex, clusterV) / size).x;
+                    float lightIndex = texture(clusterWorldTexture, (vec2(int(clusterU) + lightCellIndex, clusterV) + vec2(0.5)) / size).x;
                 #else
                     float lightIndex = texelFetch(clusterWorldTexture, ivec2(int(clusterU) + lightCellIndex, clusterV), 0).x;
                 #endif
