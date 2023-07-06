@@ -1,7 +1,7 @@
 export default /* glsl */`
-    gl_FragColor.rgb = combineColor(litShaderArgs.albedo, litShaderArgs.sheen.specularity, litShaderArgs.clearcoat.specularity);
+    gl_FragColor.rgb = combineColor(litShaderArgs_albedo, litShaderArgs_sheen_specularity, litShaderArgs_clearcoat_specularity);
 
-    gl_FragColor.rgb += litShaderArgs.emission;
+    gl_FragColor.rgb += litShaderArgs_emission;
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
 
     #ifndef HDR
