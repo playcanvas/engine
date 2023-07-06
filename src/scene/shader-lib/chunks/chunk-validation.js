@@ -53,7 +53,7 @@ const chunkVersions = {
     lightSpecularPhongPS: CHUNKAPI_1_62,
     lightmapAddPS: CHUNKAPI_1_62,
     lightmapDirAddPS: CHUNKAPI_1_62,
-    ltcPS: CHUNKAPI_1_62,    
+    ltcPS: CHUNKAPI_1_62,
     outputAlphaPS: CHUNKAPI_1_62,
     outputAlphaPremulPS: CHUNKAPI_1_62,
     reflDirPS: CHUNKAPI_1_62,
