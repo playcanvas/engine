@@ -106,7 +106,9 @@ class ContactHardeningShadowsExample {
                     // @ts-ignore
                     pc.LightComponentSystem,
                     // @ts-ignore
-                    pc.ScriptComponentSystem
+                    pc.ScriptComponentSystem,
+                    // @ts-ignore
+                    pc.AnimComponentSystem
                 ];
                 createOptions.resourceHandlers = [
                     // @ts-ignore
@@ -116,7 +118,11 @@ class ContactHardeningShadowsExample {
                     // @ts-ignore
                     pc.ScriptHandler,
                     // @ts-ignore
-                    pc.JsonHandler
+                    pc.JsonHandler,
+                    // @ts-ignore
+                    pc.AnimClipHandler,
+                    // @ts-ignore
+                    pc.AnimStateGraphHandler
                 ];
 
                 const app = new pc.AppBase(canvas);
@@ -157,7 +163,7 @@ class ContactHardeningShadowsExample {
                         material: planeMaterial
                     });
                     plane.setLocalScale(new pc.Vec3(100, 0, 100));
-                    plane.setLocalPosition(0, -1.0, 0);
+                    plane.setLocalPosition(0, 0, 0);
                     app.root.addChild(plane);
 
                     data.set('script', {
@@ -184,7 +190,16 @@ class ContactHardeningShadowsExample {
                     });
 
                     const occluder = assets.asset.resource.instantiateRenderEntity();
+                    occluder.addComponent('anim', {
+                        activate: true
+                    });
+                    occluder.setLocalScale(3, 3, 3);
                     app.root.addChild(occluder);
+
+                    occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
+                    occluder.anim.baseLayer.weight = 1.0;
+                    occluder.anim.speed = 0.1;
+                    //const animLayer = occluder.anim.addLayer('Idle', 1.0, )
 
                     app.scene.envAtlas = assets.helipad.resource;
 
@@ -239,7 +254,7 @@ class ContactHardeningShadowsExample {
                         shadowBias: 0.5,
                         shadowDistance: 50,
                         normalOffsetBias: 0.1,
-                        shadowResolution: 2048
+                        shadowResolution: 8192
                     });
                     directionalLight.setEulerAngles(65, 35, 0);
                     app.root.addChild(directionalLight);
