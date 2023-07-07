@@ -46,7 +46,7 @@ const custom  = {
 
         decl.append(litShader.chunks.litShaderArgsPS);
         code.append(options.customLitArguments);
-        func.code = `LitShaderArguments litShaderArgs = evaluateFrontend();`;
+        func.code = `evaluateFrontend();`;
 
         func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
         const useUv = [];

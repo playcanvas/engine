@@ -114,18 +114,16 @@ class CustomMaterialExample {
                 material.litOptions = options;
 
                 const argumentsChunk = `
-                LitShaderArguments evaluateFrontend() {
-                    LitShaderArguments args;
-                    args.emission = vec3(0, 0, 0);
-                    args.albedo = dVertexNormalW;
-                    args.metalness = 0.5;
-                    args.specularity = vec3(1,1,1);
-                    args.specularityFactor = 1.0;
-                    args.gloss = 0.5;
-                    args.worldNormal = dVertexNormalW;
-                    args.ao = 0.0;
-                    args.opacity = 1.0;
-                    return args;
+                void evaluateFrontend() {
+                    litArgs_emission = vec3(0, 0, 0);
+                    litArgs_albedo = dVertexNormalW;
+                    litArgs_metalness = 0.5;
+                    litArgs_specularity = vec3(1,1,1);
+                    litArgs_specularityFactor = 1.0;
+                    litArgs_gloss = 0.5;
+                    litArgs_worldNormal = dVertexNormalW;
+                    litArgs_ao = 0.0;
+                    litArgs_opacity = 1.0;
                 }`;
                 material.argumentsChunk = argumentsChunk;
                 material.update();
