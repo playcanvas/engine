@@ -41,7 +41,6 @@ const chunkVersions = {
     clusteredLightPS: CHUNKAPI_1_62,
     clusteredLightShadowPS: CHUNKAPI_1_62,
     combinePS: CHUNKAPI_1_62,
-    endPS: CHUNKAPI_1_62,
     falloffInvSquaredPS: CHUNKAPI_1_62,
     falloffLinearPS: CHUNKAPI_1_62,
     fresnelSchlickPS: CHUNKAPI_1_62,
@@ -54,8 +53,6 @@ const chunkVersions = {
     lightmapAddPS: CHUNKAPI_1_62,
     lightmapDirAddPS: CHUNKAPI_1_62,
     ltcPS: CHUNKAPI_1_62,
-    outputAlphaPS: CHUNKAPI_1_62,
-    outputAlphaPremulPS: CHUNKAPI_1_62,
     reflDirPS: CHUNKAPI_1_62,
     reflDirAnisoPS: CHUNKAPI_1_62,
     reflectionCCPS: CHUNKAPI_1_62,
@@ -81,7 +78,10 @@ const chunkVersions = {
     TBNderivativePS: CHUNKAPI_1_62,
     TBNfastPS: CHUNKAPI_1_62,
 
-    metalnessModulatePS: CHUNKAPI_1_65
+    endPS: CHUNKAPI_1_65,
+    metalnessModulatePS: CHUNKAPI_1_65,
+    outputAlphaPS: CHUNKAPI_1_65,
+    outputAlphaPremulPS: CHUNKAPI_1_65
 };
 
 // removed
