@@ -402,6 +402,7 @@ const standardMaterialProps = [
     ['emissiveVertexColor', 'boolean'],
     ['emissiveVertexColorChannel', 'string'],
     ['enableGGXSpecular', 'boolean'],
+    ['envAtlas', 'Texture|null'],
     ['fresnelModel', 'number'],
     ['gloss', 'number'],
     ['glossMap', 'Texture|null'],
