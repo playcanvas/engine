@@ -1,4 +1,4 @@
-import { LIGHTTYPE_DIRECTIONAL } from "../../constants";
+import { LIGHTTYPE_DIRECTIONAL } from "../../constants.js";
 
 const lit = {
 
@@ -56,4 +56,4 @@ const lit = {
     }
 };
 
-export default lit;
+export { lit };

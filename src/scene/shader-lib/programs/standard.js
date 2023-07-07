@@ -2,7 +2,7 @@ import { hashCode } from '../../../core/hash.js';
 import { Debug } from '../../../core/debug.js';
 
 import {
-    BLEND_NONE, FRESNEL_SCHLICK, LIGHTTYPE_DIRECTIONAL,
+    BLEND_NONE, FRESNEL_SCHLICK,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
@@ -11,7 +11,7 @@ import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
-import lit from './lit.js';
+import { lit } from './lit.js';
 
 const _matTex2D = [];
 

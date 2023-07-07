@@ -1,7 +1,7 @@
 import { hashCode } from '../../../core/hash.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
-import lit from './lit.js';
+import { lit } from './lit.js';
 
 const custom  = {
 
