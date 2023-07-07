@@ -11,7 +11,7 @@ const lit = {
         return props.sort();
     },
 
-    propertiesKey: function(props) {
+    propertiesKey: function (props) {
         let key = "";
         for (let i = 0; i < props.length; i++) {
             if (props[i])
