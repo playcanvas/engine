@@ -626,14 +626,23 @@ class Scene extends EventHandler {
      */
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
+            const prevIdentity = this._skyboxRotation.equals(Quat.IDENTITY);
+            const newIdentity = value.equals(Quat.IDENTITY);
+
             this._skyboxRotation.copy(value);
-            if (value.equals(Quat.IDENTITY)) {
+
+            if (newIdentity) {
                 this._skyboxRotationMat3.setIdentity();
             } else {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
             }
-            this._resetSky();
+
+            // only reset sky / rebuild scene shaders if rotation changed from identity, to include
+            // support for skybox rotation in shaders
+            if (prevIdentity && !newIdentity) {
+                this._resetSky();
+            }
         }
     }
 
