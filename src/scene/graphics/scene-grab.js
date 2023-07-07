@@ -304,9 +304,13 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget.depthBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
-                        this.depthRenderTarget.destroyTextureBuffers();
+                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                        this.depthRenderTarget?.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
+
+                        // assign it so the render actions knows to render to it
+                        // TODO: avoid this as this API is deprecated
+                        this.renderTarget = this.depthRenderTarget;
                     }
 
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
