@@ -1,18 +1,16 @@
-import React from 'react';
-
 import * as pc from '../../../../';
-import { Panel, Button } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
-
 class CustomMaterialExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Custom Material';
+    static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <></>;
-    }
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -21,7 +19,7 @@ class CustomMaterialExample {
             checkerboard: new pc.Asset('checkerboard', 'texture', { url: '/static/assets/textures/checkboard.png' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -66,7 +64,6 @@ class CustomMaterialExample {
                 app.start();
 
                 app.scene.envAtlas = assets.helipad.resource;
-                app.scene.clusteredLightingEnabled = false;
 
                 // Create an Entity with a camera component
                 const camera = new pc.Entity();
