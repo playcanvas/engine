@@ -54,7 +54,7 @@ export const EVENT_MOUSEWHEEL = 'mousewheel';
 
 /**
  * Name of event fired when the mouse moves out of `Mouse#_target`.
- * 
+ *
  * This also fires upon:
  *  - entering DOM elements on top of `Mouse#_target`
  *  - moving out of an unfocused PlayCanvas browser window so you may want to check for focus
