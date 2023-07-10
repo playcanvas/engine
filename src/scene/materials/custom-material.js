@@ -17,18 +17,38 @@ class CustomMaterial extends Material {
 
     _argumentsChunk = "";
 
+    /**
+     * Set the lit options used to generate the lighting code for the shader.
+     *
+     * @param {LitOptions} value - The lit options.
+     */
     set litOptions(value) {
         this._litOptions = value;
     }
 
+    /**
+     * Get the lit options.
+     *
+     * @type {LitOptions}
+     */
     get litOptions() {
         return this._litOptions;
     }
 
+    /**
+     * Set the shader chunk used to feed arguments to the lit shader.
+     *
+     * @param {string} value - The shader chunk.
+     */
     set argumentsChunk(value) {
         this._argumentsChunk = value;
     }
 
+    /**
+     * Get the shader chunk used to describe the arguments to the lit shader.
+     *
+     * @type {string}
+     */
     get argumentsChunk() {
         return this._argumentsChunk;
     }
