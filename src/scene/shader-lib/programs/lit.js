@@ -2,7 +2,7 @@ import { LIGHTTYPE_DIRECTIONAL } from "../../constants.js";
 
 const lit = {
 
-    buildPropertiesList: function (options) {
+    buildPropertiesList(options) {
         const props = [];
         for (const prop in options) {
             if (options.hasOwnProperty(prop) && prop !== "chunks" && prop !== "lights")
@@ -11,7 +11,7 @@ const lit = {
         return props.sort();
     },
 
-    propertiesKey: function (props) {
+    propertiesKey(props) {
         let key = "";
         for (let i = 0; i < props.length; i++) {
             if (props[i])
@@ -20,7 +20,7 @@ const lit = {
         return key;
     },
 
-    litOptionsKey: function (options) {
+    litOptionsKey(options) {
         let key = "";
         for (const m in options) {
 
@@ -40,7 +40,7 @@ const lit = {
         return key;
     },
 
-    chunksKey: function (chunks) {
+    chunksKey(chunks) {
         let key = "";
         if (chunks) {
             const chunks = [];
