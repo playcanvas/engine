@@ -17,6 +17,8 @@ class CustomMaterial extends Material {
 
     _argumentsChunk = "";
 
+    _usedUvs = [true];
+
     /**
      * Set the lit options used to generate the lighting code for the shader.
      *
@@ -53,6 +55,15 @@ class CustomMaterial extends Material {
         return this._argumentsChunk;
     }
 
+    /**
+     * Enable a specific UV channel.
+     *
+     * @param {number} value - The UV channel.
+     */
+    setUsedUv(value) {
+        this._usedUvs[value] = true;
+    }
+
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         const options = {
@@ -77,6 +88,7 @@ class CustomMaterial extends Material {
 
         this._litOptions.lights = lightsFiltered;
         options.customLitArguments = this._argumentsChunk;
+        options.usedUvs = this._usedUvs;
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 

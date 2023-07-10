@@ -30,7 +30,7 @@ const custom  = {
     /**
      * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
      * graphics device.
-     * @param {object} options - The lit options to be passed to the backend.
+     * @param {object} options - The options to be passed to the backend.
      * @returns {object} Returns the created shader definition.
      * @ignore
      */
@@ -49,10 +49,9 @@ const custom  = {
         func.code = `evaluateFrontend();`;
 
         func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
-        const useUv = [];
-        const useUnmodifiedUv = [];
+        const usedUvSets = options.usedUvs || [true];
         const mapTransforms = [];
-        litShader.generateVertexShader(useUv, useUnmodifiedUv, mapTransforms);
+        litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
         litShader.generateFragmentShader(decl.code, code.code, func.code, "vUv0");
 
         return litShader.getDefinition();
