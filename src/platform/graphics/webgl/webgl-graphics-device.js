@@ -39,6 +39,7 @@ import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 
 const invalidateAttachments = [];
 
@@ -721,6 +722,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.postInit();
     }
 
+    postInit() {
+        super.postInit();
+
+        this.gpuProfiler = new WebglGpuProfiler(this);
+    }
+
     /**
      * Destroy the graphics device.
      */
@@ -1121,6 +1128,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const target of this.targets) {
             target.loseContext();
         }
+
+        this.gpuProfiler.loseContext();
     }
 
     /**
@@ -1295,6 +1304,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }));
         }
         return this._copyShader;
+    }
+
+    frameStart() {
+        super.frameStart();
+        this.gpuProfiler.frameStart();
+    }
+
+    frameEnd() {
+        super.frameEnd();
+        this.gpuProfiler.frameEnd();
+        this.gpuProfiler.request();
     }
 
     /**

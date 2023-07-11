@@ -164,7 +164,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      * @ignore
      */
-    renderPassIndex;
+    renderPassIndex = 0;   /////////////////// hack
 
     /** @type {boolean} */
     insideRenderPass = false;
@@ -251,6 +251,13 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     dynamicBuffers;
+
+    /**
+     * The GPU profiler.
+     *
+     * @type {import('./gpu-profiler.js').GpuProfiler}
+     */
+    gpuProfiler;
 
     defaultClearOptions = {
         color: [0, 0, 0, 1],
@@ -366,6 +373,9 @@ class GraphicsDevice extends EventHandler {
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
+
+        this.gpuProfiler?.destroy();
+        this.gpuProfiler = null;
     }
 
     onDestroyShader(shader) {
