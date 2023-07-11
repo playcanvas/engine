@@ -115,6 +115,8 @@ class CustomMaterialExample {
                 options.ambientEncoding = assets.helipad.resource.encoding;
                 options.clusteredLightingEnabled = app.scene.clusteredLightingEnabled;
                 options.normalMapEnabled = true;
+                options.useSpecularColor = true;
+                options.useSpecularityFactor = true;
                 material.litOptions = options;
 
                 const argumentsChunk = `
@@ -122,16 +124,19 @@ class CustomMaterialExample {
                 uniform sampler2D texture_glossMap;
                 uniform sampler2D texture_normalMap;
                 uniform float material_normalMapIntensity;
+                uniform vec3 material_specularRgb;
                 void evaluateFrontend() {
                     litArgs_emission = vec3(0, 0, 0);
                     litArgs_metalness = 0.5;
-                    litArgs_specularity = vec3(1,1,1);
+                    litArgs_specularity = material_specularRgb;
                     litArgs_specularityFactor = 1.0;
                     litArgs_gloss = texture2D(texture_glossMap, vUv0).r;
 
+                    litArgs_ior = 0.1;
+
                     vec3 normalMap = texture2D(texture_normalMap, vUv0).xyz * 2.0 - 1.0;
                     litArgs_worldNormal = normalize(dTBN * mix(vec3(0,0,1), normalMap, material_normalMapIntensity));
-                    litArgs_albedo = vec3(0.2) + texture2D(texture_diffuseMap, vUv0).xyz;
+                    litArgs_albedo = vec3(0.5) + texture2D(texture_diffuseMap, vUv0).xyz;
 
                     litArgs_ao = 0.0;
                     litArgs_opacity = 1.0;
@@ -152,6 +157,7 @@ class CustomMaterialExample {
                 let time = 0;
                 app.on("update", function (dt: number) {
                     time += dt;
+                    material.setParameter("material_specularRgb", [(Math.sin(time) + 1.0) * 0.5, (Math.cos(time * 0.5) + 1.0) * 0.5, (Math.sin(time * 0.7) + 1.0) * 0.5]);
                     material.setParameter("material_normalMapIntensity", (Math.sin(time) + 1.0) * 0.5);
                 });
             });
