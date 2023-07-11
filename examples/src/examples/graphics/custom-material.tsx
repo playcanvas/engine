@@ -2,6 +2,7 @@ import * as pc from '../../../../';
 class CustomMaterialExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Custom Material';
+    static HIDDEN = true;
     static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
