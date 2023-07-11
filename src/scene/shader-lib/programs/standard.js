@@ -393,6 +393,11 @@ const standard = {
                     code.append(this._addMap("metalness", "metalnessPS", options, litShader.chunks, textureMapping));
                     func.append("getMetalness();");
                     args.append("litArgs_metalness = dMetalness;");
+
+                    decl.append("float dIor;");
+                    code.append(this._addMap("ior", "iorPS", options, litShader.chunks, textureMapping));
+                    func.append("getIor();");
+                    args.append("litArgs_ior = dIor;");
                 }
                 if (options.litOptions.useSpecularityFactor) {
                     decl.append("float dSpecularityFactor;");

@@ -242,6 +242,7 @@ class StandardMaterialOptionsBuilder {
         options.clearCoatTint = (stdMat.clearCoat !== 1.0) ? 1 : 0;
         options.clearCoatGloss = !!stdMat.clearCoatGloss;
         options.clearCoatGlossTint = (stdMat.clearCoatGloss !== 1.0) ? 1 : 0;
+        options.iorTint = stdMat.refractionIndex !== 1.0 / 1.5 ? 1 : 0;
 
         options.iridescenceTint = stdMat.iridescence !== 1.0 ? 1 : 0;
 

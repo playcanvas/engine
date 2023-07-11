@@ -725,17 +725,6 @@ class StandardMaterial extends Material {
             if (!this.sheenGlossMap || this.sheenGlossTint) {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
             }
-
-            if (this.refractionIndex === 0.0) {
-                this._setParameter('material_f0', 1.0);
-            } else if (this.refractionIndex !== 1.0 / 1.5) {
-                const oneOverRefractionIndex = 1.0 / this.refractionIndex;
-                const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
-                this._setParameter('material_f0', f0 * f0);
-            } else {
-                this._setParameter('material_f0', 0.04);
-            }
-
         }
 
         if (this.enableGGXSpecular) {

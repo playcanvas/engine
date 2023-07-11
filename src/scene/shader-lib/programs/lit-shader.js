@@ -1027,7 +1027,8 @@ class LitShader {
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
             if (options.useMetalness) {
-                backend.append("    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness);");
+                backend.append("    float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;");
+                backend.append("    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);");
                 backend.append("    litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);");
             }
 
@@ -1439,7 +1440,8 @@ class LitShader {
                         litArgs_gloss, 
                         litArgs_specularity, 
                         litArgs_albedo, 
-                        litArgs_transmission
+                        litArgs_transmission,
+                        litArgs_ior
                     #if defined(LIT_IRIDESCENCE)
                         , iridescenceFresnel, 
                         litArgs_iridescence
