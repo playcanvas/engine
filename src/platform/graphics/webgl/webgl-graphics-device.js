@@ -858,6 +858,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
         const supportedExtensions = gl.getSupportedExtensions();
         this.supportedExtensions = supportedExtensions;
+        this._extDisjointTimerQuery = null;
 
         if (this.webgl2) {
             this.extBlendMinmax = true;
@@ -1152,6 +1153,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
+
+        this.gpuProfiler.restoreContext();
     }
 
     /**

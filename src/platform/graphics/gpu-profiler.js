@@ -32,6 +32,10 @@ class GpuProfiler {
 
     _frameTime = 0;
 
+    loseContext() {
+        this.pastFrameAllocations.clear();
+    }
+
     /**
      * True to enable the profiler.
      *

@@ -82,9 +82,14 @@ class WebglGpuProfiler extends GpuProfiler {
      * @ignore
      */
     loseContext() {
+        super.loseContext();
         this.freeQueries = [];
         this.frameQueries = [];
         this.previousFrameQueries = [];
+    }
+
+    restoreContext() {
+        this.ext = this.device.extDisjointTimerQuery;
     }
 
     getQuery() {
