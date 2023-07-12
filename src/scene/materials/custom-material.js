@@ -8,6 +8,7 @@ import { custom } from '../shader-lib/programs/custom.js';
 
 /**
  * A custom material provides a custom shader chunk for the arguments passed to the lit shader.
+ *
  * @ignore
  */
 
