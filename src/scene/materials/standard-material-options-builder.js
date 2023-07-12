@@ -1,5 +1,3 @@
-import { Quat } from '../../core/math/quat.js';
-
 import {
     PIXELFORMAT_DXT5, PIXELFORMAT_RGBA8, TEXTURETYPE_SWIZZLEGGGR
 } from '../../platform/graphics/constants.js';
