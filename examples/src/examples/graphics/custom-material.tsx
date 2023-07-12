@@ -142,7 +142,7 @@ class CustomMaterialExample {
                     litArgs_ao = 0.0;
                     litArgs_opacity = 1.0;
                 }`;
-                material.argumentsChunk = argumentsChunk;
+                material.shaderChunk = argumentsChunk;
                 material.update();
 
                 // create primitive

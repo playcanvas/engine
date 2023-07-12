@@ -15,7 +15,7 @@ import { custom } from '../shader-lib/programs/custom.js';
 class CustomMaterial extends Material {
     _litOptions = new LitOptions();
 
-    _argumentsChunk = "";
+    _shaderChunk = "";
 
     _usedUvs = [true];
 
@@ -42,8 +42,8 @@ class CustomMaterial extends Material {
      *
      * @param {string} value - The shader chunk.
      */
-    set argumentsChunk(value) {
-        this._argumentsChunk = value;
+    set shaderChunk(value) {
+        this._shaderChunk = value;
     }
 
     /**
@@ -51,8 +51,8 @@ class CustomMaterial extends Material {
      *
      * @type {string}
      */
-    get argumentsChunk() {
-        return this._argumentsChunk;
+    get shaderChunk() {
+        return this._shaderChunk;
     }
 
     /**
@@ -87,7 +87,7 @@ class CustomMaterial extends Material {
         collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
 
         this._litOptions.lights = lightsFiltered;
-        options.customLitArguments = this._argumentsChunk;
+        options.customLitArguments = this._shaderChunk;
         options.usedUvs = this._usedUvs;
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
