@@ -8,6 +8,7 @@ import { custom } from '../shader-lib/programs/custom.js';
 
 /**
  * A custom material provides a custom front-end part of a lit material
+ *
  * @ignore
  * @augments Material
  */
