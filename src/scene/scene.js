@@ -226,6 +226,7 @@ class Scene extends EventHandler {
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
+        this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
         this._skyboxRotationMat3 = new Mat3();
         this._skyboxRotationMat4 = new Mat4();
@@ -626,21 +627,20 @@ class Scene extends EventHandler {
      */
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
-            const prevIdentity = this._skyboxRotation.equals(Quat.IDENTITY);
-            const newIdentity = value.equals(Quat.IDENTITY);
 
+            const isIdentity = value.equals(Quat.IDENTITY);
             this._skyboxRotation.copy(value);
 
-            if (newIdentity) {
+            if (isIdentity) {
                 this._skyboxRotationMat3.setIdentity();
             } else {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
             }
 
-            // only reset sky / rebuild scene shaders if rotation changed from identity, to include
-            // support for skybox rotation in shaders
-            if (prevIdentity && !newIdentity) {
+            // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
+            if (!this._skyboxRotationShaderInclude && !isIdentity) {
+                this._skyboxRotationShaderInclude = true;
                 this._resetSky();
             }
         }
