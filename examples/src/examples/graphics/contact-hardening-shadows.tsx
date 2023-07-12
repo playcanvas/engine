@@ -18,7 +18,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -32,7 +32,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -46,7 +46,7 @@ class ContactHardeningShadowsExample {
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.intensity' }} min={0.0} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.1} max={35.0}/>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.01} max={32.0}/>
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
@@ -81,7 +81,7 @@ class ContactHardeningShadowsExample {
                 helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
                 cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
                 luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
-                asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/old_tree.glb' })
+                asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/robot-arm.glb' })
             };
 
             const gfxOptions = {
@@ -106,7 +106,9 @@ class ContactHardeningShadowsExample {
                     // @ts-ignore
                     pc.LightComponentSystem,
                     // @ts-ignore
-                    pc.ScriptComponentSystem
+                    pc.ScriptComponentSystem,
+                    // @ts-ignore
+                    pc.AnimComponentSystem
                 ];
                 createOptions.resourceHandlers = [
                     // @ts-ignore
@@ -116,7 +118,11 @@ class ContactHardeningShadowsExample {
                     // @ts-ignore
                     pc.ScriptHandler,
                     // @ts-ignore
-                    pc.JsonHandler
+                    pc.JsonHandler,
+                    // @ts-ignore
+                    pc.AnimClipHandler,
+                    // @ts-ignore
+                    pc.AnimStateGraphHandler
                 ];
 
                 const app = new pc.AppBase(canvas);
@@ -157,7 +163,7 @@ class ContactHardeningShadowsExample {
                         material: planeMaterial
                     });
                     plane.setLocalScale(new pc.Vec3(100, 0, 100));
-                    plane.setLocalPosition(0, -1.0, 0);
+                    plane.setLocalPosition(0, 0, 0);
                     app.root.addChild(plane);
 
                     data.set('script', {
@@ -166,25 +172,34 @@ class ContactHardeningShadowsExample {
                         area: {
                             enabled: true,
                             intensity: 16.0,
-                            size: 8,
+                            size: 2,
                             shadowType: pc.SHADOW_PCSS
                         },
                         point: {
                             enabled: true,
                             intensity: 4.0,
-                            size: 8,
+                            size: 2,
                             shadowType: pc.SHADOW_PCSS
                         },
                         directional: {
                             enabled: true,
                             intensity: 2.0,
-                            size: 20,
+                            size: 1,
                             shadowType: pc.SHADOW_PCSS
                         }
                     });
 
                     const occluder = assets.asset.resource.instantiateRenderEntity();
+                    occluder.addComponent('anim', {
+                        activate: true
+                    });
+                    occluder.setLocalScale(3, 3, 3);
                     app.root.addChild(occluder);
+
+                    occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
+                    occluder.anim.baseLayer.weight = 1.0;
+                    occluder.anim.speed = 0.1;
+                    //const animLayer = occluder.anim.addLayer('Idle', 1.0, )
 
                     app.scene.envAtlas = assets.helipad.resource;
 
@@ -239,7 +254,7 @@ class ContactHardeningShadowsExample {
                         shadowBias: 0.5,
                         shadowDistance: 50,
                         normalOffsetBias: 0.1,
-                        shadowResolution: 2048
+                        shadowResolution: 8192
                     });
                     directionalLight.setEulerAngles(65, 35, 0);
                     app.root.addChild(directionalLight);
@@ -365,13 +380,17 @@ class ContactHardeningShadowsExample {
                             directionalLight.enabled = index === 1;
                             lightOmni.enabled = index === 2;
 
-                            areaLightElement.ui.enabled = false;
-                            pointLightElement.ui.enabled = false;
-                            directionalLightElement.ui.enabled = false;
+                            if (areaLightElement) {
+                                areaLightElement.ui.enabled = false;
+                                pointLightElement.ui.enabled = false;
+                                directionalLightElement.ui.enabled = false;
+                            }
                         } else {
-                            areaLightElement.ui.enabled = true;
-                            pointLightElement.ui.enabled = true;
-                            directionalLightElement.ui.enabled = true;
+                            if (areaLightElement) {
+                                areaLightElement.ui.enabled = true;
+                                pointLightElement.ui.enabled = true;
+                                directionalLightElement.ui.enabled = true;
+                            }
 
                             areaLight.enabled = data.get('script.area.enabled');
                             directionalLight.enabled = data.get('script.directional.enabled');
