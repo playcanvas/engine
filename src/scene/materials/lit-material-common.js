@@ -1,5 +1,8 @@
 import { LIGHTTYPE_DIRECTIONAL } from "../constants.js";
 
+/**
+ * @ignore
+ */
 const collectLights = (lType, lights, lightsFiltered, mask, staticLightList) => {
     for (let i = 0; i < lights.length; i++) {
         const light = lights[i];

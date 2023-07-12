@@ -108,9 +108,12 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
+export { collectLights } from './scene/materials/lit-material-common.js';
+export { custom } from './scene/shader-lib/programs/custom.js';
 export { CustomMaterial } from './scene/materials/custom-material.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
+export { getProgramLibrary } from './scene/shader-lib/get-program-library.js';
 export { GraphNode } from './scene/graph-node.js';
 export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
@@ -128,6 +131,7 @@ export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
 export { ShaderPass } from './scene/shader-pass.js';
+export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
@@ -149,6 +153,7 @@ export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
+export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 

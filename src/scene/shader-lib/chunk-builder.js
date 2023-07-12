@@ -1,5 +1,8 @@
 // helper class for combining shader chunks together
 // ensures every chunk ends with a new line otherwise shaders can be ill-formed
+/**
+ * @ignore
+ */
 class ChunkBuilder {
     code = '';
 
