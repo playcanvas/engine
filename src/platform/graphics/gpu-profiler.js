@@ -3,7 +3,7 @@ import { Debug } from "../../core/debug.js";
 import { Tracing } from "../../core/tracing.js";
 
 /**
- * A class implementing a simple GPU profiler.
+ * Base class of a simple GPU profiler.
  */
 class GpuProfiler {
     /**
