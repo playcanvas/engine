@@ -36,14 +36,17 @@ vec3 litArgs_lightmapDir;
 // The microfacet glossiness factor, range [0..1]
 float litArgs_gloss;
 
+// The normal used for the clearcoat layer
+vec3 litArgs_clearcoat_worldNormal;
+
 // Iridescence effect intensity, range [0..1]
 float litArgs_iridescence_intensity;
 
+// The color of the f0 specularity factor for the sheen layer
+vec3 litArgs_sheen_specularity;
+
 // Thickness of the iridescent microfilm layer, value is in nanometers, range [0..1000]
 float litArgs_iridescence_thickness;
-
-// The normal used for the clearcoat layer
-vec3 litArgs_clearcoat_worldNormal;
 
 // Intensity of the clearcoat layer, range [0..1]
 float litArgs_clearcoat_specularity;
@@ -54,10 +57,10 @@ float litArgs_clearcoat_gloss;
 // Surface metalness factor, range [0..1]
 float litArgs_metalness;
 
-// The color of the f0 specularity factor for the sheen layer
-vec3 litArgs_sheen_specularity;
-
 // Glossiness of the sheen layer, range [0..1]
 float litArgs_sheen_gloss;
+
+// Index of refraction
+float litArgs_ior;
 
 `;

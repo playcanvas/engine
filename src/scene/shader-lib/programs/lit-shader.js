@@ -505,7 +505,6 @@ class LitShader {
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
         const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
-        const needsLinearizedDepth = shadowType === SHADOW_PCSS;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -516,12 +515,7 @@ class LitShader {
         // Flag if we are using non-standard depth, i.e gl_FragCoord.z
         let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
-            if (needsLinearizedDepth) {
-                code += "    float depth = linearizeDepth(gl_FragCoord.z, camera_params);\n";
-                hasModifiedDepth = true;
-            } else {
-                code += "    float depth = gl_FragCoord.z;\n";
-            }
+            code += "    float depth = gl_FragCoord.z;\n";
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
             hasModifiedDepth = true;
@@ -533,7 +527,7 @@ class LitShader {
             hasModifiedDepth = true;
         }
 
-        if (usePerspectiveDepth && needsLinearizedDepth && usePackedDepth) {
+        if (usePerspectiveDepth && usePackedDepth) {
             code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
             hasModifiedDepth = true;
         }
@@ -1027,7 +1021,8 @@ class LitShader {
 
         if ((this.lighting && options.useSpecular) || this.reflections) {
             if (options.useMetalness) {
-                backend.append("    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness);");
+                backend.append("    float f0 = 1.0 / litArgs_ior; f0 = (f0 - 1.0) / (f0 + 1.0); f0 *= f0;");
+                backend.append("    litArgs_specularity = getSpecularModulate(litArgs_specularity, litArgs_albedo, litArgs_metalness, f0);");
                 backend.append("    litArgs_albedo = getAlbedoModulate(litArgs_albedo, litArgs_metalness);");
             }
 
@@ -1439,7 +1434,8 @@ class LitShader {
                         litArgs_gloss, 
                         litArgs_specularity, 
                         litArgs_albedo, 
-                        litArgs_transmission
+                        litArgs_transmission,
+                        litArgs_ior
                     #if defined(LIT_IRIDESCENCE)
                         , iridescenceFresnel, 
                         litArgs_iridescence
