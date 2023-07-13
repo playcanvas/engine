@@ -527,11 +527,6 @@ class LitShader {
             hasModifiedDepth = true;
         }
 
-        if (usePerspectiveDepth && usePackedDepth) {
-            code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
-            hasModifiedDepth = true;
-        }
-
         if (usePackedDepth) {
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (!isVsm) {
