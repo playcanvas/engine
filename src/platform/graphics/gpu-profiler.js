@@ -36,7 +36,7 @@ class GpuProfiler {
 
     /**
      * The time it took to render the last frame on GPU, or 0 if the profiler is not enabled
-     * @ignore.
+     * @ignore
      */
     _frameTime = 0;
 
