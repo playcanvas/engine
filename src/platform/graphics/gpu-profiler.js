@@ -7,29 +7,37 @@ import { Tracing } from "../../core/tracing.js";
  */
 class GpuProfiler {
     /**
-     * @type {Map<string, number>}
-     * @ignore
-     */
-    namesMap = new Map();
-
-    /**
+     * Profiling slots allocated for the current frame, storing the names of the slots.
+     *
      * @type {string[]}
-     * @ignore
-     */
-    indexedNames = [];
-
-    /**
-     * @type {number[]}
      * @ignore
      */
     frameAllocations = [];
 
+    /**
+     * Map of past frame allocations, indexed by renderVersion
+     *
+     * @type {Map<number, string[]>}
+     * @ignore
+     */
     pastFrameAllocations = new Map();
 
+    /**
+     * The if enabled in the current frame.
+     * @ignore
+     */
     _enabled = false;
 
+    /**
+     * The enable request for the next frame.
+     * @ignore
+     */
     _enableRequest = false;
 
+    /**
+     * The time it took to render the last frame on GPU, or 0 if the profiler is not enabled
+     * @ignore.
+     */
     _frameTime = 0;
 
     loseContext() {
@@ -77,7 +85,7 @@ class GpuProfiler {
             // log out timings
             if (Tracing.get(TRACEID_GPU_TIMINGS)) {
                 for (let i = 0; i < allocations.length; ++i) {
-                    const name = this.indexedNames[allocations[i]];
+                    const name = allocations[i];
                     Debug.trace(TRACEID_GPU_TIMINGS, `${timings[i].toFixed(2)} ms ${name}`);
                 }
             }
@@ -87,23 +95,24 @@ class GpuProfiler {
         this.pastFrameAllocations.delete(renderVersion);
     }
 
-    getNameIndex(name) {
-        let index = this.namesMap.get(name);
-        if (index === undefined) {
-            index = this.namesMap.size;
-            this.namesMap.set(name, index);
-            this.indexedNames[index] = name;
-        }
-        return index;
-    }
-
+    /**
+     * Allocate a slot for GPU timing during the frame. This slot is valid only for the current
+     * frame. This allows multiple timers to be used during the frame, each with a unique name.
+     * @param {string} name - The name of the slot.
+     * @returns {number} The assigned slot index.
+     * @ignore
+     */
     getSlot(name) {
-        const nameIndex = this.getNameIndex(name);
         const slot = this.frameAllocations.length;
-        this.frameAllocations.push(nameIndex);
+        this.frameAllocations.push(name);
         return slot;
     }
 
+    /**
+     * Number of slots allocated during the frame.
+     *
+     * @ignore
+     */
     get slotCount() {
         return this.frameAllocations.length;
     }
