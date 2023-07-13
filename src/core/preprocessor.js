@@ -80,10 +80,29 @@ class Preprocessor {
         // preprocess defines / ifdefs ..
         source = this._preprocess(source, defines);
 
+        // extract defines that evaluate to an integer number
+        const intDefines = new Map();
+        defines.forEach((value, key) => {
+            if (Number.isInteger(parseFloat(value)) && !value.includes('.')) {
+                intDefines.set(key, value);
+            }
+        });
+
+        // process individual lines
         if (source !== null) {
-            // convert lines with only white space into empty string
             source = source.split(/\r?\n/)
+
+                // convert lines with only white space into empty string
                 .map(line => (line.trim() === '' ? '' : line))
+
+                // replace lines containing "[intDefine]" with their values, so that we know the array size for WebGPU uniform buffer
+                // example: weight[SAMPLES] => float weight[11] in case there was a "define SAMPLES 11" in the source code
+                .map((line) => {
+                    intDefines.forEach((value, key) => {
+                        line = line.replace(new RegExp(`\\[${key}\\]`, 'g'), `[${value}]`);
+                    });
+                    return line;
+                })
                 .join('\n');
 
             // remove more than 1 consecutive empty lines
