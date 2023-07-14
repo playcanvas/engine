@@ -700,7 +700,7 @@ class AssetRegistry extends EventHandler {
     findAll(name, type) {
         const items = this._nameToAsset.get(name);
         if (!items) return [];
-        let results = Array.from(items);
+        const results = Array.from(items);
         if (!type) return results;
         return results.filter(asset => asset.type === type);
     }
