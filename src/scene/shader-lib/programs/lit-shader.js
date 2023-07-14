@@ -505,17 +505,23 @@ class LitShader {
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
         const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
+        const useAbsoluteDistance = shadowType === SHADOW_PCSS;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
         // Spot: If not using VSM
         // Point: Never
-        const usePerspectiveDepth = lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT);
+        const usePerspectiveDepth = (lightType === LIGHTTYPE_DIRECTIONAL || (!isVsm && lightType === LIGHTTYPE_SPOT));
+
 
         // Flag if we are using non-standard depth, i.e gl_FragCoord.z
         let hasModifiedDepth = false;
         if (usePerspectiveDepth) {
             code += "    float depth = gl_FragCoord.z;\n";
+            if (useAbsoluteDistance) {
+                // Transform depth values to world space
+                code += "    depth = linearizeDepth(depth, camera_params);\n";
+            }
         } else {
             code += "    float depth = min(distance(view_position, vPositionW) / light_radius, 0.99999);\n";
             hasModifiedDepth = true;
@@ -528,6 +534,9 @@ class LitShader {
         }
 
         if (usePackedDepth) {
+            if (useAbsoluteDistance) {
+                code += "    depth *= 1.0 / (camera_params.y - camera_params.z);\n";
+            }
             code += "    gl_FragColor = packFloat(depth);\n";
         } else if (!isVsm) {
             const exportR32 = shadowType === SHADOW_PCSS;
