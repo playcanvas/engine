@@ -33,7 +33,6 @@ class EventHandler {
     /**
      * When set to true, `on` and `once` methods will return `this`.
      * When set to false, `on` and `once` will return `EventHandle`.
-     * 
      * @type {boolean}
      */
     static chaining = true;
@@ -82,7 +81,7 @@ class EventHandler {
         if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
             this._callbackActive[name] = this._callbackActive[name].slice();
 
-        let evt = new EventHandle(this, name, callback, scope, once);
+        const evt = new EventHandle(this, name, callback, scope, once);
         this._callbacks[name].push(evt);
         return evt;
     }
@@ -143,9 +142,9 @@ class EventHandler {
         }
 
         if (!name) {
-            for(let name in this._callbacks) {
+            for (const name in this._callbacks) {
                 const handles = this._callbacks[name];
-                for(let i = 0; i < handles.length; i++) {
+                for (let i = 0; i < handles.length; i++) {
                     handles[i].destroy();
                 }
             }
@@ -154,7 +153,7 @@ class EventHandler {
         } else if (!callback) {
             const handles = this._callbacks[name];
             if (handles) {
-                for(let i = 0; i < handles.length; i++) {
+                for (let i = 0; i < handles.length; i++) {
                     handles[i].destroy();
                 }
                 this._callbacks[name] = [];

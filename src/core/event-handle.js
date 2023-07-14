@@ -5,16 +5,16 @@
  *     console.log(a + b);
  * });
  * obj.fire('test');
- * 
+ *
  * evt.off(); // easy way to remove this event
  * obj.fire('test'); // this will not trigger an event
  * @example
  * // store an array of event handles
  * let events = [ ];
- * 
+ *
  * events.push(objA.on('testA', () => { }));
  * events.push(objB.on('testB', () => { }));
- * 
+ *
  * // when needed, remove all events
  * events.forEach((evt) => {
  *     evt.off();
@@ -55,9 +55,9 @@ class EventHandle {
     /**
      * True if event has been removed.
      * @type {boolean}
-     * @readonly
+     * @private
      */
-    removed = false;
+    _removed = false;
 
     /**
      * @param {EventHandler} handler - source object of the event.
@@ -78,19 +78,25 @@ class EventHandle {
      * Remove references.
      */
     destroy() {
-        if (this.removed) return;
-        this.removed = true;
-        this.handler = null;
-        this.callback = null;
-        this.scope = null;
+        if (this._removed) return;
+        this._removed = true;
     }
 
     /**
      * Remove this event from its handler.
      */
     off() {
-        if (this.removed) return;
+        if (this._removed) return;
         this.handler.off(this.name, this.callback, this.scope);
+    }
+
+    /**
+     * True if event has been removed.
+     * @type {boolean}
+     * @readonly
+     */
+    get removed() {
+        return this._removed;
     }
 }
 
