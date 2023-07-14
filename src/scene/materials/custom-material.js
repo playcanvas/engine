@@ -15,7 +15,30 @@ import { custom } from '../shader-lib/programs/custom.js';
 class CustomMaterial extends Material {
     _litOptions = new LitOptions();
 
-    _shaderChunk = "";
+    _shaderChunk = `
+    void evaluateFrontend() {
+        litArgs_emission = vec3(0, 0, 0);
+        litArgs_metalness = 0.0;
+        litArgs_specularity = vec3(1);
+        litArgs_specularityFactor = 1.0;
+        litArgs_gloss = 0.0;
+        litArgs_ior = 0.6667;
+        litArgs_worldNormal = dVertexNormalW;
+        litArgs_albedo = vec3(1);
+        litArgs_ao = 0.0;
+        litArgs_opacity = 1.0;
+        litArgs_lightmap = vec3(0);
+        litArgs_lightmapDir = vec3(0);
+        litArgs_clearcoat_specularity = 0.0;
+        litArgs_clearcoat_gloss = 0.0;
+        litArgs_clearcoat_worldNormal = vec3(0);
+        litArgs_iridescence_thickness = 0.0;
+        litArgs_iridescence_intensity = 0.0;
+        litArgs_sheen_specularity = vec3(0);
+        litArgs_sheen_gloss = 0.0;
+        litArgs_transmission = 0.0;
+        litArgs_thickness = 0.0;
+    }`;
 
     _usedUvs = [true];
 
