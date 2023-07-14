@@ -55,6 +55,7 @@ class EventHandle {
     /**
      * True if event has been removed.
      * @type {boolean}
+     * @readonly
      */
     removed = false;
 
