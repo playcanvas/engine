@@ -262,7 +262,7 @@ class ForwardRenderer extends Renderer {
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 0; // unused
+                cameraParams[0] = 3.0; // unused
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;

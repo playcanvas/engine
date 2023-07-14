@@ -7,14 +7,14 @@ vec3 getShadowSampleCoord$LIGHT(mat4 shadowTransform, vec4 shadowParams, vec3 wo
 #ifdef SHADOW_SAMPLE_POINT
     #ifdef SHADOW_SAMPLE_NORMAL_OFFSET
         float distScale = length(lightDir);
-        surfacePosition = worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
+        surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
         lightDir = surfacePosition - lightPos;
         return lightDir;
     #endif
 #else
     #ifdef SHADOW_SAMPLE_SOURCE_ZBUFFER
         #ifdef SHADOW_SAMPLE_NORMAL_OFFSET
-            surfacePosition = worldPosition + normal * shadowParams.y;
+            surfacePosition = surfacePosition + normal * shadowParams.y;
         #endif
     #else
         #ifdef SHADOW_SAMPLE_NORMAL_OFFSET
@@ -23,7 +23,7 @@ vec3 getShadowSampleCoord$LIGHT(mat4 shadowTransform, vec4 shadowParams, vec3 wo
             #else
                 float distScale = abs(dot(vPositionW - lightPos, lightDirNorm));
             #endif
-            surfacePosition = worldPosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
+            surfacePosition = surfacePosition + normal * shadowParams.y * clamp(1.0 - dot(normal, -lightDirNorm), 0.0, 1.0) * distScale;
         #endif
     #endif
 
