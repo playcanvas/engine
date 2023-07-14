@@ -1,3 +1,5 @@
+import { EventHandle } from './event-handle.js';
+
 /**
  * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  *
@@ -29,6 +31,14 @@
  */
 class EventHandler {
     /**
+     * When set to true, `on` and `once` methods will return `this`.
+     * When set to false, `on` and `once` will return `EventHandle`.
+     * 
+     * @type {boolean}
+     */
+    static chaining = true;
+
+    /**
      * @type {object}
      * @private
      */
@@ -59,11 +69,12 @@ class EventHandler {
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
      * @param {boolean} [once=false] - If true, the callback will be unbound after being fired once.
+     * @returns {EventHandle|null} Created {@link EventHandle} or `null` of provided arguments are invalid.
      * @private
      */
-    _addCallback(name, callback, scope, once = false) {
+    _addCallback(name, callback, scope = this, once = false) {
         if (!name || typeof name !== 'string' || !callback)
-            return;
+            return null;
 
         if (!this._callbacks[name])
             this._callbacks[name] = [];
@@ -71,11 +82,9 @@ class EventHandler {
         if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
             this._callbackActive[name] = this._callbackActive[name].slice();
 
-        this._callbacks[name].push({
-            callback: callback,
-            scope: scope || this,
-            once: once
-        });
+        let evt = new EventHandle(this, name, callback, scope, once);
+        this._callbacks[name].push(evt);
+        return evt;
     }
 
     /**
@@ -86,7 +95,7 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandler} Self for chaining.
+     * @returns {EventHandle|EventHandler} {@link EventHandle} if `EventHandler.chaining` set to `false`, otherwise returns `this` (self) for chaining.
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
@@ -94,9 +103,8 @@ class EventHandler {
      * obj.fire('test', 1, 2); // prints 3 to the console
      */
     on(name, callback, scope) {
-        this._addCallback(name, callback, scope, false);
-
-        return this;
+        const evt = this._addCallback(name, callback, scope, false);
+        return EventHandler.chaining ? this : evt;
     }
 
     /**
@@ -135,27 +143,42 @@ class EventHandler {
         }
 
         if (!name) {
+            for(let name in this._callbacks) {
+                const handles = this._callbacks[name];
+                for(let i = 0; i < handles.length; i++) {
+                    handles[i].destroy();
+                }
+            }
+
             this._callbacks = { };
         } else if (!callback) {
-            if (this._callbacks[name])
+            const handles = this._callbacks[name];
+            if (handles) {
+                for(let i = 0; i < handles.length; i++) {
+                    handles[i].destroy();
+                }
                 this._callbacks[name] = [];
+            }
         } else {
-            const events = this._callbacks[name];
-            if (!events)
+            const handles = this._callbacks[name];
+            if (!handles)
                 return this;
 
-            let count = events.length;
+            let count = handles.length;
 
             for (let i = 0; i < count; i++) {
-                if (events[i].callback !== callback)
+                if (handles[i].callback !== callback)
                     continue;
 
-                if (scope && events[i].scope !== scope)
+                if (scope && handles[i].scope !== scope)
                     continue;
 
-                events[i--] = events[--count];
+                handles[i].destroy();
+                // potential issue with such way of removing items from an array,
+                // as it changes the order of event handlers
+                handles[i--] = handles[--count];
             }
-            events.length = count;
+            handles.length = count;
         }
 
         return this;
@@ -210,6 +233,7 @@ class EventHandler {
                     if (this._callbackActive[name] === existingCallback)
                         this._callbackActive[name] = this._callbackActive[name].slice();
 
+                    this._callbacks[name][ind].destroy();
                     this._callbacks[name].splice(ind, 1);
                 }
             }
@@ -229,7 +253,7 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandler} Self for chaining.
+     * @returns {EventHandle|EventHandler} {@link EventHandle} if `EventHandler.chaining` set to `false`, otherwise returns `this` (self) for chaining.
      * @example
      * obj.once('test', function (a, b) {
      *     console.log(a + b);
@@ -237,9 +261,9 @@ class EventHandler {
      * obj.fire('test', 1, 2); // prints 3 to the console
      * obj.fire('test', 1, 2); // not going to get handled
      */
-    once(name, callback, scope) {
-        this._addCallback(name, callback, scope, true);
-        return this;
+    once(name, callback, scope = this) {
+        const evt = this._addCallback(name, callback, scope, true);
+        return EventHandler.chaining ? this : evt;
     }
 
     /**
