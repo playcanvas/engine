@@ -61,14 +61,14 @@ class LightingParams {
     }
 
     applySettings(render) {
-        this.shadowsEnabled = render.lightingShadowsEnabled;
-        this.cookiesEnabled = render.lightingCookiesEnabled;
-        this.areaLightsEnabled = render.lightingAreaLightsEnabled;
-        this.shadowAtlasResolution = render.lightingShadowAtlasResolution;
-        this.cookieAtlasResolution = render.lightingCookieAtlasResolution;
-        this.maxLightsPerCell = render.lightingMaxLightsPerCell;
-        this.shadowType = render.lightingShadowType;
-        this.cell = new Vec3(render.lightingCells);
+        this.shadowsEnabled ??= render.lightingShadowsEnabled;
+        this.cookiesEnabled ??= render.lightingCookiesEnabled;
+        this.areaLightsEnabled ??= render.lightingAreaLightsEnabled;
+        this.shadowAtlasResolution ??= render.lightingShadowAtlasResolution;
+        this.cookieAtlasResolution ??= render.lightingCookieAtlasResolution;
+        this.maxLightsPerCell ??= render.lightingMaxLightsPerCell;
+        this.shadowType ??= render.lightingShadowType;
+        this.cell ??= new Vec3(render.lightingCells);
     }
 
     /**
