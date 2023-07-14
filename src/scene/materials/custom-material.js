@@ -1,7 +1,7 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN } from "../constants";
-import { getProgramLibrary } from "../shader-lib/get-program-library";
-import { LitOptions } from "./lit-options";
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN } from "../constants.js";
+import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { LitOptions } from "./lit-options.js";
 import { collectLights } from "./lit-material-common.js";
 import { Material } from './material.js';
 import { custom } from '../shader-lib/programs/custom.js';
