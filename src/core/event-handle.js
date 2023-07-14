@@ -23,7 +23,7 @@
  */
 class EventHandle {
     /**
-     * @type {EventHandler}
+     * @type {import('./event-handler.js').EventHandler}
      * @private
      */
     handler;
@@ -35,7 +35,7 @@ class EventHandle {
     name;
 
     /**
-     * @type {HandleEventCallback}
+     * @type {import('./event-handler.js').HandleEventCallback}
      * @private
      */
     callback;
@@ -60,9 +60,9 @@ class EventHandle {
     _removed = false;
 
     /**
-     * @param {EventHandler} handler - source object of the event.
+     * @param {import('./event-handler.js').EventHandler} handler - source object of the event.
      * @param {string} name - Name of the event.
-     * @param {HandleEventCallback} callback - Function that is called when event is fired.
+     * @param {import('./event-handler.js').HandleEventCallback} callback - Function that is called when event is fired.
      * @param {object} scope - Object that is used as `this` when event is fired.
      * @param {boolean} [once] - If this is a single event and will be removed after event is fired.
      */
@@ -93,7 +93,6 @@ class EventHandle {
     /**
      * True if event has been removed.
      * @type {boolean}
-     * @readonly
      */
     get removed() {
         return this._removed;
