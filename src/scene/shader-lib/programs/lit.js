@@ -23,7 +23,7 @@ const lit = {
     },
 
     generateChunksKey(options) {
-        return Object.keys(options.chunks)
+        return Object.keys(options.chunks ?? {})
             .sort()
             .map(key => key + options.chunks[key])
             .join("");
