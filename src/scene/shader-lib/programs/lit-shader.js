@@ -1546,7 +1546,6 @@ class LitShader {
             this.varyings +
             this.varyingDefines +
             this._fsGetBaseCode() +
-            (options.detailModes ? chunks.detailModesPS : "") +
             structCode +
             this.frontendDecl +
             mergedCode;

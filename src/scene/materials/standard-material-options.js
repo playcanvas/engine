@@ -95,6 +95,11 @@ class StandardMaterialOptions {
      */
     clearCoatGlossInvert = false;
 
+    /**
+     * Storage for the options for lit the shader and material.
+     *
+     * @type {LitOptions}
+     */
     litOptions = new LitOptions();
 
     /**

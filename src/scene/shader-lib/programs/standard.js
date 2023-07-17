@@ -338,6 +338,11 @@ const standard = {
                 decl.append("uniform mat4 matrix_model;");
             }
 
+            // support for diffuse & ao detail modes
+            if (options.diffuseDetail || options.aoDetail) {
+                code.append(litShader.chunks.detailModesPS);
+            }
+
             // albedo
             decl.append("vec3 dAlbedo;");
             if (options.diffuseDetail) {
@@ -476,11 +481,6 @@ const standard = {
                 code.code.indexOf('texture2DRGBE') !== -1) {
                 Debug.deprecated('Shader chunk macro $texture2DSAMPLE(XXX) is deprecated. Please use $DECODE(texture2D(XXX)) instead.');
                 code.prepend(litShader.chunks.textureSamplePS);
-            }
-
-            // diffuse & ao detail modes
-            if (options.diffuseDetail || options.aoDetail) {
-                code.prepend(litShader.chunks.detailModesPS);
             }
         } else {
             // all other passes require only opacity

@@ -248,7 +248,7 @@ class StandardMaterialOptionsBuilder {
         options.useSpecularColor = useSpecularColor;
 
         // LIT OPTIONS
-        options.litOptions.useAmbientTint = options.ambientTint;
+        options.litOptions.useAmbientTint = stdMat.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
