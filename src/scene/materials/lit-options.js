@@ -17,9 +17,8 @@ class LitOptions {
      */
     chunks = {};
 
-    _pass = 0;
-
-    _isForwardPass = false;
+    // one of the SHADER_ constants
+    pass = 0;
 
     /**
      * Enable alpha testing. See {@link Material#alphaTest}.
@@ -27,14 +26,6 @@ class LitOptions {
      * @type {boolean}
      */
     alphaTest = false;
-
-    /**
-     * Override fragment shader numeric precision. Can be "lowp", "mediump", "highp" or null to use
-     * default.
-     *
-     * @type {string}
-     */
-    forceFragmentPrecision = null;
 
     /**
      * The value of {@link Material#blendType}.
@@ -89,19 +80,15 @@ class LitOptions {
 
     lightMapEnabled = false;
 
-    useLightMapVertexColors = false;
-
     dirLightMapEnabled = false;
 
-    heightMapEnabled = false;
+    useHeights = false;
 
-    normalMapEnabled = false;
+    useNormals = false;
 
-    clearCoatNormalMapEnabled = false;
+    useClearCoatNormals = false;
 
-    aoMapEnabled = false;
-
-    useAoVertexColors = false;
+    useAo = false;
 
     diffuseMapEnabled = false;
 
@@ -115,14 +102,6 @@ class LitOptions {
     customFragmentShader = null;
 
     pixelSnap = false;
-
-    useClearCoatNormalMap = false;
-
-    useDiffuseMap = false;
-
-    useAoMap = false;
-
-    detailModes = 0;
 
     /**
      * The value of {@link StandardMaterial#shadingModel}.
@@ -154,6 +133,12 @@ class LitOptions {
      */
     twoSidedLighting = false;
 
+    /** The value of {@link StandardMaterial#occludeDirect}.
+     *
+     * @type {boolean}
+     */
+    occludeDirect = false;
+
     /**
      * The value of {@link StandardMaterial#occludeSpecular}.
      *
@@ -171,7 +156,7 @@ class LitOptions {
 
     useMsdf = false;
 
-    msdfTextAttribute = 0;
+    msdfTextAttribute = false;
 
     /**
      * Enable alpha to coverage. See {@link Material#alphaToCoverage}.
@@ -195,13 +180,6 @@ class LitOptions {
     cubeMapProjection = 0;
 
     /**
-     * The value of {@link StandardMaterial#occludeDirect}.
-     *
-     * @type {boolean}
-     */
-    occludeDirect = false;
-
-    /**
      * The value of {@link StandardMaterial#conserveEnergy}.
      *
      * @type {boolean}
@@ -216,8 +194,6 @@ class LitOptions {
     useSpecular = false;
 
     useSpecularityFactor = false;
-
-    useSpecularColor = false;
 
     enableGGXSpecular = false;
 
@@ -325,22 +301,6 @@ class LitOptions {
     noShadow = false;
 
     lightMaskDynamic = 0x0;
-
-    set pass(p) {
-        Debug.warn(`pc.LitOptions#pass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
-    }
-
-    get pass() {
-        return this._pass;
-    }
-
-    set isForwardPass(p) {
-        Debug.warn(`pc.LitOptions#isForwardPass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
-    }
-
-    get isForwardPass() {
-        return this._isForwardPass;
-    }
 }
 
 export { LitOptions };

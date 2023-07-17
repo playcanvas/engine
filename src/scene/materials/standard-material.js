@@ -1197,7 +1197,6 @@ function _defineMaterialProps() {
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
-    _defineFlag('forceFragmentPrecision', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useGammaTonemap', true);

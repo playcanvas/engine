@@ -67,9 +67,8 @@ class StandardMaterialOptionsBuilder {
         options.forceUv1 = stdMat.forceUv1;
         options.chunks = stdMat.chunks || '';
 
-        options.pass = pass;
+        options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
-        options.litOptions.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';
         options.litOptions.blendType = stdMat.blendType;
         options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         options.litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
@@ -117,13 +116,11 @@ class StandardMaterialOptionsBuilder {
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
-        options.litOptions.useLightMapVertexColors = options.lightVertexColor;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
-        options.litOptions.heightMapEnabled = options.heightMap;
-        options.litOptions.normalMapEnabled = options.normalMap;
-        options.litOptions.clearCoatNormalMapEnabled = options.clearCoatNormalMap;
-        options.litOptions.aoMapEnabled = options.aoMap;
-        options.litOptions.useAoVertexColors = options.aoVertexColor;
+        options.litOptions.useHeights = options.heightMap;
+        options.litOptions.useNormals = options.normalMap;
+        options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
+        options.litOptions.useAo = options.aoMap || options.aoVertexColor;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
@@ -251,16 +248,13 @@ class StandardMaterialOptionsBuilder {
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
         options.clearCoatGlossInvert = stdMat.clearCoatGlossInvert;
 
+        options.useSpecularColor = useSpecularColor;
+
         // LIT OPTIONS
         options.litOptions.useAmbientTint = options.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
-        options.litOptions.useClearCoatNormalMap = !!stdMat.clearCoatNormalMap;
-        options.litOptions.useDiffuseMap = !!stdMat.diffuseMap;
-        options.litOptions.useAoMap = !!stdMat.aoMap;
-
-        options.litOptions.detailModes = !!options.diffuseDetail || !!options.aoDetail;
         options.litOptions.shadingModel = stdMat.shadingModel;
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.fastTbn = stdMat.fastTbn;
@@ -280,7 +274,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.conserveEnergy = stdMat.conserveEnergy && stdMat.shadingModel !== SPECULAR_PHONG;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
-        options.litOptions.useSpecularColor = useSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.fresnelModel = stdMat.fresnelModel;
         options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.litOptions.reflectionSource);

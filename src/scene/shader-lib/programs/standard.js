@@ -63,12 +63,12 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isMainPass = options.isForwardPass;
+        const isForwardPass = options.litOptions.pass === SHADER_FORWARD || options.litOptions.pass === SHADER_FORWARDHDR;
 
         let expression;
-        if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
+        if (isForwardPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
-        } else if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
+        } else if (isForwardPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
             expression = "nineSlicedUv";
         } else {
             if (transformId === 0) {
@@ -212,8 +212,6 @@ const standard = {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
         const isForwardPass = shaderPassInfo.isForward;
-        options.isForwardPass = isForwardPass;
-
         const litShader = new LitShader(device, options.litOptions);
 
         // generate vertex shader
@@ -405,7 +403,7 @@ const standard = {
                     func.append("getSpecularityFactor();");
                     args.append("litArgs_specularityFactor = dSpecularityFactor;");
                 }
-                if (options.litOptions.useSpecularColor) {
+                if (options.useSpecularColor) {
                     code.append(this._addMap("specular", "specularPS", options, litShader.chunks, textureMapping, options.specularEncoding));
                 } else {
                     code.append("void getSpecularity() { dSpecularity = vec3(1); }");
@@ -480,11 +478,15 @@ const standard = {
                 code.prepend(litShader.chunks.textureSamplePS);
             }
 
+            // diffuse & ao detail modes
+            if (options.diffuseDetail || options.aoDetail) {
+                code.prepend(litShader.chunks.detailModesPS);
+            }
         } else {
             // all other passes require only opacity
             if (options.litOptions.alphaTest) {
                 decl.append("float dAlpha;");
-                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
+                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping, null, false));
                 code.append(litShader.chunks.alphaTestPS);
                 func.append("getOpacity();");
                 func.append("alphaTest(dAlpha);");

@@ -1,16 +1,11 @@
 import { LitOptions } from "./lit-options.js";
+import { Debug } from '../../core/debug.js';
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader
  * generation, such as textures, tints and multipliers.
  */
 class StandardMaterialOptions {
-    /** @private */
-    _pass = 0;
-
-    /** @private */
-    _isForwardPass = false;
-
     chunks = [];
 
     /**
@@ -111,21 +106,12 @@ class StandardMaterialOptions {
      * @type {number}
      */
     set pass(p) {
-        this._pass = p;
-        this.litOptions._pass = p;
+        Debug.error(`err`);
     }
 
     get pass() {
-        return this._pass;
-    }
-
-    set isForwardPass(value) {
-        this._isForwardPass = value;
-        this.litOptions._isForwardPass = value;
-    }
-
-    get isForwardPass() {
-        return this._isForwardPass;
+        Debug.error(`err`);
+        return null;
     }
 }
 

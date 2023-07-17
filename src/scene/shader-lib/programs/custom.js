@@ -3,6 +3,9 @@ import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
 import { lit } from './lit.js';
 
+/**
+ * @ignore
+ */
 const custom  = {
 
     /** @type { Function } */
@@ -22,7 +25,7 @@ const custom  = {
             key += lit.litOptionsKey(options.litOptions);
         }
 
-        key += options.customLitArguments;
+        key += options.shaderChunk;
 
         return hashCode(key);
     },
@@ -45,7 +48,7 @@ const custom  = {
         decl.append(`uniform float textureBias;`);
 
         decl.append(litShader.chunks.litShaderArgsPS);
-        code.append(options.customLitArguments);
+        code.append(options.shaderChunk);
         func.code = `evaluateFrontend();`;
 
         func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
