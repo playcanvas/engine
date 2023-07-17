@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import {
     BLEND_NONE, FOG_NONE, GAMMA_NONE
 } from '../constants.js';
@@ -280,6 +279,7 @@ class LitOptions {
 
     // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now
     // assume no non-skybox cubemap rotation
+
     /**
      * Skybox intensity factor.
      *

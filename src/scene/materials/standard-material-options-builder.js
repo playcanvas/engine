@@ -67,7 +67,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.blendType = stdMat.blendType;
-        options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
+
         options.litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
         options.litOptions.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
         options.litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
@@ -122,31 +122,32 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
-        const mname = p + 'Map';
-        const vname = p + 'VertexColor';
-        const vcname = p + 'VertexColorChannel';
-        const cname = mname + 'Channel';
-        const tname = mname + 'Transform';
-        const uname = mname + 'Uv';
-        const iname = mname + 'Identifier';
-
-        // Avoid overriding previous lightMap properties
-        if (p !== 'light') {
-            options[mname] = false;
-            options[iname] = undefined;
-            options[cname] = '';
-            options[tname] = 0;
-            options[uname] = 0;
-        }
-        options[vname] = false;
-        options[vcname] = '';
-
         const isOpacity = p === 'opacity';
-        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
-            return;
-        }
 
         if (!minimalOptions || isOpacity) {
+            const mname = p + 'Map';
+            const vname = p + 'VertexColor';
+            const vcname = p + 'VertexColorChannel';
+            const cname = mname + 'Channel';
+            const tname = mname + 'Transform';
+            const uname = mname + 'Uv';
+            const iname = mname + 'Identifier';
+
+            // Avoid overriding previous lightMap properties
+            if (p !== 'light') {
+                options[mname] = false;
+                options[iname] = undefined;
+                options[cname] = '';
+                options[tname] = 0;
+                options[uname] = 0;
+            }
+            options[vname] = false;
+            options[vcname] = '';
+
+            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+                return;
+            }
+
             if (p !== 'height' && stdMat[vname]) {
                 if (hasVcolor) {
                     options[vname] = stdMat[vname];
@@ -248,6 +249,7 @@ class StandardMaterialOptionsBuilder {
         options.useSpecularColor = useSpecularColor;
 
         // LIT OPTIONS
+        options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         options.litOptions.useAmbientTint = stdMat.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;

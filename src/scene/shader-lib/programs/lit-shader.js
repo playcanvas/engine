@@ -68,14 +68,13 @@ class LitShader {
         };
 
         if (options.chunks) {
-            this.chunks = {};
-
             const userChunks = options.chunks;
 
             // #if _DEBUG
-            validateUserChunks(options.chunks);
+            validateUserChunks(userChunks);
             // #endif
 
+            this.chunks = Object.create(shaderChunks);
             for (const chunkName in shaderChunks) {
                 if (userChunks.hasOwnProperty(chunkName)) {
                     const chunk = userChunks[chunkName];
@@ -85,8 +84,6 @@ class LitShader {
                         }
                     }
                     this.chunks[chunkName] = chunk;
-                } else {
-                    this.chunks[chunkName] = shaderChunks[chunkName];
                 }
             }
         } else {

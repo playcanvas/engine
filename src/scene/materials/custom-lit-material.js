@@ -6,6 +6,17 @@ import { collectLights } from "./lit-material-common.js";
 import { Material } from './material.js';
 import { custom } from '../shader-lib/programs/custom.js';
 
+class CustomLitMaterialOptions {
+    // array of booleans indicating which UV channels are used by the material
+    usedUvs;
+
+    // custom shader chunk to be added to the shader
+    shaderChunk;
+
+    // lit options
+    litOptions = new LitOptions();
+};
+
 class CustomLitMaterialOptionsBuilder {
     static update(litOptions, material, scene, objDefs, pass, sortedLights, staticLightList) {
         CustomLitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
@@ -24,7 +35,6 @@ class CustomLitMaterialOptionsBuilder {
         litOptions.pass = pass;
         litOptions.alphaTest = material.alphaTest > 0;
         litOptions.blendType = material.blendType;
-        litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
 
         litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
         litOptions.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
@@ -54,6 +64,7 @@ class CustomLitMaterialOptionsBuilder {
     static updateMaterialOptions(litOptions, material) {
         // LIT OPTIONS
         litOptions.useAmbientTint = false;
+        litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         litOptions.customFragmentShader = null;
         litOptions.pixelSnap = material.pixelSnap;
 
@@ -158,7 +169,7 @@ class CustomLitMaterialOptionsBuilder {
     }
 };
 
-const litOptions = new LitOptions();
+const options = new CustomLitMaterialOptions();
 
 /**
  * A custom lit material provides a custom shader chunk for the arguments passed to the lit shader.
@@ -204,18 +215,14 @@ class CustomLitMaterial extends Material {
     updateUniforms(device, scene) {
         this.setParameter('texture_envAtlas', scene.envAtlas);
         this.setParameter('texture_cubeMap', scene.skybox);
-
         this.clearVariants();
     }
 
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-        const options =  {
-            litOptions: litOptions,
-            usedUvs: this.usedUvs,
-            shaderChunk: this.shaderChunk
-        };
+        options.usedUvs = this.usedUvs.slice();
+        options.shaderChunk = this.shaderChunk;
 
-        CustomLitMaterialOptionsBuilder.update(litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
+        CustomLitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('custom', custom);

@@ -23,27 +23,28 @@ const standard = {
 
     /** @type { Function } */
     generateKey: function (options) {
-
-        let key = "standard";
-
         let props;
         if (options === this.optionsContextMin) {
-            if (!this.propsMin) this.propsMin = lit.buildPropertiesList(options);
+            if (!this.propsMin) this.propsMin = this._buildPropertiesList(options);
             props = this.propsMin;
         } else if (options === this.optionsContext) {
-            if (!this.props) this.props = lit.buildPropertiesList(options);
+            if (!this.props) this.props = this._buildPropertiesList(options);
             props = this.props;
         } else {
-            props = lit.buildPropertiesList(options);
+            props = this._buildPropertiesList(options);
         }
 
-        key += lit.propertiesKey(props);
-
-        if (options.litOptions) {
-            key += lit.litOptionsKey(options.litOptions);
-        }
+        let key = "standard" +
+            props.map(prop => prop + options[prop]).join("") +
+            lit.generateKey(options.litOptions);
 
         return hashCode(key);
+    },
+
+    _buildPropertiesList(options) {
+        return Object.keys(options)
+            .filter(key => key !== "litOptions")
+            .sort();
     },
 
     // get the value to replace $UV with in Map Shader functions

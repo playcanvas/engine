@@ -3,6 +3,8 @@ import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
 import { lit } from './lit.js';
 
+const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
+
 /**
  * @ignore
  */
@@ -10,22 +12,12 @@ const custom  = {
 
     /** @type { Function } */
     generateKey: function (options) {
-
-        let key = "custom";
-
-        const props = lit.buildPropertiesList(options);
-
-        key += lit.propertiesKey(props);
-
-        if (options.chunks) {
-            key += lit.chunksKey(options.chunks);
-        }
-
-        if (options.litOptions) {
-            key += lit.litOptionsKey(options.litOptions);
-        }
-
-        key += options.shaderChunk;
+        const key = "custom" +
+            dummyUvs.map((dummy, index) => {
+                return options.usedUvs[index] ? "1" : "0";
+            }).join("") +
+            options.shaderChunk +
+            lit.generateKey(options.litOptions);
 
         return hashCode(key);
     },
