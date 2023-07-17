@@ -66,6 +66,7 @@ class WebgpuResolver {
         this.pipelineCache = null;
     }
 
+    /** @private */
     getPipeline(format) {
         let pipeline = this.pipelineCache.get(format);
         if (!pipeline) {
@@ -75,6 +76,7 @@ class WebgpuResolver {
         return pipeline;
     }
 
+    /** @private */
     createPipeline(format) {
 
         /** @type {import('./webgpu-shader.js').WebgpuShader} */
