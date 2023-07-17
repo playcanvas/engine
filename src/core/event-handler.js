@@ -51,10 +51,10 @@ class EventHandler {
     _addCallback(name, callback, scope, once) {
         if (!name || typeof name !== 'string' || typeof callback !== 'function')
             return;
-    
+
         if (!this._callbacks.has(name))
             this._callbacks.set(name, []);
-    
+
         this._callbacks.get(name).push({ callback, scope, once });
     }
 
@@ -123,10 +123,10 @@ class EventHandler {
             this._callbacks.clear();
             return this;
         }
-    
+
         const handlers = this._callbacks.get(name);
         if (!handlers) return this;
-    
+
         if (callback) {
             let i = handlers.length;
             while (i--) {
@@ -140,10 +140,10 @@ class EventHandler {
         } else {
             this._callbacks.delete(name);
         }
-    
+
         return this;
     }
-    
+
     /**
      * Fire an event, all additional arguments are passed on to the event listener.
      *
@@ -155,24 +155,24 @@ class EventHandler {
      */
     fire(name, ...args) {
         if (!name || !this._callbacks.has(name)) return this;
-    
-        let handlers = this._callbacks.get(name);
+
+        const handlers = this._callbacks.get(name);
         if (!handlers) return this;
-    
+
         for (let i = 0; i < handlers.length; i++) {
             const handler = handlers[i];
             handler.callback.apply(handler.scope, args);
-    
+
             if (handler.once) {
                 handlers.splice(i, 1);
                 i--; // Adjust the index after removing an item to keep the correct order
             }
         }
-    
+
         if (handlers.length === 0) {
             this._callbacks.delete(name);
         }
-    
+
         return this;
     }
 
