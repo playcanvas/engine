@@ -55,15 +55,15 @@ describe('EntityReference', function () {
     function getTotalEventListeners(entity) {
         let total = 0;
 
-        Object.keys(entity._callbacks || {}).forEach(function (eventName) {
-            total += entity._callbacks[eventName].length;
-        });
+        for (const entry of entity._callbacks) {
+            total += entry[1].length;
+        }
 
         return total;
     }
 
     function getNumListenersForEvent(entity, eventName) {
-        return (entity._callbacks && entity._callbacks[eventName] && entity._callbacks[eventName].length) || 0;
+        return (entity._callbacks && entity._callbacks.get(eventName) && entity._callbacks.get(eventName).length) || 0;
     }
 
     it('provides a reference to the entity once the guid is populated', function () {

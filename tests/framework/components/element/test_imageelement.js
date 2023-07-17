@@ -997,7 +997,7 @@ describe('pc.ImageElement', function () {
             e.element.spriteAsset = null;
 
             // check that no event listeners come from this image element
-            app.assets._callbacks['load:' + textureAtlasAsset.id].forEach(function (callback) {
+            app.assets._callbacks.get('load:' + textureAtlasAsset.id).forEach(function (callback) {
                 expect(callback.scope).to.not.equal(e.element._image);
             });
 
