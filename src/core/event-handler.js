@@ -22,7 +22,7 @@
  */
 class EventHandler {
     /**
-     * @type {Map<string, {callback: HandleEventCallback, scope: object, once: boolean}[]>}
+     * @type {Map<string, object[]>}
      * @private
      */
     _callbacks = new Map();
