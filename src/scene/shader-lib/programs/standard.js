@@ -3,6 +3,7 @@ import { Debug } from '../../../core/debug.js';
 
 import {
     BLEND_NONE, FRESNEL_SCHLICK,
+    SHADER_FORWARD, SHADER_FORWARDHDR,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
 } from '../../constants.js';
@@ -37,10 +38,6 @@ const standard = {
         }
 
         key += lit.propertiesKey(props);
-
-        if (options.chunks) {
-            key += lit.chunksKey(options.chunks);
-        }
 
         if (options.litOptions) {
             key += lit.litOptionsKey(options.litOptions);

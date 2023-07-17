@@ -33,6 +33,8 @@ const lit = {
                         key += light.key;
                     }
                 }
+            } else if (m === 'chunks') {
+                key += this.chunksKey(options.chunks);
             } else {
                 key += m + options[m];
             }
