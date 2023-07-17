@@ -20,7 +20,6 @@ const events = {
         target.once = ev.once;
         target.hasEvent = ev.hasEvent;
         target._callbacks = { };
-        target._callbackActive = { };
         return target;
     },
 
