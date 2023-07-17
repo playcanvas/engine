@@ -1583,7 +1583,7 @@ class LitShader {
             fragmentCode: this.fshader
         });
 
-        if (this.shaderPassInfo.isForward)
+        if (this.shaderPassInfo.isForward) {
             definition.tag = SHADERTAG_MATERIAL;
         }
 

@@ -46,7 +46,6 @@ class StandardMaterialOptionsBuilder {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
-        options.litOptions.chunks = options.chunks;
     }
 
     updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
@@ -60,13 +59,11 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
-        options.litOptions.chunks = options.chunks;
     }
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.forceUv1 = stdMat.forceUv1;
-        options.chunks = stdMat.chunks || '';
-
+        options.litOptions.chunks = stdMat.chunks || {};
         options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
         options.litOptions.blendType = stdMat.blendType;

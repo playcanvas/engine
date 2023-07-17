@@ -6,8 +6,6 @@ import { Debug } from '../../core/debug.js';
  * generation, such as textures, tints and multipliers.
  */
 class StandardMaterialOptions {
-    chunks = [];
-
     /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
      * "vUv1" and passed to the fragment shader.
@@ -110,6 +108,15 @@ class StandardMaterialOptions {
     }
 
     get pass() {
+        Debug.error(`err`);
+        return null;
+    }
+
+    set chunks(p) {
+        Debug.error(`err`);
+    }
+
+    get chunks() {
         Debug.error(`err`);
         return null;
     }

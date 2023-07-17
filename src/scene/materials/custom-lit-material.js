@@ -17,13 +17,11 @@ class CustomLitMaterialOptionsBuilder {
             litOptions.gamma = GAMMA_SRGBHDR;
             litOptions.toneMap = TONEMAP_LINEAR;
         }
-
-        litOptions.chunks = material.chunks;
     }
 
     static updateSharedOptions(litOptions, material, scene, objDefs, pass) {
+        litOptions.chunks = material.chunks;
         litOptions.pass = pass;
-
         litOptions.alphaTest = material.alphaTest > 0;
         litOptions.blendType = material.blendType;
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
