@@ -23,6 +23,7 @@ import { WebgpuClearRenderer } from './webgpu-clear-renderer.js';
 import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
+import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -196,27 +197,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // optional features:
         //      "depth-clip-control",
         //      "depth32float-stencil8",
-        //      "timestamp-query",
         //      "indirect-first-instance",
         //      "shader-f16",
         //      "rg11b10ufloat-renderable",
         //      "bgra8unorm-storage",
-        //      "float32-filterable"
 
         // request optional features
         const requiredFeatures = [];
         const requireFeature = (feature) => {
-            if (this.gpuAdapter.features.has(feature)) {
+            const supported = this.gpuAdapter.features.has(feature);
+            if (supported) {
                 requiredFeatures.push(feature);
-                Debug.log("Enabled WEBGPU feature: " + feature);
-                return true;
             }
-            return false;
+            return supported;
         };
         this.floatFilterable = requireFeature('float32-filterable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
+        this.supportsTimestampQuery = requireFeature('timestamp-query');
+        Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         /** @type {GPUDeviceDescriptor} */
         const deviceDescr = {
@@ -283,6 +283,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     postInit() {
         super.postInit();
 
+        this.gpuProfiler = new WebgpuGpuProfiler(this);
+
         // init dynamic buffer using 1MB allocation
         this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
     }
@@ -314,6 +316,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     frameStart() {
 
         super.frameStart();
+        this.gpuProfiler.frameStart();
 
         // submit any commands collected before the frame rendering
         this.submit();
@@ -353,7 +356,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     frameEnd() {
         super.frameEnd();
+        this.gpuProfiler.frameEnd();
+
+        // submit scheduled command buffers
         this.submit();
+
+        this.gpuProfiler.request();
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -564,8 +572,23 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // clear cached encoder state
         this.pipeline = null;
 
+        const renderPassDesc = wrt.renderPassDescriptor;
+
+        // timestamp
+        if (this.gpuProfiler._enabled) {
+            if (this.gpuProfiler.timestampQueriesSet) {
+                const slot = this.gpuProfiler.getSlot(renderPass.name);
+
+                renderPassDesc.timestampWrites = {
+                    querySet: this.gpuProfiler.timestampQueriesSet.querySet,
+                    beginningOfPassWriteIndex: slot * 2,
+                    endOfPassWriteIndex: slot * 2 + 1
+                };
+            }
+        }
+
         // start the pass
-        this.passEncoder = this.commandEncoder.beginRenderPass(wrt.renderPassDescriptor);
+        this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
         this.setupPassEncoderDefaults();
