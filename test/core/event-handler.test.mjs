@@ -32,7 +32,7 @@ describe('EventHandler', function () {
             expect(called).to.be.true;
         });
 
-        it('calls handler with up to 8 arguments on fire', function () {
+        it('can handle over 8 arguments on fire', function () {
             const e = new EventHandler();
             let called = false;
             e.on('test', (arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => {
@@ -45,7 +45,7 @@ describe('EventHandler', function () {
                 expect(arg6).to.equal(6);
                 expect(arg7).to.equal(7);
                 expect(arg8).to.equal(8);
-                expect(arg9).to.be.undefined;
+                expect(arg9).to.equal(9);
             });
             e.fire('test', 1, 2, 3, 4, 5, 6, 7, 8, 9);
             expect(called).to.be.true;

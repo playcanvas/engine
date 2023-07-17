@@ -118,7 +118,7 @@ class EventHandler {
      * obj.off('test', handler); // Removes all handler functions, called 'test'
      * obj.off('test', handler, this); // Removes all handler functions, called 'test' with scope this
      */
-    off(name, callback, scope) {
+    off(name, callback, scope = this) {
         if (!name) {
             this._callbacks.clear();
             return this;
