@@ -16,6 +16,12 @@ import { LitOptionsUtils } from './lit-options-utils.js';
 
 const _matTex2D = [];
 
+const buildPropertiesList = (options) => {
+    return Object.keys(options)
+        .filter(key => key !== "litOptions")
+        .sort();
+};
+
 const standard = {
     // Shared Standard Material option structures
     optionsContext: new StandardMaterialOptions(),
@@ -25,13 +31,13 @@ const standard = {
     generateKey: function (options) {
         let props;
         if (options === this.optionsContextMin) {
-            if (!this.propsMin) this.propsMin = this._buildPropertiesList(options);
+            if (!this.propsMin) this.propsMin = buildPropertiesList(options);
             props = this.propsMin;
         } else if (options === this.optionsContext) {
-            if (!this.props) this.props = this._buildPropertiesList(options);
+            if (!this.props) this.props = buildPropertiesList(options);
             props = this.props;
         } else {
-            props = this._buildPropertiesList(options);
+            props = buildPropertiesList(options);
         }
 
         let key = "standard" +
@@ -39,12 +45,6 @@ const standard = {
             LitOptionsUtils.generateKey(options.litOptions);
 
         return hashCode(key);
-    },
-
-    _buildPropertiesList(options) {
-        return Object.keys(options)
-            .filter(key => key !== "litOptions")
-            .sort();
     },
 
     // get the value to replace $UV with in Map Shader functions
@@ -484,7 +484,7 @@ const standard = {
             // all other passes require only opacity
             if (options.litOptions.alphaTest) {
                 decl.append("float dAlpha;");
-                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping, null, false));
+                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping, null));
                 code.append(litShader.chunks.alphaTestPS);
                 func.append("getOpacity();");
                 func.append("alphaTest(dAlpha);");
