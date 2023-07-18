@@ -4,7 +4,7 @@ import { getProgramLibrary } from "../shader-lib/get-program-library.js";
 import { LitOptions } from "./lit-options.js";
 import { collectLights } from "./lit-material-common.js";
 import { Material } from './material.js';
-import { custom } from '../shader-lib/programs/custom.js';
+import { lit } from '../shader-lib/programs/lit.js';
 
 class LitMaterialOptions {
     // array of booleans indicating which UV channels are used by the material
@@ -228,8 +228,8 @@ class LitMaterial extends Material {
         LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
-        library.register('custom', custom);
-        const shader = library.getProgram('custom', options, processingOptions);
+        library.register('lit', lit);
+        const shader = library.getProgram('lit', options, processingOptions);
         return shader;
     }
 }

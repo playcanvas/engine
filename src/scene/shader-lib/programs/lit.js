@@ -1,33 +1,56 @@
-import { LIGHTTYPE_DIRECTIONAL } from "../../constants.js";
+import { hashCode } from '../../../core/hash.js';
+import { ChunkBuilder } from '../chunk-builder.js';
+import { LitShader } from './lit-shader.js';
+import { LitOptionsUtils } from './lit-options-utils.js';
 
+const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
+
+/**
+ * @ignore
+ */
 const lit = {
 
-    // generate a key for the lit options
-    generateKey(options) {
-        return "lit" + Object.keys(options)
-            .sort()
-            .map((key) => {
-                if (key === "chunks") {
-                    return lit.generateChunksKey(options);
-                } else if (key === "lights") {
-                    return lit.generateLightsKey(options);
-                } else {
-                    return key + options[key];
-                }
-            })
-            .join("");
+    /** @type { Function } */
+    generateKey: function (options) {
+        const key = "lit" +
+            dummyUvs.map((dummy, index) => {
+                return options.usedUvs[index] ? "1" : "0";
+            }).join("") +
+            options.shaderChunk +
+            LitOptionsUtils.generateKey(options.litOptions);
+
+        return hashCode(key);
     },
 
-    generateLightsKey(options) {
-        return options.lights.map(light => !options.clusteredLightingEnabled || light._type === LIGHTTYPE_DIRECTIONAL ? light.key : "").join("");
-    },
+    /**
+     * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @param {object} options - The options to be passed to the backend.
+     * @returns {object} Returns the created shader definition.
+     * @ignore
+     */
+    createShaderDefinition: function (device, options) {
+        const litShader = new LitShader(device, options.litOptions);
 
-    generateChunksKey(options) {
-        return Object.keys(options.chunks ?? {})
-            .sort()
-            .map(key => key + options.chunks[key])
-            .join("");
-    },
+        const decl = new ChunkBuilder();
+        const code = new ChunkBuilder();
+        const func = new ChunkBuilder();
+
+        // global texture bias for standard textures
+        decl.append(`uniform float textureBias;`);
+
+        decl.append(litShader.chunks.litShaderArgsPS);
+        code.append(options.shaderChunk);
+        func.code = `evaluateFrontend();`;
+
+        func.code = `\n${func.code.split('\n').map(l => `    ${l}`).join('\n')}\n\n`;
+        const usedUvSets = options.usedUvs || [true];
+        const mapTransforms = [];
+        litShader.generateVertexShader(usedUvSets, usedUvSets, mapTransforms);
+        litShader.generateFragmentShader(decl.code, code.code, func.code, "vUv0");
+
+        return litShader.getDefinition();
+    }
 };
 
 export { lit };

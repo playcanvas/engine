@@ -12,7 +12,7 @@ import { LitShader } from './lit-shader.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
-import { lit } from './lit.js';
+import { LitOptionsUtils } from './lit-options-utils.js';
 
 const _matTex2D = [];
 
@@ -36,7 +36,7 @@ const standard = {
 
         let key = "standard" +
             props.map(prop => prop + options[prop]).join("") +
-            lit.generateKey(options.litOptions);
+            LitOptionsUtils.generateKey(options.litOptions);
 
         return hashCode(key);
     },
