@@ -484,7 +484,7 @@ const standard = {
             // all other passes require only opacity
             if (options.litOptions.alphaTest) {
                 decl.append("float dAlpha;");
-                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping, null));
+                code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
                 code.append(litShader.chunks.alphaTestPS);
                 func.append("getOpacity();");
                 func.append("alphaTest(dAlpha);");
