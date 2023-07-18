@@ -61,12 +61,12 @@ const standard = {
     _getUvSourceExpression: function (transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
-        const isForwardPass = options.litOptions.pass === SHADER_FORWARD || options.litOptions.pass === SHADER_FORWARDHDR;
+        const isMainPass = options.litOptions.pass === SHADER_FORWARD || options.litOptions.pass === SHADER_FORWARDHDR;
 
         let expression;
-        if (isForwardPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
+        if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_SLICED) {
             expression = "nineSlicedUv";
-        } else if (isForwardPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
+        } else if (isMainPass && options.litOptions.nineSlicedMode === SPRITE_RENDERMODE_TILED) {
             expression = "nineSlicedUv";
         } else {
             if (transformId === 0) {
