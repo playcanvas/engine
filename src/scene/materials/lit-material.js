@@ -1,12 +1,12 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { CUBEPROJ_NONE, FRESNEL_SCHLICK, GAMMA_SRGBHDR, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, SPECOCC_AO, SHADER_FORWARDHDR, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE } from "../constants";
-import { getProgramLibrary } from "../shader-lib/get-program-library";
-import { LitOptions } from "./lit-options";
+import { CUBEPROJ_NONE, FRESNEL_SCHLICK, GAMMA_SRGBHDR, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, SPECOCC_AO, SHADER_FORWARDHDR, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE } from "../constants.js";
+import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { LitOptions } from "./lit-options.js";
 import { collectLights } from "./lit-material-common.js";
 import { Material } from './material.js';
 import { custom } from '../shader-lib/programs/custom.js';
 
-class CustomLitMaterialOptions {
+class LitMaterialOptions {
     // array of booleans indicating which UV channels are used by the material
     usedUvs;
 
@@ -17,12 +17,12 @@ class CustomLitMaterialOptions {
     litOptions = new LitOptions();
 };
 
-class CustomLitMaterialOptionsBuilder {
+class LitMaterialOptionsBuilder {
     static update(litOptions, material, scene, objDefs, pass, sortedLights, staticLightList) {
-        CustomLitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
-        CustomLitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
-        CustomLitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene);
-        CustomLitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights, staticLightList);
+        LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
+        LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
+        LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene);
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights, staticLightList);
 
         if (pass === SHADER_FORWARDHDR) {
             litOptions.gamma = GAMMA_SRGBHDR;
@@ -172,14 +172,14 @@ class CustomLitMaterialOptionsBuilder {
     }
 };
 
-const options = new CustomLitMaterialOptions();
+const options = new LitMaterialOptions();
 
 /**
- * A custom lit material provides a custom shader chunk for the arguments passed to the lit shader.
+ * A lit material which is provided a custom shader chunk for the arguments passed to the lit shader.
  *
  * @ignore
  */
-class CustomLitMaterial extends Material {
+class LitMaterial extends Material {
     usedUvs = [true];
     shaderChunk = 'void evaluateFrontend() {}\n';
     chunks = null;
@@ -225,7 +225,7 @@ class CustomLitMaterial extends Material {
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
 
-        CustomLitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('custom', custom);
@@ -234,4 +234,4 @@ class CustomLitMaterial extends Material {
     }
 }
 
-export { CustomLitMaterial };
+export { LitMaterial };
