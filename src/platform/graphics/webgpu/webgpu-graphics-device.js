@@ -24,6 +24,7 @@ import { WebgpuMipmapRenderer } from './webgpu-mipmap-renderer.js';
 import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
+import { WebgpuResolver } from './webgpu-resolver.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -106,6 +107,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Destroy the graphics device.
      */
     destroy() {
+
+        this.clearRenderer.destroy();
+        this.clearRenderer = null;
+
+        this.mipmapRenderer.destroy();
+        this.mipmapRenderer = null;
+
+        this.resolver.destroy();
+        this.resolver = null;
+
         super.destroy();
     }
 
@@ -274,6 +285,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.clearRenderer = new WebgpuClearRenderer(this);
         this.mipmapRenderer = new WebgpuMipmapRenderer(this);
+        this.resolver = new WebgpuResolver(this);
 
         this.postInit();
 
@@ -777,27 +789,34 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
             // read from supplied render target, or from the framebuffer
             const sourceRT = source ? source : this.renderTarget;
+            const sourceTexture = sourceRT.impl.depthTexture;
 
-            // cannot copy depth from multisampled buffer. On WebGPU, it cannot be resolve at the end of the pass either,
-            // and so we need to implement a custom depth resolve shader based copy
-            // This is currently needed for uSceneDepthMap when the camera renders to multisampled render target
-            Debug.assert(source.samples <= 1, `copyRenderTarget does not currently support copy of depth from multisampled texture ${sourceRT.name}`, sourceRT);
+            if (source.samples > 1) {
 
-            /** @type {GPUImageCopyTexture} */
-            const copySrc = {
-                texture: sourceRT.impl.depthTexture,
-                mipLevel: 0
-            };
+                // resolve the depth to a color buffer of destination render target
+                const destTexture = dest.colorBuffer.impl.gpuTexture;
+                this.resolver.resolveDepth(commandEncoder, sourceTexture, destTexture);
 
-            // write to supplied render target, or to the framebuffer
-            /** @type {GPUImageCopyTexture} */
-            const copyDst = {
-                texture: dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture,
-                mipLevel: 0
-            };
+            } else {
 
-            Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
-            commandEncoder.copyTextureToTexture(copySrc, copyDst, copySize);
+                // write to supplied render target, or to the framebuffer
+                const destTexture = dest ? dest.depthBuffer.impl.gpuTexture : this.renderTarget.impl.depthTexture;
+
+                /** @type {GPUImageCopyTexture} */
+                const copySrc = {
+                    texture: sourceTexture,
+                    mipLevel: 0
+                };
+
+                /** @type {GPUImageCopyTexture} */
+                const copyDst = {
+                    texture: destTexture,
+                    mipLevel: 0
+                };
+
+                Debug.assert(copySrc.texture !== null && copyDst.texture !== null);
+                commandEncoder.copyTextureToTexture(copySrc, copyDst, copySize);
+            }
         }
 
         DebugGraphics.popGpuMarker(this);

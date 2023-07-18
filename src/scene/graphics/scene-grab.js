@@ -3,7 +3,7 @@ import { Debug } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RGBA8
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
@@ -235,10 +235,23 @@ class SceneGrab {
 
                 if (camera.renderSceneDepthMap) {
 
+                    let useDepthBuffer = true;
+                    let format = PIXELFORMAT_DEPTHSTENCIL;
+                    if (device.isWebGPU) {
+                        const numSamples = camera.renderTarget?.samples ?? device.samples;
+
+                        // when depth buffer is multi-sampled, instead of copying it out, we use custom shader to resolve it
+                        // to a R32F texture, used as a color attachment of the render target
+                        if (numSamples > 1) {
+                            format = PIXELFORMAT_R32F;
+                            useDepthBuffer = false;
+                        }
+                    }
+
                     // reallocate RT if needed
                     if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
                     }
 
                     // copy depth
@@ -246,8 +259,8 @@ class SceneGrab {
                     device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
                     DebugGraphics.popGpuMarker(device);
 
-                    // assign unifrom
-                    self.setupUniform(device, true, this.depthRenderTarget.depthBuffer);
+                    // assign uniform
+                    self.setupUniform(device, true, useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer);
                 }
             },
 

@@ -244,9 +244,13 @@ class WebgpuRenderTarget {
                     usage: GPUTextureUsage.RENDER_ATTACHMENT
                 };
 
-                // single sampled depth buffer can be copied out (grab pass), multisampled cannot
-                // TODO: we should not enable this for shadow maps, as this is not needed it
-                if (samples <= 1) {
+                if (samples > 1) {
+                    // enable multi-sampled depth texture to be a source of our shader based resolver in WebgpuResolver
+                    // TODO: we do not always need to resolve it, and so might consider this flag to be optional
+                    depthTextureDesc.usage |= GPUTextureUsage.TEXTURE_BINDING;
+                } else {
+                    // single sampled depth buffer can be copied out (grab pass)
+                    // TODO: we should not enable this for shadow maps, as it is not needed
                     depthTextureDesc.usage |= GPUTextureUsage.COPY_SRC;
                 }
 

@@ -14,7 +14,6 @@ class WebgpuMipmapRenderer {
 
     constructor(device) {
         this.device = device;
-        const wgpu = device.wgpu;
 
         // Shader that renders a fullscreen textured quad
         const code = `
@@ -54,7 +53,12 @@ class WebgpuMipmapRenderer {
         });
 
         // using minified rendering, so that's the only filter mode we need to set.
-        this.minSampler = wgpu.createSampler({ minFilter: 'linear' });
+        this.minSampler = device.wgpu.createSampler({ minFilter: 'linear' });
+    }
+
+    destroy() {
+        this.shader.destroy();
+        this.shader = null;
     }
 
     /**
