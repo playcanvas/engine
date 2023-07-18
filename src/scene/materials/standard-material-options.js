@@ -101,30 +101,6 @@ class StandardMaterialOptions {
      * @type {LitOptions}
      */
     litOptions = new LitOptions();
-
-    /**
-     * Value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the same in
-     * {@link LitOptions#pass}.
-     *
-     * @type {number}
-     */
-    set pass(p) {
-        Debug.error(`err`);
-    }
-
-    get pass() {
-        Debug.error(`err`);
-        return null;
-    }
-
-    set chunks(p) {
-        Debug.error(`err`);
-    }
-
-    get chunks() {
-        Debug.error(`err`);
-        return null;
-    }
 }
 
 export { StandardMaterialOptions };
