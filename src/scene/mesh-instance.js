@@ -14,7 +14,7 @@ import {
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -507,6 +507,13 @@ class MeshInstance {
         return this._layer;
     }
 
+    _updateShaderDefs(shaderDefs) {
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }   
+    }
+
     /**
      * In some circumstances mesh instances are sorted by a distance calculation to determine their
      * rendering order. Set this callback to override the default distance calculation, which gives
@@ -526,7 +533,7 @@ class MeshInstance {
 
     set receiveShadow(val) {
         this._receiveShadow = val;
-        this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
+        this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
         this._shader[SHADER_FORWARD] = null;
         this._shader[SHADER_FORWARDHDR] = null;
     }
@@ -542,15 +549,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-
-        let shaderDefs = this._shaderDefs;
-        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
 
@@ -575,12 +574,7 @@ class MeshInstance {
         shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(shaderDefs);
     }
 
     get morphInstance() {
@@ -589,7 +583,7 @@ class MeshInstance {
 
     set screenSpace(val) {
         this._screenSpace = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
         this._shader[SHADER_FORWARD] = null;
     }
 
@@ -612,8 +606,7 @@ class MeshInstance {
      * @type {number}
      */
     set mask(val) {
-        const toggles = this._shaderDefs & 0x0000FFFF;
-        this._shaderDefs = toggles | (val << 16);
+        this._updateShaderDefs((this._shaderDefs & 0x0000FFFF) | (val << 16));
         this._shader[SHADER_FORWARD] = null;
         this._shader[SHADER_FORWARDHDR] = null;
     }
@@ -737,6 +730,8 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
+
+        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**
@@ -876,7 +871,7 @@ class MeshInstance {
         } else {
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT);
+            this._updateShaderDefs(this._shaderDefs & ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT));
             this.mask = (this.mask | MASK_AFFECT_DYNAMIC) & ~(MASK_AFFECT_LIGHTMAPPED | MASK_BAKE);
         }
     }
