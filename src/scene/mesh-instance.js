@@ -511,7 +511,7 @@ class MeshInstance {
         if (shaderDefs !== this._shaderDefs) {
             this._shaderDefs = shaderDefs;
             this.clearShaders();
-        }   
+        }
     }
 
     /**
