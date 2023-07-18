@@ -215,12 +215,6 @@ class LitMaterial extends Material {
     hasClearCoat = false;
     hasClearCoatNormals = false;
 
-    updateUniforms(device, scene) {
-        this.setParameter('texture_envAtlas', scene.envAtlas);
-        this.setParameter('texture_cubeMap', scene.skybox);
-        this.clearVariants();
-    }
-
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
