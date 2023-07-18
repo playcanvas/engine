@@ -1,13 +1,16 @@
 export default /* glsl */`
 
-// Transparency
-float litArgs_opacity;
-
 // Surface albedo absorbance
 vec3 litArgs_albedo;
 
+// Transparency
+float litArgs_opacity;
+
 // Emission color
 vec3 litArgs_emission;
+
+// Normal direction in world space
+vec3 litArgs_worldNormal;
 
 // Ambient occlusion amount, range [0..1]
 float litArgs_ao;
@@ -17,9 +20,6 @@ vec3 litArgs_lightmap;
 
 // Light map direction
 vec3 litArgs_lightmapDir;
-
-// Normal direction in world space
-vec3 litArgs_worldNormal;
 
 // Surface metalness factor, range [0..1]
 float litArgs_metalness;
