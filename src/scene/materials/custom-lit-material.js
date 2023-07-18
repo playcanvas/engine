@@ -123,6 +123,9 @@ class CustomLitMaterialOptionsBuilder {
         } else if (material.useSkybox && scene.skybox) {
             litOptions.reflectionSource = 'cubeMap';
             litOptions.reflectionEncoding = scene.skybox.encoding;
+        } else {
+            litOptions.reflectionSource = null;
+            litOptions.reflectionEncoding = null;
         }
 
         // source of environment ambient is as follows:
