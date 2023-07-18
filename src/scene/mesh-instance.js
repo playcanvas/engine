@@ -533,7 +533,7 @@ class MeshInstance {
 
     set receiveShadow(val) {
         this._receiveShadow = val;
-        this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
+        this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
         this._shader[SHADER_FORWARD] = null;
         this._shader[SHADER_FORWARDHDR] = null;
     }
@@ -583,7 +583,7 @@ class MeshInstance {
 
     set screenSpace(val) {
         this._screenSpace = val;
-        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
         this._shader[SHADER_FORWARD] = null;
     }
 
@@ -606,7 +606,8 @@ class MeshInstance {
      * @type {number}
      */
     set mask(val) {
-        this._updateShaderDefs((this._shaderDefs & 0x0000FFFF) | (val << 16));
+        const toggles = this._shaderDefs & 0x0000FFFF;
+        this._shaderDefs = toggles | (val << 16);
         this._shader[SHADER_FORWARD] = null;
         this._shader[SHADER_FORWARDHDR] = null;
     }
@@ -871,7 +872,7 @@ class MeshInstance {
         } else {
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[0], null);
             this.setRealtimeLightmap(MeshInstance.lightmapParamNames[1], null);
-            this._updateShaderDefs(this._shaderDefs & ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT));
+            this._shaderDefs &= ~(SHADERDEF_LM | SHADERDEF_DIRLM | SHADERDEF_LMAMBIENT);
             this.mask = (this.mask | MASK_AFFECT_DYNAMIC) & ~(MASK_AFFECT_LIGHTMAPPED | MASK_BAKE);
         }
     }
