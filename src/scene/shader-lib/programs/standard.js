@@ -40,7 +40,7 @@ const standard = {
             props = buildPropertiesList(options);
         }
 
-        let key = "standard" +
+        const key = "standard" +
             props.map(prop => prop + options[prop]).join("") +
             LitOptionsUtils.generateKey(options.litOptions);
 

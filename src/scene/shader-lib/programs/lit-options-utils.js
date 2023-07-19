@@ -11,15 +11,16 @@ const LitOptionsUtils = {
                     return LitOptionsUtils.generateChunksKey(options);
                 } else if (key === "lights") {
                     return LitOptionsUtils.generateLightsKey(options);
-                } else {
-                    return key + options[key];
                 }
+                return key + options[key];
             })
             .join("");
     },
 
     generateLightsKey(options) {
-        return options.lights.map(light => !options.clusteredLightingEnabled || light._type === LIGHTTYPE_DIRECTIONAL ? light.key : "").join("");
+        return options.lights.map((light) => {
+            return (!options.clusteredLightingEnabled || light._type === LIGHTTYPE_DIRECTIONAL) ? light.key : "";
+        }).join("");
     },
 
     generateChunksKey(options) {
@@ -27,7 +28,7 @@ const LitOptionsUtils = {
             .sort()
             .map(key => key + options.chunks[key])
             .join("");
-    },
+    }
 };
 
 export { LitOptionsUtils };

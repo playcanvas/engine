@@ -1,5 +1,4 @@
 import { LitOptions } from "./lit-options.js";
-import { Debug } from '../../core/debug.js';
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader

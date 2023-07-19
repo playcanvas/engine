@@ -132,7 +132,8 @@ class LitOptions {
      */
     twoSidedLighting = false;
 
-    /** The value of {@link StandardMaterial#occludeDirect}.
+    /**
+     * The value of {@link StandardMaterial#occludeDirect}.
      *
      * @type {boolean}
      */

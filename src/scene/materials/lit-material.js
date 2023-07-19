@@ -15,7 +15,7 @@ class LitMaterialOptions {
 
     // lit options
     litOptions = new LitOptions();
-};
+}
 
 class LitMaterialOptionsBuilder {
     static update(litOptions, material, scene, objDefs, pass, sortedLights, staticLightList) {
@@ -62,7 +62,6 @@ class LitMaterialOptionsBuilder {
     }
 
     static updateMaterialOptions(litOptions, material) {
-        // LIT OPTIONS
         litOptions.useAmbientTint = false;
         litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
         litOptions.customFragmentShader = null;
@@ -170,7 +169,7 @@ class LitMaterialOptionsBuilder {
             litOptions.noShadow = true;
         }
     }
-};
+}
 
 const options = new LitMaterialOptions();
 
@@ -181,38 +180,70 @@ const options = new LitMaterialOptions();
  */
 class LitMaterial extends Material {
     usedUvs = [true];
+
     shaderChunk = 'void evaluateFrontend() {}\n';
+
     chunks = null;
+
     useLighting = true;
+
     useFog = true;
+
     useGammaTonemap = true;
+
     useSkybox = true;
+
     shadingModel = SPECULAR_BLINN;
+
     ambientSH = null;
+
     pixelSnap = false;
+
     nineSlicedMode = null;
+
     fastTbn = false;
+
     twoSidedLighting = false;
+
     occludeDirect = false;
+
     occludeSpecular = SPECOCC_AO;
+
     occludeSpecularIntensity = 1;
+
     opacityFadesSpecular = true;
+
     conserveEnergy = true;
+
     ggxSpecular = false;
+
     fresnelModel = FRESNEL_SCHLICK;
+
     dynamicRefraction = false;
 
+    // has members
     hasAo = false;
+
     hasSpecular = false;
+
     hasSpecularityFactor = false;
+
     hasLighting = false;
+
     hasHeights = false;
+
     hasNormals = false;
+
     hasSheen = false;
+
     hasRefraction = false;
+
     hasIrridescence = false;
+
     hasMetalness = false;
+
     hasClearCoat = false;
+
     hasClearCoatNormals = false;
 
     getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
