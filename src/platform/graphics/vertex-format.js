@@ -2,11 +2,14 @@ import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
 
 import { math } from '../../core/math/math.js';
+import { StringIds } from '../../core/string-ids.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
+
+const stringIds = new StringIds();
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
@@ -266,7 +269,7 @@ class VertexFormat {
 
         // rendering hash
         this.renderingHashString = stringElementsRender.join('_');
-        this.renderingHash = hashCode(this.renderingHashString);
+        this.renderingHash = stringIds.get(this.renderingHashString);
     }
 }
 
