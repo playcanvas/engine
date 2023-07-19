@@ -17,7 +17,7 @@ function hashCode(str) {
 
 /**
  * Calculates simple hash value of an array of numbers. Designed for performance, but provides good
- * distribution with small number of collisions
+ * distribution with small number of collisions.
  *.
  * @param {Uint32Array} typedArray - Array of numbers to hash.
  * @returns {number} Hash value.
