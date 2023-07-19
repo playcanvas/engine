@@ -74,12 +74,13 @@ const _stencilOps = [
 // temp array to avoid allocation
 const _bindGroupLayouts = [];
 
-/** @private */
+/** @ignore */
 class CacheEntry {
     /**
      * Render pipeline
      *
      * @type {GPURenderPipeline}
+     * @private
      */
     pipeline;
 
@@ -116,7 +117,7 @@ class WebgpuRenderPipeline {
         this.cache = new Map();
     }
 
-
+    /** @private */
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
