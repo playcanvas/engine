@@ -521,7 +521,7 @@ fs.writeFileSync(path, dts);
 
 path = './types/framework/script/script-type.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('get enabled(): boolean;', 'get enabled(): boolean;\n' + `
+dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
     /**
      * Called when script is about to run for the first time.
      */
