@@ -17,7 +17,7 @@ function load(app) {
              *
              * @param {string} type - The class name.
              * @returns {ReferenceType} The reference type.
-             */ 
+             */
             const getType = (type) => {
                 const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
                 return new ReferenceType(type, reflection, context.project);
