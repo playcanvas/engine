@@ -14,11 +14,11 @@ function getProperties(filePath) {
     const properties = new Map();
 
     if (docBlocks) {
-        docBlocks.forEach(block => {
+        docBlocks.forEach((block) => {
             const propertyLines = block.match(/@property\s*\{[^}]+\}\s*[^*]*/g);
 
             if (propertyLines) {
-                propertyLines.forEach(line => {
+                propertyLines.forEach((line) => {
                     const match = line.match(/@property\s*\{([^}]+)\}\s*(\w+)/);
 
                     if (match) {
