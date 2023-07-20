@@ -2,7 +2,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 // eslint-disable-next-line import/no-unresolved
-import { Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, UnionType } from 'typedoc';
+import { ArrayType, Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, UnionType } from 'typedoc';
 
 /**
  * Extract property types from JSDoc in a .js file.
@@ -93,6 +93,8 @@ function load(app) {
                         return new IntrinsicType('boolean');
                     case 'number':
                         return new IntrinsicType('number');
+                    case 'number[]':
+                        return new ArrayType(new IntrinsicType('number'));
                     case 'string':
                         return new IntrinsicType('string');
                     default:
