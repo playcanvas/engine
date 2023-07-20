@@ -169,8 +169,8 @@ class StencilParameters {
         this._zfail = options.zfail ?? STENCILOP_KEEP;
         this._zpass = options.zpass ?? STENCILOP_KEEP;
 
-        // evaluate key here. This evaluates the key for the DEFAULT instance, which is important,
-        // as during rendering it gets copied and they key would get evaluated each time.
+        // Evaluate key here. This evaluates the key for the DEFAULT instance, which is important,
+        // as during rendering it gets copied and the key would get evaluated each time.
         this._evalKey();
     }
 
