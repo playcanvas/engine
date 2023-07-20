@@ -51,10 +51,10 @@ function getProperties(filePath) {
 function load(app) {
     const classes = new Map([
 //        [ 'CollisionComponent', './src/framework/components/collision/component.js' ],
-        [ 'ElementComponent', './src/framework/components/element/component.js' ],
-        [ 'LightComponent', './src/framework/components/light/component.js' ],
-        [ 'ParticleSystemComponent', './src/framework/components/particle-system/component.js' ],
-        [ 'StandardMaterial', './src/scene/materials/standard-material.js' ]
+        ['ElementComponent', './src/framework/components/element/component.js'],
+        ['LightComponent', './src/framework/components/light/component.js'],
+        ['ParticleSystemComponent', './src/framework/components/particle-system/component.js'],
+        ['StandardMaterial', './src/scene/materials/standard-material.js']
     ]);
 
     app.converter.on(Converter.EVENT_CREATE_DECLARATION, (/** @type {import('typedoc').Context} */ context, /** @type {DeclarationReflection} */ reflection) => {
