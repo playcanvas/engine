@@ -1,5 +1,8 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { StringIds } from '../../../core/string-ids.js';
 import { WebgpuDebug } from './webgpu-debug.js';
+
+const stringIds = new StringIds();
 
 /**
  * Private class storing info about color buffer.
@@ -37,7 +40,7 @@ class WebgpuRenderTarget {
     /**
      * Unique key used by render pipeline creation
      *
-     * @type {string}
+     * @type {number}
      */
     key;
 
@@ -127,11 +130,13 @@ class WebgpuRenderTarget {
         const rt = this.renderTarget;
 
         // key used by render pipeline creation
-        this.key = '';
-        this.colorAttachments.forEach((colorAttachment, index) => {
-            this.key += `${index}:${colorAttachment.format}-`;
+        let key = `${rt.samples}:${rt.depth ? this.depthFormat : 'nodepth'}`;
+        this.colorAttachments.forEach((colorAttachment) => {
+            key += `:${colorAttachment.format}`;
         });
-        this.key += `${rt.depth ? this.depthFormat : ''}-${rt.samples}`;
+
+        // convert string to a unique number
+        this.key = stringIds.get(key);
     }
 
     setDepthFormat(depthFormat) {

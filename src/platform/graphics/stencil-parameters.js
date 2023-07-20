@@ -1,4 +1,7 @@
 import { FUNC_ALWAYS, STENCILOP_KEEP } from './constants.js';
+import { StringIds } from '../../core/string-ids.js';
+
+const stringIds = new StringIds();
 
 /**
  * Holds stencil test settings.
@@ -97,7 +100,8 @@ class StencilParameters {
     // BitField to store the parameters and to speed up the key generation.
     get key() {
         const { func, ref, fail, zfail, zpass, readMask, writeMask } = this;
-        return `${func},${ref},${fail},${zfail},${zpass},${readMask},${writeMask}`;
+        const key = `${func},${ref},${fail},${zfail},${zpass},${readMask},${writeMask}`;
+        return stringIds.get(key);
     }
 
     /**
