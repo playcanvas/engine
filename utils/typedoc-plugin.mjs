@@ -1,10 +1,12 @@
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
-import { Converter, ReflectionKind, DeclarationReflection, ReflectionFlag, IntrinsicType, ReferenceType, UnionType } from 'typedoc'; // eslint-disable-line import/no-unresolved
+// eslint-disable-next-line import/no-unresolved
+import { Converter, DeclarationReflection, IntrinsicType, ReflectionFlag, ReflectionKind, ReferenceType, UnionType } from 'typedoc';
 
 /**
  * Extract property types from JSDoc in a .js file.
+ *
  * @param {string} filePath - The path to the .js file.
  * @returns {Map<string, string>} A map of property names to types.
  */
@@ -47,9 +49,16 @@ function getProperties(filePath) {
  * @param {import('typedoc').Application} app - The Typedoc application.
  */
 function load(app) {
+    const classes = new Map([
+//        [ 'CollisionComponent', './src/framework/components/collision/component.js' ],
+        [ 'ElementComponent', './src/framework/components/element/component.js' ],
+        [ 'LightComponent', './src/framework/components/light/component.js' ],
+        [ 'ParticleSystemComponent', './src/framework/components/particle-system/component.js' ],
+        [ 'StandardMaterial', './src/scene/materials/standard-material.js' ]
+    ]);
+
     app.converter.on(Converter.EVENT_CREATE_DECLARATION, (/** @type {import('typedoc').Context} */ context, /** @type {DeclarationReflection} */ reflection) => {
-        // Select the StandardMaterial class
-        if (reflection.kind === ReflectionKind.Class && reflection.name === 'StandardMaterial') {
+        if (classes.has(reflection.name) && reflection.kind === ReflectionKind.Class) {
             /**
              * Returns the reference type matching the specified class name.
              *
@@ -58,14 +67,41 @@ function load(app) {
              */
             const getReferenceType = (type) => {
                 const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
+                if (!reflection) {
+                    console.error(`Unable to find class ${type}`);
+                    return undefined;
+                }
                 return new ReferenceType(type, reflection, context.project);
             };
 
-            /** @type {Map<string, ReferenceType>} */
-            const types = new Map();
-            ['Color', 'Texture', 'Vec2', 'Vec3', 'Vec4'].forEach(type => types.set(type, getReferenceType(type)));
+            /**
+             * Returns the Typedoc type matching the specified JSDoc type. This can include a union type (|).
+             *
+             * @param {string} type - The JSDoc type string.
+             * @returns {import('typedoc').Type} The Typedoc type.
+             */
+            const getType = (type) => {
+                if (type.includes('|')) {
+                    const types = type.split('|');
+                    return new UnionType(types.map(type => getType(type)));
+                }
 
-            const properties = getProperties('./src/scene/materials/standard-material.js');
+                switch (type) {
+                    case 'null':
+                        return new IntrinsicType('null');
+                    case 'boolean':
+                        return new IntrinsicType('boolean');
+                    case 'number':
+                        return new IntrinsicType('number');
+                    case 'string':
+                        return new IntrinsicType('string');
+                    default:
+                        return getReferenceType(type);
+                }
+            };
+
+            const script = classes.get(reflection.name);
+            const properties = getProperties(script);
 
             // Get just the @property definitions from the class' JSDoc block
             const blockTags = reflection.comment.blockTags.filter(blockTag => blockTag.tag === '@property');
@@ -75,26 +111,6 @@ function load(app) {
                 const newProperty = new DeclarationReflection(blockTag.name, ReflectionKind.Property, reflection);
 
                 const type = properties.get(blockTag.name);
-
-                const getType = (type) => {
-                    if (type.includes('|')) {
-                        const types = type.split('|');
-                        return new UnionType(types.map(type => getType(type)));
-                    }
-
-                    switch (type) {
-                        case 'null':
-                            return new IntrinsicType('null');
-                        case 'boolean':
-                            return new IntrinsicType('boolean');
-                        case 'number':
-                            return new IntrinsicType('number');
-                        case 'string':
-                            return new IntrinsicType('string');
-                        default:
-                            return types.get(type);
-                    }
-                };
 
                 newProperty.type = getType(type);
 
