@@ -50,15 +50,28 @@ function getProperties(filePath) {
  */
 function load(app) {
     const classes = new Map([
-//        [ 'CollisionComponent', './src/framework/components/collision/component.js' ],
+        ['ButtonComponent', './src/framework/components/button/component.js'],
+        ['CollisionComponent', './src/framework/components/collision/component.js'],
         ['ElementComponent', './src/framework/components/element/component.js'],
         ['LightComponent', './src/framework/components/light/component.js'],
         ['ParticleSystemComponent', './src/framework/components/particle-system/component.js'],
+        ['ScrollbarComponent', './src/framework/components/scrollbar/component.js'],
+        ['ScrollViewComponent', './src/framework/components/scroll-view/component.js'],
         ['StandardMaterial', './src/scene/materials/standard-material.js']
     ]);
 
-    app.converter.on(Converter.EVENT_CREATE_DECLARATION, (/** @type {import('typedoc').Context} */ context, /** @type {DeclarationReflection} */ reflection) => {
-        if (classes.has(reflection.name) && reflection.kind === ReflectionKind.Class) {
+    app.converter.on(Converter.EVENT_RESOLVE_BEGIN, (/** @type {import('typedoc').Context} */ context) => {
+        const getReference = (type) => {
+            const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
+            if (!reflection) {
+                console.error(`Unable to find class ${type}`);
+            }
+            return reflection;
+        };
+
+        classes.forEach((filePath, className) => {
+            const reflection = getReference(className);
+
             /**
              * Returns the reference type matching the specified class name.
              *
@@ -66,12 +79,8 @@ function load(app) {
              * @returns {ReferenceType} The reference type.
              */
             const getReferenceType = (type) => {
-                const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
-                if (!reflection) {
-                    console.error(`Unable to find class ${type}`);
-                    return undefined;
-                }
-                return new ReferenceType(type, reflection, context.project);
+                const reference = getReference(type);
+                return reference ? new ReferenceType(type, reference, context.project) : undefined;
             };
 
             /**
@@ -102,8 +111,7 @@ function load(app) {
                 }
             };
 
-            const script = classes.get(reflection.name);
-            const properties = getProperties(script);
+            const properties = getProperties(filePath);
 
             // Get just the @property definitions from the class' JSDoc block
             const blockTags = reflection.comment.blockTags.filter(blockTag => blockTag.tag === '@property');
@@ -125,7 +133,7 @@ function load(app) {
                 }
                 reflection.children.push(newProperty);
             }
-        }
+        });
     });
 }
 
