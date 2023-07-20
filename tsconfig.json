@@ -3,7 +3,7 @@
         "baseUrl": ".",
         "allowJs": true,
         "checkJs": true,
-        "outFile": "dist/playcanvas.js",
+        "module": "es6",
         "target": "es6",
         "moduleResolution": "node",
         "noImplicitReturns": true,

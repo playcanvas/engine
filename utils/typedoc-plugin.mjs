@@ -1,4 +1,42 @@
-import { Converter, ReflectionKind, DeclarationReflection, ReflectionFlag, IntrinsicType, ReferenceType } from 'typedoc'; // eslint-disable-line import/no-unresolved
+import { readFileSync } from 'fs';
+import { resolve } from 'path';
+
+import { Converter, ReflectionKind, DeclarationReflection, ReflectionFlag, IntrinsicType, ReferenceType, UnionType } from 'typedoc'; // eslint-disable-line import/no-unresolved
+
+/**
+ * Extract property types from JSDoc in a .js file.
+ * @param {string} filePath - The path to the .js file.
+ * @returns {Map<string, string>} A map of property names to types.
+ */
+function getProperties(filePath) {
+    const data = readFileSync(resolve(process.cwd(), filePath), 'utf-8');
+    const docBlocks = data.match(/\/\*\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\//g);
+    const properties = new Map();
+
+    if (docBlocks) {
+        docBlocks.forEach(block => {
+            const propertyLines = block.match(/@property\s*\{[^}]+\}\s*[^*]*/g);
+
+            if (propertyLines) {
+                propertyLines.forEach(line => {
+                    const match = line.match(/@property\s*\{([^}]+)\}\s*(\w+)/);
+
+                    if (match) {
+                        let type = match[1].trim();
+                        const name = match[2].trim();
+
+                        // Simplify complex import types.
+                        type = type.replace(/import\(['"]([^'"]+)['"]\)\.(\w+)/g, (_, p1, p2) => p2);
+
+                        properties.set(name, type);
+                    }
+                });
+            }
+        });
+    }
+
+    return properties;
+}
 
 /**
  * This Typedoc plugin adds missing PlayCanvas API symbols to the Typedoc reflection graph. The
@@ -18,14 +56,16 @@ function load(app) {
              * @param {string} type - The class name.
              * @returns {ReferenceType} The reference type.
              */
-            const getType = (type) => {
+            const getReferenceType = (type) => {
                 const reflection = context.project.children.find(child => child.name === type && child.kind === ReflectionKind.Class);
                 return new ReferenceType(type, reflection, context.project);
             };
 
             /** @type {Map<string, ReferenceType>} */
             const types = new Map();
-            ['Color', 'Texture', 'Vec2', 'Vec3', 'Vec4'].forEach(type => types.set(type, getType(type)));
+            ['Color', 'Texture', 'Vec2', 'Vec3', 'Vec4'].forEach(type => types.set(type, getReferenceType(type)));
+
+            const properties = getProperties('./src/scene/materials/standard-material.js');
 
             // Get just the @property definitions from the class' JSDoc block
             const blockTags = reflection.comment.blockTags.filter(blockTag => blockTag.tag === '@property');
@@ -34,19 +74,29 @@ function load(app) {
             for (const blockTag of blockTags) {
                 const newProperty = new DeclarationReflection(blockTag.name, ReflectionKind.Property, reflection);
 
-                if (blockTag.name.endsWith('Channel')) {
-                    newProperty.type = new IntrinsicType('string');
-                } else if (blockTag.name.endsWith('Rotation') || blockTag.name.endsWith('Uv')) {
-                    newProperty.type = new IntrinsicType('number');
-                } else if (blockTag.name.startsWith('use') || blockTag.name.endsWith('Invert') || blockTag.name.endsWith('Tint') || blockTag.name.endsWith('VertexColor')) {
-                    newProperty.type = new IntrinsicType('boolean');
-                } else if (blockTag.name.endsWith('Map')) {
-                    newProperty.type = types.get('Texture');
-                } else if (blockTag.name.endsWith('Offset')) {
-                    newProperty.type = types.get('Vec2');
-                } else if (blockTag.name.endsWith('Tiling')) {
-                    newProperty.type = types.get('Vec2');
-                }
+                const type = properties.get(blockTag.name);
+
+                const getType = (type) => {
+                    if (type.includes('|')) {
+                        const types = type.split('|');
+                        return new UnionType(types.map(type => getType(type)));
+                    }
+
+                    switch (type) {
+                        case 'null':
+                            return new IntrinsicType('null');
+                        case 'boolean':
+                            return new IntrinsicType('boolean');
+                        case 'number':
+                            return new IntrinsicType('number');
+                        case 'string':
+                            return new IntrinsicType('string');
+                        default:
+                            return types.get(type);
+                    }
+                };
+
+                newProperty.type = getType(type);
 
                 // Mark the new property as public
                 newProperty.setFlag(ReflectionFlag.Public, true);
