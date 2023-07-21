@@ -2,12 +2,13 @@
  * Helper function to ensure a bit of backwards compatibility
  * @example
  * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
- * @param {string} src 
- * @returns {string}
+ * @param {string} src - The shader source which may generate shader errors.
+ * @returns {string} The backwards compatible shader source.
  */
 const toLitArgs = src => src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
     return 'litArgs' + b.replaceAll(/\./g, '_');
 });
+
 // helper class for combining shader chunks together
 // ensures every chunk ends with a new line otherwise shaders can be ill-formed
 class ChunkBuilder {
@@ -16,6 +17,7 @@ class ChunkBuilder {
     set code(newCode) {
         this._code = newCode;
     }
+
     get code() {
         if (this._code.includes('litShaderArgs')) {
             this._code = toLitArgs(this._code);
