@@ -6,7 +6,7 @@
  * @returns {string} The backwards compatible shader source.
  */
 const toLitArgs = src => src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-    return 'litArgs' + b.replaceAll(/\./g, '_');
+    return 'litArgs' + b.replace(/\./g, '_');
 });
 
 // helper class for combining shader chunks together
