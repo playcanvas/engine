@@ -69,6 +69,8 @@ function arrayGet4(offset, outputArray, outputIndex) {
 
 /**
  * Helps with accessing a specific vertex attribute.
+ *
+ * @category Graphics
  */
 class VertexIteratorAccessor {
     /**
@@ -211,6 +213,8 @@ class VertexIteratorAccessor {
 
 /**
  * A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
+ *
+ * @category Graphics
  */
 class VertexIterator {
     /**

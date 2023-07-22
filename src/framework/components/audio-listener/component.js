@@ -5,6 +5,7 @@ import { Component } from '../component.js';
  * correctly.
  *
  * @augments Component
+ * @category Sound
  */
 class AudioListenerComponent extends Component {
     /**

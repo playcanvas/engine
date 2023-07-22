@@ -8,6 +8,8 @@ let id = 0;
 
 /**
  * A render target is a rectangular rendering surface.
+ *
+ * @category Graphics
  */
 class RenderTarget {
     /** @type {string} */

@@ -9,6 +9,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
  * A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
  * Multiple morph targets can be blended together on a mesh. This is useful for effects that are
  * hard to achieve with conventional animation and skinning.
+ *
+ * @category Graphics
  */
 class MorphTarget {
     /**

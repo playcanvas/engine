@@ -18,6 +18,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * representation of real world geometry by underlying AR system.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHitTest extends EventHandler {
     /**

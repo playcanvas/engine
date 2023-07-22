@@ -1,6 +1,8 @@
 /**
  * The KeyboardEvent is passed into all event callbacks from the {@link Keyboard}. It corresponds
  * to a key press or release.
+ *
+ * @category Input
  */
 class KeyboardEvent {
     /**

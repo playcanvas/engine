@@ -7,6 +7,8 @@ let id = 0;
 /**
  * A vertex buffer is the mechanism via which the application specifies vertex data to the graphics
  * hardware.
+ *
+ * @category Graphics
  */
 class VertexBuffer {
     /**

@@ -5,6 +5,8 @@ const stringIds = new StringIds();
 
 /**
  * Holds stencil test settings.
+ *
+ * @category Graphics
  */
 class StencilParameters {
     /** @type {number} */

@@ -2,6 +2,8 @@ import { math } from './math.js';
 
 /**
  * Representation of an RGBA color.
+ *
+ * @category Math
  */
 class Color {
     /**

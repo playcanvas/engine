@@ -1,5 +1,7 @@
 /**
  * 3-dimensional vector.
+ *
+ * @category Math
  */
 class Vec3 {
     /**

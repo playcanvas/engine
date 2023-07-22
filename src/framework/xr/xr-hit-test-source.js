@@ -19,6 +19,7 @@ const poolQuat = [];
  * AR session.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHitTestSource extends EventHandler {
     /**

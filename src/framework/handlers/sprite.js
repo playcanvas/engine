@@ -24,6 +24,7 @@ function onTextureAtlasAdded(atlasAsset) {
  * Resource handler used for loading {@link Sprite} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class SpriteHandler {
     /**

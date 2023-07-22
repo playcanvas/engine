@@ -16,6 +16,7 @@ let ids = 0;
  * that operate on the viewer's pose.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrInputSource extends EventHandler {
     /**

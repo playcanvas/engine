@@ -47,6 +47,8 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 /**
  * Container for storing and loading of scenes. An instance of the registry is created on the
  * {@link AppBase} object as {@link AppBase#scenes}.
+ *
+ * @category Graphics
  */
 class SceneRegistry {
     /**

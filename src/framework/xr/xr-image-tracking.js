@@ -8,6 +8,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  * their estimated sizes.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrImageTracking extends EventHandler {
     /**

@@ -25,6 +25,7 @@ import { StencilParameters } from './stencil-parameters.js';
  * create a new graphics device against each.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class GraphicsDevice extends EventHandler {
     /**

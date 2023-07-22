@@ -1,5 +1,7 @@
 /**
  * Represents finger with related joints and index.
+ *
+ * @category XR
  */
 class XrFinger {
     /**
