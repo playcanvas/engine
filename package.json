@@ -50,6 +50,15 @@
     "parser": "@babel/eslint-parser",
     "parserOptions": {
       "requireConfigFile": false
+    },
+    "rules": {
+      "jsdoc/check-tag-names": [
+        "error", {
+          "definedTags": [
+            "category"
+          ]
+        }
+      ]
     }
   },
   "eslintIgnore": [

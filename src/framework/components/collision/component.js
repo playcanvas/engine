@@ -56,6 +56,7 @@ const _quat = new Quat();
  * @property {import('../../../scene/model.js').Model} model The model that is added to the scene
  * graph for the mesh collision volume.
  * @augments Component
+ * @category Physics
  */
 class CollisionComponent extends Component {
     /**

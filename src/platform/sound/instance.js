@@ -24,6 +24,7 @@ function capTime(time, duration) {
  * A SoundInstance plays a {@link Sound}.
  *
  * @augments EventHandler
+ * @category Sound
  */
 class SoundInstance extends EventHandler {
     /**

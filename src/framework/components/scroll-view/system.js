@@ -30,6 +30,7 @@ const DEFAULT_DRAG_THRESHOLD = 10;
  * Manages creation of {@link ScrollViewComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class ScrollViewComponentSystem extends ComponentSystem {
     /**

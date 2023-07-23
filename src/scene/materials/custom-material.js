@@ -11,7 +11,6 @@ import { custom } from '../shader-lib/programs/custom.js';
  *
  * @ignore
  */
-
 class CustomMaterial extends Material {
     _litOptions = new LitOptions();
 

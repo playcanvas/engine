@@ -28,6 +28,8 @@ const allWriteShift = redWriteShift;
  *
  * For the best performance, do not modify blend state after it has been created, but create
  * multiple blend states and assign them to the material or graphics device as needed.
+ *
+ * @category Graphics
  */
 class BlendState {
     /**

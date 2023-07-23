@@ -265,6 +265,8 @@ function sleep(ms) {
 
 /**
  * A GamePadButton stores information about a button from the Gamepad API.
+ *
+ * @category Input
  */
 class GamePadButton {
     /**
@@ -364,6 +366,8 @@ const dummyButton = Object.freeze(new GamePadButton(0));
 
 /**
  * A GamePad stores information about a gamepad from the Gamepad API.
+ *
+ * @category Input
  */
 class GamePad {
     /**
@@ -768,6 +772,7 @@ class GamePad {
  * Input handler for accessing GamePad input.
  *
  * @augments EventHandler
+ * @category Input
  */
 class GamePads extends EventHandler {
     /**

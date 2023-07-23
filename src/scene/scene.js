@@ -21,6 +21,7 @@ import { EnvLighting } from './graphics/env-lighting.js';
  * graphical objects, lights, and scene-wide properties.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class Scene extends EventHandler {
     /**

@@ -16,6 +16,7 @@ const _schema = [
  * Manages creation of {@link ScrollbarComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class ScrollbarComponentSystem extends ComponentSystem {
     /**
