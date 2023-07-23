@@ -99,8 +99,8 @@ class ContainerResource {
      *
      * @param {import('../../scene/mesh-instance').MeshInstance[]} instances - An array of mesh
      * instances.
-     * @param {string} [name] - The the name of the variant, as quered from getMaterialVariants,
-     * if null the variant will be reset to the default
+     * @param {string} [name] - The name of the variant, as queried by getMaterialVariants. If
+     * null, the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -126,18 +126,18 @@ class ContainerResource {
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
  *
- * | resource    | preprocess  | process | processAsync | postprocess |
- * | ----------- | :---------: | :-----: | :----------: | :---------: |
- * | global      |      √      |         |              |      √      |
- * | node        |      √      |    √    |              |      √      |
- * | light       |      √      |    √    |              |      √      |
- * | camera      |      √      |    √    |              |      √      |
- * | animation   |      √      |         |              |      √      |
- * | material    |      √      |    √    |              |      √      |
- * | image       |      √      |         |      √       |      √      |
- * | texture     |      √      |         |      √       |      √      |
- * | buffer      |      √      |         |      √       |      √      |
- * | bufferView  |      √      |         |      √       |      √      |
+ * | resource   | preprocess | process | processAsync | postprocess |
+ * | ---------- | :--------: | :-----: | :----------: | :---------: |
+ * | global     |      √     |         |              |      √      |
+ * | node       |      √     |    √    |              |      √      |
+ * | light      |      √     |    √    |              |      √      |
+ * | camera     |      √     |    √    |              |      √      |
+ * | animation  |      √     |         |              |      √      |
+ * | material   |      √     |    √    |              |      √      |
+ * | image      |      √     |         |      √       |      √      |
+ * | texture    |      √     |         |      √       |      √      |
+ * | buffer     |      √     |         |      √       |      √      |
+ * | bufferView |      √     |         |      √       |      √      |
  *
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
