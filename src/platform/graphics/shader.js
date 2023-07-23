@@ -55,7 +55,7 @@ class Shader {
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
      * // Create a shader that renders primitives with a solid red color
-     * 
+     *
      * // Vertex shader
      * const vshader = `
      * attribute vec3 aPosition;
