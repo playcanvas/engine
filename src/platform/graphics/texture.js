@@ -700,7 +700,8 @@ class Texture {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, this._format));
+            const depth = Math.max(1, this._depth >> options.level);
+            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 
