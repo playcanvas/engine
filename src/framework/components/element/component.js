@@ -349,26 +349,32 @@ class ElementComponent extends Component {
      * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
+    /** @private */
     get _absLeft() {
         return this._localAnchor.x + this._margin.x;
     }
 
+    /** @private */
     get _absRight() {
         return this._localAnchor.z - this._margin.z;
     }
 
+    /** @private */
     get _absTop() {
         return this._localAnchor.w - this._margin.w;
     }
 
+    /** @private */
     get _absBottom() {
         return this._localAnchor.y + this._margin.y;
     }
 
+    /** @private */
     get _hasSplitAnchorsX() {
         return Math.abs(this._anchor.x - this._anchor.z) > 0.001;
     }
 
+    /** @private */
     get _hasSplitAnchorsY() {
         return Math.abs(this._anchor.y - this._anchor.w) > 0.001;
     }

@@ -20,6 +20,7 @@ class Shader {
      * Format of the uniform buffer for mesh bind group.
      *
      * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
+     * @ignore
      */
     meshUniformBufferFormat;
 
@@ -27,6 +28,7 @@ class Shader {
      * Format of the bind group for the mesh bind group.
      *
      * @type {import('./bind-group-format.js').BindGroupFormat}
+     * @ignore
      */
     meshBindGroupFormat;
 
@@ -43,7 +45,7 @@ class Shader {
      * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader. When not specified, rendering without
-     * verex buffer is assumed.
+     * vertex buffer is assumed.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
      * useTransformFeedback is specified.
@@ -53,26 +55,31 @@ class Shader {
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
      * // Create a shader that renders primitives with a solid red color
+     * 
+     * // Vertex shader
+     * const vshader = `
+     * attribute vec3 aPosition;
+     *
+     * void main(void) {
+     *     gl_Position = vec4(aPosition, 1.0);
+     * }
+     * `;
+     *
+     * // Fragment shader
+     * const fshader = `
+     * precision ${graphicsDevice.precision} float;
+     *
+     * void main(void) {
+     *     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+     * }
+     * `;
+     *
      * const shaderDefinition = {
      *     attributes: {
      *         aPosition: pc.SEMANTIC_POSITION
      *     },
-     *     vshader: [
-     *         "attribute vec3 aPosition;",
-     *         "",
-     *         "void main(void)",
-     *         "{",
-     *         "    gl_Position = vec4(aPosition, 1.0);",
-     *         "}"
-     *     ].join("\n"),
-     *     fshader: [
-     *         "precision " + graphicsDevice.precision + " float;",
-     *         "",
-     *         "void main(void)",
-     *         "{",
-     *         "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);",
-     *         "}"
-     *     ].join("\n")
+     *     vshader,
+     *     fshader
      * };
      *
      * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
@@ -109,6 +116,7 @@ class Shader {
         this.failed = false;
     }
 
+    /** @ignore */
     get label() {
         return `Shader Id ${this.id} ${this.name}`;
     }
@@ -132,6 +140,7 @@ class Shader {
         this.impl.loseContext();
     }
 
+    /** @ignore */
     restoreContext() {
         this.impl.restoreContext(this.device, this);
     }

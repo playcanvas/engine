@@ -126,22 +126,18 @@ class ContainerResource {
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
  *
- * ```
- * |---------------------------------------------------------------------|
- * |  resource   |  preprocess |   process   |processAsync | postprocess |
- * |-------------+-------------+-------------+-------------+-------------|
- * | global      |      x      |             |             |      x      |
- * | node        |      x      |      x      |             |      x      |
- * | light       |      x      |      x      |             |      x      |
- * | camera      |      x      |      x      |             |      x      |
- * | animation   |      x      |             |             |      x      |
- * | material    |      x      |      x      |             |      x      |
- * | image       |      x      |             |      x      |      x      |
- * | texture     |      x      |             |      x      |      x      |
- * | buffer      |      x      |             |      x      |      x      |
- * | bufferView  |      x      |             |      x      |      x      |
- * |---------------------------------------------------------------------|
- * ```
+ * | resource    | preprocess  | process | processAsync | postprocess |
+ * | ----------- | :---------: | :-----: | :----------: | :---------: |
+ * | global      |      √      |         |              |      √      |
+ * | node        |      √      |    √    |              |      √      |
+ * | light       |      √      |    √    |              |      √      |
+ * | camera      |      √      |    √    |              |      √      |
+ * | animation   |      √      |         |              |      √      |
+ * | material    |      √      |    √    |              |      √      |
+ * | image       |      √      |         |      √       |      √      |
+ * | texture     |      √      |         |      √       |      √      |
+ * | buffer      |      √      |         |      √       |      √      |
+ * | bufferView  |      √      |         |      √       |      √      |
  *
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
@@ -157,8 +153,10 @@ class ContainerResource {
  * ```javascript
  * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
- *         preprocess(gltfTexture) { console.log("texture preprocess"); }
- *     },
+ *         preprocess: (gltfTexture) => {
+ *             console.log("texture preprocess");
+ *         }
+ *     }
  * });
  * ```
  *
