@@ -38,6 +38,7 @@ const _properties = [
  * cone etc.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class RenderComponentSystem extends ComponentSystem {
     /**

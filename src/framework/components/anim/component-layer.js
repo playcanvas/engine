@@ -7,6 +7,8 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
+ *
+ * @category Animation
  */
 class AnimComponentLayer {
     /**

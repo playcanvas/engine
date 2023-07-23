@@ -7,6 +7,7 @@ import { TouchEvent } from './touch-event.js';
  * touched. See also {@link Touch} and {@link TouchEvent}.
  *
  * @augments EventHandler
+ * @category Input
  */
 class TouchDevice extends EventHandler {
     /**

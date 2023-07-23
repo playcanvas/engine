@@ -532,6 +532,7 @@ let _params = new Set();
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
  * are {@link LitOptions}.
  * @augments Material
+ * @category Graphics
  */
 class StandardMaterial extends Material {
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;

@@ -23,6 +23,8 @@ let id = 0;
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
  * the texel data represents an image that is mapped over geometry.
+ *
+ * @category Graphics
  */
 class Texture {
     /**

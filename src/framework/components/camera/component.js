@@ -38,6 +38,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * ```
  *
  * @augments Component
+ * @category Graphics
  */
 class CameraComponent extends Component {
     /**

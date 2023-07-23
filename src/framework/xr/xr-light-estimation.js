@@ -19,6 +19,7 @@ const mat4B = new Mat4();
  * directional light, its rotation, intensity and color.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrLightEstimation extends EventHandler {
     /**

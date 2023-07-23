@@ -2,6 +2,8 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 /**
  * Holds information about batched mesh instances. Created in {@link BatchManager#create}.
+ *
+ * @category Graphics
  */
 class Batch {
     /** @private */

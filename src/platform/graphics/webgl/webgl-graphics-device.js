@@ -247,6 +247,7 @@ function testTextureFloatHighPrecision(device) {
  * create a new graphics device against each.
  *
  * @augments GraphicsDevice
+ * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {
     /**
