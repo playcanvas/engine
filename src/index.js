@@ -151,7 +151,7 @@ export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js'
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
-export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';
+export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 
 // FRAMEWORK
 export * from './framework/constants.js';
