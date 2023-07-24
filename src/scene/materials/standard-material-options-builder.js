@@ -14,7 +14,7 @@ import {
     SPECULAR_PHONG
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
-import { collectLights } from './lit-material-common.js';
+import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -46,7 +46,6 @@ class StandardMaterialOptionsBuilder {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
-        options.litOptions.chunks = options.chunks;
     }
 
     updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
@@ -60,18 +59,15 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
         this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
         this._updateUVOptions(options, stdMat, objDefs, false);
-        options.litOptions.chunks = options.chunks;
     }
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.forceUv1 = stdMat.forceUv1;
-        options.chunks = stdMat.chunks || '';
-
-        options.pass = pass;
+        options.litOptions.chunks = stdMat.chunks || {};
+        options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;
-        options.litOptions.forceFragmentPrecision = stdMat.forceFragmentPrecision || '';
         options.litOptions.blendType = stdMat.blendType;
-        options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
+
         options.litOptions.screenSpace = objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0;
         options.litOptions.skin = objDefs && (objDefs & SHADERDEF_SKIN) !== 0;
         options.litOptions.useInstancing = objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0;
@@ -117,42 +113,41 @@ class StandardMaterialOptionsBuilder {
 
         // All texture related lit options
         options.litOptions.lightMapEnabled = options.lightMap;
-        options.litOptions.useLightMapVertexColors = options.lightVertexColor;
         options.litOptions.dirLightMapEnabled = options.dirLightMap;
-        options.litOptions.heightMapEnabled = options.heightMap;
-        options.litOptions.normalMapEnabled = options.normalMap;
-        options.litOptions.clearCoatNormalMapEnabled = options.clearCoatNormalMap;
-        options.litOptions.aoMapEnabled = options.aoMap;
-        options.litOptions.useAoVertexColors = options.aoVertexColor;
+        options.litOptions.useHeights = options.heightMap;
+        options.litOptions.useNormals = options.normalMap;
+        options.litOptions.useClearCoatNormals = options.clearCoatNormalMap;
+        options.litOptions.useAo = options.aoMap || options.aoVertexColor;
         options.litOptions.diffuseMapEnabled = options.diffuseMap;
     }
 
     _updateTexOptions(options, stdMat, p, hasUv0, hasUv1, hasVcolor, minimalOptions, uniqueTextureMap) {
-        const mname = p + 'Map';
-        const vname = p + 'VertexColor';
-        const vcname = p + 'VertexColorChannel';
-        const cname = mname + 'Channel';
-        const tname = mname + 'Transform';
-        const uname = mname + 'Uv';
-        const iname = mname + 'Identifier';
-
-        // Avoid overriding previous lightMap properties
-        if (p !== 'light') {
-            options[mname] = false;
-            options[iname] = undefined;
-            options[cname] = '';
-            options[tname] = 0;
-            options[uname] = 0;
-        }
-        options[vname] = false;
-        options[vcname] = '';
-
         const isOpacity = p === 'opacity';
-        if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
-            return;
-        }
 
         if (!minimalOptions || isOpacity) {
+            const mname = p + 'Map';
+            const vname = p + 'VertexColor';
+            const vcname = p + 'VertexColorChannel';
+            const cname = mname + 'Channel';
+            const tname = mname + 'Transform';
+            const uname = mname + 'Uv';
+            const iname = mname + 'Identifier';
+
+            // Avoid overriding previous lightMap properties
+            if (p !== 'light') {
+                options[mname] = false;
+                options[iname] = undefined;
+                options[cname] = '';
+                options[tname] = 0;
+                options[uname] = 0;
+            }
+            options[vname] = false;
+            options[vcname] = '';
+
+            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+                return;
+            }
+
             if (p !== 'height' && stdMat[vname]) {
                 if (hasVcolor) {
                     options[vname] = stdMat[vname];
@@ -251,16 +246,14 @@ class StandardMaterialOptionsBuilder {
         options.sheenGlossInvert = stdMat.sheenGlossInvert;
         options.clearCoatGlossInvert = stdMat.clearCoatGlossInvert;
 
+        options.useSpecularColor = useSpecularColor;
+
         // LIT OPTIONS
-        options.litOptions.useAmbientTint = options.ambientTint;
+        options.litOptions.separateAmbient = false;    // store ambient light color in separate variable, instead of adding it to diffuse directly
+        options.litOptions.useAmbientTint = stdMat.ambientTint;
         options.litOptions.customFragmentShader = stdMat.customFragmentShader;
         options.litOptions.pixelSnap = stdMat.pixelSnap;
 
-        options.litOptions.useClearCoatNormalMap = !!stdMat.clearCoatNormalMap;
-        options.litOptions.useDiffuseMap = !!stdMat.diffuseMap;
-        options.litOptions.useAoMap = !!stdMat.aoMap;
-
-        options.litOptions.detailModes = !!options.diffuseDetail || !!options.aoDetail;
         options.litOptions.shadingModel = stdMat.shadingModel;
         options.litOptions.ambientSH = !!stdMat.ambientSH;
         options.litOptions.fastTbn = stdMat.fastTbn;
@@ -280,7 +273,6 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.conserveEnergy = stdMat.conserveEnergy && stdMat.shadingModel !== SPECULAR_PHONG;
         options.litOptions.useSpecular = useSpecular;
         options.litOptions.useSpecularityFactor = (specularityFactorTint || !!stdMat.specularityFactorMap) && stdMat.useMetalnessSpecularColor;
-        options.litOptions.useSpecularColor = useSpecularColor;
         options.litOptions.enableGGXSpecular = stdMat.enableGGXSpecular;
         options.litOptions.fresnelModel = stdMat.fresnelModel;
         options.litOptions.useRefraction = (stdMat.refraction || !!stdMat.refractionMap) && (stdMat.useDynamicRefraction || !!options.litOptions.reflectionSource);
@@ -390,9 +382,9 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
             if (sortedLights) {
-                collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
-                collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
             }
             options.litOptions.lights = lightsFiltered;
         } else {

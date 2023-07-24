@@ -37,7 +37,7 @@ let _params = new Set();
  * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
- * which holds some of the options only used by the lit shader backend {@link LitOptions}.
+ * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
  * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
@@ -530,7 +530,7 @@ let _params = new Set();
  * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitOptions}.
+ * are {@link LitShaderOptions}.
  * @augments Material
  * @category Graphics
  */
@@ -848,7 +848,7 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth and Shadow passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadowPass;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
@@ -1198,7 +1198,6 @@ function _defineMaterialProps() {
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
-    _defineFlag('forceFragmentPrecision', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useGammaTonemap', true);
