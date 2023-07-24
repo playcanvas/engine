@@ -51,7 +51,7 @@ class WebgpuVertexBufferLayout {
     }
 
     getKey(vertexFormat0, vertexFormat1 = null) {
-        return `VB[${vertexFormat0?.renderingHashString}, ${vertexFormat1?.renderingHashString}]`;
+        return `${vertexFormat0?.renderingHashString}-${vertexFormat1?.renderingHashString}`;
     }
 
     /**

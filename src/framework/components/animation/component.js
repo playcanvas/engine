@@ -15,6 +15,7 @@ import { Component } from '../component.js';
  * The Animation Component allows an Entity to playback animations on models.
  *
  * @augments Component
+ * @category Animation
  */
 class AnimationComponent extends Component {
     /**

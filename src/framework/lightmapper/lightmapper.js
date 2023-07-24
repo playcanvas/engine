@@ -56,6 +56,8 @@ const tempVec = new Vec3();
 
 /**
  * The lightmapper is used to bake scene lights into textures.
+ *
+ * @category Graphics
  */
 class Lightmapper {
     /**

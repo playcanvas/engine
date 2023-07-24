@@ -28,6 +28,8 @@ class InterpolatedKey {
 
 /**
  * Represents a skeleton used to play animations.
+ *
+ * @category Animation
  */
 class Skeleton {
     /**

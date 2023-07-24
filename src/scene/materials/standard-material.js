@@ -372,10 +372,10 @@ let _params = new Set();
  * it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
- * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are
+ * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
  * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
  * {@link Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when
+ * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
  * (primary) normal map of the material (default is null). The texture must contains normalized,
@@ -532,6 +532,7 @@ let _params = new Set();
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
  * are {@link LitOptions}.
  * @augments Material
+ * @category Graphics
  */
 class StandardMaterial extends Material {
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;

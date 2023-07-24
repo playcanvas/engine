@@ -15,9 +15,14 @@ import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-acces
 
 /**
  * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
+ *
+ * @category Graphics
  */
 class Morph extends RefCountedObject {
-    /** @type {BoundingBox} */
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
     _aabb;
 
     /** @type {boolean} */

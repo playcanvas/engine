@@ -14,6 +14,7 @@ const _schema = ['enabled'];
  * Manages creation of {@link ScreenComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class ScreenComponentSystem extends ComponentSystem {
     /**

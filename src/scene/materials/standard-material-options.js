@@ -3,6 +3,8 @@ import { LitOptions } from "./lit-options.js";
 /**
  * The standard material options define a set of options used to control the shader frontend shader
  * generation, such as textures, tints and multipliers.
+ *
+ * @category Graphics
  */
 class StandardMaterialOptions {
     /**

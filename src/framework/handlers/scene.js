@@ -7,6 +7,7 @@ import { SceneParser } from '../parsers/scene.js';
  * Resource handler used for loading {@link Scene} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class SceneHandler {
     /**

@@ -73,6 +73,8 @@ class Command {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
     /**

@@ -23,6 +23,8 @@ const blendStateAdditive = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE
 /**
  * An instance of {@link Morph}. Contains weights to assign to every {@link MorphTarget}, manages
  * selection of active morph targets.
+ *
+ * @category Graphics
  */
 class MorphInstance {
     /**

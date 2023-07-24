@@ -12,6 +12,7 @@ import { Asset } from '../asset/asset.js';
  * Resource handler used for loading cubemap {@link Texture} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class CubemapHandler {
     /**

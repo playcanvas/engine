@@ -94,6 +94,8 @@ class InstanceList {
  * A Layer represents a renderable subset of the scene. It can contain a list of mesh instances,
  * lights and cameras, their render settings and also defines custom callbacks before, after or
  * during rendering. Layers are organized inside {@link LayerComposition} in a desired order.
+ *
+ * @category Graphics
  */
 class Layer {
     /**

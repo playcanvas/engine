@@ -21,6 +21,7 @@ function isEnabledAndHasEnabledElement(entity) {
  * according to configurable layout rules.
  *
  * @augments Component
+ * @category User Interface
  */
 class LayoutGroupComponent extends Component {
     /**

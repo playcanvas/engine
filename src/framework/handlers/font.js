@@ -35,6 +35,7 @@ function upgradeDataSchema(data) {
  * Resource handler used for loading {@link Font} resources.
  *
  * @implements {ResourceHandler}
+ * @category User Interface
  */
 class FontHandler {
     /**
