@@ -112,7 +112,7 @@ class LitMaterialExample {
                 material.hasSpecularityFactor = true;
                 material.hasNormals = true;
                 material.hasMetalness = true;
-                material.occludeSpecular = 1;
+                material.occludeSpecular = pc.SPECOCC_AO;
 
                 const argumentsChunk = `
                 uniform sampler2D texture_diffuseMap;
