@@ -1,3 +1,4 @@
+import { WasmModule } from "../../core/wasm-module.js";
 import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGB565, PIXELFORMAT_RGBA4 } from '../../platform/graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
@@ -275,23 +276,16 @@ function basisInitialize(config) {
         return;
     }
 
-    // if any URLs are not specified in the config, take them from the global PC config structure
+    // if any URLs are not specified in the config, take them from WasmModule config
     if (!config.glueUrl || !config.wasmUrl || !config.fallbackUrl) {
-        const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        const wasmModule = modules.find(function (m) {
-            return m.moduleName === 'BASIS';
-        });
-        if (wasmModule) {
-            const urlBase = window.ASSET_PREFIX || '';
-            if (!config.glueUrl) {
-                config.glueUrl = urlBase + wasmModule.glueUrl;
-            }
-            if (!config.wasmUrl) {
-                config.wasmUrl = urlBase + wasmModule.wasmUrl;
-            }
-            if (!config.fallbackUrl) {
-                config.fallbackUrl = urlBase + wasmModule.fallbackUrl;
-            }
+        const moduleConfig = WasmModule.getConfig('BASIS');
+        if (moduleConfig) {
+            config = {
+                glueUrl: moduleConfig.glueUrl,
+                wasmUrl: moduleConfig.wasmUrl,
+                fallbackUrl: moduleConfig.fallbackUrl,
+                numWorkers: moduleConfig.numWorkers
+            };
         }
     }
 

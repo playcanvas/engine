@@ -29,9 +29,9 @@ vec3 vogelSphere(int sampleIndex, float count, float phi, float r) {
     return vec3(cos(theta) * r, weight, sin(theta) * r);
 }
 
-float gradientNoise(vec2 screenPos) {
-    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
-    return fract(magic.z * fract(dot(screenPos, magic.xy)));
+float noise(vec2 screenPos) {
+    const float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio   
+    return fract(tan(distance(screenPos * PHI, screenPos)) * screenPos.x);
 }
 
 #ifndef UNPACKFLOAT
@@ -48,7 +48,6 @@ float viewSpaceDepth(float depth, mat4 invProjection) {
     vec4 viewSpace = invProjection * clipSpace;
     return viewSpace.z;
 }
-
 
 float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z) {
 
@@ -74,14 +73,14 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
-    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
+    float receiverDepth = shadowCoords.z;
 #ifndef GL2
     // If using packed depth on GL1, we need to normalize to get the correct receiver depth
     receiverDepth *= 1.0 / (cameraParams.y - cameraParams.z);
 #endif
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
+    float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         float pcssPresample = pcssDiskSamples[i];
         samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
@@ -137,7 +136,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
 float PCSSCube(samplerCube shadowMap, vec4 shadowParams, vec3 shadowCoords, vec4 cameraParams, float shadowSearchArea, vec3 lightDir) {
     
     vec3 samplePoints[PCSS_SAMPLE_COUNT];
-    float noise = gradientNoise( gl_FragCoord.xy ) * 2.0 * PI;
+    float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         float r = pcssSphereSamples[i];
         samplePoints[i] = vogelSphere(i, float(PCSS_SAMPLE_COUNT), noise, r);

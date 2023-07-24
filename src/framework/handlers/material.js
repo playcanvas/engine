@@ -36,6 +36,7 @@ const PLACEHOLDER_MAP = {
  * Resource handler used for loading {@link Material} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class MaterialHandler {
     /**

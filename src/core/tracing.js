@@ -39,6 +39,7 @@ class Tracing {
      * - {@link TRACEID_RENDERPIPELINE_ALLOC}
      * - {@link TRACEID_PIPELINELAYOUT_ALLOC}
      * - {@link TRACEID_TEXTURES}
+     * - {@link TRACEID_GPU_TIMINGS}
      *
      * @param {boolean} enabled - New enabled state for the channel.
      */

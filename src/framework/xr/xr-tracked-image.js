@@ -8,6 +8,7 @@ import { Quat } from '../../core/math/quat.js';
  * well as the position and rotation of the tracked image.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrTrackedImage extends EventHandler {
     /**

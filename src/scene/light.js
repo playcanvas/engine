@@ -67,6 +67,7 @@ class LightRenderData {
 
         // depth range compensation for PCSS with directional lights
         this.depthRangeCompensation = 0;
+        this.projectionCompensation = 0;
 
         // face index, value is based on light type:
         // - spot: always 0

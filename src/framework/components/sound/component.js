@@ -10,6 +10,7 @@ import { SoundSlot } from './slot.js';
  * The Sound Component controls playback of {@link Sound}s.
  *
  * @augments Component
+ * @category Sound
  */
 class SoundComponent extends Component {
     /**

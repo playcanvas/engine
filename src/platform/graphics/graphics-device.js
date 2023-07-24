@@ -25,6 +25,7 @@ import { StencilParameters } from './stencil-parameters.js';
  * create a new graphics device against each.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class GraphicsDevice extends EventHandler {
     /**
@@ -252,6 +253,13 @@ class GraphicsDevice extends EventHandler {
      */
     dynamicBuffers;
 
+    /**
+     * The GPU profiler.
+     *
+     * @type {import('./gpu-profiler.js').GpuProfiler}
+     */
+    gpuProfiler;
+
     defaultClearOptions = {
         color: [0, 0, 0, 1],
         depth: 1,
@@ -366,6 +374,9 @@ class GraphicsDevice extends EventHandler {
 
         this.dynamicBuffers?.destroy();
         this.dynamicBuffers = null;
+
+        this.gpuProfiler?.destroy();
+        this.gpuProfiler = null;
     }
 
     onDestroyShader(shader) {

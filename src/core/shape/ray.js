@@ -2,6 +2,8 @@ import { Vec3 } from '../math/vec3.js';
 
 /**
  * An infinite ray.
+ *
+ * @category Math
  */
 class Ray {
     /**

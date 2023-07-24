@@ -20,6 +20,8 @@ let shapeTestBody;
 
 /**
  * Object holding the result of a successful hit.
+ *
+ * @category Physics
  */
 class HitResult {
     /**
@@ -74,6 +76,8 @@ class HitResult {
 
 /**
  * Object holding the result of a contact between two rigid bodies.
+ *
+ * @category Physics
  */
 class SingleContactResult {
     /**
@@ -157,6 +161,8 @@ class SingleContactResult {
 
 /**
  * Object holding the result of a contact between two Entities.
+ *
+ * @category Physics
  */
 class ContactPoint {
     /**
@@ -223,6 +229,8 @@ class ContactPoint {
 
 /**
  * Object holding the result of a contact between two Entities.
+ *
+ * @category Physics
  */
 class ContactResult {
     /**
@@ -280,6 +288,7 @@ function createShape(name, axis, ...args) {
  * settings for your project.
  *
  * @augments ComponentSystem
+ * @category Physics
  */
 class RigidBodyComponentSystem extends ComponentSystem {
     /**
