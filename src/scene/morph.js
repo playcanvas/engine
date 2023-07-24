@@ -19,7 +19,10 @@ import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-acces
  * @category Graphics
  */
 class Morph extends RefCountedObject {
-    /** @type {BoundingBox} */
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
     _aabb;
 
     /** @type {boolean} */
