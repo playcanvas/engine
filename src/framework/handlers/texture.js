@@ -46,6 +46,8 @@ const JSON_TEXTURE_TYPE = {
  * @name TextureParser
  * @description Interface to a texture parser. Implementations of this interface handle the loading
  * and opening of texture assets.
+ *
+ * @category Graphics
  */
 class TextureParser {
     /* eslint-disable jsdoc/require-returns-check */
@@ -157,6 +159,7 @@ const _completePartialMipmapChain = function (texture) {
  * Resource handler used for loading 2D and 3D {@link Texture} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class TextureHandler {
     /**

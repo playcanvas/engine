@@ -141,32 +141,6 @@ const string = {
     },
 
     /**
-     * Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted
-     * to true, all other values are converted to false. In strict mode, 'true' is converted to
-     * true, 'false' is converted to false, all other values will throw an Exception.
-     *
-     * @param {string} s - The string to convert.
-     * @param {boolean} [strict] - In strict mode an Exception is thrown if s is not an accepted
-     * string value. Defaults to false.
-     * @returns {boolean} The converted value.
-     */
-    toBool: function (s, strict = false) {
-        if (s === 'true') {
-            return true;
-        }
-
-        if (strict) {
-            if (s === 'false') {
-                return false;
-            }
-
-            throw new TypeError('Not a boolean string');
-        }
-
-        return false;
-    },
-
-    /**
      * Get the code point number for a character in a string. Polyfill for
      * [`codePointAt`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
      *

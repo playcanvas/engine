@@ -92,6 +92,17 @@ class WebgpuClearRenderer {
         this.depthId = device.scope.resolve('depth');
     }
 
+    destroy() {
+        this.shader.destroy();
+        this.shader = null;
+
+        this.uniformBuffer.destroy();
+        this.uniformBuffer = null;
+
+        this.bindGroup.destroy();
+        this.bindGroup = null;
+    }
+
     clear(device, renderTarget, options, defaultOptions) {
         options = options || defaultOptions;
 

@@ -5,6 +5,7 @@ import { Component } from '../component.js';
  * {@link LayoutGroupComponent}.
  *
  * @augments Component
+ * @category User Interface
  */
 class LayoutChildComponent extends Component {
     /**

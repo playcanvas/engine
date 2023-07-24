@@ -1,4 +1,5 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { StringIds } from '../../../core/string-ids.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
 
 import { WebgpuUtils } from './webgpu-utils.js';
@@ -12,6 +13,8 @@ const sampleTypes = [];
 sampleTypes[SAMPLETYPE_FLOAT] = 'float';
 sampleTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'unfilterable-float';
 sampleTypes[SAMPLETYPE_DEPTH] = 'depth';
+
+const stringIds = new StringIds();
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
@@ -32,9 +35,9 @@ class WebgpuBindGroupFormat {
         /**
          * Unique key, used for caching
          *
-         * @type {string}
+         * @type {number}
          */
-        this.key = key;
+        this.key = stringIds.get(key);
 
         // keep descr in debug mode
         Debug.call(() => {

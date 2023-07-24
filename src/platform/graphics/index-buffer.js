@@ -11,6 +11,8 @@ let id = 0;
  * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
+ *
+ * @category Graphics
  */
 class IndexBuffer {
     /**

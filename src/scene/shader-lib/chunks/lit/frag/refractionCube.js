@@ -1,6 +1,4 @@
 export default /* glsl */`
-uniform float material_refractionIndex;
-
 vec3 refract2(vec3 viewVec, vec3 normal, float IOR) {
     float vn = dot(viewVec, normal);
     float k = 1.0 - IOR * IOR * (1.0 - vn * vn);
@@ -15,7 +13,8 @@ void addRefraction(
     float gloss, 
     vec3 specularity, 
     vec3 albedo, 
-    float transmission
+    float transmission,
+    float refractionIndex
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
     IridescenceArgs iridescence
@@ -23,7 +22,7 @@ void addRefraction(
 ) {
     // use same reflection code with refraction vector
     vec4 tmpRefl = dReflection;
-    vec3 reflectionDir = refract2(-viewDir, worldNormal, material_refractionIndex);
+    vec3 reflectionDir = refract2(-viewDir, worldNormal, refractionIndex);
     dReflection = vec4(0);
     addReflection(reflectionDir, gloss);
     dDiffuseLight = mix(dDiffuseLight, dReflection.rgb * albedo, transmission);

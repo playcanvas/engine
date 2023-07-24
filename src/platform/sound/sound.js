@@ -1,5 +1,7 @@
 /**
  * Represents the resource of an audio asset.
+ *
+ * @category Sound
  */
 class Sound {
     /**

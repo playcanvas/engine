@@ -23,6 +23,7 @@ import { JsonModelParser } from '../parsers/json-model.js';
  * Resource handler used for loading {@link Model} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class ModelHandler {
     /**

@@ -63,6 +63,7 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  * ```
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrDepthSensing extends EventHandler {
     /**

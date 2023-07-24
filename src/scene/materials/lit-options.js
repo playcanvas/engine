@@ -6,6 +6,8 @@ import {
 /**
  * The lit options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
+ *
+ * @category Graphics
  */
 class LitOptions {
     hasTangents = false;

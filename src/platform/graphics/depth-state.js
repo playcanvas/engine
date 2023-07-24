@@ -17,6 +17,8 @@ const writeShift = 3;      // 03 - 03 (1bit)
  *
  * For the best performance, do not modify depth state after it has been created, but create
  * multiple depth states and assign them to the material or graphics device as needed.
+ *
+ * @category Graphics
  */
 class DepthState {
     /**

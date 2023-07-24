@@ -7,6 +7,8 @@ let ids = 0;
 /**
  * Detected Plane instance that provides position, rotation and polygon points. Plane is a subject
  * to change during its lifetime.
+ *
+ * @category XR
  */
 class XrPlane extends EventHandler {
     /**

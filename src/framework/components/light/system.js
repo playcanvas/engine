@@ -13,6 +13,7 @@ import { LightComponentData } from './data.js';
  * A Light Component is used to dynamically light the scene.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class LightComponentSystem extends ComponentSystem {
     /**
