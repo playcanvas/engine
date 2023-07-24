@@ -5,6 +5,8 @@ import { SHADOW_PCF3 } from '../constants.js';
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
  * [Clustered Lighting](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/).
+ *
+ * @category Graphics
  */
 class LightingParams {
     /** @private */
@@ -61,14 +63,15 @@ class LightingParams {
     }
 
     applySettings(render) {
-        this.shadowsEnabled = render.lightingShadowsEnabled;
-        this.cookiesEnabled = render.lightingCookiesEnabled;
-        this.areaLightsEnabled = render.lightingAreaLightsEnabled;
-        this.shadowAtlasResolution = render.lightingShadowAtlasResolution;
-        this.cookieAtlasResolution = render.lightingCookieAtlasResolution;
-        this.maxLightsPerCell = render.lightingMaxLightsPerCell;
-        this.shadowType = render.lightingShadowType;
-        this.cell = new Vec3(render.lightingCells);
+        this.shadowsEnabled = render.lightingShadowsEnabled ?? this.shadowsEnabled;
+        this.cookiesEnabled = render.lightingCookiesEnabled ?? this.cookiesEnabled;
+        this.areaLightsEnabled = render.lightingAreaLightsEnabled ?? this.areaLightsEnabled;
+        this.shadowAtlasResolution = render.lightingShadowAtlasResolution ?? this.shadowAtlasResolution;
+        this.cookieAtlasResolution = render.lightingCookieAtlasResolution ?? this.cookieAtlasResolution;
+        this.maxLightsPerCell = render.lightingMaxLightsPerCell ?? this.maxLightsPerCell;
+        this.shadowType = render.lightingShadowType ?? this.shadowType;
+        if (render.lightingCells)
+            this.cell = new Vec3(render.lightingCells);
     }
 
     /**

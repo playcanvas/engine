@@ -57,6 +57,7 @@ const _quat = new Quat();
  * graph for the mesh collision volume.
  * @property {boolean} zoneCheck Whether this collider should be used to detect if entity is within zone. Defaults to false.
  * @augments Component
+ * @category Physics
  */
 class CollisionComponent extends Component {
     /**

@@ -70,6 +70,8 @@ function getScaleSign(mi) {
 
 /**
  * Glues many mesh instances into a single one for better performance.
+ *
+ * @category Graphics
  */
 class BatchManager {
     /**

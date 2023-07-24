@@ -31,6 +31,8 @@ const clearDepthOptions = {
  * @property {number} height Height of the pick buffer in pixels (read-only).
  * @property {RenderTarget} renderTarget The render target used by the picker internally
  * (read-only).
+ *
+ * @category Graphics
  */
 class Picker {
     // internal render target

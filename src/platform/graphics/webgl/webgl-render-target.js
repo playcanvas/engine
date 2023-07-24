@@ -101,7 +101,7 @@ class WebglRenderTarget {
 
         // --- Init the provided color buffer (optional) ---
         const colorBufferCount = target._colorBuffers?.length ?? 0;
-        const attachmentBaseConstant = device.webgl2 ? gl.COLOR_ATTACHMENT0 : device.extDrawBuffers.COLOR_ATTACHMENT0_WEBGL;
+        const attachmentBaseConstant = device.webgl2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
         const buffers = [];
         for (let i = 0; i < colorBufferCount; ++i) {
             const colorBuffer = target.getColorBuffer(i);

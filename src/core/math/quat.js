@@ -3,6 +3,8 @@ import { Vec3 } from './vec3.js';
 
 /**
  * A quaternion.
+ *
+ * @category Math
  */
 class Quat {
     /**

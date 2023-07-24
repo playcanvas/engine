@@ -1,5 +1,7 @@
 /**
  * A 2-dimensional vector.
+ *
+ * @category Math
  */
 class Vec2 {
     /**

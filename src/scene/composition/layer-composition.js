@@ -23,6 +23,7 @@ const tempClusterArray = [];
  * rendering order.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class LayerComposition extends EventHandler {
     // Composition can hold only 2 sublayers of each layer

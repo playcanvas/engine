@@ -17,6 +17,7 @@ import { Component } from '../component.js';
  * model geometry in to the scene graph below the Entity.
  *
  * @augments Component
+ * @category Graphics
  */
 class ModelComponent extends Component {
     /**

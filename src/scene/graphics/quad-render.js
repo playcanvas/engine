@@ -28,6 +28,8 @@ const _tempScissor = new Vec4();
  * quad.render();
  * quad.destroy();
  * ```
+ *
+ * @category Graphics
  */
 class QuadRender {
     /**

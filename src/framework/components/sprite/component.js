@@ -31,6 +31,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * Enables an Entity to render a simple static sprite or sprite animations.
  *
  * @augments Component
+ * @category Graphics
  */
 class SpriteComponent extends Component {
     /**
@@ -596,11 +597,8 @@ class SpriteComponent extends Component {
         this._hideModel();
         this._model = null;
 
-        if (this._node) {
-            if (this._node.parent)
-                this._node.parent.removeChild(this._node);
-            this._node = null;
-        }
+        this._node?.remove();
+        this._node = null;
 
         if (this._meshInstance) {
             // make sure we decrease the ref counts materials and meshes

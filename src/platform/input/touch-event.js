@@ -29,6 +29,8 @@ function getTouchTargetCoords(touch) {
 
 /**
  * A instance of a single point touch on a {@link TouchDevice}.
+ *
+ * @category Input
  */
 class Touch {
     /**
@@ -78,6 +80,8 @@ class Touch {
 /**
  * A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the
  * standard browser event and provides lists of {@link Touch} objects.
+ *
+ * @category Input
  */
 class TouchEvent {
     /**

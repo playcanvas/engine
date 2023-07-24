@@ -65,6 +65,7 @@ import iridescenceDiffractionPS from './lit/frag/iridescenceDiffraction.js';
 import iridescencePS from './standard/frag/iridescence.js';
 import iridescenceThicknessPS from './standard/frag/iridescenceThickness.js';
 import instancingVS from './lit/vert/instancing.js';
+import iorPS from './standard/frag/ior.js';
 import lightDiffuseLambertPS from './lit/frag/lightDiffuseLambert.js';
 import lightDirPointPS from './lit/frag/lightDirPoint.js';
 import lightmapAddPS from './lit/frag/lightmapAdd.js';
@@ -275,6 +276,7 @@ const shaderChunks = {
     iridescencePS,
     iridescenceThicknessPS,
     instancingVS,
+    iorPS,
     lightDiffuseLambertPS,
     lightDirPointPS,
     lightmapAddPS,

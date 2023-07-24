@@ -23,6 +23,7 @@ const USER_INPUT_EVENTS = [
  * global volume, suspend and resume.
  *
  * @augments EventHandler
+ * @category Sound
  */
 class SoundManager extends EventHandler {
     /**
