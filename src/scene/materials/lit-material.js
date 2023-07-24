@@ -13,9 +13,9 @@ const options = new LitMaterialOptions();
  * providing the material surface properties like diffuse, opacity, normals etc) and a set of
  * flags which control the material "back end" (the shader program calculating the lighting,
  * shadows, reflections, fogging etc).
- * 
+ *
  * The front end and back end together form a complete PBR shader.
- * 
+ *
  * @ignore
  */
 class LitMaterial extends Material {

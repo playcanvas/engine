@@ -167,7 +167,7 @@ class LitMaterialOptionsBuilder {
                 }
             }
         }
-    
+
         if (staticLightList) {
             for (let i = 0; i < staticLightList.length; i++) {
                 const light = staticLightList[i];
@@ -176,7 +176,7 @@ class LitMaterialOptionsBuilder {
                 }
             }
         }
-    };
+    }
 }
 
 export { LitMaterialOptionsBuilder };

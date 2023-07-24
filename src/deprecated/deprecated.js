@@ -117,7 +117,6 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
-import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
 
