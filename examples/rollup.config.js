@@ -4,6 +4,7 @@ import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import alias from '@rollup/plugin-alias';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import date from 'date-and-time';
 import path from 'path';
 import fs from 'fs';
@@ -117,19 +118,19 @@ const builds = [
         ]
     },
     {
-        // use glob in the input
         input: 'src/iframe/index.mjs',
         output: {
             name: 'bundle',
-            format: 'umd',
+            format: 'es',
             dir: 'dist/iframe',
-            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false,
+            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
         },
         plugins: [
             alias({
                 entries: {
                     'playcanvas': ENGINE_PATH,
-                    '../../../build/playcanvas.js': ENGINE_PATH
+                    '../../../build/playcanvas.js': ENGINE_PATH,
+                    'pc-alias': ENGINE_PATH.includes('.mjs') ? './pc-es6.mjs' : './pc-es5.mjs'
                 }
             }),
             commonjs(),
@@ -143,6 +144,7 @@ const builds = [
             typescript({
                 tsconfig: 'tsconfig.json'
             }),
+            process.env.NODE_ENV === 'development' ? sourcemaps() : null,
             timestamp()
         ]
     },

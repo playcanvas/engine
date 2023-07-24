@@ -78,6 +78,10 @@ class ResourceLoader {
         return this._handlers[type];
     }
 
+    static makeKey(url, type) {
+        return `${url}-${type}`;
+    }
+
     /**
      * Make a request for a resource from a remote URL. Parse the returned data using the handler
      * for the specified type. When loaded and parsed, use the callback to return an instance of
@@ -109,7 +113,7 @@ class ResourceLoader {
             return;
         }
 
-        const key = url + type;
+        const key = ResourceLoader.makeKey(url, type);
 
         if (this._cache[key] !== undefined) {
             // in cache
@@ -188,7 +192,11 @@ class ResourceLoader {
     }
 
     _onSuccess(key, result, extra) {
-        this._cache[key] = result;
+        if (result !== null) {
+            this._cache[key] = result;
+        } else {
+            delete this._cache[key];
+        }
         for (let i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);
         }
@@ -250,7 +258,8 @@ class ResourceLoader {
      * @param {string} type - The type of resource.
      */
     clearCache(url, type) {
-        delete this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        delete this._cache[key];
     }
 
     /**
@@ -261,8 +270,9 @@ class ResourceLoader {
      * @returns {*} The resource loaded from the cache.
      */
     getFromCache(url, type) {
-        if (this._cache[url + type]) {
-            return this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        if (this._cache[key]) {
+            return this._cache[key];
         }
         return undefined;
     }

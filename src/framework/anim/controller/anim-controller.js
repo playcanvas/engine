@@ -63,6 +63,8 @@ class AnimController {
         this._findTransitionsBetweenStatesCache = {};
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
+        this._activeStateDuration = 0.0;
+        this._activeStateDurationDirty = true;
         this._playing = false;
         this._activate = activate;
 
@@ -131,17 +133,18 @@ class AnimController {
     }
 
     get activeStateDuration() {
-        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
-            return 0.0;
-
-        let maxDuration = 0.0;
-        for (let i = 0; i < this.activeStateAnimations.length; i++) {
-            const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
-            if (activeClip) {
-                maxDuration = Math.max(maxDuration, activeClip.track.duration);
+        if (this._activeStateDurationDirty) {
+            let maxDuration = 0.0;
+            for (let i = 0; i < this.activeStateAnimations.length; i++) {
+                const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+                if (activeClip) {
+                    maxDuration = Math.max(maxDuration, activeClip.track.duration);
+                }
             }
+            this._activeStateDuration = maxDuration;
+            this._activeStateDurationDirty = false;
         }
-        return maxDuration;
+        return this._activeStateDuration;
     }
 
     set activeStateCurrentTime(time) {
@@ -306,8 +309,13 @@ class AnimController {
                     progressBefore -= Math.floor(progressBefore);
                     progress -= Math.floor(progress);
                 }
-                // return false if exit time isn't within the frames delta time
-                if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
+                // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
+                if (progress === progressBefore) {
+                    if (progress !== transition.exitTime) {
+                        return null;
+                    }
+                // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
+                } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
                     return null;
                 }
             }
@@ -335,6 +343,8 @@ class AnimController {
         // Otherwise the previousState is cleared.
         this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
+        // when transitioning to a new state, we need to recalculate the duration of the active state based on its animations
+        this._activeStateDurationDirty = true;
 
         // turn off any triggers which were required to activate this transition
         for (let i = 0; i < transition.conditions.length; i++) {
@@ -466,6 +476,9 @@ class AnimController {
         if (!this._playing && this._activate && this.playable) {
             this.play();
         }
+
+        // when a new animation is added, the active state duration needs to be recalculated
+        this._activeStateDurationDirty = true;
     }
 
     removeNodeAnimations(nodeName) {
@@ -516,8 +529,17 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        this._timeInStateBefore = this._timeInState;
-        this._timeInState += dt * this.activeState.speed;
+        // update time when looping or when the active state is not at the end of its duration
+        if (this.activeState.loop || this._timeInState < this.activeStateDuration) {
+            this._timeInStateBefore = this._timeInState;
+            this._timeInState += dt * this.activeState.speed;
+            // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
+            // and update the delta time accordingly
+            if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
+                this._timeInState = this.activeStateDuration;
+                dt = this.activeStateDuration - this._timeInStateBefore;
+            }
+        }
 
         // transition between states if a transition is available from the active state
         const transition = this._findTransition(this._activeStateName);

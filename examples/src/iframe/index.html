@@ -48,8 +48,23 @@
         var event = new CustomEvent("exampleLoading");
         window.top.dispatchEvent(event);
 
+        const exampleMap = {};
+        function retrieveExample(category, example) {
+                const categoryMap = examples[Object.keys(examples).find(key => key.toLowerCase() === category.toLowerCase())];
+                if (!categoryMap) {
+                    console.error(`Category ${category} not found.`);
+                    return;
+                }
+                const exampleClass = categoryMap[Object.keys(categoryMap).find(key => key.toLowerCase() === `${example}Example`.toLowerCase())];
+                if (!exampleClass) {
+                    console.error(`Example ${example} not found.`);
+                    return;
+                }
+            return exampleClass;
+        }
+
         if (urlParams.get('category') && urlParams.get('example')) {
-            window.Example = examples[urlParams.get('category')][`${urlParams.get('example')}Example`];
+            window.Example = retrieveExample(urlParams.get('category'), urlParams.get('example'));
         } else {
             console.warn('No example specified, displaying a list of all examples instead.')
             const examplesContainer = document.createElement('div');

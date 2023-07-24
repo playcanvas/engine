@@ -66,6 +66,7 @@ export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
 export { Texture } from './platform/graphics/texture.js';
+export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
