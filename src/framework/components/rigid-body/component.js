@@ -55,6 +55,7 @@ const _vec3 = new Vec3();
  * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle)
  *
  * @augments Component
+ * @category Physics
  */
 class RigidBodyComponent extends Component {
     /** @private */

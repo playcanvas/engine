@@ -12,6 +12,8 @@ function isMousePointerLocked() {
 
 /**
  * MouseEvent object that is passed to events 'mousemove', 'mouseup', 'mousedown' and 'mousewheel'.
+ *
+ * @category Input
  */
 class MouseEvent {
     /**

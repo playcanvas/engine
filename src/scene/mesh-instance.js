@@ -14,7 +14,7 @@ import {
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -73,6 +73,8 @@ class Command {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
     /**
@@ -507,6 +509,13 @@ class MeshInstance {
         return this._layer;
     }
 
+    _updateShaderDefs(shaderDefs) {
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }
+    }
+
     /**
      * In some circumstances mesh instances are sorted by a distance calculation to determine their
      * rendering order. Set this callback to override the default distance calculation, which gives
@@ -542,15 +551,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-
-        let shaderDefs = this._shaderDefs;
-        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
 
@@ -575,12 +576,7 @@ class MeshInstance {
         shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(shaderDefs);
     }
 
     get morphInstance() {
@@ -737,6 +733,8 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
+
+        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**

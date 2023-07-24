@@ -16,6 +16,7 @@ import { Material } from './material.js';
  * modulated with a color.
  *
  * @augments Material
+ * @category Graphics
  */
 class BasicMaterial extends Material {
     /**

@@ -21,6 +21,7 @@ const _schema = ['enabled'];
  * cone etc.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class ModelComponentSystem extends ComponentSystem {
     /**

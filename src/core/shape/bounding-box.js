@@ -9,6 +9,8 @@ const tmpVecE = new Vec3();
 
 /**
  * Axis-Aligned Bounding Box.
+ *
+ * @category Math
  */
 class BoundingBox {
     /**

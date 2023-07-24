@@ -16,6 +16,8 @@ class PostEffect {
 
 /**
  * Used to manage multiple post effects for a camera.
+ *
+ * @category Graphics
  */
 class PostEffectQueue {
     /**

@@ -4,6 +4,7 @@ import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import alias from '@rollup/plugin-alias';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import date from 'date-and-time';
 import path from 'path';
 import fs from 'fs';
@@ -117,7 +118,6 @@ const builds = [
         ]
     },
     {
-        // use glob in the input
         input: 'src/iframe/index.mjs',
         output: {
             name: 'bundle',
@@ -144,6 +144,7 @@ const builds = [
             typescript({
                 tsconfig: 'tsconfig.json'
             }),
+            process.env.NODE_ENV === 'development' ? sourcemaps() : null,
             timestamp()
         ]
     },

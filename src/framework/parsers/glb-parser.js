@@ -695,15 +695,6 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
         });
     }
 
-    // draco decompressor will generate normals if they are missing
-    if (!primitive?.attributes?.NORMAL) {
-        vertexDesc.push({
-            semantic: 'NORMAL',
-            components: 3,
-            type: TYPE_FLOAT32
-        });
-    }
-
     promises.push(new Promise((resolve, reject) => {
         // decode draco data
         const dracoExt = primitive.extensions.KHR_draco_mesh_compression;
@@ -722,6 +713,15 @@ const createDracoMesh = (device, primitive, accessors, bufferViews, meshVariants
                 vertexDesc.sort((a, b) => {
                     return order[a.semantic] - order[b.semantic];
                 });
+
+                // draco decompressor will generate normals if they are missing
+                if (!primitive.attributes?.NORMAL) {
+                    vertexDesc.splice(1, 0, {
+                        semantic: 'NORMAL',
+                        components: 3,
+                        type: TYPE_FLOAT32
+                    });
+                }
 
                 const vertexFormat = new VertexFormat(device, vertexDesc);
 

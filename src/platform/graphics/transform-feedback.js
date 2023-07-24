@@ -71,6 +71,8 @@ import { ShaderUtils } from './shader-utils.js';
  *     this.tf.process(this.shader);
  * };
  * ```
+ *
+ * @category Graphics
  */
 class TransformFeedback {
     /**

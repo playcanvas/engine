@@ -12,6 +12,7 @@ import { GlbContainerParser } from '../parsers/glb-container-parser.js';
  * @property {import('../asset/asset.js').Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
  * @property {import('../asset/asset.js').Asset[]} textures An array of the {@link Texture} assets.
  * @property {import('../asset/asset.js').Asset[]} animations An array of the {@link Animation} assets.
+ * @category Graphics
  */
 class ContainerResource {
     /**
@@ -162,6 +163,7 @@ class ContainerResource {
  * ```
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class ContainerHandler {
     /**

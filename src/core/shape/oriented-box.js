@@ -13,6 +13,8 @@ const tmpMat4 = new Mat4();
 
 /**
  * Oriented Box.
+ *
+ * @category Math
  */
 class OrientedBox {
     halfExtents;

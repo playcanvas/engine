@@ -38,6 +38,7 @@ import { PostEffectQueue } from './post-effect-queue.js';
  * ```
  *
  * @augments Component
+ * @category Graphics
  */
 class CameraComponent extends Component {
     /**
@@ -118,6 +119,30 @@ class CameraComponent extends Component {
     /**
      * Sets the name of the shader pass the camera will use when rendering.
      *
+     * In addition to existing names (see the parameter description), a new name can be specified,
+     * which creates a new shader pass with the given name. The name provided can only use
+     * alphanumeric characters and underscores. When a shader is compiled for the new pass, a define
+     * is added to the shader. For example, if the name is 'custom_rendering', the define
+     * 'CUSTOM_RENDERING_PASS' is added to the shader, allowing the shader code to conditionally
+     * execute code only when that shader pass is active.
+     *
+     * Another instance where this approach may prove useful is when a camera needs to render a more
+     * cost-effective version of shaders, such as when creating a reflection texture. To accomplish
+     * this, a callback on the material that triggers during shader compilation can be used. This
+     * callback can modify the shader generation options specifically for this shader pass.
+     *
+     * ```javascript
+     * const shaderPassId = camera.setShaderPass('custom_rendering');
+     *
+     * material.onUpdateShader = function (options) {
+     *     if (options.pass === shaderPassId) {
+     *         options.litOptions.normalMapEnabled = false;
+     *         options.litOptions.useSpecular = false;
+     *     }
+     *     return options;
+     * };
+     * ```
+     *
      * @param {string} name - The name of the shader pass. Defaults to undefined, which is
      * equivalent to {@link SHADERPASS_FORWARD}. Can be:
      *
@@ -132,29 +157,6 @@ class CameraComponent extends Component {
      * - {@link SHADERPASS_EMISSION}
      * - {@link SHADERPASS_LIGHTING}
      * - {@link SHADERPASS_UV0}
-     *
-     * Additionally, a new name can be specified, which creates a new shader pass with the given
-     * name. The name provided can only use alphanumeric characters and underscores. When a shader
-     * is compiled for the new pass, a define is added to the shader. For example, if the name is
-     * 'custom_rendering', the define 'CUSTOM_RENDERING_PASS' is added to the shader, allowing the
-     * shader code to conditionally execute code only when that shader pass is active.
-     *
-     * Another instance where this approach may prove useful is when a camera needs to render a more
-     * cost-effective version of shaders, such as when creating a reflection texture. To accomplish
-     * this, a callback on the material that triggers during shader compilation can be used. This
-     * callback can modify the shader generation options specifically for this shader pass.
-     *
-     * ```javascript
-     * const shaderPassId = camera.setShaderPass('custom_rendering');
-     *
-     * material.onUpdateShader = function (options) {
-     *    if (options.pass === shaderPassId) {
-     *        options.litOptions.normalMapEnabled = false;
-     *        options.litOptions.useSpecular = false;
-     *    }
-     *    return options;
-     * };
-     * ```
      *
      * @returns {number} The id of the shader pass.
      */

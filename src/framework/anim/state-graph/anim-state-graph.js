@@ -9,6 +9,8 @@
  * entity.addComponent('anim');
  * entity.anim.loadStateGraph(animStateGraph);
  * ```
+ *
+ * @category Animation
  */
 class AnimStateGraph {
     /**

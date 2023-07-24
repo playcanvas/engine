@@ -6,6 +6,8 @@ import { CurveEvaluator } from './curve-evaluator.js';
 /**
  * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
  * type that specifies an interpolation scheme for the keys.
+ *
+ * @category Math
  */
 class Curve {
     keys = [];

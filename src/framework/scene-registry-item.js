@@ -1,5 +1,7 @@
 /**
  * Item to be stored in the {@link SceneRegistry}.
+ *
+ * @category Graphics
  */
 class SceneRegistryItem {
     /**
