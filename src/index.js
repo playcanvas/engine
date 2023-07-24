@@ -116,7 +116,7 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { LitOptions } from './scene/materials/lit-options.js';
+export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance, Command } from './scene/mesh-instance.js';

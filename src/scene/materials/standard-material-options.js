@@ -1,4 +1,4 @@
-import { LitOptions } from "./lit-options.js";
+import { LitShaderOptions } from "../shader-lib/programs/lit-shader-options.js";
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader
@@ -99,9 +99,14 @@ class StandardMaterialOptions {
     /**
      * Storage for the options for lit the shader and material.
      *
-     * @type {LitOptions}
+     * @type {LitShaderOptions}
      */
-    litOptions = new LitOptions();
+    litOptions = new LitShaderOptions();
+
+    // program-library assumes material options has a pass property
+    get pass() {
+        return this.litOptions.pass;
+    }
 }
 
 export { StandardMaterialOptions };

@@ -14,7 +14,7 @@ import {
     SPECULAR_PHONG
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
-import { collectLights } from './lit-material-common.js';
+import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
 
 const arraysEqual = (a, b) => {
     if (a.length !== b.length) {
@@ -382,9 +382,9 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.lightMaskDynamic = !!(mask & MASK_AFFECT_DYNAMIC);
 
             if (sortedLights) {
-                collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
-                collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
             }
             options.litOptions.lights = lightsFiltered;
         } else {

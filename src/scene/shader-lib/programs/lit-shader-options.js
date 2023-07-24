@@ -1,14 +1,12 @@
-import {
-    BLEND_NONE, FOG_NONE, GAMMA_NONE
-} from '../constants.js';
+import { BLEND_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
 
 /**
- * The lit options determines how the lit-shader gets generated. It specifies a set of
+ * The lit shader options determines how the lit-shader gets generated. It specifies a set of
  * parameters which triggers different fragment and vertex shader generation in the backend.
  *
  * @category Graphics
  */
-class LitOptions {
+class LitShaderOptions {
     hasTangents = false;
 
     /**
@@ -306,4 +304,4 @@ class LitOptions {
     lightMaskDynamic = 0x0;
 }
 
-export { LitOptions };
+export { LitShaderOptions };

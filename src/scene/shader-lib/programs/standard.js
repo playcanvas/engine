@@ -208,7 +208,7 @@ const standard = {
      */
     createShaderDefinition: function (device, options) {
 
-        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.litOptions.pass);
         const isForwardPass = shaderPassInfo.isForward;
         const litShader = new LitShader(device, options.litOptions);
 
