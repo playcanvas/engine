@@ -10,7 +10,7 @@ const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
  */
 const lit = {
 
-    /** @type { Function } */
+    /** @type {Function} */
     generateKey: function (options) {
         const key = "lit" +
             dummyUvs.map((dummy, index) => {
