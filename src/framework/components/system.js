@@ -35,7 +35,7 @@ class ComponentSystem extends EventHandler {
      * @returns {import('./component.js').Component} Returns a Component of type defined by the
      * component system.
      * @example
-     * var entity = new pc.Entity(app);
+     * const entity = new pc.Entity(app);
      * app.systems.model.addComponent(entity, { type: 'box' });
      * // entity.model is now set to a pc.ModelComponent
      * @ignore

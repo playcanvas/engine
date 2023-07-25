@@ -5,7 +5,10 @@ import { Vec3 } from '../../core/math/vec3.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 
 import { EMITTERSHAPE_BOX } from '../constants.js';
 
@@ -89,11 +92,9 @@ class ParticleGPUUpdater {
 
         const emitter = this._emitter;
 
-        device.setBlending(false);
-        device.setColorWrite(true, true, true, true);
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
-        device.setDepthTest(false);
-        device.setDepthWrite(false);
 
         this.randomize();
 
@@ -182,9 +183,6 @@ class ParticleGPUUpdater {
         emitter.beenReset = false;
 
         emitter.swapTex = !emitter.swapTex;
-
-        device.setDepthTest(true);
-        device.setDepthWrite(true);
 
         emitter.prevWorldBoundsSize.copy(emitter.worldBoundsSize);
         emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);

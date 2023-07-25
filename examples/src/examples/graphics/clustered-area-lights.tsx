@@ -1,18 +1,18 @@
 import React from 'react';
 import * as pc from '../../../../';
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class AreaLightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Area Lights';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
             <Panel headerText='Material'>
-                <LabelGroup text='Shininess'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.shininess' }} min={0} max={100} precision={0}/>
+                <LabelGroup text='Gloss'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.gloss' }} min={0} max={1} precision={2}/>
                 </LabelGroup>
                 <LabelGroup text='Metalness'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.material.metalness' }} min={0} max={1} precision={2}/>
@@ -21,11 +21,11 @@ class AreaLightsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data:any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data:any): void {
 
         data.set('settings', {
             material: {
-                shininess: 80,
+                gloss: 0.8,
                 metalness: 0.7
             }
         });
@@ -39,7 +39,13 @@ class AreaLightsExample {
             'luts': new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -106,7 +112,7 @@ class AreaLightsExample {
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
                 groundMaterial.diffuse = pc.Color.GRAY;
-                groundMaterial.shininess = 80;
+                groundMaterial.gloss = 0.8;
                 groundMaterial.metalness = 0.7;
                 groundMaterial.useMetalness = true;
 
@@ -261,7 +267,7 @@ class AreaLightsExample {
                 // handle HUD changes - update properties on the material
                 data.on('*:set', (path: string, value: any) => {
                     const pathArray = path.split('.');
-                    if (pathArray[2] === "shininess") groundMaterial.shininess = value;
+                    if (pathArray[2] === "gloss") groundMaterial.gloss = value;
                     if (pathArray[2] === "metalness") groundMaterial.metalness = value;
                     groundMaterial.update();
                 });

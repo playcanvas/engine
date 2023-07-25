@@ -1,13 +1,13 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class GroundFogExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Ground Fog';
+    static WEBGPU_ENABLED = true;
 
     static FILES = {
         'shader.vert': /* glsl */ `
@@ -102,16 +102,22 @@ class GroundFogExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'terrain': new pc.Asset('terrain', 'container', { url: '/static/assets/models/terrain.glb' }),
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'texture': new pc.Asset('color', 'texture', { url: '/static/assets/textures/clouds.jpg' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js',
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -268,7 +274,7 @@ class GroundFogExample {
                     material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
 
                     // debug rendering of the deptht texture in the corner
-                    app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+                    app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
                 });
             });
         });

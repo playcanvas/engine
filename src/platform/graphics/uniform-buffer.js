@@ -3,8 +3,10 @@ import {
     uniformTypeToName,
     UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4,
+    UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
     UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
 } from './constants.js';
+import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
 // Uniform buffer set functions - only implemented for types for which the default
 // array to buffer copy does not work, or could be slower.
@@ -91,12 +93,58 @@ _updateFunctions[UNIFORMTYPE_MAT3] = (uniformBuffer, value, offset) => {
     dst[offset + 10] = value[8];
 };
 
+_updateFunctions[UNIFORMTYPE_FLOATARRAY] = function (uniformBuffer, value, offset, count) {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_VEC2ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 2];
+        dst[offset + i * 4 + 1] = value[i * 2 + 1];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_VEC3ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageFloat32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 3];
+        dst[offset + i * 4 + 1] = value[i * 3 + 1];
+        dst[offset + i * 4 + 2] = value[i * 3 + 2];
+    }
+};
+
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
  *
  * @ignore
  */
 class UniformBuffer {
+    device;
+
+    /** @type {boolean} */
+    persistent;
+
+    /** @type {DynamicBufferAllocation} */
+    allocation;
+
+    /** @type {Float32Array} */
+    storageFloat32;
+
+    /** @type {Int32Array} */
+    storageInt32;
+
+    /**
+     * A render version used to track the last time the properties requiring bind group to be
+     * updated were changed.
+     *
+     * @type {number}
+     */
+    renderVersionDirty = 0;
+
     /**
      * Create a new UniformBuffer instance.
      *
@@ -104,22 +152,29 @@ class UniformBuffer {
      * used to manage this uniform buffer.
      * @param {import('./uniform-buffer-format.js').UniformBufferFormat} format - Format of the
      * uniform buffer.
+     * @param {boolean} [persistent] - Whether the buffer is persistent. Defaults to true.
      */
-    constructor(graphicsDevice, format) {
+    constructor(graphicsDevice, format, persistent = true) {
         this.device = graphicsDevice;
         this.format = format;
+        this.persistent = persistent;
         Debug.assert(format);
 
-        this.impl = graphicsDevice.createUniformBufferImpl(this);
+        if (persistent) {
 
-        this.storage = new ArrayBuffer(format.byteSize);
-        this.storageFloat32 = new Float32Array(this.storage);
-        this.storageInt32 = new Int32Array(this.storage);
+            this.impl = graphicsDevice.createUniformBufferImpl(this);
 
-        graphicsDevice._vram.ub += this.format.byteSize;
+            const storage = new ArrayBuffer(format.byteSize);
+            this.assignStorage(new Int32Array(storage));
 
-        // TODO: register with the device and handle lost context
-        // this.device.buffers.push(this);
+            graphicsDevice._vram.ub += this.format.byteSize;
+
+            // TODO: register with the device and handle lost context
+            // this.device.buffers.push(this);
+        } else {
+
+            this.allocation = new DynamicBufferAllocation();
+        }
     }
 
     /**
@@ -127,14 +182,29 @@ class UniformBuffer {
      */
     destroy() {
 
-        // // stop tracking the vertex buffer
-        const device = this.device;
+        if (this.persistent) {
+            // stop tracking the vertex buffer
+            // TODO: remove the buffer from the list on the device (lost context handling)
+            const device = this.device;
 
-        // TODO: remove the buffer from the list on the device (lost context handling)
+            this.impl.destroy(device);
 
-        this.impl.destroy(device);
+            device._vram.ub -= this.format.byteSize;
+        }
+    }
 
-        device._vram.ub -= this.format.byteSize;
+    get offset() {
+        return this.persistent ? 0 : this.allocation.offset;
+    }
+
+    /**
+     * Assign a storage to this uniform buffer.
+     *
+     * @param {Int32Array} storage - The storage to assign to this uniform buffer.
+     */
+    assignStorage(storage) {
+        this.storageInt32 = storage;
+        this.storageFloat32 = new Float32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
     }
 
     /**
@@ -143,7 +213,7 @@ class UniformBuffer {
      * @ignore
      */
     loseContext() {
-        this.impl.loseContext();
+        this.impl?.loseContext();
     }
 
     /**
@@ -159,9 +229,10 @@ class UniformBuffer {
         const value = uniformFormat.scopeId.value;
 
         if (value !== null && value !== undefined) {
-            const updateFunction = _updateFunctions[uniformFormat.type];
+
+            const updateFunction = _updateFunctions[uniformFormat.updateType];
             if (updateFunction) {
-                updateFunction(this, value, offset);
+                updateFunction(this, value, offset, uniformFormat.count);
             } else {
                 this.storageFloat32.set(value, offset);
             }
@@ -186,14 +257,34 @@ class UniformBuffer {
 
     update() {
 
+        const persistent = this.persistent;
+        if (!persistent) {
+
+            // allocate memory from dynamic buffer for this frame
+            const allocation = this.allocation;
+            const oldGpuBuffer = allocation.gpuBuffer;
+            this.device.dynamicBuffers.alloc(allocation, this.format.byteSize);
+            this.assignStorage(allocation.storage);
+
+            // buffer has changed, update the render version to force bind group to be updated
+            if (oldGpuBuffer !== allocation.gpuBuffer) {
+                this.renderVersionDirty = this.device.renderVersion;
+            }
+        }
+
         // set new values
         const uniforms = this.format.uniforms;
         for (let i = 0; i < uniforms.length; i++) {
             this.setUniform(uniforms[i]);
         }
 
-        // Upload the new data
-        this.impl.unlock(this);
+        if (persistent) {
+            // Upload the new data
+            this.impl.unlock(this);
+        } else {
+            this.storageFloat32 = null;
+            this.storageInt32 = null;
+        }
     }
 }
 

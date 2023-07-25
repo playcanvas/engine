@@ -9,20 +9,19 @@ import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
-    SHADOWUPDATE_NONE
+    SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
 
 import {
-    DEVICETYPE_WEBGPU,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4,
+    BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
+    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -35,15 +34,13 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { StaticMeshes } from './static-meshes.js';
+import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
-const worldMatX = new Vec3();
-const worldMatY = new Vec3();
-const worldMatZ = new Vec3();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
@@ -88,12 +85,14 @@ class Renderer {
 
         // shadows
         this.shadowMapCache = new ShadowMapCache();
-        this._shadowRendererLocal = new ShadowRendererLocal(this, this.lightTextureAtlas);
-        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.lightTextureAtlas);
+        this.shadowRenderer = new ShadowRenderer(this, this.lightTextureAtlas);
+        this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
+        this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // cookies
         this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
 
+        // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
         this.viewBindGroupFormat = null;
 
@@ -142,6 +141,7 @@ class Renderer {
 
         this.exposureId = scope.resolve('exposure');
         this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
+        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphWeightsA = scope.resolve('morph_weights_a');
         this.morphWeightsB = scope.resolve('morph_weights_b');
@@ -151,6 +151,7 @@ class Renderer {
     }
 
     destroy() {
+        this.shadowRenderer = null;
         this._shadowRendererLocal = null;
         this._shadowRendererDirectional = null;
 
@@ -231,7 +232,7 @@ class Renderer {
         let h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
 
-        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        // use viewport rectangle by default. Use scissor rectangle when required.
         if (camera._scissorRectClear) {
             const scissorRect = camera.scissorRect;
             x = Math.floor(scissorRect.x * pixelWidth);
@@ -244,35 +245,7 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    /**
-     * Clear the current render target, using currently set up viewport.
-     *
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - Render action
-     * containing the clear flags.
-     * @param {import('../camera.js').Camera} camera - Camera containing the clear values.
-     */
-    clear(renderAction, camera) {
-
-        const flags = (renderAction.clearColor ? CLEARFLAG_COLOR : 0) |
-                      (renderAction.clearDepth ? CLEARFLAG_DEPTH : 0) |
-                      (renderAction.clearStencil ? CLEARFLAG_STENCIL : 0);
-
-        if (flags) {
-            const device = this.device;
-            DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEWPORT');
-
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
-
-            DebugGraphics.popGpuMarker(device);
-        }
-    }
-
-    setCameraUniforms(camera, target, renderAction) {
+    setCameraUniforms(camera, target) {
 
         // flipping proj matrix
         const flipY = target?.flipY;
@@ -322,7 +295,7 @@ class Renderer {
             }
 
             // update depth range of projection matrices (-1..1 to 0..1)
-            if (this.device.deviceType === DEVICETYPE_WEBGPU) {
+            if (this.device.isWebGPU) {
                 projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
                 projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
             }
@@ -378,8 +351,38 @@ class Renderer {
         // exposure
         this.exposureId.setValue(this.scene.physicalUnits ? camera.getExposure() : this.scene.exposure);
 
-        if (this.device.supportsUniformBuffers) {
-            this.setupViewUniformBuffers(renderAction, viewCount);
+        return viewCount;
+    }
+
+    /**
+     * Clears the active render target. If the viewport is already set up, only its area is cleared.
+     *
+     * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
+     * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
+     * from the camra if not supplied.
+     * @param {boolean} [clearDepth] - True if the depth buffer should be cleared. Uses the value
+     * from the camra if not supplied.
+     * @param {boolean} [clearStencil] - True if the stencil buffer should be cleared. Uses the
+     * value from the camra if not supplied.
+     */
+    clear(camera, clearColor, clearDepth, clearStencil) {
+
+        const flags = ((clearColor ?? camera._clearColorBuffer) ? CLEARFLAG_COLOR : 0) |
+                      ((clearDepth ?? camera._clearDepthBuffer) ? CLEARFLAG_DEPTH : 0) |
+                      ((clearStencil ?? camera._clearStencilBuffer) ? CLEARFLAG_STENCIL : 0);
+
+        if (flags) {
+            const device = this.device;
+            DebugGraphics.pushGpuMarker(device, 'CLEAR');
+
+            device.clear({
+                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
+                depth: camera._clearDepth,
+                stencil: camera._clearStencil,
+                flags: flags
+            });
+
+            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -388,7 +391,7 @@ class Renderer {
     // when the functionality moves to the render passes. Note that Editor uses it as well.
     setCamera(camera, target, clear, renderAction = null) {
 
-        this.setCameraUniforms(camera, target, renderAction);
+        this.setCameraUniforms(camera, target);
         this.clearView(camera, target, clear, false);
     }
 
@@ -410,9 +413,9 @@ class Renderer {
         this.setupViewport(camera, target);
 
         if (clear) {
+
             // use camera clear options if any
             const options = camera._clearOptions;
-
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -426,27 +429,14 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    setCullMode(cullFaces, flip, drawCall) {
+    setupCullMode(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
         if (cullFaces) {
             let flipFaces = 1;
 
-            if (material.cull > CULLFACE_NONE && material.cull < CULLFACE_FRONTANDBACK) {
-                if (drawCall.flipFaces)
-                    flipFaces *= -1;
-
-                if (flip)
-                    flipFaces *= -1;
-
-                const wt = drawCall.node.worldTransform;
-                wt.getX(worldMatX);
-                wt.getY(worldMatY);
-                wt.getZ(worldMatZ);
-                worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0) {
-                    flipFaces *= -1;
-                }
+            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
+                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
             }
 
             if (flipFaces < 0) {
@@ -458,12 +448,7 @@ class Renderer {
         this.device.setCullMode(mode);
 
         if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            const wt2 = drawCall.node.worldTransform;
-            wt2.getX(worldMatX);
-            wt2.getY(worldMatY);
-            wt2.getZ(worldMatZ);
-            worldMatX.cross(worldMatX, worldMatY);
-            this.twoSidedLightingNegScaleFactorId.setValue(worldMatX.dot(worldMatZ) < 0 ? -1.0 : 1.0);
+            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
         }
     }
 
@@ -504,6 +489,8 @@ class Renderer {
         // Alpha test
         if (material.opacityMap) {
             this.opacityMapId.setValue(material.opacityMap);
+        }
+        if (material.opacityMap || material.alphaTest > 0) {
             this.alphaTestId.setValue(material.alphaTest);
         }
     }
@@ -650,46 +637,100 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewBindGroupFormat() {
+    initViewBindGroupFormat(isClustered) {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
-            this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
-            ]);
+            const uniforms = [
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
+                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
+                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
+                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
+                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
+                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                uniforms.push(...[
+                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
+                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
+                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
+                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                ]);
+            }
+
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+            const buffers = [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
-                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            ]);
+            ];
+
+            const textures = [
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+
+                new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                textures.push(...[
+                    new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                ]);
+            }
+
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
         }
     }
 
-    setupViewUniformBuffers(renderAction, viewCount) {
+    setupViewUniformBuffers(viewBindGroups, viewUniformFormat, viewBindGroupFormat, viewCount) {
 
-        Debug.assert(renderAction, "RenderAction cannot be null");
-        if (renderAction) {
+        Debug.assert(Array.isArray(viewBindGroups), "viewBindGroups must be an array");
 
-            const device = this.device;
-            Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
+        const device = this.device;
+        Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
-            while (renderAction.viewBindGroups.length < viewCount) {
-                const ub = new UniformBuffer(device, this.viewUniformFormat);
-                const bg = new BindGroup(device, this.viewBindGroupFormat, ub);
-                DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
-                renderAction.viewBindGroups.push(bg);
-            }
+        while (viewBindGroups.length < viewCount) {
+            const ub = new UniformBuffer(device, viewUniformFormat, false);
+            const bg = new BindGroup(device, viewBindGroupFormat, ub);
+            DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
+            viewBindGroups.push(bg);
+        }
 
-            // update view bind group / uniforms
-            const viewBindGroup = renderAction.viewBindGroups[0];
-            viewBindGroup.defaultUniformBuffer.update();
-            viewBindGroup.update();
+        // update view bind group / uniforms
+        const viewBindGroup = viewBindGroups[0];
+        viewBindGroup.defaultUniformBuffer.update();
+        viewBindGroup.update();
 
-            // TODO; this needs to be moved to drawInstance functions to handle XR
-            device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+        // TODO; this needs to be moved to drawInstance functions to handle XR
+        device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
+    }
+
+    setupMeshUniformBuffers(meshInstance, pass) {
+
+        const device = this.device;
+        if (device.supportsUniformBuffers) {
+
+            // TODO: model matrix setup is part of the drawInstance call, but with uniform buffer it's needed
+            // earlier here. This needs to be refactored for multi-view anyways.
+            this.modelMatrixId.setValue(meshInstance.node.worldTransform.data);
+            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
+
+            // update mesh bind group / uniform buffer
+            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            meshBindGroup.defaultUniformBuffer.update();
+            meshBindGroup.update();
+            device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
         }
     }
 
@@ -846,10 +887,20 @@ class Renderer {
      */
     cullShadowmaps(comp) {
 
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         // shadow casters culling for local (point and spot) lights
         for (let i = 0; i < comp._lights.length; i++) {
             const light = comp._lights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+
+                if (isClustered) {
+                    // if atlas slot is reassigned, make sure to update the shadow map, including the culling
+                    if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
+                        light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                    }
+                }
+
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
                     const casters = comp._lightCompositionData[i].shadowCastersList;
                     this._shadowRendererLocal.cull(light, casters);
@@ -939,6 +990,12 @@ class Renderer {
                     }
                 }
             }
+        }
+
+        // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
+        // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
+        if (this.scene.clusteredLightingEnabled) {
+            this.updateLightTextureAtlas(comp);
         }
 
         // cull shadow casters for all lights
@@ -1154,11 +1211,11 @@ class Renderer {
         return updated;
     }
 
-    baseUpdate() {
+    frameUpdate() {
 
         this.clustersDebugRendered = false;
 
-        this.initViewBindGroupFormat();
+        this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
     }
 }
 

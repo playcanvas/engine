@@ -1,4 +1,4 @@
 export default /* glsl */`
-gl_FragColor.rgb *= dAlpha;
-gl_FragColor.a = dAlpha;
+gl_FragColor.rgb *= litArgs_opacity;
+gl_FragColor.a = litArgs_opacity;
 `;

@@ -14,7 +14,7 @@ import {
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -71,10 +71,32 @@ class Command {
  */
 
 /**
- * An instance of a {@link import('./mesh.js').Mesh}. A single mesh can be referenced by many mesh
- * instances that can have different transforms and materials.
+ * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
+ * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
+    /**
+     * Enable rendering for this mesh instance. Use visible property to enable/disable
+     * rendering without overhead of removing from scene. But note that the mesh instance is
+     * still in the hierarchy and still in the draw call list.
+     *
+     * @type {boolean}
+     */
+    visible = true;
+
+    /**
+     * Enable shadow casting for this mesh instance. Use this property to enable/disable
+     * shadow casting without overhead of removing from scene. Note that this property does not
+     * add the mesh instance to appropriate list of shadow casters on a {@link Layer}, but
+     * allows mesh to be skipped from shadow casting while it is in the list already. Defaults to
+     * false.
+     *
+     * @type {boolean}
+     */
+    castShadow = false;
+
     /**
      * @type {import('./materials/material.js').Material}
      * @private
@@ -109,12 +131,12 @@ class MeshInstance {
      * component is attached to.
      * @example
      * // Create a mesh instance pointing to a 1x1x1 'cube' mesh
-     * var mesh = pc.createBox(graphicsDevice);
-     * var material = new pc.StandardMaterial();
+     * const mesh = pc.createBox(graphicsDevice);
+     * const material = new pc.StandardMaterial();
      *
-     * var meshInstance = new pc.MeshInstance(mesh, material);
+     * const meshInstance = new pc.MeshInstance(mesh, material);
      *
-     * var entity = new pc.Entity();
+     * const entity = new pc.Entity();
      * entity.addComponent('render', {
      *     meshInstances: [meshInstance]
      * });
@@ -156,25 +178,16 @@ class MeshInstance {
         this._lightHash = 0;
 
         // Render options
-        /**
-         * Enable rendering for this mesh instance. Use visible property to enable/disable
-         * rendering without overhead of removing from scene. But note that the mesh instance is
-         * still in the hierarchy and still in the draw call list.
-         *
-         * @type {boolean}
-         */
-        this.visible = true;
         this.layer = LAYER_WORLD; // legacy
         /** @private */
         this._renderStyle = RENDERSTYLE_SOLID;
-        this.castShadow = false;
         this._receiveShadow = true;
         this._screenSpace = false;
         this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
-         * ({@link CameraComponent#frustumCulling}).
+         * ({@link CameraComponent#frustumCulling}). Defaults to true.
          *
          * @type {boolean}
          */
@@ -245,7 +258,7 @@ class MeshInstance {
         this.stencilBack = null;
 
         // Negative scale batching support
-        this.flipFaces = false;
+        this.flipFacesFactor = 1;
     }
 
     /**
@@ -366,7 +379,8 @@ class MeshInstance {
 
                 // update local space bounding box by morph targets
                 if (this.mesh && this.mesh.morph) {
-                    localAabb._expand(this.mesh.morph.aabb.getMin(), this.mesh.morph.aabb.getMax());
+                    const morphAabb = this.mesh.morph.aabb;
+                    localAabb._expand(morphAabb.getMin(), morphAabb.getMax());
                 }
 
                 toWorldSpace = true;
@@ -430,12 +444,12 @@ class MeshInstance {
             // mesh uniform buffer
             const ubFormat = shader.meshUniformBufferFormat;
             Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
 
             // mesh bind group
-            const bingGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bingGroupFormat);
-            bindGroup = new BindGroup(device, bingGroupFormat, uniformBuffer);
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
             DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
 
             this._bindGroups[pass] = bindGroup;
@@ -495,6 +509,13 @@ class MeshInstance {
         return this._layer;
     }
 
+    _updateShaderDefs(shaderDefs) {
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }
+    }
+
     /**
      * In some circumstances mesh instances are sorted by a distance calculation to determine their
      * rendering order. Set this callback to override the default distance calculation, which gives
@@ -530,15 +551,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-
-        let shaderDefs = this._shaderDefs;
-        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
 
@@ -563,12 +576,7 @@ class MeshInstance {
         shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(shaderDefs);
     }
 
     get morphInstance() {
@@ -725,6 +733,8 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
+
+        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**
@@ -742,7 +752,7 @@ class MeshInstance {
      */
     updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
         this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
-                                                            viewUniformFormat, viewBindGroupFormat);
+                                                            viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 
     ensureMaterial(device) {

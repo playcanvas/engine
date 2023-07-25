@@ -3,6 +3,8 @@ import * as pc from '../../../../';
 class GrabPassExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Grab Pass';
+    static WEBGPU_ENABLED = true;
+
     static FILES = {
         'shader.vert': /* glsl */`
             attribute vec3 vertex_position;
@@ -33,6 +35,9 @@ class GrabPassExample {
             // roughness map
             uniform sampler2D uRoughnessMap;
 
+            // tint colors
+            uniform vec3 tints[4];
+
             // engine built-in constant storing render target size in .xy and inverse size in .zw
             uniform vec4 uScreenSize;
 
@@ -58,6 +63,13 @@ class GrabPassExample {
                 // get background pixel color with distorted offset
                 vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
 
+                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing
+                // (note - this could be worked around by using a series of if statements in this case)
+                #ifdef GL2
+                    float tintIndex = clamp(mipmap, 0.0, 3.0);
+                    grabColor *= tints[int(tintIndex)];
+                #endif
+
                 // brighten the refracted texture a little bit
                 // brighten even more the rough parts of the glass
                 gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
@@ -65,15 +77,21 @@ class GrabPassExample {
         `
     };
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
             "roughness": new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -121,7 +139,7 @@ class GrabPassExample {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;
-                    material.shininess = 60;
+                    material.gloss = 0.6;
                     material.metalness = 0.4;
                     material.useMetalness = true;
                     material.update();
@@ -182,6 +200,14 @@ class GrabPassExample {
 
                 // set roughness map
                 refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
+
+                // tint colors
+                refractionMaterial.setParameter('tints[0]', new Float32Array([
+                    1, 0.7, 0.7,    // red
+                    1, 1, 1,        // white
+                    0.7, 0.7, 1,    // blue
+                    1, 1, 1         // white
+                ]));
 
                 // transparency
                 refractionMaterial.blendType = pc.BLEND_NORMAL;

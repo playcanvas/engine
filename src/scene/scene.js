@@ -8,7 +8,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { PIXELFORMAT_RGBA8, ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
+import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { Sky } from './sky.js';
@@ -21,6 +21,7 @@ import { EnvLighting } from './graphics/env-lighting.js';
  * graphical objects, lights, and scene-wide properties.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class Scene extends EventHandler {
     /**
@@ -209,7 +210,7 @@ class Scene extends EventHandler {
          * @type {import('../platform/graphics/texture.js').Texture[]}
          * @private
          */
-        this._prefilteredCubemaps = [null, null, null, null, null, null];
+        this._prefilteredCubemaps = [];
 
         /**
          * Environment lighting atlas
@@ -226,6 +227,7 @@ class Scene extends EventHandler {
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
+        this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
         this._skyboxRotationMat3 = new Mat3();
         this._skyboxRotationMat4 = new Mat4();
@@ -291,10 +293,9 @@ class Scene extends EventHandler {
      * {@link LayerComposition}.
      * @example
      * this.app.scene.on('set:layers', function (oldComp, newComp) {
-     *     var list = newComp.layerList;
-     *     var layer;
-     *     for (var i = 0; i < list.length; i++) {
-     *         layer = list[i];
+     *     const list = newComp.layerList;
+     *     for (let i = 0; i < list.length; i++) {
+     *         const layer = list[i];
      *         switch (layer.name) {
      *             case 'MyLayer':
      *                 layer.onEnable = myOnEnableFunction;
@@ -357,6 +358,11 @@ class Scene extends EventHandler {
      */
     set clusteredLightingEnabled(value) {
 
+        if (this.device.isWebGPU && !value) {
+            Debug.warnOnce('WebGPU currently only supports clustered lighting, and this cannot be disabled.');
+            return;
+        }
+
         if (!this._clusteredLightingEnabled && value) {
             console.error('Turning on disabled clustered lighting is not currently supported');
             return;
@@ -373,7 +379,7 @@ class Scene extends EventHandler {
      * List of all active composition mesh instances. Only for backwards compatibility.
      * TODO: BatchManager is using it - perhaps that could be refactored
      *
-     * @type {MeshInstance[]}
+     * @type {import('./mesh-instance.js').MeshInstance[]}
      * @private
      */
     set drawCalls(value) {
@@ -399,14 +405,20 @@ class Scene extends EventHandler {
 
             // make sure required options are set up on the texture
             if (value) {
-                value.addressU = ADDRESS_REPEAT;
+                value.addressU = ADDRESS_CLAMP_TO_EDGE;
                 value.addressV = ADDRESS_CLAMP_TO_EDGE;
                 value.minFilter = FILTER_LINEAR;
                 value.magFilter = FILTER_LINEAR;
                 value.mipmaps = false;
             }
 
-            this.updateShaders = true;
+            this._prefilteredCubemaps = [];
+            if (this._internalEnvAtlas) {
+                this._internalEnvAtlas.destroy();
+                this._internalEnvAtlas = null;
+            }
+
+            this._resetSky();
         }
     }
 
@@ -518,41 +530,30 @@ class Scene extends EventHandler {
      * @type {import('../platform/graphics/texture.js').Texture[]}
      */
     set prefilteredCubemaps(value) {
-        const cubemaps = this._prefilteredCubemaps;
-
         value = value || [];
-
-        let changed = false;
-        let complete = true;
-        for (let i = 0; i < 6; ++i) {
-            const v = value[i] || null;
-            if (cubemaps[i] !== v) {
-                cubemaps[i] = v;
-                changed = true;
-            }
-            complete = complete && (!!cubemaps[i]);
-        }
+        const cubemaps = this._prefilteredCubemaps;
+        const changed = cubemaps.length !== value.length || cubemaps.some((c, i) => c !== value[i]);
 
         if (changed) {
-            this._resetSky();
+            const complete = value.length === 6 && value.every(c => !!c);
 
             if (complete) {
                 // update env atlas
-                this._internalEnvAtlas = EnvLighting.generatePrefilteredAtlas(cubemaps, {
+                this._internalEnvAtlas = EnvLighting.generatePrefilteredAtlas(value, {
                     target: this._internalEnvAtlas
                 });
 
-                if (!this._envAtlas) {
-                    // user hasn't set an envAtlas already, set it to the internal one
-                    this.envAtlas = this._internalEnvAtlas;
+                this._envAtlas = this._internalEnvAtlas;
+            } else {
+                if (this._internalEnvAtlas) {
+                    this._internalEnvAtlas.destroy();
+                    this._internalEnvAtlas = null;
                 }
-            } else if (this._internalEnvAtlas) {
-                if (this._envAtlas === this._internalEnvAtlas) {
-                    this.envAtlas = null;
-                }
-                this._internalEnvAtlas.destroy();
-                this._internalEnvAtlas = null;
+                this._envAtlas = null;
             }
+
+            this._prefilteredCubemaps = value.slice();
+            this._resetSky();
         }
     }
 
@@ -632,14 +633,22 @@ class Scene extends EventHandler {
      */
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
+
+            const isIdentity = value.equals(Quat.IDENTITY);
             this._skyboxRotation.copy(value);
-            if (value.equals(Quat.IDENTITY)) {
+
+            if (isIdentity) {
                 this._skyboxRotationMat3.setIdentity();
             } else {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
             }
-            this._resetSky();
+
+            // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
+            if (!this._skyboxRotationShaderInclude && !isIdentity) {
+                this._skyboxRotationShaderInclude = true;
+                this._resetSky();
+            }
         }
     }
 
@@ -710,9 +719,9 @@ class Scene extends EventHandler {
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
-        this._skyboxIntensity = render.skyboxIntensity === undefined ? 1 : render.skyboxIntensity;
-        this._skyboxLuminance = render.skyboxLuminance === undefined ? 20000 : render.skyboxLuminance;
-        this._skyboxMip = render.skyboxMip === undefined ? 0 : render.skyboxMip;
+        this._skyboxIntensity = render.skyboxIntensity ?? 1;
+        this._skyboxLuminance = render.skyboxLuminance ?? 20000;
+        this._skyboxMip = render.skyboxMip ?? 0;
 
         if (render.skyboxRotation) {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
@@ -787,17 +796,23 @@ class Scene extends EventHandler {
     setSkybox(cubemaps) {
         if (!cubemaps) {
             this.skybox = null;
-            this.prefilteredCubemaps = [null, null, null, null, null, null];
+            this.envAtlas = null;
         } else {
             this.skybox = cubemaps[0] || null;
-            this.prefilteredCubemaps = cubemaps.slice(1);
+            if (cubemaps[1] && !cubemaps[1].cubemap) {
+                // prefiltered data is an env atlas
+                this.envAtlas = cubemaps[1];
+            } else {
+                // prefiltered data is a set of cubemaps
+                this.prefilteredCubemaps = cubemaps.slice(1);
+            }
         }
     }
 
     /**
-     * Get the lightmap pixel format.
+     * The lightmap pixel format.
      *
-     * @type {number} The pixel format.
+     * @type {number}
      */
     get lightmapPixelFormat() {
         return this.lightmapHDR && this.device.getHdrFormat(false, true, false, true) || PIXELFORMAT_RGBA8;

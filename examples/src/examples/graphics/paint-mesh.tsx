@@ -49,7 +49,7 @@ class PaintMeshExample {
             }`
     };
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas);
@@ -132,7 +132,7 @@ class PaintMeshExample {
             // material used on the sphere
             const material = new pc.StandardMaterial();
             material.diffuseMap = texture;
-            material.shininess = 60;
+            material.gloss = 0.6;
             material.metalness = 0.4;
             material.useMetalness = true;
             material.update();

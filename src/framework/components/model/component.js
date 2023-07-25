@@ -17,6 +17,7 @@ import { Component } from '../component.js';
  * model geometry in to the scene graph below the Entity.
  *
  * @augments Component
+ * @category Graphics
  */
 class ModelComponent extends Component {
     /**
@@ -300,7 +301,7 @@ class ModelComponent extends Component {
             this._model._immutable = false;
 
             this.removeModelFromLayers();
-            this.entity.removeChild(this._model.getGraph());
+            this._model.getGraph().destroy();
             delete this._model._entity;
 
             if (this._clonedModel) {
@@ -733,7 +734,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was added.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was added.
      * @private
      */
     onLayerAdded(layer) {
@@ -743,7 +744,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was removed.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was removed.
      * @private
      */
     onLayerRemoved(layer) {

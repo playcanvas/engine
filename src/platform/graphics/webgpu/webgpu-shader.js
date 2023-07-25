@@ -1,6 +1,8 @@
-import { Debug } from '../../../core/debug.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
+import { SHADERLANGUAGE_WGSL } from '../constants.js';
 
 import { ShaderProcessor } from '../shader-processor.js';
+import { WebgpuDebug } from './webgpu-debug.js';
 
 /**
  * A WebGPU implementation of the Shader.
@@ -11,16 +13,26 @@ class WebgpuShader {
     /**
      * Transpiled vertex shader code.
      *
-     * @type {Uint32Array}
+     * @type {Uint32Array | string}
      */
     _vertexCode;
 
     /**
      * Transpiled fragment shader code.
      *
-     * @type {Uint32Array}
+     * @type {Uint32Array | string}
      */
     _fragmentCode;
+
+    /**
+     * Name of the vertex entry point function.
+     */
+    vertexEntryPoint = 'main';
+
+    /**
+     * Name of the fragment entry point function.
+     */
+    fragmentEntryPoint = 'main';
 
     /**
      * @param {import('../shader.js').Shader} shader - The shader.
@@ -32,8 +44,19 @@ class WebgpuShader {
         const definition = shader.definition;
         Debug.assert(definition);
 
-        if (definition.processingOptions) {
-            this.process();
+        if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
+
+            this._vertexCode = definition.vshader;
+            this._fragmentCode = definition.fshader;
+            this.vertexEntryPoint = 'vertexMain';
+            this.fragmentEntryPoint = 'fragmentMain';
+            shader.ready = true;
+
+        } else {
+
+            if (definition.processingOptions) {
+                this.process();
+            }
         }
     }
 
@@ -45,6 +68,34 @@ class WebgpuShader {
     destroy(shader) {
         this._vertexCode = null;
         this._fragmentCode = null;
+    }
+
+    createShaderModule(code, shaderType) {
+        const device = this.shader.device;
+        const wgpu = device.wgpu;
+
+        WebgpuDebug.validate(device);
+
+        const shaderModule = wgpu.createShaderModule({
+            code: code
+        });
+        DebugHelper.setLabel(shaderModule, `${shaderType}:${this.shader.label}`);
+
+        WebgpuDebug.end(device, {
+            shaderType,
+            source: code,
+            shader: this.shader
+        });
+
+        return shaderModule;
+    }
+
+    getVertexShaderModule() {
+        return this.createShaderModule(this._vertexCode, 'Vertex');
+    }
+
+    getFragmentShaderModule() {
+        return this.createShaderModule(this._fragmentCode, 'Fragment');
     }
 
     process() {
@@ -73,9 +124,10 @@ class WebgpuShader {
 
     transpile(src, shaderType, originalSrc) {
         try {
-            return this.shader.device.glslang.compileGLSL(src, shaderType);
+            const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
+            return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader with id ${this.shader.id} to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}]`, {
                 processed: src,
                 original: originalSrc,
                 shader: this.shader

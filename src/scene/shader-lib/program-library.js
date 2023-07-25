@@ -96,7 +96,7 @@ class ProgramLibrary {
 
             const device = this._device;
             def = generator.createShaderDefinition(device, options);
-            def.name = `${name}-pass:${options.pass}`;
+            def.name = def.name ?? (options.pass ? `${name}-pass:${options.pass}` : name);
             this.definitionsCache.set(key, def);
         }
         return def;
@@ -120,7 +120,7 @@ class ProgramLibrary {
         // we have a key for shader source code generation, a key for its further processing to work with
         // uniform buffers, and a final key to get the processed shader from the cache
         const generationKey = generator.generateKey(options);
-        const processingKey = JSON.stringify(processingOptions);
+        const processingKey = processingOptions.generateKey();
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
@@ -131,9 +131,16 @@ class ProgramLibrary {
             const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
             Debug.assert(generatedShaderDef);
 
+            // use shader pass name if known
+            let passName = '';
+            if (options.pass !== undefined) {
+                const shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
+                passName = `-${shaderPassInfo.name}`;
+            }
+
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
-                name: name,
+                name: `${generatedShaderDef.name}${passName}-proc`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -158,6 +165,8 @@ class ProgramLibrary {
                 if ((options.hasOwnProperty(p) && defaultMat[p] !== options[p]) || p === "pass")
                     opt[p] = options[p];
             }
+
+            // Note: this was added in #4792 and it does not filter out the default values, like the loop above
             for (const p in options.litOptions) {
                 opt[p] = options.litOptions[p];
             }
@@ -222,7 +231,8 @@ class ProgramLibrary {
     }
 
     _getDefaultStdMatOptions(pass) {
-        return (pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass)) ?
+        const shaderPassInfo = ShaderPass.get(this._device).getByIndex(pass);
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 

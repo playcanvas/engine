@@ -7,6 +7,8 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
 
 /**
  * The Anim Component Layer allows managers a single layer of the animation state graph.
+ *
+ * @category Animation
  */
 class AnimComponentLayer {
     /**
@@ -313,7 +315,7 @@ class AnimComponentLayer {
      * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, speed, loop) {
-        if (animTrack.constructor !== AnimTrack) {
+        if (!(animTrack instanceof AnimTrack)) {
             Debug.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             return;
         }

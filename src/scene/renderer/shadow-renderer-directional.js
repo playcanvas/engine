@@ -1,14 +1,14 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
+import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    LIGHTTYPE_DIRECTIONAL
+    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
-import { ShadowRenderer } from "./shadow-renderer.js";
 import { ShadowMap } from './shadow-map.js';
 
 const visibleSceneAabb = new BoundingBox();
@@ -48,7 +48,22 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
 /**
  * @ignore
  */
-class ShadowRendererDirectional extends ShadowRenderer {
+class ShadowRendererDirectional {
+    /** @type {import('./renderer.js').Renderer} */
+    renderer;
+
+    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    shadowRenderer;
+
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    device;
+
+    constructor(renderer, shadowRenderer) {
+        this.renderer = renderer;
+        this.shadowRenderer = shadowRenderer;
+        this.device = renderer.device;
+    }
+
     // cull directional shadow map
     cull(light, drawCalls, camera) {
 
@@ -61,9 +76,15 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
-        this.generateSplitDistances(light, nearDist, light.shadowDistance);
+        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
 
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
+
+            // if manually controlling cascade rendering and the cascade does not render this frame
+            if (shadowUpdateOverrides?.[cascade] === SHADOWUPDATE_NONE) {
+                break;
+            }
 
             const lightRenderData = light.getRenderData(camera, cascade);
             const shadowCam = lightRenderData.shadowCamera;
@@ -133,7 +154,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
 
             // find out AABB of visible shadow casters
             let emptyAabb = true;
@@ -157,6 +178,24 @@ class ShadowRendererDirectional extends ShadowRenderer {
             // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
             shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
             shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
+
+            lightRenderData.depthRangeCompensation = shadowCam.farClip;
+            lightRenderData.projectionCompensation = radius;
+        }
+    }
+
+    // function to generate frustum split distances
+    generateSplitDistances(light, nearDist, farDist) {
+
+        light._shadowCascadeDistances.fill(farDist);
+        for (let i = 1; i < light.numCascades; i++) {
+
+            //  lerp between linear and logarithmic distance, called practical split distance
+            const fraction = i / light.numCascades;
+            const linearDist = nearDist + (farDist - nearDist) * fraction;
+            const logDist = nearDist * (farDist / nearDist) ** fraction;
+            const dist = math.lerp(linearDist, logDist, light.cascadeDistribution);
+            light._shadowCascadeDistances[i - 1] = dist;
         }
     }
 
@@ -164,29 +203,41 @@ class ShadowRendererDirectional extends ShadowRenderer {
 
         // shadow cascades have more faces rendered within a singe render pass
         const faceCount = light.numShadowFaces;
+        const shadowUpdateOverrides = light.shadowUpdateOverrides;
 
         // prepare render targets / cameras for rendering
+        let allCascadesRendering = true;
         let shadowCamera;
         for (let face = 0; face < faceCount; face++) {
-            shadowCamera = this.prepareFace(light, camera, face);
+
+            if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
+                allCascadesRendering = false;
+
+            shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
         }
 
         const renderPass = new RenderPass(this.device, () => {
 
             // inside the render pass, render all faces
             for (let face = 0; face < faceCount; face++) {
-                this.renderFace(light, camera, face, false);
+
+                if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
+                    this.shadowRenderer.renderFace(light, camera, face, !allCascadesRendering);
+                }
+
+                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_THISFRAME) {
+                    shadowUpdateOverrides[face] = SHADOWUPDATE_NONE;
+                }
             }
-
-        }, () => {
-
-            // after the pass is done, apply VSM blur if needed
-            this.renderVms(light, camera);
-
         });
 
+        renderPass.after = () => {
+            // after the pass is done, apply VSM blur if needed
+            this.shadowRenderer.renderVsm(light, camera);
+        };
+
         // setup render pass using any of the cameras, they all have the same pass related properties
-        this.setupRenderPass(renderPass, shadowCamera);
+        this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
         DebugHelper.setName(renderPass, `DirShadow-${light._node.name}`);
 
         frameGraph.addRenderPass(renderPass);
@@ -208,7 +259,7 @@ class ShadowRendererDirectional extends ShadowRenderer {
             const light = lights[i];
             Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
-            if (this.needsShadowRendering(light)) {
+            if (this.shadowRenderer.needsShadowRendering(light)) {
                 this.addLightRenderPasses(frameGraph, light, camera.camera);
             }
         }

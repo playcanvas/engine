@@ -98,32 +98,18 @@ export const BLENDMODE_DST_ALPHA = 9;
 export const BLENDMODE_ONE_MINUS_DST_ALPHA = 10;
 
 /**
- * Multiplies all colors by a constant color.
+ * Multiplies all fragment components by a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_CONSTANT_COLOR = 11;
+export const BLENDMODE_CONSTANT = 11;
 
 /**
- * Multiplies all colors by 1 minus a constant color.
+ * Multiplies all fragment components by 1 minus a constant.
  *
  * @type {number}
  */
-export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = 12;
-
-/**
- * Multiplies all colors by a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_CONSTANT_ALPHA = 13;
-
-/**
- * Multiplies all colors by 1 minus a constant alpha value.
- *
- * @type {number}
- */
-export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = 14;
+export const BLENDMODE_ONE_MINUS_CONSTANT = 12;
 
 /**
  * Add the results of the source and destination fragment multiplies.
@@ -278,6 +264,7 @@ export const CULLFACE_FRONT = 2;
  * that point or line primitives are unaffected by this render state.
  *
  * @type {number}
+ * @ignore
  */
 export const CULLFACE_FRONTANDBACK = 3;
 
@@ -631,11 +618,67 @@ export const PIXELFORMAT_ATC_RGBA = 30;
  */
 export const PIXELFORMAT_BGRA8 = 31;
 
+// map of engine PIXELFORMAT_*** enums to information about the format
+export const pixelFormatInfo = new Map([
+
+    // uncompressed formats
+    [PIXELFORMAT_A8,            { name: 'A8', size: 1 }],
+    [PIXELFORMAT_L8,            { name: 'L8', size: 1 }],
+    [PIXELFORMAT_LA8,           { name: 'LA8', size: 2 }],
+    [PIXELFORMAT_RGB565,        { name: 'RGB565', size: 2 }],
+    [PIXELFORMAT_RGBA5551,      { name: 'RGBA5551', size: 2 }],
+    [PIXELFORMAT_RGBA4,         { name: 'RGBA4', size: 2 }],
+    [PIXELFORMAT_RGB8,          { name: 'RGB8', size: 4 }],
+    [PIXELFORMAT_RGBA8,         { name: 'RGBA8', size: 4 }],
+    [PIXELFORMAT_RGB16F,        { name: 'RGB16F', size: 8 }],
+    [PIXELFORMAT_RGBA16F,       { name: 'RGBA16F', size: 8 }],
+    [PIXELFORMAT_RGB32F,        { name: 'RGB32F', size: 16 }],
+    [PIXELFORMAT_RGBA32F,       { name: 'RGBA32F', size: 16 }],
+    [PIXELFORMAT_R32F,          { name: 'R32F', size: 4 }],
+    [PIXELFORMAT_DEPTH,         { name: 'DEPTH', size: 4 }],
+    [PIXELFORMAT_DEPTHSTENCIL,  { name: 'DEPTHSTENCIL', size: 4 }],
+    [PIXELFORMAT_111110F,       { name: '111110F', size: 4 }],
+    [PIXELFORMAT_SRGB,          { name: 'SRGB', size: 4 }],
+    [PIXELFORMAT_SRGBA,         { name: 'SRGBA', size: 4 }],
+    [PIXELFORMAT_BGRA8,         { name: 'BGRA8', size: 4 }],
+
+    // compressed formats
+    [PIXELFORMAT_DXT1, { name: 'DXT1', blockSize: 8 }],
+    [PIXELFORMAT_DXT3, { name: 'DXT3', blockSize: 16 }],
+    [PIXELFORMAT_DXT5, { name: 'DXT5', blockSize: 16 }],
+    [PIXELFORMAT_ETC1, { name: 'ETC1', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGB, { name: 'ETC2_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ETC2_RGBA, { name: 'ETC2_RGBA', blockSize: 16 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGB_1, { name: 'PVRTC_2BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_2BPP_RGBA_1, { name: 'PVRTC_2BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGB_1, { name: 'PVRTC_4BPP_RGB_1', blockSize: 8 }],
+    [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8 }],
+    [PIXELFORMAT_ASTC_4x4, { name: 'ASTC_4x4', blockSize: 16 }],
+    [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
+    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }]
+]);
+
 // update this function when exposing additional compressed pixel formats
-export function isCompressedPixelFormat(format) {
-    return (format >= PIXELFORMAT_DXT1 && format <= PIXELFORMAT_DXT5) ||
-           (format >= PIXELFORMAT_ETC1 && format <= PIXELFORMAT_ATC_RGBA);
-}
+export const isCompressedPixelFormat = (format) => {
+    return pixelFormatInfo.get(format).blockSize !== undefined;
+};
+
+// get the pixel format array type
+export const getPixelFormatArrayType = (format) => {
+    switch (format) {
+        case PIXELFORMAT_RGB32F:
+        case PIXELFORMAT_RGBA32F:
+            return Float32Array;
+        case PIXELFORMAT_RGB565:
+        case PIXELFORMAT_RGBA5551:
+        case PIXELFORMAT_RGBA4:
+        case PIXELFORMAT_RGB16F:
+        case PIXELFORMAT_RGBA16F:
+            return Uint16Array;
+        default:
+            return Uint8Array;
+    }
+};
 
 /**
  * List of distinct points.
@@ -920,7 +963,7 @@ export const STENCILOP_KEEP = 0;
 export const STENCILOP_ZERO = 1;
 
 /**
- * Replace value with the reference value (see {@link GraphicsDevice#setStencilFunc}).
+ * Replace value with the reference value (see {@link StencilParameters}).
  *
  * @type {number}
  */
@@ -1024,9 +1067,9 @@ export const TEXTUREDIMENSION_CUBE = 'cube';
 export const TEXTUREDIMENSION_CUBE_ARRAY = 'cube-array';
 export const TEXTUREDIMENSION_3D = '3d';
 
-export const SAMPLETYPE_FLOAT = 'float';
-export const SAMPLETYPE_UNFILTERABLE_FLOAT = 'unfilterable-float';
-export const SAMPLETYPE_DEPTH = 'depth';
+export const SAMPLETYPE_FLOAT = 0;
+export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
+export const SAMPLETYPE_DEPTH = 2;
 
 /**
  * Texture data is not stored a specific projection format.
@@ -1055,6 +1098,20 @@ export const TEXTUREPROJECTION_EQUIRECT = "equirect";
  * @type {string}
  */
 export const TEXTUREPROJECTION_OCTAHEDRAL = "octahedral";
+
+/**
+ * Shader source code uses GLSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_GLSL = 'glsl';
+
+/**
+ * Shader source code uses WGSL language.
+ *
+ * @type {string}
+ */
+export const SHADERLANGUAGE_WGSL = 'wgsl';
 
 /**
  * Signed byte vertex element type.
@@ -1129,6 +1186,7 @@ export const UNIFORMTYPE_TEXTURE3D = 20;
 export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
+export const UNIFORMTYPE_MAT4ARRAY = 24;
 
 export const uniformTypeToName = [
     'bool',
@@ -1158,11 +1216,18 @@ export const uniformTypeToName = [
 ];
 
 /**
- * A WebGL device type.
+ * A WebGL 1 device type.
  *
  * @type {string}
  */
-export const DEVICETYPE_WEBGL = 'webgl';
+export const DEVICETYPE_WEBGL1 = 'webgl1';
+
+/**
+ * A WebGL 2 device type.
+ *
+ * @type {string}
+ */
+export const DEVICETYPE_WEBGL2 = 'webgl2';
 
 /**
  * A WebGPU device type.
@@ -1177,14 +1242,15 @@ export const SHADERSTAGE_FRAGMENT = 2;
 export const SHADERSTAGE_COMPUTE = 4;
 
 // indices of commonly used bind groups
-export const BINDGROUP_VIEW = 0;
-export const BINDGROUP_MESH = 1;
+// sorted in a way that any trailing bind groups can be unused in any render pass
+export const BINDGROUP_MESH = 0;
+export const BINDGROUP_VIEW = 1;
+
+// names of bind groups
+export const bindGroupNames = ['mesh', 'view'];
 
 // name of the default uniform buffer slot in a bind group
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
-
-// names of bind groups
-export const bindGroupNames = ['view', 'mesh'];
 
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
 export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
@@ -1258,3 +1324,6 @@ export const CHUNKAPI_1_55 = '1.55';
 export const CHUNKAPI_1_56 = '1.56';
 export const CHUNKAPI_1_57 = '1.57';
 export const CHUNKAPI_1_58 = '1.58';
+export const CHUNKAPI_1_60 = '1.60';
+export const CHUNKAPI_1_62 = '1.62';
+export const CHUNKAPI_1_65 = '1.65';

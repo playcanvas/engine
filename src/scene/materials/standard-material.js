@@ -37,7 +37,7 @@ let _params = new Set();
  * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
- * which holds some of the options only used by the lit shader backend {@link LitOptions}.
+ * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
  * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
@@ -136,52 +136,54 @@ let _params = new Set();
  * - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy
  * increases as anisotropy value increases to maximum of 1.
  *
- * @property {number} clearCoat Defines intensity of clear coat layer from 0 to 1. Clear coat layer
+ * @property {number} clearCoat Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer
  * is disabled when clearCoat == 0. Default value is 0 (disabled).
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatMap Monochrome
- * clear coat intensity map (default is null). If specified, will be multiplied by normalized
+ * clearcoat intensity map (default is null). If specified, will be multiplied by normalized
  * 'clearCoat' value and/or vertex colors.
- * @property {number} clearCoatMapUv Clear coat intensity map UV channel.
- * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clear coat intensity map.
- * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clear coat intensity map. Each
+ * @property {number} clearCoatMapUv Clearcoat intensity map UV channel.
+ * @property {Vec2} clearCoatMapTiling Controls the 2D tiling of the clearcoat intensity map.
+ * @property {Vec2} clearCoatMapOffset Controls the 2D offset of the clearcoat intensity map. Each
  * component is between 0 and 1.
- * @property {number} clearCoatMapRotation Controls the 2D rotation (in degrees) of the clear coat
+ * @property {number} clearCoatMapRotation Controls the 2D rotation (in degrees) of the clearcoat
  * intensity map.
- * @property {string} clearCoatMapChannel Color channel of the clear coat intensity map to use. Can
+ * @property {string} clearCoatMapChannel Color channel of the clearcoat intensity map to use. Can
  * be "r", "g", "b" or "a".
- * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clear coat intensity. If
+ * @property {boolean} clearCoatVertexColor Use mesh vertex colors for clearcoat intensity. If
  * clearCoatMap is set, it'll be multiplied by vertex colors.
- * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clear coat
+ * @property {string} clearCoatVertexColorChannel Vertex color channel to use for clearcoat
  * intensity. Can be "r", "g", "b" or "a".
- * @property {number} clearCoatGlossiness Defines the clear coat glossiness of the clear coat layer
+ * @property {number} clearCoatGloss Defines the clearcoat glossiness of the clearcoat layer
  * from 0 (rough) to 1 (mirror).
+ * @property {boolean} clearCoatGlossInvert Invert the clearcoat gloss component (default is false).
+ * Enabling this flag results in material treating the clear coat gloss members as roughness.
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatGlossMap Monochrome
- * clear coat glossiness map (default is null). If specified, will be multiplied by normalized
- * 'clearCoatGlossiness' value and/or vertex colors.
- * @property {number} clearCoatGlossMapUv Clear coat gloss map UV channel.
- * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clear coat gloss map.
- * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clear coat gloss map.
+ * clearcoat glossiness map (default is null). If specified, will be multiplied by normalized
+ * 'clearCoatGloss' value and/or vertex colors.
+ * @property {number} clearCoatGlossMapUv Clearcoat gloss map UV channel.
+ * @property {Vec2} clearCoatGlossMapTiling Controls the 2D tiling of the clearcoat gloss map.
+ * @property {Vec2} clearCoatGlossMapOffset Controls the 2D offset of the clearcoat gloss map.
  * Each component is between 0 and 1.
  * @property {number} clearCoatGlossMapRotation Controls the 2D rotation (in degrees) of the clear
  * coat gloss map.
- * @property {string} clearCoatGlossMapChannel Color channel of the clear coat gloss map to use.
+ * @property {string} clearCoatGlossMapChannel Color channel of the clearcoat gloss map to use.
  * Can be "r", "g", "b" or "a".
- * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clear coat glossiness.
+ * @property {boolean} clearCoatGlossVertexColor Use mesh vertex colors for clearcoat glossiness.
  * If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
- * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clear coat
+ * @property {string} clearCoatGlossVertexColorChannel Vertex color channel to use for clearcoat
  * glossiness. Can be "r", "g", "b" or "a".
  * @property {import('../../platform/graphics/texture.js').Texture|null} clearCoatNormalMap The
- * clear coat normal map of the material (default is null). The texture must contains normalized,
+ * clearcoat normal map of the material (default is null). The texture must contains normalized,
  * tangent space normals.
- * @property {number} clearCoatNormalMapUv Clear coat normal map UV channel.
- * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clear coat normal
+ * @property {number} clearCoatNormalMapUv Clearcoat normal map UV channel.
+ * @property {Vec2} clearCoatNormalMapTiling Controls the 2D tiling of the main clearcoat normal
  * map.
- * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clear coat normal
+ * @property {Vec2} clearCoatNormalMapOffset Controls the 2D offset of the main clearcoat normal
  * map. Each component is between 0 and 1.
  * @property {number} clearCoatNormalMapRotation Controls the 2D rotation (in degrees) of the main
- * clear coat map.
- * @property {number} clearCoatBumpiness The bumpiness of the clear coat layer. This value scales
- * the assigned main clear coat normal map. It should be normally between 0 (no bump mapping) and 1
+ * clearcoat map.
+ * @property {number} clearCoatBumpiness The bumpiness of the clearcoat layer. This value scales
+ * the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1
  * (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
  * @property {boolean} useIridescence Enable thin-film iridescence.
  * @property {import('../../platform/graphics/texture.js').Texture|null} iridescenceMap The
@@ -215,8 +217,8 @@ let _params = new Set();
  * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
  * diffuse colors also affect specular instead of the dedicated specular map. This can be used as
- * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
- * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
+ * alternative to specular color to save space. With metalness == 0, the pixel is assumed to be
+ * dielectric, and diffuse color is used as normal. With metalness == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
  * specular map to apply color tint to specular reflections.
@@ -237,13 +239,12 @@ let _params = new Set();
  * is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
- * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny
- * mirror). A higher shininess value results in a more focused specular highlight. Glossiness map/
- * vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used
- * directly as constant output.
- * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
- * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
- * vertex colors.
+ * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
+ * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Gloss map
+ * (default is null). If specified, will be multiplied by normalized gloss value and/or vertex
+ * colors.
+ * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
+ * flag results in material treating the gloss members as roughness.
  * @property {number} glossMapUv Gloss map UV channel.
  * @property {string} glossMapChannel Color channel of the gloss map to use. Can be "r", "g", "b"
  * or "a".
@@ -332,8 +333,10 @@ let _params = new Set();
  * "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenVertexColor Use mesh vertex colors for sheen. If sheen map or
  * sheen tint are set, they'll be multiplied by vertex colors.
- * @property {number} sheenGlossiness The glossiness of the sheen (fabric) microfiber structure.
+ * @property {number} sheenGloss The glossiness of the sheen (fabric) microfiber structure.
  * This color value is a single value between 0 and 1.
+ * @property {boolean} sheenGlossInvert Invert the sheen gloss component (default is false).
+ * Enabling this flag results in material treating the sheen gloss members as roughness.
  * @property {boolean} sheenGlossTint Multiply sheen glossiness map and/or sheen glossiness vertex
  * value by the scalar sheen glossiness value.
  * @property {import('../../platform/graphics/texture.js').Texture|null} sheenGlossMap The sheen
@@ -347,7 +350,7 @@ let _params = new Set();
  * @property {string} sheenGlossMapChannel Color channels of the sheen glossiness map to use.
  * Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenGlossVertexColor Use mesh vertex colors for sheen glossiness.
- * If sheen glossiness map or sheen glosiness tint are set, they'll be multiplied by vertex colors.
+ * If sheen glossiness map or sheen glossiness tint are set, they'll be multiplied by vertex colors.
  * @property {string} sheenGlossVertexColorChannel Vertex color channels to use for sheen glossiness.
  * Can be "r", "g", "b" or "a".
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where
@@ -369,10 +372,10 @@ let _params = new Set();
  * it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
- * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are
+ * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
  * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
  * {@link Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when
+ * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
  * (primary) normal map of the material (default is null). The texture must contains normalized,
@@ -444,18 +447,43 @@ let _params = new Set();
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
- * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap Baked ambient
+ * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap The main (primary) baked ambient
  * occlusion (AO) map (default is null). Modulates ambient color.
- * @property {number} aoMapUv AO map UV channel
- * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
- * @property {Vec2} aoMapTiling Controls the 2D tiling of the AO map.
- * @property {Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0
+ * @property {number} aoMapUv Main (primary) AO map UV channel
+ * @property {string} aoMapChannel Color channel of the main (primary) AO map to use. Can be "r", "g", "b" or "a".
+ * @property {Vec2} aoMapTiling Controls the 2D tiling of the main (primary) AO map.
+ * @property {Vec2} aoMapOffset Controls the 2D offset of the main (primary) AO map. Each component is between 0
  * and 1.
- * @property {number} aoMapRotation Controls the 2D rotation (in degrees) of the AO map.
+ * @property {number} aoMapRotation Controls the 2D rotation (in degrees) of the main (primary) AO map.
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be
  * multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g",
  * "b" or "a".
+ * @property {import('../../platform/graphics/texture.js').Texture|null} aoDetailMap The
+ * detail (secondary) baked ambient occlusion (AO) map of the material (default is null). Will only be used if main
+ * (primary) ao map is non-null.
+ * @property {number} aoDetailMapUv Detail (secondary) AO map UV channel.
+ * @property {Vec2} aoDetailMapTiling Controls the 2D tiling of the detail (secondary) AO
+ * map.
+ * @property {Vec2} aoDetailMapOffset Controls the 2D offset of the detail (secondary) AO
+ * map. Each component is between 0 and 1.
+ * @property {number} aoDetailMapRotation Controls the 2D rotation (in degrees) of the detail
+ * (secondary) AO map.
+ * @property {string} aoDetailMapChannel Color channels of the detail (secondary) AO map
+ * to use. Can be "r", "g", "b" or "a" (default is "g").
+ * @property {string} aoDetailMode Determines how the main (primary) and detail (secondary)
+ * AO maps are blended together. Can be:
+ *
+ * - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+ * - {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+ * - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+ * - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+ * - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker,
+ * component-wise.
+ * - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter,
+ * component-wise.
+ *
+ * Defaults to {@link DETAILMODE_MUL}.
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a
  * hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
  *
@@ -502,8 +530,9 @@ let _params = new Set();
  * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitOptions}.
+ * are {@link LitShaderOptions}.
  * @augments Material
+ * @category Graphics
  */
 class StandardMaterial extends Material {
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
@@ -515,7 +544,7 @@ class StandardMaterial extends Material {
      *
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Update the material's diffuse and specular properties
      * material.diffuse.set(1, 0, 0);
@@ -525,7 +554,7 @@ class StandardMaterial extends Material {
      * material.update();
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Assign a texture to the diffuse slot
      * material.diffuseMap = texture;
@@ -695,17 +724,8 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheen', getUniform('sheen'));
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
-                this._setParameter('material_sheenGlossiness', this.sheenGlossiness);
+                this._setParameter('material_sheenGloss', this.sheenGloss);
             }
-
-            if (this.refractionIndex !== 1.0 / 1.5) {
-                const oneOverRefractionIndex = 1.0 / this.refractionIndex;
-                const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
-                this._setParameter('material_f0', f0 * f0);
-            } else {
-                this._setParameter('material_f0', 0.04);
-            }
-
         }
 
         if (this.enableGGXSpecular) {
@@ -714,11 +734,11 @@ class StandardMaterial extends Material {
 
         if (this.clearCoat > 0) {
             this._setParameter('material_clearCoat', this.clearCoat);
-            this._setParameter('material_clearCoatGlossiness', this.clearCoatGlossiness);
+            this._setParameter('material_clearCoatGloss', this.clearCoatGloss);
             this._setParameter('material_clearCoatBumpiness', this.clearCoatBumpiness);
         }
 
-        this._setParameter('material_shininess', getUniform('shininess'));
+        this._setParameter('material_gloss', getUniform('gloss'));
 
         if (!this.emissiveMap || this.emissiveTint) {
             this._setParameter('material_emissive', getUniform('emissive'));
@@ -821,13 +841,14 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
@@ -840,7 +861,7 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
@@ -920,9 +941,9 @@ const defineProp = (prop) => {
     return prop.defaultValue && prop.defaultValue.clone ? defineAggProp(prop) : defineValueProp(prop);
 };
 
-function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
+function _defineTex2D(name, channel = "rgb", vertexColor = true, uv = 0) {
     // store texture name
-    _matTex2D[name] = channels;
+    _matTex2D[name] = channel.length || -1;
 
     defineProp({
         name: `${name}Map`,
@@ -955,32 +976,23 @@ function _defineTex2D(name, uv, channels, defChannel, vertexColor, detailMode) {
         defaultValue: uv
     });
 
-    if (channels > 0) {
+    if (channel) {
         defineProp({
             name: `${name}MapChannel`,
-            defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
-        });
-    }
-
-    if (vertexColor) {
-        defineProp({
-            name: `${name}VertexColor`,
-            defaultValue: false
+            defaultValue: channel
         });
 
-        if (channels > 0) {
+        if (vertexColor) {
+            defineProp({
+                name: `${name}VertexColor`,
+                defaultValue: false
+            });
+
             defineProp({
                 name: `${name}VertexColorChannel`,
-                defaultValue: defChannel ? defChannel : (channels > 1 ? 'rgb' : 'g')
+                defaultValue: channel
             });
         }
-    }
-
-    if (detailMode) {
-        defineProp({
-            name: `${name}Mode`,
-            defaultValue: DETAILMODE_MUL
-        });
     }
 
     // construct the transform uniform
@@ -1034,7 +1046,7 @@ function _defineColor(name, defaultValue) {
             // HACK: since we can't detect whether a user is going to set a color property
             // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
             // the worst and flag the shader as dirty.
-            // This means currently animating a material colour is horribly slow.
+            // This means currently animating a material color is horribly slow.
             this._dirtyShader = true;
             return this[`_${name}`];
         }
@@ -1103,15 +1115,15 @@ function _defineMaterialProps() {
     _defineColor('attenuation', new Color(1, 1, 1));
     _defineFloat('emissiveIntensity', 1);
     _defineFloat('specularityFactor', 1);
-    _defineFloat('sheenGlossiness', 0.0);
+    _defineFloat('sheenGloss', 0.0);
 
-    _defineFloat('shininess', 25, (material, device, scene) => {
-        // Shininess is 0-100 value which is actually a 0-1 glossiness value.
+    _defineFloat('gloss', 0.25, (material, device, scene) => {
         return material.shadingModel === SPECULAR_PHONG ?
             // legacy: expand back to specular power
-            Math.pow(2, material.shininess * 0.01 * 11) :
-            material.shininess * 0.01;
+            Math.pow(2, material.gloss * 11) :
+            material.gloss;
     });
+
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
@@ -1129,7 +1141,7 @@ function _defineMaterialProps() {
     _defineFloat('metalness', 1);
     _defineFloat('anisotropy', 0);
     _defineFloat('clearCoat', 0);
-    _defineFloat('clearCoatGlossiness', 1);
+    _defineFloat('clearCoatGloss', 1);
     _defineFloat('clearCoatBumpiness', 1);
     _defineFloat('aoUvSet', 0, null); // legacy
 
@@ -1186,7 +1198,6 @@ function _defineMaterialProps() {
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
-    _defineFlag('forceFragmentPrecision', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useGammaTonemap', true);
@@ -1197,31 +1208,37 @@ function _defineMaterialProps() {
     _defineFlag('nineSlicedMode', undefined); // NOTE: this used to be SPRITE_RENDERMODE_SLICED but was undefined pre-Rollup
     _defineFlag('msdfTextAttribute', false);
     _defineFlag('useIridescence', false);
+    _defineFlag('glossInvert', false);
+    _defineFlag('sheenGlossInvert', false);
+    _defineFlag('clearCoatGlossInvert', false);
 
-    _defineTex2D('diffuse', 0, 3, '', true);
-    _defineTex2D('specular', 0, 3, '', true);
-    _defineTex2D('emissive', 0, 3, '', true);
-    _defineTex2D('thickness', 0, 1, '', true);
-    _defineTex2D('specularityFactor', 0, 1, '', true);
-    _defineTex2D('normal', 0, -1, '', false);
-    _defineTex2D('metalness', 0, 1, '', true);
-    _defineTex2D('gloss', 0, 1, '', true);
-    _defineTex2D('opacity', 0, 1, 'a', true);
-    _defineTex2D('refraction', 0, 1, '', true);
-    _defineTex2D('height', 0, 1, '', false);
-    _defineTex2D('ao', 0, 1, '', true);
-    _defineTex2D('light', 1, 3, '', true);
-    _defineTex2D('msdf', 0, 3, '', false);
-    _defineTex2D('diffuseDetail', 0, 3, '', false, true);
-    _defineTex2D('normalDetail', 0, -1, '', false);
-    _defineTex2D('clearCoat', 0, 1, '', true);
-    _defineTex2D('clearCoatGloss', 0, 1, '', true);
-    _defineTex2D('clearCoatNormal', 0, -1, '', false);
-    _defineTex2D('sheen', 0, 3, '', true);
-    _defineTex2D('sheenGloss', 0, 1, '', true);
+    _defineTex2D('diffuse');
+    _defineTex2D('specular');
+    _defineTex2D('emissive');
+    _defineTex2D('thickness', 'g');
+    _defineTex2D('specularityFactor', 'g');
+    _defineTex2D('normal', '');
+    _defineTex2D('metalness', 'g');
+    _defineTex2D('gloss', 'g');
+    _defineTex2D('opacity', 'a');
+    _defineTex2D('refraction', 'g');
+    _defineTex2D('height', 'g', false);
+    _defineTex2D('ao', 'g');
+    _defineTex2D('light', 'rgb', true, 1);
+    _defineTex2D('msdf', '');
+    _defineTex2D('diffuseDetail', 'rgb', false);
+    _defineTex2D('normalDetail', '');
+    _defineTex2D('aoDetail', 'g', false);
+    _defineTex2D('clearCoat', 'g');
+    _defineTex2D('clearCoatGloss', 'g');
+    _defineTex2D('clearCoatNormal', '');
+    _defineTex2D('sheen', 'rgb');
+    _defineTex2D('sheenGloss', 'g');
+    _defineTex2D('iridescence', 'g');
+    _defineTex2D('iridescenceThickness', 'g');
 
-    _defineTex2D('iridescence', 0, 1, '', true);
-    _defineTex2D('iridescenceThickness', 0, 1, '', true);
+    _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
+    _defineFlag('aoDetailMode', DETAILMODE_MUL);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');

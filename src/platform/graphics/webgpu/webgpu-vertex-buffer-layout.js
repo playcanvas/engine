@@ -1,5 +1,3 @@
-import { Debug } from "../../../core/debug.js";
-
 import {
     semanticToLocation,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
@@ -15,11 +13,23 @@ gpuVertexFormats[TYPE_INT32] = 'sint32';
 gpuVertexFormats[TYPE_UINT32] = 'uint32';
 gpuVertexFormats[TYPE_FLOAT32] = 'float32';
 
+const gpuVertexFormatsNormalized = [];
+gpuVertexFormatsNormalized[TYPE_INT8] = 'snorm8';
+gpuVertexFormatsNormalized[TYPE_UINT8] = 'unorm8';
+gpuVertexFormatsNormalized[TYPE_INT16] = 'snorm16';
+gpuVertexFormatsNormalized[TYPE_UINT16] = 'unorm16';
+gpuVertexFormatsNormalized[TYPE_INT32] = 'sint32';     // there is no 32bit normalized signed int
+gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit normalized unsigned int
+gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
+
 /**
  * @ignore
  */
 class WebgpuVertexBufferLayout {
-    // type {Map<string, GPUVertexBufferLayout[]>}
+    /**
+     * @type {Map<string, GPUVertexBufferLayout[]>}
+     * @private
+     */
     cache = new Map();
 
     /**
@@ -41,7 +51,7 @@ class WebgpuVertexBufferLayout {
     }
 
     getKey(vertexFormat0, vertexFormat1 = null) {
-        return vertexFormat0.renderingingHashString + (vertexFormat1 ? vertexFormat1.renderingingHashString : '');
+        return `${vertexFormat0?.renderingHashString}-${vertexFormat1?.renderingHashString}`;
     }
 
     /**
@@ -62,14 +72,12 @@ class WebgpuVertexBufferLayout {
             for (let i = 0; i < elementCount; i++) {
                 const element = format.elements[i];
                 const location = semanticToLocation[element.name];
-
-                // A WGL shader needs attributes to have matching types, but glslang translator we use does not allow us to set those
-                Debug.assert(element.dataType === TYPE_FLOAT32, `Only float vertex attributes are supported, ${element.dataType} is not supported, semantic: ${element.name}.`, element);
+                const formatTable = element.normalize ? gpuVertexFormatsNormalized : gpuVertexFormats;
 
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${gpuVertexFormats[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
+                    format: `${formatTable[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
@@ -83,10 +91,11 @@ class WebgpuVertexBufferLayout {
             }
         };
 
-        addFormat(vertexFormat0);
-        if (vertexFormat1) {
+        if (vertexFormat0)
+            addFormat(vertexFormat0);
+
+        if (vertexFormat1)
             addFormat(vertexFormat1);
-        }
 
         return layout;
     }

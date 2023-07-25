@@ -1,12 +1,20 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { StringIds } from '../../../core/string-ids.js';
 import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
 
 import { WebgpuUtils } from './webgpu-utils.js';
 
-const samplerTypes = { };
+const samplerTypes = [];
 samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
 samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
 samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
+
+const sampleTypes = [];
+sampleTypes[SAMPLETYPE_FLOAT] = 'float';
+sampleTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'unfilterable-float';
+sampleTypes[SAMPLETYPE_DEPTH] = 'depth';
+
+const stringIds = new StringIds();
 
 /**
  * A WebGPU implementation of the BindGroupFormat, which is a wrapper over GPUBindGroupLayout.
@@ -22,17 +30,24 @@ class WebgpuBindGroupFormat {
         /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         const device = bindGroupFormat.device;
 
-        // type {GPUBindGroupLayoutDescriptor}
         const { key, descr } = this.createDescriptor(bindGroupFormat);
 
         /**
          * Unique key, used for caching
          *
-         * @type {string}
+         * @type {number}
          */
-        this.key = key;
+        this.key = stringIds.get(key);
 
-        // type {GPUBindGroupLayout}
+        // keep descr in debug mode
+        Debug.call(() => {
+            this.descr = descr;
+        });
+
+        /**
+         * @type {GPUBindGroupLayout}
+         * @private
+         */
         this.bindGroupLayout = device.wgpu.createBindGroupLayout(descr);
         DebugHelper.setLabel(this.bindGroupLayout, bindGroupFormat.name);
     }
@@ -57,6 +72,10 @@ class WebgpuBindGroupFormat {
         return bindGroupFormat.bufferFormats.length + index * 2;
     }
 
+    /**
+     * @param {any} bindGroupFormat - The format of the bind group.
+     * @returns {any} Returns the bind group descriptor.
+     */
     createDescriptor(bindGroupFormat) {
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
@@ -84,7 +103,8 @@ class WebgpuBindGroupFormat {
                     type: 'uniform', // "uniform", "storage", "read-only-storage"
 
                     // whether this binding requires a dynamic offset
-                    hasDynamicOffset: false
+                    // currently all UBs are dynamic and need the offset
+                    hasDynamicOffset: true
 
                     // defaults to 0 meaning no validation, can do early size validation using it
                     // minBindingSize
@@ -101,7 +121,10 @@ class WebgpuBindGroupFormat {
             const viewDimension = textureFormat.textureDimension;
             const multisampled = false;
 
-            key += `#${index}T:${visibility}-${sampleType}-${viewDimension}-${multisampled}`;
+            const gpuSampleType = sampleTypes[sampleType];
+            Debug.assert(gpuSampleType);
+
+            key += `#${index}T:${visibility}-${gpuSampleType}-${viewDimension}-${multisampled}`;
 
             entries.push({
                 binding: index++,
@@ -109,7 +132,7 @@ class WebgpuBindGroupFormat {
                 texture: {
                     // Indicates the type required for texture views bound to this binding.
                     // "float", "unfilterable-float", "depth", "sint", "uint",
-                    sampleType: sampleType,
+                    sampleType: gpuSampleType,
 
                     // Indicates the required dimension for texture views bound to this binding.
                     // "1d", "2d", "2d-array", "cube", "cube-array", "3d"
@@ -121,10 +144,10 @@ class WebgpuBindGroupFormat {
             });
 
             // sampler
-            const type = samplerTypes[sampleType];
-            Debug.assert(type);
+            const gpuSamplerType = samplerTypes[sampleType];
+            Debug.assert(gpuSamplerType);
 
-            key += `#${index}S:${visibility}-${type}`;
+            key += `#${index}S:${visibility}-${gpuSamplerType}`;
 
             entries.push({
                 binding: index++,
@@ -132,11 +155,12 @@ class WebgpuBindGroupFormat {
                 sampler: {
                     // Indicates the required type of a sampler bound to this bindings
                     // 'filtering', 'non-filtering', 'comparison'
-                    type: type
+                    type: gpuSamplerType
                 }
             });
         });
 
+        /** @type {GPUBindGroupLayoutDescriptor} */
         const descr = {
             entries: entries
         };

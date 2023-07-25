@@ -1,3 +1,4 @@
+import { WasmModule } from "../../core/wasm-module.js";
 import { Debug } from '../../core/debug.js';
 import { PIXELFORMAT_RGB565, PIXELFORMAT_RGBA4 } from '../../platform/graphics/constants.js';
 import { BasisWorker } from './basis-worker.js';
@@ -17,8 +18,13 @@ const getCompressionFormats = (device) => {
 
 // download basis code and compile the wasm module for use in workers
 const prepareWorkerModules = (config, callback) => {
-    const getWorkerBlob = () => {
-        const code = '(' + BasisWorker.toString() + ')()\n\n';
+    const getWorkerBlob = (basisCode) => {
+        const code = [
+            '/* basis */',
+            basisCode,
+            "",
+            '(' + BasisWorker.toString() + ')()\n\n'
+        ].join('\n');
         return new Blob([code], { type: 'application/javascript' });
     };
 
@@ -35,8 +41,7 @@ const prepareWorkerModules = (config, callback) => {
 
     const sendResponse = (basisCode, module) => {
         callback(null, {
-            workerUrl: URL.createObjectURL(getWorkerBlob()),
-            basisUrl: URL.createObjectURL(basisCode),
+            workerUrl: URL.createObjectURL(getWorkerBlob(basisCode)),
             module: module,
             rgbPriority: config.rgbPriority,
             rgbaPriority: config.rgbaPriority
@@ -44,7 +49,8 @@ const prepareWorkerModules = (config, callback) => {
     };
 
     const options = {
-        responseType: 'blob',
+        cache: true,
+        responseType: 'text',
         retry: config.maxRetries > 0,
         maxRetries: config.maxRetries
     };
@@ -270,23 +276,16 @@ function basisInitialize(config) {
         return;
     }
 
-    // if any URLs are not specified in the config, take them from the global PC config structure
+    // if any URLs are not specified in the config, take them from WasmModule config
     if (!config.glueUrl || !config.wasmUrl || !config.fallbackUrl) {
-        const modules = (window.config ? window.config.wasmModules : window.PRELOAD_MODULES) || [];
-        const wasmModule = modules.find(function (m) {
-            return m.moduleName === 'BASIS';
-        });
-        if (wasmModule) {
-            const urlBase = window.ASSET_PREFIX || '';
-            if (!config.glueUrl) {
-                config.glueUrl = urlBase + wasmModule.glueUrl;
-            }
-            if (!config.wasmUrl) {
-                config.wasmUrl = urlBase + wasmModule.wasmUrl;
-            }
-            if (!config.fallbackUrl) {
-                config.fallbackUrl = urlBase + wasmModule.fallbackUrl;
-            }
+        const moduleConfig = WasmModule.getConfig('BASIS');
+        if (moduleConfig) {
+            config = {
+                glueUrl: moduleConfig.glueUrl,
+                wasmUrl: moduleConfig.wasmUrl,
+                fallbackUrl: moduleConfig.fallbackUrl,
+                numWorkers: moduleConfig.numWorkers
+            };
         }
     }
 

@@ -1,4 +1,4 @@
-import { isDefined } from './core.js';
+import { Debug } from './debug.js';
 
 /**
  * File path API.
@@ -19,10 +19,10 @@ const path = {
      * @param {...string} section - Section of path to join. 2 or more can be provided as parameters.
      * @returns {string} The joined file path.
      * @example
-     * var path = pc.path.join('foo', 'bar');
+     * const path = pc.path.join('foo', 'bar');
      * console.log(path); // Prints 'foo/bar'
      * @example
-     * var path = pc.path.join('alpha', 'beta', 'gamma');
+     * const path = pc.path.join('alpha', 'beta', 'gamma');
      * console.log(path); // Prints 'alpha/beta/gamma'
      */
     join: function () {
@@ -31,10 +31,11 @@ const path = {
 
         for (let index = 0; index < num - 1; ++index) {
             const one = arguments[index];
+            Debug.assert(one !== undefined);
+
             const two = arguments[index + 1];
-            if (!isDefined(one) || !isDefined(two)) {
-                throw new Error('undefined argument to pc.path.join');
-            }
+            Debug.assert(two !== undefined);
+
             if (two[0] === path.delimiter) {
                 result = two;
                 continue;
@@ -101,10 +102,11 @@ const path = {
      * filename.
      */
     split: function (pathname) {
-        const parts = pathname.split(path.delimiter);
-        const tail = parts.slice(parts.length - 1)[0];
-        const head = parts.slice(0, parts.length - 1).join(path.delimiter);
-        return [head, tail];
+        const lastDelimiterIndex = pathname.lastIndexOf(path.delimiter);
+        if (lastDelimiterIndex !== -1) {
+            return [pathname.substring(0, lastDelimiterIndex), pathname.substring(lastDelimiterIndex + 1)];
+        }
+        return ["", pathname];
     },
 
     /**
@@ -129,8 +131,7 @@ const path = {
      * @returns {string} The directory part of the path.
      */
     getDirectory: function (pathname) {
-        const parts = pathname.split(path.delimiter);
-        return parts.slice(0, parts.length - 1).join(path.delimiter);
+        return path.split(pathname)[0];
     },
 
     /**

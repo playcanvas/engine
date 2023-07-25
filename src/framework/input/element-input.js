@@ -109,6 +109,8 @@ function intersectLineQuad(p, q, corners) {
 /**
  * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
  * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
+ *
+ * @category User Interface
  */
 class ElementInputEvent {
     /**
@@ -163,6 +165,7 @@ class ElementInputEvent {
  * Represents a Mouse event fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementMouseEvent extends ElementInputEvent {
     /**
@@ -257,6 +260,7 @@ class ElementMouseEvent extends ElementInputEvent {
  * Represents a TouchEvent fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementTouchEvent extends ElementInputEvent {
     /**
@@ -303,6 +307,7 @@ class ElementTouchEvent extends ElementInputEvent {
  * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
@@ -331,6 +336,8 @@ class ElementSelectEvent extends ElementInputEvent {
 /**
  * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
  * ElementComponent this fires the appropriate events on the ElementComponent.
+ *
+ * @category User Interface
  */
 class ElementInput {
     /**
@@ -837,21 +844,29 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
+        const pressed = this._selectedPressedElements[inputSource.id];
+        if (eventType === 'selectmove' && pressed) {
+            this._fireEvent('selectmove', new ElementSelectEvent(event, pressed, camera, inputSource));
+        }
+
         if (eventType === 'selectstart') {
             this._selectedPressedElements[inputSource.id] = hoveredNow;
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
-        const pressed = this._selectedPressedElements[inputSource.id];
         if (!inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (hoveredBefore) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
         }
 
         if (eventType === 'selectend' && inputSource.elementInput) {
             delete this._selectedPressedElements[inputSource.id];
 
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (pressed) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
 
             if (pressed && pressed === hoveredBefore) {
                 this._fireEvent('click', new ElementSelectEvent(event, pressed, camera, inputSource));

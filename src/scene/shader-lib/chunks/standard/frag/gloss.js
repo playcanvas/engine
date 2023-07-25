@@ -1,13 +1,13 @@
 export default /* glsl */`
 #ifdef MAPFLOAT
-uniform float material_shininess;
+uniform float material_gloss;
 #endif
 
 void getGlossiness() {
     dGlossiness = 1.0;
 
     #ifdef MAPFLOAT
-    dGlossiness *= material_shininess;
+    dGlossiness *= material_gloss;
     #endif
 
     #ifdef MAPTEXTURE
@@ -16,6 +16,10 @@ void getGlossiness() {
 
     #ifdef MAPVERTEX
     dGlossiness *= saturate(vVertexColor.$VC);
+    #endif
+
+    #ifdef MAPINVERT
+    dGlossiness = 1.0 - dGlossiness;
     #endif
 
     dGlossiness += 0.0000001;

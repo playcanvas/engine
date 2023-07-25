@@ -18,6 +18,7 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * representation of real world geometry by underlying AR system.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHitTest extends EventHandler {
     /**
@@ -90,9 +91,10 @@ class XrHitTest extends EventHandler {
      *
      * @event XrHitTest#result
      * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
+     * @param {import('../../core/math/vec3.js').Vec3} position - Position of hit test.
+     * @param {import('../../core/math/quat.js').Quat} rotation - Rotation of hit test.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
+     * test source, then it will provide related input source.
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -205,7 +207,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      * @example
-     * var ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
+     * const ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
      *     offsetRay: ray,

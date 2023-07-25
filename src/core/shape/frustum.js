@@ -2,16 +2,19 @@
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
  * directly, but instead query {@link CameraComponent#frustum}.
+ *
+ * @category Math
  */
 class Frustum {
+    planes = [];
+
     /**
      * Create a new Frustum instance.
      *
      * @example
-     * var frustum = new pc.Frustum();
+     * const frustum = new pc.Frustum();
      */
     constructor() {
-        this.planes = [];
         for (let i = 0; i < 6; i++)
             this.planes[i] = [];
     }
@@ -23,11 +26,11 @@ class Frustum {
      * frustum.
      * @example
      * // Create a perspective projection matrix
-     * var projMat = pc.Mat4();
+     * const projMat = pc.Mat4();
      * projMat.setPerspective(45, 16 / 9, 1, 1000);
      *
      * // Create a frustum shape that is represented by the matrix
-     * var frustum = new pc.Frustum();
+     * const frustum = new pc.Frustum();
      * frustum.setFromMat4(projMat);
      */
     setFromMat4(matrix) {

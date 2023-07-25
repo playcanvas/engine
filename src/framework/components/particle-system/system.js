@@ -82,6 +82,7 @@ const _schema = [
  * Allows an Entity to render a particle system.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class ParticleSystemComponentSystem extends ComponentSystem {
     /**
@@ -213,7 +214,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
                 if (data.enabled && entity.enabled) {
                     const emitter = entity.particlesystem.emitter;
-                    if (!emitter.meshInstance.visible) continue;
+                    if (!emitter?.meshInstance.visible) continue;
 
                     // Bake ambient and directional lighting into one ambient cube
                     // TODO: only do if lighting changed

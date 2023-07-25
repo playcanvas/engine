@@ -1,7 +1,3 @@
-import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
-import { Debug } from '../core/debug.js';
-import { Tracing } from '../core/tracing.js';
-
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
@@ -48,8 +44,12 @@ class FrameGraph {
                 if (prevPass) {
 
                     // if we use the RT without clearing, make sure the previous pass stores data
-                    if (!renderPass.colorOps.clear) {
-                        prevPass.colorOps.store = true;
+                    const count = renderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        const colorOps = renderPass.colorArrayOps[j];
+                        if (!colorOps.clear) {
+                            prevPass.colorArrayOps[j].store = true;
+                        }
                     }
                     if (!renderPass.depthStencilOps.clearDepth) {
                         prevPass.depthStencilOps.storeDepth = true;
@@ -81,7 +81,10 @@ class FrameGraph {
 
                 // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
-                    lastCubeRenderPass.colorOps.mipmaps = false;
+                    const count = lastCubeRenderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        lastCubeRenderPass.colorArrayOps[j].mipmaps = false;
+                    }
                 }
 
                 lastCubeTexture = renderTarget.colorBuffer;
@@ -111,11 +114,9 @@ class FrameGraph {
         });
 
         renderTargetMap.clear();
-
-        this.log();
     }
 
-    render() {
+    render(device) {
 
         this.compile();
 
@@ -123,52 +124,6 @@ class FrameGraph {
         for (let i = 0; i < renderPasses.length; i++) {
             renderPasses[i].render();
         }
-    }
-
-    log() {
-        // #if _DEBUG
-        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
-
-            this.renderPasses.forEach((renderPass, index) => {
-
-                const hasColor = renderPass.renderTarget?.colorBuffer;
-                const hasDepth = renderPass.renderTarget?.depth;
-                const hasStencil = renderPass.renderTarget?.stencil;
-                const rt = renderPass.renderTarget === undefined ? '' : ` RT: ${(renderPass.renderTarget ? renderPass.renderTarget.name : 'NULL')} ` +
-                    `${hasColor ? '[Color]' : ''}` +
-                    `${hasDepth ? '[Depth]' : ''}` +
-                    `${hasStencil ? '[Stencil]' : ''}` +
-                    `${(renderPass.samples > 0 ? ' samples: ' + renderPass.samples : '')}`;
-
-                Debug.trace(TRACEID_RENDER_PASS,
-                            `${index.toString().padEnd(2, ' ')}: ${renderPass.name.padEnd(20, ' ')}` +
-                            rt.padEnd(30));
-
-                if (renderPass.colorOps && hasColor) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
-                                `${renderPass.colorOps.clear ? 'clear' : 'load'}->` +
-                                `${renderPass.colorOps.store ? 'store' : 'discard'} ` +
-                                `${renderPass.colorOps.resolve ? 'resolve ' : ''}` +
-                                `${renderPass.colorOps.mipmaps ? 'mipmaps ' : ''}`);
-                }
-
-                if (renderPass.depthStencilOps) {
-
-                    if (hasDepth) {
-                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
-                                    `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                    `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
-                    }
-
-                    if (hasStencil) {
-                        Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
-                                    `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                    `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
-                    }
-                }
-            });
-        }
-        // #endif
     }
 }
 

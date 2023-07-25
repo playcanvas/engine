@@ -14,7 +14,7 @@ const _schema = ['enabled'];
  * Manages creation of {@link SoundComponent}s.
  *
  * @augments ComponentSystem
- * @ignore
+ * @category Sound
  */
 class SoundComponentSystem extends ComponentSystem {
     /**

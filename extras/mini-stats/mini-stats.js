@@ -259,8 +259,8 @@ class MiniStats {
             graphs.push(graph);
         }
 
-        if (options.gpu.enabled && device.extDisjointTimerQuery) {
-            const timer = new GpuTimer(app);
+        if (options.gpu.enabled) {
+            const timer = new GpuTimer(device);
             const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
             graphs.push(graph);
         }

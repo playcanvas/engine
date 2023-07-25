@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_55,
+    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -16,7 +16,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from '../../scene/graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
 import { MeshInstance } from '../../scene/mesh-instance.js';
@@ -44,6 +44,8 @@ import { BakeLightAmbient } from './bake-light-ambient.js';
 import { BakeMeshNode } from './bake-mesh-node.js';
 import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -54,6 +56,8 @@ const tempVec = new Vec3();
 
 /**
  * The lightmapper is used to bake scene lights into textures.
+ *
+ * @category Graphics
  */
 class Lightmapper {
     /**
@@ -220,7 +224,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_55;
+        material.chunks.APIVersion = CHUNKAPI_1_65;
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
@@ -507,6 +511,11 @@ class Lightmapper {
     bake(nodes, mode = BAKE_COLORDIR) {
 
         const device = this.device;
+        if (device.isWebGPU) {
+            Debug.warnOnce('Lightmapper is not supported on WebGPU, skipping.');
+            return;
+        }
+
         const startTime = now();
 
         // update skybox
@@ -554,6 +563,8 @@ class Lightmapper {
 
         // bake nodes
         if (bakeNodes.length > 0) {
+
+            this.renderer.shadowRenderer.frameUpdate();
 
             // disable lightmapping
             const passCount = mode === BAKE_COLORDIR ? 2 : 1;
@@ -841,23 +852,26 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight) {
+    renderShadowMap(shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
+        const isClustered = this.scene.clusteredLightingEnabled;
+
         if (!shadowMapRendered && light.castShadows) {
 
             // allocate shadow map from the cache to avoid per light allocation
-            if (!light.shadowMap && !this.scene.clusteredLightingEnabled) {
+            if (!light.shadowMap && !isClustered) {
                 light.shadowMap = this.shadowMapCache.get(this.device, light);
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
-                this.renderer._shadowRendererDirectional.render(light, this.camera);
             } else {
                 this.renderer._shadowRendererLocal.cull(light, casters);
-                this.renderer.renderShadowsLocal(lightArray[light.type], this.camera);
             }
+
+            const insideRenderPass = false;
+            this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
         }
 
         return true;
@@ -873,6 +887,10 @@ class Lightmapper {
         if (filterLightmap) {
             this.lightmapFilters.prepareDenoise(this.scene.lightmapFilterRange, this.scene.lightmapFilterSmoothness);
         }
+
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
+        device.setStencilState(null, null);
 
         for (let node = 0; node < bakeNodes.length; node++) {
             const bakeNode = bakeNodes[node];
@@ -1014,7 +1032,7 @@ class Lightmapper {
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, lightArray, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
                         const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
@@ -1078,7 +1096,7 @@ class Lightmapper {
 
                         // prepare clustered lighting
                         if (clusteredLightingEnabled) {
-                            this.worldClusters.activate(this.renderer.lightTextureAtlas);
+                            this.worldClusters.activate();
                         }
 
                         this.renderer._forwardTime = 0;

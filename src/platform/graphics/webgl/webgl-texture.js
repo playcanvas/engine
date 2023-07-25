@@ -59,6 +59,8 @@ class WebglTexture {
 
     _glPixelType;
 
+    dirtyParameterFlags = 0;
+
     destroy(device) {
         if (this._glTexture) {
 
@@ -80,6 +82,10 @@ class WebglTexture {
 
     loseContext() {
         this._glTexture = null;
+    }
+
+    propertyChanged(flag) {
+        this.dirtyParameterFlags |= flag;
     }
 
     initialize(device, texture) {
@@ -287,10 +293,10 @@ class WebglTexture {
         let mipObject;
         let resMult;
 
-        const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+        const requiredMipLevels = texture.requiredMipLevels;
 
+        // Upload all existing mip levels. Initialize 0 mip anyway.
         while (texture._levels[mipLevel] || mipLevel === 0) {
-            // Upload all existing mip levels. Initialize 0 mip anyway.
 
             if (!texture._needsUpload && mipLevel === 0) {
                 mipLevel++;

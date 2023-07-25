@@ -24,6 +24,7 @@ function capTime(time, duration) {
  * A SoundInstance plays a {@link Sound}.
  *
  * @augments EventHandler
+ * @category Sound
  */
 class SoundInstance extends EventHandler {
     /**
@@ -712,6 +713,9 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
+        // start at point where sound was paused
+        let offset = this.currentTime;
+
         // set state back to playing
         this._state = STATE_PLAYING;
 
@@ -723,9 +727,6 @@ class SoundInstance extends EventHandler {
         if (!this.source) {
             this._createSource();
         }
-
-        // start at point where sound was paused
-        let offset = this.currentTime;
 
         // if the user set the 'currentTime' property while the sound
         // was paused then use that as the offset instead
@@ -815,10 +816,10 @@ class SoundInstance extends EventHandler {
      * @param {AudioNode} [lastNode] - The last node that will be connected to the destination of the AudioContext.
      * If unspecified then the firstNode will be connected to the destination instead.
      * @example
-     * var context = app.systems.sound.context;
-     * var analyzer = context.createAnalyzer();
-     * var distortion = context.createWaveShaper();
-     * var filter = context.createBiquadFilter();
+     * const context = app.systems.sound.context;
+     * const analyzer = context.createAnalyzer();
+     * const distortion = context.createWaveShaper();
+     * const filter = context.createBiquadFilter();
      * analyzer.connect(distortion);
      * distortion.connect(filter);
      * instance.setExternalNodes(analyzer, filter);

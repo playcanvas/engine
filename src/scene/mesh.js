@@ -103,8 +103,8 @@ class GeometryVertexStream {
  * form a single triangle.
  *
  * ```javascript
- * var mesh = new pc.Mesh(device);
- * var positions = [
+ * const mesh = new pc.Mesh(device);
+ * const positions = [
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
  *     1, 1, 0  // pos 2
@@ -117,20 +117,20 @@ class GeometryVertexStream {
  * channel 0, and an index buffer to form two triangles. Float32Array is used for positions and uvs.
  *
  * ```javascript
- * var mesh = new pc.Mesh(device);
- * var positions = new Float32Array([
+ * const mesh = new pc.Mesh(device);
+ * const positions = new Float32Array([
  *     0, 0, 0, // pos 0
  *     1, 0, 0, // pos 1
  *     1, 1, 0, // pos 2
  *     0, 1, 0  // pos 3
  * ]);
- * var uvs = new Float32Array([
+ * const uvs = new Float32Array([
  *     0, 0, // uv 0
  *     1, 0, // uv 1
  *     1, 1, // uv 2
  *     0, 1  // uv 3
  * ]);
- * var indices = [
+ * const indices = [
  *     0, 1, 2, // triangle 0
  *     0, 2, 3  // triangle 1
  * ];
@@ -158,6 +158,8 @@ class GeometryVertexStream {
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
+ *
+ * @category Graphics
  */
 class Mesh extends RefCountedObject {
     /**
@@ -933,6 +935,8 @@ class Mesh extends RefCountedObject {
         // release existing IB
         this._destroyIndexBuffer(RENDERSTYLE_WIREFRAME);
 
+        const numVertices = this.vertexBuffer.numVertices;
+
         const lines = [];
         let format;
         if (this.indexBuffer.length > 0 && this.indexBuffer[0]) {
@@ -943,22 +947,22 @@ class Mesh extends RefCountedObject {
             const indexBuffer = this.indexBuffer[RENDERSTYLE_SOLID];
             const srcIndices = new typedArrayIndexFormats[indexBuffer.format](indexBuffer.storage);
 
-            const uniqueLineIndices = {};
+            const seen = new Set();
 
             for (let j = base; j < base + count; j += 3) {
                 for (let k = 0; k < 3; k++) {
                     const i1 = srcIndices[j + offsets[k][0]];
                     const i2 = srcIndices[j + offsets[k][1]];
-                    const line = (i1 > i2) ? ((i2 << 16) | i1) : ((i1 << 16) | i2);
-                    if (uniqueLineIndices[line] === undefined) {
-                        uniqueLineIndices[line] = 0;
+                    const hash = (i1 > i2) ? ((i2 * numVertices) + i1) : ((i1 * numVertices) + i2);
+                    if (!seen.has(hash)) {
+                        seen.add(hash);
                         lines.push(i1, i2);
                     }
                 }
             }
             format = indexBuffer.format;
         } else {
-            for (let i = 0; i < this.vertexBuffer.numVertices; i += 3) {
+            for (let i = 0; i < numVertices; i += 3) {
                 lines.push(i, i + 1, i + 1, i + 2, i + 2, i);
             }
             format = lines.length > 65535 ? INDEXFORMAT_UINT32 : INDEXFORMAT_UINT16;

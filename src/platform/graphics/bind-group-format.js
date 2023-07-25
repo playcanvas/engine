@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
+    SAMPLETYPE_FLOAT
 } from './constants.js';
 
 let id = 0;
@@ -56,10 +56,12 @@ class BindGroupFormat {
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {BindBufferFormat[]} bufferFormats -
-     * @param {BindTextureFormat[]} textureFormats -
+     * @param {BindBufferFormat[]} [bufferFormats] - An array of bind buffer formats (uniform
+     * buffers). Defaults to an empty array.
+     * @param {BindTextureFormat[]} [textureFormats] - An array of bind texture formats (textures).
+     * Defaults to an empty array.
      */
-    constructor(graphicsDevice, bufferFormats, textureFormats) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = []) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 
@@ -123,9 +125,6 @@ class BindGroupFormat {
 
             const textureType = textureDimensionInfo[format.textureDimension];
             Debug.assert(textureType, "Unsupported texture type");
-
-            // TODO: suport depth samplers
-            Debug.assert(format.sampleType !== SAMPLETYPE_DEPTH, format);
 
             code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name};\n` +
                     `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;

@@ -15,6 +15,7 @@ import { LayerComposition } from '../../scene/composition/layer-composition.js';
 import { getApplication } from '../globals.js';
 import { Entity } from '../entity.js';
 import { Debug } from '../../core/debug.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const tempSet = new Set();
 
@@ -30,8 +31,13 @@ const clearDepthOptions = {
  * @property {number} height Height of the pick buffer in pixels (read-only).
  * @property {RenderTarget} renderTarget The render target used by the picker internally
  * (read-only).
+ *
+ * @category Graphics
  */
 class Picker {
+    // internal render target
+    renderTarget = null;
+
     /**
      * Create a new Picker instance.
      *
@@ -62,9 +68,6 @@ class Picker {
         this.layerComp = null;
         this.initLayerComposition();
 
-        // internal render target
-        this._renderTarget = null;
-
         // clear command user to simulate layer clearing, required due to storing meshes from multiple layers on a singe layer
         const device = this.device;
         this.clearDepthCommand = new Command(0, 0, function () {
@@ -88,10 +91,10 @@ class Picker {
      * that are in the selection.
      * @example
      * // Get the selection at the point (10,20)
-     * var selection = picker.getSelection(10, 20);
+     * const selection = picker.getSelection(10, 20);
      * @example
      * // Get all models in rectangle with corners at (10,20) and (20,40)
-     * var selection = picker.getSelection(10, 20, 10, 20);
+     * const selection = picker.getSelection(10, 20, 10, 20);
      */
     getSelection(x, y, width, height) {
         const device = this.device;
@@ -179,10 +182,10 @@ class Picker {
         // unset it from the camera
         this.cameraEntity.camera.renderTarget = null;
 
-        if (this._renderTarget) {
-            this._renderTarget.destroyTextureBuffers();
-            this._renderTarget.destroy();
-            this._renderTarget = null;
+        if (this.renderTarget) {
+            this.renderTarget.destroyTextureBuffers();
+            this.renderTarget.destroy();
+            this.renderTarget = null;
         }
     }
 
@@ -208,7 +211,7 @@ class Picker {
                 self.pickColor[1] = ((index >> 8) & 0xff) / 255;
                 self.pickColor[2] = (index & 0xff) / 255;
                 pickColorId.setValue(self.pickColor);
-                device.setBlending(false);
+                device.setBlendState(BlendState.NOBLEND);
 
                 // keep the index -> meshInstance index mapping
                 self.mapping[index] = meshInstance;

@@ -118,8 +118,10 @@ jobs:
         node-version: 16.x
     - name: Install dependencies
       run: npm ci
-    - name: Build PlayCanvas (ES6-only)
-      run: npm run build:es6
+    - name: Build PlayCanvas (ES5-only)
+      run: npm run build:es5
+    - name: Build PlayCanvas Extras
+      run: npm run build:extras
     - name: Build TypeScript declarations
       run: npm run build:types
     - name: Build Examples Browser

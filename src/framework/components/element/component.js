@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { TRACE_ID_ELEMENT } from '../../../core/constants.js';
 
 import { Mat4 } from '../../../core/math/mat4.js';
 import { Vec2 } from '../../../core/math/vec2.js';
@@ -9,7 +10,7 @@ import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from 
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
-import { StencilParameters } from '../../../scene/stencil-parameters.js';
+import { StencilParameters } from '../../../platform/graphics/stencil-parameters.js';
 
 import { Entity } from '../../entity.js';
 
@@ -18,10 +19,6 @@ import { Component } from '../component.js';
 import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
-
-// #if _DEBUG
-const _debugLogging = false;
-// #endif
 
 const position = new Vec3();
 const invParentWtm = new Mat4();
@@ -127,15 +124,15 @@ const matD = new Mat4();
  * override certain text styling properties on a per-character basis, the text can optionally
  * include markup tags contained within square brackets. Supported tags are:
  *
- * - `color` - override the element's `color` property. Examples:
- *   - `[color="#ff0000"]red text[/color]`
- *   - `[color="#00ff00"]green text[/color]`
- *   - `[color="#0000ff"]blue text[/color]`
- * - `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
- *   - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
- * - `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
- *   - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
- *   - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+ * 1. `color` - override the element's `color` property. Examples:
+ * - `[color="#ff0000"]red text[/color]`
+ * - `[color="#00ff00"]green text[/color]`
+ * - `[color="#0000ff"]blue text[/color]`
+ * 2. `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
+ * - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+ * 3. `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
+ * - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+ * - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
  *
  * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
  * true.
@@ -173,6 +170,7 @@ const matD = new Mat4();
  * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene,
  * but instead limit child elements to only be rendered where this element is rendered.
  * @augments Component
+ * @category User Interface
  */
 class ElementComponent extends Component {
     /**
@@ -275,7 +273,7 @@ class ElementComponent extends Component {
      * useInput is true.
      *
      * @event ElementComponent#mousedown
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
@@ -283,35 +281,35 @@ class ElementComponent extends Component {
      * useInput is true.
      *
      * @event ElementComponent#mouseup
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor enters the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mouseenter
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor leaves the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mouseleave
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mousemove
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
      * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#mousewheel
-     * @param {ElementMouseEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
      */
 
     /**
@@ -319,21 +317,21 @@ class ElementComponent extends Component {
      * ends on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#click
-     * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch starts on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchstart
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch ends on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchend
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
@@ -341,36 +339,60 @@ class ElementComponent extends Component {
      * is true.
      *
      * @event ElementComponent#touchmove
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
     /**
      * Fired when a touch is canceled on the component. Only fired when useInput is true.
      *
      * @event ElementComponent#touchcancel
-     * @param {ElementTouchEvent} event - The event.
+     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absLeft() {
         return this._localAnchor.x + this._margin.x;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absRight() {
         return this._localAnchor.z - this._margin.z;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absTop() {
         return this._localAnchor.w - this._margin.w;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absBottom() {
         return this._localAnchor.y + this._margin.y;
     }
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     get _hasSplitAnchorsX() {
         return Math.abs(this._anchor.x - this._anchor.z) > 0.001;
     }
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     get _hasSplitAnchorsY() {
         return Math.abs(this._anchor.y - this._anchor.w) > 0.001;
     }
@@ -1207,9 +1229,7 @@ class ElementComponent extends Component {
                     this.system._prerender = [];
                     this.system.app.once('prerender', this._onPrerender, this);
 
-                    // #if _DEBUG
-                    if (_debugLogging) console.log('register prerender');
-                    // #endif
+                    Debug.trace(TRACE_ID_ELEMENT, 'register prerender');
                 }
                 const i = this.system._prerender.indexOf(this.entity);
                 if (i >= 0) {
@@ -1219,9 +1239,7 @@ class ElementComponent extends Component {
                 if (j < 0) {
                     this.system._prerender.push(current);
                 }
-                // #if _DEBUG
-                if (_debugLogging) console.log('set prerender root to: ' + current.name);
-                // #endif
+                Debug.trace(TRACE_ID_ELEMENT, 'set prerender root to: ' + current.name);
             }
 
             current = next;
@@ -1231,9 +1249,7 @@ class ElementComponent extends Component {
     _onPrerender() {
         for (let i = 0; i < this.system._prerender.length; i++) {
             const mask = this.system._prerender[i];
-            // #if _DEBUG
-            if (_debugLogging) console.log('prerender from: ' + mask.name);
-            // #endif
+            Debug.trace(TRACE_ID_ELEMENT, 'prerender from: ' + mask.name);
 
             // prevent call if element has been removed since being added
             if (mask.element) {
@@ -1300,30 +1316,21 @@ class ElementComponent extends Component {
 
         if (mask) {
             const ref = mask.element._image._maskRef;
-            // #if _DEBUG
-            if (_debugLogging) console.log('masking: ' + this.entity.name + ' with ' + ref);
-            // #endif
-
-            const sp = new StencilParameters({
-                ref: ref,
-                func: FUNC_EQUAL
-            });
+            Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
 
             // if this is image or text, set the stencil parameters
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(sp);
-            }
+            renderableElement?._setStencil(new StencilParameters({
+                ref: ref,
+                func: FUNC_EQUAL
+            }));
 
             this._maskedBy = mask;
         } else {
-            // #if _DEBUG
-            if (_debugLogging) console.log('no masking on: ' + this.entity.name);
-            // #endif
+            Debug.trace(TRACE_ID_ELEMENT, 'no masking on: ' + this.entity.name);
 
             // remove stencil params if this is image or text
-            if (renderableElement && renderableElement._setStencil) {
-                renderableElement._setStencil(null);
-            }
+            renderableElement?._setStencil(null);
+
             this._maskedBy = null;
         }
     }
@@ -1348,12 +1355,8 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                // #if _DEBUG
-                if (_debugLogging) {
-                    console.log('masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
-                    console.log('depth++ to: ', depth);
-                }
-                // #endif
+                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
             }
@@ -1361,9 +1364,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // if mask counter was increased, decrement it as we come back up the hierarchy
@@ -1385,12 +1386,8 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                // #if _DEBUG
-                if (_debugLogging) {
-                    console.log('masking from: ' + this.entity.name + ' with ' + sp.ref);
-                    console.log('depth++ to: ', depth);
-                }
-                // #endif
+                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
+                Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
             }
@@ -1398,9 +1395,7 @@ class ElementComponent extends Component {
             // recurse through all children
             const children = this.entity.children;
             for (let i = 0, l = children.length; i < l; i++) {
-                if (children[i].element) {
-                    children[i].element._updateMask(currentMask, depth);
-                }
+                children[i].element?._updateMask(currentMask, depth);
             }
 
             // decrement mask counter as we come back up the hierarchy

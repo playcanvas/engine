@@ -1,14 +1,14 @@
 import { Debug } from '../../core/debug.js';
 
 import {
-    DEVICETYPE_WEBGPU,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_RGBA8
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import {
@@ -56,7 +56,7 @@ class SceneGrab {
 
         // create a depth layer, which is a default depth layer, but also a template used
         // to patch application created depth layers to behave as one
-        if (this.device.webgl2 || this.device.deviceType === DEVICETYPE_WEBGPU) {
+        if (this.device.webgl2 || this.device.isWebGPU) {
             this.initMainPath();
         } else {
             this.initFallbackPath();
@@ -74,7 +74,7 @@ class SceneGrab {
     static requiresRenderPass(device, camera) {
 
         // just copy out the textures, no render pass needed
-        if (device.webgl2 || device.deviceType === DEVICETYPE_WEBGPU) {
+        if (device.webgl2 || device.isWebGPU) {
             return false;
         }
 
@@ -145,6 +145,7 @@ class SceneGrab {
                 renderTarget._depthBuffer = buffer;
             } else {
                 renderTarget._colorBuffer = buffer;
+                renderTarget._colorBuffers = [buffer];
             }
         } else {
 
@@ -209,9 +210,12 @@ class SceneGrab {
 
                     const colorBuffer = this.colorRenderTarget.colorBuffer;
 
-                    if (device.deviceType === DEVICETYPE_WEBGPU) {
+                    if (device.isWebGPU) {
 
                         device.copyRenderTarget(camera.renderTarget, this.colorRenderTarget, true, false);
+
+                        // generate mipmaps
+                        device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
 
                     } else {
 
@@ -231,10 +235,23 @@ class SceneGrab {
 
                 if (camera.renderSceneDepthMap) {
 
+                    let useDepthBuffer = true;
+                    let format = PIXELFORMAT_DEPTHSTENCIL;
+                    if (device.isWebGPU) {
+                        const numSamples = camera.renderTarget?.samples ?? device.samples;
+
+                        // when depth buffer is multi-sampled, instead of copying it out, we use custom shader to resolve it
+                        // to a R32F texture, used as a color attachment of the render target
+                        if (numSamples > 1) {
+                            format = PIXELFORMAT_R32F;
+                            useDepthBuffer = false;
+                        }
+                    }
+
                     // reallocate RT if needed
                     if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_DEPTHSTENCIL, true, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
                     }
 
                     // copy depth
@@ -242,8 +259,8 @@ class SceneGrab {
                     device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
                     DebugGraphics.popGpuMarker(device);
 
-                    // assign unifrom
-                    self.setupUniform(device, true, this.depthRenderTarget.depthBuffer);
+                    // assign uniform
+                    self.setupUniform(device, true, useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer);
                 }
             },
 
@@ -300,9 +317,13 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget.depthBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
-                        this.depthRenderTarget.destroyTextureBuffers();
+                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                        this.depthRenderTarget?.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
+
+                        // assign it so the render actions knows to render to it
+                        // TODO: avoid this as this API is deprecated
+                        this.renderTarget = this.depthRenderTarget;
                     }
 
                     // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
@@ -387,7 +408,8 @@ class SceneGrab {
             },
 
             onDrawCall: function () {
-                device.setColorWrite(true, true, true, true);
+                // writing depth to color render target, force no blending and writing to all channels
+                device.setBlendState(BlendState.NOBLEND);
             },
 
             onPostRenderOpaque: function (cameraPass) {

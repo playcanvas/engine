@@ -304,7 +304,7 @@ class BundleRegistry {
      * error occurs. The callback expects the first argument to be the error message (if any) and
      * the second argument is the file blob URL.
      * @example
-     * var url = asset.getFileUrl().split('?')[0]; // get normalized asset URL
+     * const url = asset.getFileUrl().split('?')[0]; // get normalized asset URL
      * this.app.bundles.loadFile(url, function (err, blobUrl) {
      *     // do something with the blob URL
      * });
