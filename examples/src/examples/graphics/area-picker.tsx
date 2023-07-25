@@ -4,14 +4,20 @@ class AreaPickerExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Area Picker';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -80,7 +86,7 @@ class AreaPickerExample {
                     // create material of random color
                     const material = new pc.StandardMaterial();
                     material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
-                    material.shininess = 60;
+                    material.gloss = 0.6;
                     material.metalness = 0.4;
                     material.useMetalness = true;
                     material.update();

@@ -57,6 +57,8 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
+export { BlendState } from './platform/graphics/blend-state.js';
+export { DepthState } from './platform/graphics/depth-state.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -64,6 +66,7 @@ export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
 export { Texture } from './platform/graphics/texture.js';
+export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
@@ -123,12 +126,13 @@ export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
+export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
 export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
-export { StencilParameters } from './scene/stencil-parameters.js';
+export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
@@ -264,7 +268,8 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 export { Picker } from './framework/graphics/picker.js';
 
 // FRAMEWORK / HANDLERS
-export { basisInitialize, basisTranscode } from './framework/handlers/basis.js';
+export { basisInitialize } from './framework/handlers/basis.js';
+export { dracoInitialize } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';

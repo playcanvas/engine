@@ -29,20 +29,21 @@ class AnimController {
      * @param {object[]} states - The list of states used to form the controller state graph.
      * @param {object[]} transitions - The list of transitions used to form the controller state
      * graph.
-     * @param {object[]} parameters - The anim components parameters.
      * @param {boolean} activate - Determines whether the anim controller should automatically play
      * once all {@link AnimNodes} are assigned animations.
      * @param {import('../../../core/event-handler.js').EventHandler} eventHandler - The event
      * handler which should be notified with anim events.
-     * @param {Set} consumedTriggers - Used to set triggers back to their default state after they
+     * @param {Function} findParameter - Retrieves a parameter which is used to control the transition between states.
+     * @param {Function} consumeTrigger - Used to set triggers back to their default state after they
      * have been consumed by a transition.
      */
-    constructor(animEvaluator, states, transitions, parameters, activate, eventHandler, consumedTriggers) {
+    constructor(animEvaluator, states, transitions, activate, eventHandler, findParameter, consumeTrigger) {
         this._animEvaluator = animEvaluator;
         this._states = {};
         this._stateNames = [];
         this._eventHandler = eventHandler;
-        this._consumedTriggers = consumedTriggers;
+        this._findParameter = findParameter;
+        this._consumeTrigger = consumeTrigger;
         for (let i = 0; i < states.length; i++) {
             this._states[states[i].name] = new AnimState(
                 this,
@@ -60,9 +61,10 @@ class AnimController {
         });
         this._findTransitionsFromStateCache = {};
         this._findTransitionsBetweenStatesCache = {};
-        this._parameters = parameters;
         this._previousStateName = null;
         this._activeStateName = ANIM_STATE_START;
+        this._activeStateDuration = 0.0;
+        this._activeStateDurationDirty = true;
         this._playing = false;
         this._activate = activate;
 
@@ -131,17 +133,18 @@ class AnimController {
     }
 
     get activeStateDuration() {
-        if (this.activeStateName === ANIM_STATE_START || this.activeStateName === ANIM_STATE_END)
-            return 0.0;
-
-        let maxDuration = 0.0;
-        for (let i = 0; i < this.activeStateAnimations.length; i++) {
-            const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
-            if (activeClip) {
-                maxDuration = Math.max(maxDuration, activeClip.track.duration);
+        if (this._activeStateDurationDirty) {
+            let maxDuration = 0.0;
+            for (let i = 0; i < this.activeStateAnimations.length; i++) {
+                const activeClip = this._animEvaluator.findClip(this.activeStateAnimations[i].name);
+                if (activeClip) {
+                    maxDuration = Math.max(maxDuration, activeClip.track.duration);
+                }
             }
+            this._activeStateDuration = maxDuration;
+            this._activeStateDurationDirty = false;
         }
-        return maxDuration;
+        return this._activeStateDuration;
     }
 
     set activeStateCurrentTime(time) {
@@ -227,7 +230,7 @@ class AnimController {
         const conditions = transition.conditions;
         for (let i = 0; i < conditions.length; i++) {
             const condition = conditions[i];
-            const parameter = this.findParameter(condition.parameterName);
+            const parameter = this._findParameter(condition.parameterName);
             switch (condition.predicate) {
                 case ANIM_GREATER_THAN:
                     if (!(parameter.value > condition.value)) return false;
@@ -306,8 +309,13 @@ class AnimController {
                     progressBefore -= Math.floor(progressBefore);
                     progress -= Math.floor(progress);
                 }
-                // return false if exit time isn't within the frames delta time
-                if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
+                // if the delta time is 0 and the progress matches the exit time, the exitTime condition has been met
+                if (progress === progressBefore) {
+                    if (progress !== transition.exitTime) {
+                        return null;
+                    }
+                // otherwise if the delta time is greater than 0, return false if exit time isn't within the frames delta time
+                } else if (!(transition.exitTime > progressBefore && transition.exitTime <= progress)) {
                     return null;
                 }
             }
@@ -335,13 +343,15 @@ class AnimController {
         // Otherwise the previousState is cleared.
         this.previousState = transition.from ? this.activeStateName : null;
         this.activeState = transition.to;
+        // when transitioning to a new state, we need to recalculate the duration of the active state based on its animations
+        this._activeStateDurationDirty = true;
 
         // turn off any triggers which were required to activate this transition
         for (let i = 0; i < transition.conditions.length; i++) {
             const condition = transition.conditions[i];
-            const parameter = this.findParameter(condition.parameterName);
+            const parameter = this._findParameter(condition.parameterName);
             if (parameter.type === ANIM_PARAMETER_TRIGGER) {
-                this._consumedTriggers.add(condition.parameterName);
+                this._consumeTrigger(condition.parameterName);
             }
         }
 
@@ -450,11 +460,12 @@ class AnimController {
         const path = pathString.split('.');
         let state = this._findState(path[0]);
         if (!state) {
-            state = new AnimState(this, path[0], 1.0);
+            state = new AnimState(this, path[0], speed);
             this._states[path[0]] = state;
             this._stateNames.push(path[0]);
         }
         state.addAnimation(path, animTrack);
+        this._animEvaluator.updateClipTrack(state.name, animTrack);
         if (speed !== undefined) {
             state.speed = speed;
         }
@@ -465,6 +476,9 @@ class AnimController {
         if (!this._playing && this._activate && this.playable) {
             this.play();
         }
+
+        // when a new animation is added, the active state duration needs to be recalculated
+        this._activeStateDurationDirty = true;
     }
 
     removeNodeAnimations(nodeName) {
@@ -515,8 +529,17 @@ class AnimController {
         let state;
         let animation;
         let clip;
-        this._timeInStateBefore = this._timeInState;
-        this._timeInState += dt * this.activeState.speed;
+        // update time when looping or when the active state is not at the end of its duration
+        if (this.activeState.loop || this._timeInState < this.activeStateDuration) {
+            this._timeInStateBefore = this._timeInState;
+            this._timeInState += dt * this.activeState.speed;
+            // if the active state is not looping and the time in state is greater than the duration, set the time in state to the state duration
+            // and update the delta time accordingly
+            if (!this.activeState.loop && this._timeInState > this.activeStateDuration) {
+                this._timeInState = this.activeStateDuration;
+                dt = this.activeStateDuration - this._timeInStateBefore;
+            }
+        }
 
         // transition between states if a transition is available from the active state
         const transition = this._findTransition(this._activeStateName);
@@ -579,12 +602,12 @@ class AnimController {
                 }
             }
         }
-        this._animEvaluator.update(dt);
+        this._animEvaluator.update(dt, this.activeState.hasAnimations);
     }
 
-    findParameter(name) {
-        return this._parameters[name];
-    }
+    findParameter = (name) => {
+        return this._findParameter(name);
+    };
 }
 
 export { AnimController };

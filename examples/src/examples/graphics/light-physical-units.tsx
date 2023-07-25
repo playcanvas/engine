@@ -6,6 +6,7 @@ import { Observer } from '@playcanvas/observer';
 class LightPhysicalUnitsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Light Physical Units';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -54,11 +55,11 @@ class LightPhysicalUnitsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             lights: new pc.Asset('lights', 'container', { url: '/static/assets/models/Lights.glb' }),
             sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
             color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
@@ -67,7 +68,13 @@ class LightPhysicalUnitsExample {
             luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -149,9 +156,9 @@ class LightPhysicalUnitsExample {
                 const material = new pc.StandardMaterial();
                 material.diffuseMap = assets.color.resource;
                 material.normalMap = assets.normal.resource;
+                material.gloss = 0.8;
                 material.glossMap = assets.gloss.resource;
                 material.metalness = 0.7;
-                material.shininess = 80;
                 material.useMetalness = true;
 
                 material.diffuseMapTiling.set(17, 17);

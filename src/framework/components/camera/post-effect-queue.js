@@ -70,8 +70,8 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * this.app.graphicsDevice.width);
-        const height = Math.floor(rect.w * this.app.graphicsDevice.height);
+        const width = Math.floor(rect.z * (this.camera.renderTarget?.width ?? this.app.graphicsDevice.width));
+        const height = Math.floor(rect.w * (this.camera.renderTarget?.height ?? this.app.graphicsDevice.height));
 
         const colorBuffer = new Texture(this.app.graphicsDevice, {
             name: name,
@@ -119,6 +119,7 @@ class PostEffectQueue {
         rt.destroyFrameBuffers();
         rt.destroyTextureBuffers();
         rt._colorBuffer = this._allocateColorBuffer(format, name);
+        rt._colorBuffers = [rt._colorBuffer];
     }
 
     _destroyOffscreenTarget(rt) {

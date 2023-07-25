@@ -733,7 +733,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was added.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was added.
      * @private
      */
     onLayerAdded(layer) {
@@ -743,7 +743,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was removed.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was removed.
      * @private
      */
     onLayerRemoved(layer) {

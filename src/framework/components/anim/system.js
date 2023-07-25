@@ -1,4 +1,5 @@
 import { createDelayedExecutionRunner } from '../../../core/delayed-execution-runner.js';
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
@@ -51,7 +52,17 @@ class AnimComponentSystem extends ComponentSystem {
             data.layers.forEach((layer, i) => {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
-                        component.layers[i].assignAnimation(node.name, node.animTrack);
+                        if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
+                            const animationAsset = this.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
+                            if (animationAsset && !animationAsset.loaded) {
+                                animationAsset.once('load', () => {
+                                    component.layers[i].assignAnimation(node.name, animationAsset.resource);
+                                });
+                            }
+                        } else {
+                            component.layers[i].assignAnimation(node.name, node.animTrack);
+                        }
                     });
                 });
             });

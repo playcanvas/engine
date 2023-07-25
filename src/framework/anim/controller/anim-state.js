@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { AnimTrack } from '../evaluator/anim-track.js';
 
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
@@ -27,7 +28,8 @@ class AnimState {
     /**
      * Create a new AnimState instance.
      *
-     * @param {AnimController} controller - The controller this AnimState is associated with.
+     * @param {import('./anim-controller.js').AnimController} controller - The controller this
+     * AnimState is associated with.
      * @param {string} name - The name of the state. Used to find this state when the controller
      * transitions between states and links animations.
      * @param {number} [speed] - The speed animations in the state should play at. Individual
@@ -41,7 +43,7 @@ class AnimState {
         this._name = name;
         this._speed = speed;
         this._loop = loop;
-        const findParameter = this._controller.findParameter.bind(this._controller);
+        this._hasAnimations = false;
         if (blendTree) {
             this._blendTree = this._createTree(
                 blendTree.type,
@@ -53,7 +55,7 @@ class AnimState {
                 blendTree.children,
                 blendTree.syncAnimations,
                 this._createTree,
-                findParameter
+                this._controller.findParameter
             );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);
@@ -96,6 +98,11 @@ class AnimState {
             node.animTrack = animTrack;
             this._animationList.push(node);
         }
+        this._updateHasAnimations();
+    }
+
+    _updateHasAnimations() {
+        this._hasAnimations = this._animationList.length > 0 && this._animationList.every(animation => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
     }
 
     get name() {
@@ -104,10 +111,15 @@ class AnimState {
 
     set animations(value) {
         this._animationList = value;
+        this._updateHasAnimations();
     }
 
     get animations() {
         return this._animationList;
+    }
+
+    get hasAnimations() {
+        return this._hasAnimations;
     }
 
     set speed(value) {

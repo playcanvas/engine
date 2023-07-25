@@ -313,7 +313,7 @@ class AnimComponentLayer {
      * animation to. Defaults to true.
      */
     assignAnimation(nodePath, animTrack, speed, loop) {
-        if (animTrack.constructor !== AnimTrack) {
+        if (!(animTrack instanceof AnimTrack)) {
             Debug.error('assignAnimation: animTrack supplied to function was not of type AnimTrack');
             return;
         }

@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
 
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU } from './constants.js';
@@ -14,10 +15,26 @@ import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
  * specified array does not contain [{@link DEVICETYPE_WEBGL2} or {@link DEVICETYPE_WEBGL1}], those
  * are internally added to its end in this order. Typically, you'd only specify
  * {@link DEVICETYPE_WEBGPU}, or leave it empty.
- * @param {string} [options.glslangUrl] - An url to glslang script, required if
+ * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
+ * anti-aliasing if possible. Defaults to true.
+ * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
+ * requested to have a depth buffer of at least 16 bits.
+ * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
+ * requested to have a stencil buffer of at least 8 bits.
+ * @param {string} [options.glslangUrl] - The URL to the glslang script. Required if the
  * {@link DEVICETYPE_WEBGPU} type is added to deviceTypes array. Not used for
- * {@link DEVICETYPE_WEBGL} device type creation.
+ * {@link DEVICETYPE_WEBGL1} or {@link DEVICETYPE_WEBGL2} device type creation.
  * @param {string} [options.twgslUrl] - An url to twgsl script, required if glslangUrl was specified.
+ * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
+ * compatible graphics adapter for an immersive XR device.
+ * @param {'default'|'high-performance'|'low-power'} [options.powerPreference='default'] - A
+ * hint indicating what configuration of GPU would be selected. Possible values are:
+ *
+ * - 'default': Let the user agent decide which GPU configuration is most suitable. This is the
+ * default value.
+ * - 'high-performance': Prioritizes rendering performance over power consumption.
+ * - 'low-power': Prioritizes power saving over rendering performance.
+ *
  * @returns {Promise} - Promise object representing the created graphics device.
  */
 function createGraphicsDevice(canvas, options = {}) {
@@ -30,6 +47,11 @@ function createGraphicsDevice(canvas, options = {}) {
     }
     if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
         deviceTypes.push(DEVICETYPE_WEBGL1);
+    }
+
+    // XR compatibility if not specified
+    if (platform.browser && !!navigator.xr) {
+        options.xrCompatible ??= true;
     }
 
     let device;
@@ -49,7 +71,7 @@ function createGraphicsDevice(canvas, options = {}) {
     }
 
     Debug.assert(device, 'Failed to allocate graphics device based on requested device types: ', options.deviceTypes);
-    return Promise.reject(new Error("Failed to allocated graphics device"));
+    return Promise.reject(new Error("Failed to allocate graphics device"));
 }
 
 export { createGraphicsDevice };

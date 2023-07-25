@@ -134,7 +134,8 @@ class SoundSlot extends EventHandler {
      * Fired when the asset assigned to the slot is loaded.
      *
      * @event SoundSlot#load
-     * @param {Sound} sound - The sound resource that was loaded.
+     * @param {import('../../../platform/sound/sound.js').Sound} sound - The sound resource that
+     * was loaded.
      */
 
     /**
@@ -280,10 +281,10 @@ class SoundSlot extends EventHandler {
      * the AudioContext. If unspecified then the firstNode will be connected to the destination
      * instead.
      * @example
-     * var context = app.systems.sound.context;
-     * var analyzer = context.createAnalyzer();
-     * var distortion = context.createWaveShaper();
-     * var filter = context.createBiquadFilter();
+     * const context = app.systems.sound.context;
+     * const analyzer = context.createAnalyzer();
+     * const distortion = context.createWaveShaper();
+     * const filter = context.createBiquadFilter();
      * analyzer.connect(distortion);
      * distortion.connect(filter);
      * slot.setExternalNodes(analyzer, filter);

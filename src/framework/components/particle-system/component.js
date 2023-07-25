@@ -760,6 +760,11 @@ class ParticleSystemComponent extends Component {
             }
         }
 
+        // WebGPU does not support particle systems, ignore them
+        if (this.system.app.graphicsDevice.disableParticleSystem) {
+            return;
+        }
+
         if (!this.emitter) {
             let mesh = data.mesh;
 

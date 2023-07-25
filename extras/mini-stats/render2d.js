@@ -14,7 +14,9 @@ import {
     shaderChunks,
     IndexBuffer,
     VertexBuffer,
-    VertexFormat
+    VertexFormat,
+    BlendState,
+    DepthState
 } from 'playcanvas';
 
 // render 2d textured quads
@@ -120,6 +122,9 @@ class Render2d {
 
         this.screenTextureSizeId = device.scope.resolve('screenAndTextureSize');
         this.screenTextureSize = new Float32Array(4);
+
+        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                         BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
     }
 
     quad(texture, x, y, w, h, u, v, uw, uh, enabled) {
@@ -171,26 +176,20 @@ class Render2d {
         buffer.setData(this.data.buffer);
 
         device.updateBegin();
-        device.setDepthTest(false);
-        device.setDepthWrite(false);
         device.setCullMode(CULLFACE_NONE);
-        device.setBlending(true);
-        device.setBlendFunctionSeparate(BLENDMODE_SRC_ALPHA,
-                                        BLENDMODE_ONE_MINUS_SRC_ALPHA,
-                                        BLENDMODE_ONE,
-                                        BLENDMODE_ONE);
-        device.setBlendEquationSeparate(BLENDEQUATION_ADD, BLENDEQUATION_ADD);
+        device.setBlendState(this.blendState);
+        device.setDepthState(DepthState.NODEPTH);
+        device.setStencilState(null, null);
+
         device.setVertexBuffer(buffer, 0);
         device.setIndexBuffer(this.indexBuffer);
         device.setShader(this.shader);
 
-        const pr = Math.min(device.maxPixelRatio, window.devicePixelRatio);
-
         // set shader uniforms
         this.clr.set(clr, 0);
         this.clrId.setValue(this.clr);
-        this.screenTextureSize[0] = device.width / pr;
-        this.screenTextureSize[1] = device.height / pr;
+        this.screenTextureSize[0] = device.canvas.scrollWidth;
+        this.screenTextureSize[1] = device.canvas.scrollHeight;
 
         // colors
         this.col0Id.setValue(this.col0);

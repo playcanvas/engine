@@ -47,7 +47,7 @@ class Mat4 {
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * m.add2(pc.Mat4.IDENTITY, pc.Mat4.ONE);
      *
@@ -84,7 +84,7 @@ class Mat4 {
      * @param {Mat4} rhs - The 4x4 matrix used as the second operand of the addition.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * m.add(pc.Mat4.ONE);
      *
@@ -99,8 +99,8 @@ class Mat4 {
      *
      * @returns {this} A duplicate matrix.
      * @example
-     * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
-     * var dst = src.clone();
+     * const src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const dst = src.clone();
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
     clone() {
@@ -115,8 +115,8 @@ class Mat4 {
      * @param {Mat4} rhs - A 4x4 matrix to be copied.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
-     * var dst = new pc.Mat4();
+     * const src = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const dst = new pc.Mat4();
      * dst.copy(src);
      * console.log("The two matrices are " + (src.equals(dst) ? "equal" : "different"));
      */
@@ -150,8 +150,8 @@ class Mat4 {
      * @param {Mat4} rhs - The other matrix.
      * @returns {boolean} True if the matrices are equal and false otherwise.
      * @example
-     * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
-     * var b = new pc.Mat4();
+     * const a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const b = new pc.Mat4();
      * console.log("The two matrices are " + (a.equals(b) ? "equal" : "different"));
      */
     equals(rhs) {
@@ -181,7 +181,7 @@ class Mat4 {
      *
      * @returns {boolean} True if the matrix is identity and false otherwise.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      * console.log("The matrix is " + (m.isIdentity() ? "identity" : "not identity"));
      */
     isIdentity() {
@@ -213,9 +213,9 @@ class Mat4 {
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
-     * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
-     * var r = new pc.Mat4();
+     * const a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     * const r = new pc.Mat4();
      *
      * // r = a * b
      * r.mul2(a, b);
@@ -360,8 +360,8 @@ class Mat4 {
      * @param {Mat4} rhs - The 4x4 matrix used as the second multiplicand of the operation.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
-     * var b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     * const a = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const b = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
      *
      * // a = a * b
      * a.mul(b);
@@ -381,12 +381,12 @@ class Mat4 {
      * @returns {Vec3} The input point v transformed by the current instance.
      * @example
      * // Create a 3-dimensional point
-     * var v = new pc.Vec3(1, 2, 3);
+     * const v = new pc.Vec3(1, 2, 3);
      *
      * // Create a 4x4 rotation matrix
-     * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      *
-     * var tv = m.transformPoint(v);
+     * const tv = m.transformPoint(v);
      */
     transformPoint(vec, res = new Vec3()) {
         const m = this.data;
@@ -411,12 +411,12 @@ class Mat4 {
      * @returns {Vec3} The input vector v transformed by the current instance.
      * @example
      * // Create a 3-dimensional vector
-     * var v = new pc.Vec3(1, 2, 3);
+     * const v = new pc.Vec3(1, 2, 3);
      *
      * // Create a 4x4 rotation matrix
-     * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      *
-     * var tv = m.transformVector(v);
+     * const tv = m.transformVector(v);
      */
     transformVector(vec, res = new Vec3()) {
         const m = this.data;
@@ -441,13 +441,13 @@ class Mat4 {
      * @returns {Vec4} The input vector v transformed by the current instance.
      * @example
      * // Create an input 4-dimensional vector
-     * var v = new pc.Vec4(1, 2, 3, 4);
+     * const v = new pc.Vec4(1, 2, 3, 4);
      *
      * // Create an output 4-dimensional vector
-     * var result = new pc.Vec4();
+     * const result = new pc.Vec4();
      *
      * // Create a 4x4 rotation matrix
-     * var m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
+     * const m = new pc.Mat4().setFromEulerAngles(10, 20, 30);
      *
      * m.transformVec4(v, result);
      */
@@ -481,10 +481,10 @@ class Mat4 {
      * @param {Vec3} up - 3-d vector holding the up direction.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var position = new pc.Vec3(10, 10, 10);
-     * var target = new pc.Vec3(0, 0, 0);
-     * var up = new pc.Vec3(0, 1, 0);
-     * var m = new pc.Mat4().setLookAt(position, target, up);
+     * const position = new pc.Vec3(10, 10, 10);
+     * const target = new pc.Vec3(0, 0, 0);
+     * const up = new pc.Vec3(0, 1, 0);
+     * const m = new pc.Mat4().setLookAt(position, target, up);
      */
     setLookAt(position, target, up) {
         z.sub2(position, target).normalize();
@@ -531,7 +531,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
-     * var f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
+     * const f = pc.Mat4().setFrustum(-2, 2, -1, 1, 1, 1000);
      * @ignore
      */
     setFrustum(left, right, bottom, top, znear, zfar) {
@@ -577,7 +577,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
-     * var persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
+     * const persp = pc.Mat4().setPerspective(45, 16 / 9, 1, 1000);
      */
     setPerspective(fov, aspect, znear, zfar, fovIsHorizontal) {
         Mat4._getPerspectiveHalfSize(_halfSize, fov, aspect, znear, fovIsHorizontal);
@@ -601,7 +601,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 orthographic projection matrix
-     * var ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
+     * const ortho = pc.Mat4().ortho(-2, 2, -2, 2, 1, 1000);
      */
     setOrtho(left, right, bottom, top, near, far) {
         const r = this.data;
@@ -635,7 +635,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix
-     * var rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
+     * const rm = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 90);
      */
     setFromAxisAngle(axis, angle) {
         angle *= math.DEG_TO_RAD;
@@ -679,7 +679,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 translation matrix
-     * var tm = new pc.Mat4().setTranslate(10, 10, 10);
+     * const tm = new pc.Mat4().setTranslate(10, 10, 10);
      * @ignore
      */
     setTranslate(x, y, z) {
@@ -714,7 +714,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 scale matrix
-     * var sm = new pc.Mat4().setScale(10, 10, 10);
+     * const sm = new pc.Mat4().setScale(10, 10, 10);
      * @ignore
      */
     setScale(x, y, z) {
@@ -752,7 +752,7 @@ class Mat4 {
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 viewport matrix which scales normalized view volume to full texture viewport
-     * var vm = new pc.Mat4().setViewport(0, 0, 1, 1);
+     * const vm = new pc.Mat4().setViewport(0, 0, 1, 1);
      * @ignore
      */
     setViewport(x, y, width, height) {
@@ -779,12 +779,47 @@ class Mat4 {
     }
 
     /**
+     * Sets the matrix to a reflection matrix, which can be used as a mirror transformation by the
+     * plane.
+     *
+     * @param {Vec3} normal - The normal of the plane to reflect by.
+     * @param {number} distance - The distance of plane to reflect by.
+     * @returns {Mat4} Self for chaining.
+     */
+    setReflection(normal, distance) {
+
+        const a = normal.x;
+        const b = normal.y;
+        const c = normal.z;
+        const data = this.data;
+
+        data[0] = 1.0 - 2 * a * a;
+        data[1] = -2 * a * b;
+        data[2] = -2 * a * c;
+        data[3] = 0;
+        data[4] = -2 * a * b;
+        data[5] = 1.0 - 2 * b * b;
+        data[6] = -2 * b * c;
+        data[7] = 0;
+        data[8] = -2 * a * c;
+        data[9] = -2 * b * c;
+        data[10] = 1.0 - 2 * c * c;
+        data[11] = 0;
+        data[12] = -2 * a * distance;
+        data[13] = -2 * b * distance;
+        data[14] = -2 * c * distance;
+        data[15] = 1;
+
+        return this;
+    }
+
+    /**
      * Sets the specified matrix to its inverse.
      *
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
-     * var rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
+     * const rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
      *
      * // Invert in place
      * rot.invert();
@@ -918,11 +953,11 @@ class Mat4 {
      * @param {Vec3} s - A 3-d vector scale.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var t = new pc.Vec3(10, 20, 30);
-     * var r = new pc.Quat();
-     * var s = new pc.Vec3(2, 2, 2);
+     * const t = new pc.Vec3(10, 20, 30);
+     * const r = new pc.Quat();
+     * const s = new pc.Vec3(2, 2, 2);
      *
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      * m.setTRS(t, r, s);
      */
     setTRS(t, r, s) {
@@ -978,7 +1013,7 @@ class Mat4 {
      *
      * @returns {Mat4} Self for chaining.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * // Transpose in place
      * m.transpose();
@@ -1067,10 +1102,10 @@ class Mat4 {
      * @returns {Vec3} The translation of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * // Query the translation component
-     * var t = new pc.Vec3();
+     * const t = new pc.Vec3();
      * m.getTranslation(t);
      */
     getTranslation(t = new Vec3()) {
@@ -1084,10 +1119,10 @@ class Mat4 {
      * @returns {Vec3} The x-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * // Query the x-axis component
-     * var x = new pc.Vec3();
+     * const x = new pc.Vec3();
      * m.getX(x);
      */
     getX(x = new Vec3()) {
@@ -1101,10 +1136,10 @@ class Mat4 {
      * @returns {Vec3} The y-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * // Query the y-axis component
-     * var y = new pc.Vec3();
+     * const y = new pc.Vec3();
      * m.getY(y);
      */
     getY(y = new Vec3()) {
@@ -1118,10 +1153,10 @@ class Mat4 {
      * @returns {Vec3} The z-axis of the specified 4x4 matrix.
      * @example
      * // Create a 4x4 matrix
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      *
      * // Query the z-axis component
-     * var z = new pc.Vec3();
+     * const z = new pc.Vec3();
      * m.getZ(z);
      */
     getZ(z = new Vec3()) {
@@ -1135,7 +1170,7 @@ class Mat4 {
      * @returns {Vec3} The scale in X, Y and Z of the specified 4x4 matrix.
      * @example
      * // Query the scale component
-     * var scale = m.getScale();
+     * const scale = m.getScale();
      */
     getScale(scale = new Vec3()) {
         this.getX(x);
@@ -1147,6 +1182,20 @@ class Mat4 {
     }
 
     /**
+     * -1 if the the matrix has an odd number of negative scales (mirrored); 1 otherwise.
+     *
+     * @type {number}
+     * @ignore
+     */
+    get scaleSign() {
+        this.getX(x);
+        this.getY(y);
+        this.getZ(z);
+        x.cross(x, y);
+        return x.dot(z) < 0 ? -1 : 1;
+    }
+
+    /**
      * Sets the specified matrix to a rotation matrix defined by Euler angles. The Euler angles are
      * specified in XYZ order and in degrees.
      *
@@ -1155,7 +1204,7 @@ class Mat4 {
      * @param {number} ez - Angle to rotate around Z axis in degrees.
      * @returns {Mat4} Self for chaining.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      * m.setFromEulerAngles(45, 90, 180);
      */
     setFromEulerAngles(ex, ey, ez) {
@@ -1208,9 +1257,9 @@ class Mat4 {
      * @returns {Vec3} A 3-d vector containing the Euler angles.
      * @example
      * // Create a 4x4 rotation matrix of 45 degrees around the y-axis
-     * var m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);
+     * const m = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 45);
      *
-     * var eulers = m.getEulerAngles();
+     * const eulers = m.getEulerAngles();
      */
     getEulerAngles(eulers = new Vec3()) {
         this.getScale(scale);
@@ -1251,7 +1300,7 @@ class Mat4 {
      *
      * @returns {string} The matrix in string form.
      * @example
-     * var m = new pc.Mat4();
+     * const m = new pc.Mat4();
      * // Outputs [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
      * console.log(m.toString());
      */

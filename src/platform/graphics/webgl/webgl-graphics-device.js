@@ -1,17 +1,16 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
+import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    BLENDEQUATION_ADD,
-    BLENDMODE_ZERO, BLENDMODE_ONE,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
-    CULLFACE_BACK, CULLFACE_NONE,
+    CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    FUNC_ALWAYS, FUNC_LESSEQUAL,
+    FUNC_ALWAYS,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     STENCILOP_KEEP,
     UNIFORMTYPE_BOOL, UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
@@ -21,7 +20,9 @@ import {
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation,
     PRIMITIVE_TRISTRIP,
-    PIXELFORMAT_111110F
+    PIXELFORMAT_111110F,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGL1
 } from '../constants.js';
 
 import { GraphicsDevice } from '../graphics-device.js';
@@ -36,6 +37,9 @@ import { WebglTexture } from './webgl-texture.js';
 import { WebglRenderTarget } from './webgl-render-target.js';
 import { ShaderUtils } from '../shader-utils.js';
 import { Shader } from '../shader.js';
+import { BlendState } from '../blend-state.js';
+import { DepthState } from '../depth-state.js';
+import { StencilParameters } from '../stencil-parameters.js';
 
 const invalidateAttachments = [];
 
@@ -87,17 +91,10 @@ function quadWithShader(device, target, shader) {
     device.setRenderTarget(target);
     device.updateBegin();
 
-    const oldDepthTest = device.getDepthTest();
-    const oldDepthWrite = device.getDepthWrite();
-    const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
-    device.setDepthTest(false);
-    device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
+    device.setBlendState(BlendState.NOBLEND);
+    device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     device.setVertexBuffer(device.quadVertexBuffer, 0);
     device.setShader(shader);
@@ -108,11 +105,6 @@ function quadWithShader(device, target, shader) {
         count: 4,
         indexed: false
     });
-
-    device.setDepthTest(oldDepthTest);
-    device.setDepthWrite(oldDepthWrite);
-    device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
 
     device.updateEnd();
 
@@ -248,52 +240,6 @@ function testTextureFloatHighPrecision(device) {
     return f === 0;
 }
 
-// ImageBitmap current state (Sep 2022):
-// - Lastest Chrome and Firefox browsers appear to support the ImageBitmap API fine (though
-//   there are likely still issues with older versions of both).
-// - Safari supports the API, but completely destroys some pngs. For example the cubemaps in
-//   steampunk slots https://playcanvas.com/editor/scene/524858. See the webkit issue
-//   https://bugs.webkit.org/show_bug.cgi?id=182424 for status.
-// - Some applications assume that PNGs loaded by the engine use HTMLImageBitmap interface and
-//   fail when using ImageBitmap. For example, Space Base project fails because it uses engine
-//   texture assets on the dom https://playcanvas.com/editor/scene/446278.
-
-// This function tests whether the current browser destroys PNG data or not.
-function testImageBitmap(device) {
-    // 1x1 png image containing rgba(1, 2, 3, 63)
-    const pngBytes = new Uint8Array([
-        137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21,
-        196, 137, 0, 0, 0, 13, 73, 68, 65, 84, 120, 218, 99, 100, 100, 98, 182, 7, 0, 0, 89, 0, 71, 67, 133, 148, 237,
-        0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
-    ]);
-
-    return createImageBitmap(new Blob([pngBytes], { type: 'image/png' }), { premultiplyAlpha: 'none' })
-        .then((image) => {
-            // create the texture
-            const texture = new Texture(device, {
-                width: 1,
-                height: 1,
-                format: PIXELFORMAT_RGBA8,
-                mipmaps: false,
-                levels: [image]
-            });
-
-            // read pixels
-            const rt = new RenderTarget({ colorBuffer: texture, depth: false });
-            device.setFramebuffer(rt.impl._glFrameBuffer);
-            device.initRenderTarget(rt);
-
-            const data = new Uint8ClampedArray(4);
-            device.gl.readPixels(0, 0, 1, 1, device.gl.RGBA, device.gl.UNSIGNED_BYTE, data);
-
-            rt.destroy();
-            texture.destroy();
-
-            return data[0] === 1 && data[1] === 2 && data[2] === 3 && data[3] === 63;
-        })
-        .catch(e => false);
-}
-
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
  * render state changes and graphics primitives to the hardware. A graphics device is tied to a
@@ -332,7 +278,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * alpha buffer.
      * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
      * requested to have a depth buffer of at least 16 bits.
-     * @param {boolean} [options.stencil=false] - Boolean that indicates that the drawing buffer is
+     * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
      * requested to have a stencil buffer of at least 8 bits.
      * @param {boolean} [options.antialias=true] - Boolean that indicates whether or not to perform
      * anti-aliasing if possible.
@@ -358,9 +304,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
+     * to use. If not specified, a new context will be created.
      */
     constructor(canvas, options = {}) {
-        super(canvas);
+        super(canvas, options);
+        options = this.initOptions;
 
         this.defaultFramebuffer = null;
 
@@ -384,12 +333,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.fire('devicerestored');
         };
 
-        // options defaults
-        options.stencil = true;
-        if (!options.powerPreference) {
-            options.powerPreference = 'high-performance';
-        }
-
         // #4136 - turn off antialiasing on AppleWebKit browsers 15.4
         const ua = (typeof navigator !== 'undefined') && navigator.userAgent;
         this.forceDisableMultisampling = ua && ua.includes('AppleWebKit') && (ua.includes('15.4') || ua.includes('15_4'));
@@ -398,34 +341,40 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
-        // Retrieve the WebGL context
-        const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
-
-        const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
         let gl = null;
-        for (let i = 0; i < names.length; i++) {
-            gl = canvas.getContext(names[i], options);
 
-            if (gl) {
-                this.webgl2 = (names[i] === 'webgl2');
-                break;
+        // Retrieve the WebGL context
+        if (options.gl) {
+            gl = options.gl;
+        } else {
+            const preferWebGl2 = (options.preferWebGl2 !== undefined) ? options.preferWebGl2 : true;
+            const names = preferWebGl2 ? ["webgl2", "webgl", "experimental-webgl"] : ["webgl", "experimental-webgl"];
+            for (let i = 0; i < names.length; i++) {
+                gl = canvas.getContext(names[i], options);
+                if (gl) {
+                    break;
+                }
             }
         }
-        this.gl = gl;
 
         if (!gl) {
             throw new Error("WebGL not supported");
         }
 
+        this.gl = gl;
+        this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+        this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
+
         // pixel format of the framebuffer
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
-        const isChrome = platform.browser && !!window.chrome;
+        const isChrome = platform.browserName === 'chrome';
+        const isSafari = platform.browserName === 'safari';
         const isMac = platform.browser && navigator.appVersion.indexOf("Mac") !== -1;
 
         // enable temporary texture unit workaround on desktop safari
-        this._tempEnableSafariTextureUnitWorkaround = platform.browser && !!window.safari;
+        this._tempEnableSafariTextureUnitWorkaround = isSafari;
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
@@ -443,20 +392,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // start async image bitmap test
-        this.supportsImageBitmap = null;
-        if (typeof ImageBitmap !== 'undefined') {
-            testImageBitmap(this).then((result) => {
-                this.supportsImageBitmap = result;
-            });
-        }
-
-        this.defaultClearOptions = {
-            color: [0, 0, 0, 1],
-            depth: 1,
-            stencil: 0,
-            flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
-        };
+        // only enable ImageBitmap on chrome
+        this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
 
         this.glAddress = [
             gl.REPEAT,
@@ -472,7 +409,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.webgl2 ? gl.MAX : this.extBlendMinmax ? this.extBlendMinmax.MAX_EXT : gl.FUNC_ADD
         ];
 
-        this.glBlendFunction = [
+        this.glBlendFunctionColor = [
             gl.ZERO,
             gl.ONE,
             gl.SRC_COLOR,
@@ -485,7 +422,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.DST_ALPHA,
             gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_COLOR,
-            gl.ONE_MINUS_CONSTANT_COLOR,
+            gl.ONE_MINUS_CONSTANT_COLOR
+        ];
+
+        this.glBlendFunctionAlpha = [
+            gl.ZERO,
+            gl.ONE,
+            gl.SRC_COLOR,
+            gl.ONE_MINUS_SRC_COLOR,
+            gl.DST_COLOR,
+            gl.ONE_MINUS_DST_COLOR,
+            gl.SRC_ALPHA,
+            gl.SRC_ALPHA_SATURATE,
+            gl.ONE_MINUS_SRC_ALPHA,
+            gl.DST_ALPHA,
+            gl.ONE_MINUS_DST_ALPHA,
             gl.CONSTANT_ALPHA,
             gl.ONE_MINUS_CONSTANT_ALPHA
         ];
@@ -872,6 +823,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return precision;
     }
 
+    getExtension() {
+        for (let i = 0; i < arguments.length; i++) {
+            if (this.supportedExtensions.indexOf(arguments[i]) !== -1) {
+                return this.gl.getExtension(arguments[i]);
+            }
+        }
+        return null;
+    }
+
+    get extDisjointTimerQuery() {
+        // lazy evaluation as this is not typically used
+        if (!this._extDisjointTimerQuery) {
+            if (this.webgl2) {
+                // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than EXT_disjoint_timer_query_webgl2
+                this._extDisjointTimerQuery = this.getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            }
+        }
+        return this._extDisjointTimerQuery;
+    }
+
     /**
      * Initialize the extensions provided by the WebGL context.
      *
@@ -880,19 +851,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
     initializeExtensions() {
         const gl = this.gl;
         const supportedExtensions = gl.getSupportedExtensions();
-
-        const getExtension = function () {
-            for (let i = 0; i < arguments.length; i++) {
-                if (supportedExtensions.indexOf(arguments[i]) !== -1) {
-                    return gl.getExtension(arguments[i]);
-                }
-            }
-            return null;
-        };
+        this.supportedExtensions = supportedExtensions;
 
         if (this.webgl2) {
             this.extBlendMinmax = true;
             this.extDrawBuffers = true;
+            this.drawBuffers = gl.drawBuffers.bind(gl);
             this.extInstancing = true;
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
@@ -900,15 +864,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
-            this.extColorBufferFloat = getExtension('EXT_color_buffer_float');
-            // Note that Firefox exposes EXT_disjoint_timer_query under WebGL2 rather than
-            // EXT_disjoint_timer_query_webgl2
-            this.extDisjointTimerQuery = getExtension('EXT_disjoint_timer_query_webgl2', 'EXT_disjoint_timer_query');
+            this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
         } else {
-            this.extBlendMinmax = getExtension("EXT_blend_minmax");
-            this.extDrawBuffers = getExtension('EXT_draw_buffers');
-            this.extInstancing = getExtension("ANGLE_instanced_arrays");
+            this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
+            this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
+            this.extInstancing = this.getExtension("ANGLE_instanced_arrays");
+            this.drawBuffers = this.extDrawBuffers?.drawBuffersWEBGL.bind(this.extDrawBuffers);
             if (this.extInstancing) {
                 // Install the WebGL 2 Instancing API for WebGL 1.0
                 const ext = this.extInstancing;
@@ -917,12 +879,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.vertexAttribDivisor = ext.vertexAttribDivisorANGLE.bind(ext);
             }
 
-            this.extStandardDerivatives = getExtension("OES_standard_derivatives");
-            this.extTextureFloat = getExtension("OES_texture_float");
-            this.extTextureHalfFloat = getExtension("OES_texture_half_float");
-            this.extTextureLod = getExtension('EXT_shader_texture_lod');
-            this.extUintElement = getExtension("OES_element_index_uint");
-            this.extVertexArrayObject = getExtension("OES_vertex_array_object");
+            this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
+            this.extTextureFloat = this.getExtension("OES_texture_float");
+            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
+            this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
+            this.extUintElement = this.getExtension("OES_element_index_uint");
+            this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
             if (this.extVertexArrayObject) {
                 // Install the WebGL 2 VAO API for WebGL 1.0
                 const ext = this.extVertexArrayObject;
@@ -932,25 +894,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 gl.bindVertexArray = ext.bindVertexArrayOES.bind(ext);
             }
             this.extColorBufferFloat = null;
-            this.extDisjointTimerQuery = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
         }
 
-        this.extDebugRendererInfo = getExtension('WEBGL_debug_renderer_info');
-        this.extTextureFloatLinear = getExtension("OES_texture_float_linear");
-        this.extTextureHalfFloatLinear = getExtension("OES_texture_half_float_linear");
-        this.extFloatBlend = getExtension("EXT_float_blend");
-        this.extTextureFilterAnisotropic = getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
-        this.extCompressedTextureETC1 = getExtension('WEBGL_compressed_texture_etc1');
-        this.extCompressedTextureETC = getExtension('WEBGL_compressed_texture_etc');
-        this.extCompressedTexturePVRTC = getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
-        this.extCompressedTextureS3TC = getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
-        this.extCompressedTextureATC = getExtension('WEBGL_compressed_texture_atc');
-        this.extCompressedTextureASTC = getExtension('WEBGL_compressed_texture_astc');
-        this.extParallelShaderCompile = getExtension('KHR_parallel_shader_compile');
+        this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
+        this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
+        this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+        this.extFloatBlend = this.getExtension("EXT_float_blend");
+        this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
+        this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
+        this.extCompressedTextureETC = this.getExtension('WEBGL_compressed_texture_etc');
+        this.extCompressedTexturePVRTC = this.getExtension('WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc');
+        this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
+        this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
+        this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
+        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
         // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
-        this.extColorBufferHalfFloat = getExtension("EXT_color_buffer_half_float");
+        this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");
     }
 
     /**
@@ -985,10 +946,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.maxDrawBuffers = gl.getParameter(gl.MAX_DRAW_BUFFERS);
             this.maxColorAttachments = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS);
             this.maxVolumeSize = gl.getParameter(gl.MAX_3D_TEXTURE_SIZE);
+            this.supportsMrt = true;
+            this.supportsVolumeTextures = true;
         } else {
             ext = this.extDrawBuffers;
-            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_EXT) : 1;
-            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_EXT) : 1;
+            this.supportsMrt = !!ext;
+            this.maxDrawBuffers = ext ? gl.getParameter(ext.MAX_DRAW_BUFFERS_WEBGL) : 1;
+            this.maxColorAttachments = ext ? gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1;
             this.maxVolumeSize = 1;
         }
 
@@ -996,16 +960,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unmaskedRenderer = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : '';
         this.unmaskedVendor = ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : '';
 
-        // Check if we support GPU particles. At the moment, Samsung devices with Exynos (ARM) either crash or render
-        // incorrectly when using GPU for particles. See:
+        // Mali-G52 has rendering issues with GPU particles including
+        // SM-A225M, M2003J15SC and KFRAWI (Amazon Fire HD 8 2022)
+        const maliRendererRegex = /\bMali-G52+/;
+
+        // Samsung devices with Exynos (ARM) either crash or render incorrectly when using GPU for particles. See:
         // https://github.com/playcanvas/engine/issues/3967
         // https://github.com/playcanvas/engine/issues/3415
         // https://github.com/playcanvas/engine/issues/4514
         // Example UA matches: Starting 'SM' and any combination of letters or numbers:
         // Mozilla/5.0 (Linux, Android 12; SM-G970F Build/SP1A.210812.016; wv)
-        // Mozilla/5.0 (Linux, Android 12; SM-G970F)
         const samsungModelRegex = /SM-[a-zA-Z0-9]+/;
-        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex));
+        this.supportsGpuParticles = !(this.unmaskedVendor === 'ARM' && userAgent.match(samsungModelRegex)) &&
+            !(this.unmaskedRenderer.match(maliRendererRegex));
 
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
@@ -1036,40 +1003,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         const gl = this.gl;
 
         // Initialize render state to a known start state
-        this.blending = false;
-        gl.disable(gl.BLEND);
 
-        this.blendSrc = BLENDMODE_ONE;
-        this.blendDst = BLENDMODE_ZERO;
-        this.blendSrcAlpha = BLENDMODE_ONE;
-        this.blendDstAlpha = BLENDMODE_ZERO;
-        this.separateAlphaBlend = false;
-        this.blendEquation = BLENDEQUATION_ADD;
-        this.blendAlphaEquation = BLENDEQUATION_ADD;
-        this.separateAlphaEquation = false;
+        // default blend state
+        gl.disable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ZERO);
         gl.blendEquation(gl.FUNC_ADD);
+        gl.colorMask(true, true, true, true);
 
         this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
 
-        this.writeRed = true;
-        this.writeGreen = true;
-        this.writeBlue = true;
-        this.writeAlpha = true;
-        gl.colorMask(true, true, true, true);
-
-        this.cullMode = CULLFACE_BACK;
         gl.enable(gl.CULL_FACE);
         gl.cullFace(gl.BACK);
 
-        this.depthTest = true;
+        // default depth state
         gl.enable(gl.DEPTH_TEST);
-
-        this.depthFunc = FUNC_LESSEQUAL;
         gl.depthFunc(gl.LEQUAL);
-
-        this.depthWrite = true;
         gl.depthMask(true);
 
         this.stencil = false;
@@ -1366,7 +1315,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
-        if (colorOps.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
+        if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
 
             // the pass always clears full target
             const rt = renderPass.renderTarget;
@@ -1378,7 +1327,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             let clearFlags = 0;
             const clearOptions = {};
 
-            if (colorOps.clear) {
+            if (colorOps?.clear) {
                 clearFlags |= CLEARFLAG_COLOR;
                 clearOptions.color = [colorOps.clearValue.r, colorOps.clearValue.g, colorOps.clearValue.b, colorOps.clearValue.a];
             }
@@ -1421,17 +1370,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.unbindVertexArray();
 
         const target = this.renderTarget;
+        const colorBufferCount = renderPass.colorArrayOps.length;
         if (target) {
 
-            // invalidate buffers to stop them being written to on tiled architextures
+            // invalidate buffers to stop them being written to on tiled architectures
             if (this.webgl2) {
                 invalidateAttachments.length = 0;
                 const gl = this.gl;
 
-                // invalidate color only if we don't need to resolve it
-                if (!(renderPass.colorOps.store || renderPass.colorOps.resolve)) {
-                    invalidateAttachments.push(gl.COLOR_ATTACHMENT0);
+                // color buffers
+                for (let i = 0; i < colorBufferCount; i++) {
+                    const colorOps = renderPass.colorArrayOps[i];
+
+                    // invalidate color only if we don't need to resolve it
+                    if (!(colorOps.store || colorOps.resolve)) {
+                        invalidateAttachments.push(gl.COLOR_ATTACHMENT0 + i);
+                    }
                 }
+
                 if (!renderPass.depthStencilOps.storeDepth) {
                     invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
                 }
@@ -1449,20 +1405,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
-            // resolve the color buffer
-            if (renderPass.colorOps.resolve) {
+            // resolve the color buffer (this resolves all MRT color buffers at once)
+            if (renderPass.colorOps?.resolve) {
                 if (this.webgl2 && renderPass.samples > 1 && target.autoResolve) {
                     target.resolve(true, false);
                 }
             }
 
             // generate mipmaps
-            if (renderPass.colorOps.mipmaps) {
-                const colorBuffer = target._colorBuffer;
-                if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
-                    this.activeTexture(this.maxCombinedTextures - 1);
-                    this.bindTexture(colorBuffer);
-                    this.gl.generateMipmap(colorBuffer.impl._glTarget);
+            for (let i = 0; i < colorBufferCount; i++) {
+                const colorOps = renderPass.colorArrayOps[i];
+                if (colorOps.mipmaps) {
+                    const colorBuffer = target._colorBuffers[i];
+                    if (colorBuffer && colorBuffer.impl._glTexture && colorBuffer.mipmaps && (colorBuffer.pot || this.webgl2)) {
+
+                        DebugGraphics.pushGpuMarker(this, `MIPS${i}`);
+
+                        this.activeTexture(this.maxCombinedTextures - 1);
+                        this.bindTexture(colorBuffer);
+                        this.gl.generateMipmap(colorBuffer.impl._glTarget);
+
+                        DebugGraphics.popGpuMarker(this);
+                    }
                 }
             }
         }
@@ -1639,7 +1603,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTextureParameters(texture) {
         const gl = this.gl;
-        const flags = texture._parameterFlags;
+        const flags = texture.impl.dirtyParameterFlags;
         const target = texture.impl._glTarget;
 
         if (flags & 1) {
@@ -1690,7 +1654,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (flags & 128) {
             const ext = this.extTextureFilterAnisotropic;
             if (ext) {
-                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, Math.max(1, Math.min(Math.round(texture._anisotropy), this.maxAnisotropy)));
+                gl.texParameterf(target, ext.TEXTURE_MAX_ANISOTROPY_EXT, math.clamp(Math.round(texture._anisotropy), 1, this.maxAnisotropy));
             }
         }
     }
@@ -1704,10 +1668,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     setTexture(texture, textureUnit) {
 
-        if (!texture.impl._glTexture)
-            texture.impl.initialize(this, texture);
+        const impl = texture.impl;
+        if (!impl._glTexture)
+            impl.initialize(this, texture);
 
-        if (texture._parameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
+        if (impl.dirtyParameterFlags > 0 || texture._needsUpload || texture._needsMipmapsUpload) {
 
             // Ensure the specified texture unit is active
             this.activeTexture(textureUnit);
@@ -1715,13 +1680,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Ensure the texture is bound on correct target of the specified texture unit
             this.bindTexture(texture);
 
-            if (texture._parameterFlags) {
+            if (impl.dirtyParameterFlags) {
                 this.setTextureParameters(texture);
-                texture._parameterFlags = 0;
+                impl.dirtyParameterFlags = 0;
             }
 
             if (texture._needsUpload || texture._needsMipmapsUpload) {
-                texture.impl.upload(this, texture);
+                impl.upload(this, texture);
                 texture._needsUpload = false;
                 texture._needsMipmapsUpload = false;
             }
@@ -1917,7 +1882,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
                 }
                 if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
                 }
                 // #endif
 
@@ -1936,9 +1901,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     // Set breakpoint here to debug "Source and destination textures of the draw are the same" errors
                     if (this.renderTarget._samples < 2) {
                         if (this.renderTarget.colorBuffer && this.renderTarget.colorBuffer === texture) {
-                            Debug.error("Trying to bind current color buffer as a texture");
+                            Debug.error("Trying to bind current color buffer as a texture", { renderTarget: this.renderTarget, texture });
                         } else if (this.renderTarget.depthBuffer && this.renderTarget.depthBuffer === texture) {
-                            Debug.error("Trying to bind current depth buffer as a texture");
+                            Debug.error("Trying to bind current depth buffer as a texture", { texture });
                         }
                     }
                 }
@@ -2074,21 +2039,39 @@ class WebglGraphicsDevice extends GraphicsDevice {
             // Set the clear color
             if (flags & CLEARFLAG_COLOR) {
                 const color = options.color ?? defaultOptions.color;
-                this.setClearColor(color[0], color[1], color[2], color[3]);
-                this.setColorWrite(true, true, true, true);
+                const r = color[0];
+                const g = color[1];
+                const b = color[2];
+                const a = color[3];
+
+                const c = this.clearColor;
+                if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
+                    this.gl.clearColor(r, g, b, a);
+                    this.clearColor.set(r, g, b, a);
+                }
+
+                this.setBlendState(BlendState.NOBLEND);
             }
 
             if (flags & CLEARFLAG_DEPTH) {
                 // Set the clear depth
                 const depth = options.depth ?? defaultOptions.depth;
-                this.setClearDepth(depth);
-                this.setDepthWrite(true);
+
+                if (depth !== this.clearDepth) {
+                    this.gl.clearDepth(depth);
+                    this.clearDepth = depth;
+                }
+
+                this.setDepthState(DepthState.WRITEDEPTH);
             }
 
             if (flags & CLEARFLAG_STENCIL) {
                 // Set the clear stencil
                 const stencil = options.stencil ?? defaultOptions.stencil;
-                this.setClearStencil(stencil);
+                if (stencil !== this.clearStencil) {
+                    this.gl.clearStencil(stencil);
+                    this.clearStencil = stencil;
+                }
             }
 
             // Clear the frame buffer
@@ -2114,151 +2097,65 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Set the depth value used when the depth buffer is cleared.
+     * Asynchronously reads a block of pixels from a specified rectangle of the current color framebuffer
+     * into an ArrayBufferView object.
      *
-     * @param {number} depth - The depth value to clear the depth buffer to in the range 0.0
-     * to 1.0.
+     * @param {number} x - The x-coordinate of the rectangle's lower-left corner.
+     * @param {number} y - The y-coordinate of the rectangle's lower-left corner.
+     * @param {number} w - The width of the rectangle, in pixels.
+     * @param {number} h - The height of the rectangle, in pixels.
+     * @param {ArrayBufferView} pixels - The ArrayBufferView object that holds the returned pixel
+     * data.
      * @ignore
      */
-    setClearDepth(depth) {
-        if (depth !== this.clearDepth) {
-            this.gl.clearDepth(depth);
-            this.clearDepth = depth;
+    async readPixelsAsync(x, y, w, h, pixels) {
+        const gl = this.gl;
+
+        if (!this.webgl2) {
+            // async fences aren't supported on webgl1
+            return this.readPixels(x, y, w, h, pixels);
         }
-    }
 
-    /**
-     * Set the clear color used when the frame buffer is cleared.
-     *
-     * @param {number} r - The red component of the color in the range 0.0 to 1.0.
-     * @param {number} g - The green component of the color in the range 0.0 to 1.0.
-     * @param {number} b - The blue component of the color in the range 0.0 to 1.0.
-     * @param {number} a - The alpha component of the color in the range 0.0 to 1.0.
-     * @ignore
-     */
-    setClearColor(r, g, b, a) {
-        const c = this.clearColor;
-        if ((r !== c.r) || (g !== c.g) || (b !== c.b) || (a !== c.a)) {
-            this.gl.clearColor(r, g, b, a);
-            this.clearColor.set(r, g, b, a);
-        }
-    }
+        const clientWaitAsync = (flags, interval_ms) => {
+            const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+            gl.flush();
 
-    /**
-     * Set the stencil clear value used when the stencil buffer is cleared.
-     *
-     * @param {number} value - The stencil value to clear the stencil buffer to.
-     */
-    setClearStencil(value) {
-        if (value !== this.clearStencil) {
-            this.gl.clearStencil(value);
-            this.clearStencil = value;
-        }
-    }
+            return new Promise((resolve, reject) => {
+                function test() {
+                    const res = gl.clientWaitSync(sync, flags, 0);
+                    if (res === gl.WAIT_FAILED) {
+                        gl.deleteSync(sync);
+                        reject(new Error('webgl clientWaitSync sync failed'));
+                    } else if (res === gl.TIMEOUT_EXPIRED) {
+                        setTimeout(test, interval_ms);
+                    } else {
+                        gl.deleteSync(sync);
+                        resolve();
+                    }
+                }
+                test();
+            });
+        };
 
-    /**
-     * Queries whether depth testing is enabled.
-     *
-     * @returns {boolean} True if depth testing is enabled and false otherwise.
-     * @example
-     * var depthTest = device.getDepthTest();
-     * console.log('Depth testing is ' + depthTest ? 'enabled' : 'disabled');
-     */
-    getDepthTest() {
-        return this.depthTest;
-    }
+        const impl = this.renderTarget.colorBuffer?.impl;
+        const format = impl?._glFormat ?? gl.RGBA;
+        const pixelType = impl?._glPixelType ?? gl.UNSIGNED_BYTE;
 
-    /**
-     * Enables or disables depth testing of fragments. Once this state is set, it persists until it
-     * is changed. By default, depth testing is enabled.
-     *
-     * @param {boolean} depthTest - True to enable depth testing and false otherwise.
-     * @example
-     * device.setDepthTest(true);
-     */
-    setDepthTest(depthTest) {
-        if (this.depthTest !== depthTest) {
-            const gl = this.gl;
-            if (depthTest) {
-                gl.enable(gl.DEPTH_TEST);
-            } else {
-                gl.disable(gl.DEPTH_TEST);
-            }
-            this.depthTest = depthTest;
-        }
-    }
+        // create temporary (gpu-side) buffer and copy data into it
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.bufferData(gl.PIXEL_PACK_BUFFER, pixels.byteLength, gl.STREAM_READ);
+        gl.readPixels(x, y, w, h, format, pixelType, 0);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
 
-    /**
-     * Configures the depth test.
-     *
-     * @param {number} func - A function to compare a new depth value with an existing z-buffer
-     * value and decide if to write a pixel. Can be:
-     *
-     * - {@link FUNC_NEVER}: don't draw
-     * - {@link FUNC_LESS}: draw if new depth < depth buffer
-     * - {@link FUNC_EQUAL}: draw if new depth == depth buffer
-     * - {@link FUNC_LESSEQUAL}: draw if new depth <= depth buffer
-     * - {@link FUNC_GREATER}: draw if new depth > depth buffer
-     * - {@link FUNC_NOTEQUAL}: draw if new depth != depth buffer
-     * - {@link FUNC_GREATEREQUAL}: draw if new depth >= depth buffer
-     * - {@link FUNC_ALWAYS}: always draw
-     */
-    setDepthFunc(func) {
-        if (this.depthFunc === func) return;
-        this.gl.depthFunc(this.glComparison[func]);
-        this.depthFunc = func;
-    }
+        // async wait for previous read to finish
+        await clientWaitAsync(0, 20);
 
-    /**
-     * Queries whether writes to the depth buffer are enabled.
-     *
-     * @returns {boolean} True if depth writing is enabled and false otherwise.
-     * @example
-     * var depthWrite = device.getDepthWrite();
-     * console.log('Depth writing is ' + depthWrite ? 'enabled' : 'disabled');
-     */
-    getDepthWrite() {
-        return this.depthWrite;
-    }
-
-    /**
-     * Enables or disables writes to the depth buffer. Once this state is set, it persists until it
-     * is changed. By default, depth writes are enabled.
-     *
-     * @param {boolean} writeDepth - True to enable depth writing and false otherwise.
-     * @example
-     * device.setDepthWrite(true);
-     */
-    setDepthWrite(writeDepth) {
-        if (this.depthWrite !== writeDepth) {
-            this.gl.depthMask(writeDepth);
-            this.depthWrite = writeDepth;
-        }
-    }
-
-    /**
-     * Enables or disables writes to the color buffer. Once this state is set, it persists until it
-     * is changed. By default, color writes are enabled for all color channels.
-     *
-     * @param {boolean} writeRed - True to enable writing of the red channel and false otherwise.
-     * @param {boolean} writeGreen - True to enable writing of the green channel and false otherwise.
-     * @param {boolean} writeBlue - True to enable writing of the blue channel and false otherwise.
-     * @param {boolean} writeAlpha - True to enable writing of the alpha channel and false otherwise.
-     * @example
-     * // Just write alpha into the frame buffer
-     * device.setColorWrite(false, false, false, true);
-     */
-    setColorWrite(writeRed, writeGreen, writeBlue, writeAlpha) {
-        if ((this.writeRed !== writeRed) ||
-            (this.writeGreen !== writeGreen) ||
-            (this.writeBlue !== writeBlue) ||
-            (this.writeAlpha !== writeAlpha)) {
-            this.gl.colorMask(writeRed, writeGreen, writeBlue, writeAlpha);
-            this.writeRed = writeRed;
-            this.writeGreen = writeGreen;
-            this.writeBlue = writeBlue;
-            this.writeAlpha = writeAlpha;
-        }
+        // copy the resulting data once it's arrived
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, buf);
+        gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels);
+        gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+        gl.deleteBuffer(buf);
     }
 
     /**
@@ -2357,37 +2254,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl.polygonOffset(slopeBias, constBias);
     }
 
-    /**
-     * Queries whether blending is enabled.
-     *
-     * @returns {boolean} True if blending is enabled and false otherwise.
-     */
-    getBlending() {
-        return this.blending;
-    }
-
-    /**
-     * Enables or disables blending.
-     *
-     * @param {boolean} blending - True to enable blending and false to disable it.
-     */
-    setBlending(blending) {
-        if (this.blending !== blending) {
-            const gl = this.gl;
-            if (blending) {
-                gl.enable(gl.BLEND);
-            } else {
-                gl.disable(gl.BLEND);
-            }
-            this.blending = blending;
-        }
-    }
-
-    /**
-     * Enables or disables stencil test.
-     *
-     * @param {boolean} enable - True to enable stencil test and false to disable it.
-     */
     setStencilTest(enable) {
         if (this.stencil !== enable) {
             const gl = this.gl;
@@ -2400,54 +2266,16 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for both front and back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before
-     * comparison.
-     */
     setStencilFunc(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask ||
             this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
-            const gl = this.gl;
-            gl.stencilFunc(this.glComparison[func], ref, mask);
+            this.gl.stencilFunc(this.glComparison[func], ref, mask);
             this.stencilFuncFront = this.stencilFuncBack = func;
             this.stencilRefFront = this.stencilRefBack = ref;
             this.stencilMaskFront = this.stencilMaskBack = mask;
         }
     }
 
-    /**
-     * Configures stencil test for front faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncFront(func, ref, mask) {
         if (this.stencilFuncFront !== func || this.stencilRefFront !== ref || this.stencilMaskFront !== mask) {
             const gl = this.gl;
@@ -2458,24 +2286,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures stencil test for back faces.
-     *
-     * @param {number} func - A comparison function that decides if the pixel should be written,
-     * based on the current stencil buffer value, reference value, and mask value. Can be:
-     *
-     * - {@link FUNC_NEVER}: never pass
-     * - {@link FUNC_LESS}: pass if (ref & mask) < (stencil & mask)
-     * - {@link FUNC_EQUAL}: pass if (ref & mask) == (stencil & mask)
-     * - {@link FUNC_LESSEQUAL}: pass if (ref & mask) <= (stencil & mask)
-     * - {@link FUNC_GREATER}: pass if (ref & mask) > (stencil & mask)
-     * - {@link FUNC_NOTEQUAL}: pass if (ref & mask) != (stencil & mask)
-     * - {@link FUNC_GREATEREQUAL}: pass if (ref & mask) >= (stencil & mask)
-     * - {@link FUNC_ALWAYS}: always pass
-     *
-     * @param {number} ref - Reference value used in comparison.
-     * @param {number} mask - Mask applied to stencil buffer value and reference value before comparison.
-     */
     setStencilFuncBack(func, ref, mask) {
         if (this.stencilFuncBack !== func || this.stencilRefBack !== ref || this.stencilMaskBack !== mask) {
             const gl = this.gl;
@@ -2486,29 +2296,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for both front and back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperation(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass ||
             this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
@@ -2524,29 +2311,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for front faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed.  Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed.  Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationFront(fail, zfail, zpass, writeMask) {
         if (this.stencilFailFront !== fail || this.stencilZfailFront !== zfail || this.stencilZpassFront !== zpass) {
             this.gl.stencilOpSeparate(this.gl.FRONT, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2560,29 +2324,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures how stencil buffer values should be modified based on the result of depth/stencil
-     * tests. Works for back faces.
-     *
-     * @param {number} fail - Action to take if stencil test is failed. Can be:
-     *
-     * - {@link STENCILOP_KEEP}: don't change the stencil buffer value
-     * - {@link STENCILOP_ZERO}: set value to zero
-     * - {@link STENCILOP_REPLACE}: replace value with the reference value (see {@link GraphicsDevice#setStencilFunc})
-     * - {@link STENCILOP_INCREMENT}: increment the value
-     * - {@link STENCILOP_INCREMENTWRAP}: increment the value, but wrap it to zero when it's larger
-     * than a maximum representable value
-     * - {@link STENCILOP_DECREMENT}: decrement the value
-     * - {@link STENCILOP_DECREMENTWRAP}: decrement the value, but wrap it to a maximum
-     * representable value, if the current value is 0
-     * - {@link STENCILOP_INVERT}: invert the value bitwise
-     *
-     * @param {number} zfail - Action to take if depth test is failed. Accepts the same values as
-     * `fail`.
-     * @param {number} zpass - Action to take if both depth and stencil test are passed. Accepts
-     * the same values as `fail`.
-     * @param {number} writeMask - A bit mask applied to the reference value, when written.
-     */
     setStencilOperationBack(fail, zfail, zpass, writeMask) {
         if (this.stencilFailBack !== fail || this.stencilZfailBack !== zfail || this.stencilZpassBack !== zpass) {
             this.gl.stencilOpSeparate(this.gl.BACK, this.glStencilOp[fail], this.glStencilOp[zfail], this.glStencilOp[zpass]);
@@ -2596,115 +2337,44 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     * - {@link BLENDMODE_CONSTANT_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_COLOR}
-     * - {@link BLENDMODE_CONSTANT_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_CONSTANT_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     */
-    setBlendFunction(blendSrc, blendDst) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.separateAlphaBlend) {
-            this.gl.blendFunc(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.separateAlphaBlend = false;
-        }
-    }
+    setBlendState(blendState) {
+        const currentBlendState = this.blendState;
+        if (!currentBlendState.equals(blendState)) {
+            const gl = this.gl;
 
-    /**
-     * Configures blending operations. Both source and destination blend modes can take the
-     * following values:
-     *
-     * - {@link BLENDMODE_ZERO}
-     * - {@link BLENDMODE_ONE}
-     * - {@link BLENDMODE_SRC_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_COLOR}
-     * - {@link BLENDMODE_DST_COLOR}
-     * - {@link BLENDMODE_ONE_MINUS_DST_COLOR}
-     * - {@link BLENDMODE_SRC_ALPHA}
-     * - {@link BLENDMODE_SRC_ALPHA_SATURATE}
-     * - {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}
-     * - {@link BLENDMODE_DST_ALPHA}
-     * - {@link BLENDMODE_ONE_MINUS_DST_ALPHA}
-     *
-     * @param {number} blendSrc - The source blend function.
-     * @param {number} blendDst - The destination blend function.
-     * @param {number} blendSrcAlpha - The separate source blend function for the alpha channel.
-     * @param {number} blendDstAlpha - The separate destination blend function for the alpha channel.
-     */
-    setBlendFunctionSeparate(blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
-        if (this.blendSrc !== blendSrc || this.blendDst !== blendDst || this.blendSrcAlpha !== blendSrcAlpha || this.blendDstAlpha !== blendDstAlpha || !this.separateAlphaBlend) {
-            this.gl.blendFuncSeparate(this.glBlendFunction[blendSrc], this.glBlendFunction[blendDst],
-                                      this.glBlendFunction[blendSrcAlpha], this.glBlendFunction[blendDstAlpha]);
-            this.blendSrc = blendSrc;
-            this.blendDst = blendDst;
-            this.blendSrcAlpha = blendSrcAlpha;
-            this.blendDstAlpha = blendDstAlpha;
-            this.separateAlphaBlend = true;
-        }
-    }
+            // state values to set
+            const { blend, colorOp, alphaOp, colorSrcFactor, colorDstFactor, alphaSrcFactor, alphaDstFactor } = blendState;
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     */
-    setBlendEquation(blendEquation) {
-        if (this.blendEquation !== blendEquation || this.separateAlphaEquation) {
-            this.gl.blendEquation(this.glBlendEquation[blendEquation]);
-            this.blendEquation = blendEquation;
-            this.separateAlphaEquation = false;
-        }
-    }
+            // enable blend
+            if (currentBlendState.blend !== blend) {
+                if (blend) {
+                    gl.enable(gl.BLEND);
+                } else {
+                    gl.disable(gl.BLEND);
+                }
+            }
 
-    /**
-     * Configures the blending equation. The default blend equation is {@link BLENDEQUATION_ADD}.
-     *
-     * @param {number} blendEquation - The blend equation. Can be:
-     *
-     * - {@link BLENDEQUATION_ADD}
-     * - {@link BLENDEQUATION_SUBTRACT}
-     * - {@link BLENDEQUATION_REVERSE_SUBTRACT}
-     * - {@link BLENDEQUATION_MIN}
-     * - {@link BLENDEQUATION_MAX}
-     *
-     * Note that MIN and MAX modes require either EXT_blend_minmax or WebGL2 to work (check
-     * device.extBlendMinmax).
-     * @param {number} blendAlphaEquation - A separate blend equation for the alpha channel.
-     * Accepts same values as `blendEquation`.
-     */
-    setBlendEquationSeparate(blendEquation, blendAlphaEquation) {
-        if (this.blendEquation !== blendEquation || this.blendAlphaEquation !== blendAlphaEquation || !this.separateAlphaEquation) {
-            this.gl.blendEquationSeparate(this.glBlendEquation[blendEquation], this.glBlendEquation[blendAlphaEquation]);
-            this.blendEquation = blendEquation;
-            this.blendAlphaEquation = blendAlphaEquation;
-            this.separateAlphaEquation = true;
+            // blend ops
+            if (currentBlendState.colorOp !== colorOp || currentBlendState.alphaOp !== alphaOp) {
+                const glBlendEquation = this.glBlendEquation;
+                gl.blendEquationSeparate(glBlendEquation[colorOp], glBlendEquation[alphaOp]);
+            }
+
+            // blend factors
+            if (currentBlendState.colorSrcFactor !== colorSrcFactor || currentBlendState.colorDstFactor !== colorDstFactor ||
+                currentBlendState.alphaSrcFactor !== alphaSrcFactor || currentBlendState.alphaDstFactor !== alphaDstFactor) {
+
+                gl.blendFuncSeparate(this.glBlendFunctionColor[colorSrcFactor], this.glBlendFunctionColor[colorDstFactor],
+                                     this.glBlendFunctionAlpha[alphaSrcFactor], this.glBlendFunctionAlpha[alphaDstFactor]);
+            }
+
+            // color write
+            if (currentBlendState.allWrite !== blendState.allWrite) {
+                this.gl.colorMask(blendState.redWrite, blendState.greenWrite, blendState.blueWrite, blendState.alphaWrite);
+            }
+
+            // update internal state
+            currentBlendState.copy(blendState);
         }
     }
 
@@ -2725,17 +2395,68 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Controls how triangles are culled based on their face direction. The default cull mode is
-     * {@link CULLFACE_BACK}.
-     *
-     * @param {number} cullMode - The cull mode to set. Can be:
-     *
-     * - {@link CULLFACE_NONE}
-     * - {@link CULLFACE_BACK}
-     * - {@link CULLFACE_FRONT}
-     * - {@link CULLFACE_FRONTANDBACK}
-     */
+    setStencilState(stencilFront, stencilBack) {
+        if (stencilFront || stencilBack) {
+            this.setStencilTest(true);
+            if (stencilFront === stencilBack) {
+
+                // identical front/back stencil
+                this.setStencilFunc(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperation(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+            } else {
+
+                // front
+                stencilFront ??= StencilParameters.DEFAULT;
+                this.setStencilFuncFront(stencilFront.func, stencilFront.ref, stencilFront.readMask);
+                this.setStencilOperationFront(stencilFront.fail, stencilFront.zfail, stencilFront.zpass, stencilFront.writeMask);
+
+                // back
+                stencilBack ??= StencilParameters.DEFAULT;
+                this.setStencilFuncBack(stencilBack.func, stencilBack.ref, stencilBack.readMask);
+                this.setStencilOperationBack(stencilBack.fail, stencilBack.zfail, stencilBack.zpass, stencilBack.writeMask);
+            }
+        } else {
+            this.setStencilTest(false);
+        }
+    }
+
+    setDepthState(depthState) {
+        const currentDepthState = this.depthState;
+        if (!currentDepthState.equals(depthState)) {
+            const gl = this.gl;
+
+            // write
+            const write = depthState.write;
+            if (currentDepthState.write !== write) {
+                gl.depthMask(write);
+            }
+
+            // handle case where depth testing is off, but depth write is on => enable always test to depth write
+            // Note on WebGL API behavior: When depth testing is disabled, writes to the depth buffer are also disabled.
+            let { func, test } = depthState;
+            if (!test && write) {
+                test = true;
+                func = FUNC_ALWAYS;
+            }
+
+            if (currentDepthState.func !== func) {
+                gl.depthFunc(this.glComparison[func]);
+            }
+
+            if (currentDepthState.test !== test) {
+                if (test) {
+                    gl.enable(gl.DEPTH_TEST);
+                } else {
+                    gl.disable(gl.DEPTH_TEST);
+                }
+            }
+
+            // update internal state
+            currentDepthState.copy(depthState);
+        }
+    }
+
     setCullMode(cullMode) {
         if (this.cullMode !== cullMode) {
             if (cullMode === CULLFACE_NONE) {
@@ -2753,16 +2474,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.cullMode = cullMode;
         }
-    }
-
-    /**
-     * Gets the current cull mode.
-     *
-     * @returns {number} The current cull mode.
-     * @ignore
-     */
-    getCullMode() {
-        return this.cullMode;
     }
 
     /**
@@ -2842,6 +2553,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._vaoMap.clear();
     }
 
+    resizeCanvas(width, height) {
+
+        this._width = width;
+        this._height = height;
+
+        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        width = Math.floor(width * ratio);
+        height = Math.floor(height * ratio);
+
+        if (this.canvas.width !== width || this.canvas.height !== height) {
+            this.canvas.width = width;
+            this.canvas.height = height;
+            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
+        }
+    }
+
     /**
      * Width of the back buffer in pixels.
      *
@@ -2905,6 +2632,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
         return this._textureHalfFloatUpdatable;
     }
+
+    // #if _DEBUG
+    // debug helper to force lost context
+    debugLoseContext(sleep = 100) {
+        const context = this.gl.getExtension('WEBGL_lose_context');
+        context.loseContext();
+        setTimeout(() => context.restoreContext(), sleep);
+    }
+    // #endif
 }
 
 export { WebglGraphicsDevice };

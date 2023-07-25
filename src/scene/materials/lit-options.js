@@ -19,6 +19,8 @@ class LitOptions {
 
     _pass = 0;
 
+    _isForwardPass = false;
+
     /**
      * Enable alpha testing. See {@link Material#alphaTest}.
      *
@@ -146,7 +148,7 @@ class LitOptions {
     fastTbn = false;
 
     /**
-     * The value of {@link Material#twoSidedLighting}.
+     * The value of {@link StandardMaterial#twoSidedLighting}.
      *
      * @type {boolean}
      */
@@ -179,7 +181,7 @@ class LitOptions {
     alphaToCoverage = false;
 
     /**
-     * Enable specular fade. See {@link Material#opacityFadesSpecular}.
+     * Enable specular fade. See {@link StandardMaterial#opacityFadesSpecular}.
      *
      * @type {boolean}
      */
@@ -273,7 +275,8 @@ class LitOptions {
     toneMap = -1;
 
     /**
-     * If cubemaps require seam fixing (see {@link Texture#options.fixCubemapSeams}).
+     * If cubemaps require seam fixing (see the `fixCubemapSeams` property of the options object
+     * passed to the {@link Texture} constructor).
      *
      * @type {boolean}
      */
@@ -287,6 +290,8 @@ class LitOptions {
     reflectionSource = null;
 
     reflectionEncoding = null;
+
+    reflectionCubemapEncoding = null;
 
     /**
      * One of "ambientSH", "envAtlas", "constant".
@@ -327,6 +332,14 @@ class LitOptions {
 
     get pass() {
         return this._pass;
+    }
+
+    set isForwardPass(p) {
+        Debug.warn(`pc.LitOptions#isForwardPass should be set by its parent pc.StandardMaterialOptions, setting it directly has no effect.`);
+    }
+
+    get isForwardPass() {
+        return this._isForwardPass;
     }
 }
 

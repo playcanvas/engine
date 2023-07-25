@@ -2,16 +2,21 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
+import { Tracing } from '../../core/tracing.js';
+import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
     BUFFER_STATIC,
+    CULLFACE_BACK,
+    CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
     PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
 } from './constants.js';
+import { BlendState } from './blend-state.js';
+import { DepthState } from './depth-state.js';
 import { ScopeSpace } from './scope-space.js';
 import { VertexBuffer } from './vertex-buffer.js';
 import { VertexFormat } from './vertex-format.js';
-
-const EVENT_RESIZE = 'resizecanvas';
+import { StencilParameters } from './stencil-parameters.js';
 
 /**
  * The graphics device manages the underlying graphics context. It is responsible for submitting
@@ -26,6 +31,7 @@ class GraphicsDevice extends EventHandler {
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
      * @type {HTMLCanvasElement}
+     * @readonly
      */
     canvas;
 
@@ -33,6 +39,7 @@ class GraphicsDevice extends EventHandler {
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
+     * @readonly
      */
     isWebGPU = false;
 
@@ -40,6 +47,7 @@ class GraphicsDevice extends EventHandler {
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}
+     * @readonly
      */
     scope;
 
@@ -47,6 +55,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum number of supported bones using uniform buffers.
      *
      * @type {number}
+     * @readonly
      */
     boneLimit;
 
@@ -54,6 +63,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported texture anisotropy setting.
      *
      * @type {number}
+     * @readonly
      */
     maxAnisotropy;
 
@@ -61,6 +71,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a cube map.
      *
      * @type {number}
+     * @readonly
      */
     maxCubeMapSize;
 
@@ -68,6 +79,7 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a texture.
      *
      * @type {number}
+     * @readonly
      */
     maxTextureSize;
 
@@ -75,16 +87,59 @@ class GraphicsDevice extends EventHandler {
      * The maximum supported dimension of a 3D texture (any axis).
      *
      * @type {number}
+     * @readonly
      */
     maxVolumeSize;
+
+    /**
+     * The maximum supported number of color buffers attached to a render target.
+     *
+     * @type {number}
+     * @readonly
+     */
+    maxColorAttachments = 1;
 
     /**
      * The highest shader precision supported by this graphics device. Can be 'hiphp', 'mediump' or
      * 'lowp'.
      *
      * @type {string}
+     * @readonly
      */
     precision;
+
+    /**
+     * The number of hardware anti-aliasing samples used by the frame buffer.
+     *
+     * @readonly
+     * @type {number}
+     */
+    samples;
+
+    /**
+     * True if the main framebuffer contains stencil attachment.
+     *
+     * @ignore
+     * @type {boolean}
+     */
+    supportsStencil;
+
+    /**
+     * True if Multiple Render Targets feature is supported. This refers to the ability to render to
+     * multiple color textures with a single draw call.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsMrt = false;
+
+    /**
+     * True if the device supports volume textures.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsVolumeTextures = false;
 
     /**
      * Currently active render target.
@@ -94,6 +149,23 @@ class GraphicsDevice extends EventHandler {
      */
     renderTarget = null;
 
+    /**
+     * A version number that is incremented every frame. This is used to detect if some object were
+     * invalidated.
+     *
+     * @type {number}
+     * @ignore
+     */
+    renderVersion = 0;
+
+    /**
+     * Index of the currently active render pass.
+     *
+     * @type {number}
+     * @ignore
+     */
+    renderPassIndex;
+
     /** @type {boolean} */
     insideRenderPass = false;
 
@@ -101,6 +173,7 @@ class GraphicsDevice extends EventHandler {
      * True if hardware instancing is supported.
      *
      * @type {boolean}
+     * @readonly
      */
     supportsInstancing;
 
@@ -116,6 +189,7 @@ class GraphicsDevice extends EventHandler {
      * True if 32-bit floating-point textures can be used as a frame buffer.
      *
      * @type {boolean}
+     * @readonly
      */
     textureFloatRenderable;
 
@@ -123,6 +197,7 @@ class GraphicsDevice extends EventHandler {
       * True if 16-bit floating-point textures can be used as a frame buffer.
       *
       * @type {boolean}
+      * @readonly
       */
     textureHalfFloatRenderable;
 
@@ -134,10 +209,61 @@ class GraphicsDevice extends EventHandler {
      */
     quadVertexBuffer;
 
-    constructor(canvas) {
+    /**
+     * An object representing current blend state
+     *
+     * @ignore
+     */
+    blendState = new BlendState();
+
+    /**
+     * The current depth state.
+     *
+     * @ignore
+     */
+    depthState = new DepthState();
+
+    /**
+     * True if stencil is enabled and stencilFront and stencilBack are used
+     *
+     * @ignore
+     */
+    stencilEnabled = false;
+
+    /**
+     * The current front stencil parameters.
+     *
+     * @ignore
+     */
+    stencilFront = new StencilParameters();
+
+    /**
+     * The current back stencil parameters.
+     *
+     * @ignore
+     */
+    stencilBack = new StencilParameters();
+
+    defaultClearOptions = {
+        color: [0, 0, 0, 1],
+        depth: 1,
+        stencil: 0,
+        flags: CLEARFLAG_COLOR | CLEARFLAG_DEPTH
+    };
+
+    static EVENT_RESIZE = 'resizecanvas';
+
+    constructor(canvas, options) {
         super();
 
         this.canvas = canvas;
+
+        // copy options and handle defaults
+        this.initOptions = { ...options };
+        this.initOptions.depth ??= true;
+        this.initOptions.stencil ??= true;
+        this.initOptions.antialias ??= true;
+        this.initOptions.powerPreference ??= 'high-performance';
 
         // local width/height without pixelRatio applied
         this._width = 0;
@@ -259,9 +385,59 @@ class GraphicsDevice extends EventHandler {
     }
 
     initializeRenderState() {
+
+        this.blendState = new BlendState();
+        this.depthState = new DepthState();
+        this.cullMode = CULLFACE_BACK;
+
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+    }
+
+    /**
+     * Sets the specified stencil state. If both stencilFront and stencilBack are null, stencil
+     * operation is disabled.
+     *
+     * @param {StencilParameters} [stencilFront] - The front stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified.
+     * @param {StencilParameters} [stencilBack] - The back stencil parameters. Defaults to
+     * {@link StencilParameters.DEFAULT} if not specified.
+     */
+    setStencilState(stencilFront, stencilBack) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the specified blend state.
+     *
+     * @param {BlendState} blendState - New blend state.
+     */
+    setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the specified depth state.
+     *
+     * @param {DepthState} depthState - New depth state.
+     */
+    setDepthState(depthState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Controls how triangles are culled based on their face direction. The default cull mode is
+     * {@link CULLFACE_BACK}.
+     *
+     * @param {number} cullMode - The cull mode to set. Can be:
+     *
+     * - {@link CULLFACE_NONE}
+     * - {@link CULLFACE_BACK}
+     * - {@link CULLFACE_FRONT}
+     */
+    setCullMode(cullMode) {
+        Debug.assert(false);
     }
 
     /**
@@ -315,7 +491,7 @@ class GraphicsDevice extends EventHandler {
      * @returns {import('./render-target.js').RenderTarget} The current render target.
      * @example
      * // Get the current render target
-     * var renderTarget = device.getRenderTarget();
+     * const renderTarget = device.getRenderTarget();
      */
     getRenderTarget() {
         return this.renderTarget;
@@ -358,13 +534,21 @@ class GraphicsDevice extends EventHandler {
      */
     _isBrowserInterface(texture) {
         return this._isImageBrowserInterface(texture) ||
-                (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement) ||
-                (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
+                this._isImageCanvasInterface(texture) ||
+                this._isImageVideoInterface(texture);
     }
 
     _isImageBrowserInterface(texture) {
         return (typeof ImageBitmap !== 'undefined' && texture instanceof ImageBitmap) ||
                (typeof HTMLImageElement !== 'undefined' && texture instanceof HTMLImageElement);
+    }
+
+    _isImageCanvasInterface(texture) {
+        return (typeof HTMLCanvasElement !== 'undefined' && texture instanceof HTMLCanvasElement);
+    }
+
+    _isImageVideoInterface(texture) {
+        return (typeof HTMLVideoElement !== 'undefined' && texture instanceof HTMLVideoElement);
     }
 
     /**
@@ -378,18 +562,6 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     resizeCanvas(width, height) {
-        this._width = width;
-        this._height = height;
-
-        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(EVENT_RESIZE, width, height);
-        }
     }
 
     /**
@@ -405,7 +577,7 @@ class GraphicsDevice extends EventHandler {
         this._height = height;
         this.canvas.width = width;
         this.canvas.height = height;
-        this.fire(EVENT_RESIZE, width, height);
+        this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
     }
 
     updateClientRect() {
@@ -452,12 +624,23 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     set maxPixelRatio(ratio) {
-        this._maxPixelRatio = ratio;
-        this.resizeCanvas(this._width, this._height);
+        if (this._maxPixelRatio !== ratio) {
+            this._maxPixelRatio = ratio;
+            this.resizeCanvas(this._width, this._height);
+        }
     }
 
     get maxPixelRatio() {
         return this._maxPixelRatio;
+    }
+
+    /**
+     * The type of the device. Can be one of pc.DEVICETYPE_WEBGL1, pc.DEVICETYPE_WEBGL2 or pc.DEVICETYPE_WEBGPU.
+     *
+     * @type {import('./constants.js').DEVICETYPE_WEBGL1 | import('./constants.js').DEVICETYPE_WEBGL2 | import('./constants.js').DEVICETYPE_WEBGPU}
+     */
+    get deviceType() {
+        return this._deviceType;
     }
 
     /**
@@ -484,6 +667,34 @@ class GraphicsDevice extends EventHandler {
      */
     setBoneLimit(maxBones) {
         this.boneLimit = maxBones;
+    }
+
+    /**
+     * Function which executes at the start of the frame. This should not be called manually, as
+     * it is handled by the AppBase instance.
+     *
+     * @ignore
+     */
+    frameStart() {
+        this.renderPassIndex = 0;
+        this.renderVersion++;
+
+        Debug.call(() => {
+
+            // log out all loaded textures, sorted by gpu memory size
+            if (Tracing.get(TRACEID_TEXTURES)) {
+                const textures = this.textures.slice();
+                textures.sort((a, b) => b.gpuSize - a.gpuSize);
+                Debug.log(`Textures: ${textures.length}`);
+                let textureTotal = 0;
+                textures.forEach((texture, index) => {
+                    const textureSize  = texture.gpuSize;
+                    textureTotal += textureSize;
+                    Debug.log(`${index}. ${texture.name} ${texture.width}x${texture.height} VRAM: ${(textureSize / 1024 / 1024).toFixed(2)} MB`);
+                });
+                Debug.log(`Total: ${(textureTotal / 1024 / 1024).toFixed(2)}MB`);
+            }
+        });
     }
 }
 

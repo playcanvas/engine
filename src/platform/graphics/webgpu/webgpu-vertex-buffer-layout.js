@@ -13,6 +13,15 @@ gpuVertexFormats[TYPE_INT32] = 'sint32';
 gpuVertexFormats[TYPE_UINT32] = 'uint32';
 gpuVertexFormats[TYPE_FLOAT32] = 'float32';
 
+const gpuVertexFormatsNormalized = [];
+gpuVertexFormatsNormalized[TYPE_INT8] = 'snorm8';
+gpuVertexFormatsNormalized[TYPE_UINT8] = 'unorm8';
+gpuVertexFormatsNormalized[TYPE_INT16] = 'snorm16';
+gpuVertexFormatsNormalized[TYPE_UINT16] = 'unorm16';
+gpuVertexFormatsNormalized[TYPE_INT32] = 'sint32';     // there is no 32bit normalized signed int
+gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit normalized unsigned int
+gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
+
 /**
  * @ignore
  */
@@ -42,7 +51,7 @@ class WebgpuVertexBufferLayout {
     }
 
     getKey(vertexFormat0, vertexFormat1 = null) {
-        return vertexFormat0.renderingHashString + (vertexFormat1 ? vertexFormat1.renderingHashString : '');
+        return `VB[${vertexFormat0?.renderingHashString}, ${vertexFormat1?.renderingHashString}]`;
     }
 
     /**
@@ -63,11 +72,12 @@ class WebgpuVertexBufferLayout {
             for (let i = 0; i < elementCount; i++) {
                 const element = format.elements[i];
                 const location = semanticToLocation[element.name];
+                const formatTable = element.normalize ? gpuVertexFormatsNormalized : gpuVertexFormats;
 
                 attributes.push({
                     shaderLocation: location,
                     offset: interleaved ? element.offset : 0,
-                    format: `${gpuVertexFormats[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
+                    format: `${formatTable[element.dataType]}${element.numComponents > 1 ? 'x' + element.numComponents : ''}`
                 });
 
                 if (!interleaved || i === elementCount - 1) {
@@ -81,10 +91,11 @@ class WebgpuVertexBufferLayout {
             }
         };
 
-        addFormat(vertexFormat0);
-        if (vertexFormat1) {
+        if (vertexFormat0)
+            addFormat(vertexFormat0);
+
+        if (vertexFormat1)
             addFormat(vertexFormat1);
-        }
 
         return layout;
     }

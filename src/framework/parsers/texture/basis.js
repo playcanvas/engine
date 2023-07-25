@@ -45,7 +45,7 @@ class BasisParser {
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -57,9 +57,10 @@ class BasisParser {
             height: data.height,
             format: data.format,
             cubemap: data.cubemap,
-            levels: data.levels
-        });
+            levels: data.levels,
 
+            ...textureOptions
+        });
         texture.upload();
 
         return texture;

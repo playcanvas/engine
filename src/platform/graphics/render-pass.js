@@ -1,4 +1,7 @@
+import { Debug } from '../../core/debug.js';
+import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
+import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 class ColorAttachmentOps {
@@ -101,8 +104,22 @@ class RenderPass {
      */
     samples = 0;
 
-    /** @type {ColorAttachmentOps} */
-    colorOps;
+    /**
+     * Array of color attachment operations. The first element corresponds to the color attachment
+     * 0, and so on.
+     *
+     * @type {Array<ColorAttachmentOps>}
+     */
+    colorArrayOps = [];
+
+    /**
+     * Color attachment operations for the first color attachment.
+     *
+     * @type {ColorAttachmentOps}
+     */
+    get colorOps() {
+        return this.colorArrayOps[0];
+    }
 
     /** @type {DepthStencilAttachmentOps} */
     depthStencilOps;
@@ -124,6 +141,13 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
+     * Custom function that is called to render the pass.
+     *
+     * @type {Function}
+     */
+    execute;
+
+    /**
      * Custom function that is called before the pass has started.
      *
      * @type {Function}
@@ -142,8 +166,7 @@ class RenderPass {
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
-     * @param {Function} execute - Custom function that is called when the pass needs to be
-     * rendered.
+     * @param {Function} [execute] - Custom function that is called to render the pass.
      */
     constructor(graphicsDevice, execute) {
         this.device = graphicsDevice;
@@ -163,22 +186,27 @@ class RenderPass {
         // null represents the default framebuffer
         this.renderTarget = renderTarget || null;
 
-        // allocate ops only when render target is used
-        this.colorOps = new ColorAttachmentOps();
-        this.depthStencilOps = new DepthStencilAttachmentOps();
-
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
 
-        // if rendering to single-sampled buffer, this buffer needs to be stored
-        if (this.samples === 1) {
-            this.colorOps.store = true;
-            this.colorOps.resolve = false;
-        }
+        // allocate ops only when render target is used
+        this.depthStencilOps = new DepthStencilAttachmentOps();
 
-        // if render target needs mipmaps
-        if (this.renderTarget?.colorBuffer?.mipmaps) {
-            this.colorOps.mipmaps = true;
+        const numColorOps = renderTarget ? renderTarget._colorBuffers?.length : 1;
+        for (let i = 0; i < numColorOps; i++) {
+            const colorOps = new ColorAttachmentOps();
+            this.colorArrayOps[i] = colorOps;
+
+            // if rendering to single-sampled buffer, this buffer needs to be stored
+            if (this.samples === 1) {
+                colorOps.store = true;
+                colorOps.resolve = false;
+            }
+
+            // if render target needs mipmaps
+            if (this.renderTarget?._colorBuffers?.[i].mipmaps) {
+                colorOps.mipmaps = true;
+            }
         }
     }
 
@@ -188,8 +216,15 @@ class RenderPass {
      * @param {Color} color - The color to clear to.
      */
     setClearColor(color) {
-        this.colorOps.clearValue.copy(color);
-        this.colorOps.clear = true;
+
+        // in case of MRT, we clear all color buffers.
+        // TODO: expose per color buffer clear parameters on the camera, and copy them here.
+        const count = this.colorArrayOps.length;
+        for (let i = 0; i < count; i++) {
+            const colorOps = this.colorArrayOps[i];
+            colorOps.clearValue.copy(color);
+            colorOps.clear = true;
+        }
     }
 
     /**
@@ -221,13 +256,17 @@ class RenderPass {
         const realPass = this.renderTarget !== undefined;
         DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
+        Debug.call(() => {
+            this.log(device, device.renderPassIndex);
+        });
+
         this.before?.();
 
         if (realPass) {
             device.startPass(this);
         }
 
-        this.execute();
+        this.execute?.();
 
         if (realPass) {
             device.endPass(this);
@@ -235,9 +274,59 @@ class RenderPass {
 
         this.after?.();
 
+        device.renderPassIndex++;
+
         DebugGraphics.popGpuMarker(device);
 
     }
+
+    // #if _DEBUG
+    log(device, index) {
+        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
+
+            let rt = this.renderTarget;
+            if (rt === null && device.isWebGPU) {
+                rt = device.frameBuffer;
+            }
+            const numColor = rt?._colorBuffers?.length ?? (rt?.impl.assignedColorTexture ? 1 : 0);
+            const hasDepth = rt?.depth;
+            const hasStencil = rt?.stencil;
+            const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+                `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
+                `${hasDepth ? '[Depth]' : ''}` +
+                `${hasStencil ? '[Stencil]' : ''}` +
+                `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
+
+            Debug.trace(TRACEID_RENDER_PASS,
+                        `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        rtInfo.padEnd(30));
+
+            for (let i = 0; i < numColor; i++) {
+                const colorOps = this.colorArrayOps[i];
+                Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    color[${i}]: ` +
+                            `${colorOps.clear ? 'clear' : 'load'}->` +
+                            `${colorOps.store ? 'store' : 'discard'} ` +
+                            `${colorOps.resolve ? 'resolve ' : ''}` +
+                            `${colorOps.mipmaps ? 'mipmaps ' : ''}`);
+            }
+
+            if (this.depthStencilOps) {
+
+                if (hasDepth) {
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
+                                `${this.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
+                }
+
+                if (hasStencil) {
+                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
+                                `${this.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
+                                `${this.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
+                }
+            }
+        }
+    }
+    // #endif
 }
 
 export { RenderPass, ColorAttachmentOps, DepthStencilAttachmentOps };

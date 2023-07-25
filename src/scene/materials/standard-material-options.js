@@ -8,6 +8,9 @@ class StandardMaterialOptions {
     /** @private */
     _pass = 0;
 
+    /** @private */
+    _isForwardPass = false;
+
     chunks = [];
 
     /**
@@ -47,7 +50,7 @@ class StandardMaterialOptions {
     metalnessTint = false;
 
     /**
-     * Defines if {@link StandardMaterial#shininess} constant should affect glossiness value.
+     * Defines if {@link StandardMaterial#gloss} constant should affect glossiness value.
      *
      * @type {boolean}
      */
@@ -114,6 +117,15 @@ class StandardMaterialOptions {
 
     get pass() {
         return this._pass;
+    }
+
+    set isForwardPass(value) {
+        this._isForwardPass = value;
+        this.litOptions._isForwardPass = value;
+    }
+
+    get isForwardPass() {
+        return this._isForwardPass;
     }
 }
 

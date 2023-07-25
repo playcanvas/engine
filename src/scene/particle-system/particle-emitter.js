@@ -32,7 +32,8 @@ import {
     EMITTERSHAPE_BOX,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
-    PARTICLESORT_NONE
+    PARTICLESORT_NONE,
+    SHADER_FORWARD
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -697,7 +698,6 @@ class ParticleEmitter {
         this.material.name = this.node.name;
         this.material.cull = CULLFACE_NONE;
         this.material.alphaWrite = false;
-        this.material.blend = true;
         this.material.blendType = this.blendType;
 
         this.material.depthWrite = this.depthWrite;
@@ -858,6 +858,7 @@ class ParticleEmitter {
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
             const shader = programLib.getProgram('particle', {
+                pass: SHADER_FORWARD,
                 useCpu: this.emitter.useCpu,
                 normal: this.emitter.normalOption,
                 halflambert: this.emitter.halfLambert,
