@@ -44,6 +44,7 @@
             "TypeAlias",
             "Reference"
         ],
+        "githubPages": false,
         "name": "PlayCanvas Engine API",
         "out": "typedocs",
         "plugin": [
