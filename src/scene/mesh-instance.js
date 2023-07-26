@@ -73,6 +73,8 @@ class Command {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
     /**
@@ -152,10 +154,6 @@ class MeshInstance {
         }
 
         this._key = [0, 0];
-
-        this.isStatic = false;
-        this._staticLightList = null;
-        this._staticSource = null;
 
         /**
          * The graph node defining the transform for this instance.
@@ -740,7 +738,6 @@ class MeshInstance {
      *
      * @param {import('./scene.js').Scene} scene - The scene.
      * @param {number} pass - The render pass.
-     * @param {any} staticLightList - List of static lights.
      * @param {any} sortedLights - Array of arrays of lights.
      * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - The
      * format of the view uniform buffer.
@@ -748,8 +745,8 @@ class MeshInstance {
      * format of the view bind group.
      * @ignore
      */
-    updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
+    updatePassShader(scene, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, null, pass, sortedLights,
                                                             viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 

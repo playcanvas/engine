@@ -2,6 +2,8 @@
  * A frustum is a shape that defines the viewing space of a camera. It can be used to determine
  * visibility of points and bounding spheres. Typically, you would not create a Frustum shape
  * directly, but instead query {@link CameraComponent#frustum}.
+ *
+ * @category Math
  */
 class Frustum {
     planes = [];

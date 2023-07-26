@@ -47,18 +47,6 @@ function equalParamSets(params1, params2) {
     return true;
 }
 
-function equalLightLists(lightList1, lightList2) {
-    for (let k = 0; k < lightList1.length; k++) {
-        if (lightList2.indexOf(lightList1[k]) < 0)
-            return false;
-    }
-    for (let k = 0; k < lightList2.length; k++) {
-        if (lightList1.indexOf(lightList2[k]) < 0)
-            return false;
-    }
-    return true;
-}
-
 const _triFanIndices = [0, 1, 3, 2, 3, 1];
 const _triStripIndices = [0, 1, 3, 0, 3, 2];
 
@@ -70,6 +58,8 @@ function getScaleSign(mi) {
 
 /**
  * Glues many mesh instances into a single one for better performance.
+ *
+ * @category Graphics
  */
 class BatchManager {
     /**
@@ -267,26 +257,7 @@ class BatchManager {
 
     _extractRender(node, arr, group, groupMeshInstances) {
         if (node.render) {
-
-            if (node.render.isStatic) {
-                // static mesh instances can be in both drawCall array with _staticSource linking to original
-                // and in the original array as well, if no triangle splitting was done
-                const drawCalls = this.scene.drawCalls;
-                const nodeMeshInstances = node.render.meshInstances;
-                for (let i = 0; i < drawCalls.length; i++) {
-                    if (!drawCalls[i]._staticSource) continue;
-                    if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                    arr.push(drawCalls[i]);
-                }
-                for (let i = 0; i < nodeMeshInstances.length; i++) {
-                    if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                        arr.push(nodeMeshInstances[i]);
-                    }
-                }
-            } else {
-                arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
-            }
-
+            arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
             node.render.removeFromLayers();
         }
 
@@ -295,25 +266,7 @@ class BatchManager {
 
     _extractModel(node, arr, group, groupMeshInstances) {
         if (node.model && node.model.model) {
-            if (node.model.isStatic) {
-                // static mesh instances can be in both drawCall array with _staticSource linking to original
-                // and in the original array as well, if no triangle splitting was done
-                const drawCalls = this.scene.drawCalls;
-                const nodeMeshInstances = node.model.meshInstances;
-                for (let i = 0; i < drawCalls.length; i++) {
-                    if (!drawCalls[i]._staticSource) continue;
-                    if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                    arr.push(drawCalls[i]);
-                }
-                for (let i = 0; i < nodeMeshInstances.length; i++) {
-                    if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                        arr.push(nodeMeshInstances[i]);
-                    }
-                }
-            } else {
-                arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-            }
-
+            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
             node.model.removeModelFromLayers();
 
             // #if _DEBUG
@@ -521,7 +474,6 @@ class BatchManager {
             const defs = meshInstancesLeftA[0]._shaderDefs;
             const params = meshInstancesLeftA[0].parameters;
             const stencil = meshInstancesLeftA[0].stencilFront;
-            const lightList = meshInstancesLeftA[0]._staticLightList;
             let vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             const drawOrder = meshInstancesLeftA[0].drawOrder;
             aabb.copy(meshInstancesLeftA[0].aabb);
@@ -573,17 +525,6 @@ class BatchManager {
 
                 // Split by parameters
                 if (!equalParamSets(params, mi.parameters)) {
-                    skipMesh(mi);
-                    continue;
-                }
-                // Split by static light list
-                const staticLights = mi._staticLightList;
-                if (lightList && staticLights) {
-                    if (!equalLightLists(lightList, staticLights)) {
-                        skipMesh(mi);
-                        continue;
-                    }
-                } else if (lightList || staticLights) { // Split by static/non static
                     skipMesh(mi);
                     continue;
                 }
@@ -850,9 +791,7 @@ class BatchManager {
             const meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
             meshInstance.parameters = batch.origMeshInstances[0].parameters;
-            meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
             meshInstance.layer = batch.origMeshInstances[0].layer;
-            meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
@@ -936,10 +875,8 @@ class BatchManager {
         batch2.meshInstance = new MeshInstance(batch.meshInstance.mesh, batch.meshInstance.material, batch.meshInstance.node);
         batch2.meshInstance._updateAabb = false;
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
-        batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
         batch2.meshInstance.cull = clonedMeshInstances[0].cull;
         batch2.meshInstance.layer = clonedMeshInstances[0].layer;
-        batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
             batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);

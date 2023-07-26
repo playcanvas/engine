@@ -33,7 +33,6 @@ import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
-import { StaticMeshes } from './static-meshes.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
@@ -1182,22 +1181,6 @@ class Renderer {
             // prepare layer for culling with the camera
             for (let j = 0; j < layer.cameras.length; j++) {
                 layer.instances.prepare(j);
-            }
-
-            // Generate static lighting for meshes in this layer if needed
-            // Note: Static lighting is not used when clustered lighting is enabled
-            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
-                // TODO: reuse with the same staticLightHash
-                if (layer._staticPrepareDone) {
-                    StaticMeshes.revert(layer.opaqueMeshInstances);
-                    StaticMeshes.revert(layer.transparentMeshInstances);
-                }
-                StaticMeshes.prepare(this.device, scene, layer.opaqueMeshInstances, layer._lights);
-                StaticMeshes.prepare(this.device, scene, layer.transparentMeshInstances, layer._lights);
-                comp._dirty = true;
-                scene.updateShaders = true;
-                layer._needsStaticPrepare = false;
-                layer._staticPrepareDone = true;
             }
         }
 

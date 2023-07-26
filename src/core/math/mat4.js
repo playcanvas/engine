@@ -11,6 +11,8 @@ const scale = new Vec3();
 
 /**
  * A 4x4 matrix.
+ *
+ * @category Math
  */
 class Mat4 {
     /**

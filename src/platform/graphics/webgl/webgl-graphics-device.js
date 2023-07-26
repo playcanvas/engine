@@ -247,6 +247,7 @@ function testTextureFloatHighPrecision(device) {
  * create a new graphics device against each.
  *
  * @augments GraphicsDevice
+ * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {
     /**
@@ -838,6 +839,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
+    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {

@@ -39,6 +39,8 @@ let id = 0;
 /**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
  * render state that is set before the mesh instance is submitted to the graphics device.
+ *
+ * @category Graphics
  */
 class Material {
     /**
@@ -439,7 +441,8 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    // TODO: unused parameter should be removed, but the Editor still uses this function
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);

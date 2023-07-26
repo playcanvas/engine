@@ -9,6 +9,8 @@ class Key {
 
 /**
  * A animation node has a name and contains an array of keyframes.
+ *
+ * @category Animation
  */
 class Node {
     /**
@@ -23,6 +25,8 @@ class Node {
 /**
  * An animation is a sequence of keyframe arrays which map to the nodes of a skeletal hierarchy. It
  * controls how the nodes of the hierarchy are transformed over time.
+ *
+ * @category Animation
  */
 class Animation {
     /**

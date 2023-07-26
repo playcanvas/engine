@@ -6,6 +6,7 @@ import { XrInputSource } from './xr-input-source.js';
  * Provides access to input sources for WebXR.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrInput extends EventHandler {
     /**

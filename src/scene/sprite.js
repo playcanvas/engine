@@ -24,6 +24,7 @@ const spriteIndices = [
  * animation.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class Sprite extends EventHandler {
     /**

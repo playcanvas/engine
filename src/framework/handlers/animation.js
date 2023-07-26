@@ -16,6 +16,7 @@ import { GlbParser } from '../parsers/glb-parser.js';
  * Resource handler used for loading {@link Animation} resources.
  *
  * @implements {ResourceHandler}
+ * @category Animation
  */
 class AnimationHandler {
     /**

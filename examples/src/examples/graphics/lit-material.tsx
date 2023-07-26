@@ -1,25 +1,26 @@
 import * as pc from '../../../../';
-class CustomMaterialExample {
+
+class LitMaterialExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Custom Material';
+    static NAME = 'Lit Material';
     static HIDDEN = true;
     static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
-        const gfxOptions = {
-            deviceTypes: [deviceType],
-            glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js'
-        };
-
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
             color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
             normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
             gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' })
+        };
+
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
@@ -98,27 +99,20 @@ class CustomMaterialExample {
                 light.translate(0, 1, 0);
                 app.root.addChild(light);
 
-                const material = new pc.CustomMaterial();
+                const material = new pc.LitMaterial();
                 material.setParameter("texture_envAtlas", assets.helipad.resource);
                 material.setParameter("material_reflectivity", 1.0);
                 material.setParameter("material_normalMapIntensity", 1.0);
                 material.setParameter("texture_diffuseMap", assets.color.resource);
                 material.setParameter("texture_glossMap", assets.gloss.resource);
                 material.setParameter("texture_normalMap", assets.normal.resource);
-                const options = new pc.LitOptions();
-                options.shadingModel = pc.SPECULAR_BLINN;
-                options.useSpecular = true;
-                options.useMetalness = true;
-                options.occludeSpecular = 1;
-                options.reflectionSource = 'envAtlas';
-                options.reflectionEncoding = assets.helipad.resource.encoding;
-                options.ambientSource = 'envAtlas';
-                options.ambientEncoding = assets.helipad.resource.encoding;
-                options.clusteredLightingEnabled = app.scene.clusteredLightingEnabled;
-                options.normalMapEnabled = true;
-                options.useSpecularColor = true;
-                options.useSpecularityFactor = true;
-                material.litOptions = options;
+                material.shadingModel = pc.SPECULAR_BLINN;
+                material.useSkybox = true;
+                material.hasSpecular = true;
+                material.hasSpecularityFactor = true;
+                material.hasNormals = true;
+                material.hasMetalness = true;
+                material.occludeSpecular = pc.SPECOCC_AO;
 
                 const argumentsChunk = `
                 uniform sampler2D texture_diffuseMap;
@@ -166,4 +160,4 @@ class CustomMaterialExample {
     }
 }
 
-export default CustomMaterialExample;
+export default LitMaterialExample;

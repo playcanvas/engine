@@ -31,6 +31,7 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * Enables an Entity to render a simple static sprite or sprite animations.
  *
  * @augments Component
+ * @category Graphics
  */
 class SpriteComponent extends Component {
     /**

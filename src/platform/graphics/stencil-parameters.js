@@ -5,33 +5,62 @@ const stringIds = new StringIds();
 
 /**
  * Holds stencil test settings.
+ *
+ * @category Graphics
  */
 class StencilParameters {
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _func;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _ref;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _fail;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _zfail;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _zpass;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _readMask;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _writeMask;
 
-    /** @type {boolean} */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _dirty = true;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _key;
 
     /**

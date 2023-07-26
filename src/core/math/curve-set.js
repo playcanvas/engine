@@ -4,6 +4,8 @@ import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
  * A curve set is a collection of curves.
+ *
+ * @category Math
  */
 class CurveSet {
     curves = [];

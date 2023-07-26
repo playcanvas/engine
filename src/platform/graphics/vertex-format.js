@@ -55,6 +55,7 @@ const stringIds = new StringIds();
  * @property {number} elements[].stride The number of total bytes that are between the start of one
  * vertex, and the start of the next.
  * @property {number} elements[].size The size of the attribute in bytes.
+ * @category Graphics
  */
 class VertexFormat {
     /**

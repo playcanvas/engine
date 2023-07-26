@@ -158,6 +158,8 @@ class GeometryVertexStream {
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
  * example sharing a Vertex or Index Buffer between multiple meshes. See {@link VertexBuffer},
  * {@link IndexBuffer} and {@link VertexFormat} for details.
+ *
+ * @category Graphics
  */
 class Mesh extends RefCountedObject {
     /**
