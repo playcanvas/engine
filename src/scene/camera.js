@@ -40,7 +40,6 @@ class Camera {
         this._clearDepthBuffer = true;
         this._clearStencil = 0;
         this._clearStencilBuffer = true;
-        this._cullingMask = 0xFFFFFFFF;
         this._cullFaces = true;
         this._farClip = 1000;
         this._flipFaces = false;
@@ -175,14 +174,6 @@ class Camera {
 
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
-    }
-
-    set cullingMask(newValue) {
-        this._cullingMask = newValue;
-    }
-
-    get cullingMask() {
-        return this._cullingMask;
     }
 
     set cullFaces(newValue) {
@@ -411,7 +402,6 @@ class Camera {
         this.clearStencil = other.clearStencil;
         this.clearStencilBuffer = other.clearStencilBuffer;
         this.cullFaces = other.cullFaces;
-        this.cullingMask = other.cullingMask;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
         this.layers = other.layers;

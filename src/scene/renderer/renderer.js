@@ -786,16 +786,12 @@ class Renderer {
         let visibleLength = 0;
         const drawCallsCount = drawCalls.length;
 
-        const cullingMask = camera.cullingMask || 0xFFFFFFFF; // if missing assume camera's default value
-
         if (!camera.frustumCulling) {
             for (let i = 0; i < drawCallsCount; i++) {
                 // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                 const drawCall = drawCalls[i];
-                if (!drawCall.visible && !drawCall.command) continue;
-
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
+                if (!drawCall.visible && !drawCall.command)
+                    continue;
 
                 visibleList[visibleLength] = drawCall;
                 visibleLength++;
@@ -809,9 +805,6 @@ class Renderer {
             if (!drawCall.command) {
                 if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
                 let visible = true;
-
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
                 if (drawCall.cull) {
                     visible = drawCall._isVisible(camera);
@@ -924,7 +917,7 @@ class Renderer {
 
     /**
      * visibility culling of lights, meshInstances, shadows casters
-     * Also applies meshInstance.visible and camera.cullingMask
+     * Also applies meshInstance.visible
      *
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition.
