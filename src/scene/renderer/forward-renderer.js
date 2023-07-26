@@ -461,7 +461,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
+    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, layer, pass) {
 
         const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -481,10 +481,6 @@ class ForwardRenderer extends Renderer {
 
             /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
-
-            // apply visibility override
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
-                continue;
 
             if (drawCall.command) {
 
@@ -697,14 +693,14 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, drawCallback, layer, flipFaces) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, layer, pass);
 
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
@@ -1143,7 +1139,6 @@ class ForwardRenderer extends Renderer {
                                visible.length,
                                layer._splitLights,
                                shaderPass,
-                               layer.cullingMask,
                                layer.onDrawCall,
                                layer,
                                flipFaces);
