@@ -77,7 +77,6 @@ class EventHandler {
             }
         }
 
-        // @ts-ignore: Object is possibly 'undefined'
         this._callbacks.get(name).push({
             callback: callback,
             scope: scope,
@@ -150,7 +149,6 @@ class EventHandler {
             // if we are removing a callback from the list that is executing right now
             // ensure we preserve initial list before modifications
             if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name))
-                // @ts-ignore: Object is possibly 'undefined'
                 this._callbackActive.set(name, Array.from(this._callbackActive.get(name)));
         } else {
             // if we are removing a callback from any list that is executing right now
@@ -237,10 +235,8 @@ class EventHandler {
             callbacks = Array.from(callbacksInitial);
         }
 
-        // @ts-ignore: Array is possibly 'undefined'
         // eslint-disable-next-line no-unmodified-loop-condition
         for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
-            // @ts-ignore: Array is possibly 'undefined'
             const evt = (callbacks || this._callbackActive.get(name))[i];
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
@@ -251,7 +247,6 @@ class EventHandler {
 
                 if (ind !== -1) {
                     if (this._callbackActive.get(name) === existingCallback)
-                        // @ts-ignore: Array is possibly 'undefined'
                         this._callbackActive.set(name, Array.from(this._callbackActive.get(name)));
 
                     const callbacks = this._callbacks.get(name);
@@ -281,7 +276,6 @@ class EventHandler {
      * obj.hasEvent('hello'); // returns false
      */
     hasEvent(name) {
-        // @ts-ignore: Object is possibly 'undefined'
         return (this._callbacks.has(name) && this._callbacks.get(name).length !== 0) || false;
     }
 }
