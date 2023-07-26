@@ -841,7 +841,7 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
@@ -852,9 +852,9 @@ class StandardMaterial extends Material {
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, pass, sortedLights);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {

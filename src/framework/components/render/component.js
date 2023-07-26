@@ -42,8 +42,12 @@ class RenderComponent extends Component {
     /** @private */
     _lightmapSizeMultiplier = 1;
 
-    /** @private */
-    _isStatic = false;
+    /**
+     * Mark meshes as non-movable (optimization).
+     *
+     * @type {boolean}
+     */
+    isStatic = false;
 
     /** @private */
     _batchGroupId = -1;
@@ -251,7 +255,6 @@ class RenderComponent extends Component {
 
                 mi[i].castShadow = this._castShadows;
                 mi[i].receiveShadow = this._receiveShadows;
-                mi[i].isStatic = this._isStatic;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
@@ -380,28 +383,6 @@ class RenderComponent extends Component {
 
     get lightmapSizeMultiplier() {
         return this._lightmapSizeMultiplier;
-    }
-
-    /**
-     * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
-     */
-    set isStatic(value) {
-        if (this._isStatic !== value) {
-            this._isStatic = value;
-
-            const mi = this._meshInstances;
-            if (mi) {
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].isStatic = value;
-                }
-            }
-        }
-    }
-
-    get isStatic() {
-        return this._isStatic;
     }
 
     /**

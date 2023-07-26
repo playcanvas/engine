@@ -436,7 +436,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchLocalLights(sortedLights, scene, mask, usedDirLights, staticLightList) {
+    dispatchLocalLights(sortedLights, scene, mask, usedDirLights) {
 
         let cnt = usedDirLights;
         const scope = this.device.scope;
@@ -446,20 +446,8 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numOmnis; i++) {
             const omni = omnis[i];
             if (!(omni.mask & mask)) continue;
-            if (omni.isStatic) continue;
             this.dispatchOmniLight(scene, scope, omni, cnt);
             cnt++;
-        }
-
-        let staticId = 0;
-        if (staticLightList) {
-            let omni = staticLightList[staticId];
-            while (omni && omni._type === LIGHTTYPE_OMNI) {
-                this.dispatchOmniLight(scene, scope, omni, cnt);
-                cnt++;
-                staticId++;
-                omni = staticLightList[staticId];
-            }
         }
 
         const spts = sortedLights[LIGHTTYPE_SPOT];
@@ -467,19 +455,8 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numSpts; i++) {
             const spot = spts[i];
             if (!(spot.mask & mask)) continue;
-            if (spot.isStatic) continue;
             this.dispatchSpotLight(scene, scope, spot, cnt);
             cnt++;
-        }
-
-        if (staticLightList) {
-            let spot = staticLightList[staticId];
-            while (spot && spot._type === LIGHTTYPE_SPOT) {
-                this.dispatchSpotLight(scene, scope, spot, cnt);
-                cnt++;
-                staticId++;
-                spot = staticLightList[staticId];
-            }
         }
     }
 
@@ -501,7 +478,7 @@ class ForwardRenderer extends Renderer {
         const device = this.device;
         const scene = this.scene;
         const lightHash = layer ? layer._lightHash : 0;
-        let prevMaterial = null, prevObjDefs, prevStatic, prevLightMask;
+        let prevMaterial = null, prevObjDefs, prevLightMask;
 
         for (let i = 0; i < drawCallsCount; i++) {
 
@@ -541,10 +518,6 @@ class ForwardRenderer extends Renderer {
                     prevMaterial = null; // force change shader if the object uses a different variant of the same material
                 }
 
-                if (drawCall.isStatic || prevStatic) {
-                    prevMaterial = null;
-                }
-
                 if (material !== prevMaterial) {
                     this._materialSwitches++;
                     material._scene = scene;
@@ -565,20 +538,13 @@ class ForwardRenderer extends Renderer {
                     // marker to allow us to see the source node for shader alloc
                     DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
-                    // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
+                    // use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
-                    if (!drawCall.isStatic) {
-                        const variantKey = pass + '_' + objDefs + '_' + lightHash;
-                        drawCall._shader[pass] = material.variants[variantKey];
-                        if (!drawCall._shader[pass]) {
-                            drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                            material.variants[variantKey] = drawCall._shader[pass];
-                        }
-                    } else {
-
-                        // static lights generate unique shader per draw call, as static lights are unique per draw call,
-                        // and so variants cache is not used
-                        drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                    const variantKey = pass + '_' + objDefs + '_' + lightHash;
+                    drawCall._shader[pass] = material.variants[variantKey];
+                    if (!drawCall._shader[pass]) {
+                        drawCall.updatePassShader(scene, pass, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                        material.variants[variantKey] = drawCall._shader[pass];
                     }
                     drawCall._lightHash = lightHash;
 
@@ -592,7 +558,6 @@ class ForwardRenderer extends Renderer {
                 prevMaterial = material;
                 prevObjDefs = objDefs;
                 prevLightMask = lightMask;
-                prevStatic = drawCall.isStatic;
             }
         }
 
@@ -651,7 +616,7 @@ class ForwardRenderer extends Renderer {
                         const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
 
                         if (!clusteredLightingEnabled) {
-                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
                         }
                     }
 

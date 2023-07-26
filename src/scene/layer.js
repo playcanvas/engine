@@ -417,9 +417,6 @@ class Layer {
         this._dirtyCameras = false;
 
         this._lightHash = 0;
-        this._staticLightHash = 0;
-        this._needsStaticPrepare = true;
-        this._staticPrepareDone = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -610,27 +607,9 @@ class Layer {
      * @private
      */
     removeMeshInstanceFromArray(m, arr) {
-        let spliceOffset = -1;
-        let spliceCount = 0;
-        const len = arr.length;
-        for (let j = 0; j < len; j++) {
-            const drawCall = arr[j];
-            if (drawCall === m) {
-                spliceOffset = j;
-                spliceCount = 1;
-                break;
-            }
-            if (drawCall._staticSource === m) {
-                if (spliceOffset < 0) spliceOffset = j;
-                spliceCount++;
-            } else if (spliceOffset >= 0) {
-                break;
-            }
-        }
-
-        if (spliceOffset >= 0) {
-            arr.splice(spliceOffset, spliceCount);
-        }
+        const i = arr.indexOf(m);
+        if (i >= 0)
+            arr.splice(i, 1);
     }
 
     /**
@@ -778,31 +757,14 @@ class Layer {
         if (this._lights.length > 0) {
             this._lights.sort(sortLights);
             let str = '';
-            let strStatic = '';
 
             for (let i = 0; i < this._lights.length; i++) {
-                if (this._lights[i].isStatic) {
-                    strStatic += this._lights[i].key;
-                } else {
-                    str += this._lights[i].key;
-                }
+                str += this._lights[i].key;
             }
 
-            if (str.length === 0) {
-                this._lightHash = 0;
-            } else {
-                this._lightHash = hashCode(str);
-            }
-
-            if (strStatic.length === 0) {
-                this._staticLightHash = 0;
-            } else {
-                this._staticLightHash = hashCode(strStatic);
-            }
-
+            this._lightHash = str.length > 0 ? hashCode(str) : 0;
         } else {
             this._lightHash = 0;
-            this._staticLightHash = 0;
         }
     }
 

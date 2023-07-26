@@ -86,11 +86,11 @@ class LitMaterial extends Material {
 
     hasClearCoatNormals = false;
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
         options.usedUvs = this.usedUvs.slice();
         options.shaderChunk = this.shaderChunk;
 
-        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights, staticLightList);
+        LitMaterialOptionsBuilder.update(options.litOptions, this, scene, objDefs, pass, sortedLights);
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('lit', lit);
