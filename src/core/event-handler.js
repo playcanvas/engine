@@ -56,9 +56,9 @@ class EventHandler {
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
-     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
+     * @param {object} scope - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @param {boolean} [once] - If true, the callback will be unbound after being fired once.
+     * @param {boolean} once - If true, the callback will be unbound after being fired once.
      * @private
      */
     _addCallback(name, callback, scope, once) {
@@ -276,7 +276,7 @@ class EventHandler {
      * obj.hasEvent('hello'); // returns false
      */
     hasEvent(name) {
-        return (this._callbacks.has(name) && this._callbacks.get(name).length !== 0) || false;
+        return !!this._callbacks.get(name)?.length;
     }
 }
 
