@@ -11,15 +11,13 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-let keyA, keyB, sortPos, sortDir;
-
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
 }
 
 function sortMaterialMesh(drawCallA, drawCallB) {
-    keyA = drawCallA._key[SORTKEY_FORWARD];
-    keyB = drawCallB._key[SORTKEY_FORWARD];
+    const keyA = drawCallA._key[SORTKEY_FORWARD];
+    const keyB = drawCallB._key[SORTKEY_FORWARD];
     if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
         return drawCallB.mesh.id - drawCallA.mesh.id;
     }
@@ -844,8 +842,8 @@ class Layer {
         const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === SORTMODE_CUSTOM) {
-            sortPos = cameraNode.getPosition();
-            sortDir = cameraNode.forward;
+            const sortPos = cameraNode.getPosition();
+            const sortDir = cameraNode.forward;
             if (this.customCalculateSortValues) {
                 this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
             }
@@ -859,8 +857,8 @@ class Layer {
             }
         } else {
             if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
-                sortPos = cameraNode.getPosition();
-                sortDir = cameraNode.forward;
+                const sortPos = cameraNode.getPosition();
+                const sortDir = cameraNode.forward;
                 this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
             }
 
