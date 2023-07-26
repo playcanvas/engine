@@ -136,7 +136,6 @@ describe('ModelComponent', function () {
             expect(srcMi[i].layer).to.equal(dstMi[i].layer);
             expect(srcMi[i].receiveShadow).to.equal(dstMi[i].receiveShadow);
             expect(srcMi[i].castShadow).to.equal(dstMi[i].castShadow);
-            expect(srcMi[i].isStatic).to.equal(dstMi[i].isStatic);
             expect(srcMi[i].material.id).to.exist;
             expect(srcMi[i].material.id).to.equal(dstMi[i].material.id);
         }
@@ -157,7 +156,6 @@ describe('ModelComponent', function () {
         e.model.model.meshInstances[0].layer = 16;
 
         // // TODO: these don't get copied,
-        // e.model.model.meshInstances[0].isStatic = true;
         // e.model.model.meshInstances[0].screenSpace = true;
 
         const c = e.clone();

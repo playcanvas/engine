@@ -818,10 +818,10 @@ ForwardRenderer.prototype.renderComposition = function (comp) {
     getApplication().renderComposition(comp);
 };
 
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
+ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, unused, pass, sortedLights) {
     Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
     const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, staticLightList, sortedLights);
+    return meshInstance.updatePassShader(scene, pass, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {

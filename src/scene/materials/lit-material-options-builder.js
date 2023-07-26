@@ -1,11 +1,11 @@
 import { CUBEPROJ_NONE, GAMMA_SRGBHDR, GAMMA_NONE, LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, SHADER_FORWARDHDR, TONEMAP_LINEAR, SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED, SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_NOSHADOW, SHADERDEF_TANGENTS, SPECULAR_BLINN, SPRITE_RENDERMODE_SIMPLE } from "../constants.js";
 
 class LitMaterialOptionsBuilder {
-    static update(litOptions, material, scene, objDefs, pass, sortedLights, staticLightList) {
+    static update(litOptions, material, scene, objDefs, pass, sortedLights) {
         LitMaterialOptionsBuilder.updateSharedOptions(litOptions, material, scene, objDefs, pass);
         LitMaterialOptionsBuilder.updateMaterialOptions(litOptions, material);
         LitMaterialOptionsBuilder.updateEnvOptions(litOptions, material, scene);
-        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights, staticLightList);
+        LitMaterialOptionsBuilder.updateLightingOptions(litOptions, material, objDefs, sortedLights);
 
         if (pass === SHADER_FORWARDHDR) {
             litOptions.gamma = GAMMA_SRGBHDR;
@@ -127,7 +127,7 @@ class LitMaterialOptionsBuilder {
         litOptions.useCubeMapRotation = hasSkybox && scene._skyboxRotationShaderInclude;
     }
 
-    static updateLightingOptions(litOptions, material, objDefs, sortedLights, staticLightList) {
+    static updateLightingOptions(litOptions, material, objDefs, sortedLights) {
         litOptions.lightMapWithoutAmbient = false;
 
         if (material.useLighting) {
@@ -140,8 +140,8 @@ class LitMaterialOptionsBuilder {
 
             if (sortedLights) {
                 LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
             }
             litOptions.lights = lightsFiltered;
         } else {
@@ -153,7 +153,7 @@ class LitMaterialOptionsBuilder {
         }
     }
 
-    static collectLights(lType, lights, lightsFiltered, mask, staticLightList) {
+    static collectLights(lType, lights, lightsFiltered, mask) {
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             if (light.enabled) {
@@ -163,15 +163,6 @@ class LitMaterialOptionsBuilder {
                             continue;
                         }
                     }
-                    lightsFiltered.push(light);
-                }
-            }
-        }
-
-        if (staticLightList) {
-            for (let i = 0; i < staticLightList.length; i++) {
-                const light = staticLightList[i];
-                if (light._type === lType) {
                     lightsFiltered.push(light);
                 }
             }

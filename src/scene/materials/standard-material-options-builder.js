@@ -42,13 +42,13 @@ class StandardMaterialOptionsBuilder {
     }
 
     // Minimal options for Depth and Shadow passes
-    updateMinRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateMinOptions(options, stdMat);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
-    updateRef(options, scene, stdMat, objDefs, staticLightList, pass, sortedLights) {
+    updateRef(options, scene, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
         this._updateEnvOptions(options, stdMat, scene);
         this._updateMaterialOptions(options, stdMat);
@@ -57,7 +57,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.toneMap = TONEMAP_LINEAR;
         }
         options.litOptions.hasTangents = objDefs && ((objDefs & SHADERDEF_TANGENTS) !== 0);
-        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList);
+        this._updateLightOptions(options, scene, stdMat, objDefs, sortedLights);
         this._updateUVOptions(options, stdMat, objDefs, false);
     }
 
@@ -345,7 +345,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useCubeMapRotation = usingSceneEnv && scene._skyboxRotationShaderInclude;
     }
 
-    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList) {
+    _updateLightOptions(options, scene, stdMat, objDefs, sortedLights) {
         options.lightMap = false;
         options.lightMapChannel = '';
         options.lightMapUv = 0;
@@ -383,8 +383,8 @@ class StandardMaterialOptionsBuilder {
 
             if (sortedLights) {
                 LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_DIRECTIONAL, sortedLights[LIGHTTYPE_DIRECTIONAL], lightsFiltered, mask);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask, staticLightList);
-                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask, staticLightList);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_OMNI, sortedLights[LIGHTTYPE_OMNI], lightsFiltered, mask);
+                LitMaterialOptionsBuilder.collectLights(LIGHTTYPE_SPOT, sortedLights[LIGHTTYPE_SPOT], lightsFiltered, mask);
             }
             options.litOptions.lights = lightsFiltered;
         } else {

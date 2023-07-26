@@ -86,13 +86,13 @@ class BasicMaterial extends Material {
         }
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // Note: this is deprecated function Editor and possibly other projects use: they define
         // updateShader callback on their BasicMaterial, so we handle it here.
         if (this.updateShader) {
             Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
-            this.updateShader(device, scene, objDefs, staticLightList, pass, sortedLights);
+            this.updateShader(device, scene, objDefs, null, pass, sortedLights);
             return this.shader;
         }
 
