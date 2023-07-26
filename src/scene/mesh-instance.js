@@ -11,7 +11,6 @@ import {
     LAYER_WORLD,
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
-    SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
@@ -530,10 +529,10 @@ class MeshInstance {
     }
 
     set receiveShadow(val) {
-        this._receiveShadow = val;
-        this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        if (this._receiveShadow !== val) {
+            this._receiveShadow = val;
+            this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
+        }
     }
 
     get receiveShadow() {
@@ -580,9 +579,10 @@ class MeshInstance {
     }
 
     set screenSpace(val) {
-        this._screenSpace = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
-        this._shader[SHADER_FORWARD] = null;
+        if (this._screenSpace !== val) {
+            this._screenSpace = val;
+            this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+        }
     }
 
     get screenSpace() {
@@ -605,9 +605,7 @@ class MeshInstance {
      */
     set mask(val) {
         const toggles = this._shaderDefs & 0x0000FFFF;
-        this._shaderDefs = toggles | (val << 16);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        this._updateShaderDefs(toggles | (val << 16));
     }
 
     get mask() {
