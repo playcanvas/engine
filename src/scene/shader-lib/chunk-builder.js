@@ -1,3 +1,5 @@
+import { Debug } from "../../core/debug.js";
+
 /**
  * Helper function to ensure a bit of backwards compatibility
  * @example
@@ -6,7 +8,9 @@
  * @returns {string} The backwards compatible shader source.
  */
 const toLitArgs = src => src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-    return 'litArgs' + b.replace(/\./g, '_');
+    const newSource = 'litArgs' + b.replace(/\./g, '_');
+    Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
+    return newSource;
 });
 
 // helper class for combining shader chunks together
