@@ -532,8 +532,7 @@ class MeshInstance {
     set receiveShadow(val) {
         if (this._receiveShadow !== val) {
             this._receiveShadow = val;
-            this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
-            this.clearShaders();
+            this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
         }
     }
 
@@ -581,9 +580,10 @@ class MeshInstance {
     }
 
     set screenSpace(val) {
-        this._screenSpace = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
-        this.clearShaders();
+        if (this._screenSpace !== val) {
+            this._screenSpace = val;
+            this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+        }
     }
 
     get screenSpace() {
@@ -605,12 +605,8 @@ class MeshInstance {
      * @type {number}
      */
     set mask(val) {
-        const oldShaderDefs = this._shaderDefs;
         const toggles = this._shaderDefs & 0x0000FFFF;
-        this._shaderDefs = toggles | (val << 16);
-        if (oldShaderDefs !== this._shaderDefs) {
-            this.clearShaders();
-        }
+        this._updateShaderDefs(toggles | (val << 16));
     }
 
     get mask() {
