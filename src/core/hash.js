@@ -19,15 +19,16 @@ function hashCode(str) {
  * Calculates simple hash value of an array of numbers. Designed for performance, but provides good
  * distribution with small number of collisions.
  *.
- * @param {Uint32Array} typedArray - Array of numbers to hash.
+ * @param {number[]|Uint32Array} typedArray - Array of numbers to hash.
  * @returns {number} Hash value.
+ * @ignore
  */
-function fnv1aHashUint32Array(typedArray) {
+function fnv1aHashUint32Array(array) {
     const prime = 16777619;
     let hash = 2166136261;
 
-    for (let i = 0; i < typedArray.length; i++) {
-        hash ^= typedArray[i];
+    for (let i = 0; i < array.length; i++) {
+        hash ^= array[i];
         hash *= prime;
     }
     return hash >>> 0; // Ensure non-negative integer

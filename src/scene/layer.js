@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { hashCode } from '../core/hash.js';
+import { fnv1aHashUint32Array } from '../core/hash.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
@@ -40,6 +40,8 @@ function sortLights(lightA, lightB) {
 
 // Layers
 let layerCounter = 0;
+
+const lightKeys = [];
 
 class VisibleInstanceList {
     constructor() {
@@ -741,17 +743,18 @@ class Layer {
 
     /** @private */
     _generateLightHash() {
-        // generate hash to check if layers have the same set of static lights
-        // order of lights shouldn't matter
-        if (this._lights.length > 0) {
-            this._lights.sort(sortLights);
-            let str = '';
+        // generate hash to check if layers have the same set of lights independent of their order
+        const lights = this._lights;
+        if (lights.length > 0) {
+            lights.sort(sortLights);
 
-            for (let i = 0; i < this._lights.length; i++) {
-                str += this._lights[i].key;
+            for (let i = 0; i < lights.length; i++) {
+                lightKeys.push(lights[i].key);
             }
 
-            this._lightHash = str.length > 0 ? hashCode(str) : 0;
+            this._lightHash = fnv1aHashUint32Array(lightKeys);
+            lightKeys.length = 0;
+
         } else {
             this._lightHash = 0;
         }
