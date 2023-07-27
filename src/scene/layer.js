@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { fnv1aHashUint32Array } from '../core/hash.js';
+import { hash32Fnv1a } from '../core/hash.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
@@ -763,7 +763,7 @@ class Layer {
                 }
 
                 if (lightKeys.length > 0) {
-                    this._lightHash = fnv1aHashUint32Array(lightKeys);
+                    this._lightHash = hash32Fnv1a(lightKeys);
                     lightKeys.length = 0;
                 }
             }
