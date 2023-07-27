@@ -72,7 +72,7 @@ class EventHandler {
         if (this._callbackActive.has(name)) {
             const callbackActive = this._callbackActive.get(name);
             if (callbackActive && callbackActive === this._callbacks.get(name)) {
-                this._callbackActive.set(name, Array.from(callbackActive));
+                this._callbackActive.set(name, callbackActive.slice());
             }
         }
 
@@ -148,7 +148,7 @@ class EventHandler {
             // if we are removing a callback from the list that is executing right now
             // ensure we preserve initial list before modifications
             if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name))
-                this._callbackActive.set(name, Array.from(this._callbackActive.get(name)));
+                this._callbackActive.set(name, this._callbackActive.get(name).slice());
         } else {
             // if we are removing a callback from any list that is executing right now
             // ensure we preserve these initial lists before modifications
@@ -159,7 +159,7 @@ class EventHandler {
                 if (this._callbacks.get(key) !== callbacks)
                     continue;
 
-                this._callbackActive.set(key, Array.from(callbacks));
+                this._callbackActive.set(key, callbacks.slice());
             }
         }
 
@@ -231,7 +231,7 @@ class EventHandler {
             // if we are trying to execute a callback while there is an active execution right now
             // and the active list has been already modified,
             // then we go to an unoptimized path and clone callbacks list to ensure execution consistency
-            callbacks = Array.from(callbacksInitial);
+            callbacks = callbacksInitial.slice();
         }
 
         // eslint-disable-next-line no-unmodified-loop-condition
@@ -246,7 +246,7 @@ class EventHandler {
 
                 if (ind !== -1) {
                     if (this._callbackActive.get(name) === existingCallback)
-                        this._callbackActive.set(name, Array.from(this._callbackActive.get(name)));
+                        this._callbackActive.set(name, this._callbackActive.get(name).slice());
 
                     const callbacks = this._callbacks.get(name);
                     if (!callbacks) continue;
