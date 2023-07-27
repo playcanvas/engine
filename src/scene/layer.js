@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { hashCode } from '../core/hash.js';
+import { hash32Fnv1a } from '../core/hash.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
@@ -40,6 +40,8 @@ function sortLights(lightA, lightB) {
 
 // Layers
 let layerCounter = 0;
+
+const lightKeys = [];
 
 class VisibleInstanceList {
     constructor() {
@@ -406,6 +408,7 @@ class Layer {
         this._dirtyCameras = false;
 
         this._lightHash = 0;
+        this._lightHashDirty = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -666,7 +669,7 @@ class Layer {
 
             this._lights.push(l);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -688,7 +691,7 @@ class Layer {
 
             this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -739,22 +742,34 @@ class Layer {
         this._dirtyLights = true;
     }
 
-    /** @private */
-    _generateLightHash() {
-        // generate hash to check if layers have the same set of static lights
-        // order of lights shouldn't matter
-        if (this._lights.length > 0) {
-            this._lights.sort(sortLights);
-            let str = '';
+    getLightHash(isClustered) {
+        if (this._lightHashDirty) {
+            this._lightHashDirty = false;
 
-            for (let i = 0; i < this._lights.length; i++) {
-                str += this._lights[i].key;
-            }
-
-            this._lightHash = str.length > 0 ? hashCode(str) : 0;
-        } else {
+            // generate hash to check if layers have the same set of lights independent of their order
             this._lightHash = 0;
+
+            const lights = this._lights;
+            if (lights.length > 0) {
+                lights.sort(sortLights);
+
+                for (let i = 0; i < lights.length; i++) {
+
+                    // only directional lights affect the shader generation for clustered lighting
+                    if (isClustered && lights[i].type !== LIGHTTYPE_DIRECTIONAL)
+                        continue;
+
+                    lightKeys.push(lights[i].key);
+                }
+
+                if (lightKeys.length > 0) {
+                    this._lightHash = hash32Fnv1a(lightKeys);
+                    lightKeys.length = 0;
+                }
+            }
         }
+
+        return this._lightHash;
     }
 
     /**
