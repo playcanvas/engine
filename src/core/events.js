@@ -19,8 +19,7 @@ const events = {
         target.fire = ev.fire;
         target.once = ev.once;
         target.hasEvent = ev.hasEvent;
-        target._callbacks = { };
-        target._callbackActive = { };
+        EventHandler.prototype.initEventHandler.call(target);
         return target;
     },
 

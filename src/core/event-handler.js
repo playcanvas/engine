@@ -42,8 +42,7 @@ class EventHandler {
 
     /**
      * Reinitialize the event handler.
-     *
-     * @private
+     * @ignore
      */
     initEventHandler() {
         this._callbacks = new Map();
@@ -59,7 +58,7 @@ class EventHandler {
      * @param {object} scope - Object to use as 'this' when the event is fired, defaults to
      * current this.
      * @param {boolean} once - If true, the callback will be unbound after being fired once.
-     * @private
+     * @ignore
      */
     _addCallback(name, callback, scope, once) {
         if (!name || typeof name !== 'string' || !callback)
@@ -73,7 +72,7 @@ class EventHandler {
         if (this._callbackActive.has(name)) {
             const callbackActive = this._callbackActive.get(name);
             if (callbackActive && callbackActive === this._callbacks.get(name)) {
-                this._callbackActive.set(name, callbackActive.slice());
+                this._callbackActive.set(name, Array.from(callbackActive));
             }
         }
 
