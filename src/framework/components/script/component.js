@@ -391,7 +391,7 @@ class ScriptComponent extends Component {
             // disable script if it fails to call method
             script.enabled = false;
 
-            if (!script?.hasEvent('error')) {
+            if (!script.hasEvent('error')) {
                 console.warn(`unhandled exception while calling "${method}" for "${script.__scriptType.__name}" script: `, ex);
                 console.error(ex);
             }
