@@ -228,7 +228,7 @@ describe('ModelComponent', function () {
         e.destroy();
 
         expect(assets.material.hasEvent('load')).to.be.false;
-        expect(assets.material._callbacks.unload.length).to.equal(1);
+        expect(assets.material._callbacks.get('unload').length).to.equal(1);
         expect(assets.material.hasEvent('change')).to.be.false;
         expect(assets.material.hasEvent('remove')).to.be.false;
     });
@@ -251,7 +251,7 @@ describe('ModelComponent', function () {
         expect(assets.material.hasEvent('load')).to.be.false;
         expect(assets.material.hasEvent('remove')).to.be.false;
         expect(assets.material.hasEvent('change')).to.be.false;
-        expect(assets.material._callbacks.unload.length).to.equal(1);
+        expect(assets.material._callbacks.get('unload').length).to.equal(1);
     });
 
     it('Materials applied when loading asynchronously', function (done) {
