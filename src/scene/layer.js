@@ -408,6 +408,7 @@ class Layer {
         this._dirtyCameras = false;
 
         this._lightHash = 0;
+        this._lightHashDirty = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -668,7 +669,7 @@ class Layer {
 
             this._lights.push(l);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -690,7 +691,7 @@ class Layer {
 
             this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -741,23 +742,34 @@ class Layer {
         this._dirtyLights = true;
     }
 
-    /** @private */
-    _generateLightHash() {
-        // generate hash to check if layers have the same set of lights independent of their order
-        const lights = this._lights;
-        if (lights.length > 0) {
-            lights.sort(sortLights);
+    getLightHash(isClustered) {
+        if (this._lightHashDirty) {
+            this._lightHashDirty = false;
 
-            for (let i = 0; i < lights.length; i++) {
-                lightKeys.push(lights[i].key);
-            }
-
-            this._lightHash = fnv1aHashUint32Array(lightKeys);
-            lightKeys.length = 0;
-
-        } else {
+            // generate hash to check if layers have the same set of lights independent of their order
             this._lightHash = 0;
+
+            const lights = this._lights;
+            if (lights.length > 0) {
+                lights.sort(sortLights);
+
+                for (let i = 0; i < lights.length; i++) {
+
+                    // only directional lights affect the shader generation for clustered lighting
+                    if (isClustered && lights[i].type !== LIGHTTYPE_DIRECTIONAL)
+                        continue;
+
+                    lightKeys.push(lights[i].key);
+                }
+
+                if (lightKeys.length > 0) {
+                    this._lightHash = fnv1aHashUint32Array(lightKeys);
+                    lightKeys.length = 0;
+                }
+            }
         }
+
+        return this._lightHash;
     }
 
     /**

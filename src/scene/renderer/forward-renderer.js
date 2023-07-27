@@ -474,7 +474,8 @@ class ForwardRenderer extends Renderer {
 
         const device = this.device;
         const scene = this.scene;
-        const lightHash = layer ? layer._lightHash : 0;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
+        const lightHash = layer ? layer.getLightHash(clusteredLightingEnabled) : 0;
         let prevMaterial = null, prevObjDefs, prevLightMask;
 
         for (let i = 0; i < drawCallsCount; i++) {
