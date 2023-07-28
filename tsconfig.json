@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
+        "outDir": "./types",
         "allowJs": true,
         "checkJs": true,
         "module": "es6",
