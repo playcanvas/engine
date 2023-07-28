@@ -233,6 +233,14 @@ class Material {
         return this._blendState.blend;
     }
 
+    _updateTransparency() {
+        const transparent = this.transparent;
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].transparent = transparent;
+        }
+    }
+
     // called when material changes transparency, for layer composition to add it to appropriate
     // queue (opaque or transparent)
     _markBlendDirty() {
@@ -255,6 +263,7 @@ class Material {
             this._markBlendDirty();
         }
         this._blendState.copy(value);
+        this._updateTransparency();
     }
 
     get blendState() {
@@ -298,6 +307,7 @@ class Material {
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
             this._blendState.blend = blend;
+            this._updateTransparency();
             this._markBlendDirty();
         }
         this._updateMeshInstanceKeys();

@@ -41,7 +41,6 @@ class ReflectionBoxExample {
         const assets = {
             'script1': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'script2': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
-            'batmobile': new pc.Asset('batmobile', 'container', { url: '/static/assets/models/batmobile-armored.glb' }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
         };
 
@@ -236,23 +235,17 @@ class ReflectionBoxExample {
                 // screen
                 createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(500, 250, 5), screenMaterial);
 
-                // batmobile
-                const batmobileEntity: pc.Entity = assets.batmobile.resource.instantiateRenderEntity({
+                // shiny sphere
+                const sphereEntity: pc.Entity = new pc.Entity();
+                sphereEntity.addComponent("render", {
+                    type: "sphere",
+                    material: sphereMaterial,
                     castShadows: false,
                     receiveShadows: false
                 });
-                batmobileEntity.setLocalScale(100, 100, 100);
-                batmobileEntity.rotateLocal(0, 0, 90);
-                app.root.addChild(batmobileEntity);
-
-                // apply shiny material to it
-                const renders: Array<pc.RenderComponent> = batmobileEntity.findComponents('render') as Array<pc.RenderComponent>;
-                renders.forEach((render) => {
-                    for (let i = 0; i < render.meshInstances.length; i++) {
-                        const meshInstance = render.meshInstances[i];
-                        meshInstance.material = sphereMaterial;
-                    }
-                });
+                sphereEntity.setLocalScale(300, 300, 300);
+                sphereEntity.setLocalPosition(0, 150, 0);
+                app.root.addChild(sphereEntity);
 
                 // create an omni light white orbits the room to avoid it being completely dark
                 const lightOmni = new pc.Entity();

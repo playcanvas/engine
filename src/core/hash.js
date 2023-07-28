@@ -16,21 +16,23 @@ function hashCode(str) {
 }
 
 /**
- * Calculates simple hash value of an array of numbers. Designed for performance, but provides good
- * distribution with small number of collisions.
+ * Calculates simple 32bit hash value of an array of 32bit integer numbers. Designed for
+ * performance, but provides good distribution with small number of collisions. Based on
+ * FNV-1a non-cryptographic hash function.
  *.
- * @param {Uint32Array} typedArray - Array of numbers to hash.
- * @returns {number} Hash value.
+ * @param {number[]|Uint32Array} array - Array of 32bit integer numbers to hash.
+ * @returns {number} 32bit unsigned integer hash value.
+ * @ignore
  */
-function fnv1aHashUint32Array(typedArray) {
+function hash32Fnv1a(array) {
     const prime = 16777619;
     let hash = 2166136261;
 
-    for (let i = 0; i < typedArray.length; i++) {
-        hash ^= typedArray[i];
+    for (let i = 0; i < array.length; i++) {
+        hash ^= array[i];
         hash *= prime;
     }
     return hash >>> 0; // Ensure non-negative integer
 }
 
-export { hashCode, fnv1aHashUint32Array };
+export { hashCode, hash32Fnv1a };
