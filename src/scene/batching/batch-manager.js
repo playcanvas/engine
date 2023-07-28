@@ -857,6 +857,10 @@ class BatchManager {
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
             meshInstance.cull = batch.origMeshInstances[0].cull;
+
+            // Magnopus Patched
+            meshInstance.renderStyle = batch.origMeshInstances[0].renderStyle;
+            
             const batchGroup = this._batchGroups[batchGroupId];
             if (batchGroup && batchGroup._ui)
                 meshInstance.cull = false;
