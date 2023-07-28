@@ -657,10 +657,6 @@ class Lightmapper {
 
             // bake light
             if (light.enabled && (light.mask & MASK_BAKE) !== 0) {
-
-                // if baked, it can't be used as static
-                light.isStatic = false;
-
                 light.mask = 0xFFFFFFFF;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
                 bakeLights.push(bakeLight);
@@ -679,13 +675,6 @@ class Lightmapper {
     }
 
     setupScene() {
-
-        // lightmapper needs original model draw calls
-        this.revertStatic = false;
-        if (this.scene._needsStaticPrepare) {
-            this.scene._needsStaticPrepare = false;
-            this.revertStatic = true;
-        }
 
         // backup
         this.fog = this.scene.fog;
@@ -707,11 +696,6 @@ class Lightmapper {
 
         this.scene.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
-
-        // Revert static preprocessing
-        if (this.revertStatic) {
-            this.scene._needsStaticPrepare = true;
-        }
     }
 
     // compute bounding box for a single node

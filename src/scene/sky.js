@@ -32,7 +32,7 @@ class Sky {
 
         const material = new Material();
 
-        material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             const options = {
                 pass: pass,

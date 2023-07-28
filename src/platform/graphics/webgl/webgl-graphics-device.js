@@ -839,6 +839,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
+    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
