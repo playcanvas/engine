@@ -71,6 +71,11 @@ class EventHandler {
      * @ignore
      */
     _addCallback(name, callback, scope, once) {
+        // #if _DEBUG
+        if (!name || typeof name !== 'string' || !callback)
+            console.warn(`EventHandler: subscribing to an event (${name}) with missing arguments`, callback);
+        // #endif
+
         if (!this._callbacks.has(name))
             this._callbacks.set(name, []);
 
