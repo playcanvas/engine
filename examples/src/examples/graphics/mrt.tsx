@@ -123,7 +123,7 @@ class MrtExample {
                     name: `MRT`,
                     colorBuffers: colorBuffers,
                     depth: true,
-                    flipY: true,
+                    flipY: !app.graphicsDevice.isWebGPU,
                     samples: 2
                 });
 

@@ -144,7 +144,7 @@ class RenderToTextureExample {
                     name: `RT`,
                     colorBuffer: texture,
                     depth: true,
-                    flipY: true,
+                    flipY: !app.graphicsDevice.isWebGPU,
                     samples: 2
                 });
 
@@ -263,6 +263,11 @@ class RenderToTextureExample {
                             textureCamera.camera.orthoHeight = 5;
                         }
                     }
+
+                    // debug draw the texture on the screen in the excludedLayer layer of the main camera
+                    // @ts-ignore engine-tsd
+                    app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
+
                 });
             });
         });

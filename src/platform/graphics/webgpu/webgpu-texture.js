@@ -432,7 +432,7 @@ class WebgpuTexture {
         const height = TextureUtils.calcLevelDimension(texture.height, mipLevel);
 
         // data sizes
-        const byteSize = TextureUtils.calcLevelGpuSize(width, height, texture.format);
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, 1, texture.format);
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 

@@ -835,7 +835,7 @@ class ParticleEmitter {
             this.normalOption = hasNormal ? 2 : 1;
         }
         // getShaderVariant is also called by pc.Scene when all shaders need to be updated
-        this.material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this.material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             // The app works like this:
             // 1. Emitter init

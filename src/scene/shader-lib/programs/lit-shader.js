@@ -55,7 +55,7 @@ class LitShader {
         /**
          * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
          * graphics device.
-         * @param {import('../../../scene/materials/lit-options.js').LitOptions} options - The
+         * @param {import('./lit-shader-options.js').LitShaderOptions} options - The
          * lit options.
          * @ignore
          */
@@ -68,14 +68,13 @@ class LitShader {
         };
 
         if (options.chunks) {
-            this.chunks = {};
-
             const userChunks = options.chunks;
 
             // #if _DEBUG
-            validateUserChunks(options.chunks);
+            validateUserChunks(userChunks);
             // #endif
 
+            this.chunks = Object.create(shaderChunks);
             for (const chunkName in shaderChunks) {
                 if (userChunks.hasOwnProperty(chunkName)) {
                     const chunk = userChunks[chunkName];
@@ -85,8 +84,6 @@ class LitShader {
                         }
                     }
                     this.chunks[chunkName] = chunk;
-                } else {
-                    this.chunks[chunkName] = shaderChunks[chunkName];
                 }
             }
         } else {
@@ -98,8 +95,15 @@ class LitShader {
 
         this.lighting = (options.lights.length > 0) || options.dirLightMapEnabled || options.clusteredLightingEnabled;
         this.reflections = !!options.reflectionSource;
-        this.needsNormal = this.lighting || this.reflections || options.useSpecular || options.ambientSH || options.heightMapEnabled || options.enableGGXSpecular ||
-            (options.clusteredLightingEnabled && !this.shadowPass) || options.clearCoatNormalMapEnabled;
+        this.needsNormal =
+            this.lighting ||
+            this.reflections ||
+            options.useSpecular ||
+            options.ambientSH ||
+            options.useHeights ||
+            options.enableGGXSpecular ||
+            (options.clusteredLightingEnabled && !this.shadowPass) ||
+            options.useClearCoatNormals;
         this.needsNormal = this.needsNormal && !this.shadowPass;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
@@ -231,7 +235,7 @@ class LitShader {
                 codeBody += "   vNormalV    = getViewNormal();\n";
             }
 
-            if (options.hasTangents && (options.heightMapEnabled || options.normalMapEnabled || options.enableGGXSpecular)) {
+            if (options.hasTangents && (options.useHeights || options.useNormals || options.enableGGXSpecular)) {
                 this.attributes.vertex_tangent = SEMANTIC_TANGENT;
                 code += chunks.tangentBinormalVS;
                 codeBody += "   vTangentW   = getTangent();\n";
@@ -716,13 +720,13 @@ class LitShader {
         }
 
         // TBN
-        const hasTBN = this.needsNormal && (options.normalMapEnabled || options.clearCoatNormalMapEnabled || (options.enableGGXSpecular && !options.heightMapEnabled));
+        const hasTBN = this.needsNormal && (options.useNormals || options.useClearCoatNormals || (options.enableGGXSpecular && !options.useHeights));
 
         if (hasTBN) {
             if (options.hasTangents) {
                 func.append(options.fastTbn ? chunks.TBNfastPS : chunks.TBNPS);
             } else {
-                if (device.extStandardDerivatives && (options.normalMapEnabled || options.clearCoatNormalMapEnabled)) {
+                if (device.extStandardDerivatives && (options.useNormals || options.useClearCoatNormals)) {
                     func.append(chunks.TBNderivativePS.replace(/\$UV/g, this.lightingUv));
                 } else {
                     func.append(chunks.TBNObjectSpacePS);
@@ -764,9 +768,7 @@ class LitShader {
             }
         }
 
-        const useAo = options.aoMapEnabled || options.useAoVertexColors;
-
-        if (useAo) {
+        if (options.useAo) {
             func.append(chunks.aoDiffuseOccPS);
             switch (options.occludeSpecular) {
                 case SPECOCC_AO:
@@ -893,11 +895,11 @@ class LitShader {
         func.append(chunks.combinePS);
 
         // lightmap support
-        if (options.lightMapEnabled || options.useLightMapVertexColors) {
+        if (options.lightMapEnabled) {
             func.append((options.useSpecular && options.dirLightMapEnabled) ? chunks.lightmapDirAddPS : chunks.lightmapAddPS);
         }
 
-        const addAmbient = (!options.lightMapEnabled && !options.useLightMapVertexColors) || options.lightMapWithoutAmbient;
+        const addAmbient = !options.lightMapEnabled || options.lightMapWithoutAmbient;
 
         if (addAmbient) {
             if (options.ambientSource === 'ambientSH') {
@@ -984,7 +986,7 @@ class LitShader {
                 code.append("    dVertexNormalW = normalize(vNormalW);");
             }
 
-            if ((options.heightMapEnabled || options.normalMapEnabled) && options.hasTangents) {
+            if ((options.useHeights || options.useNormals) && options.hasTangents) {
                 if (options.twoSidedLighting) {
                     code.append("    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;");
                     code.append("    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;");
@@ -1045,11 +1047,11 @@ class LitShader {
             backend.append("    dDiffuseLight *= material_ambient;");
         }
 
-        if (useAo && !options.occludeDirect) {
+        if (options.useAo && !options.occludeDirect) {
             backend.append("    occludeDiffuse(litArgs_ao);");
         }
 
-        if (options.lightMapEnabled || options.useLightMapVertexColors) {
+        if (options.lightMapEnabled) {
             backend.append(`    addLightMap(
                 litArgs_lightmap, 
                 litArgs_lightmapDir, 
@@ -1439,7 +1441,7 @@ class LitShader {
             }
         }
 
-        if (useAo) {
+        if (options.useAo) {
             if (options.occludeDirect) {
                 backend.append("    occludeDiffuse(litArgs_ao);");
             }
@@ -1541,7 +1543,6 @@ class LitShader {
             this.varyings +
             this.varyingDefines +
             this._fsGetBaseCode() +
-            (options.detailModes ? chunks.detailModesPS : "") +
             structCode +
             this.frontendDecl +
             mergedCode;
@@ -1571,7 +1572,6 @@ class LitShader {
     }
 
     getDefinition() {
-
         const definition = ShaderUtils.createDefinition(this.device, {
             name: 'LitShader',
             attributes: this.attributes,
@@ -1579,7 +1579,7 @@ class LitShader {
             fragmentCode: this.fshader
         });
 
-        if (this.options.isForwardPass) {
+        if (this.shaderPassInfo.isForward) {
             definition.tag = SHADERTAG_MATERIAL;
         }
 

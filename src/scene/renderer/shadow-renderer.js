@@ -325,7 +325,7 @@ class ShadowRenderer {
             // set shader
             let shadowShader = meshInstance._shader[shadowPass];
             if (!shadowShader) {
-                meshInstance.updatePassShader(scene, shadowPass, null, null, this.viewUniformFormat, this.viewBindGroupFormat);
+                meshInstance.updatePassShader(scene, shadowPass, null, this.viewUniformFormat, this.viewBindGroupFormat);
                 shadowShader = meshInstance._shader[shadowPass];
                 meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
             }
