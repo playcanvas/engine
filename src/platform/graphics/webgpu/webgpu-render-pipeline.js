@@ -1,4 +1,6 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
+import { hash32Fnv1a } from "../../../core/hash.js";
+import { array } from "../../../core/array-utils.js";
 import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
 
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
@@ -72,10 +74,30 @@ const _stencilOps = [
 // temp array to avoid allocation
 const _bindGroupLayouts = [];
 
+/** @ignore */
+class CacheEntry {
+    /**
+     * Render pipeline
+     *
+     * @type {GPURenderPipeline}
+     * @private
+     */
+    pipeline;
+
+    /**
+     * The full array of hashes used to lookup the pipeline, used in case of hash collision.
+     *
+     * @type {Uint32Array}
+     */
+    hashes;
+}
+
 /**
  * @ignore
  */
 class WebgpuRenderPipeline {
+    lookupHashes = new Uint32Array(13);
+
     constructor(device) {
         /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
         this.device = device;
@@ -90,58 +112,72 @@ class WebgpuRenderPipeline {
         /**
          * The cache of render pipelines
          *
-         * @type {Map<string, object>}
+         * @type {Map<number, CacheEntry[]>}
          */
         this.cache = new Map();
     }
 
+    /** @private */
     get(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats, blendState,
         depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
 
-        // render pipeline unique key
-        const key = this.getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats,
-                                blendState, depthState, cullMode, stencilEnabled, stencilFront, stencilBack);
+        Debug.assert(bindGroupFormats.length <= 3);
+
+        // render pipeline unique hash
+        const lookupHashes = this.lookupHashes;
+        lookupHashes[0] = primitive.type;
+        lookupHashes[1] = shader.id;
+        lookupHashes[2] = cullMode;
+        lookupHashes[3] = depthState.key;
+        lookupHashes[4] = blendState.key;
+        lookupHashes[5] = vertexFormat0?.renderingHash ?? 0;
+        lookupHashes[6] = vertexFormat1?.renderingHash ?? 0;
+        lookupHashes[7] = renderTarget.impl.key;
+        lookupHashes[8] = bindGroupFormats[0]?.key ?? 0;
+        lookupHashes[9] = bindGroupFormats[1]?.key ?? 0;
+        lookupHashes[10] = bindGroupFormats[2]?.key ?? 0;
+        lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
+        lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
+        const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
-        let pipeline = this.cache.get(key);
-        if (!pipeline) {
+        let cacheEntries = this.cache.get(hash);
 
-            const primitiveTopology = _primitiveTopology[primitive.type];
-            Debug.assert(primitiveTopology, `Unsupported primitive topology`, primitive);
-
-            // pipeline layout
-            const pipelineLayout = this.getPipelineLayout(bindGroupFormats);
-
-            // vertex buffer layout
-            const vertexBufferLayout = this.vertexBufferLayout.get(vertexFormat0, vertexFormat1);
-
-            // pipeline
-            pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState,
-                                   depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
-            this.cache.set(key, pipeline);
+        // if we have cache entries, find the exact match, as hash collision can occur
+        if (cacheEntries) {
+            for (let i = 0; i < cacheEntries.length; i++) {
+                const entry = cacheEntries[i];
+                if (array.equals(entry.hashes, lookupHashes)) {
+                    return entry.pipeline;
+                }
+            }
         }
 
-        return pipeline;
-    }
+        // no match or a hash collision, so create a new pipeline
+        const primitiveTopology = _primitiveTopology[primitive.type];
+        Debug.assert(primitiveTopology, `Unsupported primitive topology`, primitive);
 
-    /**
-     * Generate a unique key for the render pipeline. Keep this function as lean as possible,
-     * as it executes for each draw call.
-     */
-    getKey(primitive, vertexFormat0, vertexFormat1, shader, renderTarget, bindGroupFormats,
-        blendState, depthState, cullMode, stencilEnabled, stencilFront, stencilBack) {
+        // pipeline layout
+        const pipelineLayout = this.getPipelineLayout(bindGroupFormats);
 
-        let bindGroupKey = '';
-        for (let i = 0; i < bindGroupFormats.length; i++) {
-            bindGroupKey += bindGroupFormats[i].key;
+        // vertex buffer layout
+        const vertexBufferLayout = this.vertexBufferLayout.get(vertexFormat0, vertexFormat1);
+
+        // pipeline
+        const cacheEntry = new CacheEntry();
+        cacheEntry.hashes = new Uint32Array(lookupHashes);
+        cacheEntry.pipeline = this.create(primitiveTopology, shader, renderTarget, pipelineLayout, blendState,
+                                          depthState, vertexBufferLayout, cullMode, stencilEnabled, stencilFront, stencilBack);
+
+        // add to cache
+        if (cacheEntries) {
+            cacheEntries.push(cacheEntry);
+        } else {
+            cacheEntries = [cacheEntry];
         }
+        this.cache.set(hash, cacheEntries);
 
-        const vertexBufferLayoutKey = this.vertexBufferLayout.getKey(vertexFormat0, vertexFormat1);
-        const renderTargetKey = renderTarget.impl.key;
-        const stencilKey = stencilEnabled ? stencilFront.key + stencilBack.key : '';
-
-        return vertexBufferLayoutKey + shader.impl.vertexCode + shader.impl.fragmentCode +
-            renderTargetKey + primitive.type + bindGroupKey + blendState.key + depthState.key + cullMode + stencilKey;
+        return cacheEntry.pipeline;
     }
 
     // TODO: this could be cached using bindGroupKey

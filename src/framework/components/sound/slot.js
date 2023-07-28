@@ -32,6 +32,7 @@ const instanceOptions = {
  * The SoundSlot controls playback of an audio asset.
  *
  * @augments EventHandler
+ * @category Sound
  */
 class SoundSlot extends EventHandler {
     /**

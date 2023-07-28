@@ -31,6 +31,7 @@ if (platform.browser && window.XRHand) {
  * Represents a hand with fingers and joints.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHand extends EventHandler {
     /**

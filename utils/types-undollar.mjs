@@ -26,7 +26,7 @@ const regexType = /type ([a-zA-Z0-9]+)(\$[a-zA-Z0-9]*)? = ([a-zA-Z0-9]+)(\$[a-zA
 
 // STEP 1: Delete all lines of the form: type <TYPE-ALIAS> = <TYPE-ALIAS>;
 content = content.replace(regexType, (all, first, firstDollar, second, secondDollar) => {
-    if (first == second) {
+    if (first === second) {
         seenTypes.add(first);
         if (debug) {
             console.log('==', { first, second });

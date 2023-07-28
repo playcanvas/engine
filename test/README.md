@@ -32,7 +32,7 @@ The PlayCanvas Engine is made up of ES Modules. Each module should have a corres
 ...has the corresponding unit test module:
 
 ```
-/test/math/vec3.test.mjs
+/test/core/math/vec3.test.mjs
 ```
 
 In short, for any given engine source module:

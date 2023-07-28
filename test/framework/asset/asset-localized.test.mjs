@@ -127,14 +127,14 @@ describe('LocalizedAsset', function () {
         expect(asset.hasEvent('remove')).to.equal(true);
         // there should be 2 remove events one for the defaultAsset
         // and one for the localizedAsset
-        expect(asset._callbacks.remove.length).to.equal(2);
+        expect(asset._callbacks.get('remove').length).to.equal(2);
 
         app.i18n.locale = 'fr';
 
         expect(asset.hasEvent('load')).to.equal(false);
         expect(asset.hasEvent('change')).to.equal(false);
         // there should now be only 1 remove event for the defaultAsset
-        expect(asset._callbacks.remove.length).to.equal(1);
+        expect(asset._callbacks.get('remove').length).to.equal(1);
 
         expect(asset2.hasEvent('load')).to.equal(true);
         expect(asset2.hasEvent('change')).to.equal(true);

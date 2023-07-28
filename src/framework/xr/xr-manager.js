@@ -28,6 +28,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  * Manage and update XR session and its states.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrManager extends EventHandler {
     /**

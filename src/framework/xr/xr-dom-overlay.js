@@ -20,6 +20,8 @@ import { platform } from '../../core/platform.js';
  *     evt.preventDefault();
  * });
  * ```
+ *
+ * @category XR
  */
 class XrDomOverlay {
     /**

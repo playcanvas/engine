@@ -11,10 +11,9 @@ import {
     LAYER_WORLD,
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
-    SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
     SORTKEY_FORWARD
 } from './constants.js';
 
@@ -73,6 +72,8 @@ class Command {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
     /**
@@ -152,10 +153,6 @@ class MeshInstance {
         }
 
         this._key = [0, 0];
-
-        this.isStatic = false;
-        this._staticLightList = null;
-        this._staticSource = null;
 
         /**
          * The graph node defining the transform for this instance.
@@ -507,6 +504,13 @@ class MeshInstance {
         return this._layer;
     }
 
+    _updateShaderDefs(shaderDefs) {
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }
+    }
+
     /**
      * In some circumstances mesh instances are sorted by a distance calculation to determine their
      * rendering order. Set this callback to override the default distance calculation, which gives
@@ -525,10 +529,10 @@ class MeshInstance {
     }
 
     set receiveShadow(val) {
-        this._receiveShadow = val;
-        this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        if (this._receiveShadow !== val) {
+            this._receiveShadow = val;
+            this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
+        }
     }
 
     get receiveShadow() {
@@ -542,15 +546,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-
-        let shaderDefs = this._shaderDefs;
-        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
 
@@ -575,12 +571,7 @@ class MeshInstance {
         shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(shaderDefs);
     }
 
     get morphInstance() {
@@ -588,9 +579,10 @@ class MeshInstance {
     }
 
     set screenSpace(val) {
-        this._screenSpace = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
-        this._shader[SHADER_FORWARD] = null;
+        if (this._screenSpace !== val) {
+            this._screenSpace = val;
+            this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+        }
     }
 
     get screenSpace() {
@@ -613,9 +605,7 @@ class MeshInstance {
      */
     set mask(val) {
         const toggles = this._shaderDefs & 0x0000FFFF;
-        this._shaderDefs = toggles | (val << 16);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        this._updateShaderDefs(toggles | (val << 16));
     }
 
     get mask() {
@@ -737,6 +727,8 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
+
+        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     /**
@@ -744,7 +736,6 @@ class MeshInstance {
      *
      * @param {import('./scene.js').Scene} scene - The scene.
      * @param {number} pass - The render pass.
-     * @param {any} staticLightList - List of static lights.
      * @param {any} sortedLights - Array of arrays of lights.
      * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - The
      * format of the view uniform buffer.
@@ -752,8 +743,8 @@ class MeshInstance {
      * format of the view bind group.
      * @ignore
      */
-    updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
+    updatePassShader(scene, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, null, pass, sortedLights,
                                                             viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 

@@ -17,6 +17,7 @@ import { Component } from '../component.js';
  * model geometry in to the scene graph below the Entity.
  *
  * @augments Component
+ * @category Graphics
  */
 class ModelComponent extends Component {
     /**
@@ -86,10 +87,11 @@ class ModelComponent extends Component {
     _lightmapSizeMultiplier = 1;
 
     /**
+     * Mark meshes as non-movable (optimization).
+     *
      * @type {boolean}
-     * @private
      */
-    _isStatic = false;
+    isStatic = false;
 
     /**
      * @type {number[]}
@@ -320,7 +322,6 @@ class ModelComponent extends Component {
             for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
-                meshInstances[i].isStatic = this._isStatic;
                 meshInstances[i].setCustomAabb(this._customAabb);
             }
 
@@ -468,29 +469,6 @@ class ModelComponent extends Component {
 
     get lightmapSizeMultiplier() {
         return this._lightmapSizeMultiplier;
-    }
-
-    /**
-     * Mark model as non-movable (optimization).
-     *
-     * @type {boolean}
-     */
-    set isStatic(value) {
-        if (this._isStatic === value) return;
-
-        this._isStatic = value;
-
-        if (this._model) {
-            const rcv = this._model.meshInstances;
-            for (let i = 0; i < rcv.length; i++) {
-                const m = rcv[i];
-                m.isStatic = value;
-            }
-        }
-    }
-
-    get isStatic() {
-        return this._isStatic;
     }
 
     /**

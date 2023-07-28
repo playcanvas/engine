@@ -21,6 +21,7 @@ const _schema = ['enabled'];
  * Manages creation of {@link SpriteComponent}s.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class SpriteComponentSystem extends ComponentSystem {
     /**

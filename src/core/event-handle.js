@@ -36,7 +36,7 @@ class EventHandle {
 
     /**
      * @type {import('./event-handler.js').HandleEventCallback}
-     * @private
+     * @ignore
      */
     callback;
 
@@ -48,7 +48,7 @@ class EventHandle {
 
     /**
      * @type {boolean}
-     * @private
+     * @ignore
      */
     once;
 
