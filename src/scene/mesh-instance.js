@@ -97,6 +97,14 @@ class MeshInstance {
     castShadow = false;
 
     /**
+     * True if the material of the mesh instance is transparent. Optimization to avoid accessing the
+     * material. Updated by the material instance itself.
+     *
+     * @ignore
+     */
+    transparent = false;
+
+    /**
      * @type {import('./materials/material.js').Material}
      * @private
      */
