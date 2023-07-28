@@ -42,7 +42,7 @@ class EventHandle {
 
     /**
      * @type {object}
-     * @private
+     * @ignore
      */
     scope;
 
