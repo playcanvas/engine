@@ -484,6 +484,9 @@ class MeshInstance {
             // Record that the material is referenced by this mesh instance
             material.addMeshInstanceRef(this);
 
+            // update transparent flag based on material
+            this.transparent = material.transparent;
+
             this.updateKey();
 
             // if blend type of the material changes

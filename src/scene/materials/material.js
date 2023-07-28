@@ -260,10 +260,10 @@ class Material {
      */
     set blendState(value) {
         if (this._blendState.blend !== value.blend) {
-            this._updateTransparency();
             this._markBlendDirty();
         }
         this._blendState.copy(value);
+        this._updateTransparency();
     }
 
     get blendState() {
