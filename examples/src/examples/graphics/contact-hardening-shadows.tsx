@@ -78,7 +78,7 @@ class ContactHardeningShadowsExample {
 
             const assets = {
                 orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
                 luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
                 asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/robot-arm.glb' })

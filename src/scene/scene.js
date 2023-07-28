@@ -250,11 +250,6 @@ class Scene extends EventHandler {
             lights: 0,
             dynamicLights: 0,
             bakedLights: 0,
-            lastStaticPrepareFullTime: 0,
-            lastStaticPrepareSearchTime: 0,
-            lastStaticPrepareWriteTime: 0,
-            lastStaticPrepareTriAabbTime: 0,
-            lastStaticPrepareCombineTime: 0,
             updateShadersTime: 0 // deprecated
         };
 

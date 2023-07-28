@@ -441,7 +441,8 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    // TODO: unused parameter should be removed, but the Editor still uses this function
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);

@@ -1,5 +1,5 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
-import { fnv1aHashUint32Array } from "../../../core/hash.js";
+import { hash32Fnv1a } from "../../../core/hash.js";
 import { array } from "../../../core/array-utils.js";
 import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
 
@@ -138,7 +138,7 @@ class WebgpuRenderPipeline {
         lookupHashes[10] = bindGroupFormats[2]?.key ?? 0;
         lookupHashes[11] = stencilEnabled ? stencilFront.key : 0;
         lookupHashes[12] = stencilEnabled ? stencilBack.key : 0;
-        const hash = fnv1aHashUint32Array(lookupHashes);
+        const hash = hash32Fnv1a(lookupHashes);
 
         // cached pipeline
         let cacheEntries = this.cache.get(hash);
