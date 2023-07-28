@@ -260,6 +260,8 @@ class EventHandler {
         // eslint-disable-next-line no-unmodified-loop-condition
         for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
             const evt = (callbacks || this._callbackActive.get(name))[i];
+            if (!evt.callback) continue;
+            
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
             if (evt.once) {
