@@ -77,7 +77,7 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
-import { LitOptions } from '../scene/materials/lit-options.js';
+import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
 import { Layer } from '../scene/layer.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
@@ -679,6 +679,7 @@ GraphicsDevice.prototype.getCullMode = function () {
 // SCENE
 
 export const PhongMaterial = StandardMaterial;
+export const LitOptions = LitShaderOptions;
 
 export const scene = {
     partitionSkin: partitionSkin,
@@ -817,10 +818,10 @@ ForwardRenderer.prototype.renderComposition = function (comp) {
     getApplication().renderComposition(comp);
 };
 
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
+ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, unused, pass, sortedLights) {
     Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
     const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, staticLightList, sortedLights);
+    return meshInstance.updatePassShader(scene, pass, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {
@@ -1018,11 +1019,11 @@ function _defineOption(name, newName) {
     if (name !== 'chunks' && name !== '_pass' && name !== '_isForwardPass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
             get: function () {
-                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
                 return this.litOptions[newName || name];
             },
             set: function (value) {
-                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
                 this.litOptions[newName || name] = value;
             }
         });
@@ -1030,7 +1031,7 @@ function _defineOption(name, newName) {
 }
 _defineOption('refraction', 'useRefraction');
 
-const tempOptions = new LitOptions();
+const tempOptions = new LitShaderOptions();
 const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
 for (const litOption in litOptionProperties) {
     _defineOption(litOptionProperties[litOption]);

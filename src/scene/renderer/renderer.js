@@ -33,7 +33,6 @@ import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
-import { StaticMeshes } from './static-meshes.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
@@ -787,16 +786,12 @@ class Renderer {
         let visibleLength = 0;
         const drawCallsCount = drawCalls.length;
 
-        const cullingMask = camera.cullingMask || 0xFFFFFFFF; // if missing assume camera's default value
-
         if (!camera.frustumCulling) {
             for (let i = 0; i < drawCallsCount; i++) {
                 // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
                 const drawCall = drawCalls[i];
-                if (!drawCall.visible && !drawCall.command) continue;
-
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
+                if (!drawCall.visible && !drawCall.command)
+                    continue;
 
                 visibleList[visibleLength] = drawCall;
                 visibleLength++;
@@ -810,9 +805,6 @@ class Renderer {
             if (!drawCall.command) {
                 if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
                 let visible = true;
-
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
 
                 if (drawCall.cull) {
                     visible = drawCall._isVisible(camera);
@@ -925,7 +917,7 @@ class Renderer {
 
     /**
      * visibility culling of lights, meshInstances, shadows casters
-     * Also applies meshInstance.visible and camera.cullingMask
+     * Also applies meshInstance.visible
      *
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition.
@@ -1182,22 +1174,6 @@ class Renderer {
             // prepare layer for culling with the camera
             for (let j = 0; j < layer.cameras.length; j++) {
                 layer.instances.prepare(j);
-            }
-
-            // Generate static lighting for meshes in this layer if needed
-            // Note: Static lighting is not used when clustered lighting is enabled
-            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
-                // TODO: reuse with the same staticLightHash
-                if (layer._staticPrepareDone) {
-                    StaticMeshes.revert(layer.opaqueMeshInstances);
-                    StaticMeshes.revert(layer.transparentMeshInstances);
-                }
-                StaticMeshes.prepare(this.device, scene, layer.opaqueMeshInstances, layer._lights);
-                StaticMeshes.prepare(this.device, scene, layer.transparentMeshInstances, layer._lights);
-                comp._dirty = true;
-                scene.updateShaders = true;
-                layer._needsStaticPrepare = false;
-                layer._staticPrepareDone = true;
             }
         }
 
