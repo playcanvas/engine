@@ -1017,7 +1017,7 @@ class LayerComposition extends EventHandler {
     /**
      * Update maps of layer IDs and names to match the layer list.
      *
-     * @ignore
+     * @private
      */
     _updateLayerMaps() {
         this.layerIdMap.clear();
