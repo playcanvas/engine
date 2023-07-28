@@ -76,6 +76,7 @@ class EventHandle {
 
     /**
      * Remove references.
+     * @ignore
      */
     destroy() {
         if (this._removed) return;
