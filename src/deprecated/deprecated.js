@@ -516,7 +516,8 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
 });
 
 /**
- * Helper function to ensure a bit of backwards compatibility
+ * Helper function to ensure a bit of backwards compatibility.
+ *
  * @example
  * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
  * @param {string} src - The shader source which may generate shader errors.
@@ -535,6 +536,7 @@ function compatibilityForLitArgs(src) {
 
 /**
  * Add more backwards compatibility functions as needed.
+ *
  * @param {string} src - The fragment shader source which may generate shader errors.
  * @returns {string} The backwards compatible fragment shader source.
  */
@@ -547,7 +549,7 @@ const original_LitShader_generateFragmentShader = LitShader.prototype.generateFr
 LitShader.prototype.generateFragmentShader = function () {
     original_LitShader_generateFragmentShader.apply(this, arguments);
     this.fshader = compatibilityForFragmentShader(this.fshader);
-}
+};
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
