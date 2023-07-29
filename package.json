@@ -93,7 +93,7 @@
     "@babel/preset-env": "^7.22.9",
     "@playcanvas/canvas-mock": "^1.0.1",
     "@playcanvas/eslint-config": "^1.5.0",
-    "@playcanvas/jsdoc-template": "^1.0.29",
+    "@playcanvas/jsdoc-template": "^1.1.0",
     "@rollup/plugin-babel": "^6.0.3",
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-strip": "^3.0.2",
