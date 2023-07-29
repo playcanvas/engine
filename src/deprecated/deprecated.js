@@ -117,6 +117,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
+import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
 
@@ -513,6 +514,40 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
         }
     });
 });
+
+/**
+ * Helper function to ensure a bit of backwards compatibility
+ * @example
+ * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
+ * @param {string} src - The shader source which may generate shader errors.
+ * @returns {string} The backwards compatible shader source.
+ */
+function compatibilityForLitArgs(src) {
+    if (src.includes('litShaderArgs')) {
+        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
+            const newSource = 'litArgs' + b.replace(/\./g, '_');
+            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
+            return newSource;
+        });
+    }
+    return src;
+}
+
+/**
+ * Add more backwards compatibility functions as needed.
+ * @param {string} src - The fragment shader source which may generate shader errors.
+ * @returns {string} The backwards compatible fragment shader source.
+ */
+function compatibilityForFragmentShader(src) {
+    src = compatibilityForLitArgs(src);
+    return src;
+}
+
+const original_LitShader_generateFragmentShader = LitShader.prototype.generateFragmentShader;
+LitShader.prototype.generateFragmentShader = function () {
+    original_LitShader_generateFragmentShader.apply(this, arguments);
+    this.fshader = compatibilityForFragmentShader(this.fshader);
+}
 
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {

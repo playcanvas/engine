@@ -1,40 +1,14 @@
-import { Debug } from "../../core/debug.js";
-
-/**
- * Helper function to ensure a bit of backwards compatibility
- * @example
- * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
- * @param {string} src - The shader source which may generate shader errors.
- * @returns {string} The backwards compatible shader source.
- */
-const toLitArgs = src => src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
-    const newSource = 'litArgs' + b.replace(/\./g, '_');
-    Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
-    return newSource;
-});
-
 // helper class for combining shader chunks together
 // ensures every chunk ends with a new line otherwise shaders can be ill-formed
 class ChunkBuilder {
-    _code = '';
-
-    set code(newCode) {
-        this._code = newCode;
-    }
-
-    get code() {
-        if (this._code.includes('litShaderArgs')) {
-            this._code = toLitArgs(this._code);
-        }
-        return this._code;
-    }
+    code = '';
 
     append(...chunks) {
         chunks.forEach((chunk) => {
             if (chunk.endsWith('\n')) {
-                this._code += chunk;
+                this.code += chunk;
             } else {
-                this._code += chunk + '\n';
+                this.code += chunk + '\n';
             }
         });
     }
@@ -42,9 +16,9 @@ class ChunkBuilder {
     prepend(...chunks) {
         chunks.forEach((chunk) => {
             if (chunk.endsWith('\n')) {
-                this._code = chunk + this._code;
+                this.code = chunk + this.code;
             } else {
-                this._code = chunk + '\n' + this._code;
+                this.code = chunk + '\n' + this.code;
             }
         });
     }
