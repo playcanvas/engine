@@ -10,12 +10,12 @@
     "build:example:data": "node --es-module-specifier-resolution=node ./scripts/example-data.mjs",
     "build:thumbnails": "node --es-module-specifier-resolution=node ./scripts/thumbnails.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
-    "serve": "serve dist -l 5000",
+    "serve": "serve dist -l 5000 --no-request-logging",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
     "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
-    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve\""
+    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve --no-request-logging\""
   },
   "eslintConfig": {
     "root": true,
@@ -76,7 +76,7 @@
     "rollup-plugin-sourcemaps": "^0.6.3",
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-typescript2": "^0.31.2",
-    "serve": "^13.0.2",
+    "serve": "^14.2.0",
     "sharp": "^0.30.5",
     "tslib": "^2.4.0",
     "typescript": "^4.6.4",
