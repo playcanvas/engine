@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:example:data && npm run build:directory && cross-env NODE_ENV=production rollup -c",
-    "build:directory": "node --es-module-specifier-resolution=node ./scripts/example-directory/index.mjs",
-    "build:example:data": "node --es-module-specifier-resolution=node ./scripts/example-data.mjs",
-    "build:thumbnails": "node --es-module-specifier-resolution=node ./scripts/thumbnails.mjs",
+    "build:directory": "node ./scripts/example-directory/index.mjs",
+    "build:example:data": "node ./scripts/example-data.mjs",
+    "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging",
     "test": "echo \"Error: no test specified\" && exit 1",
