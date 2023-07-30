@@ -70,7 +70,7 @@
     "puppeteer": "^14.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^5.2.0",
+    "react-router-dom": "^5.3.4",
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^2.74.1",
     "rollup-plugin-sourcemaps": "^0.6.3",
