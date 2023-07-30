@@ -63,7 +63,7 @@
     "fs-extra": "^10.1.0",
     "handlebars": "^4.7.7",
     "monaco-editor": "^0.33.0",
-    "nodemon": "^2.0.16",
+    "nodemon": "^2.0.22",
     "prettier": "^2.6.2",
     "promise-polyfill": "^8.2.3",
     "prop-types": "^15.7.2",
