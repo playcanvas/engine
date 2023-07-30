@@ -69,7 +69,7 @@ export {
     ClusteredOmniShadowsExample,
     ClusteredSpotShadowsExample,
     ContactHardeningShadowsExample,
-    // LitMaterialExample,
+    LitMaterialExample,
     GrabPassExample,
     GroundFogExample,
     HardwareInstancingExample,
