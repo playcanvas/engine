@@ -59,7 +59,7 @@
     "concurrently": "^7.2.1",
     "cross-env": "^7.0.2",
     "date-and-time": "^3.0.0",
-    "eslint": "^8.16.0",
+    "eslint": "^8.46.0",
     "fs-extra": "^10.1.0",
     "handlebars": "^4.7.7",
     "monaco-editor": "^0.33.0",
