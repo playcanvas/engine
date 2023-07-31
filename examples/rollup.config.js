@@ -2,7 +2,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import alias from '@rollup/plugin-alias';
 import sourcemaps from 'rollup-plugin-sourcemaps';
 import date from 'date-and-time';
