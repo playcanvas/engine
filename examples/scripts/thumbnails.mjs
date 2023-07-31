@@ -16,6 +16,7 @@ categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
     let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
     examples = examples.filter(e => e !== 'index.mjs');
+    examples = examples.filter(e => e !== 'lit-material.tsx');
     examples.forEach((e) => {
         exampleList.push({
             category,
