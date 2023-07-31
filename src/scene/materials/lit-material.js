@@ -94,7 +94,7 @@ class LitMaterial extends Material {
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
         const library = getProgramLibrary(device);
         library.register('lit', lit);
-        const shader = library.getProgram('lit', options, processingOptions);
+        const shader = library.getProgram('lit', options, processingOptions, this.userId);
         return shader;
     }
 }

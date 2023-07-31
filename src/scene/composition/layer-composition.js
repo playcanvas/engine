@@ -245,7 +245,7 @@ class LayerComposition extends EventHandler {
         function moveByBlendType(dest, src, moveTransparent) {
             for (let s = 0; s < src.length;) {
 
-                if (src[s].material?.transparent === moveTransparent) {
+                if (src[s].transparent === moveTransparent) {
 
                     // add it to dest
                     dest.push(src[s]);
