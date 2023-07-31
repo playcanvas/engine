@@ -115,7 +115,7 @@ class BasicMaterial extends Material {
         const library = getProgramLibrary(device);
         library.register('basic', basic);
 
-        return library.getProgram('basic', options, processingOptions);
+        return library.getProgram('basic', options, processingOptions, this.userId);
     }
 }
 

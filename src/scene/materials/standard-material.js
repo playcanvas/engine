@@ -865,7 +865,7 @@ class StandardMaterial extends Material {
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
-        const shader = library.getProgram('standard', options, processingOptions);
+        const shader = library.getProgram('standard', options, processingOptions, this.userId);
 
         this._dirtyShader = false;
         return shader;
