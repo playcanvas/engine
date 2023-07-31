@@ -12,6 +12,7 @@
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js,.ts,.tsx",
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
     "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
@@ -41,6 +42,11 @@
       ]
     }
   },
+  "eslintIgnore": [
+    "area-light-lut-bin-gen.js",
+    "dist",
+    "lib"
+  ],
   "devDependencies": {
     "@babel/standalone": "^7.22.9",
     "@monaco-editor/react": "^4.5.1",
