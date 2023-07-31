@@ -127,15 +127,15 @@ const string = {
      * Return a string with \{n\} replaced with the n-th argument.
      *
      * @param {string} s - The string to format.
-     * @param {object} [arguments] - All other arguments are substituted into the string.
+     * @param {...*} args - All other arguments are substituted into the string.
      * @returns {string} The formatted string.
      * @example
      * const s = pc.string.format("Hello {0}", "world");
      * console.log(s); // Prints "Hello world"
      */
-    format: function (s) {
-        for (let i = 1; i < arguments.length; i++) {
-            s = s.replace('{' + (i - 1) + '}', arguments[i]);
+    format: function (s, ...args) {
+        for (let i = 0; i < args.length; i++) {
+            s = s.replace(`{${i}}`, args[i]);
         }
         return s;
     },
