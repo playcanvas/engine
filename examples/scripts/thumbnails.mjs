@@ -65,3 +65,5 @@ async function takeScreenshots() {
 }
 
 takeScreenshots();
+
+console.log("🚀 ~ file: thumbnails.mjs:20 ~ temporary filter: 'lit-material.tsx'");
