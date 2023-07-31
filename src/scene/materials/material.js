@@ -68,6 +68,15 @@ class Material {
      */
     name = 'Untitled';
 
+    /**
+     * A unique id the user can assign to the material. The engine internally does not use this for
+     * anything, and the user can assign a value to this id for any purpose they like. Defaults to
+     * an empty string.
+     *
+     * @type {string}
+     */
+    userId = '';
+
     id = id++;
 
     variants = {};

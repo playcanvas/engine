@@ -110,7 +110,7 @@ class ProgramLibrary {
         this.processedCache.set(key, shader);
     }
 
-    getProgram(name, options, processingOptions) {
+    getProgram(name, options, processingOptions, userMaterialId) {
         const generator = this._generators[name];
         if (!generator) {
             Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
@@ -133,10 +133,19 @@ class ProgramLibrary {
 
             // use shader pass name if known
             let passName = '';
+            let shaderPassInfo;
             if (options.pass !== undefined) {
-                const shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
+                shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
                 passName = `-${shaderPassInfo.name}`;
             }
+
+            // fire an event to allow the shader to be modified by the user. Note that any modifications are applied
+            // to all materials using the same generated shader, as the cache key is not modified.
+            this._device.fire('shader:generate', {
+                userMaterialId,
+                shaderPassInfo,
+                definition: generatedShaderDef
+            });
 
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
