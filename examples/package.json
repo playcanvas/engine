@@ -67,7 +67,7 @@
     "prettier": "^2.8.8",
     "promise-polyfill": "^8.3.0",
     "prop-types": "^15.7.2",
-    "puppeteer": "^14.4.1",
+    "puppeteer": "^20.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^5.3.4",
