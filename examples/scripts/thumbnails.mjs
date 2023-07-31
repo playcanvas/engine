@@ -45,7 +45,7 @@ async function takeScreenshots() {
             continue;
         }
         const port = process.env.PORT || 5000;
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.goto(`http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`);
 
