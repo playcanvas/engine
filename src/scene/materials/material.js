@@ -68,6 +68,13 @@ class Material {
      */
     name = 'Untitled';
 
+    /**
+     * A unique id the user can assign to the material.
+     *
+     * @type {string}
+     */
+    userId = '';
+
     id = id++;
 
     variants = {};
