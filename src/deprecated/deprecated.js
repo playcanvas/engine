@@ -1016,7 +1016,7 @@ _defineAlias('sheenGloss', 'sheenGlossiess');
 _defineAlias('clearCoatGloss', 'clearCostGlossiness');
 
 function _defineOption(name, newName) {
-    if (name !== 'chunks' && name !== '_pass' && name !== '_isForwardPass') {
+    if (name !== 'pass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
             get: function () {
                 Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
