@@ -16,6 +16,7 @@ categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
     let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
     examples = examples.filter(e => e !== 'index.mjs');
+    examples = examples.filter(e => e !== 'lit-material.tsx');
     examples.forEach((e) => {
         exampleList.push({
             category,
@@ -44,7 +45,7 @@ async function takeScreenshots() {
             continue;
         }
         const port = process.env.PORT || 5000;
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.goto(`http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`);
 
@@ -64,3 +65,5 @@ async function takeScreenshots() {
 }
 
 takeScreenshots();
+
+console.log("🚀 ~ file: thumbnails.mjs:20 ~ temporary filter: 'lit-material.tsx'");
