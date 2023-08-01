@@ -127,7 +127,7 @@ class LitShader {
         this.fshader = null;
 
         /**
-         * @type {Function|undefined} - This function may update `this.fshader` in case it's
+         * @type {Function|null} - This function may update `this.fshader` in case it's
          * set in src/deprecated/deprecated.js
          * @ignore
          */
