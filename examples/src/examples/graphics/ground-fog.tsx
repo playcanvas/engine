@@ -114,7 +114,7 @@ class GroundFogExample {
         const gfxOptions = {
             deviceTypes: [deviceType],
             glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {

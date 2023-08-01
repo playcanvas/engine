@@ -37,7 +37,7 @@ class LocomotionExample {
                 'walkAnim': new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
                 'jogAnim': new pc.Asset('jogAnim', 'container', { url: '/static/assets/animations/bitmoji/run.glb' }),
                 'jumpAnim': new pc.Asset('jumpAnim', 'container', { url: '/static/assets/animations/bitmoji/jump-flip.glb' }),
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
             };
 
             const gfxOptions = {
