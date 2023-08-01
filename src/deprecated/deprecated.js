@@ -515,7 +515,7 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
     });
 });
 
-// We only provide backwards compatibility in debug builds, production builds have to be 
+// We only provide backwards compatibility in debug builds, production builds have to be
 // as fast and small as possible.
 
 // #if _DEBUG
