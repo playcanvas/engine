@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.65.0-dev",
+  "version": "1.66.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -53,7 +53,8 @@
     },
     "rules": {
       "jsdoc/check-tag-names": [
-        "error", {
+        "error",
+        {
           "definedTags": [
             "category"
           ]
