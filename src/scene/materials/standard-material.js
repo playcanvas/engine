@@ -706,11 +706,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_diffuse', getUniform('diffuse'));
         }
 
-        if (!this.useMetalness) {
-            if (!this.specularMap || this.specularTint) {
-                this._setParameter('material_specular', getUniform('specular'));
-            }
-        } else {
+        if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
@@ -725,6 +721,12 @@ class StandardMaterial extends Material {
             }
             if (!this.sheenGlossMap || this.sheenGlossTint) {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
+            }
+
+            this._setParameter('material_refractionIndex', this.refractionIndex);
+        } else {
+            if (!this.specularMap || this.specularTint) {
+                this._setParameter('material_specular', getUniform('specular'));
             }
         }
 
@@ -749,7 +751,6 @@ class StandardMaterial extends Material {
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
-            this._setParameter('material_refractionIndex', this.refractionIndex);
         }
 
         if (this.useDynamicRefraction) {
