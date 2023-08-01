@@ -245,7 +245,7 @@ class MeshDecalsExample {
                     }
 
                     // fade out all vertex colors once a second
-                    if (Math.round(time) != Math.round(previousTime)) {
+                    if (Math.round(time) !== Math.round(previousTime)) {
                         for (let i = 0; i < colors.length; i++)
                             colors[i] -= 2;
 
