@@ -19,7 +19,7 @@ const controlsObserver = new Observer();
 
 const Controls = (props: any) => {
     const controlsFunction = (document.getElementsByTagName('iframe')[0] as any).contentWindow.Example.prototype.controls || null;
-    // on desktop dont show the control panel when no controls are present
+    // on desktop don't show the control panel when no controls are present
     if (!controlsFunction && window.top.innerWidth >= MIN_DESKTOP_WIDTH) return null;
     return <ControlPanel controls={controlsFunction} files={props.files} />;
 };
