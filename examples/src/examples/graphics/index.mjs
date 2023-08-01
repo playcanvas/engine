@@ -8,7 +8,7 @@ import ClusteredLightingExample from "./clustered-lighting";
 import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
 import ClusteredSpotShadowsExample from "./clustered-spot-shadows";
 import ContactHardeningShadowsExample from "./contact-hardening-shadows";
-// import LitMaterialExample from "./lit-material";
+// import LitMaterialExample from "./lit-material";   // note that this is also excluded in read-dir.mjs
 import GrabPassExample from "./grab-pass";
 import GroundFogExample from "./ground-fog";
 import HardwareInstancingExample from "./hardware-instancing";
