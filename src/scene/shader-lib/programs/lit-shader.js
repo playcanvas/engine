@@ -131,7 +131,7 @@ class LitShader {
          * set in src/deprecated/deprecated.js
          * @ignore
          */
-        this.handleCompatibility;
+        this.handleCompatibility = null;
     }
 
     _vsAddBaseCode(code, chunks, options) {
