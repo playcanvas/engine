@@ -529,6 +529,13 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update skin matrices ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing skinInstance.
+     * @ignore
+     */
     updateGpuSkinMatrices(drawCalls) {
         // #if _PROFILER
         const skinTime = now();
@@ -548,6 +555,13 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update morphing ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing morphInstance.
+     * @ignore
+     */
     updateMorphing(drawCalls) {
         // #if _PROFILER
         const morphTime = now();
