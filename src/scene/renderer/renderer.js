@@ -71,7 +71,7 @@ class Renderer {
     clustersDebugRendered = false;
 
     /**
-     * A set of visible mesh instances which need further processing before being rendered, e.g. 
+     * A set of visible mesh instances which need further processing before being rendered, e.g.
      * skinning or morphing. Extracted during culling.
      *
      * @type {Set<import('../mesh-instance.js').MeshInstance>}
