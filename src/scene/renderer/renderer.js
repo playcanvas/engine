@@ -579,6 +579,13 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update draw calls ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * requiring updates.
+     * @ignore
+     */
     gpuUpdate(drawCalls) {
         // Note that drawCalls can be either a Set or an Array and contains mesh instances
         // that are visible in this frame
