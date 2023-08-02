@@ -3,7 +3,7 @@ import * as pc from '../../../../';
 class HierarchyExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hierarchy';
-//    static WEBGPU_ENABLED = true;
+    static WEBGPU_ENABLED = true;
 
     example(canvas: HTMLCanvasElement, deviceType: string): void {
 
@@ -115,31 +115,16 @@ class HierarchyExample {
 
             // update each frame
             let time = 0;
-            let frame = 0;
             app.on("update", function (dt) {
                 time += dt;
-                frame++;
 
                 // rotation quaternion changing with time
                 const rot = new pc.Quat();
                 rot.setFromEulerAngles(time * 5, time * 13, time * 6);
 
                 // apply it to all entities
-                if (frame === 0) {
-                    for (let e = 0; e < entities.length; e++) {
-                        entities[e].setLocalRotation(rot);
-                    }
-                }
-
-                if (frame % 2 === 0) {
-                    console.log("yes");
-
-                    for (let i = 0; i < 5; i++) {
-                        const entity = entities[Math.floor(Math.random() * entities.length)];
-                        entity.render.meshInstances[0].material.blendType = Math.random() < 0.5 ? pc.BLEND_NONE : pc.BLEND_ADDITIVE;
-                    }
-                } else {
-                    console.log("no");
+                for (let e = 0; e < entities.length; e++) {
+                    entities[e].setLocalRotation(rot);
                 }
             });
         });
