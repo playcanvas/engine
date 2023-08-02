@@ -1064,7 +1064,7 @@ class Renderer {
                 // clear visibility
                 meshInst.visibleThisFrame = false;
 
-                // collect all meshe instances if we need to update their shaders. Note that there could
+                // collect all mesh instances if we need to update their shaders. Note that there could
                 // be duplicates, which is not a problem for the shader updates, so we do not filter them out.
                 if (updateShaders) {
                     _tempMeshInstances.push(meshInst);
