@@ -284,6 +284,13 @@ class Picker {
                     for (let j = 0; j < meshInstances.length; j++) {
                         const meshInstance = meshInstances[j];
                         if (meshInstance.pick && meshInstance.transparent === transparent) {
+
+                            // as we only render opaque meshes on our internal meshes, mark this mesh as opaque
+                            if (meshInstance.transparent) {
+                                meshInstance.transparent = false;
+                                tempSet.add(meshInstance);
+                            }
+
                             destMeshInstances.push(meshInstance);
                         }
                     }
@@ -305,6 +312,12 @@ class Picker {
 
         // render
         this.app.renderComposition(this.layerComp);
+
+        // mark all meshes as transparent again
+        tempSet.forEach((meshInstance) => {
+            meshInstance.transparent = false;
+        });
+        tempSet.clear();
     }
 
     updateCamera(srcCamera) {
