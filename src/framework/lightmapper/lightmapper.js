@@ -1086,7 +1086,7 @@ class Lightmapper {
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+                        this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
 
                         device.updateEnd();
 

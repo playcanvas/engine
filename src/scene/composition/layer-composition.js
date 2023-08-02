@@ -7,7 +7,7 @@ import { sortPriority } from '../../core/sort.js';
 
 import {
     LAYERID_DEPTH,
-    COMPUPDATED_BLEND, COMPUPDATED_CAMERAS, COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
+    COMPUPDATED_CAMERAS, COMPUPDATED_LIGHTS,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
 
@@ -99,14 +99,8 @@ class LayerComposition extends EventHandler {
         this._opaqueOrder = {};
         this._transparentOrder = {};
 
-        this._dirty = false;
-        this._dirtyBlend = false;
         this._dirtyLights = false;
         this._dirtyCameras = false;
-
-        // all unique meshInstances from all layers, stored both as an array, and also a set for fast search
-        this._meshInstances = [];
-        this._meshInstancesSet = new Set();
 
         // an array of all unique lights from all layers
         this._lights = [];
@@ -181,12 +175,9 @@ class LayerComposition extends EventHandler {
         let result = 0;
 
         // if composition dirty flags are not set, test if layers are marked dirty
-        if (!this._dirty || !this._dirtyLights || !this._dirtyCameras) {
+        if (!this._dirtyLights || !this._dirtyCameras) {
             for (let i = 0; i < len; i++) {
                 const layer = this.layerList[i];
-                if (layer._dirty) {
-                    this._dirty = true;
-                }
                 if (layer._dirtyLights) {
                     this._dirtyLights = true;
                 }
@@ -194,90 +185,6 @@ class LayerComposition extends EventHandler {
                     this._dirtyCameras = true;
                 }
             }
-        }
-
-        // function adds unique meshInstances from src array into destArray. A destSet is a Set containing already
-        // existing meshInstances  to accelerate the removal of duplicates
-        // returns true if any of the materials on these meshInstances has _dirtyBlend set
-        function addUniqueMeshInstance(destArray, destSet, srcArray) {
-            let dirtyBlend = false;
-            const srcLen = srcArray.length;
-            for (let s = 0; s < srcLen; s++) {
-                const meshInst = srcArray[s];
-
-                if (!destSet.has(meshInst)) {
-                    destSet.add(meshInst);
-                    destArray.push(meshInst);
-
-                    const material = meshInst.material;
-                    if (material && material._dirtyBlend) {
-                        dirtyBlend = true;
-                        material._dirtyBlend = false;
-                    }
-                }
-            }
-            return dirtyBlend;
-        }
-
-        // rebuild this._meshInstances array - add all unique meshInstances from all layers to it
-        // also set this._dirtyBlend to true if material of any meshInstance has _dirtyBlend set, and clear those flags on materials
-        if (this._dirty) {
-            result |= COMPUPDATED_INSTANCES;
-            this._meshInstances.length = 0;
-            this._meshInstancesSet.clear();
-
-            for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (!layer.passThrough) {
-
-                    // add meshInstances from both opaque and transparent lists
-                    this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.opaqueMeshInstances) || this._dirtyBlend;
-                    this._dirtyBlend = addUniqueMeshInstance(this._meshInstances, this._meshInstancesSet, layer.transparentMeshInstances) || this._dirtyBlend;
-                }
-
-                layer._dirty = false;
-            }
-
-            this._dirty = false;
-        }
-
-        // function moves transparent or opaque meshes based on moveTransparent from src to dest array
-        function moveByBlendType(dest, src, moveTransparent) {
-            for (let s = 0; s < src.length;) {
-
-                if (src[s].transparent === moveTransparent) {
-
-                    // add it to dest
-                    dest.push(src[s]);
-
-                    // remove it from src
-                    src[s] = src[src.length - 1];
-                    src.length--;
-
-                } else {
-
-                    // just skip it
-                    s++;
-                }
-            }
-        }
-
-        // for each layer, split its meshInstances to either opaque or transparent array based on material blend type
-        if (this._dirtyBlend) {
-            result |= COMPUPDATED_BLEND;
-
-            for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (!layer.passThrough) {
-
-                    // move any opaque meshInstances from transparentMeshInstances to opaqueMeshInstances
-                    moveByBlendType(layer.opaqueMeshInstances, layer.transparentMeshInstances, false);
-
-                    // move any transparent meshInstances from opaqueMeshInstances to transparentMeshInstances
-                    moveByBlendType(layer.transparentMeshInstances, layer.opaqueMeshInstances, true);
-                }
-            }
-            this._dirtyBlend = false;
         }
 
         if (this._dirtyLights) {
@@ -410,7 +317,7 @@ class LayerComposition extends EventHandler {
         }
 
         // allocate light clusteres if lights or meshes or cameras are modified
-        if (result & (COMPUPDATED_CAMERAS | COMPUPDATED_LIGHTS | COMPUPDATED_INSTANCES)) {
+        if (result & (COMPUPDATED_CAMERAS | COMPUPDATED_LIGHTS)) {
 
             // prepare clustered lighting for render actions
             if (clusteredLightingEnabled) {
@@ -566,9 +473,7 @@ class LayerComposition extends EventHandler {
             if (layer.hasClusteredLights) {
 
                 // and if the layer has meshes
-                const transparent = this.subLayerList[ra.layerIndex];
-                const meshInstances = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                if (meshInstances.length) {
+                if (layer.meshInstances.length) {
 
                     // reuse cluster that was already set up and is compatible
                     let clusters = this.findCompatibleCluster(layer, i, emptyWorldClusters);
@@ -722,7 +627,7 @@ class LayerComposition extends EventHandler {
                     (' Lay: ' + layer.name).padEnd(22, ' ') +
                     (transparent ? ' TRANSP' : ' OPAQUE') +
                     (enabled ? ' ENABLED ' : ' DISABLED') +
-                    ' Meshes: ', (transparent ? layer.transparentMeshInstances.length : layer.opaqueMeshInstances.length).toString().padStart(4) +
+                    ' Meshes: ', ('?' + layer.meshInstances.length).padStart(5) +
                     (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
                     ' Clear: ' + clear +
                     ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
@@ -771,7 +676,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -796,7 +700,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true, true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -819,7 +722,6 @@ class LayerComposition extends EventHandler {
             this.subLayerList.splice(id, 1);
             this.subLayerEnabled.splice(id, 1);
             id = this.layerList.indexOf(layer);
-            this._dirty = true;
             this._dirtyLights = true;
             this._dirtyCameras = true;
             this.fire('remove', layer);
@@ -848,7 +750,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -873,7 +774,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -896,7 +796,6 @@ class LayerComposition extends EventHandler {
                 this._updateOpaqueOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirty = true;
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
@@ -921,7 +820,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -945,7 +843,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
@@ -967,7 +864,6 @@ class LayerComposition extends EventHandler {
                 this._updateTransparentOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirty = true;
                 this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {

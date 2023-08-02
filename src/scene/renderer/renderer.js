@@ -58,6 +58,9 @@ const _tempProjMat2 = new Mat4();
 const _tempProjMat3 = new Mat4();
 const _tempSet = new Set();
 
+const _tempMeshInstances = [];
+const _tempMeshInstancesSkinned = [];
+
 /**
  * The base renderer functionality to allow implementation of specialized renderers.
  *
@@ -66,6 +69,14 @@ const _tempSet = new Set();
 class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
+
+    /**
+     * A set of visible mesh instances which need further processing before being rendered, e.g.
+     * skinning or morphing. Extracted during culling.
+     *
+     * @type {Set<import('../mesh-instance.js').MeshInstance>}
+     */
+    processingMeshInstances = new Set();
 
     /**
      * Create a new instance.
@@ -518,20 +529,24 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update skin matrices ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing skinInstance.
+     * @ignore
+     */
     updateGpuSkinMatrices(drawCalls) {
         // #if _PROFILER
         const skinTime = now();
         // #endif
 
-        const count = drawCalls.length;
-        for (let i = 0; i < count; i++) {
-            const drawCall = drawCalls[i];
-            if (drawCall.visibleThisFrame) {
-                const skin = drawCall.skinInstance;
-                if (skin && skin._dirty) {
-                    skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
-                    skin._dirty = false;
-                }
+        for (const drawCall of drawCalls) {
+            const skin = drawCall.skinInstance;
+
+            if (skin && skin._dirty) {
+                skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
+                skin._dirty = false;
             }
         }
 
@@ -540,26 +555,40 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update morphing ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing morphInstance.
+     * @ignore
+     */
     updateMorphing(drawCalls) {
         // #if _PROFILER
         const morphTime = now();
         // #endif
 
-        const drawCallsCount = drawCalls.length;
-        for (let i = 0; i < drawCallsCount; i++) {
-            const drawCall = drawCalls[i];
+        for (const drawCall of drawCalls) {
             const morphInst = drawCall.morphInstance;
-            if (morphInst && morphInst._dirty && drawCall.visibleThisFrame) {
+            if (morphInst && morphInst._dirty) {
                 morphInst.update();
             }
         }
+
         // #if _PROFILER
         this._morphTime += now() - morphTime;
         // #endif
     }
 
+    /**
+     * Update draw calls ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * requiring updates.
+     * @ignore
+     */
     gpuUpdate(drawCalls) {
-        // skip everything with visibleThisFrame === false
+        // Note that drawCalls can be either a Set or an Array and contains mesh instances
+        // that are visible in this frame
         this.updateGpuSkinMatrices(drawCalls);
         this.updateMorphing(drawCalls);
     }
@@ -777,60 +806,53 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    cull(camera, drawCalls, visibleList) {
+    /**
+     * @param {import('../camera.js').Camera} camera - The camera used for culling.
+     * @param {import('../camera.js').MeshInstance[]} drawCalls - Draw calls to cull.
+     * @param {import('../layer.js').CulledInstances} culledInstances - Stores culled instances.
+     */
+    cull(camera, drawCalls, culledInstances) {
         // #if _PROFILER
         const cullTime = now();
-        let numDrawCallsCulled = 0;
         // #endif
 
-        let visibleLength = 0;
-        const drawCallsCount = drawCalls.length;
+        const opaque = culledInstances.opaque;
+        opaque.length = 0;
+        const transparent = culledInstances.transparent;
+        transparent.length = 0;
 
-        if (!camera.frustumCulling) {
-            for (let i = 0; i < drawCallsCount; i++) {
-                // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
-                const drawCall = drawCalls[i];
-                if (!drawCall.visible && !drawCall.command)
-                    continue;
+        const doCull = camera.frustumCulling;
+        const count = drawCalls.length;
 
-                visibleList[visibleLength] = drawCall;
-                visibleLength++;
-                drawCall.visibleThisFrame = true;
-            }
-            return visibleLength;
-        }
-
-        for (let i = 0; i < drawCallsCount; i++) {
+        for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
-            if (!drawCall.command) {
-                if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
-                let visible = true;
+            if (drawCall.command) {
 
-                if (drawCall.cull) {
-                    visible = drawCall._isVisible(camera);
-                    // #if _PROFILER
-                    numDrawCallsCulled++;
-                    // #endif
-                }
-
-                if (visible) {
-                    visibleList[visibleLength] = drawCall;
-                    visibleLength++;
-                    drawCall.visibleThisFrame = true;
-                }
-            } else {
-                visibleList[visibleLength] = drawCall;
-                visibleLength++;
+                // commands are always visible in both opaque and transparent buckets
                 drawCall.visibleThisFrame = true;
+                opaque.push(drawCall);
+                transparent.push(drawCall);
+
+            } else if (drawCall.visible) {
+
+                const visible = !doCull || drawCall._isVisible(camera);
+                if (visible) {
+                    drawCall.visibleThisFrame = true;
+
+                    // sort mesh instance into the right bucket based on its transparency
+                    const bucket = drawCall.transparent ? transparent : opaque;
+                    bucket.push(drawCall);
+
+                    if (drawCall.skinInstance || drawCall.morphInstance)
+                        this.processingMeshInstances.add(drawCall);
+                }
             }
         }
 
         // #if _PROFILER
         this._cullTime += now() - cullTime;
-        this._numDrawCallsCulled += numDrawCallsCulled;
+        this._numDrawCallsCulled += doCull ? count : 0;
         // #endif
-
-        return visibleLength;
     }
 
     cullLights(camera, lights) {
@@ -928,6 +950,8 @@ class Renderer {
         const cullTime = now();
         // #endif
 
+        this.processingMeshInstances.clear();
+
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
 
@@ -939,7 +963,6 @@ class Renderer {
             /** @type {import('../layer.js').Layer} */
             const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
-            const transparent = comp.subLayerList[layerIndex];
 
             // camera
             const cameraPass = renderAction.cameraIndex;
@@ -961,26 +984,13 @@ class Renderer {
                 this.cullLights(camera.camera, layer._lights);
 
                 // cull mesh instances
-                const objects = layer.instances;
+                layer.onPreCull?.(cameraPass);
 
-                // collect them into layer arrays
-                const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+                const culledInstances = layer.getCulledInstances(camera.camera);
+                const drawCalls = layer.meshInstances;
+                this.cull(camera.camera, drawCalls, culledInstances);
 
-                // shared objects are only culled once
-                if (!visible.done) {
-
-                    if (layer.onPreCull) {
-                        layer.onPreCull(cameraPass);
-                    }
-
-                    const drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                    visible.length = this.cull(camera.camera, drawCalls, visible.list);
-                    visible.done = true;
-
-                    if (layer.onPostCull) {
-                        layer.onPostCull(cameraPass);
-                    }
-                }
+                layer.onPostCull?.(cameraPass);
             }
         }
 
@@ -1055,25 +1065,57 @@ class Renderer {
      * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
     beginFrame(comp, lightsChanged) {
-        const meshInstances = comp._meshInstances;
 
-        // Update shaders if needed
         const scene = this.scene;
-        if (scene.updateShaders || lightsChanged) {
+        const updateShaders = scene.updateShaders || lightsChanged;
+
+        let totalMeshInstances = 0;
+        const layers = comp.layerList;
+        const layerCount = layers.length;
+        for (let i = 0; i < layerCount; i++) {
+            const layer = layers[i];
+
+            const meshInstances = layer.meshInstances;
+            const count = meshInstances.length;
+            totalMeshInstances += count;
+
+            for (let j = 0; j < count; j++) {
+                const meshInst = meshInstances[j];
+
+                // clear visibility
+                meshInst.visibleThisFrame = false;
+
+                // collect all mesh instances if we need to update their shaders. Note that there could
+                // be duplicates, which is not a problem for the shader updates, so we do not filter them out.
+                if (updateShaders) {
+                    _tempMeshInstances.push(meshInst);
+                }
+
+                // collect skinned mesh instances
+                if (meshInst.skinInstance) {
+                    _tempMeshInstancesSkinned.push(meshInst);
+                }
+            }
+        }
+
+        // #if _PROFILER
+        scene._stats.meshInstances = totalMeshInstances;
+        // #endif
+
+        // update shaders if needed
+        if (updateShaders) {
             const onlyLitShaders = !scene.updateShaders && lightsChanged;
-            this.updateShaders(meshInstances, onlyLitShaders);
+            this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
             scene._shaderVersion++;
         }
 
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
-        this.updateCpuSkinMatrices(meshInstances);
+        this.updateCpuSkinMatrices(_tempMeshInstancesSkinned);
 
-        // clear mesh instance visibility
-        const miCount = meshInstances.length;
-        for (let i = 0; i < miCount; i++) {
-            meshInstances[i].visibleThisFrame = false;
-        }
+        // clear light arrays
+        _tempMeshInstances.length = 0;
+        _tempMeshInstancesSkinned.length = 0;
 
         // clear light visibility
         const lights = comp._lights;
@@ -1170,11 +1212,6 @@ class Renderer {
                 layer._postRenderCounter |= 1;
             }
             layer._postRenderCounterMax = layer._postRenderCounter;
-
-            // prepare layer for culling with the camera
-            for (let j = 0; j < layer.cameras.length; j++) {
-                layer.instances.prepare(j);
-            }
         }
 
         // Update static layer data, if something's changed
