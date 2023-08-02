@@ -40,6 +40,7 @@ import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -753,6 +754,20 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
         return getDefaultMaterial(getApplication().graphicsDevice);
+    }
+});
+
+Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
+    get: function () {
+        Debug.deprecated('pc.LayerComposition#_meshInstances is deprecated.');
+        return null;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'drawCalls', {
+    get: function () {
+        Debug.deprecated('pc.Scene#drawCalls is deprecated and no longer provides mesh instances.');
+        return null;
     }
 });
 

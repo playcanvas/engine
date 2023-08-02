@@ -8,7 +8,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
-    COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
+    COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
@@ -461,7 +461,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, drawCalls, sortedLights, layer, pass) {
 
         const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -478,6 +478,7 @@ class ForwardRenderer extends Renderer {
         const lightHash = layer ? layer.getLightHash(clusteredLightingEnabled) : 0;
         let prevMaterial = null, prevObjDefs, prevLightMask;
 
+        const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
 
             /** @type {import('../mesh-instance.js').MeshInstance} */
@@ -519,11 +520,6 @@ class ForwardRenderer extends Renderer {
                     if (material.dirty) {
                         material.updateUniforms(device, scene);
                         material.dirty = false;
-                    }
-
-                    // if material has dirtyBlend set, notify scene here
-                    if (material._dirtyBlend) {
-                        scene.layers._dirtyBlend = true;
                     }
                 }
 
@@ -694,14 +690,14 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, drawCallback, layer, flipFaces) {
+    renderForward(camera, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, sortedLights, layer, pass);
 
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
@@ -776,10 +772,6 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             }
-        }
-
-        if (compUpdatedFlags & COMPUPDATED_INSTANCES || !scene._statsUpdated) {
-            scene._stats.meshInstances = comp._meshInstances.length;
         }
 
         scene._statsUpdated = true;
@@ -1008,7 +1000,7 @@ class ForwardRenderer extends Renderer {
         this.cullComposition(comp);
 
         // GPU update for all visible objects
-        this.gpuUpdate(comp._meshInstances);
+        this.gpuUpdate(this.processingMeshInstances);
     }
 
     renderPassPostprocessing(renderAction, layerComposition) {
@@ -1096,14 +1088,14 @@ class ForwardRenderer extends Renderer {
             const sortTime = now();
             // #endif
 
-            layer._sortVisible(transparent, camera.camera.node, cameraPass);
+            layer.sortVisible(camera.camera, transparent);
 
             // #if _PROFILER
             this._sortTime += now() - sortTime;
             // #endif
 
-            const objects = layer.instances;
-            const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+            const culledInstances = layer.getCulledInstances(camera.camera);
+            const visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
@@ -1136,8 +1128,7 @@ class ForwardRenderer extends Renderer {
 
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
-                               visible.list,
-                               visible.length,
+                               visible,
                                layer._splitLights,
                                shaderPass,
                                layer.onDrawCall,

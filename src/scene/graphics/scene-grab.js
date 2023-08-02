@@ -326,9 +326,12 @@ class SceneGrab {
                         this.renderTarget = this.depthRenderTarget;
                     }
 
-                    // Collect all rendered mesh instances with the same render target as World has, depthWrite == true and prior to this layer to replicate blitFramebuffer on WebGL2
-                    const visibleObjects = this.instances.visibleOpaque[cameraPass];
-                    const visibleList = visibleObjects.list;
+                    // Collect all rendered mesh instances on the layers prior to the depth layer.
+                    // Store them in a visible list of instances on the depth layer.
+                    const culledDepthInstances = this.getCulledInstances(camera.camera);
+                    const depthOpaque = culledDepthInstances.opaque;
+                    depthOpaque.length = 0;
+
                     const layerComposition = scene.layers;
                     const subLayerEnabled = layerComposition.subLayerEnabled;
                     const isTransparent = layerComposition.subLayerList;
@@ -336,30 +339,32 @@ class SceneGrab {
                     // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
                     const rt = layerComposition.getLayerById(LAYERID_WORLD).renderTarget;
 
-                    let visibleLength = 0;
                     const layers = layerComposition.layerList;
                     for (let i = 0; i < layers.length; i++) {
                         const layer = layers[i];
+
+                        // only use the layers before the depth layer
                         if (layer === this) break;
+
                         if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
+                        if (layer.cameras.indexOf(camera) < 0) continue;
 
-                        const layerCamId = layer.cameras.indexOf(camera);
-                        if (layerCamId < 0) continue;
-
+                        // visible instances for the camera for the layer
                         const transparent = isTransparent[i];
-                        let layerVisibleList = transparent ? layer.instances.visibleTransparent[layerCamId] : layer.instances.visibleOpaque[layerCamId];
-                        const layerVisibleListLength = layerVisibleList.length;
-                        layerVisibleList = layerVisibleList.list;
+                        const layerCulledInstances = layer.getCulledInstances(camera.camera);
+                        const layerMeshInstances = transparent ? layerCulledInstances.transparent : layerCulledInstances.opaque;
 
-                        for (let j = 0; j < layerVisibleListLength; j++) {
-                            const drawCall = layerVisibleList[j];
-                            if (drawCall.material && drawCall.material.depthWrite && !drawCall._noDepthDrawGl1) {
-                                visibleList[visibleLength] = drawCall;
-                                visibleLength++;
+                        // copy them to a visible list of the depth layer
+                        const count = layerMeshInstances.length;
+                        for (let j = 0; j < count; j++) {
+                            const drawCall = layerMeshInstances[j];
+
+                            // only collect meshes that update the depth
+                            if (drawCall.material?.depthWrite && !drawCall._noDepthDrawGl1) {
+                                depthOpaque.push(drawCall);
                             }
                         }
                     }
-                    visibleObjects.length = visibleLength;
                 }
             },
 
@@ -419,8 +424,8 @@ class SceneGrab {
 
                 if (camera.renderSceneDepthMap) {
                     // just clear the list of visible objects to avoid keeping references
-                    const visibleObjects = this.instances.visibleOpaque[cameraPass];
-                    visibleObjects.length = 0;
+                    const culledDepthInstances = this.getCulledInstances(camera.camera);
+                    culledDepthInstances.opaque.length = 0;
                 }
             }
         });

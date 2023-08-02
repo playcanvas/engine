@@ -252,7 +252,7 @@ class Picker {
 
         // populate the layer with meshes and depth clear commands
         this.layer.clearMeshInstances();
-        const destMeshInstances = this.layer.opaqueMeshInstances;
+        const destMeshInstances = this.layer.meshInstances;
 
         // source mesh instances
         const srcLayers = scene.layers.layerList;
@@ -279,10 +279,11 @@ class Picker {
                     }
 
                     // copy all pickable mesh instances
-                    const meshInstances = isTransparent[i] ? srcLayer.instances.transparentMeshInstances : srcLayer.instances.opaqueMeshInstances;
+                    const transparent = isTransparent[i];
+                    const meshInstances = srcLayer.meshInstances;
                     for (let j = 0; j < meshInstances.length; j++) {
                         const meshInstance = meshInstances[j];
-                        if (meshInstance.pick) {
+                        if (meshInstance.pick && meshInstance.transparent === transparent) {
                             destMeshInstances.push(meshInstance);
                         }
                     }
