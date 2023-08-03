@@ -79,7 +79,7 @@ class ButtonBasicExample {
 
                 // Button
                 const button = new pc.Entity();
-                button.addComponent("button", {});
+                button.addComponent("button");
                 button.addComponent("element", {
                     anchor: [0.5, 0.5, 0.5, 0.5],
                     height: 40,
