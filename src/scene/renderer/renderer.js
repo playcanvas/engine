@@ -916,8 +916,7 @@ class Renderer {
                 }
 
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightCompositionData[i].shadowCastersList;
-                    this._shadowRendererLocal.cull(light, casters);
+                    this._shadowRendererLocal.cull(light, comp);
                 }
             }
         }
@@ -931,8 +930,7 @@ class Renderer {
             for (let j = 0; j < count; j++) {
                 const lightIndex = renderAction.directionalLightsIndices[j];
                 const light = comp._lights[lightIndex];
-                const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
-                this._shadowRendererDirectional.cull(light, casters, renderAction.camera.camera);
+                this._shadowRendererDirectional.cull(light, comp, renderAction.camera.camera);
             }
         }
     }
