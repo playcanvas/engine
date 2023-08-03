@@ -1,5 +1,5 @@
 import date from 'date-and-time';
-import fs from 'node:fs';
+import * as fs from 'node:fs';
 import fse from 'fs-extra';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
