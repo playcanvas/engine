@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 /**
  * Event Handle that is created by {@link EventHandler} and can be used for easier removing and events management.
  * @example
@@ -50,7 +52,7 @@ class EventHandle {
      * @type {boolean}
      * @ignore
      */
-    once;
+    _once;
 
     /**
      * True if event has been removed.
@@ -71,7 +73,7 @@ class EventHandle {
         this.name = name;
         this.callback = callback;
         this.scope = scope;
-        this.once = once;
+        this._once = once;
     }
 
     /**
@@ -89,6 +91,16 @@ class EventHandle {
     off() {
         if (this._removed) return;
         this.handler.off(this.name, this.callback, this.scope);
+    }
+
+    on(name, callback, scope = this) {
+        Debug.deprecated('Using chaning with EventHandler.on is deprecated, subscribe to an event from EventHandler directly instead.');
+        return this.handler._addCallback(name, callback, scope, false);
+    }
+
+    once(name, callback, scope = this) {
+        Debug.deprecated('Using chaning with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.');
+        return this.handler._addCallback(name, callback, scope, true);
     }
 
     /**
