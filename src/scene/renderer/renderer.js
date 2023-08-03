@@ -808,7 +808,7 @@ class Renderer {
 
     /**
      * @param {import('../camera.js').Camera} camera - The camera used for culling.
-     * @param {import('../camera.js').MeshInstance[]} drawCalls - Draw calls to cull.
+     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Draw calls to cull.
      * @param {import('../layer.js').CulledInstances} culledInstances - Stores culled instances.
      */
     cull(camera, drawCalls, culledInstances) {
