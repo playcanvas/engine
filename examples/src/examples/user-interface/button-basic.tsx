@@ -80,7 +80,7 @@ class ButtonBasicExample {
                 // Button
                 const button = new pc.Entity();
                 button.addComponent("button", {
-                    imageEntity: button
+                    // imageEntity: button
                 });
                 button.addComponent("element", {
                     anchor: [0.5, 0.5, 0.5, 0.5],
