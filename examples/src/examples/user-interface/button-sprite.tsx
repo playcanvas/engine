@@ -78,7 +78,7 @@ class ButtonSpriteExample {
                 const button = new pc.Entity();
                 button.addComponent("button", {
                     active: true,
-                    imageEntity: button,
+                    // imageEntity: button,
                     transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE
                 });
                 button.addComponent("element", {
