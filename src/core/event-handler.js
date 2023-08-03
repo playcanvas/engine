@@ -31,13 +31,6 @@ import { EventHandle } from './event-handle.js';
  */
 class EventHandler {
     /**
-     * When set to true, `on` and `once` methods will return `this`.
-     * When set to false, `on` and `once` will return `EventHandle` for easier events management.
-     * @type {boolean}
-     */
-    static chaining = true;
-
-    /**
      * @type {Map<string,Array<object>>}
      * @private
      */
@@ -101,16 +94,21 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandle|EventHandler} {@link EventHandle} if `EventHandler.chaining` set to `false`, otherwise returns `this` (self) for chaining.
+     * @returns {EventHandle} - that can be used for removing event in the future.
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
+     * @example
+     * const evt = obj.on('test', function (a, b) {
+     *     console.log(a + b);
+     * });
+     * // some time later
+     * evt.off();
      */
     on(name, callback, scope = this) {
-        const evt = this._addCallback(name, callback, scope, false);
-        return EventHandler.chaining ? this : evt;
+        return this._addCallback(name, callback, scope, false);
     }
 
     /**
@@ -121,7 +119,7 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandle|EventHandler} {@link EventHandle} if `EventHandler.chaining` set to `false`, otherwise returns `this` (self) for chaining.
+     * @returns {EventHandle} - can be used for removing event in the future.
      * @example
      * obj.once('test', function (a, b) {
      *     console.log(a + b);
@@ -130,8 +128,7 @@ class EventHandler {
      * obj.fire('test', 1, 2); // not going to get handled
      */
     once(name, callback, scope = this) {
-        const evt = this._addCallback(name, callback, scope, true);
-        return EventHandler.chaining ? this : evt;
+        return this._addCallback(name, callback, scope, true);
     }
 
     /**
@@ -195,9 +192,7 @@ class EventHandler {
             if (!callbacks)
                 return this;
 
-            let count = callbacks.length;
-
-            for (let i = 0; i < count; i++) {
+            for (let i = 0; i < callbacks.length; i++) {
                 // remove all events with a specific name and a callback
                 if (callbacks[i].callback !== callback)
                     continue;
@@ -207,12 +202,9 @@ class EventHandler {
                     continue;
 
                 callbacks[i].destroy();
-                // potential issue with such way of removing items from an array,
-                // as it changes the order of event handlers
-                callbacks[i--] = callbacks[--count];
+                callbacks.splice(i, 1);
+                i--;
             }
-
-            callbacks.length = count;
 
             if (callbacks.length === 0)
                 this._callbacks.delete(name);
