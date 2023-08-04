@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { hashCode } from '../../core/hash.js';
 import { version, revision } from '../../core/core.js';
 
 import { Shader } from '../../platform/graphics/shader.js';
@@ -6,7 +7,6 @@ import { Shader } from '../../platform/graphics/shader.js';
 import { SHADER_FORWARD, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW } from '../constants.js';
 import { ShaderPass } from '../shader-pass.js';
 import { StandardMaterialOptions } from '../materials/standard-material-options.js';
-import { hashCode } from '../../core/hash.js';
 
 /**
  * A class responsible for creation and caching of required shaders.
