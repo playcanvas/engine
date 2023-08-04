@@ -49,10 +49,11 @@ float viewSpaceDepth(float depth, mat4 invProjection) {
     return viewSpace.z;
 }
 
-float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z) {
+float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMPLE_COUNT], vec2 shadowCoords, vec2 searchSize, float z, vec4 cameraParams) {
 
     float blockers = 0.0;
     float averageBlocker = 0.0;
+    //float radius = searchSize * ( z - )
     for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
         vec2 offset = sampleCoords[i] * searchSize;
         vec2 sampleUV = shadowCoords + offset;
@@ -64,20 +65,16 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
     #endif        
         float isBlocking = step(blocker, z);
         blockers += isBlocking;
-        averageBlocker += blocker * isBlocking;
+        averageBlocker += blocker * isBlocking;        
     }
 
     if (blockers > 0.0)
-        return averageBlocker /= blockers;
+        return averageBlocker / blockers;
     return -1.0;
 }
 
 float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
-    float receiverDepth = shadowCoords.z;
-#ifndef GL2
-    // If using packed depth on GL1, we need to normalize to get the correct receiver depth
-    receiverDepth *= 1.0 / (cameraParams.y - cameraParams.z);
-#endif
+    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
 
     vec2 samplePoints[PCSS_SAMPLE_COUNT];
     float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
@@ -86,12 +83,12 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
         samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
     }
 
-    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth);
+    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth, cameraParams);
     if (averageBlocker == -1.0) {
         return 1.0;
     } else {
-
-        vec2 filterRadius = ((receiverDepth - averageBlocker) / averageBlocker) * shadowSearchArea * cameraParams.x;
+        float depthDifference = (receiverDepth - averageBlocker) / 3.0;
+        vec2 filterRadius = depthDifference * shadowSearchArea;
 
         float shadow = 0.0;
 
@@ -111,6 +108,42 @@ float PCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2
     } 
 }
 
+float PCSSDirectional(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoords, vec4 cameraParams, vec2 shadowSearchArea) {
+    float receiverDepth = linearizeDepth(shadowCoords.z, cameraParams);
+
+    vec2 samplePoints[PCSS_SAMPLE_COUNT];
+    float noise = noise( gl_FragCoord.xy ) * 2.0 * PI;
+    for (int i = 0; i < PCSS_SAMPLE_COUNT; i++) {
+        float pcssPresample = pcssDiskSamples[i];
+        samplePoints[i] = vogelDisk(i, float(PCSS_SAMPLE_COUNT), noise, pcssPresample);
+    }
+
+    float averageBlocker = PCSSBlockerDistance(TEXTURE_PASS(shadowMap), samplePoints, shadowCoords.xy, shadowSearchArea, receiverDepth, cameraParams);
+    if (averageBlocker == -1.0) {
+        return 1.0;
+    } else {
+        float depthDifference = saturate((receiverDepth - averageBlocker) / cameraParams.x);
+        vec2 filterRadius = depthDifference * shadowSearchArea;
+
+        float shadow = 0.0;
+
+        for (int i = 0; i < PCSS_SAMPLE_COUNT; i ++)
+        {
+            vec2 sampleUV = samplePoints[i] * filterRadius;
+            sampleUV = shadowCoords.xy + sampleUV;
+
+        #ifdef GL2
+            float depth = texture(shadowMap, sampleUV).r;
+        #else // GL1
+            float depth = unpackFloat(texture2D(shadowMap, sampleUV));
+        #endif
+            shadow += step(receiverDepth, depth);
+        }
+        return shadow / float(PCSS_SAMPLE_COUNT);
+    } 
+}
+
+
 float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 samplePoints[PCSS_SAMPLE_COUNT], float z, float shadowSearchArea) {
     float blockers = 0.0;
     float averageBlocker = 0.0;
@@ -129,7 +162,7 @@ float PCSSCubeBlockerDistance(samplerCube shadowMap, vec3 lightDirNorm, vec3 sam
     }
 
     if (blockers > 0.0)
-        return averageBlocker /= float(blockers);
+        return averageBlocker / blockers;
     return -1.0;
 }
 
@@ -179,7 +212,7 @@ float getShadowSpotPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadow
 }
 
 float getShadowPCSS(TEXTURE_ACCEPT(shadowMap), vec3 shadowCoord, vec4 shadowParams, vec4 cameraParams, vec2 shadowSearchArea, vec3 lightDir) {
-    return PCSS(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, shadowSearchArea);
+    return PCSSDirectional(TEXTURE_PASS(shadowMap), shadowCoord, cameraParams, shadowSearchArea);
 }
 
 `;
