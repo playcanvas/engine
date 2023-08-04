@@ -123,7 +123,7 @@ class ProgramLibrary {
         const generationKeyString = generator.generateKey(options);
         const generationKey = hashCode(generationKeyString);
 
-        const processingKeyString = processingOptions.generateKey();
+        const processingKeyString = processingOptions.generateKey(this._device);
         const processingKey = hashCode(processingKeyString);
 
         const totalKey = `${generationKey}#${processingKey}`;
