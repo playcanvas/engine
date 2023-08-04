@@ -259,7 +259,7 @@ class ForwardRenderer extends Renderer {
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
                 const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
-                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.penumbraSize);
+                const pixelsPerMeter = directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
                 this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
 
                 const cameraParams = directional._shadowCameraParams;
@@ -333,7 +333,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
 
-            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / omni.penumbraSize);
+            const pixelsPerMeter = omni.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
             const cameraParams = omni._shadowCameraParams;
 
@@ -399,7 +399,7 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
 
-            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / spot.penumbraSize);
+            const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
