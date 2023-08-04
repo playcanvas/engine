@@ -601,7 +601,6 @@ class Layer {
                 shadowCasters.push(m);
             }
         }
-        this._dirtyLights = true;
     }
 
     /**
@@ -617,7 +616,6 @@ class Layer {
             const j = shadowCasters.indexOf(meshInstances[i]);
             if (j >= 0) shadowCasters.splice(j, 1);
         }
-        this._dirtyLights = true;
     }
 
     /**
