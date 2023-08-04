@@ -75,16 +75,22 @@ class ShaderProcessorOptions {
     }
 
     /**
-     * Generate unique key represending the processing options.
+     * Generate unique key representing the processing options.
      *
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The device.
      * @returns {string} - Returns the key.
      */
-    generateKey() {
+    generateKey(device) {
         // TODO: Optimize. Uniform and BindGroup formats should have their keys evaluated in their
         // constructors, and here we should simply concatenate those.
-        return JSON.stringify(this.uniformFormats) +
-        JSON.stringify(this.bindGroupFormats) +
-        this.vertexFormat?.renderingHashString;
+        let key = JSON.stringify(this.uniformFormats) + JSON.stringify(this.bindGroupFormats);
+
+        // WebGPU shaders are processed per vertex format
+        if (device.isWebGPU) {
+            key += this.vertexFormat?.renderingHashString;
+        }
+
+        return key;
     }
 }
 
