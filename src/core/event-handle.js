@@ -95,7 +95,7 @@ class EventHandle {
     }
 
     on(name, callback, scope = this) {
-        Debug.deprecated('Using chaning with EventHandler.on is deprecated, subscribe to an event from EventHandler directly instead.');
+        Debug.deprecated('Using chaining with EventHandler.on is deprecated, subscribe to an event from EventHandler directly instead.');
         return this.handler._addCallback(name, callback, scope, false);
     }
 
