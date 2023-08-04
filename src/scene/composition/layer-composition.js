@@ -157,17 +157,25 @@ class LayerComposition extends EventHandler {
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
     _splitLightsArray(target) {
-        const lights = target._lights;
-        target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-        target._splitLights[LIGHTTYPE_OMNI].length = 0;
-        target._splitLights[LIGHTTYPE_SPOT].length = 0;
 
+        const splitLights = target._splitLights;
+        splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
+        splitLights[LIGHTTYPE_OMNI].length = 0;
+        splitLights[LIGHTTYPE_SPOT].length = 0;
+
+        const lights = target._lights;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             if (light.enabled) {
-                target._splitLights[light._type].push(light);
+                splitLights[light._type].push(light);
             }
         }
+
+        // sort the lights by their key, as the order of lights is used to generate shader generation key,
+        // and this avoids new shaders being generated when lights are reordered
+        splitLights[LIGHTTYPE_DIRECTIONAL].sort((a, b) => a.key - b.key);
+        splitLights[LIGHTTYPE_OMNI].sort((a, b) => a.key - b.key);
+        splitLights[LIGHTTYPE_SPOT].sort((a, b) => a.key - b.key);
     }
 
     _update(device, clusteredLightingEnabled = false) {

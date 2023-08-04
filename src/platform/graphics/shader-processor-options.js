@@ -75,7 +75,7 @@ class ShaderProcessorOptions {
     }
 
     /**
-     * Generate unique key represending the processing options.
+     * Generate unique key representing the processing options.
      *
      * @returns {string} - Returns the key.
      */
