@@ -1,4 +1,3 @@
-import { hashCode } from '../../../core/hash.js';
 import { Debug } from '../../../core/debug.js';
 
 import {
@@ -40,11 +39,11 @@ const standard = {
             props = buildPropertiesList(options);
         }
 
-        const key = "standard" +
-            props.map(prop => prop + options[prop]).join("") +
+        const key = "standard:\n" +
+            props.map(prop => prop + options[prop]).join('\n') +
             LitOptionsUtils.generateKey(options.litOptions);
 
-        return hashCode(key);
+        return key;
     },
 
     // get the value to replace $UV with in Map Shader functions

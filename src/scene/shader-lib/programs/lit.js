@@ -1,4 +1,3 @@
-import { hashCode } from '../../../core/hash.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
@@ -19,7 +18,7 @@ const lit = {
             options.shaderChunk +
             LitOptionsUtils.generateKey(options.litOptions);
 
-        return hashCode(key);
+        return key;
     },
 
     /**
