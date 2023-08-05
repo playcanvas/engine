@@ -1,9 +1,10 @@
 import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 
+import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU, DEVICETYPE_NULL } from './constants.js';
 import { WebgpuGraphicsDevice } from './webgpu/webgpu-graphics-device.js';
-import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU } from './constants.js';
 import { WebglGraphicsDevice } from './webgl/webgl-graphics-device.js';
+import { NullGraphicsDevice } from './null/null-graphics-device.js';
 
 /**
  * Creates a graphics device.
@@ -48,6 +49,9 @@ function createGraphicsDevice(canvas, options = {}) {
     if (!deviceTypes.includes(DEVICETYPE_WEBGL1)) {
         deviceTypes.push(DEVICETYPE_WEBGL1);
     }
+    if (!deviceTypes.includes(DEVICETYPE_NULL)) {
+        deviceTypes.push(DEVICETYPE_NULL);
+    }
 
     // XR compatibility if not specified
     if (platform.browser && !!navigator.xr) {
@@ -63,9 +67,14 @@ function createGraphicsDevice(canvas, options = {}) {
             return device.initWebGpu(options.glslangUrl, options.twgslUrl);
         }
 
-        if (deviceType !== DEVICETYPE_WEBGPU) {
+        if (deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) {
             options.preferWebGl2 = deviceType === DEVICETYPE_WEBGL2;
             device = new WebglGraphicsDevice(canvas, options);
+            return Promise.resolve(device);
+        }
+
+        if (deviceType === DEVICETYPE_NULL) {
+            device = new NullGraphicsDevice(canvas, options);
             return Promise.resolve(device);
         }
     }
