@@ -102,6 +102,19 @@ class GltfExportExample {
                     app.root.addChild(entity);
                     entity.setLocalPosition(0, 1.5, -1.5);
 
+                    // mesh with a basic material
+                    const basicMaterial = new pc.BasicMaterial();
+                    basicMaterial.color.set(0.5, 1.0, 0.7);
+                    basicMaterial.colorMap = assets.helipad.resource;
+
+                    const capsule = new pc.Entity('capsule');
+                    capsule.addComponent('render', {
+                        material: basicMaterial,
+                        type: 'capsule'
+                    });
+                    capsule.setLocalPosition(0.5, 2.0, -0.5);
+                    app.root.addChild(capsule);
+
                     // Create an Entity with a camera component
                     const camera = new pc.Entity();
                     camera.addComponent("camera", {
