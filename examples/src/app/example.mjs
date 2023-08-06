@@ -11,6 +11,7 @@ import ControlPanel from './control-panel.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { fragment } from '../examples/animation/jsx.mjs';
 import { JsxControls } from '../examples/animation/blend-trees-2d-cartesian.mjs';
+import { iframePath } from '../assetPath.mjs';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
@@ -128,7 +129,6 @@ class ControlLoader extends Component {
  * @typedef {object} ExampleProps
  * @property {Array<File>} files
  * @property {(value: Array<File>) => void} setFiles
- * @property {boolean} useTypeScript
  * @property {{params: any}} match
  */
 
@@ -157,7 +157,7 @@ class Example extends Component {
     }
 
     get defaultFiles() {
-        return (examples /*as any*/).paths[this.path].files;
+        return examples.paths[this.path].files;
     }
 
     get path() {
@@ -165,35 +165,30 @@ class Example extends Component {
     }
 
     get iframePath() {
-        const example = (examples /*as any*/).paths[this.path];
-        //const tmp = "http://127.0.0.1/playcanvas-engine/examples/src/iframe/?category=Misc&example=MiniStats"
-        const tmp = "http://127.0.0.1/playcanvas-engine/examples/src";
-        return `${tmp}/iframe/?category=${example.category}&example=${example.name}`;
+        const example = examples.paths[this.path];
+        // E.g. "http://127.0.0.1/playcanvas-engine/examples/src/iframe/?category=Misc&example=MiniStats"
+        return `${iframePath}?category=${example.category}&example=${example.name}`;
     }
 
+    /**
+     * @type {SelectInput|undefined}
+     */
     get deviceTypeSelectInput() {
-        console.log("get deviceTypeSelectInput() {", this.deviceTypeSelectInputRef);
-        if (!this.deviceTypeSelectInputRef.current)
-        {
-
-            return "bla";
-        }
-        return (this.deviceTypeSelectInputRef.current /*as { element: SelectInputClass }*/).element;
+        return this.deviceTypeSelectInputRef.current?.element;
     }
 
     /**
      * @type {string}
      */
     set preferredGraphicsDevice(value) {
-        (window /*as any*/).preferredGraphicsDevice = value;
+        window.preferredGraphicsDevice = value;
     }
 
     get preferredGraphicsDevice() {
-        return (window /*as any*/).preferredGraphicsDevice;
+        return window.preferredGraphicsDevice;
     }
 
     /**
-     * 
      * @param {string} preferredDevice 
      * @param {string} activeDevice 
      */
@@ -221,7 +216,6 @@ class Example extends Component {
     };
 
     /**
-     * 
      * @param {string} value 
      */
     onSetActiveGraphicsDevice = (value) => {
@@ -251,7 +245,6 @@ class Example extends Component {
         this.props.setFiles(this.defaultFiles);
     }
     /**
-     * 
      * @param {Readonly<ExampleProps>} nextProps 
      * @returns {boolean}
      */
@@ -270,32 +263,21 @@ class Example extends Component {
 
     render() {
         const iframePath = this.iframePath;
-        /*
-        return <Container id="canvas-container">
-            <Spinner size={50}/>
-            <iframe id="exampleIframe" key={iframePath} src={iframePath}></iframe>
-            <Panel id='controlPanel' class={[window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'mobile' : null]} resizable='top' headerText={window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'CODE & CONTROLS' : 'CONTROLS'} collapsible={true} collapsed={window.top.innerWidth < MIN_DESKTOP_WIDTH}>
-                <SelectInput
-                    id='deviceTypeSelectInput'
-                    options={[
-                        { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
-                        { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
-                        { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU }
-                    ]}
-                    value={DEVICETYPE_WEBGL2}
-                    onSelect={this.onSetPreferredGraphicsDevice}
-                    prefix='Active Device: '
-                    // @ts-ignore this is setting a legacy ref
-                    ref={this.deviceTypeSelectInputRef}
-                />
-                <ControlLoader path={this.path} files={this.props.files} />
-            </Panel>
-        </Container>;
-        */
         return React.createElement(Container, { id: "canvas-container" },
         React.createElement(Spinner, { size: 50 }),
-        React.createElement("iframe", { id: "exampleIframe", key: iframePath, src: iframePath }),
-        React.createElement(Panel, { id: 'controlPanel', class: [window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'mobile' : null], resizable: 'top', headerText: window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'CODE & CONTROLS' : 'CONTROLS', collapsible: true, collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH },
+        React.createElement("iframe", {
+            id: "exampleIframe",
+            key: iframePath,
+            src: iframePath
+        }),
+        React.createElement(Panel, {
+            id: 'controlPanel',
+            class: [window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'mobile' : null],
+            resizable: 'top',
+            headerText: window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'CODE & CONTROLS' : 'CONTROLS',
+            collapsible: true,
+            collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH
+        },
             React.createElement(SelectInput, { id: 'deviceTypeSelectInput', options: [
                     { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
                     { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
@@ -306,5 +288,7 @@ class Example extends Component {
             React.createElement(ControlLoader, { path: this.path, files: this.props.files })));       
     }
 }
-
-export default withRouter(Example);
+const ExamptWithRouter = withRouter(Example);
+export {
+    ExamptWithRouter as Example
+};

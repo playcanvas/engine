@@ -29,8 +29,7 @@ readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach(function (category) {
             `${MAIN_DIR}/src/examples/${category}/${exampleName}`,
             "utf8"
         );
-        exampleData[category][example].typeScriptFunction = formatters.getTypeScriptFunctionFromText(exampleFileText);
-        exampleData[category][example].javaScriptFunction = Prettier.format(Babel.transform(exampleData[category][example].typeScriptFunction, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code, { parser: BabelParser.parse, tabWidth: 4 });
+        exampleData[category][example].javaScriptFunction = exampleFileText;
         exampleData[category][example].nameSlug = example;
         exampleData[category][example].categorySlug = category;
         const files = formatters.retrieveStaticObject(exampleFileText, 'FILES');

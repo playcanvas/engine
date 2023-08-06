@@ -38,5 +38,29 @@ export function getScriptsPath() {
     return assetPath;
 }
 export const scriptsPath = getScriptsPath();
-// todo
-export const ammoPath = "http://127.0.0.1/playcanvas-engine/examples/src/lib/ammo/";
+/**
+ * @example
+ * console.log(getIframePath());
+ * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
+ * @returns {string}
+ */
+export function getIframePath() {
+    const { href } = location;
+    const i = href.lastIndexOf("/src/");
+    const assetPath = href.substring(0, i) + "/src/iframe/";
+    return assetPath;
+}
+export const iframePath = getIframePath();
+/**
+ * @example
+ * console.log(getAmmoPath());
+ * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/ammo/";
+ * @returns {string}
+ */
+function getAmmoPath() {
+    const { href } = location;
+    const i = href.lastIndexOf("/src/");
+    const assetPath = href.substring(0, i) + "/src/lib/ammo/";
+    return assetPath;
+}
+export const ammoPath = getAmmoPath();

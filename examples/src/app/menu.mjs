@@ -2,11 +2,9 @@ import React, { useEffect } from 'react';
 import { Button, Container } from '@playcanvas/pcui/react';
 /**
  * @typedef {object} MenuProps
- * @property {boolean} useTypeScript
  * @property {(value: boolean) => void} setShowMiniStats
  */
 /**
- * 
  * @param {MenuProps} props 
  * @returns 
  */
@@ -45,26 +43,12 @@ const Menu = (props) => {
         document.querySelector('iframe').contentDocument.addEventListener('keydown', escapeKeyEvent);
         document.addEventListener('keydown', escapeKeyEvent);
     });
-/*
-    return <Container id='menu'>
-        <Container id='menu-buttons'>
-            <img id='playcanvas-icon' src='https://playcanvas.com/viewer/static/playcanvas-logo.png' onClick={() => {
-                window.open("https://github.com/playcanvas/engine");
-            }}/>
-            <Button icon='E256' text='' onClick={() => {
-                const tweetText = encodeURI(`Check out this @playcanvas engine example! ${location.href.replace('#/', '')}`);
-                window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
-            }}/>
-            <Button icon='E149' id='showMiniStatsButton' class='selected' text='' onClick={() => {
-                document.getElementById('showMiniStatsButton').classList.toggle('selected');
-                props.setShowMiniStats(document.getElementById('showMiniStatsButton').classList.contains('selected'));
-            }}/>
-            <Button icon='E127' text='' id='fullscreen-button' onClick={toggleFullscreen}/>
-        </Container>
-    </Container>;
-    */
-    return React.createElement(Container, { id: 'menu' },
-    React.createElement(Container, { id: 'menu-buttons' },
+    return React.createElement(
+        Container,
+        {
+            id: 'menu'
+        },
+        React.createElement(Container, { id: 'menu-buttons' },
         React.createElement("img", { id: 'playcanvas-icon', src: 'https://playcanvas.com/viewer/static/playcanvas-logo.png', onClick: () => {
                 window.open("https://github.com/playcanvas/engine");
             } }),
@@ -79,4 +63,6 @@ const Menu = (props) => {
         React.createElement(Button, { icon: 'E127', text: '', id: 'fullscreen-button', onClick: toggleFullscreen })));   
 };
 
-export default Menu;
+export {
+    Menu
+};

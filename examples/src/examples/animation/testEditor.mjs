@@ -79,10 +79,8 @@ appendReactToBody(jsx(codeEditor.CodeEditor, {
   files,
   lintErrors,
   setFiles: (...args) => console.log("setFiles", ...args),
-  useTypeScript: false,
   setLintErrors: (...args) => console.log("setLintErrors", ...args),
 }));
-
 //const a = jsxTry(getA)();
 //const b = jsxTry(getB)();
 //console.log({a, b});

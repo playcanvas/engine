@@ -85,21 +85,11 @@
             document.body.style = 'background-color: white; padding: 15px; overflow: auto;';
             return;
         }
-
         let example = new Example();
-
-        var useTypeScript = window.top.localStorage.getItem('useTypeScript') === 'true';
         window.exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
         if (!window.exampleFunction) {
             window.exampleFunction = example.example;
         } else {
-            if (useTypeScript) {
-                window.exampleFunction = window.top.Babel.transform(exampleFunction, {
-                    retainLines: true,
-                    filename: 'transformedScript.tsx',
-                    presets: ["react", "typescript", "env"]
-                }).code;
-            }
             window.exampleFunction = new Function('canvas', 'deviceType', 'data', exampleFunction);
         }
         window.loadFunction = example.load;

@@ -40,7 +40,6 @@ const ControlPanel = (props) => {
         const controls = document.getElementById('controlPanel-controls');
         controls.classList.add('pcui-hidden');
     };
-
     useEffect(() => {
         if (window.top.innerWidth < MIN_DESKTOP_WIDTH) {
             // @ts-ignore
@@ -51,7 +50,6 @@ const ControlPanel = (props) => {
             document.getElementById('controlPanel').ui.hidden = true;
         }
     });
-
     //const controls = ;
 /*
     return <Container id='controls-wrapper' class={props.controls ? 'has-controls' : null}>
@@ -73,19 +71,63 @@ const ControlPanel = (props) => {
         }
     </Container>;
     */
-    return React.createElement(Container, { id: 'controls-wrapper', class: props.controls ? 'has-controls' : null },
-    window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && React.createElement(Container, { id: 'controlPanel-tabs', class: 'tabs-container' },
-        React.createElement(Button, { text: 'CODE', id: 'codeButton', class: state.showCode ? 'selected' : null, onClick: onClickCodeTab }),
-        React.createElement(Button, { text: 'PARAMETERS', class: state.showParameters ? 'selected' : null, id: 'paramButton', onClick: onClickParametersTab })),
-    React.createElement(Container, { id: 'controlPanel-controls' },
-React.createElement(
-    //props.controls ? props.controls(window.observerData) : null
-    props.controls || null, {observer: window.observerData}
-)
-    ),
-    window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && React.createElement(MonacoEditor, { options: {
-            readOnly: true
-        }, defaultLanguage: "typescript", value: props.files ? props.files[0].text : '' }));
+    /**
+     * @param {React.ClassAttributes<Button> & ButtonArgs} options 
+     * @returns {React.CElement<ButtonArgs, Button>}
+     */
+    function jsxButton(options) {
+        console.log("new jsx button");
+        return React.createElement(Button, options);
+    }
+    return React.createElement(
+        Container,
+        {
+            id: 'controls-wrapper',
+            class: props.controls ? 'has-controls' : null
+        },
+        window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && React.createElement(
+            Container,
+            {
+                id: 'controlPanel-tabs',
+                class: 'tabs-container'
+            },
+            jsxButton({
+                text: 'CODE',
+                id: 'codeButton',
+                class: state.showCode ? 'selected' : null,
+                onClick: onClickCodeTab
+            }),
+            jsxButton({
+                text: 'PARAMETERS',
+                class: state.showParameters ? 'selected' : null,
+                id: 'paramButton',
+                onClick: onClickParametersTab
+            }),
+        ),
+        React.createElement(
+            Container,
+            {
+                id: 'controlPanel-controls'
+            },
+            React.createElement(
+                //props.controls ? props.controls(window.observerData) : null
+                props.controls || null,
+                {
+                    observer: window.observerData
+                }
+            )
+        ),
+        window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && React.createElement(
+            MonacoEditor,
+            {
+                options: {
+                    readOnly: true
+                },
+                defaultLanguage: "typescript",
+                value: props.files ? props.files[0].text : ''
+            }
+        )
+    );
 };
 
 export default ControlPanel;

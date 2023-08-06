@@ -5,13 +5,11 @@ import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
     sideBar.classList.toggle('collapsed');
 };
-
-const SideBar = () => {
+export const SideBar = () => {
     const defaultCategories = examples.categories;
     const [filteredCategories, setFilteredCategories] = useState(null);
     const [hash, setHash] = useState(location.hash);
@@ -55,78 +53,7 @@ const SideBar = () => {
             (window /*as any*/)._scrolledToExample = true;
         }
     });
-
     const categories = filteredCategories || defaultCategories;
-    
-    //return (
-    //    <>
-    //        <Panel headerText="EXAMPLES" collapsible={document.body.offsetWidth < MIN_DESKTOP_WIDTH} collapsed={true} id='sideBar' class='small-thumbnails'>
-    //            <TextInput class='filter-input' keyChange placeholder="Filter..." onChange={(/** @type {string} */ filter) => {
-    //                const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
-    //                if (!reg) {
-    //                    setFilteredCategories(defaultCategories);
-    //                    return;
-    //                }
-    //                const updatedCategories = {};
-    //                Object.keys(defaultCategories).forEach((category) => {
-    //                    if (category.search(reg) !== -1) {
-    //                        updatedCategories[category] = defaultCategories[category];
-    //                        return null;
-    //                    }
-    //                    Object.keys(defaultCategories[category].examples).forEach((example) => {
-    //                        if (defaultCategories[category].examples[example].search(reg) !== -1) {
-    //                            if (!updatedCategories[category]) {
-    //                                updatedCategories[category] = {
-    //                                    name: defaultCategories[category].name,
-    //                                    examples: {
-    //                                        [example]: defaultCategories[category].examples[example]
-    //                                    }
-    //                                };
-    //                            } else {
-    //                                updatedCategories[category].examples[example] = defaultCategories[category].examples[example];
-    //                            }
-    //                        }
-    //                    });
-    //                });
-    //                setFilteredCategories(updatedCategories);
-    //            }} />
-    //            <LabelGroup text='Large thumbnails:'>
-    //                <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer, path: 'largeThumbnails' }} />
-    //            </LabelGroup>
-    //            <Container id='sideBar-contents'>
-    //                {
-    //                    Object.keys(categories).sort((a, b) => (a > b ? 1 : -1)).map((category) => {
-    //                        return <Panel key={category} class="categoryPanel" headerText={category.split('-').join(' ').toUpperCase()} collapsible={true} collapsed={false}>
-    //                            <ul className="category-nav">
-    //                                {
-    //                                    Object.keys(categories[category].examples).sort((a, b) => (a > b ? 1 : -1)).map((example) => {
-    //                                        const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
-    //                                        const className = `nav-item ${isSelected ? 'selected' : null}`;
-    //                                        return <Link key={example} to={`/${category}/${example}`} onClick={() => {
-    //                                            const sideBar = document.getElementById('sideBar');
-    //                                            // @ts-ignore
-    //                                            sideBar.ui.collapsed = true;
-    //                                        }}>
-    //                                            <div className={className} id={`link-${category}-${example}`}>
-    //                                                <img className='small-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_small.png`} />
-    //                                                <img className='large-thumbnail' loading="lazy" src={`./thumbnails/${category}_${example}_large.png`} />
-    //                                                <div className='nav-item-text'>{example.split('-').join(' ').toUpperCase()}</div>
-    //                                            </div>
-    //                                        </Link>;
-    //                                    })
-    //                                }
-    //                            </ul>
-    //                        </Panel>;
-    //                    })
-    //                }
-    //                {
-    //                    Object.keys(categories).length === 0 && <Label text='No results' />
-    //                }
-    //            </Container>
-    //        </Panel>
-    //        <div className='panel-toggle sideBar-panel-toggle' />
-    //    </>
-    //);
     return (React.createElement(React.Fragment, null,
         React.createElement(Panel, { headerText: "EXAMPLES", collapsible: document.body.offsetWidth < MIN_DESKTOP_WIDTH, collapsed: true, id: 'sideBar', class: 'small-thumbnails' },
             React.createElement(TextInput, { class: 'filter-input', keyChange: true, placeholder: "Filter...", onChange: (/** @type {string} */ filter) => {
@@ -189,13 +116,22 @@ const SideBar = () => {
                                 }
                             },
                                 React.createElement("div", { className: className, id: `link-${category}-${example}` },
-                                    React.createElement("img", { className: 'small-thumbnail', loading: "lazy", src: `http://127.0.0.1/playcanvas-engine/examples/har/thumbnails/${category}_${example}_small.png` }),
+                                    React.createElement(
+                                        "img",
+                                        {
+                                            className: 'small-thumbnail',
+                                            loading: "lazy",
+                                            src: `http://127.0.0.1/playcanvas-engine/examples/har/thumbnails/${category}_${example}_small.png`
+                                        }
+                                    ),
                                     React.createElement("img", { className: 'large-thumbnail', loading: "lazy", src: `http://127.0.0.1/playcanvas-engine/examples/har/thumbnails/${category}_${example}_large.png` }),
                                     React.createElement("div", { className: 'nav-item-text' }, example.split('-').join(' ').toUpperCase())));
                         })));
                 }),
                 Object.keys(categories).length === 0 && React.createElement(Label, { text: 'No results' }))),
-        React.createElement("div", { className: 'panel-toggle sideBar-panel-toggle' })));    
+        React.createElement("div", {
+            className: 'panel-toggle sideBar-panel-toggle'
+        })
+        )
+    );
 };
-
-export default SideBar;

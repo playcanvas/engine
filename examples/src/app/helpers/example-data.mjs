@@ -35,7 +35,7 @@ Object.keys(exampleData).forEach((categorySlug) => {
             return;
         }
         //debugger;
-        console.log({category, name, realClass });
+        //console.log({category, name, realClass });
         categories[categorySlug].examples[exampleSlug] = name;
         const files = [
             {
@@ -43,11 +43,6 @@ Object.keys(exampleData).forEach((categorySlug) => {
                 text: 'function' + realClass.prototype.example.toString(),
                 type: 'javascript'
             },
-            //{
-            //    name: 'example.ts',
-            //    text: exampleData[categorySlug][exampleSlug].typeScriptFunction,
-            //    type: 'typescript'
-            //}
         ];
         //const extraFiles = exampleData[categorySlug][exampleSlug].files;
         const extraFiles = realClass.prototype.files;
