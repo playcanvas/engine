@@ -31,13 +31,13 @@ import { EventHandle } from './event-handle.js';
  */
 class EventHandler {
     /**
-     * @type {Map<string,Array<object>>}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
     _callbacks = new Map();
 
     /**
-     * @type {Map<string,Array<object>>}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
     _callbackActive = new Map();
