@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "checkJs": true,
         "outDir": "./dist/",
         "noImplicitAny": true,
         "module": "ES2015",
