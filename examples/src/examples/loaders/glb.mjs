@@ -1,17 +1,21 @@
 import * as pc from 'playcanvas';
+import { assetPath } from '../../assetPath.mjs';
 
 export class GlbExample {
     static CATEGORY = 'Loaders';
     static NAME = 'GLB';
     static WEBGPU_ENABLED = true;
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * @param {HTMLCanvasElement} canvas 
+     * @param {string} deviceType 
+     */
+    example(canvas, deviceType) {
 
         // The example demonstrates loading of glb file, which contains meshes,
         // lights and cameras, and switches between the cameras every 2 seconds.
 
         const assets = {
-            'scene': new pc.Asset('scene', 'container', { url: '/static/assets/models/geometry-camera-light.glb' })
+            scene: new pc.Asset('scene', 'container', { url: assetPath + 'models/geometry-camera-light.glb' })
         };
 
         const gfxOptions = {
@@ -20,7 +24,7 @@ export class GlbExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type{pc.GraphicsDevice} */device) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -52,8 +56,11 @@ export class GlbExample {
 
                 app.start();
 
-                // the array will store loaded cameras
-                let camerasComponents: Array<pc.CameraComponent> = null;
+                /**
+                 * the array will store loaded cameras
+                 * @type {pc.CameraComponent[]}
+                 */
+                let camerasComponents = null;
 
                 // glb lights use physical units
                 app.scene.physicalUnits = true;
@@ -76,8 +83,9 @@ export class GlbExample {
                     component.sensitivity = 500;
                 });
 
+                /** @type {pc.LightComponent[]} */
+                const lightComponents = entity.findComponents("light");
                 // enable all lights from the glb
-                const lightComponents: Array<pc.LightComponent> = entity.findComponents("light");
                 lightComponents.forEach((component) => {
                     component.enabled = true;
                 });

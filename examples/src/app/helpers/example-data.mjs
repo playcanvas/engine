@@ -45,7 +45,7 @@ Object.keys(exampleData).forEach((categorySlug) => {
             },
         ];
         //const extraFiles = exampleData[categorySlug][exampleSlug].files;
-        const extraFiles = realClass.prototype.files;
+        const extraFiles = realClass.FILES;
         if (extraFiles) {
             Object.keys(extraFiles).forEach((fileName) => {
                 files.push({

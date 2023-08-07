@@ -40,20 +40,6 @@ function setupApplication(app) {
         });
     }
 }
-function loadResource(app, resource, callback) {
-    if (!resource.type) {
-        fetch(resource.url)
-            .then(function(response) { return response.text() })
-            .then(function(data) {
-                var module = {
-                    exports: {}
-                };
-                window[resource.name] = (Function('module', 'exports', data).call(module, module, module.exports), module).exports;
-                callback({});
-            });
-        return;
-    }
-}
 /**
  * @example
  * const argNames = getFunctionArguments(function(
@@ -61,23 +47,49 @@ function loadResource(app, resource, callback) {
  *   deviceType,data
  * ) {});
  * console.log(argNames); // Outputs: ['canvas', 'deviceType', 'data']
- * @param {Function} fn 
+ * @param {Function|string} fn - Function or string of function.
  */
 function getFunctionArguments(fn) {
-    const argsString = fn.toString().match(/.*?\(([^)]*)\)/)[1];
+    fn = fn.toString();
+    const argsString = fn.match(/.*?\(([^)]*)\)/)[1];
     return argsString
         .replace(/ /g, '')
         .replace(/\n/g, '')
         .split(',');
 }
 /**
+ * @example
+ * getFunctionBody(getFunctionBody);
+ * // Ret: "\n    fn = fn.toString();<SNIP>return fn.slice(start + 1, end);\n"
+ * @param {Function|string} fn - Function or string of function.
+ * @returns {string} Body of function
+ */
+function getFunctionBody(fn) {
+    fn = fn.toString();
+	var start = fn.indexOf('{');
+	var end = fn.lastIndexOf('}', start);
+	return fn.slice(start + 1, end);
+}
+const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+/**
+ * @example 
+ * @param {*} str - The function
+ * @returns {async function} - todo what is it?
+ */
+function asyncFunctionFromString(str) {
+    const args = getFunctionArguments(str);
+    const body = getFunctionBody(str);
+    return new AsyncFunction(...args, body);
+}
+/**
  * @param {HTMLCanvasElement} canvas - The canvas.
  * @param {any[]|undefined} files 
  * @param {observer.Observer} data 
+ * @param {Function} exampleFunction
  */
-function callExample(canvas, files, data) {
+async function callExample(canvas, files, data, exampleFunction) {
     console.log("callExample", {canvas, files, data})
-    const argNames = getFunctionArguments(window.exampleFunction);
+    const argNames = getFunctionArguments(exampleFunction);
     const args = argNames.map(function(arg) {
         if (arg === 'canvas') {
             return canvas;
@@ -99,27 +111,25 @@ function callExample(canvas, files, data) {
             }
         }
     });
-    window.exampleFunction.apply(this, args);
-    const pollHandler = setInterval(appCreationPoll, 50);
-    function appCreationPoll() {
-        //debugger;
-        if (pc.app && pc.app.graphicsDevice.canvas) {
-            clearInterval(pollHandler);
-            setupApplication(pc.app);
-            class ExampleLoadEvent extends CustomEvent {
-                /** @type {string} */
-                deviceType;
-                /**
-                 * @param {string} deviceType
-                 */
-                constructor(deviceType) {
-                    super("exampleLoad");
-                    this.deviceType = deviceType;
-                }
-            }
-            var event = new ExampleLoadEvent(pc.app.graphicsDevice.deviceType);
-            window.top.dispatchEvent(event);
+    const app = await exampleFunction.apply(this, args);
+    class ExampleLoadEvent extends CustomEvent {
+        /** @type {string} */
+        deviceType;
+        /**
+         * @param {string} deviceType
+         */
+        constructor(deviceType) {
+            super("exampleLoad");
+            this.deviceType = deviceType;
         }
+    }
+    if (app.graphicsDevice?.canvas) {
+        setupApplication(app);
+        console.log("example loaded...");
+        var event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
+        window.top.dispatchEvent(event);
+    } else {
+        console.warn("no canvas")
     }
 }
 //console.log({moduleExamples});
@@ -168,15 +178,15 @@ if (!found) {
     if (!window.exampleFunction) {
         window.exampleFunction = example.example;
     } else {
-        window.exampleFunction = new Function('canvas', 'deviceType', 'data', exampleFunction);
+        window.exampleFunction = asyncFunctionFromString(exampleFunction);
     }
     window.loadFunction = example.load;
-    window.files = window.top.editedFiles || example.constructor.FILES;
+    window.files = window.top.editedFiles || Example.FILES;
     // create the example observer 
     const data = new observer.Observer({});
     window.top.observerData = data;
     // load the engine, create the application, load the resources if necessary, then call the example
     const canvas = document.getElementById('application-canvas');
     console.log("window.loadFunction", window.loadFunction);
-    callExample(canvas, window.files, data);
+    callExample(canvas, window.files, data, window.exampleFunction);
 }

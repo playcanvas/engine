@@ -6,6 +6,10 @@ import { assetPath } from '../../assetPath.mjs';
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
 const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+// hot-reload hack
+window.assetPath = assetPath;
+window.CORE = CORE;
+window.DRACO = DRACO;
 const vshader = /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
@@ -37,11 +41,16 @@ void main(void)
 export class LoadersGlExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Loaders.gl';
+    static FILES = {
+        'shader.vert': vshader,
+        'shader.frag': fshader,
+    };
     /**
      * @param {HTMLCanvasElement} canvas 
      * @param {string} deviceType 
+     * @param {{'shader.vert': string, 'shader.frag': string}} files
      */
-    async example(canvas, deviceType) {
+    async example(canvas, deviceType, files) {
         // This example uses draco point cloud loader library from https://loaders.gl/
         // Note that many additional formats are supported by the library and can be used.
         const gfxOptions = {
@@ -74,7 +83,6 @@ export class LoadersGlExample {
         const app = new pc.AppBase(canvas);
         app.init(createOptions);
         app.start();
-
         // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -111,8 +119,8 @@ export class LoadersGlExample {
                     aPosition: pc.SEMANTIC_POSITION,
                     aColor: pc.SEMANTIC_COLOR
                 },
-                vshader,
-                fshader,
+                vshader: files['shader.vert'],
+                fshader: files['shader.frag'],
             };
             const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
@@ -131,7 +139,7 @@ export class LoadersGlExample {
 
             app.root.addChild(entity);
         }
-        app.start();
+        //app.start();
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -153,5 +161,6 @@ export class LoadersGlExample {
                 camera.lookAt(pc.Vec3.ZERO);
             }
         });
+        return app;
     }
 }
