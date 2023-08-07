@@ -77,15 +77,6 @@ class EventHandle {
     }
 
     /**
-     * Remove references.
-     * @ignore
-     */
-    destroy() {
-        if (this._removed) return;
-        this._removed = true;
-    }
-
-    /**
      * Remove this event from its handler.
      */
     off() {
@@ -101,6 +92,16 @@ class EventHandle {
     once(name, callback, scope = this) {
         Debug.deprecated('Using chaning with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.');
         return this.handler._addCallback(name, callback, scope, true);
+    }
+
+    /**
+     * Mark if event has been removed.
+     * @type {boolean}
+     * @internal
+     */
+    set removed(value) {
+        if (!value) return;
+        this._removed = true;
     }
 
     /**

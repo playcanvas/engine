@@ -174,7 +174,7 @@ class EventHandler {
             // remove all events
             for (const callbacks of this._callbacks.values()) {
                 for (let i = 0; i < callbacks.length; i++) {
-                    callbacks[i].destroy();
+                    callbacks[i].removed = true;
                 }
             }
             this._callbacks.clear();
@@ -183,7 +183,7 @@ class EventHandler {
             const callbacks = this._callbacks.get(name);
             if (callbacks) {
                 for (let i = 0; i < callbacks.length; i++) {
-                    callbacks[i].destroy();
+                    callbacks[i].removed = true;
                 }
                 this._callbacks.delete(name);
             }
@@ -201,7 +201,7 @@ class EventHandler {
                 if (scope && callbacks[i].scope !== scope)
                     continue;
 
-                callbacks[i].destroy();
+                callbacks[i].removed = true;
                 callbacks.splice(i, 1);
                 i--;
             }
@@ -267,7 +267,7 @@ class EventHandler {
 
                     const callbacks = this._callbacks.get(name);
                     if (!callbacks) continue;
-                    callbacks[ind].destroy();
+                    callbacks[ind].removed = true;
                     callbacks.splice(ind, 1);
 
                     if (callbacks.length === 0)
