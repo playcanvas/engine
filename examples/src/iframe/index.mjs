@@ -54,46 +54,6 @@ function loadResource(app, resource, callback) {
         return;
     }
 }
-function loadResources(app, callback) {
-    var assets = [];
-    window.assets = assets;
-    var assetManifest = {};
-debugger;
-    // stub out the react create element function
-    window.stubbedReact =  {
-        default: {
-            createElement:  function(type, props) {
-                console.log("omg remove this")
-                if (props && props.name && props.url) window.assets.push(props);
-            }
-        }
-    };
-    window.stubbedScriptLoader = {};
-    let loadFunctionString = window.loadFunction.toString();
-    loadFunctionString = loadFunctionString.replace('function () {', '');
-    loadFunctionString = loadFunctionString.replaceAll('React__default', 'stubbedReact');
-    loadFunctionString = loadFunctionString.replaceAll('ScriptLoader', 'stubbedScriptLoader');
-    loadFunctionString = loadFunctionString.slice(0, loadFunctionString.length - 1);
-    // call the stubbed load function to add all assets to the assets list
-    new Function(loadFunctionString)();
-    delete window.stubbedReact;
-    delete window.stubbedScriptLoader;
-    var count = assets.length;
-    function onLoadedResource(key, asset) {
-        count--;
-        if (key) {
-            assetManifest[key] = asset;
-        }
-        if (count <= 0) {
-            callback(assetManifest);
-        }
-    }
-    assets.forEach(function (resource) {
-        loadResource(app, resource, function(asset) {
-            onLoadedResource(resource.name, asset);
-        });
-    });
-}
 /**
  * @example
  * const argNames = getFunctionArguments(function(
@@ -112,18 +72,15 @@ function getFunctionArguments(fn) {
 }
 /**
  * @param {HTMLCanvasElement} canvas - The canvas.
- * @param {object} assetManifest 
  * @param {any[]|undefined} files 
  * @param {observer.Observer} data 
  */
-function callExample(canvas, assetManifest, files, data) {
-    console.log("callExample", {canvas, assetManifest, files, data})
+function callExample(canvas, files, data) {
+    console.log("callExample", {canvas, files, data})
     const argNames = getFunctionArguments(window.exampleFunction);
     const args = argNames.map(function(arg) {
         if (arg === 'canvas') {
             return canvas;
-        } else if (arg === 'assetManifest') {
-            return assetManifest;
         } else if (arg === 'files') {
             return files;
         } else if (arg === 'data') {
@@ -221,11 +178,5 @@ if (!found) {
     // load the engine, create the application, load the resources if necessary, then call the example
     const canvas = document.getElementById('application-canvas');
     console.log("window.loadFunction", window.loadFunction);
-    if (!window.loadFunction) {
-        callExample(canvas, {}, window.files, data);
-    } else {
-        loadResources(undefined, function(assetManifest) {
-            callExample(canvas, assetManifest, window.files, data);
-        });
-    }
+    callExample(canvas, window.files, data);
 }
