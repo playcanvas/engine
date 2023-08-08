@@ -2,6 +2,10 @@
 // todo: nuke this file, just serving as example rn
 import exampleData from '../example-data.js';
 import * as realExamples from "../../examples/index.mjs";
+/**
+ * @param {string} string 
+ * @returns {string}
+ */
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
@@ -47,10 +51,10 @@ Object.keys(exampleData).forEach((categorySlug) => {
         //const extraFiles = exampleData[categorySlug][exampleSlug].files;
         const extraFiles = realClass.FILES;
         if (extraFiles) {
-            Object.keys(extraFiles).forEach((fileName) => {
+            Object.keys(extraFiles).forEach((name) => {
                 files.push({
-                    name: fileName,
-                    text: extraFiles[fileName],
+                    name,
+                    text: extraFiles[name],
                     type: 'text'
                 });
             });

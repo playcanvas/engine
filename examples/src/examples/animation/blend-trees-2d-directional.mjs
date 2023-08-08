@@ -86,12 +86,11 @@ class BlendTrees2DDirectionalExample {
     }
 
     /**
-     * 
      * @param {HTMLCanvasElement} canvas 
      * @param {string} deviceType 
-     * @returns {void}
+     * @returns {Promise<pc.AppBase>}
      */
-    example(canvas, deviceType) {
+    async example(canvas, deviceType) {
         const assets = {
             model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
             idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
@@ -108,173 +107,173 @@ class BlendTrees2DDirectionalExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((/** @type {pc.GraphicsDevice} */device) => {
+        /** @type {pc.GraphicsDevice} */
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+        const createOptions = new pc.AppOptions();
+        createOptions.graphicsDevice = device;
+        createOptions.mouse = new pc.Mouse(document.body);
+        createOptions.touch = new pc.TouchDevice(document.body);
+        createOptions.elementInput = new pc.ElementInput(canvas);
 
-            const createOptions = new pc.AppOptions();
-            createOptions.graphicsDevice = device;
-            createOptions.mouse = new pc.Mouse(document.body);
-            createOptions.touch = new pc.TouchDevice(document.body);
-            createOptions.elementInput = new pc.ElementInput(canvas);
+        createOptions.componentSystems = [
+            // @ts-ignore
+            pc.RenderComponentSystem,
+            // @ts-ignore
+            pc.CameraComponentSystem,
+            // @ts-ignore
+            pc.LightComponentSystem,
+            // @ts-ignore
+            pc.ScriptComponentSystem,
+            // @ts-ignore
+            pc.AnimComponentSystem
+        ];
+        createOptions.resourceHandlers = [
+            // @ts-ignore
+            pc.TextureHandler,
+            // @ts-ignore
+            pc.ContainerHandler,
+            // @ts-ignore
+            pc.ScriptHandler,
+            // @ts-ignore
+            pc.AnimClipHandler,
+            // @ts-ignore
+            pc.AnimStateGraphHandler
+        ];
 
-            createOptions.componentSystems = [
-                // @ts-ignore
-                pc.RenderComponentSystem,
-                // @ts-ignore
-                pc.CameraComponentSystem,
-                // @ts-ignore
-                pc.LightComponentSystem,
-                // @ts-ignore
-                pc.ScriptComponentSystem,
-                // @ts-ignore
-                pc.AnimComponentSystem
-            ];
-            createOptions.resourceHandlers = [
-                // @ts-ignore
-                pc.TextureHandler,
-                // @ts-ignore
-                pc.ContainerHandler,
-                // @ts-ignore
-                pc.ScriptHandler,
-                // @ts-ignore
-                pc.AnimClipHandler,
-                // @ts-ignore
-                pc.AnimStateGraphHandler
-            ];
+        const app = new pc.AppBase(canvas);
+        app.init(createOptions);
 
-            const app = new pc.AppBase(canvas);
-            app.init(createOptions);
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
+            // setup skydome
+            app.scene.exposure = 2;
+            app.scene.skyboxMip = 2;
+            app.scene.envAtlas = assets.helipad.resource;
 
-            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-            assetListLoader.load(() => {
-                // setup skydome
-                app.scene.exposure = 2;
-                app.scene.skyboxMip = 2;
-                app.scene.envAtlas = assets.helipad.resource;
-
-                // Create an Entity with a camera component
-                const cameraEntity = new pc.Entity();
-                cameraEntity.addComponent("camera", {
-                    clearColor: new pc.Color(0.1, 0.1, 0.1)
-                });
-                cameraEntity.translate(0, 0.75, 3);
-                // add bloom postprocessing (this is ignored by the picker)
-                cameraEntity.addComponent("script");
-                cameraEntity.script.create("bloom", {
-                    attributes: {
-                        bloomIntensity: 1,
-                        bloomThreshold: 0.7,
-                        blurAmount: 4
-                    }
-                });
-                app.root.addChild(cameraEntity);
-
-                // Create an entity with a light component
-                const lightEntity = new pc.Entity();
-                lightEntity.addComponent("light", {
-                    castShadows: true,
-                    intensity: 1.5,
-                    normalOffsetBias: 0.02,
-                    shadowType: pc.SHADOW_PCF5,
-                    shadowDistance: 6,
-                    shadowResolution: 2048,
-                    shadowBias: 0.02
-                });
-                app.root.addChild(lightEntity);
-                lightEntity.setLocalEulerAngles(45, 30, 0);
-
-                // create an entity from the loaded model using the render component
-                const modelEntity = assets.model.resource.instantiateRenderEntity({
-                    castShadows: true
-                });
-                modelEntity.name = 'model';
-
-                // add an anim component to the entity
-                modelEntity.addComponent('anim', {
-                    activate: true
-                });
-
-                // create an anim state graph
-                const animStateGraphData = {
-                    "layers": [
-                        {
-                            "name": "locomotion",
-                            "states": [
-                                {
-                                    "name": "START"
-                                },
-                                {
-                                    "name": "Travel",
-                                    "speed": 1.0,
-                                    "loop": true,
-                                    "blendTree": {
-                                        "type": pc.ANIM_BLEND_2D_DIRECTIONAL,
-                                        "syncDurations": true,
-                                        "parameters": ["posX", "posY"],
-                                        "children": [
-                                            {
-                                                "name": "Idle",
-                                                "point": [0.0, 0.0]
-                                            },
-                                            {
-                                                "speed": -1,
-                                                "name": "WalkBackwards",
-                                                "point": [0.0, -0.5]
-                                            },
-                                            {
-                                                "speed": 1,
-                                                "name": "Walk",
-                                                "point": [0.0, 0.5]
-                                            },
-                                            {
-                                                "speed": 1,
-                                                "name": "Jog",
-                                                "point": [0.0, 1.0]
-                                            }
-                                        ]
-                                    }
-                                }
-                            ],
-                            "transitions": [
-                                {
-                                    "from": "START",
-                                    "to": "Travel"
-                                }
-                            ]
-                        }
-                    ],
-                    "parameters": {
-                        "posX": {
-                            "name": "posX",
-                            "type": "FLOAT",
-                            "value": 0
-                        },
-                        "posY": {
-                            "name": "posY",
-                            "type": "FLOAT",
-                            "value": 0
-                        }
-                    }
-                };
-
-                // load the state graph into the anim component
-                modelEntity.anim.loadStateGraph(animStateGraphData);
-
-                // load the state graph asset resource into the anim component
-                const locomotionLayer = modelEntity.anim.baseLayer;
-                locomotionLayer.assignAnimation('Travel.Idle', assets.idleAnim.resource.animations[0].resource);
-                locomotionLayer.assignAnimation('Travel.Walk', assets.walkAnim.resource.animations[0].resource);
-                locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
-                locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
-
-                app.root.addChild(modelEntity);
-
-                app.start();
+            // Create an Entity with a camera component
+            const cameraEntity = new pc.Entity();
+            cameraEntity.addComponent("camera", {
+                clearColor: new pc.Color(0.1, 0.1, 0.1)
             });
+            cameraEntity.translate(0, 0.75, 3);
+            // add bloom postprocessing (this is ignored by the picker)
+            cameraEntity.addComponent("script");
+            cameraEntity.script.create("bloom", {
+                attributes: {
+                    bloomIntensity: 1,
+                    bloomThreshold: 0.7,
+                    blurAmount: 4
+                }
+            });
+            app.root.addChild(cameraEntity);
+
+            // Create an entity with a light component
+            const lightEntity = new pc.Entity();
+            lightEntity.addComponent("light", {
+                castShadows: true,
+                intensity: 1.5,
+                normalOffsetBias: 0.02,
+                shadowType: pc.SHADOW_PCF5,
+                shadowDistance: 6,
+                shadowResolution: 2048,
+                shadowBias: 0.02
+            });
+            app.root.addChild(lightEntity);
+            lightEntity.setLocalEulerAngles(45, 30, 0);
+
+            // create an entity from the loaded model using the render component
+            const modelEntity = assets.model.resource.instantiateRenderEntity({
+                castShadows: true
+            });
+            modelEntity.name = 'model';
+
+            // add an anim component to the entity
+            modelEntity.addComponent('anim', {
+                activate: true
+            });
+
+            // create an anim state graph
+            const animStateGraphData = {
+                "layers": [
+                    {
+                        "name": "locomotion",
+                        "states": [
+                            {
+                                "name": "START"
+                            },
+                            {
+                                "name": "Travel",
+                                "speed": 1.0,
+                                "loop": true,
+                                "blendTree": {
+                                    "type": pc.ANIM_BLEND_2D_DIRECTIONAL,
+                                    "syncDurations": true,
+                                    "parameters": ["posX", "posY"],
+                                    "children": [
+                                        {
+                                            "name": "Idle",
+                                            "point": [0.0, 0.0]
+                                        },
+                                        {
+                                            "speed": -1,
+                                            "name": "WalkBackwards",
+                                            "point": [0.0, -0.5]
+                                        },
+                                        {
+                                            "speed": 1,
+                                            "name": "Walk",
+                                            "point": [0.0, 0.5]
+                                        },
+                                        {
+                                            "speed": 1,
+                                            "name": "Jog",
+                                            "point": [0.0, 1.0]
+                                        }
+                                    ]
+                                }
+                            }
+                        ],
+                        "transitions": [
+                            {
+                                "from": "START",
+                                "to": "Travel"
+                            }
+                        ]
+                    }
+                ],
+                "parameters": {
+                    "posX": {
+                        "name": "posX",
+                        "type": "FLOAT",
+                        "value": 0
+                    },
+                    "posY": {
+                        "name": "posY",
+                        "type": "FLOAT",
+                        "value": 0
+                    }
+                }
+            };
+
+            // load the state graph into the anim component
+            modelEntity.anim.loadStateGraph(animStateGraphData);
+
+            // load the state graph asset resource into the anim component
+            const locomotionLayer = modelEntity.anim.baseLayer;
+            locomotionLayer.assignAnimation('Travel.Idle', assets.idleAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Travel.Walk', assets.walkAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Travel.WalkBackwards', assets.walkAnim.resource.animations[0].resource);
+            locomotionLayer.assignAnimation('Travel.Jog', assets.jogAnim.resource.animations[0].resource);
+
+            app.root.addChild(modelEntity);
+
+            app.start();
         });
+        return app;
     }
 }
 
