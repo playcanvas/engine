@@ -75,7 +75,7 @@ CubemapRenderer.prototype.initialize = function () {
             colorBuffer: this.cubeMap,
             depth: this.depth,
             face: i,
-            flipY: true
+            flipY: !this.app.graphicsDevice.isWebGPU
         });
 
         // create a child entity with the camera for this face

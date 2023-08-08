@@ -2,6 +2,8 @@ import { ScopeId } from './scope-id.js';
 
 /**
  * The scope for variables.
+ *
+ * @category Graphics
  */
 class ScopeSpace {
     /**

@@ -1,13 +1,24 @@
-import resolve from "@rollup/plugin-node-resolve";
+import date from 'date-and-time';
+import * as fs from 'node:fs';
+import fse from 'fs-extra';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+// 1st party Rollup plugins
+import alias from '@rollup/plugin-alias';
 import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
+import resolve from "@rollup/plugin-node-resolve";
+import terser from '@rollup/plugin-terser';
+
+// 3rd party Rollup plugins
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import typescript from 'rollup-plugin-typescript2';
-import { terser } from 'rollup-plugin-terser';
-import alias from '@rollup/plugin-alias';
-import date from 'date-and-time';
-import path from 'path';
-import fs from 'fs';
-import fse from 'fs-extra';
+
+/** @typedef {import('rollup').RollupOptions} RollupOptions */
+/** @typedef {import('rollup').Plugin} RollupPlugin */
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const ENGINE_PATH = process.env.ENGINE_PATH ? path.resolve(process.env.ENGINE_PATH) : path.resolve(`../build/playcanvas${process.env.NODE_ENV === 'development' ? '.dbg' : ''}.js`);
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
@@ -32,6 +43,12 @@ function timestamp() {
     };
 }
 
+/**
+ * This plugin copies static files from source to destination.
+ *
+ * @param {staticFiles} targets - Array of source and destination objects.
+ * @returns {RollupPlugin} The plugin.
+ */
 function copyStaticFiles(targets) {
     function watch(src) {
         const srcStats = fs.statSync(src);
@@ -56,21 +73,21 @@ function copyStaticFiles(targets) {
     }
     return {
         name: 'copy-and-watch',
-        async load() {
+        load() {
             return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
         },
-        async buildStart() {
+        buildStart() {
             if (process.env.NODE_ENV !== 'development') return;
             targets.forEach((target) => {
                 watch.bind(this)(target.src, target.dest);
             });
         },
-        async generateBundle() {
+        generateBundle() {
             targets.forEach((target) => {
                 fse.copySync(target.src, target.dest, { overwrite: true });
             });
         },
-        async writeBundle() {
+        writeBundle() {
             fs.unlinkSync('dist/copy.tmp');
         }
     };
@@ -90,6 +107,7 @@ const tsCompilerOptions = {
     }
 };
 
+/** @type {RollupOptions[]} */
 const builds = [
     {
         input: 'src/app/index.tsx',
@@ -117,7 +135,6 @@ const builds = [
         ]
     },
     {
-        // use glob in the input
         input: 'src/iframe/index.mjs',
         output: {
             name: 'bundle',
@@ -144,6 +161,7 @@ const builds = [
             typescript({
                 tsconfig: 'tsconfig.json'
             }),
+            process.env.NODE_ENV === 'development' ? sourcemaps() : null,
             timestamp()
         ]
     },

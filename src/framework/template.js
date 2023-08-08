@@ -5,6 +5,21 @@ import { SceneParser } from './parsers/scene.js';
  */
 class Template {
     /**
+     * @type {import('./app-base.js').AppBase}
+     * @private
+     */
+    _app;
+
+    /** @private */
+    _data;
+
+    /**
+     * @type {import('./entity.js').Entity|null}
+     * @private
+     */
+    _templateRoot = null;
+
+    /**
      * Create a new Template instance.
      *
      * @param {import('./app-base.js').AppBase} app - The application.
@@ -12,10 +27,7 @@ class Template {
      */
     constructor(app, data) {
         this._app = app;
-
         this._data = data;
-
-        this._templateRoot = null;
     }
 
     /**
@@ -31,6 +43,7 @@ class Template {
         return this._templateRoot.clone();
     }
 
+    /** @private */
     _parseTemplate() {
         const parser = new SceneParser(this._app, true);
 

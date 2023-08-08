@@ -15,43 +15,42 @@ import { Material } from './material.js';
  * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
  * modulated with a color.
  *
+ * ```javascript
+ * // Create a new Basic material
+ * const material = new pc.BasicMaterial();
+ *
+ * // Set the material to have a texture map that is multiplied by a red color
+ * material.color.set(1, 0, 0);
+ * material.colorMap = diffuseMap;
+ *
+ * // Notify the material that it has been modified
+ * material.update();
+ * ```
+ *
  * @augments Material
+ * @category Graphics
  */
 class BasicMaterial extends Material {
     /**
-     * Create a new BasicMaterial instance.
+     * The flat color of the material (RGBA, where each component is 0 to 1).
      *
-     * @example
-     * // Create a new Basic material
-     * const material = new pc.BasicMaterial();
-     *
-     * // Set the material to have a texture map that is multiplied by a red color
-     * material.color.set(1, 0, 0);
-     * material.colorMap = diffuseMap;
-     *
-     * // Notify the material that it has been modified
-     * material.update();
+     * @type {Color}
      */
-    constructor() {
-        super();
+    color = new Color(1, 1, 1, 1);
 
-        /**
-         * The flat color of the material (RGBA, where each component is 0 to 1).
-         *
-         * @type {Color}
-         */
-        this.color = new Color(1, 1, 1, 1);
-        this.colorUniform = new Float32Array(4);
+    /** @ignore */
+    colorUniform = new Float32Array(4);
 
-        /**
-         * The color map of the material (default is null). If specified, the color map is
-         * modulated by the color property.
-         *
-         * @type {import('../../platform/graphics/texture.js').Texture|null}
-         */
-        this.colorMap = null;
-        this.vertexColors = false;
-    }
+    /**
+     * The color map of the material (default is null). If specified, the color map is
+     * modulated by the color property.
+     *
+     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     */
+    colorMap = null;
+
+    /** @ignore */
+    vertexColors = false;
 
     /**
      * Copy a `BasicMaterial`.
@@ -69,6 +68,11 @@ class BasicMaterial extends Material {
         return this;
     }
 
+    /**
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../scene.js').Scene} scene - The scene.
+     * @ignore
+     */
     updateUniforms(device, scene) {
         this.clearParameters();
 
@@ -82,13 +86,13 @@ class BasicMaterial extends Material {
         }
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // Note: this is deprecated function Editor and possibly other projects use: they define
         // updateShader callback on their BasicMaterial, so we handle it here.
         if (this.updateShader) {
             Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
-            this.updateShader(device, scene, objDefs, staticLightList, pass, sortedLights);
+            this.updateShader(device, scene, objDefs, null, pass, sortedLights);
             return this.shader;
         }
 
@@ -111,7 +115,7 @@ class BasicMaterial extends Material {
         const library = getProgramLibrary(device);
         library.register('basic', basic);
 
-        return library.getProgram('basic', options, processingOptions);
+        return library.getProgram('basic', options, processingOptions, this.userId);
     }
 }
 

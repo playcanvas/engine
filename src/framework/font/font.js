@@ -2,6 +2,8 @@ import { FONT_MSDF } from './constants.js';
 
 /**
  * Represents the resource of a font asset.
+ *
+ * @category User Interface
  */
 class Font {
     /**

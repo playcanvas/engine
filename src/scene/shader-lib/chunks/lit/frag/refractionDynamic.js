@@ -1,5 +1,4 @@
 export default /* glsl */`
-uniform float material_refractionIndex;
 uniform float material_invAttenuationDistance;
 uniform vec3 material_attenuation;
 
@@ -10,7 +9,8 @@ void addRefraction(
     float gloss, 
     vec3 specularity, 
     vec3 albedo, 
-    float transmission
+    float transmission,
+    float refractionIndex
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
     IridescenceArgs iridescence
@@ -24,7 +24,7 @@ void addRefraction(
     modelScale.z = length(vec3(matrix_model[2].xyz));
 
     // Calculate the refraction vector, scaled by the thickness and scale of the object
-    vec3 refractionVector = normalize(refract(-viewDir, worldNormal, material_refractionIndex)) * thickness * modelScale;
+    vec3 refractionVector = normalize(refract(-viewDir, worldNormal, refractionIndex)) * thickness * modelScale;
 
     // The refraction point is the entry point + vector to exit point
     vec4 pointOfRefraction = vec4(vPositionW + refractionVector, 1.0);
@@ -37,7 +37,7 @@ void addRefraction(
 
     #ifdef SUPPORTS_TEXLOD
         // Use IOR and roughness to select mip
-        float iorToRoughness = (1.0 - gloss) * clamp((1.0 / material_refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
+        float iorToRoughness = (1.0 - gloss) * clamp((1.0 / refractionIndex) * 2.0 - 2.0, 0.0, 1.0);
         float refractionLod = log2(uScreenSize.x) * iorToRoughness;
         vec3 refraction = texture2DLodEXT(uSceneColorMap, uv, refractionLod).rgb;
     #else

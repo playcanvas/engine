@@ -47,8 +47,28 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 /**
  * Container for storing and loading of scenes. An instance of the registry is created on the
  * {@link AppBase} object as {@link AppBase#scenes}.
+ *
+ * @category Graphics
  */
 class SceneRegistry {
+    /**
+     * @type {import('./app-base.js').AppBase}
+     * @private
+     */
+    _app;
+
+    /**
+     * @type {SceneRegistryItem[]}
+     * @private
+     */
+    _list = [];
+
+    /** @private */
+    _index = {};
+
+    /** @private */
+    _urlIndex = {};
+
     /**
      * Create a new SceneRegistry instance.
      *
@@ -56,11 +76,9 @@ class SceneRegistry {
      */
     constructor(app) {
         this._app = app;
-        this._list = [];
-        this._index = {};
-        this._urlIndex = {};
     }
 
+    /** @ignore */
     destroy() {
         this._app = null;
     }
@@ -78,7 +96,7 @@ class SceneRegistry {
      * Add a new item to the scene registry.
      *
      * @param {string} name - The name of the scene.
-     * @param {string} url -  The url of the scene file.
+     * @param {string} url - The url of the scene file.
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
      */
     add(name, url) {
@@ -152,19 +170,26 @@ class SceneRegistry {
         }
     }
 
-    // Private function to load scene data with the option to cache
-    // This allows us to retain expected behavior of loadSceneSettings and loadSceneHierarchy where they
-    // don't store loaded data which may be undesired behavior with projects that have many scenes.
+    /**
+     * Private function to load scene data with the option to cache. This allows us to retain
+     * expected behavior of loadSceneSettings and loadSceneHierarchy where they don't store loaded
+     * data which may be undesired behavior with projects that have many scenes.
+     *
+     * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * @param {boolean} storeInCache - Whether to store the loaded data in the scene item.
+     * @param {LoadSceneDataCallback} callback - The function to call after loading,
+     * passed (err, sceneItem) where err is null if no errors occurred.
+     * @private
+     */
     _loadSceneData(sceneItem, storeInCache, callback) {
         const app = this._app;
-        // If it's a sceneItem, we want to be able to cache the data
-        // that is loaded so we don't do a subsequent http requests
-        // on the same scene later
+        // If it's a sceneItem, we want to be able to cache the data that is loaded so we don't do
+        // a subsequent http requests on the same scene later
 
-        // If it's just a URL or scene name then attempt to find
-        // the scene item in the registry else create a temp
-        // SceneRegistryItem to use for this function as the scene
-        // may not have been added to the registry
+        // If it's just a URL or scene name then attempt to find the scene item in the registry
+        // else create a temp SceneRegistryItem to use for this function as the scene may not have
+        // been added to the registry
         let url = sceneItem;
         if (typeof sceneItem === 'string') {
             sceneItem = this.findByUrl(url) || this.find(url) || new SceneRegistryItem('Untitled', url);
@@ -191,8 +216,8 @@ class SceneRegistry {
         sceneItem._onLoadedCallbacks.push(callback);
 
         if (!sceneItem._loading) {
-            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-            // Split loading into load and open
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we
+            // create script components), split loading into load and open
             const handler = app.loader.getHandler("hierarchy");
 
             handler.load(url, (err, data) => {

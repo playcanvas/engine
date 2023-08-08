@@ -1,5 +1,6 @@
 import { script } from '../script.js';
 import { ScriptTypes } from '../script/script-types.js';
+import { ResourceLoader } from './loader.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
@@ -71,7 +72,7 @@ class ScriptHandler {
                     callback(null, obj, extra);
 
                     // no cache for scripts
-                    delete self._loader._cache[url + 'script'];
+                    delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
                 }
             } else {
                 callback(err);

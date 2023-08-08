@@ -28,6 +28,8 @@ const _tempScissor = new Vec4();
  * quad.render();
  * quad.destroy();
  * ```
+ *
+ * @category Graphics
  */
 class QuadRender {
     /**
@@ -62,7 +64,7 @@ class QuadRender {
             // uniform buffer
             const ubFormat = this.shader.meshUniformBufferFormat;
             if (ubFormat) {
-                this.uniformBuffer = new UniformBuffer(device, ubFormat);
+                this.uniformBuffer = new UniformBuffer(device, ubFormat, false);
             }
 
             // bind group
@@ -119,9 +121,7 @@ class QuadRender {
         if (device.supportsUniformBuffers) {
 
             const bindGroup = this.bindGroup;
-            if (bindGroup.defaultUniformBuffer) {
-                bindGroup.defaultUniformBuffer.update();
-            }
+            bindGroup.defaultUniformBuffer?.update();
             bindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, bindGroup);
         }

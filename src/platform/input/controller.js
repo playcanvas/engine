@@ -12,6 +12,8 @@ import { Mouse } from './mouse.js';
 /**
  * A general input handler which handles both mouse and keyboard input assigned to named actions.
  * This allows you to define input handlers separately to defining keyboard/mouse configurations.
+ *
+ * @category Input
  */
 class Controller {
     /**

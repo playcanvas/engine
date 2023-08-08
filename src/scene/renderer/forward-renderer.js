@@ -8,7 +8,7 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
-    COMPUPDATED_INSTANCES, COMPUPDATED_LIGHTS,
+    COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
@@ -258,12 +258,13 @@ class ForwardRenderer extends Renderer {
                 this.shadowCascadeCountId[cnt].setValue(directional.numCascades);
                 this.lightShadowIntensity[cnt].setValue(directional.shadowIntensity);
 
-                const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / directional.penumbraSize);
-                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
+                const projectionCompensation = (50.0 / lightRenderData.projectionCompensation);
+                const pixelsPerMeter = directional.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
+                this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * projectionCompensation);
 
                 const cameraParams = directional._shadowCameraParams;
                 cameraParams.length = 4;
-                cameraParams[0] = 0;
+                cameraParams[0] = lightRenderData.depthRangeCompensation;
                 cameraParams[1] = lightRenderData.shadowCamera._farClip;
                 cameraParams[2] = lightRenderData.shadowCamera._nearClip;
                 cameraParams[3] = 1;
@@ -332,12 +333,12 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(omni.shadowIntensity);
 
-            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / omni.penumbraSize);
+            const pixelsPerMeter = omni.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter);
             const cameraParams = omni._shadowCameraParams;
 
             cameraParams.length = 4;
-            cameraParams[0] = 0;
+            cameraParams[0] = lightRenderData.depthRangeCompensation;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -398,14 +399,14 @@ class ForwardRenderer extends Renderer {
             this.lightShadowParamsId[cnt].setValue(params);
             this.lightShadowIntensity[cnt].setValue(spot.shadowIntensity);
 
-            const pixelsPerMeter = 1.0 / (lightRenderData.shadowCamera.renderTarget.width / spot.penumbraSize);
+            const pixelsPerMeter = spot.penumbraSize / lightRenderData.shadowCamera.renderTarget.width;
             const fov = lightRenderData.shadowCamera._fov * Math.PI / 180.0;
             const fovRatio = 1.0 / Math.tan(fov / 2.0);
             this.lightShadowSearchAreaId[cnt].setValue(pixelsPerMeter * fovRatio);
 
             const cameraParams = spot._shadowCameraParams;
             cameraParams.length = 4;
-            cameraParams[0] = 0;
+            cameraParams[0] = lightRenderData.depthRangeCompensation;
             cameraParams[1] = lightRenderData.shadowCamera._farClip;
             cameraParams[2] = lightRenderData.shadowCamera._nearClip;
             cameraParams[3] = 0;
@@ -435,7 +436,7 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    dispatchLocalLights(sortedLights, scene, mask, usedDirLights, staticLightList) {
+    dispatchLocalLights(sortedLights, scene, mask, usedDirLights) {
 
         let cnt = usedDirLights;
         const scope = this.device.scope;
@@ -445,20 +446,8 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numOmnis; i++) {
             const omni = omnis[i];
             if (!(omni.mask & mask)) continue;
-            if (omni.isStatic) continue;
             this.dispatchOmniLight(scene, scope, omni, cnt);
             cnt++;
-        }
-
-        let staticId = 0;
-        if (staticLightList) {
-            let omni = staticLightList[staticId];
-            while (omni && omni._type === LIGHTTYPE_OMNI) {
-                this.dispatchOmniLight(scene, scope, omni, cnt);
-                cnt++;
-                staticId++;
-                omni = staticLightList[staticId];
-            }
         }
 
         const spts = sortedLights[LIGHTTYPE_SPOT];
@@ -466,27 +455,13 @@ class ForwardRenderer extends Renderer {
         for (let i = 0; i < numSpts; i++) {
             const spot = spts[i];
             if (!(spot.mask & mask)) continue;
-            if (spot.isStatic) continue;
             this.dispatchSpotLight(scene, scope, spot, cnt);
             cnt++;
-        }
-
-        if (staticLightList) {
-            let spot = staticLightList[staticId];
-            while (spot && spot._type === LIGHTTYPE_SPOT) {
-                this.dispatchSpotLight(scene, scope, spot, cnt);
-                cnt++;
-                staticId++;
-                spot = staticLightList[staticId];
-            }
         }
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    // TODO: implement this: https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices#compile_shaders_and_link_programs_in_parallel
-    // where instead of compiling and linking shaders, which is serial operation, we compile all of them and then link them, allowing the work to
-    // take place in parallel
-    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
+    renderForwardPrepareMaterials(camera, drawCalls, sortedLights, layer, pass) {
 
         const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -499,17 +474,15 @@ class ForwardRenderer extends Renderer {
 
         const device = this.device;
         const scene = this.scene;
-        const lightHash = layer ? layer._lightHash : 0;
-        let prevMaterial = null, prevObjDefs, prevStatic, prevLightMask;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
+        const lightHash = layer ? layer.getLightHash(clusteredLightingEnabled) : 0;
+        let prevMaterial = null, prevObjDefs, prevLightMask;
 
+        const drawCallsCount = drawCalls.length;
         for (let i = 0; i < drawCallsCount; i++) {
 
             /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
-
-            // apply visibility override
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
-                continue;
 
             if (drawCall.command) {
 
@@ -540,10 +513,6 @@ class ForwardRenderer extends Renderer {
                     prevMaterial = null; // force change shader if the object uses a different variant of the same material
                 }
 
-                if (drawCall.isStatic || prevStatic) {
-                    prevMaterial = null;
-                }
-
                 if (material !== prevMaterial) {
                     this._materialSwitches++;
                     material._scene = scene;
@@ -552,11 +521,6 @@ class ForwardRenderer extends Renderer {
                         material.updateUniforms(device, scene);
                         material.dirty = false;
                     }
-
-                    // if material has dirtyBlend set, notify scene here
-                    if (material._dirtyBlend) {
-                        scene.layers._dirtyBlend = true;
-                    }
                 }
 
                 if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
@@ -564,20 +528,13 @@ class ForwardRenderer extends Renderer {
                     // marker to allow us to see the source node for shader alloc
                     DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
 
-                    // draw calls not using static lights use variants cache on material to quickly find the shader, as they are all
+                    // use variants cache on material to quickly find the shader, as they are all
                     // the same for the same pass, using all lights of the scene
-                    if (!drawCall.isStatic) {
-                        const variantKey = pass + '_' + objDefs + '_' + lightHash;
-                        drawCall._shader[pass] = material.variants[variantKey];
-                        if (!drawCall._shader[pass]) {
-                            drawCall.updatePassShader(scene, pass, null, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                            material.variants[variantKey] = drawCall._shader[pass];
-                        }
-                    } else {
-
-                        // static lights generate unique shader per draw call, as static lights are unique per draw call,
-                        // and so variants cache is not used
-                        drawCall.updatePassShader(scene, pass, drawCall._staticLightList, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                    const variantKey = pass + '_' + objDefs + '_' + lightHash;
+                    drawCall._shader[pass] = material.variants[variantKey];
+                    if (!drawCall._shader[pass]) {
+                        drawCall.updatePassShader(scene, pass, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
+                        material.variants[variantKey] = drawCall._shader[pass];
                     }
                     drawCall._lightHash = lightHash;
 
@@ -591,7 +548,6 @@ class ForwardRenderer extends Renderer {
                 prevMaterial = material;
                 prevObjDefs = objDefs;
                 prevLightMask = lightMask;
-                prevStatic = drawCall.isStatic;
             }
         }
 
@@ -606,6 +562,7 @@ class ForwardRenderer extends Renderer {
         const scene = this.scene;
         const passFlag = 1 << pass;
         const flipFactor = flipFaces ? -1 : 1;
+        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // Render the scene
         let skipMaterial = false;
@@ -647,7 +604,10 @@ class ForwardRenderer extends Renderer {
 
                     if (lightMaskChanged) {
                         const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
-                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights, drawCall._staticLightList);
+
+                        if (!clusteredLightingEnabled) {
+                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
+                        }
                     }
 
                     this.alphaTestId.setValue(material.alphaTest);
@@ -730,14 +690,14 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
+    renderForward(camera, allDrawCalls, sortedLights, pass, drawCallback, layer, flipFaces) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, sortedLights, layer, pass);
 
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
@@ -812,10 +772,6 @@ class ForwardRenderer extends Renderer {
                     }
                 }
             }
-        }
-
-        if (compUpdatedFlags & COMPUPDATED_INSTANCES || !scene._statsUpdated) {
-            scene._stats.meshInstances = comp._meshInstances.length;
         }
 
         scene._statsUpdated = true;
@@ -1044,7 +1000,7 @@ class ForwardRenderer extends Renderer {
         this.cullComposition(comp);
 
         // GPU update for all visible objects
-        this.gpuUpdate(comp._meshInstances);
+        this.gpuUpdate(this.processingMeshInstances);
     }
 
     renderPassPostprocessing(renderAction, layerComposition) {
@@ -1132,14 +1088,14 @@ class ForwardRenderer extends Renderer {
             const sortTime = now();
             // #endif
 
-            layer._sortVisible(transparent, camera.camera.node, cameraPass);
+            layer.sortVisible(camera.camera, transparent);
 
             // #if _PROFILER
             this._sortTime += now() - sortTime;
             // #endif
 
-            const objects = layer.instances;
-            const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+            const culledInstances = layer.getCulledInstances(camera.camera);
+            const visible = transparent ? culledInstances.transparent : culledInstances.opaque;
 
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
@@ -1172,11 +1128,9 @@ class ForwardRenderer extends Renderer {
 
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
-                               visible.list,
-                               visible.length,
+                               visible,
                                layer._splitLights,
                                shaderPass,
-                               layer.cullingMask,
                                layer.onDrawCall,
                                layer,
                                flipFaces);

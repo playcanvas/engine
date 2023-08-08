@@ -114,10 +114,7 @@ export class GroundFogExample {
         const gfxOptions = {
             deviceTypes: [deviceType],
             glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js',
-
-            // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
-            antialias: false
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
@@ -277,7 +274,7 @@ export class GroundFogExample {
                     material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
 
                     // debug rendering of the deptht texture in the corner
-                    app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+                    app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
                 });
             });
         });

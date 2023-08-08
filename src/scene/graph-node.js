@@ -490,7 +490,7 @@ class GraphNode extends EventHandler {
      */
     destroy() {
         // Detach from parent
-        this._parent?.removeChild(this);
+        this.remove();
 
         // Recursively destroy all children
         const children = this._children;
@@ -956,17 +956,20 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Remove graph node from current parent.
+     */
+    remove() {
+        this._parent?.removeChild(this);
+    }
+
+    /**
      * Remove graph node from current parent and add as child to new parent.
      *
      * @param {GraphNode} parent - New parent to attach graph node to.
      * @param {number} [index] - The child index where the child node should be placed.
      */
     reparent(parent, index) {
-        const current = this._parent;
-
-        if (current)
-            current.removeChild(this);
-
+        this.remove();
         if (parent) {
             if (index >= 0) {
                 parent.insertChild(this, index);
@@ -1294,9 +1297,7 @@ class GraphNode extends EventHandler {
     _prepareInsertChild(node) {
 
         // remove it from the existing parent
-        if (node._parent) {
-            node._parent.removeChild(node);
-        }
+        node.remove();
 
         Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
         Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);

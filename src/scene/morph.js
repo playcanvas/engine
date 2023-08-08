@@ -13,15 +13,16 @@ import {
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
-const defaultOptions = {
-    preferHighPrecision: false
-};
-
 /**
  * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
+ *
+ * @category Graphics
  */
 class Morph extends RefCountedObject {
-    /** @type {BoundingBox} */
+    /**
+     * @type {BoundingBox}
+     * @private
+     */
     _aabb;
 
     /** @type {boolean} */
@@ -33,21 +34,21 @@ class Morph extends RefCountedObject {
      * @param {import('./morph-target.js').MorphTarget[]} targets - A list of morph targets.
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this morph target.
-     * @param {object} options - Object for passing optional arguments.
-     * @param {boolean} options.preferHighPrecision - True if high precision storage should be
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.preferHighPrecision] - True if high precision storage should be
      * prefered. This is faster to create and allows higher precision, but takes more memory and
      * might be slower to render. Defaults to false.
      */
-    constructor(targets, graphicsDevice, options = defaultOptions) {
+    constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
         Debug.assertDeprecated(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
         this.device = graphicsDevice || GraphicsDeviceAccess.get();
 
-        this.preferHighPrecision = options.preferHighPrecision;
+        this.preferHighPrecision = preferHighPrecision;
 
         // validation
-        targets.forEach(target => Debug.assert(!target.used, 'The target specified has already been used to create a Morph, use its clone instead.'));
+        Debug.assert(targets.every(target => !target.used), 'A specified target has already been used to create a Morph, use its clone instead.');
         this._targets = targets.slice();
 
         // default to texture based morphing if available

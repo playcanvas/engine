@@ -5,7 +5,7 @@
  * @returns {number} The time in milliseconds.
  * @ignore
  */
-const now = (typeof window !== 'undefined') && window.performance && window.performance.now && window.performance.timing ?
+const now = (typeof window !== 'undefined') && window.performance && window.performance.now ?
     performance.now.bind(performance) :
     Date.now;
 

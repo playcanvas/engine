@@ -1,3 +1,5 @@
+import { EventHandle } from './event-handle.js';
+
 /**
  * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  *
@@ -29,25 +31,24 @@
  */
 class EventHandler {
     /**
-     * @type {object}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
-    _callbacks = {};
+    _callbacks = new Map();
 
     /**
-     * @type {object}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
-    _callbackActive = {};
+    _callbackActive = new Map();
 
     /**
      * Reinitialize the event handler.
-     *
-     * @private
+     * @ignore
      */
     initEventHandler() {
-        this._callbacks = {};
-        this._callbackActive = {};
+        this._callbacks = new Map();
+        this._callbackActive = new Map();
     }
 
     /**
@@ -56,26 +57,33 @@ class EventHandler {
      * @param {string} name - Name of the event to bind the callback to.
      * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
      * the callback is limited to 8 arguments.
-     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
+     * @param {object} scope - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @param {boolean} [once=false] - If true, the callback will be unbound after being fired once.
-     * @private
+     * @param {boolean} once - If true, the callback will be unbound after being fired once.
+     * @returns {EventHandle} Created {@link EventHandle}.
+     * @ignore
      */
-    _addCallback(name, callback, scope, once = false) {
+    _addCallback(name, callback, scope, once) {
+        // #if _DEBUG
         if (!name || typeof name !== 'string' || !callback)
-            return;
+            console.warn(`EventHandler: subscribing to an event (${name}) with missing arguments`, callback);
+        // #endif
 
-        if (!this._callbacks[name])
-            this._callbacks[name] = [];
+        if (!this._callbacks.has(name))
+            this._callbacks.set(name, []);
 
-        if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
-            this._callbackActive[name] = this._callbackActive[name].slice();
+        // if we are adding a callback to the list that is executing right now
+        // ensure we preserve initial list before modifications
+        if (this._callbackActive.has(name)) {
+            const callbackActive = this._callbackActive.get(name);
+            if (callbackActive && callbackActive === this._callbacks.get(name)) {
+                this._callbackActive.set(name, callbackActive.slice());
+            }
+        }
 
-        this._callbacks[name].push({
-            callback: callback,
-            scope: scope || this,
-            once: once
-        });
+        const evt = new EventHandle(this, name, callback, scope, once);
+        this._callbacks.get(name).push(evt);
+        return evt;
     }
 
     /**
@@ -86,17 +94,41 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandler} Self for chaining.
+     * @returns {EventHandle} Can be used for removing event in the future.
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
+     * @example
+     * const evt = obj.on('test', function (a, b) {
+     *     console.log(a + b);
+     * });
+     * // some time later
+     * evt.off();
      */
-    on(name, callback, scope) {
-        this._addCallback(name, callback, scope, false);
+    on(name, callback, scope = this) {
+        return this._addCallback(name, callback, scope, false);
+    }
 
-        return this;
+    /**
+     * Attach an event handler to an event. This handler will be removed after being fired once.
+     *
+     * @param {string} name - Name of the event to bind the callback to.
+     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
+     * the callback is limited to 8 arguments.
+     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
+     * current this.
+     * @returns {EventHandle} - can be used for removing event in the future.
+     * @example
+     * obj.once('test', function (a, b) {
+     *     console.log(a + b);
+     * });
+     * obj.fire('test', 1, 2); // prints 3 to the console
+     * obj.fire('test', 1, 2); // not going to get handled
+     */
+    once(name, callback, scope = this) {
+        return this._addCallback(name, callback, scope, true);
     }
 
     /**
@@ -120,42 +152,62 @@ class EventHandler {
      */
     off(name, callback, scope) {
         if (name) {
-            if (this._callbackActive[name] && this._callbackActive[name] === this._callbacks[name])
-                this._callbackActive[name] = this._callbackActive[name].slice();
+            // if we are removing a callback from the list that is executing right now
+            // ensure we preserve initial list before modifications
+            if (this._callbackActive.has(name) && this._callbackActive.get(name) === this._callbacks.get(name))
+                this._callbackActive.set(name, this._callbackActive.get(name).slice());
         } else {
-            for (const key in this._callbackActive) {
-                if (!this._callbacks[key])
+            // if we are removing a callback from any list that is executing right now
+            // ensure we preserve these initial lists before modifications
+            for (const [key, callbacks] of this._callbackActive) {
+                if (!this._callbacks.has(key))
                     continue;
 
-                if (this._callbacks[key] !== this._callbackActive[key])
+                if (this._callbacks.get(key) !== callbacks)
                     continue;
 
-                this._callbackActive[key] = this._callbackActive[key].slice();
+                this._callbackActive.set(key, callbacks.slice());
             }
         }
 
         if (!name) {
-            this._callbacks = { };
+            // remove all events
+            for (const callbacks of this._callbacks.values()) {
+                for (let i = 0; i < callbacks.length; i++) {
+                    callbacks[i].removed = true;
+                }
+            }
+            this._callbacks.clear();
         } else if (!callback) {
-            if (this._callbacks[name])
-                this._callbacks[name] = [];
+            // remove all events of a specific name
+            const callbacks = this._callbacks.get(name);
+            if (callbacks) {
+                for (let i = 0; i < callbacks.length; i++) {
+                    callbacks[i].removed = true;
+                }
+                this._callbacks.delete(name);
+            }
         } else {
-            const events = this._callbacks[name];
-            if (!events)
+            const callbacks = this._callbacks.get(name);
+            if (!callbacks)
                 return this;
 
-            let count = events.length;
-
-            for (let i = 0; i < count; i++) {
-                if (events[i].callback !== callback)
+            for (let i = 0; i < callbacks.length; i++) {
+                // remove all events with a specific name and a callback
+                if (callbacks[i].callback !== callback)
                     continue;
 
-                if (scope && events[i].scope !== scope)
+                // could be a specific scope as well
+                if (scope && callbacks[i].scope !== scope)
                     continue;
 
-                events[i--] = events[--count];
+                callbacks[i].removed = true;
+                callbacks.splice(i, 1);
+                i--;
             }
-            events.length = count;
+
+            if (callbacks.length === 0)
+                this._callbacks.delete(name);
         }
 
         return this;
@@ -178,67 +230,55 @@ class EventHandler {
      * obj.fire('test', 'This is the message');
      */
     fire(name, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
-        if (!name || !this._callbacks[name])
+        if (!name)
+            return this;
+
+        const callbacksInitial = this._callbacks.get(name);
+        if (!callbacksInitial)
             return this;
 
         let callbacks;
 
-        if (!this._callbackActive[name]) {
-            this._callbackActive[name] = this._callbacks[name];
-        } else {
-            if (this._callbackActive[name] === this._callbacks[name])
-                this._callbackActive[name] = this._callbackActive[name].slice();
-
-            callbacks = this._callbacks[name].slice();
+        if (!this._callbackActive.has(name)) {
+            // when starting callbacks execution ensure we store a list of initial callbacks
+            this._callbackActive.set(name, callbacksInitial);
+        } else if (this._callbackActive.get(name) !== callbacksInitial) {
+            // if we are trying to execute a callback while there is an active execution right now
+            // and the active list has been already modified,
+            // then we go to an unoptimized path and clone callbacks list to ensure execution consistency
+            callbacks = callbacksInitial.slice();
         }
 
-        // TODO: What does callbacks do here?
-        // In particular this condition check looks wrong: (i < (callbacks || this._callbackActive[name]).length)
-        // Because callbacks is not an integer
         // eslint-disable-next-line no-unmodified-loop-condition
-        for (let i = 0; (callbacks || this._callbackActive[name]) && (i < (callbacks || this._callbackActive[name]).length); i++) {
-            const evt = (callbacks || this._callbackActive[name])[i];
+        for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
+            const evt = (callbacks || this._callbackActive.get(name))[i];
+            if (!evt.callback) continue;
+
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-            if (evt.once) {
-                // check that callback still exists because user may have unsubscribed
-                // in the event handler
-                const existingCallback = this._callbacks[name];
+            if (evt._once) {
+                // check that callback still exists because user may have unsubscribed in the event handler
+                const existingCallback = this._callbacks.get(name);
                 const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
 
                 if (ind !== -1) {
-                    if (this._callbackActive[name] === existingCallback)
-                        this._callbackActive[name] = this._callbackActive[name].slice();
+                    if (this._callbackActive.get(name) === existingCallback)
+                        this._callbackActive.set(name, this._callbackActive.get(name).slice());
 
-                    this._callbacks[name].splice(ind, 1);
+                    const callbacks = this._callbacks.get(name);
+                    if (!callbacks) continue;
+                    callbacks[ind].removed = true;
+                    callbacks.splice(ind, 1);
+
+                    if (callbacks.length === 0)
+                        this._callbacks.delete(name);
                 }
             }
         }
 
         if (!callbacks)
-            this._callbackActive[name] = null;
+            this._callbackActive.delete(name);
 
-        return this;
-    }
-
-    /**
-     * Attach an event handler to an event. This handler will be removed after being fired once.
-     *
-     * @param {string} name - Name of the event to bind the callback to.
-     * @param {HandleEventCallback} callback - Function that is called when event is fired. Note
-     * the callback is limited to 8 arguments.
-     * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
-     * current this.
-     * @returns {EventHandler} Self for chaining.
-     * @example
-     * obj.once('test', function (a, b) {
-     *     console.log(a + b);
-     * });
-     * obj.fire('test', 1, 2); // prints 3 to the console
-     * obj.fire('test', 1, 2); // not going to get handled
-     */
-    once(name, callback, scope) {
-        this._addCallback(name, callback, scope, true);
         return this;
     }
 
@@ -253,7 +293,7 @@ class EventHandler {
      * obj.hasEvent('hello'); // returns false
      */
     hasEvent(name) {
-        return (this._callbacks[name] && this._callbacks[name].length !== 0) || false;
+        return !!this._callbacks.get(name)?.length;
     }
 }
 

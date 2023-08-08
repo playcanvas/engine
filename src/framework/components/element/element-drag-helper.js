@@ -26,6 +26,7 @@ const OPPOSITE_AXIS = {
  * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
  *
  * @augments EventHandler
+ * @category User Interface
  */
 class ElementDragHelper extends EventHandler {
     /**
@@ -78,6 +79,10 @@ class ElementDragHelper extends EventHandler {
      * @param {Vec3} value - The current position.
      */
 
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
+     */
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);

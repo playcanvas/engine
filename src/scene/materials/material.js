@@ -39,6 +39,8 @@ let id = 0;
 /**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
  * render state that is set before the mesh instance is submitted to the graphics device.
+ *
+ * @category Graphics
  */
 class Material {
     /**
@@ -65,6 +67,15 @@ class Material {
      * @type {string}
      */
     name = 'Untitled';
+
+    /**
+     * A unique id the user can assign to the material. The engine internally does not use this for
+     * anything, and the user can assign a value to this id for any purpose they like. Defaults to
+     * an empty string.
+     *
+     * @type {string}
+     */
+    userId = '';
 
     id = id++;
 
@@ -149,8 +160,6 @@ class Material {
 
     _scene = null;
 
-    _dirtyBlend = false;
-
     dirty = true;
 
     /**
@@ -231,13 +240,11 @@ class Material {
         return this._blendState.blend;
     }
 
-    // called when material changes transparency, for layer composition to add it to appropriate
-    // queue (opaque or transparent)
-    _markBlendDirty() {
-        if (this._scene) {
-            this._scene.layers._dirtyBlend = true;
-        } else {
-            this._dirtyBlend = true;
+    _updateTransparency() {
+        const transparent = this.transparent;
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].transparent = transparent;
         }
     }
 
@@ -249,10 +256,8 @@ class Material {
      * @type { BlendState }
      */
     set blendState(value) {
-        if (this._blendState.blend !== value.blend) {
-            this._markBlendDirty();
-        }
         this._blendState.copy(value);
+        this._updateTransparency();
     }
 
     get blendState() {
@@ -296,7 +301,7 @@ class Material {
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
             this._blendState.blend = blend;
-            this._markBlendDirty();
+            this._updateTransparency();
         }
         this._updateMeshInstanceKeys();
     }
@@ -439,7 +444,8 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    // TODO: unused parameter should be removed, but the Editor still uses this function
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);

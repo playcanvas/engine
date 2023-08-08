@@ -7,7 +7,7 @@ import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    CHUNKAPI_1_62,
+    CHUNKAPI_1_65,
     CULLFACE_NONE,
     FILTER_LINEAR, FILTER_NEAREST,
     PIXELFORMAT_RGBA8,
@@ -56,6 +56,8 @@ const tempVec = new Vec3();
 
 /**
  * The lightmapper is used to bake scene lights into textures.
+ *
+ * @category Graphics
  */
 class Lightmapper {
     /**
@@ -222,7 +224,7 @@ class Lightmapper {
     createMaterialForPass(device, scene, pass, addAmbient) {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
-        material.chunks.APIVersion = CHUNKAPI_1_62;
+        material.chunks.APIVersion = CHUNKAPI_1_65;
         material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
 
         if (pass === PASS_COLOR) {
@@ -655,10 +657,6 @@ class Lightmapper {
 
             // bake light
             if (light.enabled && (light.mask & MASK_BAKE) !== 0) {
-
-                // if baked, it can't be used as static
-                light.isStatic = false;
-
                 light.mask = 0xFFFFFFFF;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
                 bakeLights.push(bakeLight);
@@ -677,13 +675,6 @@ class Lightmapper {
     }
 
     setupScene() {
-
-        // lightmapper needs original model draw calls
-        this.revertStatic = false;
-        if (this.scene._needsStaticPrepare) {
-            this.scene._needsStaticPrepare = false;
-            this.revertStatic = true;
-        }
 
         // backup
         this.fog = this.scene.fog;
@@ -705,11 +696,6 @@ class Lightmapper {
 
         this.scene.fog = this.fog;
         this.scene.ambientLight.copy(this.ambientLight);
-
-        // Revert static preprocessing
-        if (this.revertStatic) {
-            this.scene._needsStaticPrepare = true;
-        }
     }
 
     // compute bounding box for a single node
@@ -1100,7 +1086,7 @@ class Lightmapper {
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+                        this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
 
                         device.updateEnd();
 

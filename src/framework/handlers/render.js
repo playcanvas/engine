@@ -45,6 +45,7 @@ function onContainerAssetRemoved(containerAsset) {
  * Resource handler used for loading {@link Render} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class RenderHandler {
     /**

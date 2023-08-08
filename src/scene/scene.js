@@ -21,6 +21,7 @@ import { EnvLighting } from './graphics/env-lighting.js';
  * graphical objects, lights, and scene-wide properties.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class Scene extends EventHandler {
     /**
@@ -226,6 +227,7 @@ class Scene extends EventHandler {
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
+        this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
         this._skyboxRotationMat3 = new Mat3();
         this._skyboxRotationMat4 = new Mat4();
@@ -248,11 +250,6 @@ class Scene extends EventHandler {
             lights: 0,
             dynamicLights: 0,
             bakedLights: 0,
-            lastStaticPrepareFullTime: 0,
-            lastStaticPrepareSearchTime: 0,
-            lastStaticPrepareWriteTime: 0,
-            lastStaticPrepareTriAabbTime: 0,
-            lastStaticPrepareCombineTime: 0,
             updateShadersTime: 0 // deprecated
         };
 
@@ -356,6 +353,11 @@ class Scene extends EventHandler {
      */
     set clusteredLightingEnabled(value) {
 
+        if (this.device.isWebGPU && !value) {
+            Debug.warnOnce('WebGPU currently only supports clustered lighting, and this cannot be disabled.');
+            return;
+        }
+
         if (!this._clusteredLightingEnabled && value) {
             console.error('Turning on disabled clustered lighting is not currently supported');
             return;
@@ -366,25 +368,6 @@ class Scene extends EventHandler {
 
     get clusteredLightingEnabled() {
         return this._clusteredLightingEnabled;
-    }
-
-    /**
-     * List of all active composition mesh instances. Only for backwards compatibility.
-     * TODO: BatchManager is using it - perhaps that could be refactored
-     *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
-     * @private
-     */
-    set drawCalls(value) {
-    }
-
-    get drawCalls() {
-        let drawCalls = this.layers._meshInstances;
-        if (!drawCalls.length) {
-            this.layers._update(this.device, this.clusteredLightingEnabled);
-            drawCalls = this.layers._meshInstances;
-        }
-        return drawCalls;
     }
 
     /**
@@ -626,14 +609,22 @@ class Scene extends EventHandler {
      */
     set skyboxRotation(value) {
         if (!this._skyboxRotation.equals(value)) {
+
+            const isIdentity = value.equals(Quat.IDENTITY);
             this._skyboxRotation.copy(value);
-            if (value.equals(Quat.IDENTITY)) {
+
+            if (isIdentity) {
                 this._skyboxRotationMat3.setIdentity();
             } else {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
                 this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
             }
-            this._resetSky();
+
+            // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
+            if (!this._skyboxRotationShaderInclude && !isIdentity) {
+                this._skyboxRotationShaderInclude = true;
+                this._resetSky();
+            }
         }
     }
 

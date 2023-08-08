@@ -31,6 +31,8 @@ const clearDepthOptions = {
  * @property {number} height Height of the pick buffer in pixels (read-only).
  * @property {RenderTarget} renderTarget The render target used by the picker internally
  * (read-only).
+ *
+ * @category Graphics
  */
 class Picker {
     // internal render target
@@ -250,7 +252,7 @@ class Picker {
 
         // populate the layer with meshes and depth clear commands
         this.layer.clearMeshInstances();
-        const destMeshInstances = this.layer.opaqueMeshInstances;
+        const destMeshInstances = this.layer.meshInstances;
 
         // source mesh instances
         const srcLayers = scene.layers.layerList;
@@ -277,10 +279,18 @@ class Picker {
                     }
 
                     // copy all pickable mesh instances
-                    const meshInstances = isTransparent[i] ? srcLayer.instances.transparentMeshInstances : srcLayer.instances.opaqueMeshInstances;
+                    const transparent = isTransparent[i];
+                    const meshInstances = srcLayer.meshInstances;
                     for (let j = 0; j < meshInstances.length; j++) {
                         const meshInstance = meshInstances[j];
-                        if (meshInstance.pick) {
+                        if (meshInstance.pick && meshInstance.transparent === transparent) {
+
+                            // as we only render opaque meshes on our internal meshes, mark this mesh as opaque
+                            if (meshInstance.transparent) {
+                                meshInstance.transparent = false;
+                                tempSet.add(meshInstance);
+                            }
+
                             destMeshInstances.push(meshInstance);
                         }
                     }
@@ -302,6 +312,12 @@ class Picker {
 
         // render
         this.app.renderComposition(this.layerComp);
+
+        // mark all meshes as transparent again
+        tempSet.forEach((meshInstance) => {
+            meshInstance.transparent = false;
+        });
+        tempSet.clear();
     }
 
     updateCamera(srcCamera) {

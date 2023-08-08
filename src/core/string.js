@@ -127,43 +127,17 @@ const string = {
      * Return a string with \{n\} replaced with the n-th argument.
      *
      * @param {string} s - The string to format.
-     * @param {object} [arguments] - All other arguments are substituted into the string.
+     * @param {...*} args - All other arguments are substituted into the string.
      * @returns {string} The formatted string.
      * @example
      * const s = pc.string.format("Hello {0}", "world");
      * console.log(s); // Prints "Hello world"
      */
-    format: function (s) {
-        for (let i = 1; i < arguments.length; i++) {
-            s = s.replace('{' + (i - 1) + '}', arguments[i]);
+    format: function (s, ...args) {
+        for (let i = 0; i < args.length; i++) {
+            s = s.replace(`{${i}}`, args[i]);
         }
         return s;
-    },
-
-    /**
-     * Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted
-     * to true, all other values are converted to false. In strict mode, 'true' is converted to
-     * true, 'false' is converted to false, all other values will throw an Exception.
-     *
-     * @param {string} s - The string to convert.
-     * @param {boolean} [strict] - In strict mode an Exception is thrown if s is not an accepted
-     * string value. Defaults to false.
-     * @returns {boolean} The converted value.
-     */
-    toBool: function (s, strict = false) {
-        if (s === 'true') {
-            return true;
-        }
-
-        if (strict) {
-            if (s === 'false') {
-                return false;
-            }
-
-            throw new TypeError('Not a boolean string');
-        }
-
-        return false;
     },
 
     /**
