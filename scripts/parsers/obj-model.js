@@ -27,7 +27,7 @@ Object.assign(ObjModelParser.prototype, {
     // - can't handle meshes larger than 65535 verts
     // - assigns default material to all meshes
     // - doesn't created indexed geometry
-    parse: function (input) {
+    parse: function (input, callback) {
         // expanded vert, uv and normal values from face indices
         var parsed = {
             default: {
@@ -80,7 +80,6 @@ Object.assign(ObjModelParser.prototype, {
                 } else if (parts.length === 5) {
                     // quads
                     var order = [1, 2, 3, 3, 4, 1]; // split quad into to triangles;
-                    p = 1;
                     for (var o = 0; o < order.length; o++) {
                         p = order[o];
                         r = this._parseIndices(parts[p]);
@@ -120,7 +119,7 @@ Object.assign(ObjModelParser.prototype, {
         }
         model.graph = root;
         model.getGraph().syncHierarchy();
-        return model;
+        callback(null, model);
     },
 
     _parseIndices: function (str) {

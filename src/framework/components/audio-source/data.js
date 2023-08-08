@@ -1,4 +1,4 @@
-import { DISTANCE_INVERSE } from '../../../audio/constants.js';
+import { DISTANCE_INVERSE } from '../../../platform/audio/constants.js';
 
 class AudioSourceComponentData {
     constructor() {

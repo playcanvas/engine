@@ -1,4 +1,5 @@
-import { Channel3d } from '../../../audio/channel3d.js';
+import { Channel3d } from '../../../platform/audio/channel3d.js';
+import { Debug } from '../../../core/debug.js';
 
 import { Entity } from '../../entity.js';
 
@@ -26,31 +27,36 @@ const _schema = [
 ];
 
 /**
- * @private
- * @class
- * @name AudioSourceComponentSystem
+ * Controls playback of an audio sample. This class will be deprecated in favor of
+ * {@link SoundComponentSystem}.
+ *
  * @augments ComponentSystem
- * @classdesc Controls playback of an audio sample. This class will be deprecated in favor of {@link SoundComponentSystem}.
- * @param {Application} app - The application managing this system.
- * @param {SoundManager} manager - A sound manager instance.
+ * @ignore
  */
 class AudioSourceComponentSystem extends ComponentSystem {
-    constructor(app, manager) {
+    /**
+     * Create a new AudioSourceComponentSystem instance.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
+     * @hideconstructor
+     */
+    constructor(app) {
         super(app);
 
-        this.id = "audiosource";
+        this.id = 'audiosource';
 
         this.ComponentType = AudioSourceComponent;
         this.DataType = AudioSourceComponentData;
 
         this.schema = _schema;
 
-        this.manager = manager;
+        this.manager = app.soundManager;
+        Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created witout sound manager");
 
         this.initialized = false;
 
-        ComponentSystem.bind('initialize', this.onInitialize, this);
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('initialize', this.onInitialize, this);
+        this.app.systems.on('update', this.onUpdate, this);
 
         this.on('remove', this.onRemove, this);
     }
@@ -71,9 +77,8 @@ class AudioSourceComponentSystem extends ComponentSystem {
             root.audiosource.play(root.audiosource.currentSource);
         }
 
-        var children = root._children;
-        var i, len = children.length;
-        for (i = 0; i < len; i++) {
+        const children = root._children;
+        for (let i = 0, len = children.length; i < len; i++) {
             if (children[i] instanceof Entity) {
                 this.onInitialize(children[i]);
             }
@@ -83,17 +88,17 @@ class AudioSourceComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
-                var entity = component.entity;
-                var componentData = component.data;
+                const component = components[id];
+                const entity = component.entity;
+                const componentData = component.data;
 
                 // Update channel position if this is a 3d sound
                 if (componentData.enabled && entity.enabled && componentData.channel instanceof Channel3d) {
-                    var pos = entity.getPosition();
+                    const pos = entity.getPosition();
                     componentData.channel.setPosition(pos);
                 }
             }
@@ -108,15 +113,20 @@ class AudioSourceComponentSystem extends ComponentSystem {
     }
 
     /**
-     * @private
-     * @function
-     * @name AudioSourceComponentSystem#setVolume
-     * @description Set the volume for the entire AudioSource system. All sources will
-     * have their volume multiplied by this value.
+     * Set the volume for the entire AudioSource system. All sources will have their volume
+     * multiplied by this value.
+     *
      * @param {number} volume - The value to set the volume to. Valid from 0 to 1.
      */
     setVolume(volume) {
         this.manager.setVolume(volume);
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('initialize', this.onInitialize, this);
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

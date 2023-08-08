@@ -1,72 +1,177 @@
 name: CI
 
 on:
+  workflow_dispatch:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.1.5
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 18.x
+        cache: 'npm'
+
     - name: Install dependencies
       run: npm ci
+
     - name: Build PlayCanvas
       run: npm run build
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build API reference manual
+      run: npm run docs
 
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.1.5
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 18.x
+        cache: 'npm'
+
     - name: Install dependencies
       run: npm ci
+
     - name: Run ESLint
       run: npm run lint
 
-  typescript-definitions:
-    name: Typescript Definitions
+  typescript-declarations:
+    name: TypeScript Declarations
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.1.5
-      with:
-        node-version: 12.x
-    - name: Install dependencies
-      run: npm ci
-    - name: Build Typescript definitions
-      run: npm run test:tsd
+      uses: actions/checkout@v3
 
-  unit-test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Setup Node.js 12.x
-      uses: actions/setup-node@v2.1.5
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
       with:
-        node-version: 12.x
+        node-version: 18.x
+        cache: 'npm'
+
     - name: Install dependencies
       run: npm ci
+
+    - name: Build TypeScript declarations
+      run: npm run build:types
+
+    - name: Compile TypeScript declarations
+      run: npm run test:types
+
+  unit-test-node:
+    name: Unit Test (Node)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run unit tests
+      run: npm test
+
+  unit-test-karma:
+    name: Unit Test (Karma)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
     - name: Build PlayCanvas (ES5-only)
       run: npm run build:es5
+
     - name: Install X virtual framebuffer
       run: sudo apt-get install xvfb
+
     - name: Run unit tests
-      run: xvfb-run --auto-servernum npm run test
+      run: xvfb-run --auto-servernum npm run test:karma
+
+  build-examples:
+    name: Build Examples Browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18.x
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build PlayCanvas (ES5-only)
+      run: npm run build:es5
+
+    - name: Build PlayCanvas Extras
+      run: npm run build:extras
+
+    - name: Build TypeScript declarations
+      run: npm run build:types
+
+    - name: Build Examples Browser
+      working-directory: ./examples
+      run: |
+        npm ci
+        npm run build

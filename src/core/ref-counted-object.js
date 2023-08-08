@@ -1,22 +1,35 @@
-// base class implementing reference counting for objects
+/**
+ * Base class that implements reference counting for objects.
+ *
+ * @ignore
+ */
 class RefCountedObject {
-    constructor() {
-        // counter
-        this._refCount = 0;
-    }
+    /**
+     * @type {number}
+     * @private
+     */
+    _refCount = 0;
 
-    // inrements the counter
+    /**
+     * Increments the reference counter.
+     */
     incRefCount() {
         this._refCount++;
     }
 
-    // decrements the counter. When the value reaches zero, destroy is called
+    /**
+     * Decrements the reference counter.
+     */
     decRefCount() {
         this._refCount--;
     }
 
-    // returns current count
-    getRefCount() {
+    /**
+     * The current reference count.
+     *
+     * @type {number}
+     */
+    get refCount() {
         return this._refCount;
     }
 }

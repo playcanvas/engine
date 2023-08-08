@@ -6,28 +6,33 @@ A selection of simple examples to get you up and running
 
 See them <a href="https://playcanvas.github.io/">running live</a>
 
-## Local development
+## Local examples browser development
+This section covers how to locally develop the examples browser application. For information on how to develop individual examples please see the following section.
+
 Ensure you have Node.js installed. Then, install all of the required Node.js dependencies:
 ```
 npm install
 ```
-Now run the following two commands in two separate terminals:
+Now run the following command:
 ```
-npm run build:watch
+npm run develop
 ```
-and
+Visit the url mentioned in your terminal to view the examples browser.
+
+You can also run the examples browser with a specific version of the engine by running the following command:
 ```
-npm run serve
+ENGINE_PATH=../build/playcanvas.mjs/index.js npm run develop
 ```
-Visit [http://localhost:5000]() to view the examples browser.
+Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the engine.
 
 To create the side bar thumbnails run the following script:
 ```
-npm run thumbnails
+npm run build:thumbnails
 ```
 
-### Local engine development
-By default, the local build uses whichever version of PlayCanvas is listed in the package.json file. If you'd like to use the locally built version of PlayCanvas in the engines build directory you can replace the `npm run build:watch` script above with `npm run local` or `npm run local:dbg` for the debug version.
+Please note that the examples app requires a built version of the engine to be present in the engine repo within the `../build` folder. If you haven't already done so, run `npm install` followed by `npm run build` in the engine repo.
+
+As the examples are written in TypeScript, you will also need to build the type definitions in the engine repo with `npm run build:types`.
 
 ## Creating an example
 
@@ -92,7 +97,7 @@ example(canvas: HTMLCanvasElement, TWEEN: any) {
 ### `controls` function
 This function allows you to define a set of PCUI based interface which can be used to display stats from your example or provide users with a way of controlling the example.
 ```tsx
-import { Button } from '@playcanvas/pcui/pcui-react';
+import Button from '@playcanvas/pcui/Button/component';
 controls(data: any) {
     return <>
         <Button text='Flash' onClick={() => {
@@ -110,3 +115,42 @@ example(canvas: HTMLCanvasElement, assets: {}, data: any) {
     console.log(data.get('flash'));
 }
 ```
+
+### Testing your example
+Ensure you have a locally built version of the examples browser by running the commands in the `Local examples browser development` section. Then run `npm run serve` to serve the examples browser.
+
+You can view the full collection of example iframes by visiting [http://localhost:5000/iframe/]() in your browser.
+
+### Debug and performance engine development
+By default, the examples app uses the local version of the playcanvas engine located at `../build/playcanvas.js`. If you'd like to test the examples browser with the debug or performance versions of the engine instead, you can run `npm run watch:debug` or `npm run watch:profiler` commands.
+
+## Deployment
+
+1) **Build the latest engine** by running the following in the `/engine` directory:
+```
+npm install
+npm run build
+npm run build:types
+```
+
+2) **Build the examples browser and launch the server** by running the following in the `/engine/examples` directory:
+```
+npm install
+npm run build
+npm run serve
+```
+
+3) **Generate thumbnails** by first ensuring the examples browser is running on [http://localhost:5000]() then running the following command. This step will create the thumbnails directory for the browser and may take a while depending on the number of new examples or if this is first time it has been run locally.
+```
+npm run build:thumbnails
+```
+If you are serving the examples browser from a different port, you can specify the port using the `PORT` environment variable:
+```
+PORT=5001 npm run build:thumbnails
+```
+
+4) Copy the contents of the `./dist` directory to the root of the [playcanvas.github.io](https://github.com/playcanvas/playcanvas.github.io) repository. Be sure not to wipe the contents of the `pcui` subdirectory in that repository.
+
+5) Run `git commit -m "Update to Engine 1.XX.X"` in the `playcanvas.github.io` repo
+
+6) Create a PR for this new commit

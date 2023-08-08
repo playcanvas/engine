@@ -62,6 +62,16 @@ describe("pc.TextElement", function () {
         expect(element._text.symbolColors).to.deep.equal(expectedLineColors);
     };
 
+    var assertLineOutlineParams = function (expectedLineOutlineParams) {
+        expect(element._text.symbolOutlineParams.length).to.equal(expectedLineOutlineParams.length);
+        expect(element._text.symbolOutlineParams).to.deep.equal(expectedLineOutlineParams);
+    };
+
+    var assertLineShadowParams = function (expectedLineShadowParams) {
+        expect(element._text.symbolShadowParams.length).to.equal(expectedLineShadowParams.length);
+        expect(element._text.symbolShadowParams).to.deep.equal(expectedLineShadowParams);
+    };
+
     // Creates data for a single translation as if it was a whole asset
     var createTranslation = function (locale, key, translations) {
         var messages = {};
@@ -1614,7 +1624,7 @@ describe("pc.TextElement", function () {
             "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        expect(element._text.symbolColors).to.equal(null);
+        assertLineColors(new Array(43).fill([255, 255, 255]))
     });
 
     it('text markup with escaping open bracket', function () {
@@ -1627,7 +1637,67 @@ describe("pc.TextElement", function () {
             "text element [color=\"#ff0000\"]in red or not"
         ]);
 
-        expect(element._text.symbolColors).to.equal(null);
+        assertLineColors(new Array(43).fill([255, 255, 255]))
+    });
+
+    it('text markup shadow tag', function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+        element.shadowColor = new pc.Color(1, 1, 0, 1);
+        element.shadowOffset = new pc.Vec2(0.5, -1);
+
+        element.text = "text [shadow color=\"#00ff00bb\" offset=\"1\"]element[/shadow] [shadow color=\"#ff0000\"]in red[/shadow] [shadow offset=\"1\"]or[/shadow] not";
+
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        // (r, g, b, a, offsetx, offsety)
+        var d1 = [255, 255, 0, 255, 64, -127];
+        var g = [0, 255, 0, 187, 127, 127];
+        var r = [255, 0, 0, 255, 64, -127];
+        var d2 = [255, 255, 0, 255, 127, 127];
+
+        assertLineShadowParams([
+            d1, d1, d1, d1, d1,
+            g, g, g, g, g, g, g, d1,
+            r, r, r, r, r, r, d1,
+            d2, d2, d1,
+            d1, d1, d1
+        ]);
+    });
+
+    it('text markup outline tag', function () {
+        registerRtlHandler('\r');
+        element.fontAsset = fontAsset;
+        element.rtlReorder = true;
+        element.enableMarkup = true;
+        element.autoWidth = true;
+        element.outlineColor = new pc.Color(1, 1, 0, 1);
+        element.outlineThickness = 1;
+
+        element.text = "text [outline color=\"#00ff00bb\" thickness=\"0.5\"]element[/outline] [outline color=\"#ff0000\"]in red[/outline] [outline thickness=\"1\"]or[/outline] not";
+
+        assertLineContents([
+            "text element in red or not"
+        ]);
+
+        // (r, g, b, a, thickness)
+        var d1 = [255, 255, 0, 255, 255];
+        var g = [0, 255, 0, 187, 128];
+        var r = [255, 0, 0, 255, 255];
+        var d2 = [255, 255, 0, 255, 255];
+
+        assertLineOutlineParams([
+            d1, d1, d1, d1, d1,
+            g, g, g, g, g, g, g, d1,
+            r, r, r, r, r, r, d1,
+            d2, d2, d1,
+            d1, d1, d1
+        ]);
     });
 
     it('text markup with attributes', function () {

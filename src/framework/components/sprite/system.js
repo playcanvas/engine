@@ -1,10 +1,10 @@
-import { Color } from '../../../math/color.js';
+import { Color } from '../../../core/math/color.js';
 
 import {
     CULLFACE_NONE,
-    PIXELFORMAT_R8_G8_B8_A8
-} from '../../../graphics/constants.js';
-import { Texture } from '../../../graphics/texture.js';
+    PIXELFORMAT_RGBA8
+} from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
@@ -18,13 +18,18 @@ import { SpriteComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name SpriteComponentSystem
+ * Manages creation of {@link SpriteComponent}s.
+ *
  * @augments ComponentSystem
- * @classdesc Manages creation of {@link SpriteComponent}s.
- * @param {Application} app - The application.
+ * @category Graphics
  */
 class SpriteComponentSystem extends ComponentSystem {
+    /**
+     * Create a new SpriteComponentSystem instance.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -47,29 +52,33 @@ class SpriteComponentSystem extends ComponentSystem {
         // material used for 9-slicing in tiled mode
         this._default9SlicedMaterialTiledMode = null;
 
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
         this.on('beforeremove', this.onBeforeRemove, this);
+    }
+
+    set defaultMaterial(material) {
+        this._defaultMaterial = material;
     }
 
     get defaultMaterial() {
         if (!this._defaultMaterial) {
-            var texture = new Texture(this.app.graphicsDevice, {
+            const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8
+                format: PIXELFORMAT_RGBA8,
+                name: 'sprite'
             });
-            var pixels = new Uint8Array(texture.lock());
+            const pixels = new Uint8Array(texture.lock());
             pixels[0] = pixels[1] = pixels[2] = pixels[3] = 255;
-            texture.name = 'sprite';
             texture.unlock();
 
-            var material = new StandardMaterial();
+            const material = new StandardMaterial();
             material.diffuse.set(0, 0, 0); // black diffuse color to prevent ambient light being included
             material.emissive.set(0.5, 0.5, 0.5); // use non-white to compile shader correctly
             material.emissiveMap = texture;
-            material.emissiveMapTint = true;
+            material.emissiveTint = true;
             material.opacityMap = texture;
-            material.opacityMapChannel = "a";
+            material.opacityMapChannel = 'a';
             material.opacityTint = true;
             material.opacity = 0; // use non-1 opacity to compile shader correctly
             material.useLighting = false;
@@ -88,13 +97,13 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._defaultMaterial;
     }
 
-    set defaultMaterial(material) {
-        this._defaultMaterial = material;
+    set default9SlicedMaterialSlicedMode(material) {
+        this._default9SlicedMaterialSlicedMode = material;
     }
 
     get default9SlicedMaterialSlicedMode() {
         if (!this._default9SlicedMaterialSlicedMode) {
-            var material = this.defaultMaterial.clone();
+            const material = this.defaultMaterial.clone();
             material.nineSlicedMode = SPRITE_RENDERMODE_SLICED;
             material.update();
 
@@ -103,13 +112,13 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._default9SlicedMaterialSlicedMode;
     }
 
-    set default9SlicedMaterialSlicedMode(material) {
-        this._default9SlicedMaterialSlicedMode = material;
+    set default9SlicedMaterialTiledMode(material) {
+        this._default9SlicedMaterialTiledMode = material;
     }
 
     get default9SlicedMaterialTiledMode() {
         if (!this._default9SlicedMaterialTiledMode) {
-            var material = this.defaultMaterial.clone();
+            const material = this.defaultMaterial.clone();
             material.nineSlicedMode = SPRITE_RENDERMODE_TILED;
             material.update();
 
@@ -118,11 +127,11 @@ class SpriteComponentSystem extends ComponentSystem {
         return this._default9SlicedMaterialTiledMode;
     }
 
-    set default9SlicedMaterialTiledMode(material) {
-        this._default9SlicedMaterialTiledMode = material;
-    }
-
     destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
+
         if (this._defaultTexture) {
             this._defaultTexture.destroy();
             this._defaultTexture = null;
@@ -146,9 +155,9 @@ class SpriteComponentSystem extends ComponentSystem {
 
         if (data.color !== undefined) {
             if (data.color instanceof Color) {
-                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity ?? 1);
             } else {
-                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity ?? 1);
             }
 
             /* eslint-disable no-self-assign */
@@ -190,7 +199,7 @@ class SpriteComponentSystem extends ComponentSystem {
         }
 
         if (data.clips) {
-            for (var name in data.clips) {
+            for (const name in data.clips) {
                 component.addClip(data.clips[name]);
             }
         }
@@ -209,7 +218,7 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var source = entity.sprite;
+        const source = entity.sprite;
 
         return this.addComponent(clone, {
             enabled: source.enabled,
@@ -231,14 +240,14 @@ class SpriteComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id];
+                const component = components[id];
                 // if sprite component is enabled advance its current clip
                 if (component.data.enabled && component.entity.enabled) {
-                    var sprite = component.entity.sprite;
+                    const sprite = component.entity.sprite;
                     if (sprite._currentClip) {
                         sprite._currentClip._update(dt);
                     }

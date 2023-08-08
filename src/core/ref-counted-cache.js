@@ -1,20 +1,43 @@
-// Class implementing reference counting cache for objects
+/**
+ * Class implementing reference counting cache for objects.
+ *
+ * @ignore
+ */
 class RefCountedCache {
-    constructor() {
-        // The cache. The key is the object being stored in the cache.
-        // The value is ref count of the object. When that reaches zero,
-        // destroy function on the object gets called and object is removed
-        // from the cache.
-        this.cache = new Map();
+    /**
+     * The cache. The key is the object being stored in the cache. The value is ref count of the
+     * object. When that reaches zero, destroy function on the object gets called and object is
+     * removed from the cache.
+     *
+     * @type {Map<object, number>}
+     */
+    cache = new Map();
+
+    /**
+     * Destroy all stored objects.
+     */
+    destroy() {
+        this.cache.forEach((refCount, object) => {
+            object.destroy();
+        });
+        this.cache.clear();
     }
 
-    // add object reference to the cache
+    /**
+     * Add object reference to the cache.
+     *
+     * @param {object} object - The object to add.
+     */
     incRef(object) {
         const refCount = (this.cache.get(object) || 0) + 1;
         this.cache.set(object, refCount);
     }
 
-    // remove object reference from the cache
+    /**
+     * Remove object reference from the cache.
+     *
+     * @param {object} object - The object to remove.
+     */
     decRef(object) {
         if (object) {
             let refCount = this.cache.get(object);

@@ -1,5 +1,5 @@
-const ASCII_LOWERCASE = "abcdefghijklmnopqrstuvwxyz";
-const ASCII_UPPERCASE = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const ASCII_LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
+const ASCII_UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const ASCII_LETTERS = ASCII_LOWERCASE + ASCII_UPPERCASE;
 
 const HIGH_SURROGATE_BEGIN = 0xD800;
@@ -97,82 +97,53 @@ function numCharsToTakeForNextSymbol(string, index) {
 }
 
 /**
+ * Extended String API.
+ *
  * @namespace
- * @name string
- * @description Extended String API.
  */
 const string = {
     /**
-     * @constant
+     * All lowercase letters.
+     *
      * @type {string}
-     * @name string.ASCII_LOWERCASE
-     * @description All lowercase letters.
      */
     ASCII_LOWERCASE: ASCII_LOWERCASE,
+
     /**
-     * @constant
+     * All uppercase letters.
+     *
      * @type {string}
-     * @name string.ASCII_UPPERCASE
-     * @description All uppercase letters.
      */
     ASCII_UPPERCASE: ASCII_UPPERCASE,
+
     /**
-     * @constant
+     * All ASCII letters.
+     *
      * @type {string}
-     * @name string.ASCII_LETTERS
-     * @description All ASCII letters.
      */
     ASCII_LETTERS: ASCII_LETTERS,
 
     /**
-     * @function
-     * @name string.format
-     * @description Return a string with {n} replaced with the n-th argument.
+     * Return a string with \{n\} replaced with the n-th argument.
+     *
      * @param {string} s - The string to format.
-     * @param {object} [arguments] - All other arguments are substituted into the string.
+     * @param {...*} args - All other arguments are substituted into the string.
      * @returns {string} The formatted string.
      * @example
-     * var s = pc.string.format("Hello {0}", "world");
+     * const s = pc.string.format("Hello {0}", "world");
      * console.log(s); // Prints "Hello world"
      */
-    format: function (s) {
-        for (let i = 1; i < arguments.length; i++) {
-            s = s.replace('{' + (i - 1) + '}', arguments[i]);
+    format: function (s, ...args) {
+        for (let i = 0; i < args.length; i++) {
+            s = s.replace(`{${i}}`, args[i]);
         }
         return s;
     },
 
     /**
-     * @function
-     * @name string.toBool
-     * @description Convert a string value to a boolean. In non-strict mode (the default), 'true' is converted to true, all other values
-     * are converted to false. In strict mode, 'true' is converted to true, 'false' is converted to false, all other values will throw
-     * an Exception.
-     * @param {string} s - The string to convert.
-     * @param {boolean} [strict] - In strict mode an Exception is thrown if s is not an accepted string value. Defaults to false.
-     * @returns {boolean} The converted value.
-     */
-    toBool: function (s, strict = false) {
-        if (s === 'true') {
-            return true;
-        }
-
-        if (strict) {
-            if (s === 'false') {
-                return false;
-            }
-
-            throw new TypeError('Not a boolean string');
-        }
-
-        return false;
-    },
-
-    /**
-     * @function
-     * @name string.getCodePoint
-     * @description Get the code point number for a character in a string. Polyfill for
+     * Get the code point number for a character in a string. Polyfill for
      * [`codePointAt`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/codePointAt}.
+     *
      * @param {string} string - The string to get the code point from.
      * @param {number} [i] - The index in the string.
      * @returns {number} The code point value for the character in the string.
@@ -183,9 +154,8 @@ const string = {
     },
 
     /**
-     * @function
-     * @name string.getCodePoints
-     * @description Gets an array of all code points in a string.
+     * Gets an array of all code points in a string.
+     *
      * @param {string} string - The string to get code points from.
      * @returns {number[]} The code points in the string.
      */
@@ -204,11 +174,11 @@ const string = {
     },
 
     /**
-     * @function
-     * @name string.getSymbols
-     * @description Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
-     * some symbols (such as emoji or accented characters) are actually made up of multiple character codes. See
-     * {@link https://mathiasbynens.be/notes/javascript-unicode here} for more info.
+     * Gets an array of all grapheme clusters (visible symbols) in a string. This is needed because
+     * some symbols (such as emoji or accented characters) are actually made up of multiple
+     * character codes. See {@link https://mathiasbynens.be/notes/javascript-unicode here} for more
+     * info.
+     *
      * @param {string} string - The string to break into symbols.
      * @returns {string[]} The symbols in the string.
      */
@@ -245,10 +215,9 @@ const string = {
     },
 
     /**
-     * @function
-     * @name string.fromCodePoint
-     * @description Get the string for a given code point or set of code points. Polyfill for
+     * Get the string for a given code point or set of code points. Polyfill for
      * [`fromCodePoint`]{@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/fromCodePoint}.
+     *
      * @param {...number} args - The code points to convert to a string.
      * @returns {string} The converted string.
      */

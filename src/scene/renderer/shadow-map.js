@@ -2,15 +2,16 @@ import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
     FUNC_LESS,
-    PIXELFORMAT_DEPTH, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
-    TEXHINT_SHADOWMAP
-} from '../../graphics/constants.js';
-import { RenderTarget } from '../../graphics/render-target.js';
-import { Texture } from '../../graphics/texture.js';
+    PIXELFORMAT_DEPTH, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    TEXHINT_SHADOWMAP,
+    PIXELFORMAT_R32F
+} from '../../platform/graphics/constants.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
 import {
     LIGHTTYPE_OMNI,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS
 } from '../constants.js';
 
 
@@ -25,7 +26,7 @@ class ShadowMap {
 
         // an array of render targets:
         // 1 for directional and spot light
-        // 6 for point light
+        // 6 for omni light
         this.renderTargets = targets;
     }
 
@@ -51,14 +52,17 @@ class ShadowMap {
             return PIXELFORMAT_RGBA16F;
         } else if (shadowType === SHADOW_PCF5) {
             return PIXELFORMAT_DEPTH;
-        } else if (shadowType === SHADOW_PCF3 && device.webgl2) {
+        } else if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow) {
             return PIXELFORMAT_DEPTH;
+        } else if ((shadowType === SHADOW_PCSS) && (device.webgl2 || device.isWebGPU)) {
+            return PIXELFORMAT_R32F;
         }
-        return PIXELFORMAT_R8_G8_B8_A8;
+
+        return PIXELFORMAT_RGBA8;
     }
 
     static getShadowFiltering(device, shadowType) {
-        if (shadowType === SHADOW_PCF3 && !device.webgl2) {
+        if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3 || shadowType === SHADOW_PCSS) && !device.supportsDepthShadow) {
             return FILTER_NEAREST;
         } else if (shadowType === SHADOW_VSM32) {
             return device.extTextureFloatLinear ? FILTER_LINEAR : FILTER_NEAREST;
@@ -72,9 +76,23 @@ class ShadowMap {
 
         let shadowMap = null;
         if (light._type === LIGHTTYPE_OMNI) {
-            shadowMap = this.createCubemap(device, light._shadowResolution);
+            shadowMap = this.createCubemap(device, light._shadowResolution, light._shadowType);
         } else {
             shadowMap = this.create2dMap(device, light._shadowResolution, light._shadowType);
+        }
+
+        return shadowMap;
+    }
+
+    // creates a shadow map which is used by the light texture atlas for clustered lighting
+    static createAtlas(device, resolution, shadowType) {
+        const shadowMap = this.create2dMap(device, resolution, shadowType);
+
+        // copy the target 5 more times to allow unified access for point light faces
+        const targets = shadowMap.renderTargets;
+        const rt = targets[0];
+        for (let i = 0; i < 5; i++) {
+            targets.push(rt);
         }
 
         return shadowMap;
@@ -96,12 +114,14 @@ class ShadowMap {
             minFilter: filter,
             magFilter: filter,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMap2D'
         });
-        texture.name = 'ShadowMap2D';
 
         let target = null;
-        if (shadowType === SHADOW_PCF5 || (shadowType === SHADOW_PCF3 && device.webgl2)) {
+        if (shadowType === SHADOW_PCF5 || ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow)) {
+
+            // enable hardware PCF when sampling the depth texture
             texture.compareOnRead = true;
             texture.compareFunc = FUNC_LESS;
 
@@ -117,15 +137,22 @@ class ShadowMap {
             });
         }
 
+        // TODO: this is temporary, and will be handle on generic level for all render targets for WebGPU
+        if (device.isWebGPU) {
+            target.flipY = true;
+        }
+
         return new ShadowMap(texture, [target]);
     }
 
-    static createCubemap(device, size) {
+    static createCubemap(device, size, shadowType) {
+
+        const format = (shadowType === SHADOW_PCSS && (device.webgl2 || device.isWebGPU)) ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,
             // #endif
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: format,
             width: size,
             height: size,
             cubemap: true,
@@ -133,9 +160,9 @@ class ShadowMap {
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            name: 'ShadowMapCube'
         });
-        cubemap.name = 'ShadowMapCube';
 
         const targets = [];
         for (let i = 0; i < 6; i++) {

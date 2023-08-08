@@ -1,12 +1,13 @@
 import { extend } from '../../../core/core.js';
 import { events } from '../../../core/events.js';
+import { Debug } from '../../../core/debug.js';
 
-import { Color } from '../../../math/color.js';
-import { Curve } from '../../../math/curve.js';
-import { CurveSet } from '../../../math/curve-set.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Color } from '../../../core/math/color.js';
+import { Curve } from '../../../core/math/curve.js';
+import { CurveSet } from '../../../core/math/curve-set.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { Entity } from '../../entity.js';
 
@@ -23,12 +24,12 @@ const _schema = [
     'runInTools'
 ];
 
-const INITIALIZE = "initialize";
-const POST_INITIALIZE = "postInitialize";
-const UPDATE = "update";
-const POST_UPDATE = "postUpdate";
-const FIXED_UPDATE = "fixedUpdate";
-const TOOLS_UPDATE = "toolsUpdate";
+const INITIALIZE = 'initialize';
+const POST_INITIALIZE = 'postInitialize';
+const UPDATE = 'update';
+const POST_UPDATE = 'postUpdate';
+const FIXED_UPDATE = 'fixedUpdate';
+const TOOLS_UPDATE = 'toolsUpdate';
 const ON_ENABLE = 'onEnable';
 const ON_DISABLE = 'onDisable';
 
@@ -53,12 +54,12 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         this.instancesWithToolsUpdate = [];
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        ComponentSystem.bind(INITIALIZE, this.onInitialize, this);
-        ComponentSystem.bind(POST_INITIALIZE, this.onPostInitialize, this);
-        ComponentSystem.bind(UPDATE, this.onUpdate, this);
-        ComponentSystem.bind(FIXED_UPDATE, this.onFixedUpdate, this);
-        ComponentSystem.bind(POST_UPDATE, this.onPostUpdate, this);
-        ComponentSystem.bind(TOOLS_UPDATE, this.onToolsUpdate, this);
+        this.app.systems.on(INITIALIZE, this.onInitialize, this);
+        this.app.systems.on(POST_INITIALIZE, this.onPostInitialize, this);
+        this.app.systems.on(UPDATE, this.onUpdate, this);
+        this.app.systems.on(FIXED_UPDATE, this.onFixedUpdate, this);
+        this.app.systems.on(POST_UPDATE, this.onPostUpdate, this);
+        this.app.systems.on(TOOLS_UPDATE, this.onToolsUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
@@ -68,8 +69,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         if (data.scripts && data.scripts.length) {
             data.scripts.forEach(function (script) {
                 if (script.attributes && Array.isArray(script.attributes)) {
-                    var dict = {};
-                    for (var i = 0; i < script.attributes.length; i++) {
+                    const dict = {};
+                    for (let i = 0; i < script.attributes.length; i++) {
                         dict[script.attributes[i].name] = script.attributes[i];
                     }
 
@@ -83,8 +84,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
 
     cloneComponent(entity, clone) {
         // overridden to make sure urls list is duplicated
-        var src = this.store[entity.getGuid()];
-        var data = {
+        const src = this.store[entity.getGuid()];
+        const data = {
             runInTools: src.data.runInTools,
             scripts: [],
             enabled: src.data.enabled
@@ -92,9 +93,9 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
 
         // manually clone scripts so that we don't clone attributes with pc.extend
         // which will result in a stack overflow when extending 'entity' script attributes
-        var scripts = src.data.scripts;
-        for (var i = 0, len = scripts.length; i < len; i++) {
-            var attributes = scripts[i].attributes;
+        const scripts = src.data.scripts;
+        for (let i = 0, len = scripts.length; i < len; i++) {
+            const attributes = scripts[i].attributes;
             if (attributes) {
                 delete scripts[i].attributes;
             }
@@ -129,9 +130,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 this._initializeScriptComponent(root.script);
             }
 
-            var children = root._children;
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
+            const children = root._children;
+            for (let i = 0, len = children.length; i < len; i++) {
                 if (children[i] instanceof Entity) {
                     this.onInitialize(children[i]);
                 }
@@ -145,9 +145,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 this._postInitializeScriptComponent(root.script);
             }
 
-            var children = root._children;
-            var i, len = children.length;
-            for (i = 0; i < len; i++) {
+            const children = root._children;
+            for (let i = 0, len = children.length; i < len; i++) {
                 if (children[i] instanceof Entity) {
                     this.onPostInitialize(children[i]);
                 }
@@ -156,10 +155,10 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _callInstancesMethod(script, method) {
-        var instances = script.data.instances;
-        for (var name in instances) {
+        const instances = script.data.instances;
+        for (const name in instances) {
             if (instances.hasOwnProperty(name)) {
-                var instance = instances[name].instance;
+                const instance = instances[name].instance;
                 if (instance[method]) {
                     instance[method]();
                 }
@@ -187,38 +186,37 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _destroyScriptComponent(script) {
-        var index;
-        var instances = script.data.instances;
-        for (var name in instances) {
+        const instances = script.data.instances;
+        for (const name in instances) {
             if (instances.hasOwnProperty(name)) {
-                var instance = instances[name].instance;
+                const instance = instances[name].instance;
                 if (instance.destroy) {
                     instance.destroy();
                 }
 
                 if (instance.update) {
-                    index = this.instancesWithUpdate.indexOf(instance);
+                    const index = this.instancesWithUpdate.indexOf(instance);
                     if (index >= 0) {
                         this.instancesWithUpdate.splice(index, 1);
                     }
                 }
 
                 if (instance.fixedUpdate) {
-                    index = this.instancesWithFixedUpdate.indexOf(instance);
+                    const index = this.instancesWithFixedUpdate.indexOf(instance);
                     if (index >= 0) {
                         this.instancesWithFixedUpdate.splice(index, 1);
                     }
                 }
 
                 if (instance.postUpdate) {
-                    index = this.instancesWithPostUpdate.indexOf(instance);
+                    const index = this.instancesWithPostUpdate.indexOf(instance);
                     if (index >= 0) {
                         this.instancesWithPostUpdate.splice(index, 1);
                     }
                 }
 
                 if (instance.toolsUpdate) {
-                    index = this.instancesWithToolsUpdate.indexOf(instance);
+                    const index = this.instancesWithToolsUpdate.indexOf(instance);
                     if (index >= 0) {
                         this.instancesWithToolsUpdate.splice(index, 1);
                     }
@@ -238,9 +236,8 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _updateInstances(method, updateList, dt) {
-        var item;
-        for (var i = 0, len = updateList.length; i < len; i++) {
-            item = updateList[i];
+        for (let i = 0, len = updateList.length; i < len; i++) {
+            const item = updateList[i];
             if (item && item.entity && item.entity.enabled && item.entity.script.enabled) {
                 item[method](dt);
             }
@@ -264,19 +261,17 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     broadcast(name, functionName) {
-        // #if _DEBUG
-        console.warn("DEPRECATED: ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/");
-        // #endif
-        var args = Array.prototype.slice.call(arguments, 2);
+        Debug.deprecated('ScriptLegacyComponentSystem.broadcast() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/');
 
-        var id, data, fn;
-        var dataStore = this.store;
+        const args = Array.prototype.slice.call(arguments, 2);
 
-        for (id in dataStore) {
+        const dataStore = this.store;
+
+        for (const id in dataStore) {
             if (dataStore.hasOwnProperty(id)) {
-                data = dataStore[id].data;
+                const data = dataStore[id].data;
                 if (data.instances[name]) {
-                    fn = data.instances[name].instance[functionName];
+                    const fn = data.instances[name].instance[functionName];
                     if (fn) {
                         fn.apply(data.instances[name].instance, args);
                     }
@@ -289,7 +284,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
         if (entity.script) {
             entity.script.data._instances = entity.script.data._instances || {};
             if (entity.script.data._instances[name]) {
-                throw Error("Script name collision '" + name + "'. Scripts from '" + url + "' and '" + entity.script.data._instances[name].url + "' {" + entity.getGuid() + "}");
+                throw Error(`Script name collision '${name}'. Scripts from '${url}' and '${entity.script.data._instances[name].url}' {${entity.getGuid()}}`);
             }
             entity.script.data._instances[name] = {
                 url: url,
@@ -300,15 +295,13 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _registerInstances(entity) {
-        var preRegistered, instance, instanceName;
-
         if (entity.script) {
             if (entity.script.data._instances) {
                 entity.script.instances = entity.script.data._instances;
 
-                for (instanceName in entity.script.instances) {
-                    preRegistered = entity.script.instances[instanceName];
-                    instance = preRegistered.instance;
+                for (const instanceName in entity.script.instances) {
+                    const preRegistered = entity.script.instances[instanceName];
+                    const instance = preRegistered.instance;
 
                     events.attach(instance);
 
@@ -334,7 +327,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
 
                     // Make instance accessible from the script component of the Entity
                     if (entity.script[instanceName]) {
-                        throw Error("Script with name '" + instanceName + "' is already attached to Script Component");
+                        throw Error(`Script with name '${instanceName}' is already attached to Script Component`);
                     } else {
                         entity.script[instanceName] = instance;
                     }
@@ -343,12 +336,10 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 // Remove temp storage
                 delete entity.script.data._instances;
             }
-
         }
 
-        var children = entity._children;
-        var i, len = children.length;
-        for (i = 0; i < len; i++) {
+        const children = entity._children;
+        for (let i = 0, len = children.length; i < len; i++) {
             if (children[i] instanceof Entity) {
                 this._registerInstances(children[i]);
             }
@@ -356,9 +347,9 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _cloneAttributes(attributes) {
-        var result = {};
+        const result = {};
 
-        for (var key in attributes) {
+        for (const key in attributes) {
             if (!attributes.hasOwnProperty(key))
                 continue;
 
@@ -366,7 +357,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 result[key] = extend({}, attributes[key]);
             } else {
                 // don't pc.extend an entity
-                var val = attributes[key].value;
+                const val = attributes[key].value;
                 delete attributes[key].value;
 
                 result[key] = extend({}, attributes[key]);
@@ -380,23 +371,21 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _createAccessors(entity, instance) {
-        var self = this;
-        var i;
-        var len = entity.script.scripts.length;
-        var url = instance.url;
+        const len = entity.script.scripts.length;
+        const url = instance.url;
 
-        for (i = 0; i < len; i++) {
-            var script = entity.script.scripts[i];
+        for (let i = 0; i < len; i++) {
+            const script = entity.script.scripts[i];
             if (script.url === url) {
-                var attributes = script.attributes;
+                const attributes = script.attributes;
                 if (script.name && attributes) {
-                    for (var key in attributes) {
+                    for (const key in attributes) {
                         if (attributes.hasOwnProperty(key)) {
-                            self._createAccessor(attributes[key], instance);
+                            this._createAccessor(attributes[key], instance);
                         }
                     }
 
-                    entity.script.data.attributes[script.name] = self._cloneAttributes(attributes);
+                    entity.script.data.attributes[script.name] = this._cloneAttributes(attributes);
                 }
                 break;
             }
@@ -404,7 +393,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
     }
 
     _createAccessor(attribute, instance) {
-        var self = this;
+        const self = this;
 
         // create copy of attribute data
         // to avoid overwriting the same attribute values
@@ -415,54 +404,48 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
             type: attribute.type
         };
 
-        self._convertAttributeValue(attribute);
+        this._convertAttributeValue(attribute);
 
         Object.defineProperty(instance.instance, attribute.name, {
             get: function () {
                 return attribute.value;
             },
             set: function (value) {
-                var oldValue = attribute.value;
+                const oldValue = attribute.value;
                 attribute.value = value;
                 self._convertAttributeValue(attribute);
-                instance.instance.fire("set", attribute.name, oldValue, attribute.value);
+                instance.instance.fire('set', attribute.name, oldValue, attribute.value);
             },
             configurable: true
         });
     }
 
     _updateAccessors(entity, instance) {
-        var self = this;
-        var i;
-        var len = entity.script.scripts.length;
-        var key;
-        var url = instance.url;
-        var scriptComponent, script, name, attributes;
-        var previousAttributes;
-        var oldAttribute;
+        const len = entity.script.scripts.length;
+        const url = instance.url;
 
-        for (i = 0; i < len; i++) {
-            scriptComponent = entity.script;
-            script = scriptComponent.scripts[i];
+        for (let i = 0; i < len; i++) {
+            const scriptComponent = entity.script;
+            const script = scriptComponent.scripts[i];
             if (script.url === url) {
-                name = script.name;
-                attributes = script.attributes;
+                const name = script.name;
+                const attributes = script.attributes;
                 if (name) {
                     if (attributes) {
                         // create / update attribute accessors
-                        for (key in attributes) {
+                        for (const key in attributes) {
                             if (attributes.hasOwnProperty(key)) {
-                                self._createAccessor(attributes[key], instance);
+                                this._createAccessor(attributes[key], instance);
                             }
                         }
                     }
 
                     // delete accessors for attributes that no longer exist
                     // and fire onAttributeChange when an attribute value changed
-                    previousAttributes = scriptComponent.data.attributes[name];
+                    const previousAttributes = scriptComponent.data.attributes[name];
                     if (previousAttributes) {
-                        for (key in previousAttributes) {
-                            oldAttribute = previousAttributes[key];
+                        for (const key in previousAttributes) {
+                            const oldAttribute = previousAttributes[key];
                             if (!(key in attributes)) {
                                 delete instance.instance[oldAttribute.name];
                             } else {
@@ -476,7 +459,7 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                     }
 
                     if (attributes) {
-                        scriptComponent.data.attributes[name] = self._cloneAttributes(attributes);
+                        scriptComponent.data.attributes[name] = this._cloneAttributes(attributes);
                     } else {
                         delete scriptComponent.data.attributes[name];
                     }
@@ -511,13 +494,24 @@ class ScriptLegacyComponentSystem extends ComponentSystem {
                 attribute.value = this.app.root.findByGuid(attribute.value);
 
         } else if (attribute.type === 'curve' || attribute.type === 'colorcurve') {
-            var curveType = attribute.value.keys[0] instanceof Array ? CurveSet : Curve;
+            const curveType = attribute.value.keys[0] instanceof Array ? CurveSet : Curve;
             attribute.value = new curveType(attribute.value.keys);
 
             /* eslint-disable no-self-assign */
             attribute.value.type = attribute.value.type;
             /* eslint-enable no-self-assign */
         }
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off(INITIALIZE, this.onInitialize, this);
+        this.app.systems.off(POST_INITIALIZE, this.onPostInitialize, this);
+        this.app.systems.off(UPDATE, this.onUpdate, this);
+        this.app.systems.off(FIXED_UPDATE, this.onFixedUpdate, this);
+        this.app.systems.off(POST_UPDATE, this.onPostUpdate, this);
+        this.app.systems.off(TOOLS_UPDATE, this.onToolsUpdate, this);
     }
 }
 

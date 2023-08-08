@@ -1,22 +1,59 @@
 import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import Example from '../../app/example';
-import { AssetLoader } from '../../app/helpers/loader';
+import * as pc from '../../../../';
 
-class LightsExample extends Example {
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { Observer } from '@playcanvas/observer';
+
+class LightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights';
+    static WEBGPU_ENABLED = true;
 
-    load() {
+    controls(data: Observer) {
         return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='font' type='font' url='static/assets/fonts/arial.json' />
-            <AssetLoader name="heart" type="texture" url="static/assets/textures/heart.png" />
+            <Panel headerText='OMNI LIGHT [KEY_1]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.shadowIntensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.cookieIntensity' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='SPOT LIGHT [KEY_2]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.shadowIntensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='cookie'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.cookieIntensity' }}/>
+                </LabelGroup>
+            </Panel>
+            <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
+                <LabelGroup text='enabled'>
+                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.enabled' }}/>
+                </LabelGroup>
+                <LabelGroup text='intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.intensity' }}/>
+                </LabelGroup>
+                <LabelGroup text='shadow intensity'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.shadowIntensity' }}/>
+                </LabelGroup>
+            </Panel>
         </>;
     }
 
-    // @ts-ignore: override class function$
-    example(canvas: HTMLCanvasElement, assets: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data:any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
             for (const param in colors) {
@@ -26,171 +63,238 @@ class LightsExample extends Example {
             return material;
         }
 
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {
-            keyboard: new pc.Keyboard(window)
-        });
-        app.start();
+        const assets = {
+            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+            "heart": new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
+            "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
+            "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),
+            "xmas_negz": new pc.Asset("xmas_negz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negz.png" }),
+            "xmas_posx": new pc.Asset("xmas_posx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posx.png" }),
+            "xmas_posy": new pc.Asset("xmas_posy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posy.png" }),
+            "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
+        };
 
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
 
-        app.scene.ambientLight = new pc.Color(0.4, 0.4, 0.4);
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
-        // Load a model file and create a Entity with a model component
-        const entity = new pc.Entity();
-        entity.addComponent("model", {
-            type: "asset",
-            asset: assets.statue.resource.model,
-            castShadows: true
-        });
-        app.root.addChild(entity);
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
+            createOptions.keyboard = new pc.Keyboard(document.body);
 
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
-        camera.translate(0, 15, 35);
-        camera.rotate(-14, 0, 0);
-        app.root.addChild(camera);
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.LightComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler,
+                // @ts-ignore
+                pc.CubemapHandler
+            ];
 
-        // Create an Entity for the ground
-        const ground = new pc.Entity();
-        ground.addComponent("model", {
-            type: "box"
-        });
-        ground.setLocalScale(70, 1, 70);
-        ground.setLocalPosition(0, -0.5, 0);
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
-        const material = createMaterial({
-            ambient: pc.Color.GRAY,
-            diffuse: pc.Color.GRAY
-        });
-        ground.model.material = material;
-        app.root.addChild(ground);
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // Create an spot light
-        const spotlight = new pc.Entity();
-        spotlight.addComponent("light", {
-            type: "spot",
-            color: pc.Color.WHITE,
-            innerConeAngle: 30,
-            outerConeAngle: 31,
-            range: 100,
-            intensity: 0.6,
-            castShadows: true,
-            shadowBias: 0.05,
-            normalOffsetBias: 0.03,
-            shadowResolution: 2048,
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
 
-            // heart texture's alpha channel as a cookie texture
-            cookie: assets.heart.resource,
-            // cookie: assets.heart.asset.resource,
-            cookieChannel: "a"
-        });
+                app.start();
 
-        const cone = new pc.Entity();
-        cone.addComponent("render", {
-            type: "cone",
-            castShadows: false,
-            material: createMaterial({ emissive: pc.Color.WHITE })
-        });
-        spotlight.addChild(cone);
-        app.root.addChild(spotlight);
+                // enable cookies which are disabled by default for clustered lighting
+                app.scene.lighting.cookiesEnabled = true;
 
-        // Create a omni light
-        const omnilight = new pc.Entity();
-        omnilight.addComponent("light", {
-            type: "omni",
-            color: pc.Color.YELLOW,
-            range: 100,
-            castShadows: true,
-            intensity: 0.6
-        });
-        omnilight.addComponent("render", {
-            type: "sphere",
-            castShadows: false,
-            material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
-        });
-        app.root.addChild(omnilight);
+                // ambient lighting
+                app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-        // Create a directional light
-        const directionallight = new pc.Entity();
-        directionallight.addComponent("light", {
-            type: "directional",
-            color: pc.Color.CYAN,
-            range: 100,
-            castShadows: true,
-            shadowBias: 0.1,
-            normalOffsetBias: 0.2,
-            intensity: 0.6
-        });
-        app.root.addChild(directionallight);
+                // create an entity with the statue
+                const entity = assets.statue.resource.instantiateRenderEntity();
 
+                app.root.addChild(entity);
 
-        // Create a 2D screen for text rendering
-        const screen = new pc.Entity();
-        screen.addComponent("screen", {
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleBlend: 0.5,
-            scaleMode: pc.SCALEMODE_BLEND,
-            screenSpace: true
-        });
-        app.root.addChild(screen);
+                // Create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.4, 0.45, 0.5)
+                });
+                camera.translate(0, 15, 35);
+                camera.rotate(-14, 0, 0);
+                app.root.addChild(camera);
 
-        // Load a font
+                // ground material
+                const material = createMaterial({
+                    ambient: pc.Color.GRAY,
+                    diffuse: pc.Color.GRAY
+                });
 
-        // Create a basic text element
-        const text = new pc.Entity();
-        text.addComponent("element", {
-            anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
-            fontAsset: assets.font,
-            fontSize: 28,
-            pivot: new pc.Vec2(0.5, 0.1),
-            type: pc.ELEMENTTYPE_TEXT,
-            alignment: pc.Vec2.ZERO
-        });
-        screen.addChild(text);
+                // Create an Entity for the ground
+                const ground = new pc.Entity();
+                ground.addComponent("render", {
+                    type: "box",
+                    material: material
+                });
+                ground.setLocalScale(70, 1, 70);
+                ground.setLocalPosition(0, -0.5, 0);
+                app.root.addChild(ground);
 
-        // Allow user to toggle individual lights
-        app.keyboard.on("keydown", function (e) {
-            switch (e.key) {
-                case pc.KEY_1:
-                    omnilight.enabled = !omnilight.enabled;
-                    break;
-                case pc.KEY_2:
-                    spotlight.enabled = !spotlight.enabled;
-                    break;
-                case pc.KEY_3:
-                    directionallight.enabled = !directionallight.enabled;
-                    break;
-            }
-        }, this);
+                // setup light data
+                data.set('lights', {
+                    spot: {
+                        enabled: true,
+                        intensity: 0.8,
+                        cookieIntensity: 1,
+                        shadowIntensity: 1
+                    },
+                    omni: {
+                        enabled: true,
+                        intensity: 0.8,
+                        cookieIntensity: 1,
+                        shadowIntensity: 1
+                    },
+                    directional: {
+                        enabled: true,
+                        intensity: 0.8,
+                        shadowIntensity: 1
+                    }
+                });
 
-        // Simple update loop to rotate the light
-        let angleRad = 1;
-        app.on("update", function (dt) {
-            angleRad += 0.3 * dt;
-            if (entity) {
+                const lights: {[key: string]: pc.Entity } = {};
 
-                spotlight.lookAt(new pc.Vec3(0, -5, 0));
-                spotlight.rotateLocal(90, 0, 0);
-                spotlight.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
+                // Create an spot light
+                lights.spot = new pc.Entity();
+                lights.spot.addComponent("light", {
+                    ...{
+                        type: "spot",
+                        color: pc.Color.WHITE,
+                        innerConeAngle: 30,
+                        outerConeAngle: 31,
+                        range: 100,
+                        castShadows: true,
+                        shadowBias: 0.05,
+                        normalOffsetBias: 0.03,
+                        shadowResolution: 2048,
+                        // heart texture's alpha channel as a cookie texture
+                        cookie: assets.heart.resource,
+                        cookieChannel: "a"
+                    },
+                    ...data.get('lights.spot')
+                });
 
-                omnilight.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                const cone = new pc.Entity();
+                cone.addComponent("render", {
+                    type: "cone",
+                    castShadows: false,
+                    material: createMaterial({ emissive: pc.Color.WHITE })
+                });
+                lights.spot.addChild(cone);
+                app.root.addChild(lights.spot);
 
-                directionallight.setLocalEulerAngles(45, -60 * angleRad, 0);
-            }
+                // construct the cubemap asset for the omni light cookie texture
+                // Note: the textures array could contain 6 texture asset names to load instead as well
+                const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
+                    textures: [
+                        assets.xmas_posx.id, assets.xmas_negx.id,
+                        assets.xmas_posy.id, assets.xmas_negy.id,
+                        assets.xmas_posz.id, assets.xmas_negz.id
+                    ]
+                });
+                cubemapAsset.loadFaces = true;
+                app.assets.add(cubemapAsset);
 
-            // update text showing which lights are enabled
-            if (text) {
-                text.element.text =
-                    "[Key 1] Omni light: " + omnilight.enabled +
-                    "\n[Key 2] Spot light: " + spotlight.enabled +
-                    "\n[Key 3] Directional light: " + directionallight.enabled;
-            }
+                // Create a omni light
+                lights.omni = new pc.Entity();
+                lights.omni.addComponent("light", {
+                    ...{
+                        type: "omni",
+                        color: pc.Color.YELLOW,
+                        castShadows: true,
+                        range: 111,
+                        cookieAsset: cubemapAsset,
+                        cookieChannel: "rgb"
+                    },
+                    ...data.get('lights.omni')
+                });
+                lights.omni.addComponent("render", {
+                    type: "sphere",
+                    castShadows: false,
+                    material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
+                });
+                app.root.addChild(lights.omni);
+
+                // Create a directional light
+                lights.directional = new pc.Entity();
+                lights.directional.addComponent("light", {
+                    ...{
+                        type: "directional",
+                        color: pc.Color.CYAN,
+                        range: 100,
+                        shadowDistance: 50,
+                        castShadows: true,
+                        shadowBias: 0.1,
+                        normalOffsetBias: 0.2
+                    },
+                    ...data.get('lights.directional')
+                });
+                app.root.addChild(lights.directional);
+
+                // Allow user to toggle individual lights
+                app.keyboard.on("keydown", function (e) {
+                    // if the user is editing an input field, ignore key presses
+                    if (e.element.constructor.name === 'HTMLInputElement') return;
+                    switch (e.key) {
+                        case pc.KEY_1:
+                            data.set('lights.omni.enabled', !data.get('lights.omni.enabled'));
+                            break;
+                        case pc.KEY_2:
+                            data.set('lights.spot.enabled', !data.get('lights.spot.enabled'));
+                            break;
+                        case pc.KEY_3:
+                            data.set('lights.directional.enabled', !data.get('lights.directional.enabled'));
+                            break;
+                    }
+                }, this);
+
+                // Simple update loop to rotate the light
+                let angleRad = 1;
+                app.on("update", function (dt) {
+                    angleRad += 0.3 * dt;
+                    if (entity) {
+
+                        lights.spot.lookAt(new pc.Vec3(0, -5, 0));
+                        lights.spot.rotateLocal(90, 0, 0);
+                        lights.spot.setLocalPosition(15 * Math.sin(angleRad), 25, 15 * Math.cos(angleRad));
+
+                        lights.omni.setLocalPosition(5 * Math.sin(-2 * angleRad), 10, 5 * Math.cos(-2 * angleRad));
+                        lights.omni.rotate(0, 50 * dt, 0);
+
+                        lights.directional.setLocalEulerAngles(45, -60 * angleRad, 0);
+                    }
+                });
+
+                data.on('*:set', (path: string, value: any) => {
+                    const pathArray = path.split('.');
+                    if (pathArray[2] === 'enabled') {
+                        lights[pathArray[1]].enabled = value;
+                    } else {
+                        // @ts-ignore
+                        lights[pathArray[1]].light[pathArray[2]] = value;
+                    }
+                });
+            });
         });
     }
 }

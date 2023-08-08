@@ -1,31 +1,29 @@
 import { EventHandler } from '../../../core/event-handler.js';
 
-import { math } from '../../../math/math.js';
+import { math } from '../../../core/math/math.js';
 
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 
 /**
- * @class
- * @name SpriteAnimationClip
+ * Handles playing of sprite animations and loading of relevant sprite assets.
+ *
  * @augments EventHandler
- * @classdesc Handles playing of sprite animations and loading of relevant sprite assets.
- * @param {SpriteComponent} component - The sprite component managing this clip.
- * @param {object} data - Data for the new animation clip.
- * @param {number} [data.fps] - Frames per second for the animation clip.
- * @param {object} [data.loop] - Whether to loop the animation clip.
- * @param {string} [data.name] - The name of the new animation clip.
- * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
- * @property {number} spriteAsset The id of the sprite asset used to play the animation.
- * @property {Sprite} sprite The current sprite used to play the animation.
- * @property {number} frame The index of the frame of the {@link Sprite} currently being rendered.
- * @property {number} time The current time of the animation in seconds.
- * @property {number} duration The total duration of the animation in seconds.
- * @property {boolean} isPlaying Whether the animation is currently playing.
- * @property {boolean} isPaused Whether the animation is currently paused.
+ * @category Graphics
  */
 class SpriteAnimationClip extends EventHandler {
+    /**
+     * Create a new SpriteAnimationClip instance.
+     *
+     * @param {import('./component.js').SpriteComponent} component - The sprite component managing
+     * this clip.
+     * @param {object} data - Data for the new animation clip.
+     * @param {number} [data.fps] - Frames per second for the animation clip.
+     * @param {boolean} [data.loop] - Whether to loop the animation clip.
+     * @param {string} [data.name] - The name of the new animation clip.
+     * @param {number} [data.spriteAsset] - The id of the sprite asset that this clip will play.
+     */
     constructor(component, data) {
         super();
 
@@ -46,273 +44,95 @@ class SpriteAnimationClip extends EventHandler {
         this._time = 0;
     }
 
-    // When sprite asset is added bind it
-    _onSpriteAssetAdded(asset) {
-        this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
-        if (this._spriteAsset === asset.id) {
-            this._bindSpriteAsset(asset);
-        }
-    }
-
-    // Hook up event handlers on sprite asset
-    _bindSpriteAsset(asset) {
-        asset.on("load", this._onSpriteAssetLoad, this);
-        asset.on("remove", this._onSpriteAssetRemove, this);
-
-        if (asset.resource) {
-            this._onSpriteAssetLoad(asset);
-        } else {
-            this._component.system.app.assets.load(asset);
-        }
-    }
-
-    _unbindSpriteAsset(asset) {
-        asset.off("load", this._onSpriteAssetLoad, this);
-        asset.off("remove", this._onSpriteAssetRemove, this);
-
-        // unbind atlas
-        if (asset.resource && asset.resource.atlas) {
-            this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
-        }
-    }
-
-    // When sprite asset is loaded make sure the texture atlas asset is loaded too
-    // If so then set the sprite, otherwise wait for the atlas to be loaded first
-    _onSpriteAssetLoad(asset) {
-        if (!asset.resource) {
-            this.sprite = null;
-        } else {
-            if (!asset.resource.atlas) {
-                var atlasAssetId = asset.data.textureAtlasAsset;
-                var assets = this._component.system.app.assets;
-                assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-                assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
-            } else {
-                this.sprite = asset.resource;
-            }
-        }
-    }
-
-    // When atlas is loaded try to reset the sprite asset
-    _onTextureAtlasLoad(atlasAsset) {
-        var spriteAsset = this._spriteAsset;
-        if (spriteAsset instanceof Asset) {
-            this._onSpriteAssetLoad(spriteAsset);
-        } else {
-            this._onSpriteAssetLoad(this._component.system.app.assets.get(spriteAsset));
-        }
-    }
-
-    _onSpriteAssetRemove(asset) {
-        this.sprite = null;
-    }
-
-    // If the meshes are re-created make sure
-    // we update them in the mesh instance
-    _onSpriteMeshesChange() {
-        if (this._component.currentClip === this) {
-            this._component._showFrame(this.frame);
-        }
-    }
-
-    // Update frame if ppu changes for 9-sliced sprites
-    _onSpritePpuChanged() {
-        if (this._component.currentClip === this) {
-            if (this.sprite.renderMode !== SPRITE_RENDERMODE_SIMPLE) {
-                this._component._showFrame(this.frame);
-            }
-        }
-    }
+    /**
+     * Fired when the clip starts playing.
+     *
+     * @event SpriteAnimationClip#play
+     */
 
     /**
-     * @private
-     * @function
-     * @name SpriteAnimationClip#_update
-     * @param {number} dt - The delta time.
-     * @description Advances the animation looping if necessary.
+     * Fired when the clip is paused.
+     *
+     * @event SpriteAnimationClip#pause
      */
-    _update(dt) {
-        if (this.fps === 0) return;
-        if (!this._playing || this._paused || !this._sprite) return;
 
-        var dir = this.fps < 0 ? -1 : 1;
-        var time = this._time + dt * this._component.speed * dir;
-        var duration = this.duration;
-        var end = (time > duration || time < 0);
+    /**
+     * Fired when the clip is resumed.
+     *
+     * @event SpriteAnimationClip#resume
+     */
 
-        this._setTime(time);
+    /**
+     * Fired when the clip is stopped.
+     *
+     * @event SpriteAnimationClip#stop
+     */
 
-        var frame = this.frame;
+    /**
+     * Fired when the clip stops playing because it reached its ending.
+     *
+     * @event SpriteAnimationClip#end
+     */
+
+    /**
+     * Fired when the clip reached the end of its current loop.
+     *
+     * @event SpriteAnimationClip#loop
+     */
+
+    /**
+     * The total duration of the animation in seconds.
+     *
+     * @type {number}
+     */
+    get duration() {
         if (this._sprite) {
-            frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
-        } else {
-            frame = 0;
+            const fps = this.fps || Number.MIN_VALUE;
+            return this._sprite.frameKeys.length / Math.abs(fps);
         }
-
-        if (frame !== this._frame) {
-            this._setFrame(frame);
-        }
-
-        if (end) {
-            if (this.loop) {
-                this.fire('loop');
-                this._component.fire('loop', this);
-            } else {
-                this._playing = false;
-                this._paused = false;
-                this.fire('end');
-                this._component.fire('end', this);
-            }
-        }
-    }
-
-    _setTime(value) {
-        this._time = value;
-        var duration = this.duration;
-        if (this._time < 0) {
-            if (this.loop) {
-                this._time = this._time % duration + duration;
-            } else {
-                this._time = 0;
-            }
-        } else if (this._time > duration) {
-            if (this.loop) {
-                this._time %= duration;
-            } else {
-                this._time = duration;
-            }
-        }
-    }
-
-    _setFrame(value) {
-        if (this._sprite) {
-            // clamp frame
-            this._frame = math.clamp(value, 0, this._sprite.frameKeys.length - 1);
-        } else {
-            this._frame = value;
-        }
-
-        if (this._component.currentClip === this) {
-            this._component._showFrame(this._frame);
-        }
-    }
-
-    _destroy() {
-        // remove sprite
-        if (this._sprite) {
-            this.sprite = null;
-        }
-
-        // remove sprite asset
-        if (this._spriteAsset) {
-            this.spriteAsset = null;
-        }
+        return 0;
     }
 
     /**
-     * @function
-     * @name SpriteAnimationClip#play
-     * @description Plays the animation. If it's already playing then this does nothing.
+     * The index of the frame of the {@link Sprite} currently being rendered.
+     *
+     * @type {number}
      */
-    play() {
-        if (this._playing)
-            return;
+    set frame(value) {
+        this._setFrame(value);
 
-        this._playing = true;
-        this._paused = false;
-        this.frame = 0;
+        // update time to start of frame
+        const fps = this.fps || Number.MIN_VALUE;
+        this._setTime(this._frame / fps);
+    }
 
-        this.fire('play');
-        this._component.fire('play', this);
+    get frame() {
+        return this._frame;
     }
 
     /**
-     * @function
-     * @name SpriteAnimationClip#pause
-     * @description Pauses the animation.
+     * Whether the animation is currently paused.
+     *
+     * @type {boolean}
      */
-    pause() {
-        if (!this._playing || this._paused)
-            return;
-
-        this._paused = true;
-
-        this.fire('pause');
-        this._component.fire('pause', this);
+    get isPaused() {
+        return this._paused;
     }
 
     /**
-     * @function
-     * @name SpriteAnimationClip#resume
-     * @description Resumes the paused animation.
+     * Whether the animation is currently playing.
+     *
+     * @type {boolean}
      */
-    resume() {
-        if (!this._paused) return;
-
-        this._paused = false;
-        this.fire('resume');
-        this._component.fire('resume', this);
+    get isPlaying() {
+        return this._playing;
     }
 
     /**
-     * @function
-     * @name SpriteAnimationClip#stop
-     * @description Stops the animation and resets the animation to the first frame.
+     * The current sprite used to play the animation.
+     *
+     * @type {import('../../../scene/sprite.js').Sprite}
      */
-    stop() {
-        if (!this._playing) return;
-
-        this._playing = false;
-        this._paused = false;
-        this._time = 0;
-        this.frame = 0;
-
-        this.fire('stop');
-        this._component.fire('stop', this);
-    }
-
-    get spriteAsset() {
-        return this._spriteAsset;
-    }
-
-    set spriteAsset(value) {
-        var assets = this._component.system.app.assets;
-        var id = value;
-
-        if (value instanceof Asset) {
-            id = value.id;
-        }
-
-        if (this._spriteAsset !== id) {
-            if (this._spriteAsset) {
-                // clean old event listeners
-                var prev = assets.get(this._spriteAsset);
-                if (prev) {
-                    this._unbindSpriteAsset(prev);
-                }
-            }
-
-            this._spriteAsset = id;
-
-            // bind sprite asset
-            if (this._spriteAsset) {
-                var asset = assets.get(this._spriteAsset);
-                if (!asset) {
-                    this.sprite = null;
-                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
-                } else {
-                    this._bindSpriteAsset(asset);
-                }
-            } else {
-                this.sprite = null;
-            }
-        }
-    }
-
-    get sprite() {
-        return this._sprite;
-    }
-
     set sprite(value) {
         if (this._sprite) {
             this._sprite.off('set:meshes', this._onSpriteMeshesChange, this);
@@ -336,7 +156,7 @@ class SpriteAnimationClip extends EventHandler {
         }
 
         if (this._component.currentClip === this) {
-            var mi;
+            let mi;
 
             // if we are clearing the sprite clear old mesh instance parameters
             if (!value || !value.atlas) {
@@ -379,38 +199,58 @@ class SpriteAnimationClip extends EventHandler {
         }
     }
 
-    get frame() {
-        return this._frame;
+    get sprite() {
+        return this._sprite;
     }
 
-    set frame(value) {
-        this._setFrame(value);
+    /**
+     * The id of the sprite asset used to play the animation.
+     *
+     * @type {number}
+     */
+    set spriteAsset(value) {
+        const assets = this._component.system.app.assets;
+        let id = value;
 
-        // update time to start of frame
-        var fps = this.fps || Number.MIN_VALUE;
-        this._setTime(this._frame / fps);
-    }
-
-    get isPlaying() {
-        return this._playing;
-    }
-
-    get isPaused() {
-        return this._paused;
-    }
-
-    get duration() {
-        if (this._sprite) {
-            var fps = this.fps || Number.MIN_VALUE;
-            return this._sprite.frameKeys.length / Math.abs(fps);
+        if (value instanceof Asset) {
+            id = value.id;
         }
-        return 0;
+
+        if (this._spriteAsset !== id) {
+            if (this._spriteAsset) {
+                // clean old event listeners
+                const prev = assets.get(this._spriteAsset);
+                if (prev) {
+                    this._unbindSpriteAsset(prev);
+                }
+            }
+
+            this._spriteAsset = id;
+
+            // bind sprite asset
+            if (this._spriteAsset) {
+                const asset = assets.get(this._spriteAsset);
+                if (!asset) {
+                    this.sprite = null;
+                    assets.on('add:' + this._spriteAsset, this._onSpriteAssetAdded, this);
+                } else {
+                    this._bindSpriteAsset(asset);
+                }
+            } else {
+                this.sprite = null;
+            }
+        }
     }
 
-    get time() {
-        return this._time;
+    get spriteAsset() {
+        return this._spriteAsset;
     }
 
+    /**
+     * The current time of the animation in seconds.
+     *
+     * @type {number}
+     */
     set time(value) {
         this._setTime(value);
 
@@ -421,43 +261,235 @@ class SpriteAnimationClip extends EventHandler {
         }
     }
 
-    // Events Documentation
+    get time() {
+        return this._time;
+    }
+
+    // When sprite asset is added bind it
+    _onSpriteAssetAdded(asset) {
+        this._component.system.app.assets.off('add:' + asset.id, this._onSpriteAssetAdded, this);
+        if (this._spriteAsset === asset.id) {
+            this._bindSpriteAsset(asset);
+        }
+    }
+
+    // Hook up event handlers on sprite asset
+    _bindSpriteAsset(asset) {
+        asset.on('load', this._onSpriteAssetLoad, this);
+        asset.on('remove', this._onSpriteAssetRemove, this);
+
+        if (asset.resource) {
+            this._onSpriteAssetLoad(asset);
+        } else {
+            this._component.system.app.assets.load(asset);
+        }
+    }
+
+    _unbindSpriteAsset(asset) {
+        if (!asset) {
+            return;
+        }
+
+        asset.off('load', this._onSpriteAssetLoad, this);
+        asset.off('remove', this._onSpriteAssetRemove, this);
+
+        // unbind atlas
+        if (asset.resource && !asset.resource.atlas) {
+            this._component.system.app.assets.off('load:' + asset.data.textureAtlasAsset, this._onTextureAtlasLoad, this);
+        }
+    }
+
+    // When sprite asset is loaded make sure the texture atlas asset is loaded too
+    // If so then set the sprite, otherwise wait for the atlas to be loaded first
+    _onSpriteAssetLoad(asset) {
+        if (!asset.resource) {
+            this.sprite = null;
+        } else {
+            if (!asset.resource.atlas) {
+                const atlasAssetId = asset.data.textureAtlasAsset;
+                const assets = this._component.system.app.assets;
+                assets.off('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+                assets.once('load:' + atlasAssetId, this._onTextureAtlasLoad, this);
+            } else {
+                this.sprite = asset.resource;
+            }
+        }
+    }
+
+    // When atlas is loaded try to reset the sprite asset
+    _onTextureAtlasLoad(atlasAsset) {
+        const spriteAsset = this._spriteAsset;
+        if (spriteAsset instanceof Asset) {
+            this._onSpriteAssetLoad(spriteAsset);
+        } else {
+            this._onSpriteAssetLoad(this._component.system.app.assets.get(spriteAsset));
+        }
+    }
+
+    _onSpriteAssetRemove(asset) {
+        this.sprite = null;
+    }
+
+    // If the meshes are re-created make sure
+    // we update them in the mesh instance
+    _onSpriteMeshesChange() {
+        if (this._component.currentClip === this) {
+            this._component._showFrame(this.frame);
+        }
+    }
+
+    // Update frame if ppu changes for 9-sliced sprites
+    _onSpritePpuChanged() {
+        if (this._component.currentClip === this) {
+            if (this.sprite.renderMode !== SPRITE_RENDERMODE_SIMPLE) {
+                this._component._showFrame(this.frame);
+            }
+        }
+    }
 
     /**
-     * @event
-     * @name SpriteAnimationClip#play
-     * @description Fired when the clip starts playing.
+     * Advances the animation, looping if necessary.
+     *
+     * @param {number} dt - The delta time.
+     * @private
      */
+    _update(dt) {
+        if (this.fps === 0) return;
+        if (!this._playing || this._paused || !this._sprite) return;
+
+        const dir = this.fps < 0 ? -1 : 1;
+        const time = this._time + dt * this._component.speed * dir;
+        const duration = this.duration;
+        const end = (time > duration || time < 0);
+
+        this._setTime(time);
+
+        let frame = this.frame;
+        if (this._sprite) {
+            frame = Math.floor(this._sprite.frameKeys.length * this._time / duration);
+        } else {
+            frame = 0;
+        }
+
+        if (frame !== this._frame) {
+            this._setFrame(frame);
+        }
+
+        if (end) {
+            if (this.loop) {
+                this.fire('loop');
+                this._component.fire('loop', this);
+            } else {
+                this._playing = false;
+                this._paused = false;
+                this.fire('end');
+                this._component.fire('end', this);
+            }
+        }
+    }
+
+    _setTime(value) {
+        this._time = value;
+        const duration = this.duration;
+        if (this._time < 0) {
+            if (this.loop) {
+                this._time = this._time % duration + duration;
+            } else {
+                this._time = 0;
+            }
+        } else if (this._time > duration) {
+            if (this.loop) {
+                this._time %= duration;
+            } else {
+                this._time = duration;
+            }
+        }
+    }
+
+    _setFrame(value) {
+        if (this._sprite) {
+            // clamp frame
+            this._frame = math.clamp(value, 0, this._sprite.frameKeys.length - 1);
+        } else {
+            this._frame = value;
+        }
+
+        if (this._component.currentClip === this) {
+            this._component._showFrame(this._frame);
+        }
+    }
+
+    _destroy() {
+        // cleanup events
+        if (this._spriteAsset) {
+            const assets = this._component.system.app.assets;
+            this._unbindSpriteAsset(assets.get(this._spriteAsset));
+        }
+
+        // remove sprite
+        if (this._sprite) {
+            this.sprite = null;
+        }
+
+        // remove sprite asset
+        if (this._spriteAsset) {
+            this.spriteAsset = null;
+        }
+    }
 
     /**
-     * @event
-     * @name SpriteAnimationClip#pause
-     * @description Fired when the clip is paused.
+     * Plays the animation. If it's already playing then this does nothing.
      */
+    play() {
+        if (this._playing)
+            return;
+
+        this._playing = true;
+        this._paused = false;
+        this.frame = 0;
+
+        this.fire('play');
+        this._component.fire('play', this);
+    }
 
     /**
-     * @event
-     * @name SpriteAnimationClip#resume
-     * @description Fired when the clip is resumed.
+     * Pauses the animation.
      */
+    pause() {
+        if (!this._playing || this._paused)
+            return;
+
+        this._paused = true;
+
+        this.fire('pause');
+        this._component.fire('pause', this);
+    }
 
     /**
-     * @event
-     * @name SpriteAnimationClip#stop
-     * @description Fired when the clip is stopped.
+     * Resumes the paused animation.
      */
+    resume() {
+        if (!this._paused) return;
+
+        this._paused = false;
+        this.fire('resume');
+        this._component.fire('resume', this);
+    }
 
     /**
-     * @event
-     * @name SpriteAnimationClip#end
-     * @description Fired when the clip stops playing because it reached its ending.
+     * Stops the animation and resets the animation to the first frame.
      */
+    stop() {
+        if (!this._playing) return;
 
-    /**
-     * @event
-     * @name SpriteAnimationClip#loop
-     * @description Fired when the clip reached the end of its current loop.
-     */
+        this._playing = false;
+        this._paused = false;
+        this._time = 0;
+        this.frame = 0;
+
+        this.fire('stop');
+        this._component.fire('stop', this);
+    }
 }
 
 export { SpriteAnimationClip };

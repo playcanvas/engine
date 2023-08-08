@@ -7,14 +7,18 @@ import { LayoutChildComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @class
- * @name LayoutChildComponentSystem
+ * Manages creation of {@link LayoutChildComponent}s.
+ *
  * @augments ComponentSystem
- * @description Create a new LayoutChildComponentSystem.
- * @classdesc Manages creation of {@link LayoutChildComponent}s.
- * @param {Application} app - The application.
+ * @category User Interface
  */
 class LayoutChildComponentSystem extends ComponentSystem {
+    /**
+     * Create a new LayoutChildComponentSystem instance.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -40,7 +44,7 @@ class LayoutChildComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var layoutChild = entity.layoutchild;
+        const layoutChild = entity.layoutchild;
 
         return this.addComponent(clone, {
             enabled: layoutChild.enabled,

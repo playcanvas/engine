@@ -1,115 +1,77 @@
 import React, { useEffect, useState, createRef } from 'react';
-import ReactDOM from 'react-dom';
-// @ts-ignore: library file import
-import { Container } from '@playcanvas/pcui/pcui-react';
+import { createRoot } from 'react-dom/client';
+import * as pcui from '@playcanvas/pcui/react';
+import '@playcanvas/pcui/styles';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
 import SideBar from './sidebar';
 import CodeEditor from './code-editor';
-import ExampleIframe from './example-iframe';
 import Menu from './menu';
-import { examples } from './helpers/raw-file-loading';
-import { File } from './helpers/types';
-import './styles.css';
+import Example from './example';
 
-interface ExampleRoutesProps {
-    files: Array<File>,
-    setDefaultFiles: (files: Array<File>) => void,
-    showMiniStats: boolean
-}
-const ExampleRoutes = (props: ExampleRoutesProps) => {
-    return (
-        <Switch>
-            {
-                examples.paths.map((p) => {
-                    return <Route key={p.path} path={[p.path, `${p.path}.html`]}>
-                        <p.example path={p.path} defaultFiles={p.files} files={props.files} setDefaultFiles={props.setDefaultFiles} showMiniStats={props.showMiniStats} />
-                    </Route>;
-                })
-            }
-        </Switch>
-    );
-};
-
-
-const filesHaveChanged = (a: Array<File>, b: Array<File>) => {
-    if (a && !b) return true;
-    if (a.length !== b.length) {
-        return true;
-    }
-    for (let i = 0; i < a.length; i++) {
-        if (a[i].text !== b[i].text) {
-            return true;
-        }
-    }
-    return false;
-};
+(window as any).pcui = pcui;
+(window as any).React = React;
 
 const MainLayout = () => {
     const emptyFiles = [{
         name: 'example.ts',
         text: ''
     }];
-    // The defaults files are the collection of example files created by an example author. When loading up a new example page, that examples files will be set here
-    const [defaultFiles, setDefaultFiles] = useState(emptyFiles);
-    // The edited files contains any edits to the default files that have been made by the user
-    const [editedFiles, setEditedFiles] = useState(emptyFiles);
-    // The example files are the files that should be loaded and executed by the example. Upon hitting the play button, the currently set edited files are set to the example files
-    const [exampleFiles, setExampleFiles] = useState(emptyFiles);
+    const [files, setFiles] = useState(emptyFiles);
     const [lintErrors, setLintErrors] = useState(false);
-    const [showMiniStats, setShowMiniStats] = useState(false);
+    const [useTypeScript, setUseTypeScript] = useState(localStorage.getItem('useTypeScript') === 'true');
+
+    const updateShowMiniStats = (value: boolean) => {
+        (window as any)._showMiniStats = value;
+    };
 
     const playButtonRef = createRef();
+    const languageButtonRef = createRef();
     useEffect(() => {
         if (playButtonRef.current) {
             // @ts-ignore
             playButtonRef.current.element.unbind();
             // @ts-ignore
             playButtonRef.current.element.on('click', () => {
-                setExampleFiles(editedFiles);
+                // @ts-ignore
+                document.getElementById('exampleIframe').contentWindow.location.reload();
+            });
+        }
+        if (languageButtonRef.current) {
+            // @ts-ignore
+            languageButtonRef.current.element.unbind();
+            // @ts-ignore
+            languageButtonRef.current.element.on('click', () => {
+                localStorage.setItem('useTypeScript', !useTypeScript ? 'true' : 'false');
+                setUseTypeScript(!useTypeScript);
             });
         }
     });
-
-    const updateExample = (newExampleDefaultFiles: Array<File>) => {
-        setDefaultFiles(newExampleDefaultFiles);
-        setEditedFiles(emptyFiles);
-        setExampleFiles(emptyFiles);
-    };
-
-    const hasEditedFiles = () => {
-        if (exampleFiles[0].text.length === 0) {
-            return filesHaveChanged(defaultFiles, editedFiles);
-        }
-        return filesHaveChanged(editedFiles, exampleFiles);
-    };
 
     return (
         <div id='appInner'>
             <Router>
                 <Switch>
-                    <Route exact path="/">
+                    <Route exact path='/'>
                         <Redirect to="/misc/hello-world" />
                     </Route>
-                    {
-                        examples.paths.map((p) => {
-                            const e = new p.example();
-                            const assetsLoader = e.load;
-                            const controls = e.controls;
-                            return <Route key={`/iframe${p.path}`} path={[`/iframe${p.path}`]}>
-                                <ExampleIframe controls={controls} assets={assetsLoader ? assetsLoader().props.children : null} files={p.files} debug={p.path.includes('mini-stats')} />
-                            </Route>;
-                        })
-                    }
-                    <Route key='main' path={`/`}>
-                        <SideBar categories={examples.categories}/>
-                        <Container id='main-view-wrapper'>
-                            <Menu lintErrors={lintErrors} hasEditedFiles={hasEditedFiles()} playButtonRef={playButtonRef} showMiniStats={showMiniStats} setShowMiniStats={setShowMiniStats} />
-                            <Container id='main-view'>
-                                <ExampleRoutes files={exampleFiles} setDefaultFiles={updateExample.bind(this)} showMiniStats={showMiniStats} />
-                                <CodeEditor files={editedFiles[0].text.length > 0 ? editedFiles : defaultFiles} setFiles={setEditedFiles.bind(this)} setLintErrors={setLintErrors} />
-                            </Container>
-                        </Container>
+                    <Route path='/:category/:example'>
+                        <SideBar/>
+                        <pcui.Container id='main-view-wrapper'>
+                            <Menu useTypeScript={useTypeScript} setShowMiniStats={updateShowMiniStats} />
+                            <pcui.Container id='main-view'>
+                                <CodeEditor
+                                    lintErrors={lintErrors}
+                                    setLintErrors={setLintErrors}
+                                    playButtonRef={playButtonRef}
+                                    languageButtonRef={languageButtonRef}
+                                    useTypeScript={useTypeScript}
+                                    files={files}
+                                    setFiles={setFiles}
+                                />
+                                <Example files={files} setFiles={setFiles} useTypeScript={useTypeScript} />
+                            </pcui.Container>
+                        </pcui.Container>
                     </Route>
                 </Switch>
             </Router>
@@ -118,7 +80,6 @@ const MainLayout = () => {
 };
 
 // render out the app
-ReactDOM.render(
-    <MainLayout />,
-    document.getElementById('app')
-);
+const container = document.getElementById('app');
+const root = createRoot(container);
+root.render(<MainLayout />);

@@ -1,5 +1,5 @@
-import { Color } from '../../../math/color.js';
-import { Vec4 } from '../../../math/vec4.js';
+import { Color } from '../../../core/math/color.js';
+import { Vec4 } from '../../../core/math/vec4.js';
 
 import { BUTTON_TRANSITION_MODE_TINT } from './constants.js';
 

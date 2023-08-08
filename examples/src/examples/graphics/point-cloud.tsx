@@ -1,9 +1,11 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-const vshader = `
+
+class PointCloudExample {
+    static CATEGORY = 'Graphics';
+    static NAME = 'Point Cloud';
+    static FILES = {
+        'shader.vert': /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
 
@@ -38,10 +40,8 @@ void main(void)
 
     // color mixes red and yellow based on intensity
     outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
-}
-`;
-
-const fshader = `
+}`,
+        'shader.frag': /* glsl */`
 precision lowp float;
 varying vec4 outColor;
 
@@ -49,84 +49,79 @@ void main(void)
 {
     // just output color supplied by vertex shader
     gl_FragColor = outColor;
-}
-`;
+}`
+    };
 
-class PointCloudExample extends Example {
-    static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud';
 
-    load() {
-        return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-            <AssetLoader name='shader.vert' type='shader' data={vshader} />
-            <AssetLoader name='shader.frag' type='shader' data={fshader} />
-        </>;
-    }
-
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: any): void {
-
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.1, 0.1, 0.1)
-        });
-        camera.translate(0, 7, 24);
-
-        // Add entity into scene hierarchy
-        app.root.addChild(camera);
-        app.start();
-
-        // Create a new Entity
-        const entity = assets.statue.resource.instantiateRenderEntity();
-        app.root.addChild(entity);
-
-        // Create the shader definition and shader from the vertex and fragment shaders
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION
-            },
-            vshader: assets['shader.vert'].data,
-            fshader: assets['shader.frag'].data
+        const assets = {
+            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
         };
-        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
-        // Create a new material with the new shader
-        const material = new pc.Material();
-        material.shader = shader;
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-        // find all render components
-        const renderComponents = entity.findComponents('render');
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // for all render components
-        renderComponents.forEach(function (render: any) {
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.1, 0.1, 0.1)
+            });
+            camera.translate(0, 7, 24);
 
-            // For all meshes in the render component, assign new material
-            render.meshInstances.forEach(function (meshInstance: pc.MeshInstance) {
-                meshInstance.material = material;
+            // Add entity into scene hierarchy
+            app.root.addChild(camera);
+            app.start();
+
+            // Create a new Entity
+            const entity = assets.statue.resource.instantiateRenderEntity();
+            app.root.addChild(entity);
+
+            // Create the shader definition and shader from the vertex and fragment shaders
+            const shaderDefinition = {
+                attributes: {
+                    aPosition: pc.SEMANTIC_POSITION
+                },
+                vshader: files['shader.vert'],
+                fshader: files['shader.frag']
+            };
+            const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+
+            // Create a new material with the new shader
+            const material = new pc.Material();
+            material.shader = shader;
+
+            // find all render components
+            const renderComponents = entity.findComponents('render');
+
+            // for all render components
+            renderComponents.forEach(function (render: any) {
+
+                // For all meshes in the render component, assign new material
+                render.meshInstances.forEach(function (meshInstance: pc.MeshInstance) {
+                    meshInstance.material = material;
+                });
+
+                // set it to render as points
+                render.renderStyle = pc.RENDERSTYLE_POINTS;
             });
 
-            // set it to render as points
-            render.renderStyle = pc.RENDERSTYLE_POINTS;
-        });
+            let currentTime = 0;
+            app.on("update", function (dt) {
 
-        let currentTime = 0;
-        app.on("update", function (dt) {
+                // Update the time and pass it to shader
+                currentTime += dt;
+                material.setParameter('uTime', currentTime);
 
-            // Update the time and pass it to shader
-            currentTime += dt;
-            material.setParameter('uTime', currentTime);
-
-            // Rotate the model
-            entity.rotate(0, 15 * dt, 0);
+                // Rotate the model
+                entity.rotate(0, 15 * dt, 0);
+            });
         });
     }
 }

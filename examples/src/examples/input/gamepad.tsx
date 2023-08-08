@@ -1,62 +1,88 @@
-import React from 'react';
-import * as pc from 'playcanvas/build/playcanvas.js';
-import { AssetLoader } from '../../app/helpers/loader';
-import Example from '../../app/example';
+import * as pc from '../../../../';
 
-class GamepadExample extends Example {
+class GamepadExample {
     static CATEGORY = 'Input';
     static NAME = 'Gamepad';
+    static WEBGPU_ENABLED = true;
 
-    load() {
-        return <>
-            <AssetLoader name='statue' type='container' url='static/assets/models/statue.glb' />
-        </>;
-    }
-
-    // @ts-ignore: override class function
-    example(canvas: HTMLCanvasElement, assets: { statue: pc.Asset }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
-        app.start();
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        const assets = {
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
+        };
 
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
-        });
-        camera.translate(0, 7, 25);
-        app.root.addChild(camera);
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
 
-        // Create an Entity with a omni light component and a sphere model component.
-        const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
-            color: new pc.Color(1, 1, 1),
-            range: 100
-        });
-        light.translate(5, 5, 10);
-        app.root.addChild(light);
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
-        const entity = assets.statue.resource.instantiateRenderEntity();
-        app.root.addChild(entity);
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
 
-        const gamepads = new pc.GamePads();
-        app.on("update", function () {
-            gamepads.update();
-            if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
-                entity.rotate(0, -1, 0);
-            }
-            if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
-                entity.rotate(0, 1, 0);
-            }
-            if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
-                entity.rotate(-1, 0, 0);
-            }
-            if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
-                entity.rotate(1, 0, 0);
-            }
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler
+            ];
+
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
+
+            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
+
+                app.start();
+
+                // set skybox
+                app.scene.envAtlas = assets.helipad.resource;
+                app.scene.toneMapping = pc.TONEMAP_ACES;
+                app.scene.exposure = 1.6;
+                app.scene.skyboxMip = 1;
+
+                // Create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.4, 0.45, 0.5)
+                });
+                camera.translate(0, 7, 25);
+                app.root.addChild(camera);
+
+                const entity = assets.statue.resource.instantiateRenderEntity();
+                app.root.addChild(entity);
+
+                const gamepads = new pc.GamePads();
+                app.on("update", function () {
+                    gamepads.update();
+                    if (gamepads.isPressed(pc.PAD_1, pc.PAD_LEFT)) {
+                        entity.rotate(0, -1, 0);
+                    }
+                    if (gamepads.isPressed(pc.PAD_1, pc.PAD_RIGHT)) {
+                        entity.rotate(0, 1, 0);
+                    }
+                    if (gamepads.wasPressed(pc.PAD_1, pc.PAD_UP)) {
+                        entity.rotate(-1, 0, 0);
+                    }
+                    if (gamepads.wasPressed(pc.PAD_1, pc.PAD_DOWN)) {
+                        entity.rotate(1, 0, 0);
+                    }
+                });
+            });
         });
     }
 }

@@ -1,12 +1,11 @@
 {
     "plugins": [
-        "plugins/markdown"
+        "plugins/markdown",
+        "./node_modules/jsdoc-tsimport-plugin/index.js"
     ],
     "recurseDepth": 10,
     "source": {
-        "include": ["src"],
-        "includePattern": ".+\\.js(doc|x)?$",
-        "excludePattern": "(^|\\/|\\\\)_"
+        "include": ["src"]
     },
     "sourceType": "module",
     "tags": {

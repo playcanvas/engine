@@ -1,3 +1,4 @@
+import { AnimTrack } from '../../anim/evaluator/anim-track.js';
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
@@ -9,14 +10,18 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name AnimComponentSystem
+ * The AnimComponentSystem manages creating and deleting AnimComponents.
+ *
  * @augments ComponentSystem
- * @classdesc The AnimComponentSystem manages creating and deleting AnimComponents.
- * @description Create an AnimComponentSystem.
- * @param {Application} app - The application managing this system.
+ * @category Animation
  */
 class AnimComponentSystem extends ComponentSystem {
+    /**
+     * Create an AnimComponentSystem instance.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The application managing this system.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -28,15 +33,14 @@ class AnimComponentSystem extends ComponentSystem {
         this.schema = _schema;
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        ComponentSystem.bind('animationUpdate', this.onAnimationUpdate, this);
+        this.app.systems.on('animationUpdate', this.onAnimationUpdate, this);
     }
 
     initializeComponentData(component, data, properties) {
-        properties = ['activate', 'speed', 'playing'];
         super.initializeComponentData(component, data, _schema);
-        const complexProperties = ['animationAssets', 'stateGraph', 'layers'];
+        const complexProperties = ['animationAssets', 'stateGraph', 'layers', 'masks'];
         Object.keys(data).forEach((key) => {
-            // these properties will be initialised manually below
+            // these properties will be initialized manually below
             if (complexProperties.includes(key)) return;
             component[key] = data[key];
         });
@@ -48,34 +52,73 @@ class AnimComponentSystem extends ComponentSystem {
             data.layers.forEach((layer, i) => {
                 layer._controller.states.forEach((stateKey) => {
                     layer._controller._states[stateKey]._animationList.forEach((node) => {
-                        component.layers[i].assignAnimation(node.name, node.animTrack);
+                        if (!node.animTrack || node.animTrack === AnimTrack.EMPTY) {
+                            const animationAsset = this.app.assets.get(layer._component._animationAssets[layer.name + ':' + node.name].asset);
+                            // If there is an animation asset that hasn't been loaded, assign it once it has loaded. If it is already loaded it will be assigned already.
+                            if (animationAsset && !animationAsset.loaded) {
+                                animationAsset.once('load', () => {
+                                    component.layers[i].assignAnimation(node.name, animationAsset.resource);
+                                });
+                            }
+                        } else {
+                            component.layers[i].assignAnimation(node.name, node.animTrack);
+                        }
                     });
                 });
             });
         } else if (data.animationAssets) {
             component.animationAssets = Object.assign(component.animationAssets, data.animationAssets);
         }
+
+        if (data.masks) {
+            Object.keys(data.masks).forEach((key) => {
+                if (component.layers[key]) {
+                    const maskData = data.masks[key].mask;
+                    const mask = {};
+                    Object.keys(maskData).forEach((maskKey) => {
+                        mask[decodeURI(maskKey)] = maskData[maskKey];
+                    });
+                    component.layers[key].mask = mask;
+                }
+            });
+        }
     }
 
     onAnimationUpdate(dt) {
-        var components = this.store;
+        const components = this.store;
 
-        for (var id in components) {
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                var component = components[id].entity.anim;
-                var componentData = component.data;
+                const component = components[id].entity.anim;
+                const componentData = component.data;
 
                 if (componentData.enabled && component.entity.enabled && component.playing) {
-                    for (var i = 0; i < component.layers.length; i++) {
-                        component.layers[i].update(dt * component.speed);
-                    }
+                    component.update(dt);
                 }
             }
         }
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        let masks;
+        // If the component animaites from the components entity, any layer mask hierarchy should be updated from the old entity to the cloned entity.
+        if (!entity.anim.rootBone || entity.anim.rootBone === entity) {
+            masks = {};
+            entity.anim.layers.forEach((layer, i) => {
+                if (layer.mask) {
+                    const mask = {};
+                    Object.keys(layer.mask).forEach((path) => {
+                        // The base of all mask paths should be mapped from the previous entity to the cloned entity
+                        const pathArr = path.split('/');
+                        pathArr.shift();
+                        const clonePath = [clone.name, ...pathArr].join('/');
+                        mask[clonePath] = layer.mask[path];
+                    });
+                    masks[i] = { mask };
+                }
+            });
+        }
+        const data = {
             stateGraphAsset: entity.anim.stateGraphAsset,
             animationAssets: entity.anim.animationAssets,
             speed: entity.anim.speed,
@@ -85,13 +128,21 @@ class AnimComponentSystem extends ComponentSystem {
             stateGraph: entity.anim.stateGraph,
             layers: entity.anim.layers,
             layerIndices: entity.anim.layerIndices,
-            parameters: entity.anim.parameters
+            parameters: entity.anim.parameters,
+            normalizeWeights: entity.anim.normalizeWeights,
+            masks
         };
-        this.addComponent(clone, data);
+        return this.addComponent(clone, data);
     }
 
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('animationUpdate', this.onAnimationUpdate, this);
     }
 }
 

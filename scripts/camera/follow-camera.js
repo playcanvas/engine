@@ -15,9 +15,9 @@ FollowCamera.attributes.add('lerpAmount', {
     type: 'number',
     min: 0,
     max: 1,
-    default: 0.1,
+    default: 0.99,
     title: 'Lerp Amount',
-    description: 'The amount to lerp the camera towards its desired position every frame based on a 60fps frame rate. Lerping is frame rate independent though and will be correct for other frame rates.'
+    description: 'The amount to lerp the camera towards its desired position over time. The closer it is to 1, the faster the camera will move. Lerping is frame rate independent and will be correct for every frame rate.'
 });
 
 // initialize code called once per entity
@@ -57,7 +57,8 @@ FollowCamera.prototype.postUpdate = function (dt) {
 
         // Lerp the current camera position to where we want it to be
         // Note that the lerping is framerate independent
-        this.currentPos.lerp(this.currentPos, this.targetPos, this.lerpAmount * dt * 60);
+        // From: https://www.rorydriscoll.com/2016/03/07/frame-rate-independent-damping-using-lerp/
+        this.currentPos.lerp(this.currentPos, this.targetPos, 1 - Math.pow(1 - this.lerpAmount, dt));
 
         // Set the camera's position
         this.entity.setPosition(this.currentPos);
