@@ -76,7 +76,7 @@ class XrManager extends EventHandler {
 
     /**
      * @type {XRReferenceSpace|null}
-     * @private
+     * @ignore
      */
     _referenceSpace = null;
 

@@ -1,66 +1,93 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 import { XrAnchor } from './xr-anchor.js';
 
 /**
- * @callback callbacks.XrAnchorCreate
- * @description Callback used by {@link XrAnchors#create}.
+ * Callback used by {@link XrAnchors#create}.
+ *
+ * @callback XrAnchorCreate
  * @param {Error|null} err - The Error object if failed to create an anchor or null.
  * @param {XrAnchor|null} anchor - The anchor that is tracked against real world geometry.
  */
 
 /**
- * @class
- * @name XrAnchors
- * @classdesc Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
- * @description Anchors provide an ability to specify a point in the world that need to be updated to correctly reflect the evolving understanding of the world by the underlying AR system, such that the anchor remains aligned with the same place in the physical world. Anchors tend to persist better relative to the real world, especially during a longer session with lots of movement.
- * @hideconstructor
- * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+ * Anchors provide an ability to specify a point in the world that need to be updated to
+ * correctly reflect the evolving understanding of the world by the underlying AR system,
+ * such that the anchor remains aligned with the same place in the physical world.
+ * Anchors tend to persist better relative to the real world, especially during a longer
+ * session with lots of movement.
+ *
  * @property {boolean} supported True if Anchors are supported.
  * @property {XrAnchor[]} list Array of active {@link XrAnchor}s.
- * @example
+ * @augments EventHandler
+ * @category XR
+ * ```javascript
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
  *     anchors: true
  * });
+ * ```
  */
 class XrAnchors extends EventHandler {
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _supported = platform.browser && !!window.XRAnchor;
+
+    /**
+     * List of anchor creation requests.
+     *
+     * @type {Array<object>}
+     * @private
+     */
+    _creationQueue = [];
+
+    /**
+     * @type {Map<XRAnchor,XrAnchor>}
+     * @ignore
+     */
+    _index = new Map();
+
+    /**
+     * @type {Array<XrAnchor>}
+     * @ignore
+     */
+    _list = [];
+
+    /**
+     * Map of callbacks to XRAnchors so that we can call its callback once
+     * an anchor is updated with a pose for the first time.
+     *
+     * @type {Map<XrAnchor,XrAnchorCreate>}
+     * @private
+     */
+    _callbacksAnchors = new Map();
+
+    /**
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
+     * @hideconstructor
+     */
     constructor(manager) {
         super();
 
         this.manager = manager;
-        this._supported = !! window.XRAnchor;
-
-        // list of anchor creation requests
-        this._creationQueue = [];
-
-        // key - XRAnchor (native anchor does not have an ID)
-        // value - XrAnchor
-        this._index = new Map();
-        this._list = null;
-
-        // map of callbacks to XRAnchors so that we can call its callback once an anchor is updated
-        // with a pose for the first time
-        //
-        // key - XRAnchor
-        // value - function
-        this._callbacksAnchors = new Map();
 
         if (this._supported) {
-            this.manager.on('start', this._onSessionStart, this);
             this.manager.on('end', this._onSessionEnd, this);
         }
     }
 
     /**
-     * @event
-     * @name XrAnchors#error
+     * Fired when anchor failed to be created.
+     *
+     * @event XrAnchors#error
      * @param {Error} error - Error object related to a failure of anchors.
-     * @description Fired when anchor failed to be created.
      */
 
     /**
-     * @event
-     * @name XrAnchors#add
-     * @description Fired when a new {@link XrAnchor} is added.
+     * Fired when a new {@link XrAnchor} is added.
+     *
+     * @event XrAnchors#add
      * @param {XrAnchor} anchor - Anchor that has been added.
      * @example
      * app.xr.anchors.on('add', function (anchor) {
@@ -69,9 +96,9 @@ class XrAnchors extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrAnchors#destroy
-     * @description Fired when an {@link XrAnchor} is destroyed.
+     * Fired when an {@link XrAnchor} is destroyed.
+     *
+     * @event XrAnchors#destroy
      * @param {XrAnchor} anchor - Anchor that has been destroyed.
      * @example
      * app.xr.anchors.on('destroy', function (anchor) {
@@ -79,14 +106,11 @@ class XrAnchors extends EventHandler {
      * });
      */
 
-    _onSessionStart() {
-        this._list = [];
-    }
-
+    /** @private */
     _onSessionEnd() {
         // clear anchor creation queue
         for (let i = 0; i < this._creationQueue.length; i++) {
-            if (! this._creationQueue[i].callback)
+            if (!this._creationQueue[i].callback)
                 continue;
 
             this._creationQueue[i].callback(new Error('session ended'), null);
@@ -99,17 +123,16 @@ class XrAnchors extends EventHandler {
             while (i--) {
                 this._list[i].destroy();
             }
-            this._list = null;
+            this._list.length = 0;
         }
     }
 
     /**
-     * @function
-     * @name XrAnchors#create
-     * @description Create anchor with position, rotation and a callback.
+     * Create anchor with position, rotation and a callback.
+     *
      * @param {import('../../core/math/vec3.js').Vec3} position - Position for an anchor
      * @param {import('../../core/math/quat.js').Quat} [rotation] - Rotation for an anchor
-     * @param {callbacks.XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created
+     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created
      * @example
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
      *     if (! err) {
@@ -119,11 +142,15 @@ class XrAnchors extends EventHandler {
      */
     create(position, rotation, callback) {
         this._creationQueue.push({
-            transform: new XRRigidTransform(position, rotation),
+            transform: new XRRigidTransform(position, rotation), // eslint-disable-line no-undef
             callback: callback
         });
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
         // check if need to create anchors
         if (this._creationQueue.length) {
@@ -164,6 +191,14 @@ class XrAnchors extends EventHandler {
             if (this._index.has(xrAnchor))
                 continue;
 
+            try {
+                const tmp = xrAnchor.anchorSpace; // eslint-disable-line no-unused-vars
+            } catch (ex) {
+                // if anchorSpace is not available, then anchor is invalid
+                // and should not be created
+                continue;
+            }
+
             const anchor = new XrAnchor(this, xrAnchor);
             this._index.set(xrAnchor, anchor);
             this._list.push(anchor);
@@ -179,10 +214,20 @@ class XrAnchors extends EventHandler {
         }
     }
 
+    /**
+     * True if Anchors are supported.
+     *
+     * @type {boolean}
+     */
     get supported() {
         return this._supported;
     }
 
+    /**
+     * List of available {@link XrAnchor}s.
+     *
+     * @type {Array<XrAnchor>}
+     */
     get list() {
         return this._list;
     }

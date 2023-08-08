@@ -4,29 +4,43 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Quat } from '../../core/math/quat.js';
 
 /**
- * @class
- * @name XrAnchor
- * @classdesc An anchor keeps track of a position and rotation that is fixed relative to the real world. This allows the application to adjust the location of the virtual objects placed in the scene in a way that helps with maintaining the illusion that the placed objects are really present in the user’s environment.
- * @description Creates an XrAnchor.
- * @hideconstructor
- * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
- * @property {object} xrAnchor native XRAnchor object that is provided by the WebXR API.
+ * An anchor keeps track of a position and rotation that is fixed relative to the real world.
+ * This allows the application to adjust the location of the virtual objects placed in the
+ * scene in a way that helps with maintaining the illusion that the placed objects are really
+ * present in the user’s environment.
+ *
+ * @augments EventHandler
+ * @category XR
  */
 class XrAnchor extends EventHandler {
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
+     * @param {object} xrAnchor - native XRAnchor object that is provided by WebXR API
+     * @hideconstructor
+     */
     constructor(anchors, xrAnchor) {
         super();
 
         this._anchors = anchors;
         this._xrAnchor = xrAnchor;
-
-        this._position = new Vec3();
-        this._rotation = new Quat();
     }
 
     /**
-     * @event
-     * @name XrAnchor#destroy
-     * @description Fired when an {@link XrAnchor} is destroyed.
+     * Fired when an {@link XrAnchor} is destroyed.
+     *
+     * @event XrAnchor#destroy
      * @example
      * // once anchor is destroyed
      * anchor.once('destroy', function () {
@@ -36,9 +50,9 @@ class XrAnchor extends EventHandler {
      */
 
     /**
-     * @event
-     * @name XrAnchor#change
-     * @description Fired when an {@link XrAnchor}'s position and/or rotation is changed.
+     * Fired when an {@link XrAnchor}'s position and/or rotation is changed.
+     *
+     * @event XrAnchor#change
      * @example
      * anchor.on('change', function () {
      *     // anchor has been updated
@@ -48,26 +62,28 @@ class XrAnchor extends EventHandler {
      */
 
     /**
-     * @function
-     * @name XrAnchor#destroy
-     * @description Destroy an anchor.
+     * Destroy an anchor.
      */
     destroy() {
+        if (!this._xrAnchor) return;
         this._anchors._index.delete(this._xrAnchor);
 
         const ind = this._anchors._list.indexOf(this);
         if (ind !== -1) this._anchors._list.splice(ind, 1);
 
         this._xrAnchor.delete();
-
         this._xrAnchor = null;
 
         this.fire('destroy');
         this._anchors.fire('destroy', this);
     }
 
+    /**
+     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
     update(frame) {
-        if (! this._xrAnchor)
+        if (!this._xrAnchor)
             return;
 
         const pose = frame.getPose(this._xrAnchor.anchorSpace, this._anchors.manager._referenceSpace);
@@ -82,9 +98,8 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrAnchor#getPosition
-     * @description Get the world space position of an anchor.
+     * Get the world space position of an anchor.
+     *
      * @returns {Vec3} The world space position of an anchor.
      */
     getPosition() {
@@ -92,9 +107,8 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * @function
-     * @name XrAnchor#getRotation
-     * @description Get the world space rotation of an anchor.
+     * Get the world space rotation of an anchor.
+     *
      * @returns {Quat} The world space rotation of an anchor.
      */
     getRotation() {
