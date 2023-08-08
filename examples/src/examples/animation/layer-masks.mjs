@@ -1,70 +1,100 @@
-import * as React from 'react';
 import * as pc from 'playcanvas';
 
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
+import { fragment, jsx, jsxBooleanInput, jsxSelectInput, jsxSliderInput } from './jsx.mjs';
 
 class LayerMasksExample {
     static CATEGORY = 'Animation';
     static NAME = 'Layer Masks';
     static WEBGPU_ENABLED = true;
+
     /**
      * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
-     * @returns {JSX.Element}
+     * @returns {JSX.Element} todo
      */
     static controls({observer}) {
-        /*
-        return <>
-            <Panel headerText='Full Body Layer'>
-                <LabelGroup text='active state'>
-                    <SelectInput options={[{ v: 'Idle', t: 'Idle' }, { v: 'Walk', t: 'Walk' }]} binding={new BindingTwoWay()} link={{ observer: data, path: 'fullBodyLayer.state' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Upper Body Layer'>
-                <LabelGroup text='active state'>
-                    <SelectInput options={[{ v: 'Eager', t: 'Eager' }, { v: 'Idle', t: 'Idle' }, { v: 'Dance', t: 'Dance' }]} binding={new BindingTwoWay()} link={{ observer: data, path: 'upperBodyLayer.state' }}/>
-                </LabelGroup>
-                <LabelGroup text='blend type'>
-                    <SelectInput options={[{ v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' }, { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }]} value={pc.ANIM_LAYER_ADDITIVE} binding={new BindingTwoWay()} link={{ observer: data, path: 'upperBodyLayer.blendType' }}/>
-                </LabelGroup>
-                <LabelGroup text='use mask'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'upperBodyLayer.useMask' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Options'>
-                <LabelGroup text='blend'>
-                    <SliderInput min={0.01} max={0.99} binding={new BindingTwoWay()} link={{ observer: data, path: 'options.blend' }} value={0.5}/>
-                </LabelGroup>
-                <LabelGroup text='skeleton'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'options.skeleton' }}/>
-                </LabelGroup>
-            </Panel>
-        </>;
-        */
-        return React.createElement(React.Fragment, null,
-            React.createElement(Panel, { headerText: 'Full Body Layer' },
-                React.createElement(LabelGroup, { text: 'active state' },
-                    React.createElement(SelectInput, { options: [{ v: 'Idle', t: 'Idle' }, { v: 'Walk', t: 'Walk' }], binding: new BindingTwoWay(), link: { observer, path: 'fullBodyLayer.state' } }))),
-            React.createElement(Panel, { headerText: 'Upper Body Layer' },
-                React.createElement(LabelGroup, { text: 'active state' },
-                    React.createElement(SelectInput, { options: [{ v: 'Eager', t: 'Eager' }, { v: 'Idle', t: 'Idle' }, { v: 'Dance', t: 'Dance' }], binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.state' } })),
-                React.createElement(LabelGroup, { text: 'blend type' },
-                    React.createElement(SelectInput, { options: [{ v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' }, { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }], value: pc.ANIM_LAYER_ADDITIVE, binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.blendType' } })),
-                React.createElement(LabelGroup, { text: 'use mask' },
-                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'upperBodyLayer.useMask' } }))),
-            React.createElement(Panel, { headerText: 'Options' },
-                React.createElement(LabelGroup, { text: 'blend' },
-                    React.createElement(SliderInput, { min: 0.01, max: 0.99, binding: new BindingTwoWay(), link: { observer, path: 'options.blend' }, value: 0.5 })),
-                React.createElement(LabelGroup, { text: 'skeleton' },
-                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'options.skeleton' } }))));       
+        return fragment(
+            jsx(Panel, { headerText: 'Full Body Layer' },
+                jsx(LabelGroup, { text: 'active state' },
+                    jsxSelectInput({
+                        options: ['Idle', 'Walk'].map(_ => ({v: _, t: _})),
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'fullBodyLayer.state'
+                        }
+                    })
+                )
+            ),
+            jsx(Panel, { headerText: 'Upper Body Layer' },
+                jsx(LabelGroup, { text: 'active state' },
+                    jsxSelectInput({
+                        options: ['Eager', 'Idle', 'Dance'].map(_ => ({v: _, t: _})),
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'upperBodyLayer.state'
+                        }
+                    })
+                ),
+                jsx(LabelGroup, { text: 'blend type' },
+                    jsxSelectInput({
+                        options: [
+                            { v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
+                            { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }
+                        ],
+                        value: pc.ANIM_LAYER_ADDITIVE,
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'upperBodyLayer.blendType'
+                        }
+                    })
+                ),
+                jsx(LabelGroup, { text: 'use mask' },
+                    jsxBooleanInput({
+                        type: 'toggle',
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'upperBodyLayer.useMask'
+                        }
+                    })
+                )
+            ),
+            jsx(Panel, { headerText: 'Options' },
+                jsx(LabelGroup, { text: 'blend' },
+                    jsxSliderInput({
+                        min: 0.01,
+                        max: 0.99,
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'options.blend'
+                        },
+                        value: 0.5
+                    })
+                ),
+                jsx(LabelGroup, { text: 'skeleton' },
+                    jsxBooleanInput({
+                        type: 'toggle',
+                        binding: new BindingTwoWay(),
+                        link: {
+                            observer,
+                            path: 'options.skeleton'
+                        }
+                    })
+                )
+            )
+        );
     }
 
     /**
-     * 
-     * @param {HTMLCanvasElement} canvas 
-     * @param {string} deviceType 
-     * @param {any} data 
-     * @returns {Promise<pc.AppBase>}
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
      */
     async example(canvas, deviceType, data) {
 
