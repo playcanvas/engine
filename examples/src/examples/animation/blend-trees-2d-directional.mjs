@@ -86,9 +86,9 @@ class BlendTrees2DDirectionalExample {
     }
 
     /**
-     * @param {HTMLCanvasElement} canvas 
-     * @param {string} deviceType 
-     * @returns {Promise<pc.AppBase>}
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
      */
     async example(canvas, deviceType) {
         const assets = {
@@ -107,7 +107,6 @@ class BlendTrees2DDirectionalExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        /** @type {pc.GraphicsDevice} */
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
         const createOptions = new pc.AppOptions();
         createOptions.graphicsDevice = device;

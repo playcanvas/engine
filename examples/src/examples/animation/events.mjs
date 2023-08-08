@@ -5,10 +5,11 @@ class EventsExample {
     static CATEGORY = 'Animation';
     static NAME = 'Events';
     static WEBGPU_ENABLED = true;
+
     /**
-     * @param {HTMLCanvasElement} canvas 
-     * @param {string} deviceType 
-     * @returns {Promise<pc.AppBase>}
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
      */
     async example(canvas, deviceType) {
 
@@ -24,7 +25,6 @@ class EventsExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        /** @type {pc.GraphicsDevice} */
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
         const createOptions = new pc.AppOptions();
         createOptions.graphicsDevice = device;

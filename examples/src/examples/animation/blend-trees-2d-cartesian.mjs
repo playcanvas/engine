@@ -124,9 +124,9 @@ class BlendTrees2DCartesianExample {
     static WEBGPU_ENABLED = true;
     static controls = JsxControls;
     /**
-     * @param {HTMLCanvasElement} canvas 
-     * @param {string} deviceType
-     * @returns {Promise<pc.AppBase>}
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
      */
     async example(canvas, deviceType) {
         //await import("http://127.0.0.1/playcanvas-engine/scripts/posteffects/posteffect-bloom.js");
@@ -147,9 +147,7 @@ class BlendTrees2DCartesianExample {
             twgslUrl: '../../../lib/twgsl/twgsl.js'
         };
 
-        /** @type {pc.GraphicsDevice} */
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-
         const createOptions = new pc.AppOptions();
         createOptions.graphicsDevice = device;
         createOptions.mouse = new pc.Mouse(document.body);

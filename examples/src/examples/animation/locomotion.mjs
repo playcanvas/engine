@@ -72,7 +72,6 @@ class LocomotionExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        /** @type {pc.GraphicsDevice} */
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
         const createOptions = new pc.AppOptions();
         createOptions.graphicsDevice = device;

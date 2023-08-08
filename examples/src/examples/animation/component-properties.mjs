@@ -31,10 +31,10 @@ class ComponentPropertiesExample {
     }
 
     /**
-     * @param {HTMLCanvasElement} canvas 
-     * @param {string} deviceType 
-     * @param {any} data 
-     * @returns {Promise<pc.AppBase>}
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
      */
     async example(canvas, deviceType, data) {
 
@@ -47,7 +47,6 @@ class ComponentPropertiesExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        /** @type {pc.GraphicsDevice} */
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
         const createOptions = new pc.AppOptions();
         createOptions.graphicsDevice = device;
