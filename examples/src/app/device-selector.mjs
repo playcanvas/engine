@@ -11,7 +11,7 @@ const deviceTypeNames = {
 /**
  * @typedef {object} Props
  * @property {Function} onSelect
- * @property {import('@playcanvas/observer').Observer} observer
+ * @property {import('@playcanvas/observer').Observer} [observer]
  */
 
 /** @typedef {object} State */
@@ -27,7 +27,7 @@ class DeviceSelector extends c {
      */
     constructor(props) {
         super(props);
-        this.props.observer.on('updateActiveDevice', this.onSetActiveGraphicsDevice.bind(this));
+        this.props.observer?.on('updateActiveDevice', this.onSetActiveGraphicsDevice.bind(this));
     }
 
     /**

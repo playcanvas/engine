@@ -4,6 +4,7 @@ import {
 } from '@playcanvas/pcui/react';
 export const jsx = React.createElement;
 export const fragment = (...args) => jsx(React.Fragment, null, ...args);
+import * as ReactDOMClient from "react-dom/client";
 
 /**
  * @param {Function} fn - todo
@@ -73,4 +74,14 @@ export function jsxPanel(options, ...children) {
  */
 export function jsxContainer(options, ...children) {
     return React.createElement(Container, options, ...children);
+}
+
+/**
+ * @param {JSX.Element} jsx - todo
+ */
+export function appendReactToBody(jsx) {
+    const div = document.createElement("div");
+    const root = ReactDOMClient.createRoot(div);
+    root.render(jsx);
+    document.body.append(div);
 }
