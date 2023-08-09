@@ -1,22 +1,21 @@
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { fragment, jsx } from "../examples/animation/jsx.mjs";
 import { controlsObserver } from './example.mjs';
 import { Controls } from './controls.mjs';
 /**
- * @typedef {object} ControlLoaderProps
+ * @typedef {object} Props
  * @property {string} path
  * @property {any} files
  */
 /**
- * @typedef {object} ControlLoaderState
+ * @typedef {object} State
  * @property {boolean} exampleLoaded
  */
-/**
- * @extends Component <ControlLoaderProps, ControlLoaderState>
- */
-class ControlLoader extends Component {
+/** @type {typeof Component<Props, State>} */
+const c = Component;
+class ControlLoader extends c {
     /**
-     * @param {ControlLoaderProps} props 
+     * @param {Props} props 
      */
     constructor(props) {
         super(props);
@@ -32,15 +31,12 @@ class ControlLoader extends Component {
             this.setState({
                 exampleLoaded: true
             });
-            //debugger;
             const activeDevice = event.deviceType;
-            console.log("got device type from iframe:", activeDevice);
             controlsObserver.emit('updateActiveDevice', activeDevice);
         });
-        console.log("another control loader...", this);
     }
     /**
-     * @param {Readonly<ControlLoaderProps>} prevProps 
+     * @param {Readonly<Props>} prevProps 
      */
     componentDidUpdate(prevProps) {
         if (prevProps.path !== this.props.path) {
