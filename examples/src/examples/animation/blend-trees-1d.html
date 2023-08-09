@@ -1,0 +1,14 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="../../example.css">
+        <script src="../../importmap.js"></script>
+    </head>
+    <body>
+        <canvas id='application-canvas'></canvas>
+        <script type="module">
+            import { example } from "./blend-trees-1d.mjs";
+            const canvas = document.getElementById("application-canvas");
+            example(canvas);
+        </script>
+    </body>
+</html>

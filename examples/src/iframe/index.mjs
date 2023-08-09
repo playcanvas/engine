@@ -173,14 +173,12 @@ if (!found) {
     document.body.removeChild(document.getElementById('app'))
     document.body.style = 'background-color: white; padding: 15px; overflow: auto;';
 } else {
-    const example = new Example();
     window.exampleFunction = window.top.localStorage.getItem(window.top.location.hash.replace('#', ''));
     if (!window.exampleFunction) {
-        window.exampleFunction = example.example;
+        window.exampleFunction = Example.example;
     } else {
         window.exampleFunction = asyncFunctionFromString(exampleFunction);
     }
-    window.loadFunction = example.load;
     window.files = window.top.editedFiles || Example.FILES;
     // create the example observer 
     const data = new observer.Observer({});

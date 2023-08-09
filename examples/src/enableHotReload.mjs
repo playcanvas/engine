@@ -1,0 +1,12 @@
+/**
+ * @example
+ * enableHotReload({
+ *     assetPath,
+ *     CORE,
+ *     DRACO,
+ * });
+ * @param {object} obj - Everything to be accessible for hot reloading the example function.
+ */
+export function enableHotReload(obj) {
+    Object.assign(window, obj);
+}

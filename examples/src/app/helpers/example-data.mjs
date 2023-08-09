@@ -44,7 +44,7 @@ Object.keys(exampleData).forEach((categorySlug) => {
         const files = [
             {
                 name: 'example.js',
-                text: 'function' + realClass.prototype.example.toString(),
+                text: 'function' + realClass.example.toString(),
                 type: 'javascript'
             },
         ];

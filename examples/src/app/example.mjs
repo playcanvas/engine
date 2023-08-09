@@ -6,12 +6,9 @@ import { Observer } from '@playcanvas/observer';
 import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from 'playcanvas';
 //import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
-import * as realExamples from '../examples/index.mjs';
-import ControlPanel from './control-panel.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { fragment } from '../examples/animation/jsx.mjs';
-import { JsxControls } from '../examples/animation/blend-trees-2d-cartesian.mjs';
 import { iframePath } from '../assetPath.mjs';
+import { ControlLoader } from './control-loader.mjs';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
@@ -20,110 +17,6 @@ const deviceTypeNames = {
 };
 
 const controlsObserver = new Observer();
-/**
- * @example
- * makeCamelCase("animation") // Outputs "Animation"
- */
-const makeCamelCase = word => word.charAt(0).toUpperCase() + word.slice(1);
-/**
- * @example
- * console.log(rewriteExampleString('blend-trees-2d-cartesian')); // Outputs "BlendTrees2DCartesianExample"
- * @param {*} str 
- * @returns 
- */
-function rewriteExampleString(str) {
-    let result = str.split('-').map(makeCamelCase).join('');
-    result = result.replaceAll("1d", "1D");
-    result = result.replaceAll("2d", "2D");
-    result = result.replaceAll("3d", "3D");
-    result += "Example";
-    return result;
-}
-const Controls = (props) => {
-    let { category, example } = useParams();
-    category = makeCamelCase(category);
-    example = rewriteExampleString(example);
-    let controls;
-    try {
-        //debugger;
-        controls = realExamples[category][example].controls;
-        //console.log({controls});
-    } catch (e) {
-        console.warn("error finding jsx controls for example", e);
-    }
-    //const controlsFunction = JsxControls; // only for test
-    //const controlsFunction = (document.getElementsByTagName('iframe')[0] /*as any*/).contentWindow.Example.controls || null;
-    //console.log("CONTROLS FUNCTION", controlsFunction)
-    // on desktop dont show the control panel when no controls are present
-    if (!controls && window.top.innerWidth >= MIN_DESKTOP_WIDTH) {
-        return null;
-    }
-    //return <ControlPanel controls={controlsFunction} files={props.files} />;
-    return React.createElement(ControlPanel, { controls, files: props.files });
-};
-/**
- * @typedef {object} ControlLoaderProps
- * @property {string} path
- * @property {any} files
- */
-/**
- * @typedef {object} ControlLoaderState
- * @property {boolean} exampleLoaded
- */
-/**
- * @extends Component <ControlLoaderProps, ControlLoaderState>
- */
-
-class ControlLoader extends Component {
-    timeout;
-    /**
-     * @param {ControlLoaderProps} props 
-     */
-    constructor(props) {
-        super(props);
-        this.state = {
-            exampleLoaded: false
-        };
-        window.addEventListener('exampleLoading', () => {
-            this.setState({
-                exampleLoaded: false
-            });
-        });
-        window.addEventListener('exampleLoad', (event) => {
-            this.setState({
-                exampleLoaded: true
-            });
-            //debugger;
-            const activeDevice = event.deviceType;
-            console.log("got device type from iframe:", activeDevice);
-            controlsObserver.emit('updateActiveDevice', activeDevice);
-        });
-        console.log("another control loader...", this);
-    }
-    /**
-     * @param {Readonly<ControlLoaderProps>} prevProps 
-     * @returns {void}
-     */
-    componentDidUpdate(prevProps) {
-        if (prevProps.path !== this.props.path) {
-            this.setState({
-                exampleLoaded: false
-            });
-        }
-    }
-
-    render() {
-        //return <>
-        //    { this.state.exampleLoaded && <Controls {...this.props} /> }
-        //</>;
-        //fragment()
-        return React.createElement(
-            React.Fragment,
-            null,
-            this.state.exampleLoaded && React.createElement(Controls, { ...this.props })
-        );
-    }
-}
 
 /**
  * @typedef {object} ExampleProps
@@ -290,5 +183,6 @@ class Example extends Component {
 }
 const ExamptWithRouter = withRouter(Example);
 export {
-    ExamptWithRouter as Example
+    ExamptWithRouter as Example,
+    controlsObserver,
 };
