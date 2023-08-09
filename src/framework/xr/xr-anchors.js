@@ -43,6 +43,8 @@ class XrAnchors extends EventHandler {
     _creationQueue = [];
 
     /**
+     * Index of XrAnchors, with XRAnchor (native handle) used as a key.
+     *
      * @type {Map<XRAnchor,XrAnchor>}
      * @ignore
      */
