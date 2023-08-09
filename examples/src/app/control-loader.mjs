@@ -15,7 +15,6 @@ import { Controls } from './controls.mjs';
  * @extends Component <ControlLoaderProps, ControlLoaderState>
  */
 class ControlLoader extends Component {
-    //timeout;
     /**
      * @param {ControlLoaderProps} props 
      */
@@ -42,7 +41,6 @@ class ControlLoader extends Component {
     }
     /**
      * @param {Readonly<ControlLoaderProps>} prevProps 
-     * @returns {void}
      */
     componentDidUpdate(prevProps) {
         if (prevProps.path !== this.props.path) {

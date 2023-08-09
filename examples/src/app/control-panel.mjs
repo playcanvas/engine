@@ -2,9 +2,13 @@ import React, { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container } from '@playcanvas/pcui/react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
+import { jsxButton } from '../examples/animation/jsx.mjs';
 /**
- * @param {} props 
- * @returns 
+ * @typedef {object} ControlPanelProps
+ */
+/**
+ * @param {ControlPanelProps} props - todo
+ * @returns {JSX.Element} todo
  */
 const ControlPanel = (props) => {
     const [state, setState] = useState({
@@ -50,35 +54,6 @@ const ControlPanel = (props) => {
             document.getElementById('controlPanel').ui.hidden = true;
         }
     });
-    //const controls = ;
-/*
-    return <Container id='controls-wrapper' class={props.controls ? 'has-controls' : null}>
-        { window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && <Container id= 'controlPanel-tabs' class='tabs-container'>
-            <Button text='CODE' id='codeButton' class={state.showCode ? 'selected' : null} onClick={onClickCodeTab}/>
-            <Button text='PARAMETERS' class={state.showParameters ? 'selected' : null} id='paramButton' onClick={onClickParametersTab} />
-        </Container>
-        }
-        <Container id='controlPanel-controls'>
-            { controls }
-        </Container>
-        { window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && <MonacoEditor
-            options={{
-                readOnly: true
-            }}
-            defaultLanguage="typescript"
-            value={props.files ? props.files[0].text : ''}
-        />
-        }
-    </Container>;
-    */
-    /**
-     * @param {React.ClassAttributes<Button> & ButtonArgs} options 
-     * @returns {React.CElement<ButtonArgs, Button>}
-     */
-    function jsxButton(options) {
-        console.log("new jsx button");
-        return React.createElement(Button, options);
-    }
     return React.createElement(
         Container,
         {

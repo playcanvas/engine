@@ -199,5 +199,6 @@ class BlendTrees1DExample {
 }
 export {
     example,
+    JsxControls as controls,
     BlendTrees1DExample,
 };

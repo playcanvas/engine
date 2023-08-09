@@ -9,7 +9,8 @@ import { CodeEditor    } from './code-editor.mjs';
 import { Menu          } from './menu.mjs';
 import { Example       } from './example.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
-import { jsx           } from '../examples/animation/jsx.mjs';
+import { jsx, jsxContainer           } from '../examples/animation/jsx.mjs';
+import { ControlLoader } from './control-loader.mjs';
 
 window.pcui = pcui;
 window.React = React;
@@ -39,34 +40,46 @@ const MainLayout = () => {
             });
         }
     });
-    return (React.createElement("div", { id: 'appInner' },
-        React.createElement(Router, null,
-            React.createElement(Switch, null,
-                React.createElement(Route, { exact: true, path: '/' },
-                    React.createElement(Redirect, { to: "/misc/hello-world" })),
-                React.createElement(Route, { path: '/:category/:example' },
-                    React.createElement(SideBar, null),
-                    React.createElement(pcui.Container, { id: 'main-view-wrapper' },
-                        React.createElement(Menu, {
-                            setShowMiniStats: updateShowMiniStats
-                        }),
-                        React.createElement(pcui.Container, { id: 'main-view' },
-                            jsx(ErrorBoundary, null,
-                                React.createElement(CodeEditor, {
-                                    lintErrors,
-                                    setLintErrors,
-                                    playButtonRef,
-                                    files,
-                                    setFiles
-                                }),
-                                React.createElement(Example, {
-                                    files,
-                                    setFiles,
-                                }))))))))
+    return (
+        jsx("div", { id: 'appInner' },
+            jsx(Router, null,
+                jsx(Switch, null,
+                    jsx(Route, { exact: true, path: '/' },
+                        jsx(Redirect, { to: "/misc/hello-world" })),
+                    jsx(Route, { path: '/:category/:example' },
+                        jsx(SideBar, null),
+                        jsxContainer({ id: 'main-view-wrapper' },
+                            jsx(Menu, {
+                                setShowMiniStats: updateShowMiniStats
+                            }),
+                            jsxContainer({ id: 'main-view' },
+                                jsx(ErrorBoundary, null,
+                                    jsx(CodeEditor, {
+                                        lintErrors,
+                                        setLintErrors,
+                                        playButtonRef,
+                                        files,
+                                        setFiles
+                                    }),
+                                    jsx(
+                                        Example,
+                                        {
+                                            files,
+                                            setFiles,
+                                        },
+                                        jsx(ControlLoader, { /*path: this.path,*/ files, setFiles })
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
     );
 };
 // render out the app
 ReactDOM.render(
-    React.createElement(MainLayout, null),
+    jsx(MainLayout, null),
     document.getElementById('app')
 );

@@ -6,9 +6,33 @@
     <body>
         <canvas id='application-canvas'></canvas>
         <script type="module">
-            import { example } from "./blend-trees-1d.mjs";
+            import * as pc from 'playcanvas';
+            import { Observer } from '@playcanvas/observer';
+            import { controls, example } from "./blend-trees-1d.mjs";
+            import * as React from "react";
+            import * as ReactDOMClient from "react-dom/client";
+            import '@playcanvas/pcui/styles';
             const canvas = document.getElementById("application-canvas");
-            example(canvas);
+            const observer = new Observer();
+            example(canvas, pc.DEVICETYPE_WEBGL2, observer);
+            function appendReactToBody(jsx) {
+                const div = document.createElement("div");
+                div.style.position = "absolute";
+                div.style.right = "10px";
+                div.style.top = "10px";
+                const root = ReactDOMClient.createRoot(div);
+                root.render(jsx);
+                document.body.append(div);
+            }
+            appendReactToBody(React.createElement(controls, { observer }));
+            Object.assign(window, {
+                controls,
+                example,
+                pc,
+                observer,
+                React,
+                ReactDOMClient,
+            });
         </script>
     </body>
 </html>

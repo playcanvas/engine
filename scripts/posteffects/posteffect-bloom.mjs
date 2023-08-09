@@ -1,5 +1,8 @@
+// Not a full module yet, keep window.pc to load it as asset.
+// import * as pc from 'playcanvas';
+
 // --------------- POST EFFECT DEFINITION --------------- //
-var SAMPLE_COUNT = 15;
+const SAMPLE_COUNT = 15;
 
 function computeGaussian(n, theta) {
     return ((1.0 / Math.sqrt(2 * Math.PI * theta)) * Math.exp(-(n * n) / (2 * theta * theta)));
