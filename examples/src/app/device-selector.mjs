@@ -11,19 +11,24 @@ const deviceTypeNames = {
 /**
  * @typedef {object} Props
  * @property {Function} onSelect
+ * @property {import('@playcanvas/observer').Observer} observer
  */
 
-/**
- * @typedef {object} State
- */
+/** @typedef {object} State */
 
-/**
- * @type {typeof Component<Props, State>}
- */
+/** @type {typeof Component<Props, State>} */
 const c = Component;
 
 class DeviceSelector extends c {
     deviceTypeSelectInputRef = React.createRef();
+
+    /**
+     * @param {Props} props 
+     */
+    constructor(props) {
+        super(props);
+        this.props.observer.on('updateActiveDevice', this.onSetActiveGraphicsDevice.bind(this));
+    }
 
     /**
      * @type {SelectInput|undefined}

@@ -1,7 +1,5 @@
-import React, { Component } from 'react';
-import { useParams, withRouter } from 'react-router-dom';
-import { Container, Spinner, SelectInput, Panel } from '@playcanvas/pcui/react';
-import { SelectInput as SelectInputClass } from '@playcanvas/pcui';
+import { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 //import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
@@ -13,31 +11,23 @@ import { DeviceSelector } from './device-selector.mjs';
 const controlsObserver = new Observer();
 
 /**
- * @typedef {object} ExampleProps
- * @property {Array<File>} files
+ * @typedef {object} Props
+ * @property {File[]} files
  * @property {(value: Array<File>) => void} setFiles
  * @property {{params: any}} match
  */
 
 /**
- * @typedef {object} ExampleState
+ * @typedef {object} State
  * @property {any} codeError
  */
 
-/** @type {typeof Component<ExampleProps, ExampleState>} */
+/** @type {typeof Component<Props, State>} */
 const c = Component;
 
 class Example extends c {
     /** @type {string} */
     editorValue;
-    /**
-     * @param {ExampleProps} props 
-     */
-    constructor(props) {
-        super(props);
-        //controlsObserver.on('updateActiveDevice', this.onSetActiveGraphicsDevice);
-        controlsObserver.on('updateActiveDevice', () => console.warn("todo turn into prop"));
-    }
 
     get defaultFiles() {
         return examples.paths[this.path].files;
@@ -58,7 +48,7 @@ class Example extends c {
         this.props.setFiles(this.defaultFiles);
     }
     /**
-     * @param {Readonly<ExampleProps>} nextProps 
+     * @param {Readonly<Props>} nextProps 
      * @returns {boolean}
      */
     shouldComponentUpdate(nextProps) {
@@ -103,7 +93,7 @@ class Example extends c {
                     collapsible: true,
                     collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH
                 },
-                jsx(DeviceSelector, {onSelect: this.onSetPreferredGraphicsDevice}),
+                jsx(DeviceSelector, {onSelect: this.onSetPreferredGraphicsDevice, observer: controlsObserver}),
                 children,
             )
         );       
