@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import getExamplesList from '../src/app/helpers/read-dir.mjs';
 /* eslint-disable no-await-in-loop */
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,9 +15,8 @@ const exampleList = [];
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
 categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
-    let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
+    let examples = getExamplesList(MAIN_DIR, category);
     examples = examples.filter(e => e !== 'index.mjs');
-    examples = examples.filter(e => e !== 'lit-material.tsx');
     examples.forEach((e) => {
         exampleList.push({
             category,
@@ -65,5 +65,3 @@ async function takeScreenshots() {
 }
 
 takeScreenshots();
-
-console.log("🚀 ~ file: thumbnails.mjs:20 ~ temporary filter: 'lit-material.tsx'");

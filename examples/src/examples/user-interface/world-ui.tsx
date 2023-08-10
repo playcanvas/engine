@@ -145,9 +145,7 @@ class WorldUiExample {
                 // Button
                 const button = new pc.Entity();
                 button.setLocalPosition(0, -25, 0);
-                button.addComponent("button", {
-                    imageEntity: button
-                });
+                button.addComponent("button");
                 button.addComponent("element", {
                     anchor: [0.5, 0.5, 0.5, 0.5],
                     width: 100,

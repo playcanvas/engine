@@ -385,15 +385,13 @@ class AppBase extends EventHandler {
             enabled: true,
             name: "UI",
             id: LAYERID_UI,
-            transparentSortMode: SORTMODE_MANUAL,
-            passThrough: false
+            transparentSortMode: SORTMODE_MANUAL
         });
         this.defaultLayerImmediate = new Layer({
             enabled: true,
             name: "Immediate",
             id: LAYERID_IMMEDIATE,
-            opaqueSortMode: SORTMODE_NONE,
-            passThrough: true
+            opaqueSortMode: SORTMODE_NONE
         });
 
         const defaultLayerComposition = new LayerComposition("default");
@@ -415,12 +413,6 @@ class AppBase extends EventHandler {
                 switch (layer.id) {
                     case LAYERID_DEPTH:
                         self.sceneGrab.patch(layer);
-                        break;
-                    case LAYERID_UI:
-                        layer.passThrough = self.defaultLayerUi.passThrough;
-                        break;
-                    case LAYERID_IMMEDIATE:
-                        layer.passThrough = self.defaultLayerImmediate.passThrough;
                         break;
                 }
             }

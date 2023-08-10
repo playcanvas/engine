@@ -1550,6 +1550,18 @@ class LitShader {
         return result;
     }
 
+    /**
+     * Generates a fragment shader. Please make sure to update src/deprecated/deprecated.js in
+     * case `this.fshader` does not longer contain the entire fragment shader once this function
+     * is done because we handle backwards compatibility there for old shaders. This allows us
+     * to have deprecation-free tree shaking while still fixing shaders for full builds.
+     *
+     * @param {string} frontendDecl - Frontend declarations like `float dAlpha;`
+     * @param {string} frontendCode - Frontend code containing `getOpacity()` etc.
+     * @param {string} frontendFunc - E.g. `evaluateFrontend();`
+     * @param {string} lightingUv - E.g. `vUv0`
+     * @ignore
+     */
     generateFragmentShader(frontendDecl, frontendCode, frontendFunc, lightingUv) {
         const options = this.options;
 
@@ -1569,6 +1581,7 @@ class LitShader {
         } else {
             this.fshader = this._fsGetLitPassCode();
         }
+        this.handleCompatibility?.();
     }
 
     getDefinition() {
