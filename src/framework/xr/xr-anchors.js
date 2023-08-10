@@ -17,15 +17,13 @@ import { XrAnchor } from './xr-anchor.js';
  * Anchors tend to persist better relative to the real world, especially during a longer
  * session with lots of movement.
  *
- * @property {boolean} supported True if Anchors are supported.
- * @property {XrAnchor[]} list Array of active {@link XrAnchor}s.
- * @augments EventHandler
- * @category XR
  * ```javascript
  * app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
  *     anchors: true
  * });
  * ```
+ * @augments EventHandler
+ * @category XR
  */
 class XrAnchors extends EventHandler {
     /**
