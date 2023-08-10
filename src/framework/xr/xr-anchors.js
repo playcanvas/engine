@@ -11,7 +11,7 @@ import { XrAnchor } from './xr-anchor.js';
  */
 
 /**
- * Anchors provide an ability to specify a point in the world that need to be updated to
+ * Anchors provide an ability to specify a point in the world that needs to be updated to
  * correctly reflect the evolving understanding of the world by the underlying AR system,
  * such that the anchor remains aligned with the same place in the physical world.
  * Anchors tend to persist better relative to the real world, especially during a longer
