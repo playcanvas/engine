@@ -4,7 +4,7 @@ import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextI
 import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
-import { MIN_DESKTOP_WIDTH } from './constants.js';
+import { MIN_DESKTOP_WIDTH } from './constants';
 
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');

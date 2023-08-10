@@ -371,25 +371,6 @@ class Scene extends EventHandler {
     }
 
     /**
-     * List of all active composition mesh instances. Only for backwards compatibility.
-     * TODO: BatchManager is using it - perhaps that could be refactored
-     *
-     * @type {import('./mesh-instance.js').MeshInstance[]}
-     * @private
-     */
-    set drawCalls(value) {
-    }
-
-    get drawCalls() {
-        let drawCalls = this.layers._meshInstances;
-        if (!drawCalls.length) {
-            this.layers._update(this.device, this.clusteredLightingEnabled);
-            drawCalls = this.layers._meshInstances;
-        }
-        return drawCalls;
-    }
-
-    /**
      * The environment lighting atlas.
      *
      * @type {import('../platform/graphics/texture.js').Texture}

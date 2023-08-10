@@ -240,9 +240,8 @@ class Immediate {
             const meshInstances = this.layerMeshInstances.get(layer);
             if (meshInstances) {
                 for (let i = 0; i < meshInstances.length; i++) {
-                    visibleList.list[visibleList.length + i] = meshInstances[i];
+                    visibleList.push(meshInstances[i]);
                 }
-                visibleList.length += meshInstances.length;
                 meshInstances.length = 0;
             }
         }

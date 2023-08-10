@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.65.0-dev",
+  "version": "1.66.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -53,7 +53,8 @@
     },
     "rules": {
       "jsdoc/check-tag-names": [
-        "error", {
+        "error",
+        {
           "definedTags": [
             "category"
           ]
@@ -85,6 +86,8 @@
     "LICENSE",
     "package.json",
     "README.md",
+    "README-ja.md",
+    "README-kr.md",
     "README-zh.md"
   ],
   "devDependencies": {
@@ -99,6 +102,7 @@
     "@rollup/plugin-strip": "^3.0.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/pluginutils": "^5.0.2",
+    "@types/webxr": "^0.5.2",
     "@webgpu/types": "^0.1.34",
     "c8": "^8.0.0",
     "chai": "^4.3.7",
