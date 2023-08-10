@@ -1,3 +1,5 @@
+import { EventHandle } from './event-handle.js';
+
 /**
  * Callback used by {@link EventHandler} functions. Note the callback is limited to 8 arguments.
  *
@@ -29,13 +31,13 @@
  */
 class EventHandler {
     /**
-     * @type {Map<string,Array<object>>}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
     _callbacks = new Map();
 
     /**
-     * @type {Map<string,Array<object>>}
+     * @type {Map<string,Array<EventHandle>>}
      * @private
      */
     _callbackActive = new Map();
@@ -58,11 +60,14 @@ class EventHandler {
      * @param {object} scope - Object to use as 'this' when the event is fired, defaults to
      * current this.
      * @param {boolean} once - If true, the callback will be unbound after being fired once.
+     * @returns {EventHandle} Created {@link EventHandle}.
      * @ignore
      */
     _addCallback(name, callback, scope, once) {
+        // #if _DEBUG
         if (!name || typeof name !== 'string' || !callback)
-            return;
+            console.warn(`EventHandler: subscribing to an event (${name}) with missing arguments`, callback);
+        // #endif
 
         if (!this._callbacks.has(name))
             this._callbacks.set(name, []);
@@ -76,11 +81,9 @@ class EventHandler {
             }
         }
 
-        this._callbacks.get(name).push({
-            callback: callback,
-            scope: scope,
-            once: once
-        });
+        const evt = new EventHandle(this, name, callback, scope, once);
+        this._callbacks.get(name).push(evt);
+        return evt;
     }
 
     /**
@@ -91,16 +94,21 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandler} Self for chaining.
+     * @returns {EventHandle} Can be used for removing event in the future.
      * @example
      * obj.on('test', function (a, b) {
      *     console.log(a + b);
      * });
      * obj.fire('test', 1, 2); // prints 3 to the console
+     * @example
+     * const evt = obj.on('test', function (a, b) {
+     *     console.log(a + b);
+     * });
+     * // some time later
+     * evt.off();
      */
     on(name, callback, scope = this) {
-        this._addCallback(name, callback, scope, false);
-        return this;
+        return this._addCallback(name, callback, scope, false);
     }
 
     /**
@@ -111,7 +119,7 @@ class EventHandler {
      * the callback is limited to 8 arguments.
      * @param {object} [scope] - Object to use as 'this' when the event is fired, defaults to
      * current this.
-     * @returns {EventHandler} Self for chaining.
+     * @returns {EventHandle} - can be used for removing event in the future.
      * @example
      * obj.once('test', function (a, b) {
      *     console.log(a + b);
@@ -120,8 +128,7 @@ class EventHandler {
      * obj.fire('test', 1, 2); // not going to get handled
      */
     once(name, callback, scope = this) {
-        this._addCallback(name, callback, scope, true);
-        return this;
+        return this._addCallback(name, callback, scope, true);
     }
 
     /**
@@ -165,33 +172,41 @@ class EventHandler {
 
         if (!name) {
             // remove all events
+            for (const callbacks of this._callbacks.values()) {
+                for (let i = 0; i < callbacks.length; i++) {
+                    callbacks[i].removed = true;
+                }
+            }
             this._callbacks.clear();
         } else if (!callback) {
             // remove all events of a specific name
-            if (this._callbacks.has(name))
+            const callbacks = this._callbacks.get(name);
+            if (callbacks) {
+                for (let i = 0; i < callbacks.length; i++) {
+                    callbacks[i].removed = true;
+                }
                 this._callbacks.delete(name);
+            }
         } else {
-            const events = this._callbacks.get(name);
-            if (!events)
+            const callbacks = this._callbacks.get(name);
+            if (!callbacks)
                 return this;
 
-            let count = events.length;
-
-            for (let i = 0; i < count; i++) {
+            for (let i = 0; i < callbacks.length; i++) {
                 // remove all events with a specific name and a callback
-                if (events[i].callback !== callback)
+                if (callbacks[i].callback !== callback)
                     continue;
 
                 // could be a specific scope as well
-                if (scope && events[i].scope !== scope)
+                if (scope && callbacks[i].scope !== scope)
                     continue;
 
-                events[i--] = events[--count];
+                callbacks[i].removed = true;
+                callbacks.splice(i, 1);
+                i--;
             }
 
-            events.length = count;
-
-            if (events.length === 0)
+            if (callbacks.length === 0)
                 this._callbacks.delete(name);
         }
 
@@ -237,9 +252,11 @@ class EventHandler {
         // eslint-disable-next-line no-unmodified-loop-condition
         for (let i = 0; (callbacks || this._callbackActive.get(name)) && (i < (callbacks || this._callbackActive.get(name)).length); i++) {
             const evt = (callbacks || this._callbackActive.get(name))[i];
+            if (!evt.callback) continue;
+
             evt.callback.call(evt.scope, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 
-            if (evt.once) {
+            if (evt._once) {
                 // check that callback still exists because user may have unsubscribed in the event handler
                 const existingCallback = this._callbacks.get(name);
                 const ind = existingCallback ? existingCallback.indexOf(evt) : -1;
@@ -250,6 +267,7 @@ class EventHandler {
 
                     const callbacks = this._callbacks.get(name);
                     if (!callbacks) continue;
+                    callbacks[ind].removed = true;
                     callbacks.splice(ind, 1);
 
                     if (callbacks.length === 0)

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, createRef } from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import * as pcui from '@playcanvas/pcui/react';
 import '@playcanvas/pcui/styles';
 // @ts-ignore: library file import
@@ -80,7 +80,6 @@ const MainLayout = () => {
 };
 
 // render out the app
-ReactDOM.render(
-    <MainLayout />,
-    document.getElementById('app')
-);
+const container = document.getElementById('app');
+const root = createRoot(container);
+root.render(<MainLayout />);

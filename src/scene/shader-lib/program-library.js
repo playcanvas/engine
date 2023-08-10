@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { hashCode } from '../../core/hash.js';
 import { version, revision } from '../../core/core.js';
 
 import { Shader } from '../../platform/graphics/shader.js';
@@ -119,8 +120,12 @@ class ProgramLibrary {
 
         // we have a key for shader source code generation, a key for its further processing to work with
         // uniform buffers, and a final key to get the processed shader from the cache
-        const generationKey = generator.generateKey(options);
-        const processingKey = processingOptions.generateKey();
+        const generationKeyString = generator.generateKey(options);
+        const generationKey = hashCode(generationKeyString);
+
+        const processingKeyString = processingOptions.generateKey(this._device);
+        const processingKey = hashCode(processingKeyString);
+
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
@@ -158,6 +163,13 @@ class ProgramLibrary {
 
             // add new shader to the processed cache
             processedShader = new Shader(this._device, shaderDefinition);
+
+            // keep the keys in the debug mode
+            Debug.call(() => {
+                processedShader._generationKey = generationKeyString;
+                processedShader._processingKey = processingKeyString;
+            });
+
             this.setCachedShader(totalKey, processedShader);
         }
 
