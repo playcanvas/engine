@@ -2141,7 +2141,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         if (!this.webgl2) {
             // async fences aren't supported on webgl1
-            return this.readPixels(x, y, w, h, pixels);
+            this.readPixels(x, y, w, h, pixels);
+            return;
         }
 
         const clientWaitAsync = (flags, interval_ms) => {

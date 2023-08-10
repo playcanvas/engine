@@ -92,7 +92,7 @@ class TextureAtlasHandler {
                 }
             });
         } else {
-            return handler.load(url, callback);
+            handler.load(url, callback);
         }
     }
 
