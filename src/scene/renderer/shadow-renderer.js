@@ -173,7 +173,8 @@ class ShadowRenderer {
 
     /**
      * Culls the list of shadow casters used by the light by the camera, storing visible mesh
-     * instances in the specified array
+     * instances in the specified array.
+
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition used as a source of shadow casters, if those are not provided directly.
      * @param {import('../light.js').Light} light - The light.
