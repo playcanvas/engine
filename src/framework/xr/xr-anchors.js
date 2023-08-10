@@ -137,7 +137,7 @@ class XrAnchors extends EventHandler {
      * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
-     *     if (! err) {
+     *     if (!err) {
      *         // new anchor has been created
      *     }
      * });
