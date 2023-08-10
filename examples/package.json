@@ -45,7 +45,12 @@
     "settings": {
       "import/resolver": {
         "node": {
-          "extensions": [".js", ".jsx", ".ts", ".tsx"]
+          "extensions": [
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx"
+          ]
         }
       }
     }
@@ -97,5 +102,8 @@
     "whatwg-fetch": "^3.6.17"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "fflate": "^0.8.0"
+  }
 }
