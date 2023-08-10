@@ -31,7 +31,7 @@ class ShadowRendererLocal {
     }
 
     // cull local shadow map
-    cull(light, drawCalls) {
+    cull(light, comp, casters = null) {
 
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
 
@@ -85,7 +85,7 @@ class ShadowRendererLocal {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
         }
     }
 

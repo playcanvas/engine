@@ -77,12 +77,28 @@ class Layer {
     meshInstances = [];
 
     /**
+     * Mesh instances assigned to this layer, stored in a set.
+     *
+     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @ignore
+     */
+    meshInstancesSet = new Set();
+
+    /**
      * Shadow casting instances assigned to this layer.
      *
      * @type {import('./mesh-instance.js').MeshInstance[]}
      * @ignore
      */
     shadowCasters = [];
+
+    /**
+     * Shadow casting instances assigned to this layer, stored in a set.
+     *
+     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @ignore
+     */
+    shadowCastersSet = new Set();
 
     /**
      * Visible (culled) mesh instances assigned to this layer. Looked up by the Camera.
@@ -518,29 +534,31 @@ class Layer {
      * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
      * {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
-     * to cast shadows in this layer.
+     * to cast shadows in this layer. Defaults to false.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
-        const sceneShaderVer = this._shaderVersion;
-        const casters = this.shadowCasters;
-        const destMeshInstances = this.meshInstances;
 
-        // add mesh instances to the layer's arrays
+        const destMeshInstances = this.meshInstances;
+        const destMeshInstancesSet = this.meshInstancesSet;
+
+        // add mesh instances to the layer's array and the set
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
-            if (destMeshInstances.indexOf(mi) < 0) {
+            if (!destMeshInstancesSet.has(mi)) {
                 destMeshInstances.push(mi);
-                _tempMaterials.add(mi.material);
-            }
-
-            if (!skipShadowCasters && mi.castShadow && casters.indexOf(mi) < 0) {
-                casters.push(mi);
+                destMeshInstancesSet.add(mi);
                 _tempMaterials.add(mi.material);
             }
         }
 
+        // shadow casters
+        if (!skipShadowCasters) {
+            this.addShadowCasters(meshInstances);
+        }
+
         // clear old shader variants if necessary
         if (_tempMaterials.size > 0) {
+            const sceneShaderVer = this._shaderVersion;
             _tempMaterials.forEach((mat) => {
                 if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer)  {
                     // skip this for materials not using variants
@@ -561,28 +579,30 @@ class Layer {
      * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
      * {@link MeshInstance}. If they were added to this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
-     * removed mesh instances or if they never did cast shadows before.
+     * removed mesh instances or if they never did cast shadows before. Defaults to false.
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
         const destMeshInstances = this.meshInstances;
-        const casters = this.shadowCasters;
+        const destMeshInstancesSet = this.meshInstancesSet;
 
+        // mesh instances
         for (let i = 0; i < meshInstances.length; i++) {
             const mi = meshInstances[i];
 
             // remove from mesh instances list
-            const j = destMeshInstances.indexOf(mi);
-            if (j >= 0) {
-                destMeshInstances.splice(j, 1);
+            if (destMeshInstancesSet.has(mi)) {
+                destMeshInstancesSet.delete(mi);
+                const j = destMeshInstances.indexOf(mi);
+                if (j >= 0) {
+                    destMeshInstances.splice(j, 1);
+                }
             }
+        }
 
-            // remove from casters
-            if (!skipShadowCasters) {
-                const j = casters.indexOf(mi);
-                if (j >= 0)
-                    casters.splice(j, 1);
-            }
+        // shadow casters
+        if (!skipShadowCasters) {
+            this.removeShadowCasters(meshInstances);
         }
     }
 
@@ -595,13 +615,15 @@ class Layer {
      */
     addShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
+        const shadowCastersSet = this.shadowCastersSet;
+
         for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
-            if (m.castShadow && shadowCasters.indexOf(m) < 0) {
-                shadowCasters.push(m);
+            const mi = meshInstances[i];
+            if (mi.castShadow && !shadowCastersSet.has(mi)) {
+                shadowCastersSet.add(mi);
+                shadowCasters.push(mi);
             }
         }
-        this._dirtyLights = true;
     }
 
     /**
@@ -613,11 +635,18 @@ class Layer {
      */
     removeShadowCasters(meshInstances) {
         const shadowCasters = this.shadowCasters;
+        const shadowCastersSet = this.shadowCastersSet;
+
         for (let i = 0; i < meshInstances.length; i++) {
-            const j = shadowCasters.indexOf(meshInstances[i]);
-            if (j >= 0) shadowCasters.splice(j, 1);
+            const mi = meshInstances[i];
+            if (shadowCastersSet.has(mi)) {
+                shadowCastersSet.delete(mi);
+                const j = shadowCasters.indexOf(mi);
+                if (j >= 0) {
+                    shadowCasters.splice(j, 1);
+                }
+            }
         }
-        this._dirtyLights = true;
     }
 
     /**
@@ -628,8 +657,11 @@ class Layer {
      */
     clearMeshInstances(skipShadowCasters = false) {
         this.meshInstances.length = 0;
+        this.meshInstancesSet.clear();
+
         if (!skipShadowCasters) {
             this.shadowCasters.length = 0;
+            this.shadowCastersSet.clear();
         }
     }
 

@@ -13,7 +13,6 @@ import {
 
 import { RenderAction } from './render-action.js';
 import { WorldClusters } from '../lighting/world-clusters.js';
-import { LightCompositionData } from './light-composition-data.js';
 
 const tempSet = new Set();
 const tempClusterArray = [];
@@ -108,10 +107,6 @@ class LayerComposition extends EventHandler {
         // a map of Light to index in _lights for fast lookup
         this._lightsMap = new Map();
 
-        // each entry in _lights has entry of type LightCompositionData here at the same index,
-        // storing shadow casters and additional composition related data for the light
-        this._lightCompositionData = [];
-
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
 
@@ -200,11 +195,6 @@ class LayerComposition extends EventHandler {
             this._dirtyLights = false;
 
             this.updateLights();
-        }
-
-        // if meshes OR lights changed, rebuild shadow casters
-        if (result) {
-            this.updateShadowCasters();
         }
 
         if (this._dirtyCameras || (result & COMPUPDATED_LIGHTS)) {
@@ -324,7 +314,7 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
         }
 
-        // allocate light clusteres if lights or meshes or cameras are modified
+        // allocate light clusters if lights or meshes or cameras are modified
         if (result & (COMPUPDATED_CAMERAS | COMPUPDATED_LIGHTS)) {
 
             // prepare clustered lighting for render actions
@@ -338,44 +328,6 @@ class LayerComposition extends EventHandler {
         }
 
         return result;
-    }
-
-    updateShadowCasters() {
-
-        // _lightCompositionData already has the right size, just clean up shadow casters
-        const lightCount = this._lights.length;
-        for (let i = 0; i < lightCount; i++) {
-            this._lightCompositionData[i].clearShadowCasters();
-        }
-
-        // for each layer
-        const len = this.layerList.length;
-        for (let i = 0; i < len; i++) {
-            const layer = this.layerList[i];
-
-            // layer can be in the list two times (opaque, transp), add casters only one time
-            if (!tempSet.has(layer)) {
-                tempSet.add(layer);
-
-                // for each light of a layer
-                const lights = layer._lights;
-                for (let j = 0; j < lights.length; j++) {
-
-                    // only need casters when casting shadows
-                    if (lights[j].castShadows) {
-
-                        // find its index in global light list, and get shadow casters for it
-                        const lightIndex = this._lightsMap.get(lights[j]);
-                        const lightCompData = this._lightCompositionData[lightIndex];
-
-                        // add unique meshes from the layer to casters
-                        lightCompData.addShadowCasters(layer.shadowCasters);
-                    }
-                }
-            }
-        }
-
-        tempSet.clear();
     }
 
     updateLights() {
@@ -402,13 +354,6 @@ class LayerComposition extends EventHandler {
                         lightIndex = this._lights.length;
                         this._lightsMap.set(light, lightIndex);
                         this._lights.push(light);
-
-                        // make sure the light has composition data allocated
-                        let lightCompData = this._lightCompositionData[lightIndex];
-                        if (!lightCompData) {
-                            lightCompData = new LightCompositionData();
-                            this._lightCompositionData[lightIndex] = lightCompData;
-                        }
                     }
                 }
             }
@@ -422,10 +367,6 @@ class LayerComposition extends EventHandler {
 
         // split light list by type
         this._splitLightsArray(this);
-
-        // adjust _lightCompositionData to the right size, matching number of lights
-        const lightCount = this._lights.length;
-        this._lightCompositionData.length = lightCount;
     }
 
     // find existing light cluster that is compatible with specified layer
