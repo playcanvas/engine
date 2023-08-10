@@ -488,17 +488,6 @@ class MeshInstance {
             this.transparent = material.transparent;
 
             this.updateKey();
-
-            // if blend type of the material changes
-            const prevBlend = prevMat && prevMat.transparent;
-            if (material.transparent !== prevBlend) {
-                const scene = this._material._scene || prevMat?._scene;
-                if (scene) {
-                    scene.layers._dirtyBlend = true;
-                } else {
-                    material._dirtyBlend = true;
-                }
-            }
         }
     }
 

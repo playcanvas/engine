@@ -4,6 +4,7 @@ import Prettier from 'prettier/standalone.js';
 import Babel from '@babel/standalone';
 import formatters from '../src/app/helpers/formatters.mjs';
 import readDirectoryNames from '../src/app/helpers/read-dir-names.mjs';
+import getExamplesList from '../src/app/helpers/read-dir.mjs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -20,7 +21,7 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
 
 readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach(function (category) {
     exampleData[category] = {};
-    const examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
+    const examples = getExamplesList(MAIN_DIR, category);
     examples.forEach((exampleName) => {
         if (exampleName.includes('index.mjs')) return;
         const example = exampleName.replace('.tsx', '');

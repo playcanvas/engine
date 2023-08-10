@@ -129,9 +129,7 @@ class TextLocalizationExample {
                 function createButton(labelText: string, x: number, y: number) {
                     // Create a simple button
                     const button = new pc.Entity();
-                    button.addComponent("button", {
-                        imageEntity: button
-                    });
+                    button.addComponent("button");
                     button.addComponent("element", {
                         anchor: [0.5, 0.5, 0.5, 0.5],
                         height: 40,

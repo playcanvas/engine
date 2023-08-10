@@ -47,6 +47,7 @@ function gaussWeights(kernelSize) {
     return values;
 }
 
+const tempSet = new Set();
 const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
@@ -155,10 +156,8 @@ class ShadowRenderer {
         shadowCam.clearColorBuffer = !hwPcf;
     }
 
-    // culls the list of meshes instances by the camera, storing visible mesh instances in the specified array
-    cullShadowCasters(meshInstances, visible, camera) {
+    _cullShadowCastersInternal(meshInstances, visible, camera) {
 
-        let count = 0;
         const numInstances = meshInstances.length;
         for (let i = 0; i < numInstances; i++) {
             const meshInstance = meshInstances[i];
@@ -166,13 +165,54 @@ class ShadowRenderer {
             if (meshInstance.castShadow) {
                 if (!meshInstance.cull || meshInstance._isVisible(camera)) {
                     meshInstance.visibleThisFrame = true;
-                    visible[count] = meshInstance;
-                    count++;
+                    visible.push(meshInstance);
                 }
             }
         }
+    }
 
-        visible.length = count;
+    /**
+     * Culls the list of shadow casters used by the light by the camera, storing visible mesh
+     * instances in the specified array.
+     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
+     * composition used as a source of shadow casters, if those are not provided directly.
+     * @param {import('../light.js').Light} light - The light.
+     * @param {import('../mesh-instance.js').MeshInstance[]} visible - The array to store visible
+     * mesh instances in.
+     * @param {import('../camera.js').Camera} camera - The camera.
+     * @param {import('../mesh-instance.js').MeshInstance[]} [casters] - Optional array of mesh
+     * instances to use as casters.
+     * @ignore
+     */
+    cullShadowCasters(comp, light, visible, camera, casters) {
+
+        visible.length = 0;
+
+        // if the casters are supplied, use them
+        if (casters) {
+
+            this._cullShadowCastersInternal(casters, visible, camera);
+
+        } else {    // otherwise, get them from the layer composition
+
+            // for each layer
+            const layers = comp.layerList;
+            const len = layers.length;
+            for (let i = 0; i < len; i++) {
+                const layer = layers[i];
+                if (layer._lightsSet.has(light)) {
+
+                    // layer can be in the list two times (opaque, transp), add casters only one time
+                    if (!tempSet.has(layer)) {
+                        tempSet.add(layer);
+
+                        this._cullShadowCastersInternal(layer.shadowCasters, visible, camera);
+                    }
+                }
+            }
+
+            tempSet.clear();
+        }
 
         // TODO: we should probably sort shadow meshes by shader and not depth
         visible.sort(this.renderer.sortCompareDepth);

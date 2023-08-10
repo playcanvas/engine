@@ -182,6 +182,7 @@ function BasisWorker() {
                 // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
                 return true;
         }
+        return false;
     };
 
     const transcodeKTX2 = (url, data, options) => {

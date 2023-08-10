@@ -841,10 +841,8 @@ export const SORTMODE_FRONT2BACK = 4;
  */
 export const SORTMODE_CUSTOM = 5;
 
-export const COMPUPDATED_INSTANCES = 1;
-export const COMPUPDATED_LIGHTS = 2;
-export const COMPUPDATED_CAMERAS = 4;
-export const COMPUPDATED_BLEND = 8;
+export const COMPUPDATED_LIGHTS = 1;
+export const COMPUPDATED_CAMERAS = 2;
 
 /**
  * Automatically set aspect ratio to current render target's width divided by height.
