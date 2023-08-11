@@ -13,6 +13,7 @@ export function getAssetPath() {
     return assetPath;
 }
 export const assetPath = getAssetPath();
+
 /**
  * @example
  * http://127.0.0.1/playcanvas-engine/examples/../build/playcanvas.d.ts
@@ -25,6 +26,7 @@ export function getPlayCanvasTypes() {
     return assetPath;
 }
 export const pcTypes = getPlayCanvasTypes();
+
 /**
  * @example
  * console.log(getScriptsPath());
@@ -38,6 +40,7 @@ export function getScriptsPath() {
     return assetPath;
 }
 export const scriptsPath = getScriptsPath();
+
 /**
  * @example
  * console.log(getIframePath());
@@ -46,11 +49,14 @@ export const scriptsPath = getScriptsPath();
  */
 export function getIframePath() {
     const { href } = location;
-    const i = href.lastIndexOf("/src/");
-    const assetPath = href.substring(0, i) + "/src/iframe/";
+    //const i = href.lastIndexOf("/src/");
+    //const assetPath = href.substring(0, i) + "/src/iframe/";
+    const i = href.lastIndexOf("/examples/")
+    const assetPath = href.substring(0, i) + "/examples/src/iframe/";
     return assetPath;
 }
 export const iframePath = getIframePath();
+
 /**
  * @example
  * console.log(getAmmoPath());
@@ -64,3 +70,19 @@ function getAmmoPath() {
     return assetPath;
 }
 export const ammoPath = getAmmoPath();
+
+/**
+ * @example
+ * console.log(getIframePath());
+ * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
+ * @returns {string}
+ */
+export function getThumbnailPath() {
+    const { href } = location;
+    //const i = href.lastIndexOf("/src/");
+    //const assetPath = href.substring(0, i) + "/src/iframe/";
+    const i = href.lastIndexOf("/examples/")
+    const assetPath = href.substring(0, i) + "/examples/dist/thumbnails/";
+    return assetPath;
+}
+export const thumbnailPath = getThumbnailPath();

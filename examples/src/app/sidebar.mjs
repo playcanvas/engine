@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
+import { thumbnailPath } from '../assetPath.mjs';
+import { jsx } from '../examples/animation/jsx.mjs';
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
     sideBar.classList.toggle('collapsed');
@@ -54,9 +56,13 @@ export const SideBar = () => {
         }
     });
     const categories = filteredCategories || defaultCategories;
-    return (React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: "EXAMPLES", collapsible: document.body.offsetWidth < MIN_DESKTOP_WIDTH, collapsed: true, id: 'sideBar', class: 'small-thumbnails' },
-            React.createElement(TextInput, { class: 'filter-input', keyChange: true, placeholder: "Filter...", onChange: (/** @type {string} */ filter) => {
+    return (jsx(React.Fragment, null,
+        jsx(Panel, { headerText: "EXAMPLES", collapsible: document.body.offsetWidth < MIN_DESKTOP_WIDTH, collapsed: true, id: 'sideBar', class: 'small-thumbnails' },
+            jsx(TextInput, {
+                class: 'filter-input',
+                keyChange: true,
+                placeholder: "Filter...",
+                onChange: (/** @type {string} */ filter) => {
                     const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
                     if (!reg) {
                         setFilteredCategories(defaultCategories);
@@ -86,11 +92,11 @@ export const SideBar = () => {
                     });
                     setFilteredCategories(updatedCategories);
                 } }),
-            React.createElement(LabelGroup, { text: 'Large thumbnails:' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'largeThumbnails' } })),
-            React.createElement(Container, { id: 'sideBar-contents' },
+            jsx(LabelGroup, { text: 'Large thumbnails:' },
+                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'largeThumbnails' } })),
+            jsx(Container, { id: 'sideBar-contents' },
                 Object.keys(categories).sort((a, b) => (a > b ? 1 : -1)).map((category) => {
-                    return React.createElement(
+                    return jsx(
                         Panel,
                         {
                             key: category,
@@ -99,14 +105,14 @@ export const SideBar = () => {
                             collapsible: true,
                             collapsed: false
                         },
-                        React.createElement("ul", {
+                        jsx("ul", {
                             className: "category-nav"
                         },
                         Object.keys(categories[category].examples).sort((a, b) => (a > b ? 1 : -1)).map((example) => {
                             //console.log({ category, example });
                             const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
                             const className = `nav-item ${isSelected ? 'selected' : null}`;
-                            return React.createElement(Link, {
+                            return jsx(Link, {
                                 key: example,
                                 to: `/${category}/${example}`,
                                 onClick: () => {
@@ -115,21 +121,21 @@ export const SideBar = () => {
                                     sideBar.ui.collapsed = true;
                                 }
                             },
-                                React.createElement("div", { className: className, id: `link-${category}-${example}` },
-                                    React.createElement(
+                                jsx("div", { className: className, id: `link-${category}-${example}` },
+                                    jsx(
                                         "img",
                                         {
                                             className: 'small-thumbnail',
                                             loading: "lazy",
-                                            src: `http://127.0.0.1/playcanvas-engine/examples/har/thumbnails/${category}_${example}_small.png`
+                                            src: thumbnailPath + `${category}_${example}_small.png`
                                         }
                                     ),
-                                    React.createElement("img", { className: 'large-thumbnail', loading: "lazy", src: `http://127.0.0.1/playcanvas-engine/examples/har/thumbnails/${category}_${example}_large.png` }),
-                                    React.createElement("div", { className: 'nav-item-text' }, example.split('-').join(' ').toUpperCase())));
+                                    jsx("img", { className: 'large-thumbnail', loading: "lazy", src: thumbnailPath + `${category}_${example}_large.png` }),
+                                    jsx("div", { className: 'nav-item-text' }, example.split('-').join(' ').toUpperCase())));
                         })));
                 }),
-                Object.keys(categories).length === 0 && React.createElement(Label, { text: 'No results' }))),
-        React.createElement("div", {
+                Object.keys(categories).length === 0 && jsx(Label, { text: 'No results' }))),
+        jsx("div", {
             className: 'panel-toggle sideBar-panel-toggle'
         })
         )
