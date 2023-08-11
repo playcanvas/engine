@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import "https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js";
+import { loadES5 } from '../../loadES5.mjs';
 
 /**
  * @param {HTMLCanvasElement} canvas - todo
@@ -8,6 +8,7 @@ import "https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js";
  * @returns {Promise<pc.AppBase>} todo
  */
 async function example(canvas, deviceType) {
+    await loadES5("https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js");
 
     const assets = {
         font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),

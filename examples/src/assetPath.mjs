@@ -8,8 +8,11 @@
  */
 export function getAssetPath() {
     const { href } = location;
-    const i = href.lastIndexOf("/src/");
-    const assetPath = href.substring(0, i) + "/assets/";
+    const i = href.indexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/static/assets/';
+    }
+    const assetPath = href.substring(0, i) + "/examples/assets/";
     return assetPath;
 }
 export const assetPath = getAssetPath();
@@ -21,8 +24,11 @@ export const assetPath = getAssetPath();
  */
 export function getPlayCanvasTypes() {
     const { href } = location;
-    const i = href.lastIndexOf("/src/");
-    const assetPath = href.substring(0, i) + "/../build/playcanvas.d.ts";
+    const i = href.lastIndexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/playcanvas.d.ts';
+    }
+    const assetPath = href.substring(0, i) + "/build/playcanvas.d.ts";
     return assetPath;
 }
 export const pcTypes = getPlayCanvasTypes();
@@ -30,13 +36,16 @@ export const pcTypes = getPlayCanvasTypes();
 /**
  * @example
  * console.log(getScriptsPath());
- * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/../scripts/'
+ * // Outputs: 'http://127.0.0.1/playcanvas-engine/scripts/'
  * @returns {string}
  */
 export function getScriptsPath() {
     const { href } = location;
-    const i = href.lastIndexOf("/src/");
-    const assetPath = href.substring(0, i) + "/../scripts/";
+    const i = href.indexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/static/scripts/';
+    }
+    const assetPath = href.substring(0, i) + "/scripts/";
     return assetPath;
 }
 export const scriptsPath = getScriptsPath();
@@ -51,9 +60,11 @@ export function getIframePath() {
     const { href } = location;
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
-    const i = href.lastIndexOf("/examples/")
-    const assetPath = href.substring(0, i) + "/examples/src/iframe/";
-    return assetPath;
+    const i = href.indexOf("/examples/")
+    if (i === -1) { // npm run serve
+        return '/iframe/';
+    }
+    return href.substring(0, i) + "/examples/src/iframe/";
 }
 export const iframePath = getIframePath();
 
@@ -81,8 +92,10 @@ export function getThumbnailPath() {
     const { href } = location;
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
-    const i = href.lastIndexOf("/examples/")
-    const assetPath = href.substring(0, i) + "/examples/dist/thumbnails/";
-    return assetPath;
+    const i = href.lastIndexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/thumbnails/';
+    }
+    return href.substring(0, i) + "/examples/dist/thumbnails/";
 }
 export const thumbnailPath = getThumbnailPath();

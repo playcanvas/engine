@@ -29,7 +29,7 @@ const staticFiles = [
     { src: './src/lib', dest: 'dist/static/lib/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: 'src/iframe/index.html', dest: 'dist/iframe/index.html' }
+    { src: 'src/iframe/index-serve.html', dest: 'dist/iframe/index.html' }
 ];
 
 function timestamp() {

@@ -5,12 +5,10 @@ import { enableHotReload } from '../../enableHotReload.mjs';
 // todo simply import "@loaders.gl/core";
 // https://loaders.gl/docs/developer-guide/get-started
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
-const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
-const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 enableHotReload({
     assetPath,
-    CORE,
-    DRACO,
+    // CORE,
+    // DRACO,
 });
 const vshader = /* glsl */`
 // Attributes per vertex: position
@@ -47,6 +45,9 @@ void main(void)
  * @param {{'shader.vert': string, 'shader.frag': string}} files - todo
  */
 async function example(canvas, deviceType, files) {
+    const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
+    const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+
     // This example uses draco point cloud loader library from https://loaders.gl/
     // Note that many additional formats are supported by the library and can be used.
     const gfxOptions = {

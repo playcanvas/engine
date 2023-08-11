@@ -1,20 +1,17 @@
-import * as observer from '@playcanvas/observer';
-import * as pcuiReal from '@playcanvas/pcui';
-import * as pcui from '@playcanvas/pcui/react';
-import React from 'react';
-import * as pcx from 'playcanvas-extras';
-import * as moduleExamples from "../examples/index.mjs";
-import * as pc from "playcanvas";
-window.pcuiReal = pcuiReal;
-window.observer = observer;
-window.pcui = window.top.pcui || pcui;
-window.React = window.top.React || React;
-window.pcx = pcx;
-window.pc = pc;
-// make pc available outside of the iframe
-window.top.pc = window.pc;
-Object.assign(window, {moduleExamples});
-window.examples = moduleExamples;
+//import * as observer from '@playcanvas/observer';
+//import * as pcuiReal from '@playcanvas/pcui';
+//import * as pcui from '@playcanvas/pcui/react';
+//import React from 'react';
+//import * as pcx from 'playcanvas-extras';
+//import * as realExamples from "../examples/index.mjs";
+//import * as pc from "playcanvas";
+window.pcuiReal     = window.top.pcuiReal;
+window.observer     = window.top.observer;
+window.pcui         = window.top.pcui;
+window.React        = window.top.React;
+window.pcx          = window.top.pcx;
+window.pc           = window.top.pc;
+window.realExamples = window.top.realExamples;
 function setupApplication(app) {
     const canvas = app.graphicsDevice.canvas;
     // handle resizing
@@ -35,8 +32,11 @@ function setupApplication(app) {
         if (urlParams.get('miniStats') === 'false') {
             miniStats.enabled = false;
         }
-        app.on('update', function () {
-            if (window.top._showMiniStats !== undefined) miniStats.enabled = window.top._showMiniStats;
+        false && app.on('update', function () {
+            if (window.top._showMiniStats !== undefined) {
+                miniStats.enabled = window.top._showMiniStats;
+
+            }
         });
     }
 }
@@ -149,7 +149,9 @@ const event = new CustomEvent("exampleLoading");
 window.top.dispatchEvent(event);
 let found = false;
 if (urlParams.get('category') && urlParams.get('example')) {
-    window.Example = examples[urlParams.get('category')][`${urlParams.get('example')}Example`];
+    const categorySlug = urlParams.get('category');
+    const exampleSlug = urlParams.get('example');
+    window.Example = realExamples[categorySlug][`${exampleSlug}Example`];
     if (window.Example) {
         found = true;
     }
