@@ -68,7 +68,8 @@
     "scripts/textmesh/opentype.min.js",
     "src/polyfill/*",
     "scripts/parsers/vox-parser.js",
-    "scripts/spine/playcanvas-spine.3.8.js"
+    "scripts/spine/playcanvas-spine.3.8.js",
+    "scripts/spine/playcanvas-spine.3.8.mjs"
   ],
   "files": [
     "build/playcanvas.js",
