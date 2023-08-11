@@ -10,7 +10,7 @@ window.process = {
 function importFile(content) {
   return "data:text/javascript;base64," + btoa(content);
 }
-const playcanvasEngine = "/examples_es6/";
+const playcanvasEngine = document.currentScript.src + "/../../../";
 const react = {
   "prop-types"               : "/react-es6/prop-types/index.js",
   "tiny-warning"             : "/react-es6/tiny-warning.mjs",
@@ -33,11 +33,17 @@ const react_min = {
   "react"                    : "/react-es6/build/react.min.mjs",
   "react-dom"                : "/react-es6/build/react-dom.min.mjs",
   "react-dom/client"         : "/react-es6/build/react-dom-client.min.mjs",
-}
-const imports = {
-  //"playcanvas"            : playcanvasEngine + "src/index.js",
-  "playcanvas"            : playcanvasEngine + "build/playcanvas.whole.mjs",
+};
+const { host } = document.location;
+const local = host === 'localhost' || host === '127.0.0.1';
+const playcanvas = local ? {
+  "playcanvas"            : playcanvasEngine + "src/index.js",
   //"playcanvas"            : playcanvasEngine + "build/playcanvas.dbg.mjs/index.js",
+} : {
+  "playcanvas"            : playcanvasEngine + "build/playcanvas.whole.mjs",
+};
+const imports = {
+  ...playcanvas,
   "@playcanvas/pcui"      : playcanvasEngine + "examples/node_modules/@playcanvas/pcui/dist/module/src/index.mjs",
   "@playcanvas/pcui/react": playcanvasEngine + "examples/node_modules/@playcanvas/pcui/react/dist/module/src/index.mjs",
   "@playcanvas/observer"  : playcanvasEngine + "examples/node_modules/@playcanvas/observer/dist/index.mjs",

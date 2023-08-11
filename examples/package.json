@@ -99,11 +99,9 @@
     "tslib": "^2.6.1",
     "typescript": "^5.1.6",
     "url-search-params-polyfill": "^8.2.4",
-    "whatwg-fetch": "^3.6.17"
+    "whatwg-fetch": "^3.6.17",
+    "fflate": "^0.8.0"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
-  "license": "MIT",
-  "dependencies": {
-    "fflate": "^0.8.0"
-  }
+  "license": "MIT"
 }
