@@ -1,17 +1,18 @@
-//import * as observer from '@playcanvas/observer';
+import * as observer from '@playcanvas/observer';
 //import * as pcuiReal from '@playcanvas/pcui';
 //import * as pcui from '@playcanvas/pcui/react';
 //import React from 'react';
-//import * as pcx from 'playcanvas-extras';
-//import * as realExamples from "../examples/index.mjs";
-//import * as pc from "playcanvas";
-window.pcuiReal     = window.top.pcuiReal;
-window.observer     = window.top.observer;
-window.pcui         = window.top.pcui;
-window.React        = window.top.React;
-window.pcx          = window.top.pcx;
-window.pc           = window.top.pc;
-window.realExamples = window.top.realExamples;
+import * as pcx from 'playcanvas-extras';
+import * as realExamples from "../examples/index.mjs";
+import * as pc from "playcanvas";
+//window.pcuiReal     = window.top.pcuiReal;
+//window.observer     = window.top.observer;
+//window.pcui         = window.top.pcui;
+//window.React        = window.top.React;
+//window.pcx          = window.top.pcx;
+//window.pc           = window.top.pc;
+//window.realExamples = window.top.realExamples;
+window.top.pc = pc;
 function setupApplication(app) {
     const canvas = app.graphicsDevice.canvas;
     // handle resizing

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, createRef } from 'react';
 import ReactDOM from 'react-dom';
 import * as pcui from '@playcanvas/pcui/react';
+import { createRoot } from 'react-dom/client';
 import '@playcanvas/pcui/styles';
 // @ts-ignore: library file import
 import { HashRouter as Router, Switch, Route, Redirect } from "react-router-dom";
@@ -11,9 +12,19 @@ import { Example       } from './example.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { jsx, jsxContainer           } from '../examples/animation/jsx.mjs';
 import { ControlLoader } from './control-loader.mjs';
+//import * as pc from 'playcanvas';
+//import * as pcx from 'playcanvas-extras';
+//import * as observer from '@playcanvas/observer';
+//console.log("having app now", pc, window);
+//window.pc = pc;
 
-window.pcui = pcui;
-window.React = React;
+Object.assign(window, {
+    pcui,
+    React,
+    //pc,
+    //pcx,
+    //observer,
+});
 
 const MainLayout = () => {
     const emptyFiles = [{
@@ -78,8 +89,23 @@ const MainLayout = () => {
         )
     );
 };
-// render out the app
-ReactDOM.render(
-    jsx(MainLayout, null),
-    document.getElementById('app')
-);
+function main() {
+    const oldWay = !true;
+    console.log("oldWay", oldWay);
+    if (oldWay) {    
+        // render out the app
+        ReactDOM.render(
+            jsx(MainLayout, null),
+            document.getElementById('app')
+        );
+    } else {
+        // render out the app
+        const container = document.getElementById('app');
+        const root = createRoot(container);
+        root.render(jsx(MainLayout, null));
+    }
+}
+window.onload = () => {
+    // Just a little timeout to give browser some time to "breathe"
+    setTimeout(main, 50);
+};
