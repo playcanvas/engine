@@ -13,14 +13,12 @@ import terser from '@rollup/plugin-terser';
 
 // 3rd party Rollup plugins
 import sourcemaps from 'rollup-plugin-sourcemaps';
-import typescript from 'rollup-plugin-typescript2';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const ENGINE_PATH = process.env.ENGINE_PATH ? path.resolve(process.env.ENGINE_PATH) : path.resolve(`../build/playcanvas${process.env.NODE_ENV === 'development' ? '.dbg' : ''}.js`);
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
@@ -99,14 +97,6 @@ const aliasEntries = {
     '@playcanvas/pcui/styles': PCUI_STYLES_PATH
 };
 
-const tsCompilerOptions = {
-    baseUrl: '.',
-    paths: {
-        '@playcanvas/pcui/react': [PCUI_REACT_PATH],
-        '@playcanvas/pcui/styles': [PCUI_STYLES_PATH]
-    }
-};
-
 /** @type {RollupOptions[]} */
 const builds = [
     {
@@ -119,18 +109,19 @@ const builds = [
             alias({ entries: aliasEntries }),
             commonjs(),
             resolve(),
-            typescript({
-                tsconfig: 'tsconfig.json',
-                tsconfigDefaults: { compilerOptions: tsCompilerOptions },
-                clean: true
-            }),
             replace({
                 values: {
                     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
                 },
                 preventAssignment: true
             }),
-            (process.env.NODE_ENV === 'production' && terser()),
+            /*(process.env.NODE_ENV === 'production' && terser({
+                "mangle": { 
+                    "properties": {
+                        "reserved": ["exampleasd"]
+                    }
+                }
+            }))*/,
             timestamp()
         ]
     },
@@ -143,12 +134,6 @@ const builds = [
             sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
         },
         plugins: [
-            alias({
-                entries: {
-                    'playcanvas': ENGINE_PATH,
-                    '../../../build/playcanvas.js': ENGINE_PATH,
-                }
-            }),
             commonjs(),
             resolve(),
             replace({
@@ -157,16 +142,13 @@ const builds = [
                 ),
                 preventAssignment: true
             }),
-            typescript({
-                tsconfig: 'tsconfig.json'
-            }),
             process.env.NODE_ENV === 'development' ? sourcemaps() : null,
             timestamp()
         ]
     },
     {
         input: 'src/examples/index.mjs',
-        external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
+        //external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
         output: {
             name: 'examples',
             format: 'es',
@@ -181,9 +163,6 @@ const builds = [
         plugins: [
             commonjs(),
             resolve(),
-            typescript({
-                tsconfig: 'tsconfig.json'
-            }),
             timestamp()
         ]
     },
