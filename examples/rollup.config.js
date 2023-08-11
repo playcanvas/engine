@@ -110,7 +110,7 @@ const tsCompilerOptions = {
 /** @type {RollupOptions[]} */
 const builds = [
     {
-        input: 'src/app/index.tsx',
+        input: 'src/app/index.mjs',
         output: {
             dir: 'dist',
             format: 'es'
@@ -147,7 +147,6 @@ const builds = [
                 entries: {
                     'playcanvas': ENGINE_PATH,
                     '../../../build/playcanvas.js': ENGINE_PATH,
-                    'pc-alias': ENGINE_PATH.includes('.mjs') ? './pc-es6.mjs' : './pc-es5.mjs'
                 }
             }),
             commonjs(),
@@ -170,7 +169,7 @@ const builds = [
         external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
         output: {
             name: 'examples',
-            format: 'umd',
+            format: 'es',
             dir: `dist/examples`,
             globals: {
                 '@playcanvas/pcui/react': 'pcui',

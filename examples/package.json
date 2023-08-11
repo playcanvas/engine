@@ -5,9 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run build:example:data && npm run build:directory && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run build:directory && cross-env NODE_ENV=production rollup -c",
     "build:directory": "node ./scripts/example-directory/index.mjs",
-    "build:example:data": "node ./scripts/example-data.mjs",
     "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging",
@@ -80,8 +79,8 @@
     "cross-env": "^7.0.2",
     "date-and-time": "^3.0.2",
     "eslint": "^8.46.0",
+    "fflate": "^0.8.0",
     "fs-extra": "^10.1.0",
-    "handlebars": "^4.7.7",
     "monaco-editor": "^0.33.0",
     "prettier": "^2.8.8",
     "promise-polyfill": "^8.3.0",
@@ -99,8 +98,7 @@
     "tslib": "^2.6.1",
     "typescript": "^5.1.6",
     "url-search-params-polyfill": "^8.2.4",
-    "whatwg-fetch": "^3.6.17",
-    "fflate": "^0.8.0"
+    "whatwg-fetch": "^3.6.17"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"
