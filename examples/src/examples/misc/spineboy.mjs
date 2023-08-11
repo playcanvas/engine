@@ -1,31 +1,14 @@
-import * as pc_es6 from 'playcanvas';
-import { assetPath } from '../../assetPath.mjs';
-
-const pc = { ...pc_es6 };
-
-pc.ComponentSystem = function(...args) {
-    const self = new pc_es6.ComponentSystem(...args);
-    Object.assign(this, self);
-    //Object.setPrototypeOf(this, pc_es6.ComponentSystem.prototype);
-    Object.setPrototypeOf(this, self);
-    //debugger;
-    //return self;
-}
-pc.Component = function(...args) {
-    const self = new pc_es6.Component(...args);
-    Object.assign(this, self);
-    //Object.setPrototypeOf(this, pc_es6.Component.prototype);
-    Object.setPrototypeOf(this, self);
-    //return self;
-}
-globalThis.pc = pc;
-//debugger;
-
+import * as pc from 'playcanvas';
+import { assetPath, scriptsPath } from '../../assetPath.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+enableHotReload({
+    assetPath,
+    scriptsPath,
+});
 /**
- * 
- * @param {HTMLCanvasElement} canvas 
- * @param {string} deviceType 
- * @returns {Promise<pc.AppBase>}
+ * @param {HTMLCanvasElement} canvas - todo
+ * @param {string} deviceType - todo
+ * @returns {Promise<pc.AppBase>} todo
  */
 async function example(canvas, deviceType) {
 
@@ -76,7 +59,7 @@ async function example(canvas, deviceType) {
         app.start();
 
         globalThis.pc = pc;
-        await import("/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js");
+        await import(scriptsPath + "spine/playcanvas-spine.3.8.mjs");
 
         // create camera entity
         const camera = new pc.Entity('camera');
@@ -105,7 +88,7 @@ async function example(canvas, deviceType) {
 
             // play spine animation
             // @ts-ignore
-            debugger;
+            //debugger;
             spineEntity.spine.state.setAnimation(0, "portal", true);
 
             // @ts-ignore
