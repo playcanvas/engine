@@ -322,7 +322,7 @@ describe('Vec3', function () {
 
         it('calculates the length squared of a zero length vector', function () {
             const v = new Vec3();
-            expect(v.length()).to.equal(0);
+            expect(v.lengthSq()).to.equal(0);
         });
 
         it('calculates the length squared of a vector', function () {
