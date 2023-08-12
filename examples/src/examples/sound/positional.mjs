@@ -1,12 +1,16 @@
 import * as pc from 'playcanvas';
 
-
 class PositionalExample {
     static CATEGORY = 'Sound';
     static NAME = 'Positional';
 
-
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -103,7 +107,8 @@ class PositionalExample {
                 entity.setLocalEulerAngles(0, angle + 90, 0);
             });
         });
+        return app;
     }
 }
 
-export default PositionalExample;
+export { PositionalExample };
