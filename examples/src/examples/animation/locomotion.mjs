@@ -4,7 +4,7 @@ import { BindingTwoWay, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 import { ammoPath, assetPath } from '../../assetPath.mjs';
 import { fragment, jsxBooleanInput, jsxButton } from './jsx.mjs';
-Object.assign(window, {
+Object.assign(globalThis, {
     ammoPath,
     assetPath,
 });

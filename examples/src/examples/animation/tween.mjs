@@ -1,6 +1,29 @@
 import * as pc from 'playcanvas';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { loadES5 } from '../../loadES5.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+
+/**
+ * @param {string} url 
+ * @returns {Promise<string>}
+ */
+const loadScript = (url) => {
+    return new Promise(function (resolve, reject) {
+        const script = document.createElement('script');
+        script.src = url;
+        script.async = false;
+        script.onload = function () {
+            resolve(url);
+        };
+        script.onerror = function () {
+            reject(new Error(`Failed to download script ${url}`));
+        };
+        document.body.appendChild(script);
+    });
+};
+
+enableHotReload({
+    loadScript,
+});
 
 /**
  * @param {HTMLCanvasElement} canvas - todo
@@ -8,7 +31,7 @@ import { loadES5 } from '../../loadES5.mjs';
  * @returns {Promise<pc.AppBase>} todo
  */
 async function example(canvas, deviceType) {
-    await loadES5("https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js");
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js");
 
     const assets = {
         font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),
