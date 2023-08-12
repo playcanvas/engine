@@ -52,8 +52,13 @@ void main(void)
 }`
     };
 
-
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType, files) {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
 
@@ -101,10 +106,10 @@ void main(void)
             const renderComponents = entity.findComponents('render');
 
             // for all render components
-            renderComponents.forEach(function (render: any) {
+            renderComponents.forEach(function (/** @type {pc.RenderComponent} */ render) {
 
                 // For all meshes in the render component, assign new material
-                render.meshInstances.forEach(function (meshInstance: pc.MeshInstance) {
+                render.meshInstances.forEach(function (meshInstance) {
                     meshInstance.material = material;
                 });
 

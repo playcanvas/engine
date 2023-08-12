@@ -49,7 +49,13 @@ export class PaintMeshExample {
             }`
     };
 
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType, files) {
 
         // Create the app and start the update loop
         const app = new pc.Application(canvas);
@@ -75,8 +81,13 @@ export class PaintMeshExample {
             app.scene.skyboxIntensity = 1;
             app.scene.skyboxMip = 2;
 
-            // helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
-            const createHighQualitySphere = function (material: pc.Material, layer: number[]) {
+            /**
+             * helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
+             * @param {pc.Material} material - todo
+             * @param {number[]} layer - todo
+             * @returns {pc.Entity} todo
+             */
+            const createHighQualitySphere = function (material, layer) {
 
                 // Create Entity and add it to the scene
                 const entity = new pc.Entity("HighResSphere");

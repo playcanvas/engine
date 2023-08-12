@@ -1,16 +1,13 @@
 import * as pc from 'playcanvas';
 
-
 export class VideoTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Video Texture';
 
-
-        /**
-     * 
+    /**
      * @param {HTMLCanvasElement} canvas - todo
      * @param {string} deviceType - todo
-     * @returns {Promise<pc.AppBase>} todo
+     * @returns {Promise<pc.Application>} todo
      */
     static async example(canvas, deviceType) {
 
@@ -61,7 +58,8 @@ export class VideoTextureExample {
             });
 
             // Create our HTML element with the video
-            const video: HTMLVideoElement = document.createElement('video');
+            /** @type {HTMLVideoElement} */
+            const video = document.createElement('video');
             video.id = 'vid';
             video.loop = true;
 
@@ -122,5 +120,6 @@ export class VideoTextureExample {
                 }
             });
         });
+        return app;
     }
 }

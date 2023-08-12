@@ -51,7 +51,13 @@ void main(void)
     };
 
 
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType, files) {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
@@ -81,8 +87,11 @@ void main(void)
             oldPositions[i] = positions[i] + Math.random() * 0.04 - 0.01;
         }
 
-        // helper function to update vertex of the mesh
-        function updateMesh(mesh: pc.Mesh) {
+        /**
+         * helper function to update vertex of the mesh
+         * @param {pc.Mesh} mesh 
+         */
+        function updateMesh(mesh) {
 
             // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.
             // For best performance, we could preallocate enough space using mesh.Clear.

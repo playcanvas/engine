@@ -26,87 +26,87 @@ export class RenderAssetExample {
         };
 
         const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+        const createOptions = new pc.AppOptions();
+        createOptions.graphicsDevice = device;
 
-            const createOptions = new pc.AppOptions();
-            createOptions.graphicsDevice = device;
+        createOptions.componentSystems = [
+            // @ts-ignore
+            pc.RenderComponentSystem,
+            // @ts-ignore
+            pc.CameraComponentSystem,
+            // @ts-ignore
+            pc.LightComponentSystem
+        ];
+        createOptions.resourceHandlers = [
+            // @ts-ignore
+            pc.TextureHandler,
+            // @ts-ignore
+            pc.ContainerHandler
+        ];
 
-            createOptions.componentSystems = [
-                // @ts-ignore
-                pc.RenderComponentSystem,
-                // @ts-ignore
-                pc.CameraComponentSystem,
-                // @ts-ignore
-                pc.LightComponentSystem
-            ];
-            createOptions.resourceHandlers = [
-                // @ts-ignore
-                pc.TextureHandler,
-                // @ts-ignore
-                pc.ContainerHandler
-            ];
+        const app = new pc.AppBase(canvas);
+        app.init(createOptions);
 
-            const app = new pc.AppBase(canvas);
-            app.init(createOptions);
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-            assetListLoader.load(() => {
+            app.start();
 
-                app.start();
+            /** @type {pc.Entity[]} */
+            const cubeEntities = [];
 
-                const cubeEntities: pc.Entity[] = [];
+            // get the instance of the cube it set up with render component and add it to scene
+            cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
+            cubeEntities[0].setLocalPosition(7, 12, 0);
+            cubeEntities[0].setLocalScale(3, 3, 3);
+            app.root.addChild(cubeEntities[0]);
 
-                // get the instance of the cube it set up with render component and add it to scene
-                cubeEntities[0] = assets.cube.resource.instantiateRenderEntity();
-                cubeEntities[0].setLocalPosition(7, 12, 0);
-                cubeEntities[0].setLocalScale(3, 3, 3);
-                app.root.addChild(cubeEntities[0]);
+            // clone another copy of it and add it to scene
+            cubeEntities[1] = cubeEntities[0].clone();
+            cubeEntities[1].setLocalPosition(-7, 12, 0);
+            cubeEntities[1].setLocalScale(3, 3, 3);
+            app.root.addChild(cubeEntities[1]);
 
-                // clone another copy of it and add it to scene
-                cubeEntities[1] = cubeEntities[0].clone() as pc.Entity;
-                cubeEntities[1].setLocalPosition(-7, 12, 0);
-                cubeEntities[1].setLocalScale(3, 3, 3);
-                app.root.addChild(cubeEntities[1]);
+            // get the instance of the statue and set up with render component
+            const statueEntity = assets.statue.resource.instantiateRenderEntity();
+            app.root.addChild(statueEntity);
 
-                // get the instance of the statue and set up with render component
-                const statueEntity = assets.statue.resource.instantiateRenderEntity();
-                app.root.addChild(statueEntity);
-
-                // Create an Entity with a camera component
-                const camera = new pc.Entity();
-                camera.addComponent("camera", {
-                    clearColor: new pc.Color(0.2, 0.1, 0.1),
-                    farClip: 100
-                });
-                camera.translate(-20, 15, 20);
-                camera.lookAt(0, 7, 0);
-                app.root.addChild(camera);
-
-                // set skybox
-                app.scene.envAtlas = assets.helipad.resource;
-                app.scene.toneMapping = pc.TONEMAP_ACES;
-                app.scene.skyboxMip = 1;
-
-                // spin the meshes
-                app.on("update", function (dt) {
-
-                    if (cubeEntities[0]) {
-                        cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
-                    }
-
-                    if (cubeEntities[1]) {
-                        cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
-                    }
-
-                    if (statueEntity) {
-                        statueEntity.rotate(0, -12 * dt, 0);
-                    }
-
-                });
+            // Create an Entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.2, 0.1, 0.1),
+                farClip: 100
             });
-        }).catch(console.error);
+            camera.translate(-20, 15, 20);
+            camera.lookAt(0, 7, 0);
+            app.root.addChild(camera);
+
+            // set skybox
+            app.scene.envAtlas = assets.helipad.resource;
+            app.scene.toneMapping = pc.TONEMAP_ACES;
+            app.scene.skyboxMip = 1;
+
+            // spin the meshes
+            app.on("update", function (dt) {
+
+                if (cubeEntities[0]) {
+                    cubeEntities[0].rotate(3 * dt, 10 * dt, 6 * dt);
+                }
+
+                if (cubeEntities[1]) {
+                    cubeEntities[1].rotate(-7 * dt, 5 * dt, -2 * dt);
+                }
+
+                if (statueEntity) {
+                    statueEntity.rotate(0, -12 * dt, 0);
+                }
+
+            });
+        });
+        return app;
     }
 }

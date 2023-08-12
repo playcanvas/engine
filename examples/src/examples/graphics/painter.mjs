@@ -54,8 +54,16 @@ export class PainterExample {
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // helper function to create a primitive with shape type, position, scale, color and layer
-            function createPrimitive(primitiveType: string, position: number | pc.Vec3, scale: number | pc.Vec3, layer: number[], material: pc.StandardMaterial) {
+            /**
+             * helper function to create a primitive with shape type, position, scale, color and layer
+             * @param {string} primitiveType - todo
+             * @param {number | pc.Vec3} position - todo
+             * @param {number | pc.Vec3} scale - todo
+             * @param {number[]} layer - todo
+             * @param {pc.StandardMaterial} material - todo
+             * @returns {pc.Entity} todo
+             */
+            function createPrimitive(primitiveType, position, scale, layer, material) {
 
                 // create primitive
                 const primitive = new pc.Entity();
@@ -99,10 +107,14 @@ export class PainterExample {
             brushMaterial.useLighting = false;
             brushMaterial.update();
 
-            // we render multiple brush imprints each frame to make smooth lines, and set up pool to reuse them each frame
-            const brushes: any[] = [];
+            /**
+             * we render multiple brush imprints each frame to make smooth lines, and set up pool to reuse them each frame
+             * @type {pc.Entity[]}
+             */
+            const brushes = [];
             function getBrush() {
-                let brush: pc.Entity;
+                /** @type {pc.Entity} */
+                let brush;
                 if (brushes.length === 0) {
                     // create new brush - use sphere primitive, but could use plane with a texture as well
                     // Note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible

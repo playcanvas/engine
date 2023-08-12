@@ -117,7 +117,8 @@ export class MeshDecalsExample {
                 const colors = new Uint8ClampedArray(4 * numDecalVertices);
 
                 // Allocate storage for uvs, each vertex stores u and v. And fill them up to display whole texture
-                const uvs: any = [];
+                /** @type {number[]} */
+                const uvs = [];
                 for (let i = 0; i < numDecals; i++)
                     uvs.push(0, 0, 0, 1, 1, 1, 1, 0);
 
@@ -173,8 +174,14 @@ export class MeshDecalsExample {
                     positions[12 * i + 11] = pos.z + size * Math.cos(angle); angle += Math.PI * 0.5;
                 }
 
-                // helper function to update required vertex streams
-                function updateMesh(mesh: pc.Mesh, updatePositions: any, updateColors: any, initAll?: boolean) {
+                /**
+                 * helper function to update required vertex streams
+                 * @param {pc.Mesh} mesh - todo
+                 * @param {any} updatePositions - todo
+                 * @param {any} updateColors - todo
+                 * @param {boolean} [initAll] - todo
+                 */
+                function updateMesh(mesh, updatePositions, updateColors, initAll) {
 
                     // update positions when needed
                     if (updatePositions)

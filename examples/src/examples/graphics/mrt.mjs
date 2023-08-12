@@ -168,7 +168,7 @@ export class MrtExample {
                 });
 
                 // Create an Entity with a camera component
-                const camera: any = new pc.Entity();
+                const camera = new pc.Entity();
                 camera.addComponent("camera", {
                     layers: [worldLayer.id, skyboxLayer.id]
                 });

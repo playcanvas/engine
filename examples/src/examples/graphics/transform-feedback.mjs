@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 
-
 export class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Transform Feedback';
@@ -89,8 +88,13 @@ void main(void)
 }`
     };
 
-
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {{ 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }} files - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType, files) {
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
 
@@ -149,8 +153,8 @@ void main(void)
             app.root.addChild(camera);
 
             // set up texture transform part, on webgl2 devices only
-            let tf: any;
-            let shader: any;
+            let tf;
+            let shader;
             const areaSize = 30;
 
             // resolve parameters to simulation shader parameters

@@ -127,7 +127,8 @@ export class MeshGenerationExample {
                 }
 
                 // Generate array of indices to form triangle list - two triangles per grid square
-                const indexArray: any = [];
+                /** @type {number[]} */
+                const indexArray = [];
                 for (let x = 0; x < resolution - 1; x++) {
                     for (let y = 0; y < resolution - 1; y++) {
                         indexArray.push(x * resolution + y + 1, (x + 1) * resolution + y, x * resolution + y,
@@ -135,8 +136,12 @@ export class MeshGenerationExample {
                     }
                 }
 
-                // helper function to update required vertex / index streams
-                function updateMesh(mesh: pc.Mesh, initAll?: boolean) {
+                /**
+                 * helper function to update required vertex / index streams
+                 * @param {pc.Mesh} mesh - todo
+                 * @param {boolean} [initAll] - todo
+                 */
+                function updateMesh(mesh, initAll) {
 
                     // Set updated positions and normal each frame
                     mesh.setPositions(positions);

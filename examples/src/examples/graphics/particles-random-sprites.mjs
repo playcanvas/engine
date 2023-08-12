@@ -81,7 +81,12 @@ export class ParticlesRandomSpritesExample {
                 [0, 0, 0.5, 1, 1, 0]
             );
 
-            const particleSystemConfiguration = function (asset: any, animTilesX: any, animTilesY: any) {
+            /**
+             * @param {*} asset - todo
+             * @param {*} animTilesX - todo
+             * @param {*} animTilesY - todo
+             */
+            const particleSystemConfiguration = function (asset, animTilesX, animTilesY) {
                 return {
                     numParticles: 32,
                     lifetime: 2,
