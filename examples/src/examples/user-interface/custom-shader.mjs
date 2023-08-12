@@ -67,7 +67,13 @@ void main(void)
 }`
     };
 
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType, files) {
 
         const assets = {
             "playcanvas": new pc.Asset("playcanvas", "texture", { url: "/static/assets/textures/playcanvas.png" })
@@ -79,102 +85,101 @@ void main(void)
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
-            const createOptions = new pc.AppOptions();
-            createOptions.graphicsDevice = device;
-            createOptions.mouse = new pc.Mouse(document.body);
-            createOptions.touch = new pc.TouchDevice(document.body);
-            createOptions.elementInput = new pc.ElementInput(canvas);
+        const createOptions = new pc.AppOptions();
+        createOptions.graphicsDevice = device;
+        createOptions.mouse = new pc.Mouse(document.body);
+        createOptions.touch = new pc.TouchDevice(document.body);
+        createOptions.elementInput = new pc.ElementInput(canvas);
 
-            createOptions.componentSystems = [
-                // @ts-ignore
-                pc.RenderComponentSystem,
-                // @ts-ignore
-                pc.CameraComponentSystem,
-                // @ts-ignore
-                pc.ScreenComponentSystem,
-                // @ts-ignore
-                pc.ButtonComponentSystem,
-                // @ts-ignore
-                pc.ElementComponentSystem
-            ];
-            createOptions.resourceHandlers = [
-                // @ts-ignore
-                pc.TextureHandler,
-                // @ts-ignore
-                pc.FontHandler
-            ];
+        createOptions.componentSystems = [
+            // @ts-ignore
+            pc.RenderComponentSystem,
+            // @ts-ignore
+            pc.CameraComponentSystem,
+            // @ts-ignore
+            pc.ScreenComponentSystem,
+            // @ts-ignore
+            pc.ButtonComponentSystem,
+            // @ts-ignore
+            pc.ElementComponentSystem
+        ];
+        createOptions.resourceHandlers = [
+            // @ts-ignore
+            pc.TextureHandler,
+            // @ts-ignore
+            pc.FontHandler
+        ];
 
-            const app = new pc.AppBase(canvas);
-            app.init(createOptions);
+        const app = new pc.AppBase(canvas);
+        app.init(createOptions);
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-            assetListLoader.load(() => {
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-                app.start();
+            app.start();
 
-                window.addEventListener("resize", function () {
-                    app.resizeCanvas(canvas.width, canvas.height);
-                });
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
 
-                // Create a camera
-                const camera = new pc.Entity();
-                camera.addComponent("camera", {
-                    clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
-                });
-                app.root.addChild(camera);
+            // Create a camera
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
+            });
+            app.root.addChild(camera);
 
-                // Create a 2D screen
-                const screen = new pc.Entity();
-                screen.addComponent("screen", {
-                    referenceResolution: new pc.Vec2(1280, 720),
-                    scaleBlend: 0.5,
-                    scaleMode: pc.SCALEMODE_BLEND,
-                    screenSpace: true
-                });
-                app.root.addChild(screen);
+            // Create a 2D screen
+            const screen = new pc.Entity();
+            screen.addComponent("screen", {
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleBlend: 0.5,
+                scaleMode: pc.SCALEMODE_BLEND,
+                screenSpace: true
+            });
+            app.root.addChild(screen);
 
-                // Create the shader from the vertex and fragment shader
-                const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myUIShader', {
-                    vertex_position: pc.SEMANTIC_POSITION,
-                    vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
-                });
+            // Create the shader from the vertex and fragment shader
+            const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myUIShader', {
+                vertex_position: pc.SEMANTIC_POSITION,
+                vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+            });
 
-                // Create a new material with the new shader and additive alpha blending
-                const material = new pc.Material();
-                material.shader = shader;
-                material.blendType = pc.BLEND_ADDITIVEALPHA;
-                material.depthWrite = true;
-                material.setParameter("uDiffuseMap", assets.playcanvas.resource);
-                material.update();
+            // Create a new material with the new shader and additive alpha blending
+            const material = new pc.Material();
+            material.shader = shader;
+            material.blendType = pc.BLEND_ADDITIVEALPHA;
+            material.depthWrite = true;
+            material.setParameter("uDiffuseMap", assets.playcanvas.resource);
+            material.update();
 
-                // Create the UI image element with the custom material
-                const entity = new pc.Entity();
-                entity.addComponent("element", {
-                    pivot: new pc.Vec2(0.5, 0.5),
-                    anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
-                    width: 350,
-                    height: 350,
-                    type: pc.ELEMENTTYPE_IMAGE
-                });
-                entity.element.material = material;
-                screen.addChild(entity);
+            // Create the UI image element with the custom material
+            const entity = new pc.Entity();
+            entity.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0.5),
+                anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+                width: 350,
+                height: 350,
+                type: pc.ELEMENTTYPE_IMAGE
+            });
+            entity.element.material = material;
+            screen.addChild(entity);
 
-                // update the material's 'amount' parameter to animate the inverse effect
-                let time = 0;
-                app.on('update', (dt) => {
-                    time += dt;
-                    // animate the amount as a sine wave varying from 0 to 1
-                    material.setParameter("amount", (Math.sin(time * 4) + 1) * 0.5);
-                });
+            // update the material's 'amount' parameter to animate the inverse effect
+            let time = 0;
+            app.on('update', (dt) => {
+                time += dt;
+                // animate the amount as a sine wave varying from 0 to 1
+                material.setParameter("amount", (Math.sin(time * 4) + 1) * 0.5);
             });
         });
     }
 }
 
-export default CustomShaderExample;
+export { CustomShaderExample };
