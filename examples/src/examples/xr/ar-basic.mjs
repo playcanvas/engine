@@ -4,9 +4,19 @@ class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
-        const message = function (msg: string) {
-            let el: HTMLDivElement = document.querySelector('.message');
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.Application>} todo
+     */
+    static async example(canvas, deviceType) {
+        /**
+         * @param {string} msg - The message.
+         */
+        const message = function (msg) {
+            /** @type {HTMLDivElement} */
+            let el = document.querySelector('.message');
             if (!el) {
                 el = document.createElement('div');
                 el.classList.add('message');
@@ -43,8 +53,12 @@ class ArBasicExample {
         l.translate(0, 10, 0);
         app.root.addChild(l);
 
-
-        const createCube = function (x: number, y: number, z: number) {
+        /**
+         * @param {number} x - todo
+         * @param {number} y - todo
+         * @param {number} z - todo
+         */
+        const createCube = function (x, y, z) {
             const cube = new pc.Entity();
             cube.addComponent("render", {
                 type: "box"
@@ -118,7 +132,8 @@ class ArBasicExample {
         } else {
             message("WebXR is not supported");
         }
+        return app;
     }
 }
 
-export default ArBasicExample;
+export { ArBasicExample };

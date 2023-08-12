@@ -4,9 +4,19 @@ class XrPickingExample {
     static CATEGORY = 'XR';
     static NAME = 'XR Picking';
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
-        const message = function (msg: string) {
-            let el: HTMLDivElement = document.querySelector('.message');
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
+        /**
+         * @param {string} msg - The message.
+         */
+        const message = function (msg) {
+            /** @type {HTMLDivElement} */
+            let el = document.querySelector('.message');
             if (!el) {
                 el = document.createElement('div');
                 el.classList.add('message');
@@ -14,6 +24,7 @@ class XrPickingExample {
             }
             el.textContent = msg;
         };
+
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(canvas),
@@ -48,9 +59,15 @@ class XrPickingExample {
         l.translate(0, 10, 0);
         app.root.addChild(l);
 
-        const cubes: any = [];
+        /** @type {pc.Entity[]} */
+        const cubes = [];
 
-        const createCube = function (x: number, y: number, z: number) {
+        /**
+         * @param {number} x - todo
+         * @param {number} y - todo
+         * @param {number} z - todo
+         */
+        const createCube = function (x, y, z) {
             const cube = new pc.Entity();
             cube.addComponent("render", {
                 type: "box",
@@ -165,7 +182,8 @@ class XrPickingExample {
         } else {
             message("WebXR is not supported");
         }
+        return app;
     }
 }
 
-export default XrPickingExample;
+export { XrPickingExample };

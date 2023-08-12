@@ -4,9 +4,19 @@ class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
-        const message = function (msg: string) {
-            let el: HTMLDivElement = document.querySelector('.message');
+    /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.Application>} todo
+     */
+    static async example(canvas, deviceType) {
+        /**
+         * @param {string} msg - The message.
+         */
+        const message = function (msg) {
+            /** @type {HTMLDivElement} */
+            let el = document.querySelector('.message');
             if (!el) {
                 el = document.createElement('div');
                 el.classList.add('message');
@@ -142,7 +152,8 @@ class ArHitTestExample {
         } else {
             message("WebXR is not supported");
         }
+        return app;
     }
 }
 
-export default ArHitTestExample;
+export { ArHitTestExample };
