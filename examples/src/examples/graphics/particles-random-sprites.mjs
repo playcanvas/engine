@@ -6,7 +6,13 @@ export class ParticlesRandomSpritesExample {
     static NAME = 'Particles: Random Sprites';
 
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

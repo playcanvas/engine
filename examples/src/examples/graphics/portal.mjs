@@ -5,7 +5,13 @@ export class PortalExample {
     static NAME = 'Portal';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -20,7 +26,7 @@ export class PortalExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

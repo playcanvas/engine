@@ -4,7 +4,13 @@ export class ParticlesSparkExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Particles: Spark';
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'spark': new pc.Asset('spark', 'texture', { url: '/static/assets/textures/spark.png' })
@@ -16,7 +22,7 @@ export class ParticlesSparkExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

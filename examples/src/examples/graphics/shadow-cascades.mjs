@@ -9,39 +9,41 @@ export class ShadowCascadesExample {
     static NAME = 'Shadow Cascades';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Shadow Cascade Settings'>
-                {<LabelGroup text='Filtering'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowType' }} type="number" options={[
-                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
-                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF5' },
-                        { v: pc.SHADOW_VSM8, t: 'VSM8' },
-                        { v: pc.SHADOW_VSM16, t: 'VSM16' },
-                        { v: pc.SHADOW_VSM32, t: 'VSM32' }
-                    ]} />
-                </LabelGroup>}
-                <LabelGroup text='Count'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.numCascades' }} min={1} max={4} precision={0}/>
-                </LabelGroup>
-                <LabelGroup text='Every Frame'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.everyFrame' }} value={data.get('settings.light.everyFrame')}/>
-                </LabelGroup>
-                <LabelGroup text='Resolution'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowResolution' }} min={128} max={2048} precision={0}/>
-                </LabelGroup>
-                <LabelGroup text='Distribution'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.cascadeDistribution' }} min={0} max={1} precision={2}/>
-                </LabelGroup>
-                <LabelGroup text='VSM Blur'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.vsmBlurSize' }} min={1} max={25} precision={0}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Shadow Cascade Settings' },
+                React.createElement(LabelGroup, { text: 'Filtering' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.shadowType' }, type: "number", options: [
+                            { v: pc.SHADOW_PCF1, t: 'PCF1' },
+                            { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                            { v: pc.SHADOW_PCF5, t: 'PCF5' },
+                            { v: pc.SHADOW_VSM8, t: 'VSM8' },
+                            { v: pc.SHADOW_VSM16, t: 'VSM16' },
+                            { v: pc.SHADOW_VSM32, t: 'VSM32' }
+                        ] })),
+                React.createElement(LabelGroup, { text: 'Count' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.numCascades' }, min: 1, max: 4, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'Every Frame' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.everyFrame' }, value: data.get('settings.light.everyFrame') })),
+                React.createElement(LabelGroup, { text: 'Resolution' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.shadowResolution' }, min: 128, max: 2048, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'Distribution' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.cascadeDistribution' }, min: 0, max: 1, precision: 2 })),
+                React.createElement(LabelGroup, { text: 'VSM Blur' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.light.vsmBlurSize' }, min: 1, max: 25, precision: 0 }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -55,7 +57,7 @@ export class ShadowCascadesExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -198,7 +200,7 @@ export class ShadowCascadesExample {
                 let updateEveryFrame = true;
 
                 // handle HUD changes - update properties on the light
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     const pathArray = path.split('.');
 
                     if (pathArray[2] === 'everyFrame') {
@@ -212,7 +214,7 @@ export class ShadowCascadesExample {
                 const cloudSpeed = 0.2;
                 let frameNumber = 0;
                 let time = 0;
-                app.on("update", function (dt: number) {
+                app.on("update", function (/** @type {number} */dt) {
 
                     time += dt;
 

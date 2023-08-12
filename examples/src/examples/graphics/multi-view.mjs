@@ -8,11 +8,14 @@ export class MultiViewExample {
     static NAME = 'Multi View';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Debug Shader Rendering'>
-                {<LabelGroup text='Mode'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shaderPassName' }} type="string" options={[
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Debug Shader Rendering' }, React.createElement(LabelGroup, { text: 'Mode' },
+                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.shaderPassName' }, type: "string", options: [
                         { v: pc.SHADERPASS_FORWARD, t: 'None' },
                         { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
                         { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
@@ -24,13 +27,16 @@ export class MultiViewExample {
                         { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
                         { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
                         { v: pc.SHADERPASS_UV0, t: 'UV0' }
-                    ]} />
-                </LabelGroup>}
-            </Panel>
-        </>;
+                    ] }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -54,7 +60,7 @@ export class MultiViewExample {
                 twgslUrl: '/static/lib/twgsl/twgsl.js'
             };
 
-            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -167,7 +173,7 @@ export class MultiViewExample {
                     app.scene.skyboxMip = 1;
 
                     // handle HUD changes - update the debug mode on the top camera
-                    data.on('*:set', (path: string, value: any) => {
+                    data.on('*:set', (/** @type {string} */ path, value) => {
                         cameraTop.camera.setShaderPass(value);
                     });
 

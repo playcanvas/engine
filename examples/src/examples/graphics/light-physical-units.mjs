@@ -8,54 +8,48 @@ export class LightPhysicalUnitsExample {
     static NAME = 'Light Physical Units';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Lights'>
-                <LabelGroup text='Rect (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.rect.luminance' }} min={0.0} max={800000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Point (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.luminance' }} min={0.0} max={800000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot (lm)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.luminance' }} min={0.0} max={200000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Spot angle'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.spot.aperture' }} min={1.0} max={90.0}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Camera'>
-                <LabelGroup text='Aperture (F/x)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.aperture' }} min={1.0} max={16.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shutter (1/x) s'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.shutter' }} min={1.0} max={1000.0}/>
-                </LabelGroup>
-                <LabelGroup text='ISO'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.sensitivity' }} min={100.0} max={1000.0}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Scene'>
-                <LabelGroup text='Animate'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.camera.animate' }}/>
-                </LabelGroup>
-                <LabelGroup text='Physical'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.physicalUnits' }}/>
-                </LabelGroup>
-                <LabelGroup text='Skylight'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.scene.sky' }}/>
-                </LabelGroup>
-                <LabelGroup text='Sky (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sky.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-                <LabelGroup text='Sun (lm/m2)'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.sun.luminance' }} min={0.0} max={100000.0}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Lights' },
+                React.createElement(LabelGroup, { text: 'Rect (lm)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.rect.luminance' }, min: 0.0, max: 800000.0 })),
+                React.createElement(LabelGroup, { text: 'Point (lm)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.point.luminance' }, min: 0.0, max: 800000.0 })),
+                React.createElement(LabelGroup, { text: 'Spot (lm)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.spot.luminance' }, min: 0.0, max: 200000.0 })),
+                React.createElement(LabelGroup, { text: 'Spot angle' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.spot.aperture' }, min: 1.0, max: 90.0 }))),
+            React.createElement(Panel, { headerText: 'Camera' },
+                React.createElement(LabelGroup, { text: 'Aperture (F/x)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.camera.aperture' }, min: 1.0, max: 16.0 })),
+                React.createElement(LabelGroup, { text: 'Shutter (1/x) s' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.camera.shutter' }, min: 1.0, max: 1000.0 })),
+                React.createElement(LabelGroup, { text: 'ISO' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.camera.sensitivity' }, min: 100.0, max: 1000.0 }))),
+            React.createElement(Panel, { headerText: 'Scene' },
+                React.createElement(LabelGroup, { text: 'Animate' },
+                    React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.camera.animate' } })),
+                React.createElement(LabelGroup, { text: 'Physical' },
+                    React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.scene.physicalUnits' } })),
+                React.createElement(LabelGroup, { text: 'Skylight' },
+                    React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.scene.sky' } })),
+                React.createElement(LabelGroup, { text: 'Sky (lm/m2)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.sky.luminance' }, min: 0.0, max: 100000.0 })),
+                React.createElement(LabelGroup, { text: 'Sun (lm/m2)' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.sun.luminance' }, min: 0.0, max: 100000.0 }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -74,7 +68,7 @@ export class LightPhysicalUnitsExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -311,7 +305,7 @@ export class LightPhysicalUnitsExample {
                 camera.script.create("orbitCameraInputTouch");
                 app.root.addChild(camera);
 
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     if (path === 'script.sun.luminance') {
                         directionalLight.light.luminance = value;
                     } else if (path === 'script.sky.luminance') {

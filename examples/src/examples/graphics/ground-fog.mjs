@@ -92,14 +92,15 @@ export class GroundFogExample {
         `
     };
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Controls'>
-                <LabelGroup text='softness'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.softness' }}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Controls' },
+                React.createElement(LabelGroup, { text: 'softness' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.softness' } }))));
     }
 
     example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
@@ -117,7 +118,7 @@ export class GroundFogExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

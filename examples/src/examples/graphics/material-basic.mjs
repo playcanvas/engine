@@ -5,7 +5,13 @@ export class MaterialBasicExample {
     static NAME = 'Material Basic';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
@@ -18,7 +24,7 @@ export class MaterialBasicExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -134,7 +140,7 @@ export class MaterialBasicExample {
                 // Set an update function on the app's update event
                 let time = 0;
                 const rot = new pc.Quat();
-                app.on("update", function (dt: number) {
+                app.on("update", function (/** @type {number} */dt) {
                     time += dt;
 
                     // rotate the boxes

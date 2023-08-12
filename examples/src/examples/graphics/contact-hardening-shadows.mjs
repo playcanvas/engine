@@ -8,62 +8,53 @@ export class ContactHardeningShadowsExample {
     static NAME = 'Contact Hardening Shadows';
     static WEBGPU_ENABLED = false;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Area light'>
-                <LabelGroup text='Enabled'>
-                    <BooleanInput id='area-light' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.enabled' }} />
-                </LabelGroup>
-                <LabelGroup text='Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.intensity' }} min={0.0} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.01} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Point light'>
-                <LabelGroup text='Enabled'>
-                    <BooleanInput id='point-light' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.enabled' }} />
-                </LabelGroup>
-                <LabelGroup text='Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.intensity' }} min={0.0} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.size' }} min={0.01} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Directional light'>
-                <LabelGroup text='Enabled'>
-                    <BooleanInput id='directional-light' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.enabled' }} />
-                </LabelGroup>
-                <LabelGroup text='Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.intensity' }} min={0.0} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.01} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Animate'>
-                <LabelGroup text='Cycle Active Light'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.cycle' }} />
-                </LabelGroup>
-                <LabelGroup text='Animate Lights'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.animate' }} />
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Area light' },
+                React.createElement(LabelGroup, { text: 'Enabled' },
+                    React.createElement(BooleanInput, { id: 'area-light', binding: new BindingTwoWay(), link: { observer: data, path: 'script.area.enabled' } })),
+                React.createElement(LabelGroup, { text: 'Intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.area.intensity' }, min: 0.0, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Softness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.area.size' }, min: 0.01, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Shadows' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.area.shadowType' }, options: [{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }] }))),
+            React.createElement(Panel, { headerText: 'Point light' },
+                React.createElement(LabelGroup, { text: 'Enabled' },
+                    React.createElement(BooleanInput, { id: 'point-light', binding: new BindingTwoWay(), link: { observer: data, path: 'script.point.enabled' } })),
+                React.createElement(LabelGroup, { text: 'Intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.point.intensity' }, min: 0.0, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Softness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.point.size' }, min: 0.01, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Shadows' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.point.shadowType' }, options: [{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }] }))),
+            React.createElement(Panel, { headerText: 'Directional light' },
+                React.createElement(LabelGroup, { text: 'Enabled' },
+                    React.createElement(BooleanInput, { id: 'directional-light', binding: new BindingTwoWay(), link: { observer: data, path: 'script.directional.enabled' } })),
+                React.createElement(LabelGroup, { text: 'Intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.directional.intensity' }, min: 0.0, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Softness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.directional.size' }, min: 0.01, max: 32.0 })),
+                React.createElement(LabelGroup, { text: 'Shadows' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.directional.shadowType' }, options: [{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }] }))),
+            React.createElement(Panel, { headerText: 'Animate' },
+                React.createElement(LabelGroup, { text: 'Cycle Active Light' },
+                    React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.cycle' } })),
+                React.createElement(LabelGroup, { text: 'Animate Lights' },
+                    React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'script.animate' } }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         pc.WasmModule.setConfig('DracoDecoderModule', {
             glueUrl: '/static/lib/draco/draco.wasm.js',
@@ -90,7 +81,7 @@ export class ContactHardeningShadowsExample {
                 twgslUrl: '/static/lib/twgsl/twgsl.js'
             };
 
-            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+            const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;
@@ -312,7 +303,7 @@ export class ContactHardeningShadowsExample {
                     camera.script.create("orbitCameraInputTouch");
                     app.root.addChild(camera);
 
-                    data.on('*:set', (path: string, value: any) => {
+                    data.on('*:set', (/** @type {string} */ path, value) => {
                         switch (path) {
                             case 'script.area.enabled':
                                 areaLight.enabled = value;

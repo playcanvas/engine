@@ -9,78 +9,63 @@ export class PostEffectsExample {
     static NAME = 'Post Effects';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='BLOOM [KEY_1]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.bloomIntensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='threshold'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.bloomThreshold' }}/>
-                </LabelGroup>
-                <LabelGroup text='blur amount'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bloom.blurAmount' }} min={1} max={30}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='SEPIA [KEY_2]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='amount'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.sepia.amount' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='VIGNETTE [KEY_3]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='darkness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.darkness' }}/>
-                </LabelGroup>
-                <LabelGroup text='offset'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.vignette.offset' }} max={2}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='BOKEH [KEY_4]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='aperture'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.aperture' }} max={0.2}/>
-                </LabelGroup>
-                <LabelGroup text='max blur'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.bokeh.maxBlur' }} max={0.1}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='SSAO [KEY_5]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='radius'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.radius' }} max={10}/>
-                </LabelGroup>
-                <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.samples' }} max={32}/>
-                </LabelGroup>
-                <LabelGroup text='brightness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.brightness' }}/>
-                </LabelGroup>
-                <LabelGroup text='downscale'>
-                    <SelectInput options={[{ v: 1, t: 'None' }, { v: 2, t: '50%' }, { v: '4', t: '25%' }]} binding={new BindingTwoWay()} link={{ observer: data, path: 'scripts.ssao.downscale' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='POST-PROCESS UI [KEY_6]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.postProcessUI.enabled' }}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'BLOOM [KEY_1]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bloom.enabled' } })),
+                React.createElement(LabelGroup, { text: 'intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bloom.bloomIntensity' } })),
+                React.createElement(LabelGroup, { text: 'threshold' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bloom.bloomThreshold' } })),
+                React.createElement(LabelGroup, { text: 'blur amount' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bloom.blurAmount' }, min: 1, max: 30 }))),
+            React.createElement(Panel, { headerText: 'SEPIA [KEY_2]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.sepia.enabled' } })),
+                React.createElement(LabelGroup, { text: 'amount' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.sepia.amount' } }))),
+            React.createElement(Panel, { headerText: 'VIGNETTE [KEY_3]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.vignette.enabled' } })),
+                React.createElement(LabelGroup, { text: 'darkness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.vignette.darkness' } })),
+                React.createElement(LabelGroup, { text: 'offset' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.vignette.offset' }, max: 2 }))),
+            React.createElement(Panel, { headerText: 'BOKEH [KEY_4]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bokeh.enabled' } })),
+                React.createElement(LabelGroup, { text: 'aperture' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bokeh.aperture' }, max: 0.2 })),
+                React.createElement(LabelGroup, { text: 'max blur' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.bokeh.maxBlur' }, max: 0.1 }))),
+            React.createElement(Panel, { headerText: 'SSAO [KEY_5]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.ssao.enabled' } })),
+                React.createElement(LabelGroup, { text: 'radius' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.ssao.radius' }, max: 10 })),
+                React.createElement(LabelGroup, { text: 'samples' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.ssao.samples' }, max: 32 })),
+                React.createElement(LabelGroup, { text: 'brightness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.ssao.brightness' } })),
+                React.createElement(LabelGroup, { text: 'downscale' },
+                    React.createElement(SelectInput, { options: [{ v: 1, t: 'None' }, { v: 2, t: '50%' }, { v: '4', t: '25%' }], binding: new BindingTwoWay(), link: { observer: data, path: 'scripts.ssao.downscale' } }))),
+            React.createElement(Panel, { headerText: 'POST-PROCESS UI [KEY_6]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.postProcessUI.enabled' } }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         // set up and load draco module, as the glb we load is draco compressed
         pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -109,7 +94,7 @@ export class PostEffectsExample {
             antialias: false
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -307,7 +292,7 @@ export class PostEffectsExample {
 
                 // update things every frame
                 let angle = 0;
-                app.on("update", function (dt: any) {
+                app.on("update", function (/** @type {number} */dt) {
                     angle += dt;
 
                     // rotate the skydome
@@ -333,7 +318,7 @@ export class PostEffectsExample {
                     }
                 });
 
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     const pathArray = path.split('.');
                     if (pathArray[0] === 'scripts') {
                         camera.script[pathArray[1]][pathArray[2]] = value;

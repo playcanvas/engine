@@ -5,7 +5,13 @@ export class MeshGenerationExample {
     static NAME = 'Mesh Generation';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'playcanvasGrey': new pc.Asset('playcanvasGrey', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
@@ -17,7 +23,7 @@ export class MeshGenerationExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

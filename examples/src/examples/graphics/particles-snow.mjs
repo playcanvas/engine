@@ -6,7 +6,13 @@ export class ParticlesSnowExample {
     static NAME = 'Particles: Snow';
 
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});

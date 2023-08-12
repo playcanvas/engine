@@ -40,7 +40,7 @@ export class MrtExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -176,7 +176,7 @@ export class MrtExample {
 
                 // update things every frame
                 let angle = 1;
-                app.on("update", function (dt: any) {
+                app.on("update", function (/** @type {number} */dt) {
                     angle += dt;
 
                     // orbit the camera around

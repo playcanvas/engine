@@ -5,7 +5,13 @@ export class ShaderCompileExample {
     static NAME = 'Shader Compile';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         // This example serves as a test framework for large shader compilation speed test. Enable tracking for it.
         pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
@@ -24,7 +30,7 @@ export class ShaderCompileExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -175,7 +181,7 @@ export class ShaderCompileExample {
 
                 // update things each frame
                 let time = 0;
-                app.on("update", function (dt: number) {
+                app.on("update", function (/** @type {number} */dt) {
                     time += dt;
 
                     // orbit spot lights around

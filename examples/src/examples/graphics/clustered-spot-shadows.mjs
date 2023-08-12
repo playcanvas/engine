@@ -10,59 +10,55 @@ export class ClusteredSpotShadowsExample {
     static ENGINE = 'DEBUG';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Atlas'>
-                <LabelGroup text='Resolution'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={256} max={4096} precision={0}/>
-                </LabelGroup>
-                {<LabelGroup text='Split'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.atlasSplit' }} type="number" options={[
-                        { v: 0, t: 'Automatic' },
-                        { v: 1, t: '7 Shadows' },
-                        { v: 2, t: '12 Shadows' },
-                        { v: 3, t: '16 Shadows' }
-                    ]} />
-                </LabelGroup>}
-                {<LabelGroup text='Filter'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowType' }} type="number" options={[
-                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
-                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF5' }
-                    ]} />
-                </LabelGroup>}
-            </Panel>
-            <Panel headerText='Lights'>
-                <LabelGroup text='Shadows On'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowsEnabled' }} value={data.get('settings.shadowsEnabled')}/>
-                </LabelGroup>
-                <LabelGroup text='Cookies On'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookiesEnabled' }} value={data.get('settings.cookiesEnabled')}/>
-                </LabelGroup>
-                <LabelGroup text='Static'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.static' }} value={data.get('settings.static')}/>
-                </LabelGroup>
-                <LabelGroup text='Shadow Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowIntensity' }} min={0} max={1} value={data.get('settings.shadowIntensity')}/>
-                </LabelGroup>
-                <Button text='Add Light' onClick={() => data.emit('add')}/>
-                <Button text='Remove Light' onClick={() => data.emit('remove')}/>
-                <LabelGroup text='Light Count'>
-                    <Label binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.numLights' }} value={data.get('settings.numLights')}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Debug'>
-                <LabelGroup text='Cells'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.debug' }} value={data.get('settings.debug')}/>
-                </LabelGroup>
-                <LabelGroup text='Atlas'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.debugAtlas' }} value={data.get('settings.debugAtlas')}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Atlas' },
+                React.createElement(LabelGroup, { text: 'Resolution' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.shadowAtlasResolution' }, min: 256, max: 4096, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'Split' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.atlasSplit' }, type: "number", options: [
+                            { v: 0, t: 'Automatic' },
+                            { v: 1, t: '7 Shadows' },
+                            { v: 2, t: '12 Shadows' },
+                            { v: 3, t: '16 Shadows' }
+                        ] })),
+                React.createElement(LabelGroup, { text: 'Filter' },
+                    React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.shadowType' }, type: "number", options: [
+                            { v: pc.SHADOW_PCF1, t: 'PCF1' },
+                            { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                            { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                        ] }))),
+            React.createElement(Panel, { headerText: 'Lights' },
+                React.createElement(LabelGroup, { text: 'Shadows On' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.shadowsEnabled' }, value: data.get('settings.shadowsEnabled') })),
+                React.createElement(LabelGroup, { text: 'Cookies On' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.cookiesEnabled' }, value: data.get('settings.cookiesEnabled') })),
+                React.createElement(LabelGroup, { text: 'Static' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.static' }, value: data.get('settings.static') })),
+                React.createElement(LabelGroup, { text: 'Shadow Intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.shadowIntensity' }, min: 0, max: 1, value: data.get('settings.shadowIntensity') })),
+                React.createElement(Button, { text: 'Add Light', onClick: () => data.emit('add') }),
+                React.createElement(Button, { text: 'Remove Light', onClick: () => data.emit('remove') }),
+                React.createElement(LabelGroup, { text: 'Light Count' },
+                    React.createElement(Label, { binding: new BindingTwoWay(), link: { observer: data, path: 'settings.numLights' }, value: data.get('settings.numLights') }))),
+            React.createElement(Panel, { headerText: 'Debug' },
+                React.createElement(LabelGroup, { text: 'Cells' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.debug' }, value: data.get('settings.debug') })),
+                React.createElement(LabelGroup, { text: 'Atlas' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'settings.debugAtlas' }, value: data.get('settings.debugAtlas') }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -78,7 +74,7 @@ export class ClusteredSpotShadowsExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -196,8 +192,15 @@ export class ClusteredSpotShadowsExample {
                 cubeMaterial.bumpiness = 0.5;
                 cubeMaterial.update();
 
-                // helper function to create a 3d primitive including its material
-                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, mat: pc.Material) {
+                /**
+                 * helper function to create a 3d primitive including its material
+                 * @param {string} primitiveType - todo
+                 * @param {pc.Vec3} position - todo
+                 * @param {pc.Vec3} scale - todo
+                 * @param {pc.Material} mat - todo
+                 * @returns {pc.Entity} todo
+                 */
+                function createPrimitive(primitiveType, position, scale, mat) {
 
                     // create the primitive using the material
                     const primitive = new pc.Entity();
@@ -312,7 +315,7 @@ export class ClusteredSpotShadowsExample {
                 camera.script.create("orbitCameraInputTouch");
 
                 // handle HUD changes - update properties on the scene
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     const pathArray = path.split('.');
                     if (pathArray[1] === 'static') {
 
@@ -374,7 +377,7 @@ export class ClusteredSpotShadowsExample {
 
                 // Set an update function on the app's update event
                 let time = 0;
-                app.on("update", function (dt: number) {
+                app.on("update", function (/** @type {number} */dt) {
 
                     // don't move lights around when they're static
                     if (!lightsStatic) {

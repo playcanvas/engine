@@ -5,7 +5,13 @@ export class ModelOutlineExample {
     static NAME = 'Model Outline';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'outline': new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })
@@ -17,7 +23,7 @@ export class ModelOutlineExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -54,8 +60,16 @@ export class ModelOutlineExample {
 
                 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-                // helper function to create a primitive with shape type, position, scale, color and layer
-                function createPrimitive(primitiveType: string, position: number | pc.Vec3, scale: number | pc.Vec3, color: pc.Color, layer: number[]) {
+                /**
+                 * helper function to create a primitive with shape type, position, scale, color and layer
+                 * @param {string} primitiveType 
+                 * @param {number | pc.Vec3} position 
+                 * @param {number | pc.Vec3} scale 
+                 * @param {pc.Color} color 
+                 * @param {number[]} layer 
+                 * @returns {pc.Entity}
+                 */
+                function createPrimitive(primitiveType, position, scale, color, layer) {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;

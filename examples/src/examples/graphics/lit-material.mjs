@@ -6,7 +6,13 @@ class LitMaterialExample {
     static HIDDEN = true;
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -23,7 +29,7 @@ class LitMaterialExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -150,7 +156,7 @@ class LitMaterialExample {
                 app.root.addChild(primitive);
 
                 let time = 0;
-                app.on("update", function (dt: number) {
+                app.on("update", function (/** @type {number} */dt) {
                     time += dt;
                     material.setParameter("material_specularRgb", [(Math.sin(time) + 1.0) * 0.5, (Math.cos(time * 0.5) + 1.0) * 0.5, (Math.sin(time * 0.7) + 1.0) * 0.5]);
                     material.setParameter("material_normalMapIntensity", (Math.sin(time) + 1.0) * 0.5);

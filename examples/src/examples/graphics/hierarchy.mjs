@@ -5,7 +5,13 @@ export class HierarchyExample {
     static NAME = 'Hierarchy';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+        /**
+     * 
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const gfxOptions = {
             deviceTypes: [deviceType],
@@ -13,7 +19,7 @@ export class HierarchyExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -38,8 +44,14 @@ export class HierarchyExample {
 
             app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-            // helper function to create a primitive with shape type, position, scale
-            function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3) {
+            /**
+             * helper function to create a primitive with shape type, position, scale
+             * @param {string} primitiveType - todo
+             * @param {pc.Vec3} position - todo
+             * @param {pc.Vec3} scale - todo
+             * @returns {pc.Entity} todo
+             */
+            function createPrimitive(primitiveType, position, scale) {
                 // create material of random color
                 const material = new pc.StandardMaterial();
                 material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());

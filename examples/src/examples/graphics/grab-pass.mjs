@@ -91,7 +91,7 @@ export class GrabPassExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -134,8 +134,15 @@ export class GrabPassExample {
                 app.scene.layers.remove(depthLayer);
                 app.scene.layers.insertOpaque(depthLayer, 2);
 
-                // helper function to create a primitive with shape type, position, scale, color
-                function createPrimitive(primitiveType: string, position: pc.Vec3, scale: pc.Vec3, color: pc.Color) {
+                /**
+                 * helper function to create a primitive with shape type, position, scale, color
+                 * @param {string} primitiveType - todo
+                 * @param {pc.Vec3} position - todo
+                 * @param {pc.Vec3} scale - todo
+                 * @param {pc.Color} color - todo
+                 * @returns {pc.Entity}
+                 */
+                function createPrimitive(primitiveType, position, scale, color) {
                     // create material of specified color
                     const material = new pc.StandardMaterial();
                     material.diffuse = color;

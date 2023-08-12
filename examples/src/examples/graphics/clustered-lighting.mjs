@@ -6,7 +6,12 @@ export class ClusteredLightingExample {
     static ENGINE = 'PERFORMANCE';
     static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement, deviceType: string): void {
+    /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */
+    static async example(canvas, deviceType) {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -19,225 +24,227 @@ export class ClusteredLightingExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+        const createOptions = new pc.AppOptions();
+        createOptions.graphicsDevice = device;
+        createOptions.mouse = new pc.Mouse(document.body);
+        createOptions.touch = new pc.TouchDevice(document.body);
 
-            const createOptions = new pc.AppOptions();
-            createOptions.graphicsDevice = device;
-            createOptions.mouse = new pc.Mouse(document.body);
-            createOptions.touch = new pc.TouchDevice(document.body);
+        createOptions.componentSystems = [
+            // @ts-ignore
+            pc.RenderComponentSystem,
+            // @ts-ignore
+            pc.CameraComponentSystem,
+            // @ts-ignore
+            pc.LightComponentSystem,
+            // @ts-ignore
+            pc.ScriptComponentSystem
+        ];
+        createOptions.resourceHandlers = [
+            // @ts-ignore
+            pc.TextureHandler,
+            // @ts-ignore
+            pc.ContainerHandler,
+            // @ts-ignore
+            pc.ScriptHandler
+        ];
 
-            createOptions.componentSystems = [
-                // @ts-ignore
-                pc.RenderComponentSystem,
-                // @ts-ignore
-                pc.CameraComponentSystem,
-                // @ts-ignore
-                pc.LightComponentSystem,
-                // @ts-ignore
-                pc.ScriptComponentSystem
-            ];
-            createOptions.resourceHandlers = [
-                // @ts-ignore
-                pc.TextureHandler,
-                // @ts-ignore
-                pc.ContainerHandler,
-                // @ts-ignore
-                pc.ScriptHandler
-            ];
+        const app = new pc.AppBase(canvas);
+        app.init(createOptions);
 
-            const app = new pc.AppBase(canvas);
-            app.init(createOptions);
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-            assetListLoader.load(() => {
+            app.start();
 
-                app.start();
+            /** @type {Array<pc.Entity>} */
+            const pointLightList = [];
+            /** @type {Array<pc.Entity>} */
+            const spotLightList = [];
+            /** @type {pc.Entity|null} */
+            let dirLight = null;
 
-                const pointLightList: Array<pc.Entity> = [];
-                const spotLightList: Array<pc.Entity> = [];
-                let dirLight: pc.Entity = null;
+            // enabled clustered lighting. This is a temporary API and will change in the future
+            app.scene.clusteredLightingEnabled = true;
 
-                // enabled clustered lighting. This is a temporary API and will change in the future
-                app.scene.clusteredLightingEnabled = true;
+            // adjust default clustered lighting parameters to handle many lights
+            const lighting = app.scene.lighting;
 
-                // adjust default clustered lighting parameters to handle many lights
-                const lighting = app.scene.lighting;
+            // 1) subdivide space with lights into this many cells
+            lighting.cells = new pc.Vec3(12, 16, 12);
 
-                // 1) subdivide space with lights into this many cells
-                lighting.cells = new pc.Vec3(12, 16, 12);
+            // 2) and allow this many lights per cell
+            lighting.maxLightsPerCell = 48;
 
-                // 2) and allow this many lights per cell
-                lighting.maxLightsPerCell = 48;
+            lighting.shadowsEnabled = false;
 
-                lighting.shadowsEnabled = false;
+            window.addEventListener("resize", function () {
+                app.resizeCanvas(canvas.width, canvas.height);
+            });
 
-                window.addEventListener("resize", function () {
-                    app.resizeCanvas(canvas.width, canvas.height);
+            // material with tiled normal map
+            let material = new pc.StandardMaterial();
+            material.normalMap = assets.normal.resource;
+            material.normalMapTiling.set(5, 5);
+            material.bumpiness = 1;
+
+            // enable specular
+            material.gloss = 0.5;
+            material.metalness = 0.3;
+            material.useMetalness = true;
+
+            material.update();
+
+            // ground plane
+            const ground = new pc.Entity();
+            ground.addComponent('render', {
+                type: "plane",
+                material: material
+            });
+            ground.setLocalScale(150, 150, 150);
+            app.root.addChild(ground);
+
+            // high polycount cylinder
+            const cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
+            const cylinder = new pc.Entity();
+            cylinder.addComponent('render', {
+                material: material,
+                meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
+                castShadows: true
+            });
+            app.root.addChild(cylinder);
+            cylinder.setLocalPosition(0, 50, 0);
+            cylinder.setLocalScale(50, 100, 50);
+
+            // create many omni lights that do not cast shadows
+            let count = 30;
+            for (let i = 0; i < count; i++) {
+                const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
+                const lightPoint = new pc.Entity();
+                lightPoint.addComponent("light", {
+                    type: "omni",
+                    color: color,
+                    range: 12,
+                    castShadows: false,
+                    falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
                 });
 
-                // material with tiled normal map
-                let material = new pc.StandardMaterial();
-                material.normalMap = assets.normal.resource;
-                material.normalMapTiling.set(5, 5);
-                material.bumpiness = 1;
-
-                // enable specular
-                material.gloss = 0.5;
-                material.metalness = 0.3;
-                material.useMetalness = true;
-
+                // attach a render component with a small sphere to each light
+                const material = new pc.StandardMaterial();
+                material.emissive = color;
                 material.update();
 
-                // ground plane
-                const ground = new pc.Entity();
-                ground.addComponent('render', {
-                    type: "plane",
-                    material: material
-                });
-                ground.setLocalScale(150, 150, 150);
-                app.root.addChild(ground);
-
-                // high polycount cylinder
-                const cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
-                const cylinder = new pc.Entity();
-                cylinder.addComponent('render', {
+                lightPoint.addComponent('render', {
+                    type: "sphere",
                     material: material,
-                    meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
                     castShadows: true
                 });
-                app.root.addChild(cylinder);
-                cylinder.setLocalPosition(0, 50, 0);
-                cylinder.setLocalScale(50, 100, 50);
+                lightPoint.setLocalScale(5, 5, 5);
 
-                // create many omni lights that do not cast shadows
-                let count = 30;
-                for (let i = 0; i < count; i++) {
-                    const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
-                    const lightPoint = new pc.Entity();
-                    lightPoint.addComponent("light", {
-                        type: "omni",
-                        color: color,
-                        range: 12,
-                        castShadows: false,
-                        falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED
-                    });
+                // add it to the scene and also keep it in an array
+                app.root.addChild(lightPoint);
+                pointLightList.push(lightPoint);
+            }
 
-                    // attach a render component with a small sphere to each light
-                    const material = new pc.StandardMaterial();
-                    material.emissive = color;
-                    material.update();
+            // create many spot lights
+            count = 16;
+            for (let i = 0; i < count; i++) {
+                const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
+                const lightSpot = new pc.Entity();
+                lightSpot.addComponent("light", {
+                    type: "spot",
+                    color: color,
+                    innerConeAngle: 5,
+                    outerConeAngle: 6 + Math.random() * 40,
+                    range: 25,
+                    castShadows: false
+                });
 
-                    lightPoint.addComponent('render', {
-                        type: "sphere",
-                        material: material,
-                        castShadows: true
-                    });
-                    lightPoint.setLocalScale(5, 5, 5);
+                // attach a render component with a small cone to each light
+                material = new pc.StandardMaterial();
+                material.emissive = color;
+                material.update();
 
-                    // add it to the scene and also keep it in an array
-                    app.root.addChild(lightPoint);
-                    pointLightList.push(lightPoint);
+                lightSpot.addComponent('render', {
+                    type: "cone",
+                    material: material
+                });
+                lightSpot.setLocalScale(5, 5, 5);
+
+                lightSpot.setLocalPosition(100, 50, 70);
+                lightSpot.lookAt(new pc.Vec3(100, 60, 70));
+                app.root.addChild(lightSpot);
+                spotLightList.push(lightSpot);
+            }
+
+            // Create a single directional light which casts shadows
+            dirLight = new pc.Entity();
+            dirLight.addComponent("light", {
+                type: "directional",
+                color: pc.Color.WHITE,
+                intensity: 0.15,
+                range: 300,
+                shadowDistance: 600,
+                castShadows: true,
+                shadowBias: 0.2,
+                normalOffsetBias: 0.05
+            });
+            app.root.addChild(dirLight);
+
+            // Create an entity with a camera component
+            const camera = new pc.Entity();
+            camera.addComponent("camera", {
+                clearColor: new pc.Color(0.05, 0.05, 0.05),
+                farClip: 500,
+                nearClip: 0.1
+            });
+            camera.setLocalPosition(140, 140, 140);
+            camera.lookAt(new pc.Vec3(0, 40, 0));
+
+            // add orbit camera script with mouse and touch support
+            camera.addComponent("script");
+            camera.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2,
+                    focusEntity: app.root,
+                    distanceMax: 400,
+                    frameOnStart: false
                 }
+            });
+            camera.script.create("orbitCameraInputMouse");
+            camera.script.create("orbitCameraInputTouch");
+            app.root.addChild(camera);
 
-                // create many spot lights
-                count = 16;
-                for (let i = 0; i < count; i++) {
-                    const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
-                    const lightSpot = new pc.Entity();
-                    lightSpot.addComponent("light", {
-                        type: "spot",
-                        color: color,
-                        innerConeAngle: 5,
-                        outerConeAngle: 6 + Math.random() * 40,
-                        range: 25,
-                        castShadows: false
-                    });
+            // Set an update function on the app's update event
+            let time = 0;
+            app.on("update", function (/** @type {number} */dt) {
+                time += dt;
 
-                    // attach a render component with a small cone to each light
-                    material = new pc.StandardMaterial();
-                    material.emissive = color;
-                    material.update();
+                // move lights along sin based waves around the cylinder
+                pointLightList.forEach(function (light, i) {
+                    const angle = (i / pointLightList.length) * Math.PI * 2;
+                    const y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
+                    light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
+                });
 
-                    lightSpot.addComponent('render', {
-                        type: "cone",
-                        material: material
-                    });
-                    lightSpot.setLocalScale(5, 5, 5);
+                // rotate spot lights around
+                spotLightList.forEach(function (spotlight, i) {
+                    const angle = (i / spotLightList.length) * Math.PI * 2;
+                    spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
+                    spotlight.lookAt(pc.Vec3.ZERO);
+                    spotlight.rotateLocal(90, 0, 0);
+                });
 
-                    lightSpot.setLocalPosition(100, 50, 70);
-                    lightSpot.lookAt(new pc.Vec3(100, 60, 70));
-                    app.root.addChild(lightSpot);
-                    spotLightList.push(lightSpot);
+                // rotate directional light
+                if (dirLight) {
+                    dirLight.setLocalEulerAngles(25, -30 * time, 0);
                 }
-
-                // Create a single directional light which casts shadows
-                dirLight = new pc.Entity();
-                dirLight.addComponent("light", {
-                    type: "directional",
-                    color: pc.Color.WHITE,
-                    intensity: 0.15,
-                    range: 300,
-                    shadowDistance: 600,
-                    castShadows: true,
-                    shadowBias: 0.2,
-                    normalOffsetBias: 0.05
-                });
-                app.root.addChild(dirLight);
-
-                // Create an entity with a camera component
-                const camera = new pc.Entity();
-                camera.addComponent("camera", {
-                    clearColor: new pc.Color(0.05, 0.05, 0.05),
-                    farClip: 500,
-                    nearClip: 0.1
-                });
-                camera.setLocalPosition(140, 140, 140);
-                camera.lookAt(new pc.Vec3(0, 40, 0));
-
-                // add orbit camera script with mouse and touch support
-                camera.addComponent("script");
-                camera.script.create("orbitCamera", {
-                    attributes: {
-                        inertiaFactor: 0.2,
-                        focusEntity: app.root,
-                        distanceMax: 400,
-                        frameOnStart: false
-                    }
-                });
-                camera.script.create("orbitCameraInputMouse");
-                camera.script.create("orbitCameraInputTouch");
-                app.root.addChild(camera);
-
-                // Set an update function on the app's update event
-                let time = 0;
-                app.on("update", function (dt: number) {
-                    time += dt;
-
-                    // move lights along sin based waves around the cylinder
-                    pointLightList.forEach(function (light, i) {
-                        const angle = (i / pointLightList.length) * Math.PI * 2;
-                        const y = Math.sin(time * 0.5 + 7 * angle) * 30 + 70;
-                        light.setLocalPosition(30 * Math.sin(angle), y, 30 * Math.cos(angle));
-                    });
-
-                    // rotate spot lights around
-                    spotLightList.forEach(function (spotlight, i) {
-                        const angle = (i / spotLightList.length) * Math.PI * 2;
-                        spotlight.setLocalPosition(40 * Math.sin(time + angle), 5, 40 * Math.cos(time + angle));
-                        spotlight.lookAt(pc.Vec3.ZERO);
-                        spotlight.rotateLocal(90, 0, 0);
-                    });
-
-                    // rotate directional light
-                    if (dirLight) {
-                        dirLight.setLocalEulerAngles(25, -30 * time, 0);
-                    }
-                });
             });
         });
+        return app;
     }
 }

@@ -9,48 +9,37 @@ export class LightsExample {
     static NAME = 'Lights';
     static WEBGPU_ENABLED = true;
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='OMNI LIGHT [KEY_1]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.intensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='shadow intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.shadowIntensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='cookie'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.omni.cookieIntensity' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='SPOT LIGHT [KEY_2]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.intensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='shadow intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.shadowIntensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='cookie'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.spot.cookieIntensity' }}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='DIRECTIONAL LIGHT [KEY_3]'>
-                <LabelGroup text='enabled'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.enabled' }}/>
-                </LabelGroup>
-                <LabelGroup text='intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.intensity' }}/>
-                </LabelGroup>
-                <LabelGroup text='shadow intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'lights.directional.shadowIntensity' }}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'OMNI LIGHT [KEY_1]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'lights.omni.enabled' } })),
+                React.createElement(LabelGroup, { text: 'intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.omni.intensity' } })),
+                React.createElement(LabelGroup, { text: 'shadow intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.omni.shadowIntensity' } })),
+                React.createElement(LabelGroup, { text: 'cookie' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.omni.cookieIntensity' } }))),
+            React.createElement(Panel, { headerText: 'SPOT LIGHT [KEY_2]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'lights.spot.enabled' } })),
+                React.createElement(LabelGroup, { text: 'intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.spot.intensity' } })),
+                React.createElement(LabelGroup, { text: 'shadow intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.spot.shadowIntensity' } })),
+                React.createElement(LabelGroup, { text: 'cookie' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.spot.cookieIntensity' } }))),
+            React.createElement(Panel, { headerText: 'DIRECTIONAL LIGHT [KEY_3]' },
+                React.createElement(LabelGroup, { text: 'enabled' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'lights.directional.enabled' } })),
+                React.createElement(LabelGroup, { text: 'intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.directional.intensity' } })),
+                React.createElement(LabelGroup, { text: 'shadow intensity' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'lights.directional.shadowIntensity' } }))));
     }
 
     example(canvas: HTMLCanvasElement, deviceType: string, data:any): void {
@@ -80,7 +69,7 @@ export class LightsExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -285,7 +274,7 @@ export class LightsExample {
                     }
                 });
 
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     const pathArray = path.split('.');
                     if (pathArray[2] === 'enabled') {
                         lights[pathArray[1]].enabled = value;

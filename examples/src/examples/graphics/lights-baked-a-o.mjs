@@ -8,67 +8,56 @@ export class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked AO';
 
-    controls(data: Observer) {
-        return <>
-            <Panel headerText='Lightmap Filter Settings'>
-                <LabelGroup text='enable'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterEnabled' }} value={data.get('data.settings.lightmapFilterEnabled')}/>
-                </LabelGroup>
-                <LabelGroup text='range'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterRange' }} value={data.get('data.settings.lightmapFilterRange')} min = {1} max = {20} precision = {0}/>
-                </LabelGroup>
-                <LabelGroup text='smoothness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.settings.lightmapFilterSmoothness' }} value={data.get('data.settings.lightmapFilterSmoothness')} min = {0.1} max = {2} precision = {1}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Ambient light'>
-                <LabelGroup text='bake'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBake' }} value={data.get('data.ambient.ambientBake')}/>
-                </LabelGroup>
-                <LabelGroup text='cubemap'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.cubemap' }} value={data.get('data.ambient.cubemap')}/>
-                </LabelGroup>
-                <LabelGroup text='hemisphere'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.hemisphere' }} value={data.get('data.ambient.hemisphere')}/>
-                </LabelGroup>
-                <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeNumSamples' }} value={data.get('data.ambient.ambientBakeNumSamples')} max={64} precision={0}/>
-                </LabelGroup>
-                <LabelGroup text='contrast'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }} value={data.get('data.ambient.ambientBakeOcclusionContrast')} min = {-1} max={1} precision={1}/>
-                </LabelGroup>
-                <LabelGroup text='brightness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }} value={data.get('data.ambient.ambientBakeOcclusionBrightness')} min = {-1} max={1} precision={1}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Directional light'>
-                <LabelGroup text='enable'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.enabled' }} value={data.get('data.directional.enabled')}/>
-                </LabelGroup>
-                <LabelGroup text='bake'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bake' }} value={data.get('data.directional.bake')}/>
-                </LabelGroup>
-                <LabelGroup text='samples'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeNumSamples' }} value={data.get('data.directional.bakeNumSamples')} max={64} precision={0}/>
-                </LabelGroup>
-                <LabelGroup text='area'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'data.directional.bakeArea' }} value={data.get('data.directional.bakeArea')} max={40} precision={0}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Other lights'>
-                <LabelGroup text='enable'>
-                    <BooleanInput type='toggle' binding={new BindingTwoWay()} link={{ observer: data, path: 'data.other.enabled' }} value={data.get('data.other.enabled')}/>
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Bake stats'>
-                <LabelGroup text='duration'>
-                    <Label binding={new BindingTwoWay()} link={{ observer: data, path: 'data.stats.duration' }} value={data.get('data.stats.duration')}/>
-                </LabelGroup>
-            </Panel>
-        </>;
+    /**
+     * @param {Observer} data todo
+     * @returns {JSX.Element} todo
+     */
+    static controls(data) {
+        return React.createElement(React.Fragment, null,
+            React.createElement(Panel, { headerText: 'Lightmap Filter Settings' },
+                React.createElement(LabelGroup, { text: 'enable' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.settings.lightmapFilterEnabled' }, value: data.get('data.settings.lightmapFilterEnabled') })),
+                React.createElement(LabelGroup, { text: 'range' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.settings.lightmapFilterRange' }, value: data.get('data.settings.lightmapFilterRange'), min: 1, max: 20, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'smoothness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.settings.lightmapFilterSmoothness' }, value: data.get('data.settings.lightmapFilterSmoothness'), min: 0.1, max: 2, precision: 1 }))),
+            React.createElement(Panel, { headerText: 'Ambient light' },
+                React.createElement(LabelGroup, { text: 'bake' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.ambientBake' }, value: data.get('data.ambient.ambientBake') })),
+                React.createElement(LabelGroup, { text: 'cubemap' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.cubemap' }, value: data.get('data.ambient.cubemap') })),
+                React.createElement(LabelGroup, { text: 'hemisphere' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.hemisphere' }, value: data.get('data.ambient.hemisphere') })),
+                React.createElement(LabelGroup, { text: 'samples' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.ambientBakeNumSamples' }, value: data.get('data.ambient.ambientBakeNumSamples'), max: 64, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'contrast' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.ambientBakeOcclusionContrast' }, value: data.get('data.ambient.ambientBakeOcclusionContrast'), min: -1, max: 1, precision: 1 })),
+                React.createElement(LabelGroup, { text: 'brightness' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.ambient.ambientBakeOcclusionBrightness' }, value: data.get('data.ambient.ambientBakeOcclusionBrightness'), min: -1, max: 1, precision: 1 }))),
+            React.createElement(Panel, { headerText: 'Directional light' },
+                React.createElement(LabelGroup, { text: 'enable' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.directional.enabled' }, value: data.get('data.directional.enabled') })),
+                React.createElement(LabelGroup, { text: 'bake' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.directional.bake' }, value: data.get('data.directional.bake') })),
+                React.createElement(LabelGroup, { text: 'samples' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.directional.bakeNumSamples' }, value: data.get('data.directional.bakeNumSamples'), max: 64, precision: 0 })),
+                React.createElement(LabelGroup, { text: 'area' },
+                    React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.directional.bakeArea' }, value: data.get('data.directional.bakeArea'), max: 40, precision: 0 }))),
+            React.createElement(Panel, { headerText: 'Other lights' },
+                React.createElement(LabelGroup, { text: 'enable' },
+                    React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer: data, path: 'data.other.enabled' }, value: data.get('data.other.enabled') }))),
+            React.createElement(Panel, { headerText: 'Bake stats' },
+                React.createElement(LabelGroup, { text: 'duration' },
+                    React.createElement(Label, { binding: new BindingTwoWay(), link: { observer: data, path: 'data.stats.duration' }, value: data.get('data.stats.duration') }))));
     }
 
-    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
+        /**
+     * @param {HTMLCanvasElement} canvas - todo
+     * @param {string} deviceType - todo
+     * @param {any} data - todo
+     * @returns {Promise<pc.AppBase>} todo
+     */    
+    static async example(canvas, deviceType, data) {
 
         const assets = {
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -82,7 +71,7 @@ export class LightsBakedAOExample {
             twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
-        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+        const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -238,7 +227,7 @@ export class LightsBakedAOExample {
                 let needBake = false;
 
                 // handle data changes from HUD to modify baking properties
-                data.on('*:set', (path: string, value: any) => {
+                data.on('*:set', (/** @type {string} */ path, value) => {
                     let bakeSettingChanged = true;
                     const pathArray = path.split('.');
 
