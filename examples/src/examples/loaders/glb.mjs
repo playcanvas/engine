@@ -116,5 +116,4 @@ class GlbExample {
 
 export {
     GlbExample,
-    example,
 };

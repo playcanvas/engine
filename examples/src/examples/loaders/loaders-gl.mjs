@@ -173,5 +173,4 @@ class LoadersGlExample {
 
 export {
     LoadersGlExample,
-    example,
 };
