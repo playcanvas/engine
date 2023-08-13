@@ -354,7 +354,8 @@ async function example(canvas, deviceType, data) {
         Locomotion.prototype.onMouseDown = function (event) {
             if (event.button !== 0) return;
             // Set the character target position to a position on the plane that the user has clicked
-            const cameraEntity = app.root.findByName('Camera') /*as pc.Entity*/;
+            /** @type {pc.Entity} */
+            const cameraEntity = app.root.findByName('Camera');
             const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
             const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
             const result = app.systems.rigidbody.raycastFirst(far, near);
@@ -426,6 +427,4 @@ class LocomotionExample {
 }
 export {
     LocomotionExample,
-    controls,
-    example,
 };

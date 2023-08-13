@@ -13,7 +13,7 @@ import { Button } from '@playcanvas/pcui/react';
 async function example(canvas, deviceType, data) {
 
     const assets = {
-        playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
+        playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', { url: assetPath + 'textures/playcanvas-grey.png' })
     };
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -290,13 +290,6 @@ class ComponentPropertiesExample {
      * @returns {JSX.Element}
      */
     static controls({observer}) {
-        /*
-        return <>
-            <Button text='Flash' onClick={() => {
-                data.set('flash', !data.get('flash'));
-            }}/>
-        </>;
-        */
         return React.createElement(React.Fragment, null,
             React.createElement(Button, {
                 text: 'Flash',

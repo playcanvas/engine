@@ -200,5 +200,4 @@ class TweenExample {
 
 export {
     TweenExample,
-    example,
-}
+};

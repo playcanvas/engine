@@ -267,9 +267,6 @@ class BlendTrees2DDirectionalExample {
                 canvas.addEventListener('mousedown', mouseEvent);
             });
         });
-        //return <>
-        //    <canvas id='2d-blend-control' />
-        //</>;
         return React.createElement(React.Fragment, null,
             React.createElement("canvas", { id: '2d-blend-control' }));
     }
