@@ -11,28 +11,29 @@ function importFile(content) {
   return "data:text/javascript;base64," + btoa(content);
 }
 const playcanvasEngine = document.currentScript.src + "/../../../";
+const nodeModules = playcanvasEngine + "examples/node_modules/";
 const react = {
-  "prop-types"               : "/react-es6/prop-types/index.js",
-  "tiny-warning"             : "/react-es6/tiny-warning.mjs",
-  "tiny-invariant"           : "/react-es6/tiny-invariant.mjs",
-  "mini-create-react-context": playcanvasEngine + "examples/node_modules/react-router/node_modules/mini-create-react-context/dist/esm/index.js",
-  "path-to-regexp"           : "/react-es6/path-to-regexp.mjs",
-  "react-is"                 : "/react-es6/react-is.mjs",
-  "hoist-non-react-statics"  : "/react-es6/hoist-non-react-statics.mjs",
-  "resolve-pathname"         : "/react-es6/resolve-pathname.mjs",
-  "isarray"                  : "/react-es6/isarray.mjs",
+  "prop-types"               : nodeModules + "react-es6/prop-types/index.js",
+  "tiny-warning"             : nodeModules + "react-es6/tiny-warning.mjs",
+  "tiny-invariant"           : nodeModules + "react-es6/tiny-invariant.mjs",
+  "mini-create-react-context": nodeModules + "react-router/node_modules/mini-create-react-context/dist/esm/index.js",
+  "path-to-regexp"           : nodeModules + "react-es6/path-to-regexp.mjs",
+  "react-is"                 : nodeModules + "react-es6/react-is.mjs",
+  "hoist-non-react-statics"  : nodeModules + "react-es6/hoist-non-react-statics.mjs",
+  "resolve-pathname"         : nodeModules + "react-es6/resolve-pathname.mjs",
+  "isarray"                  : nodeModules + "react-es6/isarray.mjs",
 }
 const react_dev = {
   ...react,
-  "react"                    : "/react-es6/react.mjs",
-  "react-dom"                : "/react-es6/react-dom.mjs",
-  "react-dom/client"         : "/react-es6/react-dom-client.mjs",
+  "react"                    : nodeModules + "react-es6/react.mjs",
+  "react-dom"                : nodeModules + "react-es6/react-dom.mjs",
+  "react-dom/client"         : nodeModules + "react-es6/react-dom-client.mjs",
 };
 const react_min = {
   ...react,
-  "react"                    : "/react-es6/build/react.min.mjs",
-  "react-dom"                : "/react-es6/build/react-dom.min.mjs",
-  "react-dom/client"         : "/react-es6/build/react-dom-client.min.mjs",
+  "react"                    : nodeModules + "react-es6/build/react.min.mjs",
+  "react-dom"                : nodeModules + "react-es6/build/react-dom.min.mjs",
+  "react-dom/client"         : nodeModules + "react-es6/build/react-dom-client.min.mjs",
 };
 const { host } = document.location;
 const local = host === 'localhost' || host === '127.0.0.1';
@@ -44,33 +45,34 @@ const playcanvas = local ? {
 };
 const imports = {
   ...playcanvas,
-  "@playcanvas/pcui"      : playcanvasEngine + "examples/node_modules/@playcanvas/pcui/dist/module/src/index.mjs",
-  "@playcanvas/pcui/react": playcanvasEngine + "examples/node_modules/@playcanvas/pcui/react/dist/module/src/index.mjs",
-  "@playcanvas/observer"  : playcanvasEngine + "examples/node_modules/@playcanvas/observer/dist/index.mjs",
-  //"@monaco-editor/react"  : playcanvasEngine + "examples/node_modules/@monaco-editor/react/lib/es/index.js",
-  "@monaco-editor/react"  : playcanvasEngine + "examples/node_modules/@monaco-editor/react/dist/index.mjs",
-  "@monaco-editor/loader" : playcanvasEngine + "examples/node_modules/@monaco-editor/loader/lib/es/index.js",
-  "state-local"           : playcanvasEngine + "examples/node_modules/state-local/lib/es/state-local.js",
-  "react-router-dom"      : playcanvasEngine + "examples/node_modules/react-router-dom/esm/react-router-dom.js",
-  "react-router"          : playcanvasEngine + "examples/node_modules/react-router/esm/react-router.js",
-  "@babel/runtime/helpers/esm/inheritsLoose"               : playcanvasEngine + "examples/node_modules/@babel/runtime/helpers/esm/inheritsLoose.js",
-  "@babel/runtime/helpers/esm/extends"                     : playcanvasEngine + "examples/node_modules/@babel/runtime/helpers/esm/extends.js",
-  "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose": playcanvasEngine + "examples/node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js",
-  "history"                  : playcanvasEngine + "examples/node_modules/history/esm/history.js",
-  "value-equal"              : playcanvasEngine + "examples/node_modules/value-equal/esm/value-equal.js",
-  "@playcanvas/pcui/styles"  : playcanvasEngine + "examples/node_modules/@playcanvas/pcui/styles/dist/index.mjs",
+  "@playcanvas/pcui"      : nodeModules + "@playcanvas/pcui/dist/module/src/index.mjs",
+  "@playcanvas/pcui/react": nodeModules + "@playcanvas/pcui/react/dist/module/src/index.mjs",
+  "@playcanvas/observer"  : nodeModules + "@playcanvas/observer/dist/index.mjs",
+  //"@monaco-editor/react"  : nodeModules + "@monaco-editor/react/lib/es/index.js", // was an older version
+  "@monaco-editor/react"  : nodeModules + "@monaco-editor/react/dist/index.mjs",
+  "@monaco-editor/loader" : nodeModules + "@monaco-editor/loader/lib/es/index.js",
+  "state-local"           : nodeModules + "state-local/lib/es/state-local.js",
+  "react-router-dom"      : nodeModules + "react-router-dom/esm/react-router-dom.js",
+  "react-router"          : nodeModules + "react-router/esm/react-router.js",
+  "@babel/runtime/helpers/esm/inheritsLoose"               : nodeModules + "@babel/runtime/helpers/esm/inheritsLoose.js",
+  "@babel/runtime/helpers/esm/extends"                     : nodeModules + "@babel/runtime/helpers/esm/extends.js",
+  "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose": nodeModules + "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js",
+  "history"                  : nodeModules + "history/esm/history.js",
+  "value-equal"              : nodeModules + "value-equal/esm/value-equal.js",
+  "@playcanvas/pcui/styles"  : nodeModules + "@playcanvas/pcui/styles/dist/index.mjs",
   "playcanvas-extras"        : playcanvasEngine + "extras/index.js",
-  "fflate"                   : playcanvasEngine + "examples/node_modules/fflate/esm/browser.js",
+  "fflate"                   : nodeModules + "fflate/esm/browser.js",
   ...react_min
 };
 const importmap = document.createElement("script");
 importmap.type = "importmap";
 importmap.textContent = JSON.stringify({imports});
-if (!document.body) {
-  //debugger;
-}
 let node = document.body;
 if (!node) {
   node = document.head;
 }
-node.appendChild(importmap);
+if (!node) {
+  console.error("importmap.js> make sure to either have a <HEAD> or <BODY> before you include this file.");
+} else {
+  node.appendChild(importmap);
+}
