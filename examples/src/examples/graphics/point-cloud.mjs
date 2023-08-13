@@ -1,5 +1,89 @@
 import * as pc from 'playcanvas';
+import { assetPath } from '../../assetPath.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
 
+enableHotReload({
+    assetPath,
+});
+
+/**
+ * @param {HTMLCanvasElement} canvas - todo
+ * @param {string} deviceType - todo
+ * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
+ * @returns {Promise<pc.AppBase>} todo
+ */
+async function example(canvas, deviceType, files) {
+    // Create the application and start the update loop
+    const app = new pc.Application(canvas, {});
+
+    const assets = {
+        'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
+    };
+
+    const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+    assetListLoader.load(() => {
+
+        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+        // Create an Entity with a camera component
+        const camera = new pc.Entity();
+        camera.addComponent("camera", {
+            clearColor: new pc.Color(0.1, 0.1, 0.1)
+        });
+        camera.translate(0, 7, 24);
+
+        // Add entity into scene hierarchy
+        app.root.addChild(camera);
+        app.start();
+
+        // Create a new Entity
+        const entity = assets.statue.resource.instantiateRenderEntity();
+        app.root.addChild(entity);
+
+        // Create the shader definition and shader from the vertex and fragment shaders
+        const shaderDefinition = {
+            attributes: {
+                aPosition: pc.SEMANTIC_POSITION
+            },
+            vshader: files['shader.vert'],
+            fshader: files['shader.frag']
+        };
+        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+
+        // Create a new material with the new shader
+        const material = new pc.Material();
+        material.shader = shader;
+
+        // find all render components
+        const renderComponents = entity.findComponents('render');
+
+        // for all render components
+        renderComponents.forEach(function (/** @type {pc.RenderComponent} */ render) {
+
+            // For all meshes in the render component, assign new material
+            render.meshInstances.forEach(function (meshInstance) {
+                meshInstance.material = material;
+            });
+
+            // set it to render as points
+            render.renderStyle = pc.RENDERSTYLE_POINTS;
+        });
+
+        let currentTime = 0;
+        app.on("update", function (dt) {
+
+            // Update the time and pass it to shader
+            currentTime += dt;
+            material.setParameter('uTime', currentTime);
+
+            // Rotate the model
+            entity.rotate(0, 15 * dt, 0);
+        });
+    });
+    return app;
+}
 
 export class PointCloudExample {
     static CATEGORY = 'Graphics';
@@ -51,82 +135,5 @@ void main(void)
     gl_FragColor = outColor;
 }`
     };
-
-    /**
-     * @param {HTMLCanvasElement} canvas - todo
-     * @param {string} deviceType - todo
-     * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
-     * @returns {Promise<pc.AppBase>} todo
-     */
-    static async example(canvas, deviceType, files) {
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
-
-        const assets = {
-            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
-        };
-
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.1, 0.1, 0.1)
-            });
-            camera.translate(0, 7, 24);
-
-            // Add entity into scene hierarchy
-            app.root.addChild(camera);
-            app.start();
-
-            // Create a new Entity
-            const entity = assets.statue.resource.instantiateRenderEntity();
-            app.root.addChild(entity);
-
-            // Create the shader definition and shader from the vertex and fragment shaders
-            const shaderDefinition = {
-                attributes: {
-                    aPosition: pc.SEMANTIC_POSITION
-                },
-                vshader: files['shader.vert'],
-                fshader: files['shader.frag']
-            };
-            const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-
-            // Create a new material with the new shader
-            const material = new pc.Material();
-            material.shader = shader;
-
-            // find all render components
-            const renderComponents = entity.findComponents('render');
-
-            // for all render components
-            renderComponents.forEach(function (/** @type {pc.RenderComponent} */ render) {
-
-                // For all meshes in the render component, assign new material
-                render.meshInstances.forEach(function (meshInstance) {
-                    meshInstance.material = material;
-                });
-
-                // set it to render as points
-                render.renderStyle = pc.RENDERSTYLE_POINTS;
-            });
-
-            let currentTime = 0;
-            app.on("update", function (dt) {
-
-                // Update the time and pass it to shader
-                currentTime += dt;
-                material.setParameter('uTime', currentTime);
-
-                // Rotate the model
-                entity.rotate(0, 15 * dt, 0);
-            });
-        });
-    }
+    static example = example;
 }

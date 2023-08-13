@@ -1,13 +1,17 @@
 import * as pc from 'playcanvas';
+import { scriptsPath } from '../../assetPath.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+
+enableHotReload({
+    scriptsPath,
+});
 
 /**
- * 
  * @param {HTMLCanvasElement} canvas - todo
  * @param {string} deviceType - todo
  * @returns {Promise<pc.AppBase>} todo
  */
 async function example(canvas, deviceType) {
-
     const assets = {
         'outline': new pc.Asset('outline', 'script', { url: scriptsPath + 'posteffects/posteffect-outline.js' })
     };
@@ -19,7 +23,6 @@ async function example(canvas, deviceType) {
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
     createOptions.mouse = new pc.Mouse(document.body);

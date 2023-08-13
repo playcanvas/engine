@@ -1,9 +1,9 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { jsx } from '../animation/jsx.mjs';
 
 enableHotReload({
     assetPath,
@@ -15,20 +15,42 @@ enableHotReload({
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Settings' },
-            React.createElement(LabelGroup, { text: 'Filter' },
-                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowType' }, type: "number", options: [
-                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
-                        { v: pc.SHADOW_PCF3, t: 'PCF3' },
-                        { v: pc.SHADOW_PCF5, t: 'PCF5' }
-                    ] })),
-            React.createElement(LabelGroup, { text: 'Shadow Res' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowAtlasResolution' }, min: 512, max: 4096, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'Shadows On' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowsEnabled' }, value: data.get('settings.shadowsEnabled') })),
-            React.createElement(LabelGroup, { text: 'Cookies On' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.cookiesEnabled' }, value: data.get('settings.cookiesEnabled') }))));
+    return jsx(Panel, { headerText: 'Settings' },
+        jsx(LabelGroup, { text: 'Filter' },
+            jsx(SelectInput, {
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'settings.shadowType' },
+                type: "number",
+                options: [
+                    { v: pc.SHADOW_PCF1, t: 'PCF1' },
+                    { v: pc.SHADOW_PCF3, t: 'PCF3' },
+                    { v: pc.SHADOW_PCF5, t: 'PCF5' }
+                ]
+            })),
+        jsx(LabelGroup, { text: 'Shadow Res' },
+            jsx(SliderInput, {
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'settings.shadowAtlasResolution' },
+                min: 512,
+                max: 4096,
+                precision: 0
+            })),
+        jsx(LabelGroup, { text: 'Shadows On' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'settings.shadowsEnabled' },
+                value: observer.get('settings.shadowsEnabled')
+            })),
+        jsx(LabelGroup, { text: 'Cookies On' },
+            jsx(BooleanInput, {
+                type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'settings.cookiesEnabled' },
+                value: observer.get('settings.cookiesEnabled')
+            })
+        )
+    );
 }
 
 /**

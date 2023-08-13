@@ -3,6 +3,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, Button, Label, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { jsx } from '../animation/jsx.mjs';
 
 enableHotReload({
     assetPath,
@@ -14,41 +15,101 @@ enableHotReload({
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Atlas' },
-            React.createElement(LabelGroup, { text: 'Resolution' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowAtlasResolution' }, min: 256, max: 4096, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'Split' },
-                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.atlasSplit' }, type: "number", options: [
+    return jsx(React.Fragment, null,
+        jsx(Panel, { headerText: 'Atlas' },
+            jsx(LabelGroup, { text: 'Resolution' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.shadowAtlasResolution' },
+                    min: 256,
+                    max: 4096,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'Split' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.atlasSplit' },
+                    type: "number",
+                    options: [
                         { v: 0, t: 'Automatic' },
                         { v: 1, t: '7 Shadows' },
                         { v: 2, t: '12 Shadows' },
                         { v: 3, t: '16 Shadows' }
-                    ] })),
-            React.createElement(LabelGroup, { text: 'Filter' },
-                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowType' }, type: "number", options: [
+                    ]
+                })),
+            jsx(LabelGroup, { text: 'Filter' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.shadowType' },
+                    type: "number",
+                    options: [
                         { v: pc.SHADOW_PCF1, t: 'PCF1' },
                         { v: pc.SHADOW_PCF3, t: 'PCF3' },
                         { v: pc.SHADOW_PCF5, t: 'PCF5' }
-                    ] }))),
-        React.createElement(Panel, { headerText: 'Lights' },
-            React.createElement(LabelGroup, { text: 'Shadows On' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowsEnabled' }, value: observer.get('settings.shadowsEnabled') })),
-            React.createElement(LabelGroup, { text: 'Cookies On' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.cookiesEnabled' }, value: observer.get('settings.cookiesEnabled') })),
-            React.createElement(LabelGroup, { text: 'Static' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.static' }, value: observer.get('settings.static') })),
-            React.createElement(LabelGroup, { text: 'Shadow Intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.shadowIntensity' }, min: 0, max: 1, value: observer.get('settings.shadowIntensity') })),
-            React.createElement(Button, { text: 'Add Light', onClick: () => observer.emit('add') }),
-            React.createElement(Button, { text: 'Remove Light', onClick: () => observer.emit('remove') }),
-            React.createElement(LabelGroup, { text: 'Light Count' },
-                React.createElement(Label, { binding: new BindingTwoWay(), link: { observer, path: 'settings.numLights' }, value: observer.get('settings.numLights') }))),
-        React.createElement(Panel, { headerText: 'Debug' },
-            React.createElement(LabelGroup, { text: 'Cells' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.debug' }, value: observer.get('settings.debug') })),
-            React.createElement(LabelGroup, { text: 'Atlas' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.debugAtlas' }, value: observer.get('settings.debugAtlas') }))));
+                    ]
+                }))),
+        jsx(Panel, { headerText: 'Lights' },
+            jsx(LabelGroup, { text: 'Shadows On' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.shadowsEnabled' },
+                    value: observer.get('settings.shadowsEnabled')
+                })),
+            jsx(LabelGroup, { text: 'Cookies On' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.cookiesEnabled' },
+                    value: observer.get('settings.cookiesEnabled')
+                })),
+            jsx(LabelGroup, { text: 'Static' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.static' },
+                    value: observer.get('settings.static')
+                })),
+            jsx(LabelGroup, { text: 'Shadow Intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.shadowIntensity' },
+                    min: 0,
+                    max: 1,
+                    value: observer.get('settings.shadowIntensity')
+                })),
+            jsx(Button, {
+                text: 'Add Light',
+                onClick: () => observer.emit('add')
+            }),
+            jsx(Button, {
+                text: 'Remove Light',
+                onClick: () => observer.emit('remove')
+            }),
+            jsx(LabelGroup, { text: 'Light Count' },
+                jsx(Label, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.numLights' },
+                    value: observer.get('settings.numLights')
+                }))),
+        jsx(Panel, { headerText: 'Debug' },
+            jsx(LabelGroup, { text: 'Cells' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.debug' },
+                    value: observer.get('settings.debug')
+                })),
+            jsx(LabelGroup, { text: 'Atlas' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.debugAtlas' },
+                    value: observer.get('settings.debugAtlas')
+                })
+            )
+        )
+    );
 }
 
 /**
@@ -58,7 +119,7 @@ function controls({observer}) {
  * @returns {Promise<pc.AppBase>} todo
  */    
 async function example(canvas, deviceType, data) {
-
+    const observer = data;
     const assets = {
         'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
         "channels": new pc.Asset("channels", "texture", { url: assetPath + "textures/channels.png" }),

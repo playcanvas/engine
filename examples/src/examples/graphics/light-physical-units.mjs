@@ -18,31 +18,77 @@ function controls({observer}) {
     return React.createElement(React.Fragment, null,
         React.createElement(Panel, { headerText: 'Lights' },
             React.createElement(LabelGroup, { text: 'Rect (lm)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.rect.luminance' }, min: 0.0, max: 800000.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.rect.luminance' },
+                    min: 0.0,
+                    max: 800000.0
+                })),
             React.createElement(LabelGroup, { text: 'Point (lm)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.point.luminance' }, min: 0.0, max: 800000.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.point.luminance' },
+                    min: 0.0,
+                    max: 800000.0
+                })),
             React.createElement(LabelGroup, { text: 'Spot (lm)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.spot.luminance' }, min: 0.0, max: 200000.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.spot.luminance' },
+                    min: 0.0,
+                    max: 200000.0
+                })),
             React.createElement(LabelGroup, { text: 'Spot angle' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.spot.aperture' }, min: 1.0, max: 90.0 }))),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.spot.aperture' },
+                    min: 1.0,
+                    max: 90.0
+                }))),
         React.createElement(Panel, { headerText: 'Camera' },
             React.createElement(LabelGroup, { text: 'Aperture (F/x)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.camera.aperture' }, min: 1.0, max: 16.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.camera.aperture' },
+                    min: 1.0,
+                    max: 16.0
+                })),
             React.createElement(LabelGroup, { text: 'Shutter (1/x) s' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.camera.shutter' }, min: 1.0, max: 1000.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.camera.shutter' },
+                    min: 1.0,
+                    max: 1000.0
+                })),
             React.createElement(LabelGroup, { text: 'ISO' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.camera.sensitivity' }, min: 100.0, max: 1000.0 }))),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.camera.sensitivity' },
+                    min: 100.0,
+                    max: 1000.0
+                }))),
         React.createElement(Panel, { headerText: 'Scene' },
             React.createElement(LabelGroup, { text: 'Animate' },
-                React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.camera.animate' } })),
+                React.createElement(BooleanInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.camera.animate' }
+                })),
             React.createElement(LabelGroup, { text: 'Physical' },
-                React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.scene.physicalUnits' } })),
+                React.createElement(BooleanInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.scene.physicalUnits' } })),
             React.createElement(LabelGroup, { text: 'Skylight' },
-                React.createElement(BooleanInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.scene.sky' } })),
+                React.createElement(BooleanInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.scene.sky' } })),
             React.createElement(LabelGroup, { text: 'Sky (lm/m2)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.sky.luminance' }, min: 0.0, max: 100000.0 })),
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.sky.luminance' }, min: 0.0, max: 100000.0 })),
             React.createElement(LabelGroup, { text: 'Sun (lm/m2)' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'script.sun.luminance' }, min: 0.0, max: 100000.0 }))));
+                React.createElement(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'script.sun.luminance' }, min: 0.0, max: 100000.0 }))));
 }
 
 /**

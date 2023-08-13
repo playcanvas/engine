@@ -1,9 +1,9 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, Label, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { fragment, jsx } from '../animation/jsx.mjs';
 
 enableHotReload({
     assetPath,
@@ -15,44 +15,127 @@ enableHotReload({
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Lightmap Filter Settings' },
-            React.createElement(LabelGroup, { text: 'enable' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.settings.lightmapFilterEnabled' }, value: data.get('data.settings.lightmapFilterEnabled') })),
-            React.createElement(LabelGroup, { text: 'range' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.settings.lightmapFilterRange' }, value: data.get('data.settings.lightmapFilterRange'), min: 1, max: 20, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'smoothness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.settings.lightmapFilterSmoothness' }, value: data.get('data.settings.lightmapFilterSmoothness'), min: 0.1, max: 2, precision: 1 }))),
-        React.createElement(Panel, { headerText: 'Ambient light' },
-            React.createElement(LabelGroup, { text: 'bake' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.ambientBake' }, value: data.get('data.ambient.ambientBake') })),
-            React.createElement(LabelGroup, { text: 'cubemap' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.cubemap' }, value: data.get('data.ambient.cubemap') })),
-            React.createElement(LabelGroup, { text: 'hemisphere' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.hemisphere' }, value: data.get('data.ambient.hemisphere') })),
-            React.createElement(LabelGroup, { text: 'samples' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.ambientBakeNumSamples' }, value: data.get('data.ambient.ambientBakeNumSamples'), max: 64, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'contrast' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.ambientBakeOcclusionContrast' }, value: data.get('data.ambient.ambientBakeOcclusionContrast'), min: -1, max: 1, precision: 1 })),
-            React.createElement(LabelGroup, { text: 'brightness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.ambient.ambientBakeOcclusionBrightness' }, value: data.get('data.ambient.ambientBakeOcclusionBrightness'), min: -1, max: 1, precision: 1 }))),
-        React.createElement(Panel, { headerText: 'Directional light' },
-            React.createElement(LabelGroup, { text: 'enable' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.directional.enabled' }, value: data.get('data.directional.enabled') })),
-            React.createElement(LabelGroup, { text: 'bake' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.directional.bake' }, value: data.get('data.directional.bake') })),
-            React.createElement(LabelGroup, { text: 'samples' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.directional.bakeNumSamples' }, value: data.get('data.directional.bakeNumSamples'), max: 64, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'area' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'data.directional.bakeArea' }, value: data.get('data.directional.bakeArea'), max: 40, precision: 0 }))),
-        React.createElement(Panel, { headerText: 'Other lights' },
-            React.createElement(LabelGroup, { text: 'enable' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.other.enabled' }, value: data.get('data.other.enabled') }))),
-        React.createElement(Panel, { headerText: 'Bake stats' },
-            React.createElement(LabelGroup, { text: 'duration' },
-                React.createElement(Label, { binding: new BindingTwoWay(), link: { observer, path: 'data.stats.duration' }, value: data.get('data.stats.duration') }))));
+    return fragment(
+        jsx(Panel, { headerText: 'Lightmap Filter Settings' },
+            jsx(LabelGroup, { text: 'enable' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.settings.lightmapFilterEnabled' },
+                    value: observer.get('data.settings.lightmapFilterEnabled') })),
+            jsx(LabelGroup, { text: 'range' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.settings.lightmapFilterRange' },
+                    value: observer.get('data.settings.lightmapFilterRange'),
+                    min: 1,
+                    max: 20,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'smoothness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.settings.lightmapFilterSmoothness' },
+                    value: observer.get('data.settings.lightmapFilterSmoothness'),
+                    min: 0.1,
+                    max: 2,
+                    precision: 1
+                }))),
+        jsx(Panel, { headerText: 'Ambient light' },
+            jsx(LabelGroup, { text: 'bake' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.ambientBake' },
+                    value: observer.get('data.ambient.ambientBake')
+                })),
+            jsx(LabelGroup, { text: 'cubemap' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.cubemap' },
+                    value: observer.get('data.ambient.cubemap')
+                })),
+            jsx(LabelGroup, { text: 'hemisphere' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.hemisphere' },
+                    value: observer.get('data.ambient.hemisphere') })),
+            jsx(LabelGroup, { text: 'samples' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.ambientBakeNumSamples' },
+                    value: observer.get('data.ambient.ambientBakeNumSamples'),
+                    max: 64,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'contrast' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.ambientBakeOcclusionContrast' },
+                    value: observer.get('data.ambient.ambientBakeOcclusionContrast'),
+                    min: -1,
+                    max: 1,
+                    precision: 1
+                })),
+            jsx(LabelGroup, { text: 'brightness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.ambient.ambientBakeOcclusionBrightness' },
+                    value: observer.get('data.ambient.ambientBakeOcclusionBrightness'),
+                    min: -1,
+                    max: 1,
+                    precision: 1
+                }))),
+        jsx(Panel, { headerText: 'Directional light' },
+            jsx(LabelGroup, { text: 'enable' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.directional.enabled' },
+                    value: observer.get('data.directional.enabled') })),
+            jsx(LabelGroup, { text: 'bake' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.directional.bake' },
+                    value: observer.get('data.directional.bake') })),
+            jsx(LabelGroup, { text: 'samples' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.directional.bakeNumSamples' },
+                    value: observer.get('data.directional.bakeNumSamples'),
+                    max: 64,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'area' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.directional.bakeArea' },
+                    value: observer.get('data.directional.bakeArea'),
+                    max: 40,
+                    precision: 0
+                }))),
+        jsx(Panel, { headerText: 'Other lights' },
+            jsx(LabelGroup, { text: 'enable' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.other.enabled' },
+                    value: observer.get('data.other.enabled')
+                }))),
+        jsx(Panel, { headerText: 'Bake stats' },
+            jsx(LabelGroup, { text: 'duration' },
+                jsx(Label, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.stats.duration' },
+                    value: observer.get('data.stats.duration')
+                })
+            )
+        )
+    );
 }
-
 
 /**
  * @param {HTMLCanvasElement} canvas - todo

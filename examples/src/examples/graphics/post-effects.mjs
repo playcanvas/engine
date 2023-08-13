@@ -1,56 +1,136 @@
 import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
+import { assetPath, dracoPath, scriptsPath } from '../../assetPath.mjs';
+import { jsx } from '../animation/jsx.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+
+enableHotReload({
+    assetPath,
+    scriptsPath,
+})
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'BLOOM [KEY_1]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'scripts.bloom.enabled' } })),
-            React.createElement(LabelGroup, { text: 'intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.bloom.bloomIntensity' } })),
-            React.createElement(LabelGroup, { text: 'threshold' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.bloom.bloomThreshold' } })),
-            React.createElement(LabelGroup, { text: 'blur amount' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.bloom.blurAmount' }, min: 1, max: 30 }))),
-        React.createElement(Panel, { headerText: 'SEPIA [KEY_2]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'scripts.sepia.enabled' } })),
-            React.createElement(LabelGroup, { text: 'amount' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.sepia.amount' } }))),
-        React.createElement(Panel, { headerText: 'VIGNETTE [KEY_3]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'scripts.vignette.enabled' } })),
-            React.createElement(LabelGroup, { text: 'darkness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.vignette.darkness' } })),
-            React.createElement(LabelGroup, { text: 'offset' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.vignette.offset' }, max: 2 }))),
-        React.createElement(Panel, { headerText: 'BOKEH [KEY_4]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'scripts.bokeh.enabled' } })),
-            React.createElement(LabelGroup, { text: 'aperture' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.bokeh.aperture' }, max: 0.2 })),
-            React.createElement(LabelGroup, { text: 'max blur' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.bokeh.maxBlur' }, max: 0.1 }))),
-        React.createElement(Panel, { headerText: 'SSAO [KEY_5]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'scripts.ssao.enabled' } })),
-            React.createElement(LabelGroup, { text: 'radius' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.ssao.radius' }, max: 10 })),
-            React.createElement(LabelGroup, { text: 'samples' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.ssao.samples' }, max: 32 })),
-            React.createElement(LabelGroup, { text: 'brightness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'scripts.ssao.brightness' } })),
-            React.createElement(LabelGroup, { text: 'downscale' },
-                React.createElement(SelectInput, { options: [{ v: 1, t: 'None' }, { v: 2, t: '50%' }, { v: '4', t: '25%' }], binding: new BindingTwoWay(), link: { observer, path: 'scripts.ssao.downscale' } }))),
-        React.createElement(Panel, { headerText: 'POST-PROCESS UI [KEY_6]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'data.postProcessUI.enabled' } }))));
+    return jsx(React.Fragment, null,
+        jsx(Panel, { headerText: 'BLOOM [KEY_1]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bloom.enabled' }
+                })),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bloom.bloomIntensity' }
+                })),
+            jsx(LabelGroup, { text: 'threshold' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bloom.bloomThreshold' }
+                })),
+            jsx(LabelGroup, { text: 'blur amount' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bloom.blurAmount' },
+                    min: 1,
+                    max: 30
+                }))),
+        jsx(Panel, { headerText: 'SEPIA [KEY_2]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.sepia.enabled' }
+                })),
+            jsx(LabelGroup, { text: 'amount' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.sepia.amount' }
+                }))),
+        jsx(Panel, { headerText: 'VIGNETTE [KEY_3]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.vignette.enabled' }
+                })),
+            jsx(LabelGroup, { text: 'darkness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.vignette.darkness' }
+                })),
+            jsx(LabelGroup, { text: 'offset' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.vignette.offset' },
+                    max: 2
+                }))),
+        jsx(Panel, { headerText: 'BOKEH [KEY_4]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bokeh.enabled' }
+                })),
+            jsx(LabelGroup, { text: 'aperture' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bokeh.aperture' },
+                    max: 0.2
+                })),
+            jsx(LabelGroup, { text: 'max blur' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.bokeh.maxBlur' },
+                    max: 0.1
+                }))),
+        jsx(Panel, { headerText: 'SSAO [KEY_5]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.ssao.enabled' } })),
+            jsx(LabelGroup, { text: 'radius' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.ssao.radius' },
+                    max: 10
+                })),
+            jsx(LabelGroup, { text: 'samples' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.ssao.samples' },
+                    max: 32
+                })),
+            jsx(LabelGroup, { text: 'brightness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.ssao.brightness' } })),
+            jsx(LabelGroup, { text: 'downscale' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 1, t: 'None' },
+                        { v: 2, t: '50%' },
+                        { v: '4', t: '25%' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'scripts.ssao.downscale' }
+                }))),
+        jsx(Panel, { headerText: 'POST-PROCESS UI [KEY_6]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.postProcessUI.enabled' }
+                })
+            )
+        )
+    );
 }
 
 /**
