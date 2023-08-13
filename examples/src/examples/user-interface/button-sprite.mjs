@@ -13,8 +13,8 @@ class ButtonSpriteExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' }),
-            'red_button_atlas': new pc.Asset('red_button_atlas', 'texture', { url: '/static/assets/button/red_button_atlas.png' })
+            'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' }),
+            'red_button_atlas': new pc.Asset('red_button_atlas', 'texture', { url: assetPath + 'button/red_button_atlas.png' })
         };
 
         const gfxOptions = {

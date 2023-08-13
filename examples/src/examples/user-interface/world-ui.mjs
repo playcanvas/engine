@@ -14,7 +14,7 @@ class WorldUiExample {
 
         const assets = {
             "checkboard": new pc.Asset("checkboard", "texture", { url: "/static/assets/textures/checkboard.png" }),
-            'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' }),
+            'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
         };
 

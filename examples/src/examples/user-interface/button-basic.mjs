@@ -12,7 +12,7 @@ class ButtonBasicExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
+            'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
         };
 
         const gfxOptions = {
