@@ -9,7 +9,7 @@ import * as pc from 'playcanvas';
 async function example(canvas, deviceType) {
 
     const assets = {
-        'outline': new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })
+        'outline': new pc.Asset('outline', 'script', { url: scriptsPath + 'posteffects/posteffect-outline.js' })
     };
 
     const gfxOptions = {

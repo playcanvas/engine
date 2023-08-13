@@ -14,7 +14,7 @@ export class ClusteredLightingExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+            'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
             'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
         };
 

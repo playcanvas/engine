@@ -46,7 +46,7 @@ export class ShadowCascadesExample {
     static async example(canvas, deviceType, data) {
 
         const assets = {
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+            'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
             'terrain': new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };

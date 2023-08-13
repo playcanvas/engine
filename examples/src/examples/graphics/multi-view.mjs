@@ -51,7 +51,7 @@ async function example(canvas, deviceType, data) {
     await new Promise((resolve) => { pc.WasmModule.getInstance('DracoDecoderModule', () => resolve()) });
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
         'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
         'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' })
     };

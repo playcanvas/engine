@@ -13,7 +13,7 @@ export class AreaPickerExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
+            'bloom': new pc.Asset('bloom', 'script', { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 

@@ -48,7 +48,7 @@ export class ReflectionPlanarExample {
         const assets = {
             envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/planar-renderer.js' })
+            'script': new pc.Asset('script', 'script', { url: scriptsPath + 'utils/planar-renderer.js' })
         };
 
         const gfxOptions = {

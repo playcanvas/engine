@@ -106,7 +106,7 @@ export class GroundFogExample {
     example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
 
         const assets = {
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+            'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
             'terrain': new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
             'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'texture': new pc.Asset('color', 'texture', { url: assetPath + 'textures/clouds.jpg' })

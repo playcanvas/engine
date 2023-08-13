@@ -42,8 +42,8 @@ export class ReflectionBoxExample {
     static async example(canvas, deviceType, data) {
 
         const assets = {
-            'script1': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            'script2': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
+            'script1': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
+            'script2': new pc.Asset('script', 'script', { url: scriptsPath + 'utils/cubemap-renderer.js' }),
             'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
         };
 

@@ -70,11 +70,11 @@ async function example(canvas, deviceType, data) {
 
     const assets = {
         'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
-        'bloom': new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
-        'bokeh': new pc.Asset('bokeh', 'script', { url: '/static/scripts/posteffects/posteffect-bokeh.js' }),
-        'sepia': new pc.Asset('sepia', 'script', { url: '/static/scripts/posteffects/posteffect-sepia.js' }),
-        'vignette': new pc.Asset('vignette', 'script', { url: '/static/scripts/posteffects/posteffect-vignette.js' }),
-        'ssao': new pc.Asset('ssao', 'script', { url: '/static/scripts/posteffects/posteffect-ssao.js' }),
+        'bloom': new pc.Asset('bloom', 'script', { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),
+        'bokeh': new pc.Asset('bokeh', 'script', { url: scriptsPath + 'posteffects/posteffect-bokeh.js' }),
+        'sepia': new pc.Asset('sepia', 'script', { url: scriptsPath + 'posteffects/posteffect-sepia.js' }),
+        'vignette': new pc.Asset('vignette', 'script', { url: scriptsPath + 'posteffects/posteffect-vignette.js' }),
+        'ssao': new pc.Asset('ssao', 'script', { url: scriptsPath + 'posteffects/posteffect-ssao.js' }),
         'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };

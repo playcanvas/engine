@@ -15,7 +15,7 @@ export class ReflectionCubemapExample {
 
         const assets = {
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' })
+            'script': new pc.Asset('script', 'script', { url: scriptsPath + 'utils/cubemap-renderer.js' })
         };
 
         const gfxOptions = {

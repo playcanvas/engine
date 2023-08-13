@@ -15,7 +15,7 @@ class LitMaterialExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+            orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
             color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),

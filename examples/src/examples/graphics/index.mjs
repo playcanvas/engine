@@ -6,8 +6,8 @@ export * from "./reflection-box.mjs";
 export * from "./clustered-area-lights.mjs";
 export * from "./clustered-lighting.mjs";
 export * from "./clustered-omni-shadows.mjs";
-//export * from "./clustered-spot-shadows.mjs";
-//export * from "./contact-hardening-shadows.mjs";
+export * from "./clustered-spot-shadows.mjs";
+export * from "./contact-hardening-shadows.mjs";
 // export * from "./lit-material";   // note that this is also excluded in read-dir.mjs
 // export * from "./grab-pass.mjs";
 // export * from "./ground-fog.mjs";

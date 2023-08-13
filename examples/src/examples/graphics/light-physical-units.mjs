@@ -52,7 +52,7 @@ export class LightPhysicalUnitsExample {
     static async example(canvas, deviceType, data) {
 
         const assets = {
-            orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+            orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
             helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             lights: new pc.Asset('lights', 'container', { url: assetPath + 'models/Lights.glb' }),
             sheen: new pc.Asset('sheen', 'container', { url: assetPath + 'models/SheenChair.glb' }),

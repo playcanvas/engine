@@ -87,7 +87,7 @@ export class GrabPassExample {
 
         const assets = {
             'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' }),
-            "roughness": new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
+            "roughness": new pc.Asset("roughness", "texture", { url: assetPath + "textures/pc-gray.png" }),
             'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
