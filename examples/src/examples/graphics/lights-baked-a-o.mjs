@@ -60,8 +60,8 @@ export class LightsBakedAOExample {
     static async example(canvas, deviceType, data) {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'house': new pc.Asset('house', 'container', { url: '/static/assets/models/house.glb' }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            'house': new pc.Asset('house', 'container', { url: assetPath + 'models/house.glb' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
         };
 

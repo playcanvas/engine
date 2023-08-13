@@ -44,7 +44,7 @@ export class ReflectionBoxExample {
         const assets = {
             'script1': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'script2': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
         };
 
         const gfxOptions = {

@@ -6,16 +6,16 @@ import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { jsx } from '../animation/jsx.mjs';
 
 /**
- * @param {Observer} data 
- * @returns {JSX.Element}
+ * @param {{observer: import('@playcanvas/observer').Observer}} props todo
+ * @returns {JSX.Element} todo
  */
-function controls(data) {
+function controls({observer}) {
     return jsx(React.Fragment, null,
         jsx(Panel, { headerText: 'Material' },
             jsx(LabelGroup, { text: 'Gloss' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer: data, path: 'settings.material.gloss' },
+                    link: { observer, path: 'settings.material.gloss' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -23,7 +23,7 @@ function controls(data) {
             jsx(LabelGroup, { text: 'Metalness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer: data, path: 'settings.material.metalness' },
+                    link: { observer, path: 'settings.material.metalness' },
                     min: 0,
                     max: 1,
                     precision: 2

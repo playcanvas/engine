@@ -86,9 +86,9 @@ export class GrabPassExample {
     static async example(canvas, deviceType, files) {
 
         const assets = {
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' }),
             "roughness": new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
         const gfxOptions = {

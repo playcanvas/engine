@@ -14,8 +14,8 @@ export class MeshDeformationExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
         const gfxOptions = {

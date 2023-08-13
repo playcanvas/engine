@@ -14,10 +14,10 @@ export class PortalExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'portal': new pc.Asset('portal', 'container', { url: '/static/assets/models/portal.glb' }),
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-            'bitmoji': new pc.Asset('bitmoji', 'container', { url: '/static/assets/models/bitmoji.glb' })
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            'portal': new pc.Asset('portal', 'container', { url: assetPath + 'models/portal.glb' }),
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
+            'bitmoji': new pc.Asset('bitmoji', 'container', { url: assetPath + 'models/bitmoji.glb' })
         };
 
         const gfxOptions = {

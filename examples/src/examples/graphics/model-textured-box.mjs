@@ -14,7 +14,7 @@ export class ModelTexturedBoxExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'clouds': new pc.Asset('clouds', 'texture', { url: '/static/assets/textures/clouds.jpg' })
+            'clouds': new pc.Asset('clouds', 'texture', { url: assetPath + 'textures/clouds.jpg' })
         };
 
         const gfxOptions = {

@@ -14,10 +14,10 @@ export class MaterialClearCoatExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/flakes5n.png' }),
-            'diffuse': new pc.Asset('diffuse', 'texture', { url: '/static/assets/textures/flakes5c.png' }),
-            'other': new pc.Asset('other', 'texture', { url: '/static/assets/textures/flakes5o.png' })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/flakes5n.png' }),
+            'diffuse': new pc.Asset('diffuse', 'texture', { url: assetPath + 'textures/flakes5c.png' }),
+            'other': new pc.Asset('other', 'texture', { url: assetPath + 'textures/flakes5o.png' })
         };
 
         const gfxOptions = {

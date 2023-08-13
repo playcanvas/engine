@@ -64,8 +64,8 @@ export class ClusteredSpotShadowsExample {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             "channels": new pc.Asset("channels", "texture", { url: "/static/assets/textures/channels.png" }),
             "heart": new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
         const gfxOptions = {

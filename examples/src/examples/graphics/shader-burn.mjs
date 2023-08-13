@@ -52,8 +52,8 @@ void main(void)
     static async example(canvas, deviceType, files) {
 
         const assets = {
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-            'clouds': new pc.Asset('clouds', 'texture', { url: '/static/assets/textures/clouds.jpg' })
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
+            'clouds': new pc.Asset('clouds', 'texture', { url: assetPath + 'textures/clouds.jpg' })
         };
 
         const gfxOptions = {

@@ -13,7 +13,7 @@ export class ParticlesSparkExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'spark': new pc.Asset('spark', 'texture', { url: '/static/assets/textures/spark.png' })
+            'spark': new pc.Asset('spark', 'texture', { url: assetPath + 'textures/spark.png' })
         };
 
         const gfxOptions = {

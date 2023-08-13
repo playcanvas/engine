@@ -18,7 +18,7 @@ export class ParticlesSnowExample {
         const app = new pc.Application(canvas, {});
 
         const assets = {
-            'snowflake': new pc.Asset('snowflake', 'texture', { url: '/static/assets/textures/snowflake.png' })
+            'snowflake': new pc.Asset('snowflake', 'texture', { url: assetPath + 'textures/snowflake.png' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

@@ -46,8 +46,8 @@ export class ReflectionPlanarExample {
     static async example(canvas, deviceType, files) {
 
         const assets = {
-            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+            envatlas: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/utils/planar-renderer.js' })
         };
 

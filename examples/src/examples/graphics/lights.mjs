@@ -59,7 +59,7 @@ export class LightsExample {
         }
 
         const assets = {
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
             "heart": new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
             "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
             "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),

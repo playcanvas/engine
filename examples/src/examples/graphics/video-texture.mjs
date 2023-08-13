@@ -15,7 +15,7 @@ export class VideoTextureExample {
         const app = new pc.Application(canvas, {});
 
         const assets = {
-            'tv': new pc.Asset('tv', 'container', { url: '/static/assets/models/tv.glb' })
+            'tv': new pc.Asset('tv', 'container', { url: assetPath + 'models/tv.glb' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

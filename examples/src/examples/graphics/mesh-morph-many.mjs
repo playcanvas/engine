@@ -13,8 +13,8 @@ export class MeshMorphManyExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            morph: new pc.Asset('glb', 'container', { url: '/static/assets/models/morph-stress-test.glb' })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            morph: new pc.Asset('glb', 'container', { url: assetPath + 'models/morph-stress-test.glb' })
         };
 
         const gfxOptions = {

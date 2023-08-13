@@ -21,8 +21,8 @@ export class ParticlesRandomSpritesExample {
         });
 
         const assets = {
-            'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: '/static/assets/textures/particles-coins.png' }),
-            'particlesBonusTexture': new pc.Asset('particlesBonusTexture', 'texture', { url: '/static/assets/textures/particles-bonus.png' })
+            'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: assetPath + 'textures/particles-coins.png' }),
+            'particlesBonusTexture': new pc.Asset('particlesBonusTexture', 'texture', { url: assetPath + 'textures/particles-bonus.png' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

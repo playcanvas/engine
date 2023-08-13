@@ -14,7 +14,7 @@ export class MeshGenerationExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'playcanvasGrey': new pc.Asset('playcanvasGrey', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
+            'playcanvasGrey': new pc.Asset('playcanvasGrey', 'texture', { url: assetPath + 'textures/playcanvas-grey.png' })
         };
 
         const gfxOptions = {

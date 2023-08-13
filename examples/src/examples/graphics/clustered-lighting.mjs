@@ -15,7 +15,7 @@ export class ClusteredLightingExample {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
         };
 
         const gfxOptions = {

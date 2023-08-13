@@ -18,7 +18,7 @@ export class ParticlesAnimIndexExample {
         const app = new pc.Application(canvas, {});
 
         const assets = {
-            'particlesNumbers': new pc.Asset('particlesNumbers', 'texture', { url: '/static/assets/textures/particles-numbers.png' })
+            'particlesNumbers': new pc.Asset('particlesNumbers', 'texture', { url: assetPath + 'textures/particles-numbers.png' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

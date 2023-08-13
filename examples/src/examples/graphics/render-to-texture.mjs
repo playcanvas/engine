@@ -23,8 +23,8 @@ export class RenderToTextureExample {
         // - camera - this camera renders into main framebuffer, objects from World, Excluded and also Skybox layers
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-            checkerboard: new pc.Asset('checkerboard', 'texture', { url: '/static/assets/textures/checkboard.png' }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            checkerboard: new pc.Asset('checkerboard', 'texture', { url: assetPath + 'textures/checkboard.png' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
         };
 

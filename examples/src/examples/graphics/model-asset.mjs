@@ -14,7 +14,7 @@ export class ModelAssetExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
+            'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
         };
 
         const gfxOptions = {

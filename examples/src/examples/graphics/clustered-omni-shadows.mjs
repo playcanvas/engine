@@ -39,7 +39,7 @@ export class ClusteredOmniShadowsExample {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-            'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+            'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' }),
             "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
             "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),
             "xmas_negz": new pc.Asset("xmas_negz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negz.png" }),
