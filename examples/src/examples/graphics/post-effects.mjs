@@ -4,7 +4,7 @@ import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInpu
 import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props todo
+ * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {

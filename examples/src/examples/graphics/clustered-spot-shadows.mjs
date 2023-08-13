@@ -10,7 +10,7 @@ enableHotReload({
 });
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props todo
+ * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
