@@ -8,7 +8,7 @@
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
 function FxaaEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     // Shaders
     // TODO: this shader does not use UV coordinates from vertex shader, and might render upside down on WebGPU. Needs to be fixed.

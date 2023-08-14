@@ -11,7 +11,7 @@
  * @property {Color} color The outline color.
  */
 function OutlineEffect(graphicsDevice, thickness) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     var fshader = [
         "#define THICKNESS " + (thickness ? thickness.toFixed(0) : 1),

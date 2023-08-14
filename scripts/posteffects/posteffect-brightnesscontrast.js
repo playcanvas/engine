@@ -10,7 +10,7 @@
  * @property {number} contrast Controls the contrast of the render target. Ranges from -1 to 1 (-1 is solid gray, 0 no change, 1 maximum contrast).
  */
 function BrightnessContrastEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     // Shader author: tapio / http://tapio.github.com/
     var fshader = [

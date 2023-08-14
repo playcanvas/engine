@@ -14,7 +14,7 @@ import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export * from './core/constants.js';
-export { apps, common, config, data, extend, revision, type, version } from './core/core.js';
+export * from './core/core.js';
 export { events } from './core/events.js';
 export { guid } from './core/guid.js';
 export { path } from './core/path.js';

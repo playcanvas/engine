@@ -62,7 +62,7 @@ function calculateBlurValues(sampleWeights, sampleOffsets, dx, dy, blurAmount) {
  * @property {number} bloomIntensity The intensity of the effect.
  */
 function BloomEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     // Shaders
     var attributes = {

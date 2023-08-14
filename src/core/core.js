@@ -58,6 +58,36 @@ function type(obj) {
 }
 
 /**
+ * Allows to call a function AND a class constructor to allow for ES5 style inheritance required
+ * due to ES6 regression. The assumption that "classes are just syntactic sugar for functions"
+ * is wrong and I hope it will work again in a later ES version. Until then, we have to deal with
+ * ES6 limitations.
+ *
+ * Old style: pc.PostEffect.call(this, graphicsDevice); // fails when pc.PostEffect is an ES6 class
+ * New Style: Object.assign(this, new pc.PostEffect(graphicsDevice)); // works in ES5 and ES6
+ *
+ * @example
+ *   class AddClass { constructor(a, b) { this.ret = a + b; } }
+ *   function AddFunc(a, b) { this.ret = a + b; }
+ *   function TestClass() {
+ *      pc.call(AddClass, this, 10, 20)
+ *   }
+ *   function TestFunc() {
+ *      pc.call(AddFunc, this, 10, 20)
+ *   }
+ *   const testClass = new TestClass();
+ *   const testFunc = new TestFunc();
+ *   console.assert(testClass.ret === 30, "should be 30");
+ *   console.assert(testFunc.ret === 30, "should be 30");
+ * @param {Function} func - Function or class
+ * @param {object} thisArg - Existing object with added properties
+ * @param {...*} args - Arguments to constructor function
+ */
+function call(func, thisArg, ...args) {
+    Object.assign(thisArg, new func(...args))
+}
+
+/**
  * Merge the contents of two objects into a single object.
  *
  * @param {object} target - The target object of the merge.
@@ -98,4 +128,4 @@ function extend(target, ex) {
     return target;
 }
 
-export { apps, common, config, data, extend, revision, type, version };
+export { apps, common, config, data, call, extend, revision, type, version };

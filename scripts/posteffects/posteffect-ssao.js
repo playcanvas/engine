@@ -12,7 +12,7 @@
  * @param {any} ssaoScript - The script using the effect.
  */
 function SSAOEffect(graphicsDevice, ssaoScript) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     this.ssaoScript = ssaoScript;
     this.needsDepthBuffer = true;

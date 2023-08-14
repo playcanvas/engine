@@ -9,7 +9,7 @@
  * @property {number} amount Controls the intensity of the effect. Ranges from 0 to 1.
  */
 function SepiaEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     var fshader = [
         "uniform float uAmount;",

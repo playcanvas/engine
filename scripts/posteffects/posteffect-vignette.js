@@ -10,7 +10,7 @@
  * @property {number} darkness Controls the darkness of the effect.
  */
 function VignetteEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     // Shaders
     var luminosityFrag = [

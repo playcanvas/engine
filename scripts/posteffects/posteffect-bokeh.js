@@ -11,7 +11,7 @@
  * @property {number} focus Controls the focus of the effect.
  */
 function BokehEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     this.needsDepthBuffer = true;
 

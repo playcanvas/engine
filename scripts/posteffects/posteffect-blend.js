@@ -10,7 +10,7 @@
  * @property {number} mixRatio The amount of blending between the input and the blendMap. Ranges from 0 to 1.
  */
 function BlendEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     var fshader = [
         "uniform float uMixRatio;",

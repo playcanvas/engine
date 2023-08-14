@@ -9,7 +9,7 @@
  * @property {number} focus Controls where the "focused" horizontal line lies.
  */
 function VerticalTiltShiftEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     // Shader author: alteredq / http://alteredqualia.com/
     var fshader = [

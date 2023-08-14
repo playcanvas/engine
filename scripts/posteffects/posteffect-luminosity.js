@@ -8,7 +8,7 @@
  * @param {GraphicsDevice} graphicsDevice - The graphics device of the application.
  */
 function LuminosityEffect(graphicsDevice) {
-    pc.PostEffect.call(this, graphicsDevice);
+    pc.call(pc.PostEffect, this, graphicsDevice);
 
     var fshader = [
         "uniform sampler2D uColorBuffer;",
