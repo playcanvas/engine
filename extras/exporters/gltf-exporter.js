@@ -98,7 +98,8 @@ const getWrap = function (wrap) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap'
+    'diffuseMap',
+    'colorMap'
 ];
 
 class GltfExporter extends CoreExporter {
@@ -324,7 +325,7 @@ class GltfExporter extends CoreExporter {
             pbr.baseColorFactor = [color.r, color.g, color.b, color];
         }
 
-        this.attachTexture(resources, mat, pbr, 'colorMap', 'diffuseMap');
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap');
     }
 
     writeMaterials(resources, json) {
