@@ -1,6 +1,6 @@
 import React, { createRef, Component } from 'react';
 import * as pc from 'playcanvas';
-import { fragment, jsx } from './jsx.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 /**
  * @todo Add props

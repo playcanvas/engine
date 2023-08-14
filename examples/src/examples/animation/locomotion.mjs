@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 import { ammoPath, assetPath } from '../../assetPath.mjs';
-import { fragment, jsxBooleanInput, jsxButton } from './jsx.mjs';
+import { fragment, jsxBooleanInput, jsxButton } from '../../app/jsx.mjs';
 Object.assign(globalThis, {
     ammoPath,
     assetPath,

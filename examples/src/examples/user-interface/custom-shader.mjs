@@ -76,7 +76,7 @@ void main(void)
     static async example(canvas, deviceType, files) {
 
         const assets = {
-            "playcanvas": new pc.Asset("playcanvas", "texture", { url: "/static/assets/textures/playcanvas.png" })
+            "playcanvas": new pc.Asset("playcanvas", "texture", { url: assetPath + "textures/playcanvas.png" })
         };
 
         const gfxOptions = {

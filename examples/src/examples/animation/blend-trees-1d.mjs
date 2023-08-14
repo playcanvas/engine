@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, SliderInput, Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-import { jsx } from './jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import React from 'react';
 class JsxControls extends React.Component {

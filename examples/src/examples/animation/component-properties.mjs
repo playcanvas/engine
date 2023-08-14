@@ -1,8 +1,12 @@
 import * as React from 'react';
 import * as pc from 'playcanvas';
-
 import { Button } from '@playcanvas/pcui/react';
+import { assetPath } from '../../assetPath.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
 
+enableHotReload({
+    assetPath,
+});
 
 /**
  * @param {HTMLCanvasElement} canvas - todo

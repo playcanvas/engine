@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 
 import { BindingTwoWay, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { fragment, jsx, jsxBooleanInput, jsxSelectInput, jsxSliderInput } from './jsx.mjs';
+import { fragment, jsx, jsxBooleanInput, jsxSelectInput, jsxSliderInput } from '../../app/jsx.mjs';
 
 
 /**

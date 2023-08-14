@@ -113,5 +113,4 @@ class SpineboyExample {
 
 export {
     SpineboyExample,
-    example,
 };

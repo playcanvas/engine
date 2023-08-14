@@ -32,7 +32,7 @@ class VrControllersExample {
         });
 
         const assets = {
-            'glb': new pc.Asset('glb', 'container', { url: '/static/assets/models/vr-controller.glb' })
+            'glb': new pc.Asset('glb', 'container', { url: assetPath + 'models/vr-controller.glb' })
         };
 
         const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

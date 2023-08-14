@@ -3,7 +3,7 @@ import { Panel, Button } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
-import { jsx } from '../animation/jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 
 enableHotReload({
     assetPath,

@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { jsx } from '../animation/jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo

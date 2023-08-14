@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
-import { jsx } from '../animation/jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 
 enableHotReload({
     assetPath,

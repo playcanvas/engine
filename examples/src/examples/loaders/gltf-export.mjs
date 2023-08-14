@@ -1,14 +1,14 @@
 import * as pc from 'playcanvas';
 import { assetPath, dracoPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
-import { jsxButton } from '../animation/jsx.mjs';
+import { jsxButton } from '../../app/jsx.mjs';
 
 enableHotReload({
     dracoPath,
 });
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props todo
+ * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {

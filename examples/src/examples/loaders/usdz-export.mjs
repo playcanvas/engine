@@ -1,9 +1,9 @@
 import * as pc from 'playcanvas';
-import { jsxButton } from '../animation/jsx.mjs';
+import { jsxButton } from '../../app/jsx.mjs';
 import { assetPath } from '../../assetPath.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props todo
+ * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {

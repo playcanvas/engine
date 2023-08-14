@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { loadAssets } from './loadAssets.mjs';
+import { loadAssets } from './loadAssets.shared.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 import { scriptsPath } from '../../assetPath.mjs';
 

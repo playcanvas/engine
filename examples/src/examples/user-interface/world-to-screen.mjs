@@ -14,7 +14,7 @@ class WorldToScreenExample {
     static async example(canvas, deviceType) {
 
         const assets = {
-            "checkboard": new pc.Asset("checkboard", "texture", { url: "/static/assets/textures/checkboard.png" }),
+            "checkboard": new pc.Asset("checkboard", "texture", { url: assetPath + "textures/checkboard.png" }),
             'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
         };
 

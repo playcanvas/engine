@@ -2,7 +2,7 @@ import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
 import { assetPath, dracoPath } from '../../assetPath.mjs';
-import { jsx } from '../animation/jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo

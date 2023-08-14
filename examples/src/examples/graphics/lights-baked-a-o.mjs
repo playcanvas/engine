@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, Label, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
-import { fragment, jsx } from '../animation/jsx.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 enableHotReload({
     assetPath,

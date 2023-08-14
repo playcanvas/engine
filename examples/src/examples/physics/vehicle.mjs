@@ -1,8 +1,6 @@
 import * as pc from 'playcanvas';
 import { ammoPath, assetPath, scriptsPath } from '../../assetPath.mjs';
 
-window.pc = pc;
-
 /**
  * @param {HTMLCanvasElement} canvas - todo
  * @param {string} deviceType - todo

@@ -75,5 +75,4 @@ class HelloWorldExample {
 
 export {
     HelloWorldExample,
-    example,
 };

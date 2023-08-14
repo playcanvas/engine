@@ -1,7 +1,7 @@
 import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, BooleanInput } from '@playcanvas/pcui/react';
-import { jsx } from '../animation/jsx.mjs';
+import { jsx } from '../../app/jsx.mjs';
 import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**

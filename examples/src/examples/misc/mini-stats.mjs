@@ -252,5 +252,4 @@ class MiniStatsExample {
 
 export {
     MiniStatsExample,
-    example,
 };
