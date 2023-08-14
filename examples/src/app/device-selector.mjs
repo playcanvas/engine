@@ -1,6 +1,6 @@
 import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from 'playcanvas';
 import React, { Component } from 'react';
-import { jsxSelectInput } from '../examples/animation/jsx.mjs';
+import { jsxSelectInput } from './jsx.mjs';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',

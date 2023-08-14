@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { useParams } from 'react-router-dom';
-import { jsx } from '../examples/animation/jsx.mjs';
+import { jsx } from './jsx.mjs';
 import * as realExamples from "../examples/index.mjs";
 window.realExamples = realExamples; // iframe requires this
 import ControlPanel from './control-panel.mjs';

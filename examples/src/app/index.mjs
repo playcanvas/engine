@@ -10,20 +10,12 @@ import { CodeEditor    } from './code-editor.mjs';
 import { Menu          } from './menu.mjs';
 import { Example       } from './example.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
-import { jsx, jsxContainer           } from '../examples/animation/jsx.mjs';
+import { jsx, jsxContainer           } from './jsx.mjs';
 import { ControlLoader } from './control-loader.mjs';
-//import * as pc from 'playcanvas';
-//import * as pcx from 'playcanvas-extras';
-//import * as observer from '@playcanvas/observer';
-//console.log("having app now", pc, window);
-//window.pc = pc;
 
 Object.assign(window, {
     pcui,
     React,
-    //pc,
-    //pcx,
-    //observer,
 });
 
 const MainLayout = () => {
@@ -90,8 +82,8 @@ const MainLayout = () => {
     );
 };
 function main() {
-    const oldWay = !true;
-    console.log("oldWay", oldWay);
+    const oldWay = true;
+    // console.log("oldWay", oldWay);
     if (oldWay) {    
         // render out the app
         ReactDOM.render(

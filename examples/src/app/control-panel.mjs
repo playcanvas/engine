@@ -2,10 +2,12 @@ import React, { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container } from '@playcanvas/pcui/react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { jsxButton } from '../examples/animation/jsx.mjs';
+import { jsxButton } from './jsx.mjs';
+
 /**
  * @typedef {object} ControlPanelProps
  */
+
 /**
  * @param {ControlPanelProps} props - todo
  * @returns {JSX.Element} todo

@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { fragment, jsx } from "../examples/animation/jsx.mjs";
+import { fragment, jsx } from './jsx.mjs';
 import { controlsObserver } from './example.mjs';
 import { Controls } from './controls.mjs';
 /**

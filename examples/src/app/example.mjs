@@ -5,7 +5,7 @@ import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
-import { jsx, jsxContainer, jsxPanel, jsxSelectInput, jsxSpinner } from '../examples/animation/jsx.mjs';
+import { jsx, jsxContainer, jsxPanel, jsxSelectInput, jsxSpinner } from './jsx.mjs';
 import { DeviceSelector } from './device-selector.mjs';
 
 const controlsObserver = new Observer();

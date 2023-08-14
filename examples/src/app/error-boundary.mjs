@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { jsx } from "../examples/animation/jsx.mjs";
+import { jsx } from "./jsx.mjs";
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);

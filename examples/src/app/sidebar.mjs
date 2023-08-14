@@ -6,7 +6,7 @@ import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
-import { jsx } from '../examples/animation/jsx.mjs';
+import { jsx } from './jsx.mjs';
 const toggleSideBar = () => {
     const sideBar = document.getElementById('sideBar');
     sideBar.classList.toggle('collapsed');
