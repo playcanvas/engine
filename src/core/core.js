@@ -84,7 +84,7 @@ function type(obj) {
  * @param {...*} args - Arguments to constructor function
  */
 function call(func, thisArg, ...args) {
-    Object.assign(thisArg, new func(...args))
+    Object.assign(thisArg, new func(...args));
 }
 
 /**
