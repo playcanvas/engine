@@ -4,6 +4,7 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { jsx } from '../animation/jsx.mjs';
 
 enableHotReload({
     assetPath,
@@ -15,10 +16,14 @@ enableHotReload({
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Shadow Cascade Settings' },
-            React.createElement(LabelGroup, { text: 'Filtering' },
-                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.light.shadowType' }, type: "number", options: [
+    return jsx(React.Fragment, null,
+        jsx(Panel, { headerText: 'Shadow Cascade Settings' },
+            jsx(LabelGroup, { text: 'Filtering' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.shadowType' },
+                    type: "number",
+                    options: [
                         { v: pc.SHADOW_PCF1, t: 'PCF1' },
                         { v: pc.SHADOW_PCF3, t: 'PCF3' },
                         { v: pc.SHADOW_PCF5, t: 'PCF5' },
@@ -26,16 +31,48 @@ function controls({observer}) {
                         { v: pc.SHADOW_VSM16, t: 'VSM16' },
                         { v: pc.SHADOW_VSM32, t: 'VSM32' }
                     ] })),
-            React.createElement(LabelGroup, { text: 'Count' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.light.numCascades' }, min: 1, max: 4, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'Every Frame' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'settings.light.everyFrame' }, value: data.get('settings.light.everyFrame') })),
-            React.createElement(LabelGroup, { text: 'Resolution' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.light.shadowResolution' }, min: 128, max: 2048, precision: 0 })),
-            React.createElement(LabelGroup, { text: 'Distribution' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.light.cascadeDistribution' }, min: 0, max: 1, precision: 2 })),
-            React.createElement(LabelGroup, { text: 'VSM Blur' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.light.vsmBlurSize' }, min: 1, max: 25, precision: 0 }))));
+            jsx(LabelGroup, { text: 'Count' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.numCascades' },
+                    min: 1,
+                    max: 4,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'Every Frame' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.everyFrame' },
+                    value: observer.get('settings.light.everyFrame')
+                })),
+            jsx(LabelGroup, { text: 'Resolution' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.shadowResolution' },
+                    min: 128,
+                    max: 2048,
+                    precision: 0
+                })),
+            jsx(LabelGroup, { text: 'Distribution' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.cascadeDistribution' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })),
+            jsx(LabelGroup, { text: 'VSM Blur' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.light.vsmBlurSize' },
+                    min: 1,
+                    max: 25,
+                    precision: 0
+                })
+            )
+        )
+    );
 }
 
 /**

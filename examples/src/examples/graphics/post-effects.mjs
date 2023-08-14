@@ -8,7 +8,21 @@ import { enableHotReload } from '../../enableHotReload.mjs';
 enableHotReload({
     assetPath,
     scriptsPath,
-})
+});
+
+/*
+waiting for decision in https://github.com/playcanvas/engine/pull/5561
+// Object.prototype.toString.call(1) === '[object Number]'
+const functionCall = Function.prototype.call;
+Function.prototype.call = function(thisArg, ...args) {
+    // console.log("polyfill Function .call", this, thisArg, ...args);
+    if (this.toString().startsWith('class')) {
+        console.warn("ES6 classes are not the same as functions, but we make it work anyway... be careful.");
+        return Object.assign(thisArg, new this(...args));
+    }
+    return functionCall.bind(this)(thisArg, ...args);
+}
+*/
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo

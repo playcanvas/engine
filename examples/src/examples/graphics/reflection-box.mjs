@@ -1,9 +1,8 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
-import { jsx } from '../animation/jsx.mjs';
+import { fragment, jsx } from '../animation/jsx.mjs';
 
 enableHotReload({
     assetPath,
@@ -15,23 +14,55 @@ enableHotReload({
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Settings' },
-            React.createElement(LabelGroup, { text: 'Update' },
-                React.createElement(SelectInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.updateFrequency' }, type: "number", options: [
+    return fragment(
+        jsx(Panel, { headerText: 'Settings' },
+            jsx(LabelGroup, { text: 'Update' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.updateFrequency' },
+                    type: "number",
+                    options: [
                         { v: 0, t: 'Once' },
                         { v: 1, t: 'Every frame' },
                         { v: 10, t: 'Every 10 frames' },
                         { v: 30, t: 'Every 30 frames' }
-                    ] })),
-            React.createElement(LabelGroup, { text: 'Gloss' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.gloss' }, min: 0, max: 1, precision: 2 })),
-            React.createElement(LabelGroup, { text: 'Metalness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.metalness' }, min: 0, max: 1, precision: 2 })),
-            React.createElement(LabelGroup, { text: 'Reflectivity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.reflectivity' }, min: 0, max: 1, precision: 2 })),
-            React.createElement(LabelGroup, { text: 'Bumpiness' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'settings.bumpiness' }, min: 0, max: 1, precision: 2 }))));
+                    ]
+                })),
+            jsx(LabelGroup, { text: 'Gloss' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.gloss' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })),
+            jsx(LabelGroup, { text: 'Metalness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.metalness' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })),
+            jsx(LabelGroup, { text: 'Reflectivity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.reflectivity' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })),
+            jsx(LabelGroup, { text: 'Bumpiness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.bumpiness' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
+            )
+        )
+    );
 }
 
 /**
@@ -186,7 +217,7 @@ async function example(canvas, deviceType, data) {
             video.playsInline = true;
             video.crossOrigin = "anonymous";
             video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
-            video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+            video.src = assetPath + 'video/SampleVideo_1280x720_1mb.mp4';
             document.body.append(video);
             video.addEventListener('canplaythrough', function () {
                 videoTexture.setSource(video);
@@ -398,10 +429,12 @@ async function example(canvas, deviceType, data) {
     return app;
 }
 
-export class ReflectionBoxExample {
+class ReflectionBoxExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Reflection Box';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;
 }
+
+export { ReflectionBoxExample };
