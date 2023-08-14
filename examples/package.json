@@ -16,7 +16,7 @@
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
     "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
-    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve --no-request-logging\""
+    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve\""
   },
   "eslintConfig": {
     "root": true,
