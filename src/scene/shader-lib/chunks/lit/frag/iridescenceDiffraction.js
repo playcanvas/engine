@@ -98,7 +98,7 @@ vec3 calcIridescence(float outsideIor, float cosTheta, vec3 base_f0, float iride
     return max(i, vec3(0.0));
 }
 
-vec3 getIridescence(float cosTheta, vec3 specularity, inout IridescenceArgs iridescence) {
-    return calcIridescence(1.0, cosTheta, specularity, iridescence.thickness);
+vec3 getIridescence(float cosTheta, vec3 specularity, float iridescenceThickness) {
+    return calcIridescence(1.0, cosTheta, specularity, iridescenceThickness);
 }
 `;
