@@ -1,8 +1,12 @@
 import * as pc from 'playcanvas';
 import { assetPath } from '../../assetPath.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+
+enableHotReload({
+    assetPath,
+});
 
 /**
- * 
  * @param {HTMLCanvasElement} canvas - todo
  * @param {string} deviceType - todo
  * @returns {Promise<pc.AppBase>} todo
@@ -20,7 +24,6 @@ async function example(canvas, deviceType) {
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
 
@@ -89,4 +92,4 @@ class MouseExample {
     static example = example;
 }
 
-export default MouseExample;
+export { MouseExample };
