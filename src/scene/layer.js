@@ -825,9 +825,9 @@ class Layer {
     }
 
     /**
-     * @param {boolean} transparent - True if transparent sorting should be used.
      * @param {import('./camera.js').Camera} camera - The camera to sort the visible mesh instances
      * for.
+     * @param {boolean} transparent - True if transparent sorting should be used.
      * @ignore
      */
     sortVisible(camera, transparent) {
