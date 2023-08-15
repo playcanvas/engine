@@ -109,6 +109,34 @@ function getDracoPath() {
 }
 export const dracoPath = getDracoPath();
 
+
+/**
+ * @example
+ * console.log(getDracoPath());
+ * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/glslang/'
+ * @returns {string}
+ */
+function getGlslangPath() {
+    const { href } = location;
+    const i = href.indexOf("/examples/");
+    return href.substring(0, i) + "/examples/src/lib/glslang/";
+}
+export const glslangPath = getGlslangPath();
+
+
+/**
+ * @example
+ * console.log(getDracoPath());
+ * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/twgsl/'
+ * @returns {string}
+ */
+function getTwgslPath() {
+    const { href } = location;
+    const i = href.indexOf("/examples/");
+    return href.substring(0, i) + "/examples/src/lib/twgsl/";
+}
+export const twgslPath = getTwgslPath();
+
 /**
  * @example
  * console.log(getIframePath());
