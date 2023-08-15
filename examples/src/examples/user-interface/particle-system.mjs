@@ -178,6 +178,7 @@ async function example(canvas, deviceType) {
             panel.setLocalPosition(300 * Math.sin(time), 300 * Math.cos(time), 0);
         });
     });
+    return app;
 }
 
 class ParticleSystemExample {

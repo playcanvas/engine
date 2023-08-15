@@ -115,13 +115,7 @@ const builds = [
                 },
                 preventAssignment: true
             }),
-            /*(process.env.NODE_ENV === 'production' && terser({
-                "mangle": { 
-                    "properties": {
-                        "reserved": ["exampleasd"]
-                    }
-                }
-            }))*/,
+            (process.env.NODE_ENV === 'production' && terser()),
             timestamp()
         ]
     },
@@ -146,6 +140,7 @@ const builds = [
             timestamp()
         ]
     },
+    /*
     {
         input: 'src/examples/index.mjs',
         //external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
@@ -166,6 +161,7 @@ const builds = [
             timestamp()
         ]
     },
+    */
     {
         input: 'src/static/index.html',
         output: {

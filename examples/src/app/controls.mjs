@@ -1,10 +1,23 @@
-import React, { Component } from 'react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { useParams } from 'react-router-dom';
-import { jsx } from './jsx.mjs';
-import * as realExamples from "../examples/index.mjs";
-window.realExamples = realExamples; // iframe requires this
+import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton  } from './jsx.mjs';
+import { exampleData } from '../example-data.mjs';
 import ControlPanel from './control-panel.mjs';
+import { BindingTwoWay, LabelGroup, SliderInput, Button, Panel } from '@playcanvas/pcui/react';
+import { Observer } from '@playcanvas/observer';
+import React, { createRef, Component, useEffect } from 'react';
+
+// What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
+// 1) We don't want to load React code in iframe
+// 2) We don't want to load PlayCanvas code in Examples browser
+// (just to keep the file sizes as minimal as possible)
+Object.assign(window, {
+    BindingTwoWay, LabelGroup, SliderInput, Button, Panel,
+    Observer,
+    jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton,
+    React, createRef, Component, useEffect,
+});
+
 /**
  * @example
  * makeCamelCase('animation') // Outputs 'Animation'
@@ -16,6 +29,7 @@ const makeCamelCase = word => (
 ).replace(/-(.)/g, function(match, p1){
     return p1.toUpperCase();
 });
+
 /**
  * @example
  * console.log(rewriteExampleString('blend-trees-2d-cartesian')); // Outputs "BlendTrees2DCartesianExample"
@@ -30,34 +44,34 @@ function rewriteExampleString(str) {
     result += "Example";
     return result;
 }
+
 /**
  * @typedef {object} ControlsProps
  * @property {object[]} files
  */
+
 /**
  * @param {ControlsProps} props - The props.
  * @returns {JSX.Element}
  */
 function Controls(props) {
     let { category, example } = useParams();
-    category = makeCamelCase(category);
-    example = rewriteExampleString(example);
+    //category = makeCamelCase(category);
+    //example = rewriteExampleString(example);  
     let controls;
-    try {
-        //debugger;
-        controls = realExamples[category][example].controls;
-        //console.log({controls});
-    } catch (e) {
-        console.warn("error finding jsx controls for example", e);
+    let controlsSrc = exampleData[category][example].controls;
+    if (controlsSrc) {
+        if (!controlsSrc.startsWith('function') && !controlsSrc.startsWith('class')) {
+            controlsSrc = 'function ' + controlsSrc;
+        }
+        controls = Function('return ' + controlsSrc)();
     }
-    //const controlsFunction = JsxControls; // only for test
-    //const controlsFunction = (document.getElementsByTagName('iframe')[0] /*as any*/).contentWindow.Example.controls || null;
-    //console.log("CONTROLS FUNCTION", controlsFunction)
+    // This was fragile and hard to follow...
+    // controls = (document.getElementsByTagName('iframe')[0]).contentWindow.Example?.controls || null;
     // on desktop dont show the control panel when no controls are present
     if (!controls && window.top.innerWidth >= MIN_DESKTOP_WIDTH) {
         return null;
     }
-    //return <ControlPanel controls={controlsFunction} files={props.files} />;
     return jsx(
         ControlPanel,
         {
@@ -66,6 +80,4 @@ function Controls(props) {
         }
     );
 };
-export {
-    Controls,
-};
+export { Controls };

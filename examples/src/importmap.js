@@ -10,8 +10,11 @@ window.process = {
 function importFile(content) {
   return "data:text/javascript;base64," + btoa(content);
 }
-const playcanvasEngine = document.currentScript.src + "/../../../";
-const nodeModules = playcanvasEngine + "examples/node_modules/";
+const playcanvasEngineThis = document.currentScript.src + "/../../../";
+const playcanvasEngine = playcanvasEngineThis;
+//const playcanvasEngine = '/playcanvas-engine-jsdoc/';
+const nodeModules = playcanvasEngineThis + "examples/node_modules/";
+//const nodeModules = playcanvasEngineThis + "examples/node_modules/";
 const react = {
   "prop-types"               : nodeModules + "react-es6/prop-types/index.js",
   "tiny-warning"             : nodeModules + "react-es6/tiny-warning.mjs",
@@ -39,9 +42,11 @@ const { host } = document.location;
 const local = host === 'localhost' || host === '127.0.0.1';
 const playcanvas = local ? {
   "playcanvas"            : playcanvasEngine + "src/index.js",
+  "playcanvas/"           : playcanvasEngine,
   //"playcanvas"            : playcanvasEngine + "build/playcanvas.dbg.mjs/index.js",
 } : {
   "playcanvas"            : playcanvasEngine + "build/playcanvas.whole.mjs",
+  "playcanvas/"           : playcanvasEngine,
 };
 const imports = {
   ...playcanvas,

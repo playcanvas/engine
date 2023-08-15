@@ -1,3 +1,4 @@
+/*
 import fs from 'fs';
 import Handlebars from 'handlebars';
 import { dirname } from 'path';
@@ -46,3 +47,4 @@ readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach((category) => {
 });
 
 fs.writeFileSync(`dist/examples.json`, JSON.stringify(categoriesList));
+*/

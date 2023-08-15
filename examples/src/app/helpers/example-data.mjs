@@ -1,7 +1,4 @@
-//import exampleData from '../../../dist/example-data.js';
-// todo: nuke this file, just serving as example rn
-import exampleData from '../example-data.js';
-import * as realExamples from "../../examples/index.mjs";
+import { exampleData } from '../../example-data.mjs';
 /**
  * @param {string} string 
  * @returns {string}
@@ -9,7 +6,12 @@ import * as realExamples from "../../examples/index.mjs";
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
-//console.log(toKebabCase("BlendTrees1D")); // blend-trees-1d
+/**
+ * @example
+ * console.log(toKebabCase("BlendTrees1D")); // blend-trees-1d
+ * @param {string} str - The string.
+ * @returns String in kebab-case-format
+ */
 function toKebabCase(str) {
     return str
       .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -19,7 +21,9 @@ function toKebabCase(str) {
       .replaceAll("2d", "-2d")
       .replaceAll("3d", "-3d")
 }
+/** @type {Record<string, Record<string, object>>} */
 const categories = {};
+/** @type {Record<string, object>} */
 const paths = {};
 Object.keys(exampleData).forEach((categorySlug) => {
     const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
@@ -28,28 +32,33 @@ Object.keys(exampleData).forEach((categorySlug) => {
     };
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
         const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
+        /*
         let realClass;
         try {
             realClass = realExamples[category][name + "Example"];
         } catch (e) {
             // slow process of porting everything to proper MJS
+            debugger;
             return;
         }
         if (!realClass) {
             return;
         }
+        */
         //debugger;
         //console.log({category, name, realClass });
         categories[categorySlug].examples[exampleSlug] = name;
+        const data = exampleData[categorySlug][exampleSlug];
         const files = [
             {
                 name: 'example.js',
-                text: realClass.example.toString(),
+                //text: realClass.example.toString(),
+                text: data.example,
                 type: 'javascript'
             },
         ];
-        //const extraFiles = exampleData[categorySlug][exampleSlug].files;
-        const extraFiles = realClass.FILES;
+        const extraFiles = data.files;
+        //const extraFiles = realClass.FILES;
         if (extraFiles) {
             Object.keys(extraFiles).forEach((name) => {
                 files.push({

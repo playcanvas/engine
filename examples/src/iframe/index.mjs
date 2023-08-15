@@ -12,7 +12,7 @@ import * as pc from "playcanvas";
 //window.pcx          = window.top.pcx;
 //window.pc           = window.top.pc;
 //window.realExamples = window.top.realExamples;
-window.top.pc = pc;
+window.pc = window.top.pc = pc;
 function setupApplication(app) {
     const canvas = app.graphicsDevice.canvas;
     // handle resizing
@@ -21,12 +21,13 @@ function setupApplication(app) {
     canvas.setAttribute('height', window.innerHeight + 'px');
     var resizeTimeout = null;
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
-    if (window.ResizeObserver) {
-        new ResizeObserver(function() {
-            canvas.width = canvasContainerElement.clientWidth;
-            canvas.height = canvasContainerElement.clientHeight;
-        }).observe(canvasContainerElement);
-    }
+    // triggers resize every frame for camera/fly+orbit
+    // if (window.ResizeObserver) {
+    //     new ResizeObserver(function() {
+    //         canvas.width = canvasContainerElement.clientWidth;
+    //         canvas.height = canvasContainerElement.clientHeight;
+    //     }).observe(canvasContainerElement);
+    // }
     if (app.graphicsDevice.deviceType !== 'webgpu' && !Example.MINISTATS) {
         // set up miniStats
         var miniStats = new pcx.MiniStats(app);
@@ -149,9 +150,10 @@ const urlParams = new URLSearchParams(queryString);
 const event = new CustomEvent("exampleLoading");
 window.top.dispatchEvent(event);
 let found = false;
-if (urlParams.get('category') && urlParams.get('example')) {
-    const categorySlug = urlParams.get('category');
-    const exampleSlug = urlParams.get('example');
+const categorySlug = urlParams.get('category');
+const exampleSlug = urlParams.get('example');
+// console.log("trying to load", categorySlug, exampleSlug);
+if (categorySlug && exampleSlug) {
     window.Example = realExamples[categorySlug][`${exampleSlug}Example`];
     if (window.Example) {
         found = true;
@@ -188,6 +190,5 @@ if (!found) {
     window.top.observerData = data;
     // load the engine, create the application, load the resources if necessary, then call the example
     const canvas = document.getElementById('application-canvas');
-    console.log("window.loadFunction", window.loadFunction);
     callExample(canvas, window.files, data, window.exampleFunction);
 }
