@@ -31,7 +31,8 @@ class GltfExportExample {
                 'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'bench': new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' }),
                 'model': new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-                'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
+                'board': new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
+                'color': new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' })
             };
 
             const gfxOptions = {
@@ -101,6 +102,19 @@ class GltfExportExample {
                     });
                     app.root.addChild(entity);
                     entity.setLocalPosition(0, 1.5, -1.5);
+
+                    // mesh with a basic material
+                    const basicMaterial = new pc.BasicMaterial();
+                    basicMaterial.color.set(0.5, 1.0, 0.7);
+                    basicMaterial.colorMap = assets.color.resource;
+
+                    const capsule = new pc.Entity('capsule');
+                    capsule.addComponent('render', {
+                        material: basicMaterial,
+                        type: 'capsule'
+                    });
+                    capsule.setLocalPosition(0.5, 2.0, -0.5);
+                    app.root.addChild(capsule);
 
                     // Create an Entity with a camera component
                     const camera = new pc.Entity();
