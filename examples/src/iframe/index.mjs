@@ -90,7 +90,6 @@ function asyncFunctionFromString(str) {
  * @param {Function} exampleFunction
  */
 async function callExample(canvas, files, data, exampleFunction) {
-    console.log("callExample", {canvas, files, data})
     const argNames = getFunctionArguments(exampleFunction);
     const args = argNames.map(function(arg) {
         if (arg === 'canvas') {
@@ -102,10 +101,8 @@ async function callExample(canvas, files, data, exampleFunction) {
         } else if (arg === 'pcx') {
             return pcx;
         } else if (arg === 'deviceType') {
-            //debugger;
             if (Example.WEBGPU_ENABLED) {
-                //return window.top.preferredGraphicsDevice || 'webgpu';
-                return window.top.preferredGraphicsDevice || 'webgl2';
+                return window.top.preferredGraphicsDevice || 'webgpu';
             } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
                 return window.top.preferredGraphicsDevice;
             } else {
@@ -127,14 +124,12 @@ async function callExample(canvas, files, data, exampleFunction) {
     }
     if (app.graphicsDevice?.canvas) {
         setupApplication(app);
-        console.log("example loaded...");
         var event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
         window.top.dispatchEvent(event);
     } else {
         console.warn("no canvas")
     }
 }
-//console.log({moduleExamples});
 // polyfill slice on UInt8Array
 if (!Uint8Array.prototype.slice) {
     Object.defineProperty(Uint8Array.prototype, 'slice', {
