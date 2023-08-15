@@ -84,6 +84,33 @@ export const ammoPath = getAmmoPath();
 
 /**
  * @example
+ * console.log(getBasisPath());
+ * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/basis/";
+ * @returns {string}
+ */
+function getBasisPath() {
+    const { href } = location;
+    const i = href.lastIndexOf("/src/");
+    return href.substring(0, i) + "/src/lib/basis/";
+}
+export const basisPath = getBasisPath();
+
+/**
+ * @example
+ * console.log(getDracoPath());
+ * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/draco/'
+ * @returns {string}
+ */
+function getDracoPath() {
+    const { href } = location;
+    const i = href.indexOf("/examples/");
+    const assetPath = href.substring(0, i) + "/examples/src/lib/draco/";
+    return assetPath;
+}
+export const dracoPath = getDracoPath();
+
+/**
+ * @example
  * console.log(getIframePath());
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
  * @returns {string}
