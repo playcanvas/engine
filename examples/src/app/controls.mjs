@@ -7,10 +7,15 @@ window.realExamples = realExamples; // iframe requires this
 import ControlPanel from './control-panel.mjs';
 /**
  * @example
- * makeCamelCase("animation") // Outputs "Animation"
+ * makeCamelCase('animation') // Outputs 'Animation'
+ * makeCamelCase('user-interface'); // Outputs 'UserInterface'
  * @param {string} word - The word.
  */
-const makeCamelCase = word => word.charAt(0).toUpperCase() + word.slice(1);
+const makeCamelCase = word => (
+    word.charAt(0).toUpperCase() + word.slice(1)
+).replace(/-(.)/g, function(match, p1){
+    return p1.toUpperCase();
+});
 /**
  * @example
  * console.log(rewriteExampleString('blend-trees-2d-cartesian')); // Outputs "BlendTrees2DCartesianExample"
