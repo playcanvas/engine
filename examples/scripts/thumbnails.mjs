@@ -21,14 +21,15 @@ function isDir(path) {
         return false;
     }
 }
-
-globalThis.location = "nowhere";
-import * as realExamples from "../src/examples/index.mjs";
+//globalThis.location = {
+//    href: 'unused'
+//};
+//import * as realExamples from "../src/examples/index.mjs";
 
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
 categories = categories.filter(c => isDir(`${MAIN_DIR}/src/examples/${c}`));
 console.log("categories", categories);
-console.log("realExamples", {...realExamples});
+//console.log("realExamples", {...realExamples});
 
 categories.forEach(function (category) {
     let examples = getExamplesList(MAIN_DIR, category);
@@ -47,7 +48,12 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/thumbnails`)) {
 }
 
 function kebabCaseToPascalCase(str) {
-    return str.split('-').map(s => s.charAt(0).toUpperCase() + s.substring(1)).join('');
+    return str.split('-')
+        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
+        .join('')
+        .replace('1d', '1D')
+        .replace('2d', '2D')
+        .replace('3d', '3D');
 }
 
 async function takeScreenshots() {
@@ -72,8 +78,8 @@ async function takeScreenshots() {
         page.on('pageerror', ({ message }) => console.log(message));
         // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
         page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
-        //const link = `http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`;
-        const link = `http://localhost/playcanvas-engine/examples/src/iframe/?category=${category}&example=${example}&miniStats=false`;
+        const link = `http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`;
+        //const link = `http://localhost/playcanvas-engine/examples/src/iframe/?category=${category}&example=${example}&miniStats=false`;
         console.log("goto", link);
         await page.goto(link);
         console.log("wait for", link);
