@@ -17,7 +17,7 @@ void addRefraction(
     float refractionIndex
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
-    IridescenceArgs iridescence
+    float iridescenceIntensity
 #endif 
 ) {
     // use same reflection code with refraction vector
