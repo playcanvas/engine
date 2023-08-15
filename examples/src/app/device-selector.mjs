@@ -1,4 +1,6 @@
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from 'playcanvas';
+// Don't include all of 'playcanvas' for these defines, it just
+// causes bigger bundles and prolongs the build time by ~3s.
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from 'playcanvas/src/platform/graphics/constants.js';
 import React, { Component } from 'react';
 import { jsxSelectInput } from './jsx.mjs';
 
