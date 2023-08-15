@@ -1,10 +1,8 @@
-import * as React from 'react';
 import { LegacyRef, useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
-//import { File } from './helpers/types';
-import formatters from './helpers/formatters.mjs';
 import { pcTypes } from '../assetPath.mjs';
+import { jsx } from './jsx.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
@@ -13,6 +11,13 @@ const FILE_TYPE_LANGUAGES = {
 };
 
 let monacoEditor;
+
+/**
+ * @typedef {object} File
+ * @property {string} name - todo
+ * @property {string} text - todo
+ * @property {string} [type] - todo
+ */
 
 /**
  * @typedef {object} CodeEditorProps
@@ -124,7 +129,7 @@ const CodeEditor = (props) => {
         });
         window.toggleEvent = true;
     });
-    return React.createElement(
+    return jsx(
         Panel,
         {
             headerText: 'CODE',
@@ -133,24 +138,24 @@ const CodeEditor = (props) => {
             resizable: 'left',
             resizeMax: 2000
         },
-        React.createElement(
+        jsx(
             "div",
             {
                 className: 'panel-toggle',
                 id: 'codePane-panel-toggle'
             }
         ),
-        React.createElement(
+        jsx(
             Container,
             {
                 class: 'tabs-wrapper'
             },
-            React.createElement(
+            jsx(
                 Container,
                 {
                     class: 'code-editor-menu-container'
                 },
-                React.createElement(
+                jsx(
                     Button,
                     {
                         id: 'play-button',
@@ -160,24 +165,24 @@ const CodeEditor = (props) => {
                         ref: props.playButtonRef
                     }
                 ),
-                React.createElement(
+                jsx(
                     Button, {
                         icon: 'E259',
                         text: '',
                         onClick: () => {
                             const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
-                            window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.tsx`);
+                            window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.mjs`);
                         }
                     }
                 )
             ),
-            React.createElement(
+            jsx(
                 Container,
                 {
                     class: 'tabs-container'
                 },
                 props.files.map((file, index) => {
-                    return React.createElement(Button, {
+                    return jsx(Button, {
                         key: index,
                         id: `code-editor-file-tab-${index}`,
                         text: file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name,
@@ -187,7 +192,7 @@ const CodeEditor = (props) => {
                 })
             )
         ),
-        React.createElement(
+        jsx(
             MonacoEditor,
             {
                 language: FILE_TYPE_LANGUAGES[files[selectedFile]?.type],
@@ -208,6 +213,4 @@ const CodeEditor = (props) => {
         )
     );   
 };
-export {
-    CodeEditor
-};
+export { CodeEditor };
