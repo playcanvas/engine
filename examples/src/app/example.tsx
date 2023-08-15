@@ -13,7 +13,7 @@ const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_WEBGPU]: 'WebGPU',
-    [DEVICETYPE_NULL]: 'NULL'
+    [DEVICETYPE_NULL]: 'Null'
 };
 
 const controlsObserver = new Observer();
