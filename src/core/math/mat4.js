@@ -828,24 +828,24 @@ class Mat4 {
      * rot.invert();
      */
     invert(src = this) {
-        const m = src.data;
+        const s = src.data;
 
-        const a00 = m[0];
-        const a01 = m[1];
-        const a02 = m[2];
-        const a03 = m[3];
-        const a10 = m[4];
-        const a11 = m[5];
-        const a12 = m[6];
-        const a13 = m[7];
-        const a20 = m[8];
-        const a21 = m[9];
-        const a22 = m[10];
-        const a23 = m[11];
-        const a30 = m[12];
-        const a31 = m[13];
-        const a32 = m[14];
-        const a33 = m[15];
+        const a00 = s[0];
+        const a01 = s[1];
+        const a02 = s[2];
+        const a03 = s[3];
+        const a10 = s[4];
+        const a11 = s[5];
+        const a12 = s[6];
+        const a13 = s[7];
+        const a20 = s[8];
+        const a21 = s[9];
+        const a22 = s[10];
+        const a23 = s[11];
+        const a30 = s[12];
+        const a31 = s[13];
+        const a32 = s[14];
+        const a33 = s[15];
 
         const b00 = a00 * a11 - a01 * a10;
         const b01 = a00 * a12 - a02 * a10;
@@ -865,24 +865,70 @@ class Mat4 {
             this.setIdentity();
         } else {
             const invDet = 1 / det;
-            const r = this.data;
+            const t = this.data;
 
-            r[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
-            r[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
-            r[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
-            r[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
-            r[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
-            r[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
-            r[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
-            r[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
-            r[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
-            r[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
-            r[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
-            r[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
-            r[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
-            r[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
-            r[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
-            r[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+            t[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
+            t[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
+            t[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
+            t[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
+            t[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
+            t[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
+            t[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
+            t[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
+            t[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
+            t[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
+            t[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
+            t[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
+            t[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
+            t[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
+            t[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
+            t[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+        }
+
+        return this;
+    }
+
+    invert3x3(src = this) {
+        const s = src.data;
+
+        const a0 = s[0];
+        const a1 = s[1];
+        const a2 = s[2];
+
+        const a4 = s[4];
+        const a5 = s[5];
+        const a6 = s[6];
+
+        const a8 = s[8];
+        const a9 = s[9];
+        const a10 = s[10];
+
+        const b11 =  a10 * a5 - a6 * a9;
+        const b21 = -a10 * a1 + a2 * a9;
+        const b31 =  a6  * a1 - a2 * a5;
+        const b12 = -a10 * a4 + a6 * a8;
+        const b22 =  a10 * a0 - a2 * a8;
+        const b32 = -a6  * a0 + a2 * a4;
+        const b13 =  a9  * a4 - a5 * a8;
+        const b23 = -a9  * a0 + a1 * a8;
+        const b33 =  a5  * a0 - a1 * a4;
+
+        const det =  a0 * b11 + a1 * b12 + a2 * b13;
+        if (det === 0) {
+            this.setIdentity();
+        } else {
+            const invDet = 1 / det;
+            const t = this.data;
+
+            t[0] = b11 * invDet;
+            t[1] = b21 * invDet;
+            t[2] = b31 * invDet;
+            t[3] = b12 * invDet;
+            t[4] = b22 * invDet;
+            t[5] = b32 * invDet;
+            t[6] = b13 * invDet;
+            t[7] = b23 * invDet;
+            t[8] = b33 * invDet;
         }
 
         return this;
@@ -1071,52 +1117,6 @@ class Mat4 {
             t[14] = s[11];
             t[15] = s[15];
         }
-
-        return this;
-    }
-
-    invertTo3x3(res) {
-        const m = this.data;
-        const r = res.data;
-
-        const m0 = m[0];
-        const m1 = m[1];
-        const m2 = m[2];
-
-        const m4 = m[4];
-        const m5 = m[5];
-        const m6 = m[6];
-
-        const m8 = m[8];
-        const m9 = m[9];
-        const m10 = m[10];
-
-        const a11 =  m10 * m5 - m6 * m9;
-        const a21 = -m10 * m1 + m2 * m9;
-        const a31 =  m6  * m1 - m2 * m5;
-        const a12 = -m10 * m4 + m6 * m8;
-        const a22 =  m10 * m0 - m2 * m8;
-        const a32 = -m6  * m0 + m2 * m4;
-        const a13 =  m9  * m4 - m5 * m8;
-        const a23 = -m9  * m0 + m1 * m8;
-        const a33 =  m5  * m0 - m1 * m4;
-
-        const det =  m0 * a11 + m1 * a12 + m2 * a13;
-        if (det === 0) { // no inverse
-            return this;
-        }
-
-        const idet = 1 / det;
-
-        r[0] = idet * a11;
-        r[1] = idet * a21;
-        r[2] = idet * a31;
-        r[3] = idet * a12;
-        r[4] = idet * a22;
-        r[5] = idet * a32;
-        r[6] = idet * a13;
-        r[7] = idet * a23;
-        r[8] = idet * a33;
 
         return this;
     }

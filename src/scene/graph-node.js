@@ -295,8 +295,7 @@ class GraphNode extends EventHandler {
 
         const normalMat = this._normalMatrix;
         if (this._dirtyNormal) {
-            this.getWorldTransform().invertTo3x3(normalMat);
-            normalMat.transpose();
+            normalMat.invert3x3(this.getWorldTransform()).transpose();
             this._dirtyNormal = false;
         }
 
