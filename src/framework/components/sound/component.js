@@ -344,19 +344,21 @@ class SoundComponent extends Component {
      *
      * @param {string} name - The name of the slot.
      * @param {object} [options] - Settings for the slot.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
-     * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
-     * @param {number} [options.duration=null] - The duration of the sound that the slot will play
-     * starting from startTime.
-     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be
-     * played independently of each other. Otherwise the slot will first stop the current sound
-     * before starting the new one.
-     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as
-     * its audio asset is loaded.
-     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be
-     * played by this slot.
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * Defaults to false.
+     * @param {number} [options.startTime] - The start time from which the sound will start playing.
+     * Defaults to 0 to start at the beginning.
+     * @param {number} [options.duration] - The duration of the sound that the slot will play
+     * starting from startTime. Defaults to `null` which means play to end of the sound.
+     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * independently of each other. Otherwise the slot will first stop the current sound before
+     * starting the new one. Defaults to false.
+     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * audio asset is loaded. Defaults to false.
+     * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
+     * by this slot.
      * @returns {SoundSlot|null} The new slot or null if the slot already exists.
      * @example
      * // get an asset by id

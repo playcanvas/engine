@@ -574,8 +574,8 @@ class Mat4 {
      * (width / height).
      * @param {number} znear - The near clip plane in eye coordinates.
      * @param {number} zfar - The far clip plane in eye coordinates.
-     * @param {boolean} [fovIsHorizontal=false] - Set to true to treat the fov as horizontal
-     * (x-axis) and false for vertical (y-axis). Defaults to false.
+     * @param {boolean} [fovIsHorizontal] - Set to true to treat the fov as horizontal (x-axis) and
+     * false for vertical (y-axis). Defaults to false.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 perspective projection matrix
