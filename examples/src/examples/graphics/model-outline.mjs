@@ -3,9 +3,7 @@ import { scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
 
-enableHotReload({
-    scriptsPath,
-});
+enableHotReload({ scriptsPath });
 
 /**
  * @param {HTMLCanvasElement} canvas - todo

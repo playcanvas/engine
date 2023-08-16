@@ -5,9 +5,7 @@ import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@pl
 import { assetPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    assetPath,
-});
+enableHotReload({ assetPath });
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo

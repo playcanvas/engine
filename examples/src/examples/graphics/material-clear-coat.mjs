@@ -2,9 +2,7 @@ import * as pc from 'playcanvas';
 import { assetPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    assetPath,
-});
+enableHotReload({ assetPath });
 
 /**
  * @param {HTMLCanvasElement} canvas - todo

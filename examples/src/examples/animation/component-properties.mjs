@@ -4,9 +4,7 @@ import { Button } from '@playcanvas/pcui/react';
 import { assetPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    assetPath,
-});
+enableHotReload({ assetPath });
 
 /**
  * @param {HTMLCanvasElement} canvas - todo
@@ -306,6 +304,4 @@ class ComponentPropertiesExample {
     static example = example;
 }
 
-export {
-    ComponentPropertiesExample
-};
+export { ComponentPropertiesExample };
