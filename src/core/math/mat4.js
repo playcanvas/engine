@@ -818,7 +818,8 @@ class Mat4 {
     /**
      * Sets the specified matrix to its inverse.
      *
-     * @returns {Mat4} Self for chaining.
+     * @param {Mat4} [res] - An optional matrix to receive the result of the invert. Otherwise this is used.
+     * @returns {Mat4} The resulting inverse matrix.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
      * const rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -826,8 +827,8 @@ class Mat4 {
      * // Invert in place
      * rot.invert();
      */
-    invert() {
-        const m = this.data;
+    invert(res = this) {
+        const m = res.data;
 
         const a00 = m[0];
         const a01 = m[1];
@@ -861,7 +862,7 @@ class Mat4 {
 
         const det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
         if (det === 0) {
-            this.setIdentity();
+            res.setIdentity();
         } else {
             const invDet = 1 / det;
 
@@ -883,7 +884,7 @@ class Mat4 {
             m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
         }
 
-        return this;
+        return res;
     }
 
     /**
