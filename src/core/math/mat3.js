@@ -239,7 +239,7 @@ class Mat3 {
      *
      * @param {import('./mat4.js').Mat4} src - The 4x4 matrix to invert.
      * @returns {Mat3} Self for chaining.
-     * 
+     *
      * @ignore
      */
     invertMat4(src) {
