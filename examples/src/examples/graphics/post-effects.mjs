@@ -4,25 +4,12 @@ import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInpu
 import { assetPath, dracoPath, scriptsPath } from '../../assetPath.mjs';
 import { jsx } from '../../app/jsx.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
 
 enableHotReload({
     assetPath,
     scriptsPath,
 });
-
-/*
-waiting for decision in https://github.com/playcanvas/engine/pull/5561
-// Object.prototype.toString.call(1) === '[object Number]'
-const functionCall = Function.prototype.call;
-Function.prototype.call = function(thisArg, ...args) {
-    // console.log("polyfill Function .call", this, thisArg, ...args);
-    if (this.toString().startsWith('class')) {
-        console.warn("ES6 classes are not the same as functions, but we make it work anyway... be careful.");
-        return Object.assign(thisArg, new this(...args));
-    }
-    return functionCall.bind(this)(thisArg, ...args);
-}
-*/
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -161,6 +148,8 @@ async function example(canvas, deviceType, data) {
         wasmUrl:     dracoPath + 'draco.wasm.wasm',
         fallbackUrl: dracoPath + 'draco.js'
     });
+
+    enablePolyfillFunctionCall();
 
     const assets = {
         'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),

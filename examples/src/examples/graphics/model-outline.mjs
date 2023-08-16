@@ -1,6 +1,7 @@
 import * as pc from 'playcanvas';
 import { scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
+import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
 
 enableHotReload({
     scriptsPath,
@@ -12,16 +13,15 @@ enableHotReload({
  * @returns {Promise<pc.AppBase>} todo
  */
 async function example(canvas, deviceType) {
+    enablePolyfillFunctionCall();
     const assets = {
-        'outline': new pc.Asset('outline', 'script', { url: scriptsPath + 'posteffects/posteffect-outline.js' })
+        outline: new pc.Asset('outline', 'script', { url: scriptsPath + 'posteffects/posteffect-outline.js' })
     };
-
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
-
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
