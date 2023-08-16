@@ -1,35 +1,26 @@
 import fs from 'fs';
-import readDirectoryNames from '../src/app/helpers/read-dir-names.mjs';
-import getExamplesList from '../src/app/helpers/read-dir.mjs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import * as realExamples from "../src/examples/index.mjs";
+import { toKebabCase } from '../src/app/helpers/strings.mjs';
 /**
  * It would be possible to *not* pregenerate example-data.js, but then we would include all
  * examples only to generate the list in the UI... which would be a waste.
  */
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const MAIN_DIR = `${__dirname}/../`;
+const MAIN_DIR = `${dirname(__filename)}/../`;
 const exampleData = {};
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
 }
-globalThis.location = {href: "unused"};
-const categories = readDirectoryNames(`${MAIN_DIR}/src/examples/`);
-for (const category of categories) {
+for (const category_ in realExamples) {
+    const category = toKebabCase(category_);
     exampleData[category] = {};
-    const examples = getExamplesList(MAIN_DIR, category);
-    for (const exampleName of examples) {        
-        const example = exampleName.replace('.mjs', '');
+    const examples = realExamples[category_];
+    for (const exampleName_ in examples) {        
+        const exampleClass = examples[exampleName_];
+        const example = toKebabCase(exampleName_).replace('-example', '');
         exampleData[category][example] = {};
-        const path = `${MAIN_DIR}src/examples/${category}/${exampleName}`;
-        const mod = await import(path);
-        const keyForExample = Object.keys(mod).find(key => key.endsWith('Example'));
-        if (!keyForExample) {
-            console.warn("skip", path);
-            continue;
-        }
-        const exampleClass = mod[keyForExample];
         const exampleFunc = exampleClass.example.toString();
         exampleData[category][example].example = exampleFunc;
         exampleData[category][example].nameSlug = example;

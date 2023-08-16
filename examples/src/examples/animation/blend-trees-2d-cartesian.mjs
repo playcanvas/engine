@@ -5,7 +5,7 @@ import { assetPath, scriptsPath } from '../../assetPath.mjs';
 /**
  * @todo Add props
  */
-export class JsxControls extends Component {
+class JsxControls extends Component {
     position = new pc.Vec2();
     /** @type {React.RefObject<HTMLCanvasElement>} */
     refCanvas = createRef();

@@ -1,37 +1,16 @@
 import { exampleData } from '../../example-data.mjs';
-/**
- * @param {string} string 
- * @returns {string}
- */
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-/**
- * @example
- * console.log(toKebabCase("BlendTrees1D")); // blend-trees-1d
- * @param {string} str - The string.
- * @returns String in kebab-case-format
- */
-function toKebabCase(str) {
-    return str
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
-      .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
-      .toLowerCase()
-      .replaceAll("1d", "-1d")
-      .replaceAll("2d", "-2d")
-      .replaceAll("3d", "-3d")
-}
+import { kebabCaseToPascalCase } from './strings.mjs';
 /** @type {Record<string, Record<string, object>>} */
 const categories = {};
 /** @type {Record<string, object>} */
 const paths = {};
 Object.keys(exampleData).forEach((categorySlug) => {
-    const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
+    const category = kebabCaseToPascalCase(categorySlug);
     categories[categorySlug] = {
         examples: {}
     };
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
-        const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
+        const name = kebabCaseToPascalCase(exampleSlug);
         /*
         let realClass;
         try {
