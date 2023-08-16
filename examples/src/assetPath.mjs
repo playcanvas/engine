@@ -1,3 +1,5 @@
+const href = typeof location !== 'undefined' ? location.href : '';
+
 /**
  * Motivation is to not hardcode asset paths and change it quickly all at once.
  * @example
@@ -7,7 +9,6 @@
  * @returns {string}
  */
 export function getAssetPath() {
-    const { href } = location;
     const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/assets/';
@@ -23,7 +24,6 @@ export const assetPath = getAssetPath();
  * @returns {string}
  */
 export function getPlayCanvasTypes() {
-    const { href } = location;
     const i = href.lastIndexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/playcanvas.d.ts';
@@ -40,7 +40,6 @@ export const pcTypes = getPlayCanvasTypes();
  * @returns {string}
  */
 export function getScriptsPath() {
-    const { href } = location;
     const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/scripts/';
@@ -57,7 +56,6 @@ export const scriptsPath = getScriptsPath();
  * @returns {string}
  */
 export function getIframePath() {
-    const { href } = location;
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.indexOf("/examples/")
@@ -75,7 +73,6 @@ export const iframePath = getIframePath();
  * @returns {string}
  */
 function getAmmoPath() {
-    const { href } = location;
     const i = href.lastIndexOf("/src/");
     const assetPath = href.substring(0, i) + "/src/lib/ammo/";
     return assetPath;
@@ -89,7 +86,6 @@ export const ammoPath = getAmmoPath();
  * @returns {string}
  */
 function getBasisPath() {
-    const { href } = location;
     const i = href.lastIndexOf("/src/");
     return href.substring(0, i) + "/src/lib/basis/";
 }
@@ -102,7 +98,6 @@ export const basisPath = getBasisPath();
  * @returns {string}
  */
 function getDracoPath() {
-    const { href } = location;
     const i = href.indexOf("/examples/");
     const assetPath = href.substring(0, i) + "/examples/src/lib/draco/";
     return assetPath;
@@ -117,7 +112,6 @@ export const dracoPath = getDracoPath();
  * @returns {string}
  */
 function getGlslangPath() {
-    const { href } = location;
     const i = href.indexOf("/examples/");
     return href.substring(0, i) + "/examples/src/lib/glslang/";
 }
@@ -131,7 +125,6 @@ export const glslangPath = getGlslangPath();
  * @returns {string}
  */
 function getTwgslPath() {
-    const { href } = location;
     const i = href.indexOf("/examples/");
     return href.substring(0, i) + "/examples/src/lib/twgsl/";
 }
@@ -144,7 +137,6 @@ export const twgslPath = getTwgslPath();
  * @returns {string}
  */
 export function getThumbnailPath() {
-    const { href } = location;
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.lastIndexOf("/examples/");
