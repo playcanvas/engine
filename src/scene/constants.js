@@ -471,7 +471,7 @@ export const DETAILMODE_ADD = 'add';
 /**
  * Softer version of {@link DETAILMODE_ADD}.
  *
- * @name DETAILMODE_SCREEN
+ * @type {string}
  */
 export const DETAILMODE_SCREEN = 'screen';
 
