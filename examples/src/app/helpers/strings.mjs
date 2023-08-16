@@ -10,12 +10,14 @@ function capitalizeFirstLetter(string) {
 
 /**
  * @example
- * console.log(toKebabCase("BlendTrees1D")); // blend-trees-1d
+ * toKebabCase('BlendTrees1D'); // Outputs: 'blend-trees-1d'
+ * toKebabCase('LightsBakedAO'); // Outputs 'lights-baked-a-o'
  * @param {string} str - The string.
  * @returns String in kebab-case-format
  */
 function toKebabCase(str) {
     return str
+      .replace(/([A-Z])([A-Z])/g, '$1-$2') // case for "...AO" -> '...-a-o'
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
       .toLowerCase()
