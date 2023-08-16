@@ -4,58 +4,28 @@ import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import getExamplesList from '../src/app/helpers/read-dir.mjs';
-/* eslint-disable no-await-in-loop */
-
+import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
+import * as categories from "../src/examples/index.mjs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
 const MAIN_DIR = `${__dirname}/../`;
+const debug = true;
+/** @type {{category: string, example: string}[]} */
 const exampleList = [];
-
-function isDir(path) {
-    try {
-        var stat = fs.lstatSync(path);
-        return stat.isDirectory();
-    } catch (e) {
-        // lstatSync throws an error if path doesn't exist
-        return false;
-    }
-}
-//globalThis.location = {
-//    href: 'unused'
-//};
-//import * as realExamples from "../src/examples/index.mjs";
-
-let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
-categories = categories.filter(c => isDir(`${MAIN_DIR}/src/examples/${c}`));
-console.log("categories", categories);
-//console.log("realExamples", {...realExamples});
-
-categories.forEach(function (category) {
-    let examples = getExamplesList(MAIN_DIR, category);
-    examples = examples.filter(e => e !== 'index.mjs');
-    examples.forEach((e) => {
+for (const category_ in categories) {
+    const category = toKebabCase(category_);
+    const examples = categories[category_];
+    for (const example_ in examples) {
+        const example = toKebabCase(example_).replace('-example', '');
         exampleList.push({
             category,
-            example: e.replace('.mjs', '')
+            example,
         });
-    });
-});
-
-
+    }
+}
 if (!fs.existsSync(`${MAIN_DIR}/dist/thumbnails`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/thumbnails`);
 }
-
-function kebabCaseToPascalCase(str) {
-    return str.split('-')
-        .map(s => s.charAt(0).toUpperCase() + s.substring(1))
-        .join('')
-        .replace('1d', '1D')
-        .replace('2d', '2D')
-        .replace('3d', '3D');
-}
-
 async function takeScreenshots() {
     for (let i = 0; i < exampleList.length; i++) {
         const exampleListItem = exampleList[i];
@@ -74,17 +44,22 @@ async function takeScreenshots() {
         const port = process.env.PORT || 5000;
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
-        page.on('console', message => console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
-        page.on('pageerror', ({ message }) => console.log(message));
-        // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
-        page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
-        const link = `http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`;
-        //const link = `http://localhost/playcanvas-engine/examples/src/iframe/?category=${category}&example=${example}&miniStats=false`;
-        console.log("goto", link);
+        if (debug) {
+            page.on('console', message => console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
+            page.on('pageerror', ({ message }) => console.log(message));
+            // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
+            page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
+        }
+        //const link = `http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`;
+        const link = `http://localhost/playcanvas-engine/examples/src/iframe/?category=${category}&example=${example}&miniStats=false`;
+        if (debug) {
+            console.log("goto", link);
+        }
         await page.goto(link);
-        console.log("wait for", link);
+        if (debug) {
+            console.log("wait for", link);
+        }
         await page.waitForFunction("pc.app?._time > 1000");
-
         await page.screenshot({ path: `${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png` });
         await sharp(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png`)
             .resize(320, 240)
