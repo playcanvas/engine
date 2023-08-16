@@ -13,6 +13,9 @@ import * as pc from "playcanvas";
 //window.pc           = window.top.pc;
 //window.realExamples = window.top.realExamples;
 window.pc = window.top.pc = pc;
+/**
+ * @param {pc.AppBase} app - todo
+ */
 function setupApplication(app) {
     const canvas = app.graphicsDevice.canvas;
     // handle resizing
@@ -37,7 +40,6 @@ function setupApplication(app) {
         false && app.on('update', function () {
             if (window.top._showMiniStats !== undefined) {
                 miniStats.enabled = window.top._showMiniStats;
-
             }
         });
     }
@@ -91,6 +93,7 @@ function asyncFunctionFromString(str) {
  */
 async function callExample(canvas, files, data, exampleFunction) {
     const argNames = getFunctionArguments(exampleFunction);
+    // TODO turn into {}
     const args = argNames.map(function(arg) {
         if (arg === 'canvas') {
             return canvas;
@@ -102,7 +105,12 @@ async function callExample(canvas, files, data, exampleFunction) {
             return pcx;
         } else if (arg === 'deviceType') {
             if (Example.WEBGPU_ENABLED) {
-                return window.top.preferredGraphicsDevice || 'webgpu';
+                let preferredDevice = 'webgpu';
+                // Lack of Chrome's WebGPU support on Linux
+                if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
+                    preferredDevice = 'webgl2';
+                }
+                return window.top.preferredGraphicsDevice || preferredDevice;
             } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
                 return window.top.preferredGraphicsDevice;
             } else {
@@ -185,5 +193,8 @@ if (!found) {
     window.top.observerData = data;
     // load the engine, create the application, load the resources if necessary, then call the example
     const canvas = document.getElementById('application-canvas');
-    callExample(canvas, window.files, data, window.exampleFunction);
+    callExample(canvas, window.files, data, window.exampleFunction)
+      .catch((e) => {
+        console.error("callExample>", e);
+      });
 }
