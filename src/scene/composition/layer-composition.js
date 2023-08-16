@@ -2,7 +2,6 @@ import { TRACEID_RENDER_ACTION } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { EventHandler } from '../../core/event-handler.js';
-import { set } from '../../core/set-utils.js';
 import { sortPriority } from '../../core/sort.js';
 
 import {
@@ -12,10 +11,8 @@ import {
 } from '../constants.js';
 
 import { RenderAction } from './render-action.js';
-import { WorldClusters } from '../lighting/world-clusters.js';
 
 const tempSet = new Set();
-const tempClusterArray = [];
 
 /**
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
@@ -109,45 +106,12 @@ class LayerComposition extends EventHandler {
 
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
-
-        // all currently created light clusters, that need to be updated before rendering
-        this._worldClusters = [];
-
-        // empty cluster with no lights
-        this._emptyWorldClusters = null;
     }
 
     destroy() {
-        // empty light cluster
-        if (this._emptyWorldClusters) {
-            this._emptyWorldClusters.destroy();
-            this._emptyWorldClusters = null;
-        }
-
-        // all other clusters
-        this._worldClusters.forEach((cluster) => {
-            cluster.destroy();
-        });
-        this._worldClusters = null;
-
         // render actions
         this._renderActions.forEach(ra => ra.destroy());
         this._renderActions = null;
-    }
-
-    // returns an empty light cluster object to be used when no lights are used
-    getEmptyWorldClusters(device) {
-        if (!this._emptyWorldClusters) {
-
-            // create cluster structure with no lights
-            this._emptyWorldClusters = new WorldClusters(device);
-            this._emptyWorldClusters.name = 'ClusterEmpty';
-
-            // update it once to avoid doing it each frame
-            this._emptyWorldClusters.update([], false, null);
-        }
-
-        return this._emptyWorldClusters;
     }
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
@@ -173,7 +137,7 @@ class LayerComposition extends EventHandler {
         splitLights[LIGHTTYPE_SPOT].sort((a, b) => a.key - b.key);
     }
 
-    _update(device, clusteredLightingEnabled = false) {
+    _update() {
         const len = this.layerList.length;
         let result = 0;
 
@@ -314,15 +278,6 @@ class LayerComposition extends EventHandler {
             this._renderActions.length = renderActionCount;
         }
 
-        // allocate light clusters if lights or meshes or cameras are modified
-        if (result & (COMPUPDATED_CAMERAS | COMPUPDATED_LIGHTS)) {
-
-            // prepare clustered lighting for render actions
-            if (clusteredLightingEnabled) {
-                this.allocateLightClusters(device);
-            }
-        }
-
         if (result & (COMPUPDATED_LIGHTS | COMPUPDATED_LIGHTS)) {
             this._logRenderActions();
         }
@@ -367,96 +322,6 @@ class LayerComposition extends EventHandler {
 
         // split light list by type
         this._splitLightsArray(this);
-    }
-
-    // find existing light cluster that is compatible with specified layer
-    findCompatibleCluster(layer, renderActionCount, emptyWorldClusters) {
-
-        // check already set up render actions
-        for (let i = 0; i < renderActionCount; i++) {
-            const ra = this._renderActions[i];
-            const raLayer = this.layerList[ra.layerIndex];
-
-            // only reuse clusters if not empty
-            if (ra.lightClusters !== emptyWorldClusters) {
-
-                // if layer is the same (but different sublayer), cluster can be used directly as lights are the same
-                if (layer === raLayer) {
-                    return ra.lightClusters;
-                }
-
-                if (ra.lightClusters) {
-                    // if the layer has exactly the same set of lights, use the same cluster
-                    if (set.equals(layer._clusteredLightsSet, raLayer._clusteredLightsSet)) {
-                        return ra.lightClusters;
-                    }
-                }
-            }
-        }
-
-        // no match
-        return null;
-    }
-
-    // assign light clusters to render actions that need it
-    allocateLightClusters(device) {
-
-        // reuse previously allocated clusters
-        tempClusterArray.push(...this._worldClusters);
-
-        // the cluster with no lights
-        const emptyWorldClusters = this.getEmptyWorldClusters(device);
-
-        // start with no clusters
-        this._worldClusters.length = 0;
-
-        // process all render actions
-        const count = this._renderActions.length;
-        for (let i = 0; i < count; i++) {
-            const ra = this._renderActions[i];
-            const layer = this.layerList[ra.layerIndex];
-
-            ra.lightClusters = null;
-
-            // if the layer has lights used by clusters
-            if (layer.hasClusteredLights) {
-
-                // and if the layer has meshes
-                if (layer.meshInstances.length) {
-
-                    // reuse cluster that was already set up and is compatible
-                    let clusters = this.findCompatibleCluster(layer, i, emptyWorldClusters);
-                    if (!clusters) {
-
-                        // use already allocated cluster from before
-                        if (tempClusterArray.length) {
-                            clusters = tempClusterArray.pop();
-                        }
-
-                        // create new cluster
-                        if (!clusters) {
-                            clusters = new WorldClusters(device);
-                        }
-
-                        clusters.name = 'Cluster-' + this._worldClusters.length;
-                        this._worldClusters.push(clusters);
-                    }
-
-                    ra.lightClusters = clusters;
-                }
-            }
-
-            // no clustered lights, use the cluster with no lights
-            if (!ra.lightClusters) {
-                ra.lightClusters = emptyWorldClusters;
-            }
-        }
-
-        // delete leftovers
-        tempClusterArray.forEach((item) => {
-            item.destroy();
-        });
-        tempClusterArray.length = 0;
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
@@ -510,6 +375,7 @@ class LayerComposition extends EventHandler {
         renderAction.reset();
         renderAction.triggerPostprocess = false;
         renderAction.layerIndex = layerIndex;
+        renderAction.layer = layer;
         renderAction.cameraIndex = cameraIndex;
         renderAction.camera = camera;
         renderAction.renderTarget = rt;
@@ -579,8 +445,8 @@ class LayerComposition extends EventHandler {
                     ' Meshes: ', ('?' + layer.meshInstances.length).padStart(5) +
                     (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
                     ' Clear: ' + clear +
-                    ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
-                    ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
+                    // ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
+                    // ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
                     (ra.firstCameraUse ? ' CAM-FIRST' : '') +
                     (ra.lastCameraUse ? ' CAM-LAST' : '') +
                     (ra.triggerPostprocess ? ' POSTPROCESS' : '') +

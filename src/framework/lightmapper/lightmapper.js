@@ -918,7 +918,7 @@ class Lightmapper {
         this.setupScene();
 
         // update layer composition
-        comp._update(device, clusteredLightingEnabled);
+        comp._update();
 
         // compute bounding boxes for nodes
         this.computeNodesBounds(bakeNodes);
