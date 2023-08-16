@@ -816,10 +816,10 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to its inverse.
+     * Sets the specified matrix to the inverse of a matrix.
      *
-     * @param {Mat4} [res] - An optional matrix to receive the result of the invert. Otherwise this is used.
-     * @returns {Mat4} The resulting inverse matrix.
+     * @param {Mat4} [src] - The matrix to invert. If not set, the current matrix is used.
+     * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
      * const rot = new pc.Mat4().setFromAxisAngle(pc.Vec3.UP, 180);
@@ -827,8 +827,8 @@ class Mat4 {
      * // Invert in place
      * rot.invert();
      */
-    invert(res = this) {
-        const m = res.data;
+    invert(src = this) {
+        const m = src.data;
 
         const a00 = m[0];
         const a01 = m[1];
@@ -862,29 +862,30 @@ class Mat4 {
 
         const det = (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
         if (det === 0) {
-            res.setIdentity();
+            this.setIdentity();
         } else {
             const invDet = 1 / det;
+            const r = this.data;
 
-            m[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
-            m[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
-            m[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
-            m[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
-            m[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
-            m[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
-            m[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
-            m[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
-            m[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
-            m[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
-            m[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
-            m[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
-            m[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
-            m[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
-            m[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
-            m[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
+            r[0] = (a11 * b11 - a12 * b10 + a13 * b09) * invDet;
+            r[1] = (-a01 * b11 + a02 * b10 - a03 * b09) * invDet;
+            r[2] = (a31 * b05 - a32 * b04 + a33 * b03) * invDet;
+            r[3] = (-a21 * b05 + a22 * b04 - a23 * b03) * invDet;
+            r[4] = (-a10 * b11 + a12 * b08 - a13 * b07) * invDet;
+            r[5] = (a00 * b11 - a02 * b08 + a03 * b07) * invDet;
+            r[6] = (-a30 * b05 + a32 * b02 - a33 * b01) * invDet;
+            r[7] = (a20 * b05 - a22 * b02 + a23 * b01) * invDet;
+            r[8] = (a10 * b10 - a11 * b08 + a13 * b06) * invDet;
+            r[9] = (-a00 * b10 + a01 * b08 - a03 * b06) * invDet;
+            r[10] = (a30 * b04 - a31 * b02 + a33 * b00) * invDet;
+            r[11] = (-a20 * b04 + a21 * b02 - a23 * b00) * invDet;
+            r[12] = (-a10 * b09 + a11 * b07 - a12 * b06) * invDet;
+            r[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
+            r[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
+            r[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
         }
 
-        return res;
+        return this;
     }
 
     /**
@@ -1012,8 +1013,9 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to its transpose.
+     * Sets the specified matrix to the transpose of a matrix.
      *
+     * @param {Mat4} src - The matrix to transpose. If not set, the current matrix is used.
      * @returns {Mat4} Self for chaining.
      * @example
      * const m = new pc.Mat4();
@@ -1021,33 +1023,54 @@ class Mat4 {
      * // Transpose in place
      * m.transpose();
      */
-    transpose() {
-        let tmp;
-        const m = this.data;
+    transpose(src = this) {
+        const s = src.data;
+        const t = this.data;
 
-        tmp = m[1];
-        m[1] = m[4];
-        m[4] = tmp;
+        if (s === t) {
+            let tmp;
 
-        tmp = m[2];
-        m[2] = m[8];
-        m[8] = tmp;
+            tmp = s[1];
+            t[1] = s[4];
+            t[4] = tmp;
 
-        tmp = m[3];
-        m[3] = m[12];
-        m[12] = tmp;
+            tmp = s[2];
+            t[2] = s[8];
+            t[8] = tmp;
 
-        tmp = m[6];
-        m[6] = m[9];
-        m[9] = tmp;
+            tmp = s[3];
+            t[3] = s[12];
+            t[12] = tmp;
 
-        tmp = m[7];
-        m[7] = m[13];
-        m[13] = tmp;
+            tmp = s[6];
+            t[6] = s[9];
+            t[9] = tmp;
 
-        tmp = m[11];
-        m[11] = m[14];
-        m[14] = tmp;
+            tmp = s[7];
+            t[7] = s[13];
+            t[13] = tmp;
+
+            tmp = s[11];
+            t[11] = s[14];
+            t[14] = tmp;
+        } else {
+            t[0] = s[0];
+            t[1] = s[4];
+            t[2] = s[8];
+            t[3] = s[12];
+            t[4] = s[1];
+            t[5] = s[5];
+            t[6] = s[9];
+            t[7] = s[13];
+            t[8] = s[2];
+            t[9] = s[6];
+            t[10] = s[10];
+            t[11] = s[14];
+            t[12] = s[3];
+            t[13] = s[7];
+            t[14] = s[11];
+            t[15] = s[15];
+        }
 
         return this;
     }
