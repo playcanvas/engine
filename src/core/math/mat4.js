@@ -816,7 +816,7 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to the inverse of a matrix.
+     * Sets the matrix to the inverse of a source matrix.
      *
      * @param {Mat4} [src] - The matrix to invert. If not set, the current matrix is used.
      * @returns {Mat4} Self for chaining.
@@ -883,52 +883,6 @@ class Mat4 {
             t[13] = (a00 * b09 - a01 * b07 + a02 * b06) * invDet;
             t[14] = (-a30 * b03 + a31 * b01 - a32 * b00) * invDet;
             t[15] = (a20 * b03 - a21 * b01 + a22 * b00) * invDet;
-        }
-
-        return this;
-    }
-
-    invert3x3(src = this) {
-        const s = src.data;
-
-        const a0 = s[0];
-        const a1 = s[1];
-        const a2 = s[2];
-
-        const a4 = s[4];
-        const a5 = s[5];
-        const a6 = s[6];
-
-        const a8 = s[8];
-        const a9 = s[9];
-        const a10 = s[10];
-
-        const b11 =  a10 * a5 - a6 * a9;
-        const b21 = -a10 * a1 + a2 * a9;
-        const b31 =  a6  * a1 - a2 * a5;
-        const b12 = -a10 * a4 + a6 * a8;
-        const b22 =  a10 * a0 - a2 * a8;
-        const b32 = -a6  * a0 + a2 * a4;
-        const b13 =  a9  * a4 - a5 * a8;
-        const b23 = -a9  * a0 + a1 * a8;
-        const b33 =  a5  * a0 - a1 * a4;
-
-        const det =  a0 * b11 + a1 * b12 + a2 * b13;
-        if (det === 0) {
-            this.setIdentity();
-        } else {
-            const invDet = 1 / det;
-            const t = this.data;
-
-            t[0] = b11 * invDet;
-            t[1] = b21 * invDet;
-            t[2] = b31 * invDet;
-            t[3] = b12 * invDet;
-            t[4] = b22 * invDet;
-            t[5] = b32 * invDet;
-            t[6] = b13 * invDet;
-            t[7] = b23 * invDet;
-            t[8] = b33 * invDet;
         }
 
         return this;
@@ -1059,9 +1013,9 @@ class Mat4 {
     }
 
     /**
-     * Sets the specified matrix to the transpose of a matrix.
+     * Sets the matrix to the transpose of a source matrix.
      *
-     * @param {Mat4} src - The matrix to transpose. If not set, the current matrix is used.
+     * @param {Mat4} [src] - The matrix to transpose. If not set, the current matrix is used.
      * @returns {Mat4} Self for chaining.
      * @example
      * const m = new pc.Mat4();

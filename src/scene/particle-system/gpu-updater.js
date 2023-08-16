@@ -140,7 +140,7 @@ class ParticleGPUUpdater {
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
         emitterMatrix3.setFromMat4(emitterMatrix);
-        emitterMatrix3Inv.invert3x3(emitterMatrix);
+        emitterMatrix3Inv.invertMat4(emitterMatrix);
         this.emitterPosUniform[0] = emitterPos.x;
         this.emitterPosUniform[1] = emitterPos.y;
         this.emitterPosUniform[2] = emitterPos.z;

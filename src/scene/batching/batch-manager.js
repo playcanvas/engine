@@ -712,7 +712,7 @@ class BatchManager {
                             } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
 
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
-                                mat3.invert3x3(transform).transpose();
+                                mat3.invertMat4(transform).transpose();
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
                                     vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
