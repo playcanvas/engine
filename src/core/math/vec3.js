@@ -437,6 +437,7 @@ class Vec3 {
             this.y = src.y * invLength;
             this.z = src.z * invLength;
         }
+
         return this;
     }
 
