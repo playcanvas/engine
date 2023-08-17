@@ -801,8 +801,7 @@ class ForwardRenderer extends Renderer {
                 const renderPass = new RenderPass(this.device, () => {
                     // render cookies for all local visible lights
                     if (this.scene.lighting.cookiesEnabled) {
-                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_SPOT]);
-                        this.renderCookies(layerComposition._splitLights[LIGHTTYPE_OMNI]);
+                        this.renderCookies(layerComposition._lights);
                     }
                 });
                 renderPass.requiresCubemaps = false;

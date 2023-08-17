@@ -1,15 +1,18 @@
+import { DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, CULLFACE_NONE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
-import { LIGHTTYPE_OMNI } from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
+import { QuadRender } from '../graphics/quad-render.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
+import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 const textureBlitVertexShader = `
     attribute vec2 vertex_position;
@@ -41,42 +44,46 @@ const textureCubeBlitFragmentShader = `
     }`;
 
 const _viewport = new Vec4();
+const _filteredLights = [];
 
 // helper class used by clustered lighting system to render cookies into the texture atlas, similarly to shadow renderer
 class CookieRenderer {
+    /** @type {QuadRender|null} */
+    _quadRenderer2D = null;
+
+    /** @type {QuadRender|null} */
+    _quadRendererCube = null;
+
     constructor(device, lightTextureAtlas) {
         this.device = device;
         this.lightTextureAtlas = lightTextureAtlas;
 
-        this.blitShader2d = null;
-        this.blitShaderCube = null;
-        this.blitTextureId = null;
-        this.invViewProjId = null;
+        this.blitTextureId = this.device.scope.resolve('blitTexture');
+        this.invViewProjId = this.device.scope.resolve('invViewProj');
     }
 
     destroy() {
+        this._quadRenderer2D?.destroy();
+        this._quadRenderer2D = null;
+
+        this._quadRendererCube?.destroy();
+        this._quadRendererCube = null;
     }
 
-    getShader(shader, fragment) {
-
-        if (!this[shader])
-            this[shader] = createShaderFromCode(this.device, textureBlitVertexShader, fragment, `cookie_renderer_${shader}`);
-
-        if (!this.blitTextureId)
-            this.blitTextureId = this.device.scope.resolve('blitTexture');
-
-        if (!this.invViewProjId)
-            this.invViewProjId = this.device.scope.resolve('invViewProj');
-
-        return this[shader];
+    get quadRenderer2D() {
+        if (!this._quadRenderer2D) {
+            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureBlitFragmentShader, `cookieRenderer2d`);
+            this._quadRenderer2D = new QuadRender(shader);
+        }
+        return this._quadRenderer2D;
     }
 
-    get shader2d() {
-        return this.getShader('blitShader2d', textureBlitFragmentShader);
-    }
-
-    get shaderCube() {
-        return this.getShader('blitShaderCube', textureCubeBlitFragmentShader);
+    get quadRendererCube() {
+        if (!this._quadRendererCube) {
+            const shader = createShaderFromCode(this.device, textureBlitVertexShader, textureCubeBlitFragmentShader, `cookieRendererCube`);
+            this._quadRendererCube = new QuadRender(shader);
+        }
+        return this._quadRendererCube;
     }
 
     static createTexture(device, resolution) {
@@ -113,51 +120,98 @@ class CookieRenderer {
         }
     }
 
-    render(light, renderTarget) {
+    filter(lights) {
 
-        if (light.enabled && light.cookie && light.visibleThisFrame) {
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
 
-            DebugGraphics.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
+            // skip directional lights
+            if (light._type === LIGHTTYPE_DIRECTIONAL)
+                continue;
 
-            const faceCount = light.numShadowFaces;
-            const shader = faceCount > 1 ? this.shaderCube : this.shader2d;
-            const device = this.device;
+            // skip clustered cookies with no assigned atlas slot
+            if (!light.atlasViewportAllocated)
+                continue;
 
-            if (faceCount > 1) {
-                this.initInvViewProjMatrices();
+            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
+            if (!light.atlasSlotUpdated)
+                continue;
+
+            if (light.enabled && light.cookie && light.visibleThisFrame) {
+                _filteredLights.push(light);
             }
+        }
+    }
 
-            // source texture
-            this.blitTextureId.setValue(light.cookie);
+    render(renderTarget, lights) {
+
+        // pick lights we need to update the cookies for
+        this.filter(lights);
+        if (_filteredLights.length <= 0)
+            return;
+
+        // prepare a single render pass to render all quads to the render target
+        const device = this.device;
+        const renderPass = new RenderPass(device, () => {
 
             // render state
             device.setBlendState(BlendState.NOBLEND);
+            device.setCullMode(CULLFACE_NONE);
+            device.setDepthState(DepthState.NODEPTH);
+            device.setStencilState(null, null);
 
-            // render it to a viewport of the target
-            for (let face = 0; face < faceCount; face++) {
+            for (let i = 0; i < _filteredLights.length; i++) {
+                const light = _filteredLights[i];
 
-                _viewport.copy(light.atlasViewport);
+                DebugGraphics.pushGpuMarker(this.device, `COOKIE ${light._node.name}`);
+
+                const faceCount = light.numShadowFaces;
+                const quad = faceCount > 1 ? this.quadRendererCube : this.quadRenderer2D;
 
                 if (faceCount > 1) {
-
-                    // for cubemap, render to one of the 3x3 sub-areas
-                    const smallSize = _viewport.z / 3;
-                    const offset = this.lightTextureAtlas.cubeSlotsOffsets[face];
-                    _viewport.x += smallSize * offset.x;
-                    _viewport.y += smallSize * offset.y;
-                    _viewport.z = smallSize;
-                    _viewport.w = smallSize;
-
-                    // cubemap face projection uniform
-                    this.invViewProjId.setValue(CookieRenderer._invViewProjMatrices[face].data);
+                    this.initInvViewProjMatrices();
                 }
 
-                _viewport.mulScalar(renderTarget.colorBuffer.width);
-                drawQuadWithShader(device, renderTarget, shader, _viewport);
-            }
+                // source texture
+                this.blitTextureId.setValue(light.cookie);
 
-            DebugGraphics.popGpuMarker(this.device);
-        }
+                // render it to a viewport of the target
+                for (let face = 0; face < faceCount; face++) {
+
+                    _viewport.copy(light.atlasViewport);
+
+                    if (faceCount > 1) {
+
+                        // for cubemap, render to one of the 3x3 sub-areas
+                        const smallSize = _viewport.z / 3;
+                        const offset = this.lightTextureAtlas.cubeSlotsOffsets[face];
+                        _viewport.x += smallSize * offset.x;
+                        _viewport.y += smallSize * offset.y;
+                        _viewport.z = smallSize;
+                        _viewport.w = smallSize;
+
+                        // cubemap face projection uniform
+                        this.invViewProjId.setValue(CookieRenderer._invViewProjMatrices[face].data);
+                    }
+
+                    _viewport.mulScalar(renderTarget.colorBuffer.width);
+
+                    quad.render(_viewport);
+                }
+
+                DebugGraphics.popGpuMarker(device);
+            }
+        });
+
+        DebugHelper.setName(renderPass, `RenderPass-CookieRenderer`);
+        renderPass.init(renderTarget);
+        renderPass.colorOps.clear = false;
+        renderPass.depthStencilOps.clearDepth = false;
+
+        // render the pass
+        renderPass.render();
+
+        _filteredLights.length = 0;
     }
 }
 
