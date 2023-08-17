@@ -1,11 +1,10 @@
 import * as pc from 'playcanvas';
-import { ammoPath, assetPath } from '../../assetPath.mjs';
 
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, twgslPath }) {
 
     pc.WasmModule.setConfig('Ammo', {
         glueUrl:     ammoPath + 'ammo.wasm.js',
@@ -274,6 +273,4 @@ class FallingShapesExample {
     static example = example;
 }
 
-export {
-    FallingShapesExample,
-};
+export { FallingShapesExample };

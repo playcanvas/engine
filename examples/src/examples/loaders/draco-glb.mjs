@@ -1,11 +1,10 @@
 import * as pc from 'playcanvas';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath }) {
     pc.WasmModule.setConfig('DracoDecoderModule', {
         glueUrl:     dracoPath + 'draco.wasm.js',
         wasmUrl:     dracoPath + 'draco.wasm.wasm',

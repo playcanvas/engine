@@ -1,7 +1,6 @@
 import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
 import { jsx } from '../../app/jsx.mjs';
 
 /**
@@ -37,7 +36,7 @@ function controls({observer}) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */    
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -49,9 +48,9 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     await new Promise((resolve) => { pc.WasmModule.getInstance('DracoDecoderModule', () => resolve()) });
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' })
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' })
     };
 
     const gfxOptions = {

@@ -1,9 +1,6 @@
-import * as React from 'react';
 import * as pc from 'playcanvas';
 import { Button } from '@playcanvas/pcui/react';
-import { assetPath, glslangPath, twgslPath } from '../../assetPath.mjs';
 import { fragment, jsx } from '../../app/jsx.mjs';
-
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
@@ -21,12 +18,10 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, data, assetPath, glslangPath, twgslPath }) {
 
     const assets = {
         playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', { url: assetPath + 'textures/playcanvas-grey.png' })
