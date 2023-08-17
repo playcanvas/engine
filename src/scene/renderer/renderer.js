@@ -13,6 +13,7 @@ import {
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
+import { LightCube } from '../graphics/light-cube.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -169,6 +170,10 @@ class Renderer {
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
         this.morphTexParams = scope.resolve('morph_tex_params');
+
+        // a single instance of light cube
+        this.lightCube = new LightCube();
+        this.constantLightCube = scope.resolve('lightCube[0]');
     }
 
     destroy() {
