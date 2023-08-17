@@ -1024,7 +1024,7 @@ class LitShader {
             }
 
             if (options.useIridescence) {
-                backend.append("    vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence);");
+                backend.append("    vec3 iridescenceFresnel = getIridescence(saturate(dot(dViewDirW, litArgs_worldNormal)), litArgs_specularity, litArgs_iridescence_thickness);");
             }
         }
 
@@ -1064,7 +1064,7 @@ class LitShader {
                 dTBN
             #if defined(LIT_IRIDESCENCE)
                 , iridescenceFresnel,
-                litArgs_iridescence
+                litArgs_iridescence_intensity
             #endif
                 );`);
         }
@@ -1099,7 +1099,7 @@ class LitShader {
                             litArgs_specularity
                         #if defined(LIT_IRIDESCENCE)
                             , iridescenceFresnel,
-                            litArgs_iridescence
+                            litArgs_iridescence_intensity
                         #endif
                             );`);
                 } else {
@@ -1375,7 +1375,7 @@ class LitShader {
                                         litArgs_specularity
                                     #if defined(LIT_IRIDESCENCE)
                                         , iridescenceFresnel, 
-                                        litArgs_iridescence
+                                        litArgs_iridescence_intensity
                                     #endif
                                     );` : `* litArgs_specularity;`));
                         }
@@ -1435,7 +1435,7 @@ class LitShader {
                         litArgs_ior
                     #if defined(LIT_IRIDESCENCE)
                         , iridescenceFresnel, 
-                        litArgs_iridescence
+                        litArgs_iridescence_intensity
                     #endif
                     );`);
             }

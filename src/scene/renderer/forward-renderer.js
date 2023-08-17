@@ -475,7 +475,7 @@ class ForwardRenderer extends Renderer {
         const device = this.device;
         const scene = this.scene;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
-        const lightHash = layer ? layer.getLightHash(clusteredLightingEnabled) : 0;
+        const lightHash = layer?.getLightHash(clusteredLightingEnabled) ?? 0;
         let prevMaterial = null, prevObjDefs, prevLightMask;
 
         const drawCallsCount = drawCalls.length;
@@ -1099,6 +1099,12 @@ class ForwardRenderer extends Renderer {
 
             // add debug mesh instances to visible list
             this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
+            // set up layer uniforms
+            if (layer.requiresLightCube) {
+                this.lightCube.update(this.scene.ambientLight, layer._lights);
+                this.constantLightCube.setValue(this.lightCube.colors);
+            }
 
             // upload clustered lights uniforms
             if (clusteredLightingEnabled && renderAction.lightClusters) {

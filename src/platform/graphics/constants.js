@@ -1236,6 +1236,13 @@ export const DEVICETYPE_WEBGL2 = 'webgl2';
  */
 export const DEVICETYPE_WEBGPU = 'webgpu';
 
+/**
+ * A Null device type.
+ *
+ * @type {string}
+ */
+export const DEVICETYPE_NULL = 'null';
+
 // (bit-flags) shader stages for resource visibility on the GPU
 export const SHADERSTAGE_VERTEX = 1;
 export const SHADERSTAGE_FRAGMENT = 2;

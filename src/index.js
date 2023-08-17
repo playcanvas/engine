@@ -78,6 +78,9 @@ export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-de
 // PLATFORM / GRAPHICS / webgpu
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
 
+// PLATFORM / GRAPHICS / null
+export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-device.js';
+
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';

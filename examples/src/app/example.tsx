@@ -3,7 +3,7 @@ import { withRouter } from 'react-router-dom';
 import { Container, Spinner, SelectInput, Panel } from '@playcanvas/pcui/react';
 import { SelectInput as SelectInputClass } from '@playcanvas/pcui';
 import { Observer } from '@playcanvas/observer';
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from '../../../build/playcanvas.js';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_NULL } from '../../../build/playcanvas.js';
 import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
 import ControlPanel from './control-panel';
@@ -12,7 +12,8 @@ import { MIN_DESKTOP_WIDTH } from './constants';
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
-    [DEVICETYPE_WEBGPU]: 'WebGPU'
+    [DEVICETYPE_WEBGPU]: 'WebGPU',
+    [DEVICETYPE_NULL]: 'Null'
 };
 
 const controlsObserver = new Observer();
@@ -149,7 +150,7 @@ class Example extends Component <ExampleProps, ExampleState> {
             this.deviceTypeSelectInput.value = value;
         }
         this.setDisabledOptions(this.preferredGraphicsDevice, value);
-        document.getElementById('showMiniStatsButton').ui.enabled = value !== DEVICETYPE_WEBGPU;
+        document.getElementById('showMiniStatsButton').ui.enabled = (value !== DEVICETYPE_WEBGPU) && (value !== DEVICETYPE_NULL);
     };
 
     onSetPreferredGraphicsDevice = (value: string) => {
@@ -190,7 +191,8 @@ class Example extends Component <ExampleProps, ExampleState> {
                     options={[
                         { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
                         { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
-                        { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU }
+                        { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
+                        { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
                     ]}
                     onSelect={this.onSetPreferredGraphicsDevice}
                     prefix='Active Device: '
