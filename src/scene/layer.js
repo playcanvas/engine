@@ -679,7 +679,7 @@ class Layer {
         }
     }
 
-    markLightDirty() {
+    markLightsDirty() {
         this._dirtyLights = true;
         this._lightHashDirty = true;
         this._lightIdHashDirty = true;
@@ -699,7 +699,7 @@ class Layer {
             this._lightsSet.add(l);
 
             this._lights.push(l);
-            this.markLightDirty();
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -720,7 +720,7 @@ class Layer {
             this._lightsSet.delete(l);
 
             this._lights.splice(this._lights.indexOf(l), 1);
-            this.markLightDirty();
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -735,7 +735,7 @@ class Layer {
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
-        this.markLightDirty();
+        this.markLightsDirty();
     }
 
     evaluateLightHash(localLights, directionalLights, useIds) {
