@@ -442,11 +442,8 @@ class LayerComposition extends EventHandler {
                     (' Lay: ' + layer.name).padEnd(22, ' ') +
                     (transparent ? ' TRANSP' : ' OPAQUE') +
                     (enabled ? ' ENABLED ' : ' DISABLED') +
-                    ' Meshes: ', ('?' + layer.meshInstances.length).padStart(5) +
                     (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
                     ' Clear: ' + clear +
-                    // ' Lights: (' + layer._clusteredLightsSet.size + '/' + layer._lightsSet.size + ')' +
-                    // ' ' + (ra.lightClusters !== this._emptyWorldClusters ? (ra.lightClusters.name) : '').padEnd(10, ' ') +
                     (ra.firstCameraUse ? ' CAM-FIRST' : '') +
                     (ra.lastCameraUse ? ' CAM-LAST' : '') +
                     (ra.triggerPostprocess ? ' POSTPROCESS' : '') +
