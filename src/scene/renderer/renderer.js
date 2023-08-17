@@ -34,6 +34,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { ShadowRenderer } from './shadow-renderer.js';
+import { WorldClustersAllocator } from './world-clusters-allocator.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -75,8 +76,15 @@ class Renderer {
      * skinning or morphing. Extracted during culling.
      *
      * @type {Set<import('../mesh-instance.js').MeshInstance>}
+     * @private
      */
     processingMeshInstances = new Set();
+
+    /**
+     * @type {WorldClustersAllocator}
+     * @ignore
+     */
+    worldClustersAllocator;
 
     /**
      * Create a new instance.
@@ -89,6 +97,9 @@ class Renderer {
 
         /** @type {import('../scene.js').Scene|null} */
         this.scene = null;
+
+        // TODO: allocate only when the scene has clustered lighting enabled
+        this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
@@ -1141,31 +1152,12 @@ class Renderer {
         const startTime = now();
         // #endif
 
-        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
-
         const renderActions = comp._renderActions;
-        for (let i = 0; i < renderActions.length; i++) {
-            const renderAction = renderActions[i];
-            const cluster = renderAction.lightClusters;
-
-            if (cluster && cluster !== emptyWorldClusters) {
-
-                // update each cluster only one time
-                if (!_tempSet.has(cluster)) {
-                    _tempSet.add(cluster);
-
-                    const layer = comp.layerList[renderAction.layerIndex];
-                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
-                }
-            }
-        }
-
-        // keep temp set empty
-        _tempSet.clear();
+        this.worldClustersAllocator.update(renderActions, this.scene.gammaCorrection, this.scene.lighting);
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
-        this._lightClusters = comp._worldClusters.length;
+        this._lightClusters = this.worldClustersAllocator.count;
         // #endif
     }
 
@@ -1213,7 +1205,7 @@ class Renderer {
         }
 
         // Update static layer data, if something's changed
-        const updated = comp._update(this.device, clusteredLightingEnabled);
+        const updated = comp._update();
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;

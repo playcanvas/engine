@@ -14,6 +14,9 @@ class RenderAction {
         // index into a layer stored in LayerComposition.layerList
         this.layerIndex = 0;
 
+        // the layer
+        this.layer = null;
+
         // index into a camera array of the layer, stored in Layer.cameras
         this.cameraIndex = 0;
 
