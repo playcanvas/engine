@@ -1,20 +1,15 @@
 import * as pc from 'playcanvas';
 import { loadAssets } from './loadAssets.shared.mjs';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    loadAssets,
-    assetPath,
-    scriptsPath,
-});
+enableHotReload({ loadAssets });
 
 /**
- * @param {HTMLCanvasElement} canvas - The canvas.
- * @param {string} deviceType - The device type.
- * @return {Promise<pc.Application>} - The application.
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, assetPath, scriptsPath }) {
     // Create the app and start the update loop
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(document.body),
@@ -66,6 +61,4 @@ class OrbitExample {
     static example = example;
 }
 
-export {
-    OrbitExample,
-};
+export { OrbitExample };

@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 import { jsxButton } from '../../app/jsx.mjs';
-import { assetPath } from '../../assetPath.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -14,23 +13,21 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} pcx - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, pcx, data) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data, pcx }) {
 
     const assets = {
-        'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        'bench': new pc.Asset('bench', 'container', { url: assetPath + 'models/bench_wooden_01.glb' })
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        bench: new pc.Asset('bench', 'container', { url: assetPath + 'models/bench_wooden_01.glb' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

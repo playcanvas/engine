@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import { ammoPath, assetPath, scriptsPath } from '../../assetPath.mjs';
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @return {Promise<pc.AppBase>} The application.
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, glslangPath, twgslPath }) {
     pc.WasmModule.setConfig('Ammo', {
         glueUrl:     ammoPath + 'ammo.wasm.js',
         wasmUrl:     ammoPath + 'ammo.wasm.wasm',
@@ -25,8 +24,8 @@ async function example(canvas, deviceType) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -236,6 +235,4 @@ class VehicleExample {
     static example = example;
 }
 
-export {
-    VehicleExample,
-};
+export { VehicleExample };

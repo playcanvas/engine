@@ -2,12 +2,7 @@ import * as React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
-import { ammoPath, assetPath } from '../../assetPath.mjs';
 import { fragment, jsxBooleanInput, jsxButton } from '../../app/jsx.mjs';
-Object.assign(globalThis, {
-    ammoPath,
-    assetPath,
-});
 
 /**
  * @param {{observer: Observer}} data - todo
@@ -38,14 +33,12 @@ function controls({observer}) {
     );
 }
 
-
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, twgslPath, data }) {
     pc.WasmModule.setConfig('Ammo', {
         glueUrl:     ammoPath + 'ammo.wasm.js',
         wasmUrl:     ammoPath + 'ammo.wasm.wasm',
@@ -65,8 +58,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -425,6 +418,4 @@ class LocomotionExample {
     static controls = controls;
     static example = example;
 }
-export {
-    LocomotionExample,
-};
+export { LocomotionExample };

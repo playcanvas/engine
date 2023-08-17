@@ -1,21 +1,17 @@
 import * as pc from 'playcanvas';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ assetPath });
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.Application>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, assetPath }) {
 
     // Create the application and start the update loop
     const app = new pc.Application(canvas, {});
 
     const assets = {
-        'tv': new pc.Asset('tv', 'container', { url: assetPath + 'models/tv.glb' })
+        tv: new pc.Asset('tv', 'container', { url: assetPath + 'models/tv.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

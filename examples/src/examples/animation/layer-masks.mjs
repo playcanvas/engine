@@ -1,17 +1,13 @@
 import * as pc from 'playcanvas';
-
 import { BindingTwoWay, LabelGroup, Panel } from '@playcanvas/pcui/react';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { fragment, jsx, jsxBooleanInput, jsxSelectInput, jsxSliderInput } from '../../app/jsx.mjs';
 
-
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, data }) {
 
     const assets = {
         model        : new pc.Asset('model'            , 'container', { url: assetPath + 'models/bitmoji.glb' }),
@@ -25,8 +21,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -299,6 +295,4 @@ class LayerMasksExample {
     }
     static example = example;
 }
-export {
-    LayerMasksExample
-};
+export { LayerMasksExample };

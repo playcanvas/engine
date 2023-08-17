@@ -1,15 +1,8 @@
 import * as pc from 'playcanvas';
 import { loadES5 } from '../../loadES5.mjs';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
 // todo simply import "@loaders.gl/core";
 // https://loaders.gl/docs/developer-guide/get-started
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
-enableHotReload({
-    assetPath,
-    // CORE,
-    // DRACO,
-});
 const vshader = /* glsl */`
 // Attributes per vertex: position
 attribute vec4 aPosition;
@@ -40,11 +33,12 @@ void main(void)
 }`;
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {{'shader.vert': string, 'shader.frag': string}} files - todo
+ * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, files) {
+async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
@@ -52,8 +46,8 @@ async function example(canvas, deviceType, files) {
     // Note that many additional formats are supported by the library and can be used.
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     /** @type {pc.GraphicsDevice} */
@@ -171,6 +165,4 @@ class LoadersGlExample {
     static example = example;
 }
 
-export {
-    LoadersGlExample,
-};
+export { LoadersGlExample };

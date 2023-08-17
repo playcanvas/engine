@@ -1,12 +1,12 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, files) {
+async function example({ canvas, files }) {
     // Create the application and start the update loop
     const app = new pc.Application(canvas, {});
     app.start();

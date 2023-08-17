@@ -1,11 +1,5 @@
 import * as pc from 'playcanvas';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
 import { jsxButton } from '../../app/jsx.mjs';
-
-enableHotReload({
-    dracoPath,
-});
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -19,13 +13,11 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} pcx - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, pcx, data) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data, pcx, dracoPath }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -36,16 +28,16 @@ async function example(canvas, deviceType, pcx, data) {
     await new Promise((resolve) => { pc.WasmModule.getInstance('DracoDecoderModule', () => resolve()) });
 
     const assets = {
-        'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        'bench': new pc.Asset('bench', 'container', { url: assetPath + 'models/bench_wooden_01.glb' }),
-        'model': new pc.Asset('model', 'container', { url: assetPath + 'models/bitmoji.glb' }),
-        'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' })
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        bench: new pc.Asset('bench', 'container', { url: assetPath + 'models/bench_wooden_01.glb' }),
+        model: new pc.Asset('model', 'container', { url: assetPath + 'models/bitmoji.glb' }),
+        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

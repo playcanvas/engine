@@ -1,13 +1,11 @@
 import * as React from 'react';
 import * as pc from 'playcanvas';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 const { useEffect } = React;
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
@@ -20,8 +18,8 @@ async function example(canvas, deviceType) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

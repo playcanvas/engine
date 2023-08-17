@@ -1,16 +1,10 @@
 import * as pc from 'playcanvas';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-enableHotReload({
-    assetPath,
-    scriptsPath,
-});
+
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
 
     const assets = {
         'skeleton'   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
@@ -21,8 +15,8 @@ async function example(canvas, deviceType) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

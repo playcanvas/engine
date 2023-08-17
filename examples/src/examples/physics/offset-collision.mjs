@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import { ammoPath, assetPath } from '../../assetPath.mjs';
 
 /**
- * @param {HTMLCanvasElement} canvas 
- * @param {string} deviceType 
- * @param {import("@playcanvas/observer").Observer} data - The observer.
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, twgslPath }) {
 
     pc.WasmModule.setConfig('Ammo', {
         glueUrl:     ammoPath + 'ammo.wasm.js',
@@ -23,8 +22,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -272,6 +271,4 @@ class OffsetCollisionExample {
     static example = example;
 }
 
-export {
-    OffsetCollisionExample,
-}
+export { OffsetCollisionExample };

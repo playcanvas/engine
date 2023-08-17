@@ -1,20 +1,11 @@
 import * as observer from '@playcanvas/observer';
-//import * as pcuiReal from '@playcanvas/pcui';
-//import * as pcui from '@playcanvas/pcui/react';
-//import React from 'react';
 import * as pcx from 'playcanvas-extras';
 import * as realExamples from "../examples/index.mjs";
 import * as pc from "playcanvas";
-//window.pcuiReal     = window.top.pcuiReal;
-//window.observer     = window.top.observer;
-//window.pcui         = window.top.pcui;
-//window.React        = window.top.React;
-//window.pcx          = window.top.pcx;
-//window.pc           = window.top.pc;
-//window.realExamples = window.top.realExamples;
+import * as dirs from '../assetPath.mjs';
 window.pc = window.top.pc = pc;
 /**
- * @param {pc.AppBase} app - todo
+ * @param {pc.AppBase} app - The application.
  */
 function setupApplication(app) {
     const canvas = app.graphicsDevice.canvas;
@@ -45,80 +36,40 @@ function setupApplication(app) {
     }
 }
 /**
- * @example
- * const argNames = getFunctionArguments(function(
- *   canvas,
- *   deviceType,data
- * ) {});
- * console.log(argNames); // Outputs: ['canvas', 'deviceType', 'data']
- * @param {Function|string} fn - Function or string of function.
+ * @returns {string}
  */
-function getFunctionArguments(fn) {
-    fn = fn.toString();
-    const argsString = fn.match(/.*?\(([^)]*)\)/)[1];
-    return argsString
-        .replace(/ /g, '')
-        .replace(/\n/g, '')
-        .split(',');
-}
-/**
- * @example
- * getFunctionBody(getFunctionBody);
- * // Ret: "\n    fn = fn.toString();<SNIP>return fn.slice(start + 1, end);\n"
- * @param {Function|string} fn - Function or string of function.
- * @returns {string} Body of function
- */
-function getFunctionBody(fn) {
-    fn = fn.toString();
-	var start = fn.indexOf('{');
-	var end = fn.lastIndexOf('}', start);
-	return fn.slice(start + 1, end);
-}
-const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
-/**
- * @example 
- * @param {*} str - The function
- * @returns {async function} - todo what is it?
- */
-function asyncFunctionFromString(str) {
-    const args = getFunctionArguments(str);
-    const body = getFunctionBody(str);
-    return new AsyncFunction(...args, body);
+function getDeviceType() {
+    if (Example.WEBGPU_ENABLED) {
+        let preferredDevice = 'webgpu';
+        // Lack of Chrome's WebGPU support on Linux
+        if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
+            preferredDevice = 'webgl2';
+        }
+        return window.top.preferredGraphicsDevice || preferredDevice;
+    } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
+        return window.top.preferredGraphicsDevice;
+    } else {
+        return 'webgl2';
+    }
 }
 /**
  * @param {HTMLCanvasElement} canvas - The canvas.
- * @param {any[]|undefined} files 
- * @param {observer.Observer} data 
- * @param {Function} exampleFunction
+ * @param {Record<string, string>} [files] - The files.
+ * @param {observer.Observer} data - The observer.
+ * @param {Function} exampleFunction - The example function.
  */
-async function callExample(canvas, files, data, exampleFunction) {
-    const argNames = getFunctionArguments(exampleFunction);
-    // TODO turn into {}
-    const args = argNames.map(function(arg) {
-        if (arg === 'canvas') {
-            return canvas;
-        } else if (arg === 'files') {
-            return files;
-        } else if (arg === 'data') {
-            return data;
-        } else if (arg === 'pcx') {
-            return pcx;
-        } else if (arg === 'deviceType') {
-            if (Example.WEBGPU_ENABLED) {
-                let preferredDevice = 'webgpu';
-                // Lack of Chrome's WebGPU support on Linux
-                if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
-                    preferredDevice = 'webgl2';
-                }
-                return window.top.preferredGraphicsDevice || preferredDevice;
-            } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
-                return window.top.preferredGraphicsDevice;
-            } else {
-                return 'webgl2';
-            }
-        }
-    });
-    const app = await exampleFunction.apply(this, args);
+async function callExample(canvas, files = {}, data, exampleFunction) {
+    const deviceType = getDeviceType();
+    /** @type {import('../options.mjs').ExampleOptions} */
+    const options = {
+        canvas,
+        files,
+        data,
+        pcx,
+        deviceType,
+        ...dirs,
+    }
+    const app = await exampleFunction(options);
     class ExampleLoadEvent extends CustomEvent {
         /** @type {string} */
         deviceType;
@@ -132,7 +83,7 @@ async function callExample(canvas, files, data, exampleFunction) {
     }
     if (app.graphicsDevice?.canvas) {
         setupApplication(app);
-        var event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
+        const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
         window.top.dispatchEvent(event);
     } else {
         console.warn("no canvas")
@@ -185,7 +136,7 @@ if (!found) {
     if (!window.exampleFunction) {
         window.exampleFunction = Example.example;
     } else {
-        window.exampleFunction = asyncFunctionFromString(exampleFunction);
+        window.exampleFunction = new Function('return ' + exampleFunction)();
     }
     window.files = window.top.editedFiles || Example.FILES;
     // create the example observer 

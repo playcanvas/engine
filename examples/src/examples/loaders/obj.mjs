@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.Application>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, assetPath, scriptsPath }) {
     // Create the app and start the update loop
     const app = new pc.Application(canvas, {});
 

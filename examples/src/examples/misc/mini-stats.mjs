@@ -1,14 +1,11 @@
 import * as pc from 'playcanvas';
 
-
 /**
- * 
- * @param {HTMLCanvasElement} canvas 
- * @param {string} deviceType 
- * @param {any} pcx 
- * @returns {Promise<pc.Application>}
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, pcx) {
+async function example({ canvas, pcx }) {
     // Create the application and start the update loop
     const app = new pc.Application(canvas, {});
     app.start();
@@ -155,7 +152,7 @@ async function example(canvas, deviceType, pcx) {
     }
 
     // list of all created engine resources
-    /** @type {any[]} */
+    /** @type {pc.Entity[]} */
     const entities = [];
     /** @type {any[]} */
     const vertexBuffers = [];
@@ -165,7 +162,7 @@ async function example(canvas, deviceType, pcx) {
     // update function called every frame
     let adding = true;
     const step = 10, max = 2000;
-    /** @type {pc.GraphNode} */
+    /** @type {pc.Entity} */
     let entity;
     /** @type {pc.VertexBuffer} */
     let vertexBuffer;
@@ -250,6 +247,4 @@ class MiniStatsExample {
     static example = example;
 }
 
-export {
-    MiniStatsExample,
-};
+export { MiniStatsExample };

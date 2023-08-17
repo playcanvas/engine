@@ -8,7 +8,7 @@ const href = typeof location !== 'undefined' ? location.href : '';
  * // http://127.0.0.1/playcanvas-engine/examples/src/examples/animation/test-examples.html
  * @returns {string}
  */
-export function getAssetPath() {
+function getAssetPath() {
     const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/assets/';
@@ -23,7 +23,7 @@ export const assetPath = getAssetPath();
  * http://127.0.0.1/playcanvas-engine/examples/../build/playcanvas.d.ts
  * @returns {string}
  */
-export function getPlayCanvasTypes() {
+function getPlayCanvasTypes() {
     const i = href.lastIndexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/playcanvas.d.ts';
@@ -39,7 +39,7 @@ export const pcTypes = getPlayCanvasTypes();
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/scripts/'
  * @returns {string}
  */
-export function getScriptsPath() {
+function getScriptsPath() {
     const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/scripts/';
@@ -55,7 +55,7 @@ export const scriptsPath = getScriptsPath();
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
  * @returns {string}
  */
-export function getIframePath() {
+function getIframePath() {
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.indexOf("/examples/")
@@ -104,7 +104,6 @@ function getDracoPath() {
 }
 export const dracoPath = getDracoPath();
 
-
 /**
  * @example
  * console.log(getDracoPath());
@@ -116,7 +115,6 @@ function getGlslangPath() {
     return href.substring(0, i) + "/examples/src/lib/glslang/";
 }
 export const glslangPath = getGlslangPath();
-
 
 /**
  * @example
@@ -136,7 +134,7 @@ export const twgslPath = getTwgslPath();
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
  * @returns {string}
  */
-export function getThumbnailPath() {
+function getThumbnailPath() {
     //const i = href.lastIndexOf("/src/");
     //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.lastIndexOf("/examples/");

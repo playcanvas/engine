@@ -1,22 +1,17 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { assetPath, dracoPath, scriptsPath } from '../../assetPath.mjs';
-import { jsx } from '../../app/jsx.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    assetPath,
-    scriptsPath,
-});
+enableHotReload({ enablePolyfillFunctionCall });
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
+    return fragment(
         jsx(Panel, { headerText: 'BLOOM [KEY_1]' },
             jsx(LabelGroup, { text: 'enabled' },
                 jsx(BooleanInput, {
@@ -135,12 +130,10 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */    
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -152,20 +145,20 @@ async function example(canvas, deviceType, data) {
     enablePolyfillFunctionCall();
 
     const assets = {
-        'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
-        'bloom': new pc.Asset('bloom', 'script', { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),
-        'bokeh': new pc.Asset('bokeh', 'script', { url: scriptsPath + 'posteffects/posteffect-bokeh.js' }),
-        'sepia': new pc.Asset('sepia', 'script', { url: scriptsPath + 'posteffects/posteffect-sepia.js' }),
-        'vignette': new pc.Asset('vignette', 'script', { url: scriptsPath + 'posteffects/posteffect-vignette.js' }),
-        'ssao': new pc.Asset('ssao', 'script', { url: scriptsPath + 'posteffects/posteffect-ssao.js' }),
-        'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
+        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
+        bloom: new pc.Asset('bloom', 'script', { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),
+        bokeh: new pc.Asset('bokeh', 'script', { url: scriptsPath + 'posteffects/posteffect-bokeh.js' }),
+        sepia: new pc.Asset('sepia', 'script', { url: scriptsPath + 'posteffects/posteffect-sepia.js' }),
+        vignette: new pc.Asset('vignette', 'script', { url: scriptsPath + 'posteffects/posteffect-vignette.js' }),
+        ssao: new pc.Asset('ssao', 'script', { url: scriptsPath + 'posteffects/posteffect-ssao.js' }),
+        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js',
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js',
 
         // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
         antialias: false

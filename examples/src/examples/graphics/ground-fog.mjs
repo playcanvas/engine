@@ -1,13 +1,6 @@
 import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
-import { enableHotReload } from '../../enableHotReload.mjs';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { jsx } from '../../app/jsx.mjs';
-
-enableHotReload({
-    assetPath,
-    scriptsPath,
-});
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -27,25 +20,24 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, files, data) {
+async function example({ canvas, deviceType, files, assetPath, scriptsPath, glslangPath, twgslPath, data }) {
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'terrain': new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
-        'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        'texture': new pc.Asset('color', 'texture', { url: assetPath + 'textures/clouds.jpg' })
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
+        terrain: new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        texture: new pc.Asset('color', 'texture', { url: assetPath + 'textures/clouds.jpg' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

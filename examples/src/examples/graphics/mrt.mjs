@@ -1,13 +1,12 @@
 import * as pc from 'playcanvas';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {{ 'output.frag': string, }} files - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {{ 'output.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, files) {
+async function example({ canvas, deviceType, files, dracoPath, assetPath, glslangPath, twgslPath }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -17,14 +16,14 @@ async function example(canvas, deviceType, files) {
     });
 
     const assets = {
-        'board': new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
+        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -1,15 +1,11 @@
 import * as pc from 'playcanvas';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({ assetPath });
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
 
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(document.body),

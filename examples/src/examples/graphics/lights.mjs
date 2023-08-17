@@ -1,11 +1,6 @@
-import React from 'react';
 import * as pc from 'playcanvas';
-
+import React from 'react';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ assetPath });
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -41,12 +36,11 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data }) {
     function createMaterial(colors) {
         const material = new pc.StandardMaterial();
         for (const param in colors) {
@@ -57,20 +51,20 @@ async function example(canvas, deviceType, data) {
     }
 
     const assets = {
-        'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-        "heart": new pc.Asset("heart", "texture", { url: assetPath + "textures/heart.png" }),
-        "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negx.png" }),
-        "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negy.png" }),
-        "xmas_negz": new pc.Asset("xmas_negz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negz.png" }),
-        "xmas_posx": new pc.Asset("xmas_posx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posx.png" }),
-        "xmas_posy": new pc.Asset("xmas_posy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posy.png" }),
-        "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posz.png" })
+        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
+        heart: new pc.Asset("heart", "texture", { url: assetPath + "textures/heart.png" }),
+        xmas_negx: new pc.Asset("xmas_negx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negx.png" }),
+        xmas_negy: new pc.Asset("xmas_negy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negy.png" }),
+        xmas_negz: new pc.Asset("xmas_negz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negz.png" }),
+        xmas_posx: new pc.Asset("xmas_posx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posx.png" }),
+        xmas_posy: new pc.Asset("xmas_posy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posy.png" }),
+        xmas_posz: new pc.Asset("xmas_posz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posz.png" })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -2,13 +2,8 @@ import React from 'react';
 import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
 
-enableHotReload({
-    assetPath,
-    scriptsPath,
-});
+
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -92,12 +87,10 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */    
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
         orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
@@ -112,8 +105,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { enableHotReload } from '../../enableHotReload.mjs';
 
 /**
@@ -21,16 +20,13 @@ const loadScript = (url) => {
     });
 };
 
-enableHotReload({
-    loadScript,
-});
+enableHotReload({ loadScript });
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
     await loadScript("https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js");
 
     const assets = {
@@ -40,8 +36,8 @@ async function example(canvas, deviceType) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -198,6 +194,4 @@ class TweenExample {
     static example = example;
 }
 
-export {
-    TweenExample,
-};
+export { TweenExample };

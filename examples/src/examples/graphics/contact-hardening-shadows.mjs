@@ -2,7 +2,6 @@ import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, BooleanInput } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
-import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -45,12 +44,10 @@ function controls({observer}) {
 }
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */    
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath }) {
 
     pc.WasmModule.setConfig('DracoDecoderModule', {
         glueUrl:     dracoPath + 'draco.wasm.js',
@@ -59,7 +56,6 @@ async function example(canvas, deviceType, data) {
     });
 
     await new Promise((resolve) => { pc.WasmModule.getInstance('DracoDecoderModule', () => resolve()) });
-
 
     const assets = {
         orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
@@ -71,8 +67,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

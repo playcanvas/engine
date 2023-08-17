@@ -1,26 +1,21 @@
 import * as pc from 'playcanvas';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ assetPath, scriptsPath });
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
-        "checkboard": new pc.Asset("checkboard", "texture", { url: assetPath + "textures/checkboard.png" }),
-        'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' }),
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
+        checkboard: new pc.Asset("checkboard", "texture", { url: assetPath + "textures/checkboard.png" }),
+        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' }),
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

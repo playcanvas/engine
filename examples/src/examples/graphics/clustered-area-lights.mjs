@@ -1,8 +1,6 @@
 import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import { jsx } from '../../app/jsx.mjs';
 
 /**
@@ -34,13 +32,11 @@ function controls({observer}) {
 }
 
 /**
- * 
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, data }) {
 
     data.set('settings', {
         material: {
@@ -60,8 +56,8 @@ async function example(canvas, deviceType, data) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

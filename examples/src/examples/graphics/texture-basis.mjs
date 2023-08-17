@@ -1,11 +1,4 @@
 import * as pc from 'playcanvas';
-import { assetPath, basisPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({
-    assetPath,
-    basisPath,
-});
 
 // Color textures have been converted with the following arguments:
 //   basisu seaside-rocks01-gloss.jpg -q 255 -mipmap
@@ -13,11 +6,10 @@ enableHotReload({
 //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, basisPath }) {
 
     // initialize basis
     pc.basisInitialize({
@@ -27,16 +19,16 @@ async function example(canvas, deviceType) {
     });
 
     const assets = {
-        'color': new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.basis' }),
-        'gloss': new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.basis' }),
-        'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.basis' }, { type: pc.TEXTURETYPE_SWIZZLEGGGR }),
-        'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+        color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.basis' }),
+        gloss: new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.basis' }),
+        normal: new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.basis' }, { type: pc.TEXTURETYPE_SWIZZLEGGGR }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

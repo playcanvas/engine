@@ -1,26 +1,40 @@
 import * as React from 'react';
 import * as pc from 'playcanvas';
 import { Button } from '@playcanvas/pcui/react';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
+import { assetPath, glslangPath, twgslPath } from '../../assetPath.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
-enableHotReload({ assetPath });
+
+/**
+ * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
+ * @returns {JSX.Element}
+ */
+function controls({observer}) {
+    return fragment(
+        jsx(Button, {
+            text: 'Flash',
+            onClick: () => {
+                observer.set('flash', !observer.get('flash'));
+            }
+        })
+    );
+}
 
 /**
  * @param {HTMLCanvasElement} canvas - todo
  * @param {string} deviceType - todo
  * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
         playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', { url: assetPath + 'textures/playcanvas-grey.png' })
     };
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -286,21 +300,7 @@ class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
     static NAME = 'Component Properties';
     static WEBGPU_ENABLED = true;
-
-    /**
-     * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
-     * @returns {JSX.Element}
-     */
-    static controls({observer}) {
-        return React.createElement(React.Fragment, null,
-            React.createElement(Button, {
-                text: 'Flash',
-                onClick: () => {
-                    observer.set('flash', !observer.get('flash'));
-                }
-            })
-        );
-    }
+    static controls = controls;
     static example = example;
 }
 

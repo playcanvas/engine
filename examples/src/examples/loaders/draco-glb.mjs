@@ -2,11 +2,10 @@ import * as pc from 'playcanvas';
 import { assetPath, dracoPath } from '../../assetPath.mjs';
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
     pc.WasmModule.setConfig('DracoDecoderModule', {
         glueUrl:     dracoPath + 'draco.wasm.js',
         wasmUrl:     dracoPath + 'draco.wasm.wasm',
@@ -16,8 +15,8 @@ async function example(canvas, deviceType) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

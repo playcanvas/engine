@@ -1,16 +1,12 @@
 import * as pc from 'playcanvas';
-import { assetPath } from '../../assetPath.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ assetPath });
 
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {{ 'shader.vert': string, 'shader.frag': string }} files - todo
- * @returns {Promise<pc.Application>} todo
+ * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, files) {
+async function example({ canvas, files, assetPath }) {
 
     // Create the app and start the update loop
     const app = new pc.Application(canvas);

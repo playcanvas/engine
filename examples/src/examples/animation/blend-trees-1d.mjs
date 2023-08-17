@@ -1,12 +1,9 @@
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, SliderInput, Button } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
 import { jsx } from '../../app/jsx.mjs';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 import React from 'react';
 class JsxControls extends React.Component {
     render() {
-        //console.log("props", this.props);
         const { observer } = this.props;
         const binding = new BindingTwoWay();
         const link = {
@@ -18,13 +15,13 @@ class JsxControls extends React.Component {
         );
     }
 }
+
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @param {any} data - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType, data) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, data }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath   + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath   + 'animations/bitmoji/idle.glb' }),
@@ -197,6 +194,4 @@ class BlendTrees1DExample {
     static controls = JsxControls;
     static example = example;
 }
-export {
-    BlendTrees1DExample,
-};
+export { BlendTrees1DExample };

@@ -1,7 +1,6 @@
 import React, { createRef, Component } from 'react';
 import * as pc from 'playcanvas';
 import { fragment, jsx } from '../../app/jsx.mjs';
-import { assetPath, scriptsPath } from '../../assetPath.mjs';
 /**
  * @todo Add props
  */
@@ -119,11 +118,10 @@ class JsxControls extends Component {
     }
 }
 /**
- * @param {HTMLCanvasElement} canvas - todo
- * @param {string} deviceType - todo
- * @returns {Promise<pc.AppBase>} todo
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example(canvas, deviceType) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
     //await import("http://127.0.0.1/playcanvas-engine/scripts/posteffects/posteffect-bloom.js");
 
     const assets = {
