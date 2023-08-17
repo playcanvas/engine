@@ -10,7 +10,7 @@ import { Ammo, isOfAmmoType, allOfAmmoType } from '../../../ammo.mjs';
 
 const modifiedAmmoFunctions = {};
 function modifyAmmoFunction(name, fn, excludeOriginal = false) {
-    // Don't overwride original if function was already saved.
+    // Don't override original if function was already saved.
     if (!modifiedAmmoFunctions[name]) {
         modifiedAmmoFunctions[name] = Ammo[name];
     }
