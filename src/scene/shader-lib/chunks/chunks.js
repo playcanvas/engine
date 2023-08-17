@@ -202,11 +202,9 @@ import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
 import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
 /**
- * @static
- * @readonly
+ * Object containing all default shader chunks used by shader generators.
+ *
  * @type {object}
- * @name shaderChunks
- * @description Object containing all default shader chunks used by shader generators.
  */
 const shaderChunks = {
     alphaTestPS,

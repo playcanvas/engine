@@ -275,34 +275,37 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
      * @param {object} [options] - Options passed when creating the WebGL context.
-     * @param {boolean} [options.alpha=true] - Boolean that indicates if the canvas contains an
-     * alpha buffer.
-     * @param {boolean} [options.depth=true] - Boolean that indicates that the drawing buffer is
-     * requested to have a depth buffer of at least 16 bits.
-     * @param {boolean} [options.stencil=true] - Boolean that indicates that the drawing buffer is
-     * requested to have a stencil buffer of at least 8 bits.
-     * @param {boolean} [options.antialias=true] - Boolean that indicates whether or not to perform
-     * anti-aliasing if possible.
-     * @param {boolean} [options.premultipliedAlpha=true] - Boolean that indicates that the page
+     * @param {boolean} [options.alpha] - Boolean that indicates if the canvas contains an
+     * alpha buffer. Defaults to true.
+     * @param {boolean} [options.depth] - Boolean that indicates that the drawing buffer is
+     * requested to have a depth buffer of at least 16 bits. Defaults to true.
+     * @param {boolean} [options.stencil] - Boolean that indicates that the drawing buffer is
+     * requested to have a stencil buffer of at least 8 bits. Defaults to true.
+     * @param {boolean} [options.antialias] - Boolean that indicates whether or not to perform
+     * anti-aliasing if possible. Defaults to true.
+     * @param {boolean} [options.premultipliedAlpha] - Boolean that indicates that the page
      * compositor will assume the drawing buffer contains colors with pre-multiplied alpha.
-     * @param {boolean} [options.preserveDrawingBuffer=false] - If the value is true the buffers
-     * will not be cleared and will preserve their values until cleared or overwritten by the
-     * author.
-     * @param {'default'|'high-performance'|'low-power'} [options.powerPreference='default'] - A
-     * hint to the user agent indicating what configuration of GPU is suitable for the WebGL
-     * context. Possible values are:
+     * Defaults to true.
+     * @param {boolean} [options.preserveDrawingBuffer] - If the value is true the buffers will not
+     * be cleared and will preserve their values until cleared or overwritten by the author.
+     * Defaults to false.
+     * @param {'default'|'high-performance'|'low-power'} [options.powerPreference] - A hint to the
+     * user agent indicating what configuration of GPU is suitable for the WebGL context. Possible
+     * values are:
      *
      * - 'default': Let the user agent decide which GPU configuration is most suitable. This is the
      * default value.
      * - 'high-performance': Prioritizes rendering performance over power consumption.
      * - 'low-power': Prioritizes power saving over rendering performance.
      *
-     * @param {boolean} [options.failIfMajorPerformanceCaveat=false] - Boolean that indicates if a
+     * Defaults to 'default'.
+     * @param {boolean} [options.failIfMajorPerformanceCaveat] - Boolean that indicates if a
      * context will be created if the system performance is low or if no hardware GPU is available.
-     * @param {boolean} [options.preferWebGl2=true] - Boolean that indicates if a WebGl2 context
-     * should be preferred.
-     * @param {boolean} [options.desynchronized=false] - Boolean that hints the user agent to
-     * reduce the latency by desynchronizing the canvas paint cycle from the event loop.
+     * Defaults to false.
+     * @param {boolean} [options.preferWebGl2] - Boolean that indicates if a WebGl2 context should
+     * be preferred. Defaults to true.
+     * @param {boolean} [options.desynchronized] - Boolean that hints the user agent to reduce the
+     * latency by desynchronizing the canvas paint cycle from the event loop. Defaults to false.
      * @param {boolean} [options.xrCompatible] - Boolean that hints to the user agent to use a
      * compatible graphics adapter for an immersive XR device.
      * @param {WebGLRenderingContext | WebGL2RenderingContext} [options.gl] - The rendering context
@@ -1863,7 +1866,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * call.
      * @param {boolean} [primitive.indexed] - True to interpret the primitive as indexed, thereby
      * using the currently set index buffer and false otherwise.
-     * @param {number} [numInstances=1] - The number of instances to render when using
+     * @param {number} [numInstances] - The number of instances to render when using
      * ANGLE_instanced_arrays. Defaults to 1.
      * @param {boolean} [keepBuffers] - Optionally keep the current set of vertex / index buffers /
      * VAO. This is used when rendering of multiple views, for example under WebXR.
@@ -2023,10 +2026,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {object} [options] - Optional options object that controls the behavior of the clear
      * operation defined as follows:
-     * @param {number[]} [options.color] - The color to clear the color buffer to in the range 0.0
-     * to 1.0 for each component.
-     * @param {number} [options.depth=1] - The depth value to clear the depth buffer to in the
-     * range 0.0 to 1.0.
+     * @param {number[]} [options.color] - The color to clear the color buffer to in the range 0 to
+     * 1 for each component.
+     * @param {number} [options.depth] - The depth value to clear the depth buffer to in the
+     * range 0 to 1. Defaults to 1.
      * @param {number} [options.flags] - The buffers to clear (the types being color, depth and
      * stencil). Can be any bitwise combination of:
      *
@@ -2034,9 +2037,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * - {@link CLEARFLAG_DEPTH}
      * - {@link CLEARFLAG_STENCIL}
      *
-     * @param {number} [options.stencil=0] - The stencil value to clear the stencil buffer to. Defaults to 0.
+     * @param {number} [options.stencil] - The stencil value to clear the stencil buffer to.
+     * Defaults to 0.
      * @example
-     * // Clear color buffer to black and depth buffer to 1.0
+     * // Clear color buffer to black and depth buffer to 1
      * device.clear();
      *
      * // Clear just the color buffer to red
