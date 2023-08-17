@@ -2,8 +2,6 @@ import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
-import { LIGHTTYPE_DIRECTIONAL } from '../../../scene/constants.js';
-
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
@@ -11,7 +9,6 @@ import { ComponentSystem } from '../system.js';
 
 import { ParticleSystemComponent } from './component.js';
 import { ParticleSystemComponentData } from './data.js';
-import { LightCube } from '../../../scene/graphics/light-cube.js';
 
 const _schema = [
     'enabled',
