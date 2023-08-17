@@ -1,14 +1,13 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
-import { jsx } from '../../app/jsx.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
+    return fragment(
         jsx(Panel, { headerText: 'Material' },
             jsx(LabelGroup, { text: 'Gloss' },
                 jsx(SliderInput, {

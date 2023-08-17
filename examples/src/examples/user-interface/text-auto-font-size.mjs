@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 
-
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
@@ -8,7 +7,7 @@ import * as pc from 'playcanvas';
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
 
     const assets = {
-        'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
+        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
     };
 
     const gfxOptions = {

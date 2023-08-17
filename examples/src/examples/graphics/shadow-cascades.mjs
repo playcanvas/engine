@@ -1,17 +1,14 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { jsx } from '../../app/jsx.mjs';
-
-
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
+    return fragment(
         jsx(Panel, { headerText: 'Shadow Cascade Settings' },
             jsx(LabelGroup, { text: 'Filtering' },
                 jsx(SelectInput, {
@@ -77,8 +74,8 @@ function controls({observer}) {
 async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'terrain': new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
+        terrain: new pc.Asset('terrain', 'container', { url: assetPath + 'models/terrain.glb' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 

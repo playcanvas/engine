@@ -4,13 +4,13 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath }) {
 
     const assets = {
         model:    new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
         walkAnim: new pc.Asset('walkAnim',          'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
         helipad:  new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom:    new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
+        bloom:    new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
     };
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -199,6 +199,4 @@ class EventsExample {
     static WEBGPU_ENABLED = true;
     static example = example;
 }
-export {
-    EventsExample
-};
+export { EventsExample };

@@ -1,7 +1,8 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, LabelGroup, SliderInput, Button } from '@playcanvas/pcui/react';
+import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
 import React from 'react';
+
 class JsxControls extends React.Component {
     render() {
         const { observer } = this.props;
@@ -27,7 +28,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data }) {
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath   + 'animations/bitmoji/idle.glb' }),
         danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath   + 'animations/bitmoji/win-dance.glb' }),
         helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
+        bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
     };
 
     const gfxOptions = {

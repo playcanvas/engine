@@ -1,10 +1,6 @@
 import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { fragment, jsx } from '../../app/jsx.mjs';
-import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ enablePolyfillFunctionCall });
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
@@ -141,8 +137,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         wasmUrl:     dracoPath + 'draco.wasm.wasm',
         fallbackUrl: dracoPath + 'draco.js'
     });
-
-    enablePolyfillFunctionCall();
 
     const assets = {
         board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),

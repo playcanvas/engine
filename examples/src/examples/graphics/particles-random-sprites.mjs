@@ -1,11 +1,10 @@
 import * as pc from 'playcanvas';
 
-
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, assetPath }) {
 
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(document.body),

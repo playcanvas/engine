@@ -11,7 +11,7 @@ async function example({ canvas, files, assetPath }) {
     const app = new pc.Application(canvas, {});
 
     const assets = {
-        'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
+        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

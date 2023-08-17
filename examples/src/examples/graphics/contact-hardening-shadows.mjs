@@ -1,14 +1,13 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput, BooleanInput } from '@playcanvas/pcui/react';
-import { jsx } from '../../app/jsx.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
+    return fragment(
         jsx(Panel, { headerText: 'Area light' },
             jsx(LabelGroup, { text: 'Enabled' },
                 jsx(BooleanInput, { id: 'area-light', binding: new BindingTwoWay(), link: { observer, path: 'script.area.enabled' } })),

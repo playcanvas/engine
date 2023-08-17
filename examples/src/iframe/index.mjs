@@ -3,6 +3,7 @@ import * as pcx from 'playcanvas-extras';
 import * as realExamples from "../examples/index.mjs";
 import * as pc from "playcanvas";
 import * as dirs from '../assetPath.mjs';
+import '../app/polyfills.mjs';
 window.pc = window.top.pc = pc;
 /**
  * @param {pc.AppBase} app - The application.

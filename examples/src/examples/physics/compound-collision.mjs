@@ -336,11 +336,11 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
         }
     ];
 
-    // Convert an entity definition in the structure above to a pc.Entity object
     /**
-     * 
-     * @param {typeof scene} e 
-     * @returns 
+     * Convert an entity definition in the structure above to a pc.Entity object
+     *
+     * @param {typeof scene} e - The scene definition.
+     * @returns {pc.Entity} The entity.
      */
     function parseEntity(e) {
         const entity = new pc.Entity(e.name);

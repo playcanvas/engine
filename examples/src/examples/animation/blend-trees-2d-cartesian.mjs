@@ -1,19 +1,12 @@
 import React, { createRef, Component } from 'react';
 import * as pc from 'playcanvas';
 import { fragment, jsx } from '../../app/jsx.mjs';
-/**
- * @todo Add props
- */
+
 class JsxControls extends Component {
     position = new pc.Vec2();
     /** @type {React.RefObject<HTMLCanvasElement>} */
     refCanvas = createRef();
-    //constructor(props) {
-    //    console.log("constructor(props)", app)
-    //    super(props)
-    //}
     mouseEvent(e) {
-        //console.log("mouseEvent", e);
         const { position, modelEntity, width } = this;
         if (e.targetTouches) {
             const offset = canvas.getBoundingClientRect();
@@ -117,13 +110,12 @@ class JsxControls extends Component {
         );
     }
 }
+
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
-    //await import("http://127.0.0.1/playcanvas-engine/scripts/posteffects/posteffect-bloom.js");
-
+async function example({ canvas, deviceType, assetPath, scriptsPath }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
@@ -131,7 +123,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         eagerAnim: new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle-eager.glb' }),
         danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
         helipad:   new pc.Asset('helipad-env-atlas', 'texture'  , { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom:     new pc.Asset('bloom',             'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
+        bloom:     new pc.Asset('bloom',             'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
     };
 
     const gfxOptions = {
@@ -311,6 +303,4 @@ class BlendTrees2DCartesianExample {
     static controls = JsxControls;
     static example = example;
 }
-export {
-    BlendTrees2DCartesianExample
-};
+export { BlendTrees2DCartesianExample };

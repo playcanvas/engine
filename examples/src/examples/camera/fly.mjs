@@ -1,5 +1,8 @@
 import * as pc from 'playcanvas';
 import { loadAssets } from './loadAssets.shared.mjs';
+import { enableHotReload } from '../../enableHotReload.mjs';
+
+enableHotReload({ loadAssets });
 
 /**
  * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions

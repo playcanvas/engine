@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
 
 /**

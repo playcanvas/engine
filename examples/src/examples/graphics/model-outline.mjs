@@ -1,15 +1,10 @@
 import * as pc from 'playcanvas';
-import { enablePolyfillFunctionCall } from '../../app/polyfillFunctionCall.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ enablePolyfillFunctionCall });
 
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath }) {
-    enablePolyfillFunctionCall();
     const assets = {
         outline: new pc.Asset('outline', 'script', { url: scriptsPath + 'posteffects/posteffect-outline.js' })
     };

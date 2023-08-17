@@ -16,7 +16,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         walkAnim     : new pc.Asset('walkAnim'         , 'container', { url: assetPath + 'animations/bitmoji/walk.glb' }),
         danceAnim    : new pc.Asset('danceAnim'        , 'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
         helipad      : new pc.Asset('helipad-env-atlas', 'texture'  , { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom        : new pc.Asset('bloom'            , 'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
+        bloom        : new pc.Asset('bloom'            , 'script'   , { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
     };
 
     const gfxOptions = {

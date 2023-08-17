@@ -1,11 +1,12 @@
-import * as React from 'react';
+import { useEffect } from 'react';
 import * as pc from 'playcanvas';
-const { useEffect } = React;
+import { fragment, jsx } from '../../app/jsx.mjs';
+
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
@@ -13,7 +14,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         jogAnim:   new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/run.glb' }),
         danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath + 'animations/bitmoji/win-dance.glb' }),
         helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.mjs' })
+        bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
     };
 
     const gfxOptions = {
@@ -189,6 +190,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     });
     return app;
 }
+
 class BlendTrees2DDirectionalExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Directional';
@@ -265,12 +267,11 @@ class BlendTrees2DDirectionalExample {
                 canvas.addEventListener('mousedown', mouseEvent);
             });
         });
-        return React.createElement(React.Fragment, null,
-            React.createElement("canvas", { id: '2d-blend-control' }));
+        return fragment(
+            jsx("canvas", { id: '2d-blend-control' })
+        );
     }
     static example = example;
 }
 
-export {
-    BlendTrees2DDirectionalExample
-};
+export { BlendTrees2DDirectionalExample };

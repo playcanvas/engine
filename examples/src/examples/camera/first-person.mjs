@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, files, assetPath, scriptsPath, ammoPath, glslangPath, twgslPath }) {
+async function example({ canvas, assetPath, scriptsPath, ammoPath }) {
 
     // Create the application and start the update loop
     const app = new pc.Application(canvas, {

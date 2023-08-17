@@ -1,9 +1,6 @@
 import * as pc from 'playcanvas';
 import { Panel, Button } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
 import { jsx } from '../../app/jsx.mjs';
-
-
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo

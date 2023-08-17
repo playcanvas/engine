@@ -1,38 +1,38 @@
 import * as pc from 'playcanvas';
-import React from 'react';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return React.createElement(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'OMNI LIGHT [KEY_1]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.enabled' } })),
-            React.createElement(LabelGroup, { text: 'intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.intensity' } })),
-            React.createElement(LabelGroup, { text: 'shadow intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.shadowIntensity' } })),
-            React.createElement(LabelGroup, { text: 'cookie' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.cookieIntensity' } }))),
-        React.createElement(Panel, { headerText: 'SPOT LIGHT [KEY_2]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.enabled' } })),
-            React.createElement(LabelGroup, { text: 'intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.intensity' } })),
-            React.createElement(LabelGroup, { text: 'shadow intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.shadowIntensity' } })),
-            React.createElement(LabelGroup, { text: 'cookie' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.cookieIntensity' } }))),
-        React.createElement(Panel, { headerText: 'DIRECTIONAL LIGHT [KEY_3]' },
-            React.createElement(LabelGroup, { text: 'enabled' },
-                React.createElement(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.enabled' } })),
-            React.createElement(LabelGroup, { text: 'intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.intensity' } })),
-            React.createElement(LabelGroup, { text: 'shadow intensity' },
-                React.createElement(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.shadowIntensity' } }))));
+    return fragment(
+        jsx(Panel, { headerText: 'OMNI LIGHT [KEY_1]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.enabled' } })),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.intensity' } })),
+            jsx(LabelGroup, { text: 'shadow intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.shadowIntensity' } })),
+            jsx(LabelGroup, { text: 'cookie' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.cookieIntensity' } }))),
+        jsx(Panel, { headerText: 'SPOT LIGHT [KEY_2]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.enabled' } })),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.intensity' } })),
+            jsx(LabelGroup, { text: 'shadow intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.shadowIntensity' } })),
+            jsx(LabelGroup, { text: 'cookie' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.cookieIntensity' } }))),
+        jsx(Panel, { headerText: 'DIRECTIONAL LIGHT [KEY_3]' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.enabled' } })),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.intensity' } })),
+            jsx(LabelGroup, { text: 'shadow intensity' },
+                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.shadowIntensity' } }))));
 }
 
 /**

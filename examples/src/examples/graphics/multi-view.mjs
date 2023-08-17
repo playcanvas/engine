@@ -1,32 +1,33 @@
-import React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup, Panel, SelectInput } from '@playcanvas/pcui/react';
-import { jsx } from '../../app/jsx.mjs';
+import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
-    return jsx(React.Fragment, null,
-        React.createElement(Panel, { headerText: 'Debug Shader Rendering' }, React.createElement(LabelGroup, { text: 'Mode' },
-            React.createElement(SelectInput, {
-                binding: new BindingTwoWay(),
-                link: { observer, path: 'settings.shaderPassName' },
-                type: "string",
-                options: [
-                    { v: pc.SHADERPASS_FORWARD, t: 'None' },
-                    { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
-                    { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
-                    { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
-                    { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
-                    { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
-                    { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
-                    { v: pc.SHADERPASS_AO, t: 'AO' },
-                    { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
-                    { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
-                    { v: pc.SHADERPASS_UV0, t: 'UV0' }
-                ] })
+    return fragment(
+        jsx(Panel, { headerText: 'Debug Shader Rendering' },
+            jsx(LabelGroup, { text: 'Mode' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.shaderPassName' },
+                    type: "string",
+                    options: [
+                        { v: pc.SHADERPASS_FORWARD, t: 'None' },
+                        { v: pc.SHADERPASS_ALBEDO, t: 'Albedo' },
+                        { v: pc.SHADERPASS_OPACITY, t: 'Opacity' },
+                        { v: pc.SHADERPASS_WORLDNORMAL, t: 'World Normal' },
+                        { v: pc.SHADERPASS_SPECULARITY, t: 'Specularity' },
+                        { v: pc.SHADERPASS_GLOSS, t: 'Gloss' },
+                        { v: pc.SHADERPASS_METALNESS, t: 'Metalness' },
+                        { v: pc.SHADERPASS_AO, t: 'AO' },
+                        { v: pc.SHADERPASS_EMISSION, t: 'Emission' },
+                        { v: pc.SHADERPASS_LIGHTING, t: 'Lighting' },
+                        { v: pc.SHADERPASS_UV0, t: 'UV0' }
+                    ]
+                })
             )
         )
     );

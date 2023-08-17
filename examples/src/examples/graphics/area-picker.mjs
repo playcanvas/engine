@@ -1,12 +1,10 @@
 import * as pc from 'playcanvas';
 
-
-
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath }) {
 
     const assets = {
         bloom: new pc.Asset('bloom', 'script', { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),

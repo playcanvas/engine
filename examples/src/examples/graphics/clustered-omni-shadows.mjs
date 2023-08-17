@@ -3,8 +3,6 @@ import * as pc from 'playcanvas';
 import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
 
-
-
 /**
  * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
  * @returns {JSX.Element} todo

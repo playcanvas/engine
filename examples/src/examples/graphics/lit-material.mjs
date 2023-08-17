@@ -1,12 +1,10 @@
 import * as pc from 'playcanvas';
 
-
-
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
         orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
@@ -167,6 +165,4 @@ class LitMaterialExample {
     static example = example;
 }
 
-export {
-    LitMaterialExample,
-};
+export { LitMaterialExample };
