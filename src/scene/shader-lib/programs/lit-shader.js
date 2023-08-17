@@ -374,6 +374,9 @@ class LitShader {
         if (options.pixelSnap) {
             code += "#define PIXELSNAP\n";
         }
+        if (options.useDisplacement) {
+            code += "#define DISPLACEMENT\n";
+        }
 
         code = this._vsAddTransformCode(code, device, chunks, options);
 

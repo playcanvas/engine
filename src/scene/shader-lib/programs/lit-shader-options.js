@@ -83,6 +83,8 @@ class LitShaderOptions {
 
     useHeights = false;
 
+    useDisplacement = false;
+
     useNormals = false;
 
     useClearCoatNormals = false;
