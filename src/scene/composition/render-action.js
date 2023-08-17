@@ -1,7 +1,3 @@
-import {
-    LIGHTTYPE_DIRECTIONAL
-} from '../constants.js';
-
 /**
  * Class representing an entry in the final order of rendering of cameras and layers in the engine
  * this is populated at runtime based on LayerComposition
@@ -53,9 +49,6 @@ class RenderAction {
         // and also store them as an array
         this.directionalLights = [];
 
-        // and also the same directional lights, stored as indices into LayerComposition._lights
-        this.directionalLightsIndices = [];
-
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
         /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
         this.viewBindGroups = [];
@@ -79,7 +72,6 @@ class RenderAction {
         this.lightClusters = null;
         this.directionalLightsSet.clear();
         this.directionalLights.length = 0;
-        this.directionalLightsIndices.length = 0;
     }
 
     /**
@@ -97,7 +89,6 @@ class RenderAction {
 
         this.directionalLightsSet.clear();
         this.directionalLights.length = 0;
-        this.directionalLightsIndices.length = 0;
 
         for (let i = 0; i < dirLights.length; i++) {
             const light = dirLights[i];
@@ -107,15 +98,10 @@ class RenderAction {
                 for (let l = 0; l < cameraLayers.length; l++) {
 
                     // if layer has the light
-                    if (cameraLayers[l]._splitLights[LIGHTTYPE_DIRECTIONAL].indexOf(light) >= 0) {
+                    if (cameraLayers[l]._lightsSet.has(light)) {
                         if (!this.directionalLightsSet.has(light)) {
                             this.directionalLightsSet.add(light);
-
                             this.directionalLights.push(light);
-
-                            // store index into all lights
-                            const lightIndex = allLights.indexOf(light);
-                            this.directionalLightsIndices.push(lightIndex);
                         }
                     }
                 }

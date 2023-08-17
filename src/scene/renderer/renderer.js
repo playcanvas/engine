@@ -942,10 +942,9 @@ class Renderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
-            const count = renderAction.directionalLightsIndices.length;
+            const count = renderAction.directionalLights.length;
             for (let j = 0; j < count; j++) {
-                const lightIndex = renderAction.directionalLightsIndices[j];
-                const light = comp._lights[lightIndex];
+                const light = renderAction.directionalLights[j];
                 this._shadowRendererDirectional.cull(light, comp, renderAction.camera.camera);
             }
         }
