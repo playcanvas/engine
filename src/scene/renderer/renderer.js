@@ -174,7 +174,6 @@ class Renderer {
         // a single instance of light cube
         this.lightCube = new LightCube();
         this.constantLightCube = scope.resolve('lightCube[0]');
-        this.constantLightCube.setValue(this.lightCube.colors);
     }
 
     destroy() {

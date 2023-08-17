@@ -1103,6 +1103,7 @@ class ForwardRenderer extends Renderer {
             // set up layer uniforms
             if (layer.requiresLightCube) {
                 this.lightCube.update(this.scene.ambientLight, layer._lights);
+                this.constantLightCube.setValue(this.lightCube.colors);
             }
 
             // upload clustered lights uniforms

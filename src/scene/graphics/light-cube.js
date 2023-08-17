@@ -33,7 +33,7 @@ class LightCube {
         // directional contribution
         for (let j = 0; j < lights.length; j++) {
             const light = lights[j];
-            if (light._type === LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame) {
+            if (light._type === LIGHTTYPE_DIRECTIONAL) {
                 for (let c = 0; c < 6; c++) {
                     const weight = Math.max(lightCubeDir[c].dot(light._direction), 0) * light._intensity;
                     const lightColor = light._color;
