@@ -37,11 +37,14 @@ function sortLights(lightA, lightB) {
     return lightB.key - lightA.key;
 }
 
+function sortLightsIds(lightA, lightB) {
+    return lightB.id - lightA.id;
+}
+
 // Layers
 let layerCounter = 0;
 
 const lightKeys = [];
-
 const _tempMaterials = new Set();
 
 class CulledInstances {
@@ -107,6 +110,36 @@ class Layer {
      * @private
      */
     _visibleInstances = new WeakMap();
+
+    /**
+     * All lights assigned to a layer.
+     *
+     * @type {import('./light.js').Light[]}
+     * @private
+     */
+    _lights = [];
+
+    /**
+     * All lights assigned to a layer stored in a set.
+     *
+     * @type {Set<import('./light.js').Light>}
+     * @private
+     */
+
+    _lightsSet = new Set();
+
+    /**
+     * Set of light used by clustered lighting (omni and spot, but no directional).
+     *
+     * @type {Set<import('./light.js').Light>}
+     * @private
+     */
+    _clusteredLightsSet = new Set();
+
+    /**
+     * True if the objects rendered on the layer require light cube (emitters with lighting do).
+     */
+    requiresLightCube = false;
 
     /**
      * Create a new Layer instance.
@@ -350,25 +383,6 @@ class Layer {
         this.customCalculateSortValues = null;
 
         /**
-         * @type {import('./light.js').Light[]}
-         * @private
-         */
-        this._lights = [];
-        /**
-         * @type {Set<import('./light.js').Light>}
-         * @private
-         */
-        this._lightsSet = new Set();
-
-        /**
-         * Set of light used by clustered lighting (omni and spot, but no directional).
-         *
-         * @type {Set<import('./light.js').Light>}
-         * @private
-         */
-        this._clusteredLightsSet = new Set();
-
-        /**
          * Lights separated by light type.
          *
          * @type {import('./light.js').Light[][]}
@@ -385,8 +399,13 @@ class Layer {
         this._dirtyLights = false;
         this._dirtyCameras = false;
 
+        // light hash based on the light keys
         this._lightHash = 0;
         this._lightHashDirty = false;
+
+        // light hash based on light ids
+        this._lightIdHash = 0;
+        this._lightIdHashDirty = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -398,22 +417,6 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
-
-        /**
-         * @type {Float32Array|null}
-         * @ignore
-         */
-        this._lightCube = null;
-    }
-
-    /**
-     * True if the layer contains omni or spot lights
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    get hasClusteredLights() {
-        return this._clusteredLightsSet.size > 0;
     }
 
     /**
@@ -478,6 +481,16 @@ class Layer {
 
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
+    }
+
+    /**
+     * True if the layer contains omni or spot lights
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasClusteredLights() {
+        return this._clusteredLightsSet.size > 0;
     }
 
     /**
@@ -665,6 +678,12 @@ class Layer {
         }
     }
 
+    markLightsDirty() {
+        this._dirtyLights = true;
+        this._lightHashDirty = true;
+        this._lightIdHashDirty = true;
+    }
+
     /**
      * Adds a light to this layer.
      *
@@ -679,8 +698,7 @@ class Layer {
             this._lightsSet.add(l);
 
             this._lights.push(l);
-            this._dirtyLights = true;
-            this._lightHashDirty = true;
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -701,8 +719,7 @@ class Layer {
             this._lightsSet.delete(l);
 
             this._lights.splice(this._lights.indexOf(l), 1);
-            this._dirtyLights = true;
-            this._lightHashDirty = true;
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -717,37 +734,60 @@ class Layer {
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
-        this._dirtyLights = true;
+        this.markLightsDirty();
     }
+
+    evaluateLightHash(localLights, directionalLights, useIds) {
+
+        let hash = 0;
+
+        const lights = this._lights;
+        if (lights.length > 0) {
+            lights.sort(useIds ? sortLightsIds : sortLights);
+
+            for (let i = 0; i < lights.length; i++) {
+
+                const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
+
+                if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
+                    lightKeys.push(useIds ? lights[i].id : lights[i].key);
+                }
+            }
+
+            if (lightKeys.length > 0) {
+                hash = hash32Fnv1a(lightKeys);
+                lightKeys.length = 0;
+            }
+        }
+
+        return hash;
+    }
+
 
     getLightHash(isClustered) {
         if (this._lightHashDirty) {
             this._lightHashDirty = false;
 
-            // generate hash to check if layers have the same set of lights independent of their order
-            this._lightHash = 0;
-
-            const lights = this._lights;
-            if (lights.length > 0) {
-                lights.sort(sortLights);
-
-                for (let i = 0; i < lights.length; i++) {
-
-                    // only directional lights affect the shader generation for clustered lighting
-                    if (isClustered && lights[i].type !== LIGHTTYPE_DIRECTIONAL)
-                        continue;
-
-                    lightKeys.push(lights[i].key);
-                }
-
-                if (lightKeys.length > 0) {
-                    this._lightHash = hash32Fnv1a(lightKeys);
-                    lightKeys.length = 0;
-                }
-            }
+            // Generate hash to check if layers have the same set of lights independent of their order.
+            // Always use directional lights. Additionally use local lights if clustered lighting is disabled.
+            // (only directional lights affect the shader generation for clustered lighting)
+            this._lightHash = this.evaluateLightHash(!isClustered, true, false);
         }
 
         return this._lightHash;
+    }
+
+    // This is only used in clustered lighting mode
+    getLightIdHash() {
+        if (this._lightIdHashDirty) {
+            this._lightIdHashDirty = false;
+
+            // Generate hash based on Ids of lights sorted by ids, to check if the layers have the same set of lights
+            // Only use local lights (directional lights are not used for clustered lighting)
+            this._lightIdHash = this.evaluateLightHash(true, false, true);
+        }
+
+        return this._lightIdHash;
     }
 
     /**
@@ -825,9 +865,9 @@ class Layer {
     }
 
     /**
-     * @param {boolean} transparent - True if transparent sorting should be used.
      * @param {import('./camera.js').Camera} camera - The camera to sort the visible mesh instances
      * for.
+     * @param {boolean} transparent - True if transparent sorting should be used.
      * @ignore
      */
     sortVisible(camera, transparent) {

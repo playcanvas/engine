@@ -18,7 +18,9 @@ import {
     Color,
     Quat,
     Vec3,
-    VertexBuffer
+    VertexBuffer,
+    StandardMaterial,
+    BasicMaterial
 } from 'playcanvas';
 
 const ARRAY_BUFFER = 34962;
@@ -96,7 +98,8 @@ const getWrap = function (wrap) {
 
 // supported texture semantics on a material
 const textureSemantics = [
-    'diffuseMap'
+    'diffuseMap',
+    'colorMap'
 ];
 
 class GltfExporter extends CoreExporter {
@@ -286,39 +289,64 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeMaterials(resources, json) {
+    attachTexture(resources, material, destination, name, textureSemantic) {
+        const texture = material[textureSemantic];
+        if (texture) {
+            const textureIndex = resources.textures.indexOf(texture);
+            if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+            destination[name] = {
+                "index": textureIndex
+            };
+        }
+    }
 
-        const attachTexture = (material, destination, name, textureSemantic) => {
-            const texture = material[textureSemantic];
-            if (texture) {
-                const textureIndex = resources.textures.indexOf(texture);
-                if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
-                destination[name] = {
-                    "index": textureIndex
-                };
-            }
-        };
+    writeStandardMaterial(resources, mat, output) {
+
+        const { diffuse, emissive, opacity } = mat;
+        const pbr = output.pbrMetallicRoughness;
+
+        if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
+            pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+        }
+
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap');
+
+        if (!emissive.equals(Color.BLACK)) {
+            output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
+        }
+    }
+
+    writeBasicMaterial(resources, mat, output) {
+
+        const { color } = mat;
+        const pbr = output.pbrMetallicRoughness;
+
+        if (!color.equals(Color.WHITE)) {
+            pbr.baseColorFactor = [color.r, color.g, color.b, color];
+        }
+
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap');
+    }
+
+    writeMaterials(resources, json) {
 
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
-                const { name, diffuse, emissive, opacity, blendType, cull } = mat;
+                const { name, blendType, cull } = mat;
                 const material = {
                     pbrMetallicRoughness: {}
                 };
-                const pbr = material.pbrMetallicRoughness;
 
                 if (name && name.length > 0) {
                     material.name = name;
                 }
 
-                if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
-                    pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
+                if (mat instanceof StandardMaterial) {
+                    this.writeStandardMaterial(resources, mat, material);
                 }
 
-                attachTexture(mat, pbr, 'baseColorTexture', 'diffuseMap');
-
-                if (!emissive.equals(Color.BLACK)) {
-                    material.emissiveFactor = [emissive.r, emissive.g, emissive.b];
+                if (mat instanceof BasicMaterial) {
+                    this.writeBasicMaterial(resources, mat, material);
                 }
 
                 if (blendType === BLEND_NORMAL) {

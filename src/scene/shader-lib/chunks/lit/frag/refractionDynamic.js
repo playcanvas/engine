@@ -13,7 +13,7 @@ void addRefraction(
     float refractionIndex
 #if defined(LIT_IRIDESCENCE)
     , vec3 iridescenceFresnel,
-    IridescenceArgs iridescence
+    float iridescenceIntensity
 #endif
 ) {
 
@@ -64,7 +64,7 @@ void addRefraction(
             specularity
         #if defined(LIT_IRIDESCENCE)
             , iridescenceFresnel,
-            iridescence
+            iridescenceIntensity
         #endif
         );
     dDiffuseLight = mix(dDiffuseLight, refraction * transmittance * fresnel, transmission);

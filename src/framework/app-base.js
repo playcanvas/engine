@@ -91,6 +91,12 @@ class Progress {
  * @callback PreloadAppCallback
  */
 
+/**
+ * Gets the current application, if any.
+ *
+ * @type {AppBase|null}
+ * @ignore
+ */
 let app = null;
 
 /**
@@ -606,14 +612,6 @@ class AppBase extends EventHandler {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
-
-    /**
-     * @private
-     * @static
-     * @name app
-     * @type {AppBase|undefined}
-     * @description Gets the current application, if any.
-     */
 
     static _applications = {};
 

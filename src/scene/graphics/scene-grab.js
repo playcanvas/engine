@@ -54,6 +54,18 @@ class SceneGrab {
         // create depth layer
         this.layer = null;
 
+        // null device does not support scene grab
+        if (this.device.isNull) {
+
+            this.layer = new Layer({
+                enabled: false,
+                name: "Depth",
+                id: LAYERID_DEPTH
+            });
+
+            return;
+        }
+
         // create a depth layer, which is a default depth layer, but also a template used
         // to patch application created depth layers to behave as one
         if (this.device.webgl2 || this.device.isWebGPU) {

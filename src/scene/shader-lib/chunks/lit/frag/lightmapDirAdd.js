@@ -11,7 +11,7 @@ void addLightMap(
     mat3 tbn
 #if defined(LIT_IRIDESCENCE)
     vec3 iridescenceFresnel, 
-    IridescenceArgs iridescence
+    float iridescenceIntensity
 #endif
 ) {
     if (dot(dir, dir) < 0.0001) {
@@ -33,7 +33,7 @@ void addLightMap(
             specularity
         #if defined(LIT_IRIDESCENCE)
             , iridescenceFresnel,
-            iridescence
+            iridescenceIntensity
         #endif
             );
 #endif

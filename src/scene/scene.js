@@ -617,7 +617,7 @@ class Scene extends EventHandler {
                 this._skyboxRotationMat3.setIdentity();
             } else {
                 this._skyboxRotationMat4.setTRS(Vec3.ZERO, value, Vec3.ONE);
-                this._skyboxRotationMat4.invertTo3x3(this._skyboxRotationMat3);
+                this._skyboxRotationMat3.invertMat4(this._skyboxRotationMat4);
             }
 
             // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
