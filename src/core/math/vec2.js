@@ -386,6 +386,7 @@ class Vec2 {
      * Returns this 2-dimensional vector converted to a unit vector in place. If the vector has a
      * length of zero, the vector's elements will be set to zero.
      *
+     * @param {Vec2} [src] - The vector to normalize. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
      * @example
      * const v = new pc.Vec2(25, 0);
@@ -395,12 +396,12 @@ class Vec2 {
      * // Outputs 1, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize() {
-        const lengthSq = this.x * this.x + this.y * this.y;
+    normalize(src = this) {
+        const lengthSq = src.x * src.x + src.y * src.y;
         if (lengthSq > 0) {
             const invLength = 1 / Math.sqrt(lengthSq);
-            this.x *= invLength;
-            this.y *= invLength;
+            this.x = src.x * invLength;
+            this.y = src.y * invLength;
         }
 
         return this;
@@ -409,33 +410,36 @@ class Vec2 {
     /**
      * Each element is set to the largest integer less than or equal to its value.
      *
+     * @param {Vec2} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
      */
-    floor() {
-        this.x = Math.floor(this.x);
-        this.y = Math.floor(this.y);
+    floor(src = this) {
+        this.x = Math.floor(src.x);
+        this.y = Math.floor(src.y);
         return this;
     }
 
     /**
      * Each element is rounded up to the next largest integer.
      *
+     * @param {Vec2} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
      */
-    ceil() {
-        this.x = Math.ceil(this.x);
-        this.y = Math.ceil(this.y);
+    ceil(src = this) {
+        this.x = Math.ceil(src.x);
+        this.y = Math.ceil(src.y);
         return this;
     }
 
     /**
      * Each element is rounded up or down to the nearest integer.
      *
+     * @param {Vec2} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec2} Self for chaining.
      */
-    round() {
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
+    round(src = this) {
+        this.x = Math.round(src.x);
+        this.y = Math.round(src.y);
         return this;
     }
 
