@@ -177,7 +177,7 @@ class Mat3 {
     /**
      * Generates the transpose of the specified 3x3 matrix.
      *
-     * @param {Mat3} [src] - The matrix to transpose. If not set, the current matrix is used.
+     * @param {Mat3} [src] - The matrix to transpose. If not set, the matrix is transposed in-place.
      * @returns {Mat3} Self for chaining.
      * @example
      * const m = new pc.Mat3();

@@ -818,7 +818,7 @@ class Mat4 {
     /**
      * Sets the matrix to the inverse of a source matrix.
      *
-     * @param {Mat4} [src] - The matrix to invert. If not set, the current matrix is used.
+     * @param {Mat4} [src] - The matrix to invert. If not set, the matrix is inverted in-place.
      * @returns {Mat4} Self for chaining.
      * @example
      * // Create a 4x4 rotation matrix of 180 degrees around the y-axis
@@ -1015,7 +1015,7 @@ class Mat4 {
     /**
      * Sets the matrix to the transpose of a source matrix.
      *
-     * @param {Mat4} [src] - The matrix to transpose. If not set, the current matrix is used.
+     * @param {Mat4} [src] - The matrix to transpose. If not set, the matrix is transposed in-place.
      * @returns {Mat4} Self for chaining.
      * @example
      * const m = new pc.Mat4();
