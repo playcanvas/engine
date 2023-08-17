@@ -97,17 +97,18 @@ class WorldClustersAllocator {
             const layer = ra.layer;
             if (layer.hasClusteredLights && layer.meshInstances.length) {
 
-                // reuse cluster that is already used by a render action
+                // use existing clusters if the lights on the layer are the same
                 const hash = layer.getLightIdHash();
                 const existingRenderAction = this._clusters.get(hash);
                 let clusters = existingRenderAction?.lightClusters;
 
+                // no match, needs new clusters
                 if (!clusters) {
 
-                    // use already allocated cluster from before, or create a new one
+                    // use already allocated cluster from last frame, or create a new one
                     clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
-
                     DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+
                     this._allocated.push(clusters);
                     this._clusters.set(hash, ra);
                 }
