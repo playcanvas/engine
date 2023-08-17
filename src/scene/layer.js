@@ -137,6 +137,11 @@ class Layer {
     _clusteredLightsSet = new Set();
 
     /**
+     * True if the objects rendered on the layer require light cube (emitters with lighting do).
+     */
+    requiresLightCube = false;
+
+    /**
      * Create a new Layer instance.
      *
      * @param {object} options - Object for passing optional arguments. These arguments are the
@@ -412,12 +417,6 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
-
-        /**
-         * @type {Float32Array|null}
-         * @ignore
-         */
-        this._lightCube = null;
     }
 
     /**
