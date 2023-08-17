@@ -1,4 +1,4 @@
-export default /* glsl */`
+export default /* glsl */ `
 #ifdef PIXELSNAP
 uniform vec4 uScreenSize;
 #endif
@@ -57,9 +57,21 @@ mat4 getModelMatrix() {
     #endif
 }
 
+#ifdef DISPLACEMENT
+uniform sampler2D texture_displacementMap;
+uniform float material_displacementMapFactor;
+#endif
+
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
+    
+    #ifdef DISPLACEMENT
+    vec4 dMapSample = texture2D(texture_displacementMap, vertex_texCoord0.st);
+    float displacer = dMapSample.r * material_displacementMapFactor;
+    vec3 localPos = vertex_position + vertex_normal * displacer;
+    #else
     vec3 localPos = vertex_position;
+    #endif
 
     #ifdef NINESLICED
     // outer and inner vertices are at the same position, scale both
