@@ -35,7 +35,7 @@ function restoreAmmoFunctions() {
     Object.keys(modifiedAmmoFunctions).forEach(f => restoreAmmoFunction(f));
 }
 
-describe('CollisionSystem', function () {
+describe('CollisionComponent', function () {
     /** @type {Application} */
     let app;
 
