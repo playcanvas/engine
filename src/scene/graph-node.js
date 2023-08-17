@@ -295,8 +295,7 @@ class GraphNode extends EventHandler {
 
         const normalMat = this._normalMatrix;
         if (this._dirtyNormal) {
-            this.getWorldTransform().invertTo3x3(normalMat);
-            normalMat.transpose();
+            normalMat.invertMat4(this.getWorldTransform()).transpose();
             this._dirtyNormal = false;
         }
 
@@ -1496,9 +1495,9 @@ class GraphNode extends EventHandler {
      * @param {Vec3|number} [y] - If passing a 3D vector, this is the world-space up vector for look at
      * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
      * @param {number} [z] - Z-component of the world-space coordinate to look at.
-     * @param {number} [ux=0] - X-component of the up vector for the look at transform.
-     * @param {number} [uy=1] - Y-component of the up vector for the look at transform.
-     * @param {number} [uz=0] - Z-component of the up vector for the look at transform.
+     * @param {number} [ux] - X-component of the up vector for the look at transform. Defaults to 0.
+     * @param {number} [uy] - Y-component of the up vector for the look at transform. Defaults to 1.
+     * @param {number} [uz] - Z-component of the up vector for the look at transform. Defaults to 0.
      * @example
      * // Look at another entity, using the (default) positive y-axis for up
      * const position = otherEntity.getPosition();

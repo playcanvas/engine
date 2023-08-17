@@ -43,15 +43,11 @@ const chunkVersions = {
     combinePS: CHUNKAPI_1_62,
     falloffInvSquaredPS: CHUNKAPI_1_62,
     falloffLinearPS: CHUNKAPI_1_62,
-    fresnelSchlickPS: CHUNKAPI_1_62,
-    iridescenceDiffractionPS: CHUNKAPI_1_62,
     lightDiffuseLambertPS: CHUNKAPI_1_62,
     lightSheenPS: CHUNKAPI_1_62,
     lightSpecularAnisoGGXPS: CHUNKAPI_1_62,
     lightSpecularBlinnPS: CHUNKAPI_1_62,
     lightSpecularPhongPS: CHUNKAPI_1_62,
-    lightmapAddPS: CHUNKAPI_1_62,
-    lightmapDirAddPS: CHUNKAPI_1_62,
     ltcPS: CHUNKAPI_1_62,
     reflDirPS: CHUNKAPI_1_62,
     reflDirAnisoPS: CHUNKAPI_1_62,
@@ -62,8 +58,6 @@ const chunkVersions = {
     reflectionSheenPS: CHUNKAPI_1_62,
     reflectionSpherePS: CHUNKAPI_1_62,
     reflectionSphereLowPS: CHUNKAPI_1_62,
-    refractionCubePS: CHUNKAPI_1_62,
-    refractionDynamicPS: CHUNKAPI_1_62,
     shadowCommonPS: CHUNKAPI_1_62,
     shadowCoordPS: CHUNKAPI_1_62,
     shadowCoordPerspZBufferPS: CHUNKAPI_1_62,
@@ -81,7 +75,13 @@ const chunkVersions = {
     endPS: CHUNKAPI_1_65,
     metalnessModulatePS: CHUNKAPI_1_65,
     outputAlphaPS: CHUNKAPI_1_65,
-    outputAlphaPremulPS: CHUNKAPI_1_65
+    outputAlphaPremulPS: CHUNKAPI_1_65,
+    fresnelSchlickPS: CHUNKAPI_1_65,
+    iridescenceDiffractionPS: CHUNKAPI_1_65,
+    lightmapAddPS: CHUNKAPI_1_65,
+    lightmapDirAddPS: CHUNKAPI_1_65,
+    refractionCubePS: CHUNKAPI_1_65,
+    refractionDynamicPS: CHUNKAPI_1_65
 };
 
 // removed
