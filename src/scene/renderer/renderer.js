@@ -1055,21 +1055,8 @@ class Renderer {
     }
 
     renderCookies(lights) {
-
         const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-
-            // skip clustered cookies with no assigned atlas slot
-            if (!light.atlasViewportAllocated)
-                continue;
-
-            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated)
-                continue;
-
-            this._cookieRenderer.render(light, cookieRenderTarget);
-        }
+        this._cookieRenderer.render(cookieRenderTarget, lights);
     }
 
     /**
