@@ -13,8 +13,7 @@ function getAssetPath() {
     if (i === -1) { // npm run serve
         return '/static/assets/';
     }
-    const assetPath = href.substring(0, i) + "/examples/assets/";
-    return assetPath;
+    return href.substring(0, i) + "/examples/assets/";
 }
 export const assetPath = getAssetPath();
 
@@ -24,12 +23,11 @@ export const assetPath = getAssetPath();
  * @returns {string}
  */
 function getPlayCanvasTypes() {
-    const i = href.lastIndexOf("/examples/");
+    const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/playcanvas.d.ts';
     }
-    const assetPath = href.substring(0, i) + "/build/playcanvas.d.ts";
-    return assetPath;
+    return href.substring(0, i) + "/build/playcanvas.d.ts";
 }
 export const pcTypes = getPlayCanvasTypes();
 
@@ -44,8 +42,7 @@ function getScriptsPath() {
     if (i === -1) { // npm run serve
         return '/static/scripts/';
     }
-    const assetPath = href.substring(0, i) + "/scripts/";
-    return assetPath;
+    return href.substring(0, i) + "/scripts/";
 }
 export const scriptsPath = getScriptsPath();
 
@@ -56,8 +53,6 @@ export const scriptsPath = getScriptsPath();
  * @returns {string}
  */
 function getIframePath() {
-    //const i = href.lastIndexOf("/src/");
-    //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.indexOf("/examples/")
     if (i === -1) { // npm run serve
         return '/iframe/';
@@ -74,8 +69,10 @@ export const iframePath = getIframePath();
  */
 function getAmmoPath() {
     const i = href.lastIndexOf("/src/");
-    const assetPath = href.substring(0, i) + "/src/lib/ammo/";
-    return assetPath;
+    if (i === -1) { // npm run serve
+        return '/static/lib/ammo/';
+    }
+    return href.substring(0, i) + "/src/lib/ammo/";
 }
 export const ammoPath = getAmmoPath();
 
@@ -87,6 +84,9 @@ export const ammoPath = getAmmoPath();
  */
 function getBasisPath() {
     const i = href.lastIndexOf("/src/");
+    if (i === -1) { // npm run serve
+        return '/static/lib/basis/';
+    }
     return href.substring(0, i) + "/src/lib/basis/";
 }
 export const basisPath = getBasisPath();
@@ -99,8 +99,10 @@ export const basisPath = getBasisPath();
  */
 function getDracoPath() {
     const i = href.indexOf("/examples/");
-    const assetPath = href.substring(0, i) + "/examples/src/lib/draco/";
-    return assetPath;
+    if (i === -1) { // npm run serve
+        return '/static/lib/draco/';
+    }
+    return href.substring(0, i) + "/examples/src/lib/draco/";
 }
 export const dracoPath = getDracoPath();
 
@@ -112,6 +114,9 @@ export const dracoPath = getDracoPath();
  */
 function getGlslangPath() {
     const i = href.indexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/static/lib/glslang/';
+    }
     return href.substring(0, i) + "/examples/src/lib/glslang/";
 }
 export const glslangPath = getGlslangPath();
@@ -124,6 +129,9 @@ export const glslangPath = getGlslangPath();
  */
 function getTwgslPath() {
     const i = href.indexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return '/static/lib/twgsl/';
+    }
     return href.substring(0, i) + "/examples/src/lib/twgsl/";
 }
 export const twgslPath = getTwgslPath();
@@ -135,8 +143,6 @@ export const twgslPath = getTwgslPath();
  * @returns {string}
  */
 function getThumbnailPath() {
-    //const i = href.lastIndexOf("/src/");
-    //const assetPath = href.substring(0, i) + "/src/iframe/";
     const i = href.lastIndexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/thumbnails/';
