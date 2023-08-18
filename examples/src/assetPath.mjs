@@ -68,11 +68,11 @@ export const iframePath = getIframePath();
  * @returns {string}
  */
 function getAmmoPath() {
-    const i = href.lastIndexOf("/src/");
+    const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/lib/ammo/';
     }
-    return href.substring(0, i) + "/src/lib/ammo/";
+    return href.substring(0, i) + "/examples/src/lib/ammo/";
 }
 export const ammoPath = getAmmoPath();
 
@@ -83,11 +83,11 @@ export const ammoPath = getAmmoPath();
  * @returns {string}
  */
 function getBasisPath() {
-    const i = href.lastIndexOf("/src/");
+    const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/static/lib/basis/';
     }
-    return href.substring(0, i) + "/src/lib/basis/";
+    return href.substring(0, i) + "/examples/src/lib/basis/";
 }
 export const basisPath = getBasisPath();
 
