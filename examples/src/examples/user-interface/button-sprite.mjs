@@ -177,6 +177,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         button.button.pressedSpriteAsset = createSpriteAsset('2');
         button.button.inactiveSpriteAsset = createSpriteAsset('3');
     });
+    return app;
 }
 
 class ButtonSpriteExample {

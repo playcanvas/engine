@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton  } from './jsx.mjs';
 import { exampleData } from '../example-data.mjs';
 import ControlPanel from './control-panel.mjs';
-import { BindingTwoWay, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel } from '@playcanvas/pcui/react';
+import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 import React, { createRef, Component, useEffect } from 'react';
 
@@ -12,7 +12,7 @@ import React, { createRef, Component, useEffect } from 'react';
 // 2) We don't want to load PlayCanvas code in Examples browser
 // (just to keep the file sizes as minimal as possible)
 Object.assign(window, {
-    BindingTwoWay, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel,
+    BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel,
     Observer,
     jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton,
     React, createRef, Component, useEffect,

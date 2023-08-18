@@ -205,7 +205,6 @@ class BlendTrees2DDirectionalExample {
                 // @ts-ignore engine-tsd
                 /** @type {pc.Entity} */
                 const modelEntity = pc.app.root.findByName('model');
-                console.log({modelEntity});
                 const width = window.top.controlPanel.offsetWidth;
                 const height = width;
                 const halfWidth = Math.floor(width / 2);

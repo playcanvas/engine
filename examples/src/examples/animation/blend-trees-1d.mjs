@@ -3,7 +3,7 @@ import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
 import React from 'react';
 
-class JsxControls extends React.Component {
+const controls = () => class JsxControls extends React.Component {
     render() {
         const { observer } = this.props;
         const binding = new BindingTwoWay();
@@ -22,7 +22,7 @@ class JsxControls extends React.Component {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, data }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, data, glslangPath, twgslPath }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath   + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath   + 'animations/bitmoji/idle.glb' }),
@@ -33,8 +33,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '../../../lib/glslang/glslang.js',
-        twgslUrl: '../../../lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -192,7 +192,7 @@ class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
     static WEBGPU_ENABLED = true;
-    static controls = JsxControls;
+    static get controls() { return controls() };
     static example = example;
 }
 export { BlendTrees1DExample };

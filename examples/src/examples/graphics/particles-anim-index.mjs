@@ -141,6 +141,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         app.start();
     });
+    return app;
 }
 
 export class ParticlesAnimIndexExample {

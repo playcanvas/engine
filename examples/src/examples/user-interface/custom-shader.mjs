@@ -112,6 +112,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
             material.setParameter("amount", (Math.sin(time * 4) + 1) * 0.5);
         });
     });
+    return app;
 }
 
 class CustomShaderExample {

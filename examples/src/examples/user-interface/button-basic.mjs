@@ -110,6 +110,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
             camera.camera.clearColor = new pc.Color(Math.random(), Math.random(), Math.random());
         });
     });
+    return app;
 }
 
 class ButtonBasicExample {

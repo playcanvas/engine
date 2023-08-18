@@ -1,11 +1,9 @@
-import * as React from 'react';
 import * as pc from 'playcanvas';
 import { BindingTwoWay, LabelGroup } from '@playcanvas/pcui/react';
-import { Observer } from '@playcanvas/observer';
-import { fragment, jsxBooleanInput, jsxButton } from '../../app/jsx.mjs';
+import { fragment, jsx, jsxBooleanInput, jsxButton } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: Observer}} data - todo
+ * @param {{observer: import('@playcanvas/observer').Observer}} data - todo
  * @returns {JSX.Element} todo
  */
 function controls({observer}) {
@@ -19,7 +17,7 @@ function controls({observer}) {
             text: 'Jump',
             onClick: () => observer.emit('jump')
         }),
-        React.createElement(
+        jsx(
             LabelGroup,
             {
                 text: 'Run: '

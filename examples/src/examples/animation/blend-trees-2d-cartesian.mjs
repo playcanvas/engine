@@ -2,7 +2,7 @@ import React, { createRef, Component } from 'react';
 import * as pc from 'playcanvas';
 import { fragment, jsx } from '../../app/jsx.mjs';
 
-class JsxControls extends Component {
+const controls = () => class JsxControls extends Component {
     position = new pc.Vec2();
     /** @type {React.RefObject<HTMLCanvasElement>} */
     refCanvas = createRef();
@@ -115,7 +115,7 @@ class JsxControls extends Component {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
     const assets = {
         model:     new pc.Asset('model',             'container', { url: assetPath + 'models/bitmoji.glb' }),
         idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath + 'animations/bitmoji/idle.glb' }),
@@ -128,8 +128,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: '../../../lib/glslang/glslang.js',
-        twgslUrl: '../../../lib/twgsl/twgsl.js'
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -300,7 +300,7 @@ class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 2D Cartesian';
     static WEBGPU_ENABLED = true;
-    static controls = JsxControls;
+    static get controls() { return controls() };
     static example = example;
 }
 export { BlendTrees2DCartesianExample };

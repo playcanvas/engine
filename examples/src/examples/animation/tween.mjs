@@ -1,33 +1,12 @@
 import * as pc from 'playcanvas';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-/**
- * @param {string} url 
- * @returns {Promise<string>}
- */
-const loadScript = (url) => {
-    return new Promise(function (resolve, reject) {
-        const script = document.createElement('script');
-        script.src = url;
-        script.async = false;
-        script.onload = function () {
-            resolve(url);
-        };
-        script.onerror = function () {
-            reject(new Error(`Failed to download script ${url}`));
-        };
-        document.body.appendChild(script);
-    });
-};
-
-enableHotReload({ loadScript });
+import * as TWEEN from '@tweenjs/tween.js'
 
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
-    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js");
+    globalThis.TWEEN = TWEEN; // ES5 script depends on this global
 
     const assets = {
         font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),

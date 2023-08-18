@@ -7,7 +7,7 @@ import * as pc from 'playcanvas';
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
 
     const assets = {
-        'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' })
+        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' })
     };
 
     const gfxOptions = {
