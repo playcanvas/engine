@@ -40,7 +40,8 @@ class Example extends c {
     get iframePath() {
         const example = examples.paths[this.path];
         // E.g. "http://127.0.0.1/playcanvas-engine/examples/src/iframe/?category=Misc&example=MiniStats"
-        return `${iframePath}?category=${example.category}&example=${example.name}`;
+        //return `${iframePath}?category=${example.category}&example=${example.name}`;
+        return `${iframePath}../../dist/iframe/${example.category}_${example.name}.html`;
     }
 
     componentDidMount() {
