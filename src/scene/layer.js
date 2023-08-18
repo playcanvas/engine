@@ -33,14 +33,6 @@ function sortFrontToBack(drawCallA, drawCallB) {
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
-function sortLights(lightA, lightB) {
-    return lightB.key - lightA.key;
-}
-
-function sortLightsIds(lightA, lightB) {
-    return lightB.id - lightA.id;
-}
-
 // Layers
 let layerCounter = 0;
 
@@ -741,23 +733,24 @@ class Layer {
 
         let hash = 0;
 
+        // select local/directional lights based on request
         const lights = this._lights;
-        if (lights.length > 0) {
-            lights.sort(useIds ? sortLightsIds : sortLights);
+        for (let i = 0; i < lights.length; i++) {
 
-            for (let i = 0; i < lights.length; i++) {
+            const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
 
-                const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
-
-                if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
-                    lightKeys.push(useIds ? lights[i].id : lights[i].key);
-                }
+            if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
+                lightKeys.push(useIds ? lights[i].id : lights[i].key);
             }
+        }
 
-            if (lightKeys.length > 0) {
-                hash = hash32Fnv1a(lightKeys);
-                lightKeys.length = 0;
-            }
+        if (lightKeys.length > 0) {
+
+            // sort the keys to make sure the hash is the same for the same set of lights
+            lightKeys.sort();
+
+            hash = hash32Fnv1a(lightKeys);
+            lightKeys.length = 0;
         }
 
         return hash;
