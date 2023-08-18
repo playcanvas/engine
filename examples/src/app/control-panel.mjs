@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { Button, Container } from '@playcanvas/pcui/react';
+import { Container } from '@playcanvas/pcui/react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { jsxButton } from './jsx.mjs';
+import { jsx, jsxButton } from './jsx.mjs';
 
 /**
  * @typedef {object} ControlPanelProps
@@ -56,13 +56,13 @@ const ControlPanel = (props) => {
             document.getElementById('controlPanel').ui.hidden = true;
         }
     });
-    return React.createElement(
+    return jsx(
         Container,
         {
             id: 'controls-wrapper',
             class: props.controls ? 'has-controls' : null
         },
-        window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && React.createElement(
+        window.top.innerWidth < MIN_DESKTOP_WIDTH && props.controls && jsx(
             Container,
             {
                 id: 'controlPanel-tabs',
@@ -81,12 +81,12 @@ const ControlPanel = (props) => {
                 onClick: onClickParametersTab
             }),
         ),
-        React.createElement(
+        jsx(
             Container,
             {
                 id: 'controlPanel-controls'
             },
-            React.createElement(
+            jsx(
                 //props.controls ? props.controls(window.observerData) : null
                 props.controls || null,
                 {
@@ -94,7 +94,7 @@ const ControlPanel = (props) => {
                 }
             )
         ),
-        window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && React.createElement(
+        window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && jsx(
             MonacoEditor,
             {
                 options: {
