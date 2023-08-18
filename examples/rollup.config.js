@@ -29,7 +29,11 @@ const staticFiles = [
     { src: './src/lib', dest: 'dist/static/lib/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: 'src/iframe/index-serve.html', dest: 'dist/iframe/index.html' }
+    { src: 'src/iframe/index-serve.html', dest: 'dist/iframe/index.html' },
+    { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
+    { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
+    { src: 'node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' }, // todo drop dependency
+    { src: 'src/example.css', dest: 'dist/iframe/example.css' },
 ];
 
 function timestamp() {
@@ -121,9 +125,14 @@ const builds = [
     },
     {
         input: 'src/iframe/index.mjs',
+        external: [
+            'react', 'react-dom', "react-dom/client", '@playcanvas/pcui/react',
+            // '@playcanvas/observer' // we could make observer optional and drop this dependency
+            'playcanvas', 'playcanvas-extras',
+        ],
         output: {
             name: 'bundle',
-            format: 'es',
+            format: 'umd',
             dir: 'dist/iframe',
             sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
         },

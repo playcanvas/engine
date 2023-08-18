@@ -1,0 +1,163 @@
+import fs from 'fs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import * as realExamples from "../src/examples/index.mjs";
+import { toKebabCase } from '../src/app/helpers/strings.mjs';
+const __filename = fileURLToPath(import.meta.url);
+const MAIN_DIR = `${dirname(__filename)}/../`;
+const exampleData = {};
+if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
+    fs.mkdirSync(`${MAIN_DIR}/dist/`);
+}
+for (const category_ in realExamples) {
+    const category = toKebabCase(category_);
+    exampleData[category] = {};
+    const examples = realExamples[category_];
+    for (const exampleName_ in examples) {        
+        const exampleClass = examples[exampleName_];
+        const example = toKebabCase(exampleName_).replace('-example', '');
+        exampleData[category][example] = {};
+        const exampleFunc = exampleClass.example.toString();
+        exampleData[category][example].example = exampleFunc;
+        exampleData[category][example].nameSlug = example;
+        exampleData[category][example].categorySlug = category;
+        if (exampleClass.FILES) {
+            exampleData[category][example].files = exampleClass.FILES;
+        }
+        if (exampleClass.controls) {
+            exampleData[category][example].controls = exampleClass.controls.toString();
+        }
+        const dropEnding = exampleName_.replace(/Example$/, ""); // TestExample -> Test
+        const out = generateExampleFile(category_, dropEnding, exampleClass);
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category_}_${dropEnding}.html`, out);
+    }
+}
+/**
+ * @param {string} category - The category.
+ * @param {string} example - The example.
+ * @param {object} exampleClass - The example class.
+ * @param {object} ministats - Should ministats be enabled?
+ * @returns {string} File to write as standalone example.
+ */
+function generateExampleFile(category, example, exampleClass) {
+    return `<html>
+    <head>
+        <link rel="stylesheet" href="./example.css">
+        <!--<link rel="stylesheet" href="../styles.css">-->
+        <title>${category}: ${example}</title>
+    </head>
+    <body>
+        <canvas id='application-canvas'></canvas>
+        <script src='./playcanvas.js'></script>
+        <script src='./playcanvas-extras.js'></script>
+        <script src='./playcanvas-observer.js'></script>
+        <script src='./pathes.js'></script>
+        <script>
+${exampleClass.example.toString()}
+        </script>
+        <script>
+        window.top.pc = pc;
+        /**
+         * @returns {string}
+         */
+        function getDeviceType() {
+            if (${Boolean(exampleClass.WEBGPU_ENABLED)}) {
+                let preferredDevice = 'webgpu';
+                // Lack of Chrome's WebGPU support on Linux
+                if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
+                    preferredDevice = 'webgl2';
+                }
+                return window.top.preferredGraphicsDevice || preferredDevice;
+            } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
+                return window.top.preferredGraphicsDevice;
+            } else {
+                return 'webgl2';
+            }
+        }
+        async function main() {
+            var canvas = document.getElementById("application-canvas");
+            var data = new observer.Observer({});
+            window.top.observerData = data;
+            var args = Object.fromEntries(
+                location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
+            );
+            var deviceType = getDeviceType();
+            if (args.deviceType) {
+                console.warn("overwriting default deviceType from URL");
+                deviceType = args.deviceType;
+            }
+            if (!deviceType) {
+                console.warn("No deviceType given, defaulting to WebGL2");
+                deviceType = 'webgl2';
+            }
+            // notify the parent window that the example is loading
+            const event = new CustomEvent("exampleLoading");
+            window.top.dispatchEvent(event);
+            const app = await example({
+                canvas,
+                deviceType,
+                data,
+                assetPath,
+                scriptsPath,
+                ammoPath,
+                basisPath,
+                dracoPath,
+                glslangPath,
+                twgslPath,
+                pcx,
+            });
+            /**
+             * @param {pc.AppBase} app - The application.
+             */
+            function setupApplication(app) {
+                const canvas = app.graphicsDevice.canvas;
+                // handle resizing
+                var canvasContainerElement = canvas.parentElement;
+                canvas.setAttribute('width', window.innerWidth + 'px');
+                canvas.setAttribute('height', window.innerHeight + 'px');
+                var resizeTimeout = null;
+                app.setCanvasResolution(pc.RESOLUTION_AUTO);
+                // triggers resize every frame for camera/fly+orbit
+                // if (window.ResizeObserver) {
+                //     new ResizeObserver(function() {
+                //         canvas.width = canvasContainerElement.clientWidth;
+                //         canvas.height = canvasContainerElement.clientHeight;
+                //     }).observe(canvasContainerElement);
+                // }
+                if (app.graphicsDevice.deviceType !== 'webgpu' && ${Boolean(exampleClass.MINISTATS)}) {
+                    // set up miniStats
+                    var miniStats = new pcx.MiniStats(app);
+                    if (urlParams.get('miniStats') === 'false') {
+                        miniStats.enabled = false;
+                    }
+                    false && app.on('update', function () {
+                        if (window.top._showMiniStats !== undefined) {
+                            miniStats.enabled = window.top._showMiniStats;
+                        }
+                    });
+                }
+            }            
+            class ExampleLoadEvent extends CustomEvent {
+                /** @type {string} */
+                deviceType;
+                /**
+                 * @param {string} deviceType
+                 */
+                constructor(deviceType) {
+                    super("exampleLoad");
+                    this.deviceType = deviceType;
+                }
+            }
+            if (app.graphicsDevice?.canvas) {
+                setupApplication(app);
+                const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
+                window.top.dispatchEvent(event);
+            } else {
+                console.warn("no canvas")
+            }
+        }
+        window.onload = main;
+        </script>
+    </body>
+</html>`;
+}
