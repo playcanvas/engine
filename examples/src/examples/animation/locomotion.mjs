@@ -137,8 +137,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
         light.setLocalEulerAngles(60, 30, 0);
         app.root.addChild(light);
 
-        app.start();
-
         const characterEntity = new pc.Entity();
 
         // create an entity from the loaded model using the render component
@@ -406,6 +404,8 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
         characterEntity.addComponent("script");
         characterEntity.script.create('Locomotion', {});
+
+        app.start();
     });
     return app;
 }

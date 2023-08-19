@@ -3,18 +3,21 @@ import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
 import { jsx } from '../../app/jsx.mjs';
 import React from 'react';
 
-const controls = () => class JsxControls extends React.Component {
-    render() {
-        const { observer } = this.props;
-        const binding = new BindingTwoWay();
-        const link = {
-            observer,
-            path: 'blend'
-        };
-        return jsx(LabelGroup, { text: 'blend' },
-            jsx(SliderInput, { binding, link })
-        );
+function controls(props) {
+    class JsxControls extends React.Component {
+        render() {
+            const { observer } = this.props;
+            const binding = new BindingTwoWay();
+            const link = {
+                observer,
+                path: 'blend'
+            };
+            return jsx(LabelGroup, { text: 'blend' },
+                jsx(SliderInput, { binding, link })
+            );
+        }
     }
+    return jsx(JsxControls, props);
 }
 
 /**
@@ -75,9 +78,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data, glsla
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
-
-        app.start();
-
         // setup skydome
         app.scene.exposure = 2;
         app.scene.skyboxMip = 2;
@@ -185,6 +185,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data, glsla
         data.on('blend:set', (/** @type {number} */ blend) => {
             modelEntity.anim.setFloat('blend', blend);
         });
+
+        app.start();
     });
     return app;
 }
@@ -192,7 +194,7 @@ class BlendTrees1DExample {
     static CATEGORY = 'Animation';
     static NAME = 'Blend Trees 1D';
     static WEBGPU_ENABLED = true;
-    static get controls() { return controls() };
+    static controls = controls;
     static example = example;
 }
 export { BlendTrees1DExample };

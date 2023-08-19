@@ -60,8 +60,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 
-        app.start();
-
         // setup skydome
         app.scene.exposure = 2;
         app.scene.skyboxMip = 2;
@@ -190,6 +188,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             cameraEntity.lookAt(modelPosition);
 
         });
+        app.start();
     });
     return app;
 }
