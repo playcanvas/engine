@@ -5,7 +5,13 @@ import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { jsx, jsxButton } from './jsx.mjs';
 
 /**
+ * @typedef {import('react').FunctionComponent<{observer: import('@playcanvas/observer').Observer}>} ExampleControls
+ */
+
+/**
  * @typedef {object} ControlPanelProps
+ * @property {ExampleControls} controls
+ * @property {import('./code-editor.mjs').File[]} files
  */
 
 /**
@@ -87,7 +93,6 @@ const ControlPanel = (props) => {
                 id: 'controlPanel-controls'
             },
             jsx(
-                //props.controls ? props.controls(window.observerData) : null
                 props.controls || null,
                 {
                     observer: window.observerData
