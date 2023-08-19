@@ -36,6 +36,9 @@ const CodeEditor = (props) => {
     const files = JSON.parse(JSON.stringify(props.files));
     const [selectedFile, setSelectedFile] = useState(0);
 
+    /**
+     * @param {import('@monaco-editor/react').Monaco} monaco 
+     */
     const beforeMount = (monaco) => {
         // todo: props
         fetch(pcTypes).then((r) => {
@@ -182,6 +185,10 @@ const CodeEditor = (props) => {
                     class: 'tabs-container'
                 },
                 props.files.map((file, index) => {
+                    if (!file) {
+                        console.log("CodeEditor> missing file", file, index);
+                        return null;
+                    }
                     return jsx(Button, {
                         key: index,
                         id: `code-editor-file-tab-${index}`,
