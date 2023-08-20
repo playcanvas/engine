@@ -40,7 +40,12 @@ const Menu = (props) => {
                 toggleFullscreen();
             }
         };
-        document.querySelector('iframe').contentDocument.addEventListener('keydown', escapeKeyEvent);
+        const iframe = document.querySelector('iframe');
+        if (iframe) {
+            iframe.contentDocument.addEventListener('keydown', escapeKeyEvent);
+        } else {
+            console.warn('Menu#useEffect> iframe undefined');
+        }
         document.addEventListener('keydown', escapeKeyEvent);
     });
     return React.createElement(

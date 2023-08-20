@@ -1,7 +1,6 @@
 import { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
-//import { File } from './helpers/types';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
@@ -12,9 +11,7 @@ const controlsObserver = new Observer();
 
 /**
  * @typedef {object} Props
- * @property {File[]} files
- * @property {(value: Array<File>) => void} setFiles
- * @property {{params: any}} match
+ * @property {{params: {category: string, example: string}}} match
  */
 
 /**
@@ -26,12 +23,6 @@ const controlsObserver = new Observer();
 const c = Component;
 
 class Example extends c {
-    /** @type {string} */
-    editorValue;
-
-    get defaultFiles() {
-        return examples.paths[this.path].files;
-    }
 
     get path() {
         return `/${this.props.match.params.category}/${this.props.match.params.example}`;
@@ -39,14 +30,11 @@ class Example extends c {
 
     get iframePath() {
         const example = examples.paths[this.path];
-        // E.g. "http://127.0.0.1/playcanvas-engine/examples/src/iframe/?category=Misc&example=MiniStats"
-        //return `${iframePath}?category=${example.category}&example=${example.name}`;
         return `${iframePath}../../dist/iframe/${example.category}_${example.name}.html`;
     }
 
     componentDidMount() {
         window.localStorage.removeItem(this.path);
-        this.props.setFiles(this.defaultFiles);
     }
     /**
      * @param {Readonly<Props>} nextProps 
@@ -54,15 +42,18 @@ class Example extends c {
      */
     shouldComponentUpdate(nextProps) {
         const updateMobileOnFileChange = () => {
-            return window.top.innerWidth < MIN_DESKTOP_WIDTH && this.props.files !== nextProps.files;
+            return window.top.innerWidth < MIN_DESKTOP_WIDTH;
         };
-        return this.props.match.params.category !== nextProps.match.params.category || this.props.match.params.example !== nextProps.match.params.example || updateMobileOnFileChange();
+        return (
+            this.props.match.params.category !== nextProps.match.params.category ||
+            this.props.match.params.example !== nextProps.match.params.example ||
+            updateMobileOnFileChange()
+        );
     }
 
     componentDidUpdate() {
         window.localStorage.removeItem(this.path);
         delete window.editedFiles;
-        this.props.setFiles(this.defaultFiles);
     }
 
     onSetPreferredGraphicsDevice(value) {
@@ -73,8 +64,8 @@ class Example extends c {
     }
 
     render() {
-        const iframePath = this.iframePath;
-        const children = this.props.children;
+        const { iframePath } = this;
+        const { children } = this.props;
         return jsxContainer(
             {
                 id: "canvas-container"

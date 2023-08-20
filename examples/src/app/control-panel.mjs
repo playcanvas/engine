@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Container } from '@playcanvas/pcui/react';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { jsx, jsxButton } from './jsx.mjs';
+import { fragment, jsx, jsxButton } from './jsx.mjs';
 
 /**
  * @typedef {import('react').FunctionComponent<{observer: import('@playcanvas/observer').Observer}>} ExampleControls
@@ -11,12 +11,11 @@ import { jsx, jsxButton } from './jsx.mjs';
 /**
  * @typedef {object} ControlPanelProps
  * @property {ExampleControls} controls
- * @property {import('./code-editor.mjs').File[]} files
  */
 
 /**
- * @param {ControlPanelProps} props - todo
- * @returns {JSX.Element} todo
+ * @param {ControlPanelProps} props - The props.
+ * @returns {JSX.Element} The JSX element.
  */
 const ControlPanel = (props) => {
     const [state, setState] = useState({
@@ -92,12 +91,7 @@ const ControlPanel = (props) => {
             {
                 id: 'controlPanel-controls'
             },
-            jsx(
-                props.controls || null,
-                {
-                    observer: window.observerData
-                }
-            )
+            props.controls
         ),
         window.top.innerWidth < MIN_DESKTOP_WIDTH && state.showCode && jsx(
             MonacoEditor,
@@ -106,7 +100,7 @@ const ControlPanel = (props) => {
                     readOnly: true
                 },
                 defaultLanguage: "typescript",
-                value: props.files ? props.files[0].text : ''
+                value: '// loading...'
             }
         )
     );

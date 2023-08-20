@@ -47,11 +47,27 @@ function generateExampleFile(category, example, exampleClass) {
         <title>${category}: ${example}</title>
     </head>
     <body>
-        <canvas id='application-canvas'></canvas>
+        <div id="app">
+            <div id="appInner">
+                <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
+                <div style="width:100%; position:absolute; top:10px">
+                    <div style="text-align: center;">
+                        <a id="ar-link" rel="ar" download="asset.usdz">
+                            <img id="button" width="200" src="../arkit.png">
+                        </a>    
+                    </div>
+                </div>
+                <canvas id='application-canvas'></canvas>
+            </div>
+        </div>
         <script src='./playcanvas.js'></script>
         <script src='./playcanvas-extras.js'></script>
         <script src='./playcanvas-observer.js'></script>
         <script src='./pathes.js'></script>
+        <script>
+            // controls (if given)
+${exampleClass.controls?.toString() || ''}
+        </script>
         <script>
 ${exampleClass.example.toString()}
         </script>
@@ -90,8 +106,14 @@ ${exampleClass.example.toString()}
                 console.warn("No deviceType given, defaulting to WebGL2");
                 deviceType = 'webgl2';
             }
-            // notify the parent window that the example is loading
-            const event = new CustomEvent("exampleLoading");
+            const files = {};
+            files['example.mjs'] = example.toString();
+            if (window.controls) {
+                files['controls.mjs'] = controls.toString();
+            }
+            var filesObject = ${exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}'};
+            Object.assign(files, filesObject);
+            const event = new CustomEvent("exampleLoading"); // just notify to clean UI
             window.top.dispatchEvent(event);
             const app = await example({
                 canvas,
@@ -105,7 +127,9 @@ ${exampleClass.example.toString()}
                 glslangPath,
                 twgslPath,
                 pcx,
+                files,
             });
+            window.app = app;
             /**
              * @param {pc.AppBase} app - The application.
              */
@@ -136,7 +160,7 @@ ${exampleClass.example.toString()}
                         }
                     });
                 }
-            }            
+            }
             class ExampleLoadEvent extends CustomEvent {
                 /** @type {string} */
                 deviceType;
@@ -146,15 +170,21 @@ ${exampleClass.example.toString()}
                 constructor(deviceType) {
                     super("exampleLoad");
                     this.deviceType = deviceType;
+                    this.files = files;
                 }
             }
-            if (app.graphicsDevice?.canvas) {
-                setupApplication(app);
-                const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
-                window.top.dispatchEvent(event);
-            } else {
-                console.warn("no canvas")
-            }
+            // Wait until assets loaded.
+            // app.start() is called when assets loaded in examples
+            app.once('start', () => {
+                // console.log("REAL START");
+                if (app.graphicsDevice?.canvas) {
+                    setupApplication(app);
+                    const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
+                    window.top.dispatchEvent(event);
+                } else {
+                    console.warn("no canvas")
+                }
+            });
         }
         window.onload = main;
         </script>

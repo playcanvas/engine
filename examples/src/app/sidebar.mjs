@@ -119,6 +119,12 @@ export const SideBar = () => {
                                     const sideBar = document.getElementById('sideBar');
                                     // @ts-ignore
                                     sideBar.ui.collapsed = true;
+                                    console.log("load new example", category, example);
+                                    const { pc } = window;
+                                    if (pc) {
+                                        pc.app?.destroy();
+                                        pc.app = null;
+                                    }
                                 }
                             },
                                 jsx("div", { className: className, id: `link-${category}-${example}` },

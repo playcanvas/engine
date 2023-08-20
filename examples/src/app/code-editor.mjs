@@ -2,27 +2,28 @@ import { LegacyRef, useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
-import { jsx } from './jsx.mjs';
+import { fragment, jsx } from './jsx.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
     'shader': null,
     'javascript': 'javascript',
+    'mjs': 'javascript',
 };
 
 let monacoEditor;
 
-/**
- * @typedef {object} File
- * @property {string} name - todo
- * @property {string} text - todo
- * @property {string} [type] - todo
- */
+function ObjectMap(object, fn) {
+    const ret = [];
+    for (const key in object) {
+        const value = object[key];
+        ret.push(fn(key, value));
+    }
+    return ret;
+}
 
 /**
  * @typedef {object} CodeEditorProps
- * @property {File[]} files
- * @property {(value: Array<File>) => void} setFiles
  * @property {(value: boolean) => void} setLintErrors
  * @property {boolean} lintErrors
  * @property {LegacyRef<any>} playButtonRef
@@ -32,9 +33,15 @@ let monacoEditor;
  * @param {CodeEditorProps} props
  */
 const CodeEditor = (props) => {
-    /** @type {File[]} */
-    const files = JSON.parse(JSON.stringify(props.files));
-    const [selectedFile, setSelectedFile] = useState(0);
+    const [files, setFiles] = useState({'example.mjs': '//CodeEditor state'});
+    const [selectedFile, setSelectedFile] = useState('example.mjs');
+
+    window.addEventListener('exampleLoad', (event) => {
+        // console.log("CodeEditor got files event", event);
+        /** @type {Record<string, string>} */
+        const files = event.files;
+        setFiles({...files});
+    });
 
     /**
      * @param {import('@monaco-editor/react').Monaco} monaco 
@@ -63,20 +70,27 @@ const CodeEditor = (props) => {
      * @param {string} value 
      */
     const onChange = (value) => {
-        files[selectedFile].text = value;
-        props.setFiles(files);
-        const exampleFunction = files[0].text;
+        files[selectedFile] = value;
+        const event = new CustomEvent("updateFiles", {
+            detail: {
+                files
+            }
+        });
+        window.dispatchEvent(event);
+
+        const exampleFunction = files['example.mjs'];
         const val = exampleFunction;
         //console.log("onChange val", val);
         window.localStorage.setItem(
             window.location.hash.replace('#', ''),
             exampleFunction
         );
-        if (files.length > 1) {
-            window.editedFiles = {};
-            files.slice(1).forEach((f) => {
-                window.editedFiles[f.name] = f.text;
-            });
+        if (Object.keys(files).length > 1) {
+            window.editedFiles = {...files};
+            console.log('editedFiles', window.editedFiles);
+            //files.slice(1).forEach((f) => {
+            //    window.editedFiles[f.name] = f.text;
+            //});
         }
     };
 
@@ -93,25 +107,25 @@ const CodeEditor = (props) => {
     };
 
     /**
-     * @param {number} selectedFileIndex 
+     * @param {string} name
      */
-    const selectFile = (selectedFileIndex) => {
-        setSelectedFile(selectedFileIndex);
+    const selectFile = (name) => {
+        setSelectedFile(name);
         monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
-        document.querySelectorAll('#codePane .tabs-container .pcui-button').forEach((node, i) => {
-            if (selectedFileIndex === i) {
-                node.classList.add('selected');
-            } else {
-                node.classList.remove('selected');
-            }
-        });
+        //document.querySelectorAll('#codePane .tabs-container .pcui-button').forEach((node, i) => {
+        //    if (selectedFileIndex === i) {
+        //        node.classList.add('selected');
+        //    } else {
+        //        node.classList.remove('selected');
+        //    }
+        //});
     };
 
     useEffect(() => {
         const codePane = document.getElementById('codePane');
         codePane.classList.add('multiple-files');
         if (!files[selectedFile]) {
-            setSelectedFile(0);
+            setSelectedFile('example.mjs');
         }
         // @ts-ignore
         codePane.ui.on('resize', () => {
@@ -184,27 +198,25 @@ const CodeEditor = (props) => {
                 {
                     class: 'tabs-container'
                 },
-                props.files.map((file, index) => {
-                    if (!file) {
-                        console.log("CodeEditor> missing file", file, index);
-                        return null;
-                    }
-                    return jsx(Button, {
-                        key: index,
-                        id: `code-editor-file-tab-${index}`,
-                        text: file.name.indexOf('.') === -1 ? `${file.name}.${file.type}` : file.name,
-                        class: index === selectedFile ? 'selected' : null,
-                        onClick: () => selectFile(index)
+                ObjectMap(files, (name, text) => {
+                    const ext = name.split('.').pop();
+                    const button = jsx(Button, {
+                        key: name,
+                        id: `code-editor-file-tab-${name}`,
+                        text: name,
+                        class: name === selectedFile ? 'selected' : null,
+                        onClick: () => selectFile(name)
                     });
+                    return button;
                 })
             )
         ),
         jsx(
             MonacoEditor,
             {
-                language: FILE_TYPE_LANGUAGES[files[selectedFile]?.type],
+                language: FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()],
                 //language: "javascript",
-                value: files[selectedFile]?.text,
+                value: files[selectedFile],
                 beforeMount,
                 onMount: editorDidMount,
                 onChange,

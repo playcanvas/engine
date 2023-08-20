@@ -17,20 +17,12 @@ for (const category_ in realExamples) {
     const category = toKebabCase(category_);
     exampleData[category] = {};
     const examples = realExamples[category_];
-    for (const exampleName_ in examples) {        
-        const exampleClass = examples[exampleName_];
+    for (const exampleName_ in examples) {
         const example = toKebabCase(exampleName_).replace('-example', '');
+        // turn: turn into simple array...
         exampleData[category][example] = {};
-        const exampleFunc = exampleClass.example.toString();
-        exampleData[category][example].example = exampleFunc;
         exampleData[category][example].nameSlug = example;
         exampleData[category][example].categorySlug = category;
-        if (exampleClass.FILES) {
-            exampleData[category][example].files = exampleClass.FILES;
-        }
-        if (exampleClass.controls) {
-            exampleData[category][example].controls = exampleClass.controls.toString();
-        }
     }
 }
 // This will be minified by rollup terser plugin, just keep it readable/debuggable here

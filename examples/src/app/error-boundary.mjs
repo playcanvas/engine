@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { jsx } from "./jsx.mjs";
+import { fragment, jsx } from "./jsx.mjs";
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
@@ -14,11 +14,24 @@ class ErrorBoundary extends Component {
     //logErrorToMyService(error, errorInfo);
     console.warn(error, errorInfo);
   }
+  resetState() {
+    console.log("reset error");
+    this.setState({hasError: false})
+  }
   render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       //return <h1>Something went wrong.</h1>;
-      return jsx("h1", null, "Something went wrong.");
+      return fragment(
+        jsx("pre", null, "Something went wrong."),
+        jsx(
+          'button',
+          {
+            onClick: this.resetState.bind(this),
+          },
+          'retry'
+        )
+      );
     }
     return this.props.children; 
   }
