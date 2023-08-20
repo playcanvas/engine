@@ -107,11 +107,11 @@ function controls(props) {
                 console.warn("no app");
                 return;
             }
-            this.app.on('start', this.onAppStart.bind(this));
+            this.onAppStart();
         }
         render() {
             return fragment(
-                jsx("canvas", {id: "2d-blend-control", ref: this.refCanvas})
+                jsx("canvas", { ref: this.refCanvas })
             );
         }
     }
