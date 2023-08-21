@@ -7,10 +7,6 @@ function controls() {
     const canvasRef = useRef(null);
     useEffect(() => {
         const canvas = canvasRef.current;
-        // Loading another example
-        if (!pc.app) {
-            return;
-        }
         // @ts-ignore engine-tsd
         /** @type {pc.Entity} */
         const modelEntity = pc.app.root.findByName('model');

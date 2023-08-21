@@ -97,7 +97,7 @@ class ControlLoader extends c {
     render() {
         // console.log("RERENDER CONTROLLOADER exampleLoaded", this.state.exampleLoaded);
         return fragment(
-            this.state.exampleLoaded && jsx(ErrorBoundary, null, jsx(Controls, {
+            this.state.exampleLoaded && window.pc?.app && jsx(ErrorBoundary, null, jsx(Controls, {
                 controls: jsx(this.state.controls, {
                     observer: window.observerData
                 })
