@@ -119,7 +119,7 @@ export const SideBar = () => {
                                     const sideBar = document.getElementById('sideBar');
                                     // @ts-ignore
                                     sideBar.ui.collapsed = true;
-                                    console.log("load new example", category, example);
+                                    // console.log("load new example", category, example);
                                     const { pc } = window;
                                     if (pc) {
                                         pc.app?.destroy();
