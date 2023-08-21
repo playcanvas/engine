@@ -1,4 +1,4 @@
-import { LegacyRef, useEffect, useState } from 'react';
+import { LegacyRef, createRef, useEffect, useState } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
@@ -26,21 +26,33 @@ function ObjectMap(object, fn) {
  * @typedef {object} CodeEditorProps
  * @property {(value: boolean) => void} setLintErrors
  * @property {boolean} lintErrors
- * @property {LegacyRef<any>} playButtonRef
  */
 
 /**
  * @param {CodeEditorProps} props
  */
 const CodeEditor = (props) => {
-    const [files, setFiles] = useState({'example.mjs': '//CodeEditor state'});
+    const [files, setFiles] = useState({'example.mjs': '// init'});
     const [selectedFile, setSelectedFile] = useState('example.mjs');
+
+    const stateRefFiles = useRef();
+    // make stateRef always have the current files
+    // your "fixed" callbacks can refer to this object whenever
+    // they need the current value.  Note: the callbacks will not
+    // be reactive - they will not re-run the instant state changes,
+    // but they *will* see the current value whenever they do run
+    stateRefFiles.current = files;
 
     window.addEventListener('exampleLoad', (event) => {
         // console.log("CodeEditor got files event", event);
         /** @type {Record<string, string>} */
         const files = event.files;
         setFiles({...files});
+    });
+
+
+    window.addEventListener('exampleLoading', (e) => {
+        setFiles({'example.mjs': '// reloading'});
     });
 
     /**
@@ -66,6 +78,19 @@ const CodeEditor = (props) => {
         monacoEditor = editor;
     };
 
+    const onPlayButton = () => {
+        const files = stateRefFiles.current;
+        // @ts-ignore
+        const frameWindow = document.getElementById('exampleIframe').contentWindow;
+        // console.log("got files", files);
+        //frameWindow.location.reload();
+        //frameWindow.app.destroy();
+        frameWindow.exampleString = files["example.mjs"];
+        frameWindow.eval("example = Function('return ' + exampleString)()");
+        frameWindow.eval("app.destroy();");
+        frameWindow.eval("main()");
+    }
+
     /**
      * @param {string} value 
      */
@@ -87,7 +112,7 @@ const CodeEditor = (props) => {
         );
         if (Object.keys(files).length > 1) {
             window.editedFiles = {...files};
-            console.log('editedFiles', window.editedFiles);
+            // console.log('editedFiles', window.editedFiles);
             //files.slice(1).forEach((f) => {
             //    window.editedFiles[f.name] = f.text;
             //});
@@ -179,7 +204,7 @@ const CodeEditor = (props) => {
                         //enabled: !props.lintErrors,
                         icon: 'E304',
                         text: '',
-                        ref: props.playButtonRef
+                        onClick: () => onPlayButton()
                     }
                 ),
                 jsx(

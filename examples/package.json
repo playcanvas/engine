@@ -5,15 +5,16 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run build:example:data && npm run build:directory && cross-env NODE_ENV=production rollup -c",
+    "build": "npm run build:example:data && npm run build:standalone && npm run build:directory && cross-env NODE_ENV=production rollup -c",
     "build:directory": "node ./scripts/example-directory/index.mjs",
     "build:example:data": "node ./scripts/example-data.mjs",
     "build:thumbnails": "node ./scripts/thumbnails.mjs",
+    "build:standalone": "node ./scripts/generate-standalone-files.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging",
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .js,.ts,.tsx",
-    "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
+    "watch": "npm run build:example:data && npm run build:standalone && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
     "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
     "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve --no-request-logging\""

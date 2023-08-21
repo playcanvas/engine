@@ -2,7 +2,6 @@ import { Component } from 'react';
 import { fragment, jsx } from './jsx.mjs';
 import { controlsObserver } from './example.mjs';
 import { Controls } from './controls.mjs';
-import { Container } from '@playcanvas/pcui/react';
 import { ErrorBoundary } from './error-boundary.mjs';
 
 /**
@@ -32,11 +31,11 @@ class ControlLoader extends c {
     constructor(props) {
         super(props);
         const self = this;
-        // console.log("remove event listener aswell?");
         window.addEventListener('exampleLoading', (e) => {
             self.setState({
                 exampleLoaded: false,
-                controls: () => jsx('h1', null, 'reload'),
+                //controls: () => jsx('h1', null, 'state: reload'),
+                controls: null,
             });
         });
         window.addEventListener('exampleLoad', (event) => {
@@ -70,6 +69,12 @@ class ControlLoader extends c {
             const files = event.detail.files;
             // console.log("updateFiles", files);
             const controlsSrc = files['controls.mjs'] ?? 'null';
+            if (!files['controls.mjs']) {
+                this.setState({
+                    exampleLoaded: true,
+                    controls: null,
+                });
+            }
             let controls;
             try {
                 controls = Function('return ' + controlsSrc)();
@@ -95,24 +100,17 @@ class ControlLoader extends c {
         }
     }
     render() {
-        // console.log("RERENDER CONTROLLOADER exampleLoaded", this.state.exampleLoaded);
+        // console.log('ControlLoader#render> exampleLoaded', this.state.exampleLoaded);
         return fragment(
-            this.state.exampleLoaded && window.pc?.app && jsx(ErrorBoundary, null, jsx(Controls, {
-                controls: jsx(this.state.controls, {
-                    observer: window.observerData
+            this.state.exampleLoaded && window.pc?.app && this.state.controls && jsx(
+                ErrorBoundary,
+                null,
+                jsx(Controls, {
+                    controls: jsx(this.state.controls, {
+                        observer: window.observerData
+                    })
                 })
-            })),
-            //jsx(
-            //    Container,
-            //    {
-            //        id: 'controlPanel-controls'
-            //    },
-            //    //jsx("span", null, "in container now"),
-            //    jsx(ErrorBoundary, null, 
-            //    jsx(this.state.controls, {
-            //        observer: window.observerData
-            //    })),
-            //)
+            ),
         );
     }
 }

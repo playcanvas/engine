@@ -15,18 +15,19 @@ function controls({observer}) {
                     link: { observer, path: 'settings.material.gloss' },
                     min: 0,
                     max: 1,
-                    precision: 2
-                })),
+                    precision: 2,
+                }),
+            ),
             jsx(LabelGroup, { text: 'Metalness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'settings.material.metalness' },
                     min: 0,
                     max: 1,
-                    precision: 2
-                })
-            )
-        )
+                    precision: 2,
+                }),
+            ),
+        ),
     );
 }
 

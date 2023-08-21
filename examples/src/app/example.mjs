@@ -30,7 +30,7 @@ class Example extends c {
 
     get iframePath() {
         const example = examples.paths[this.path];
-        return `${iframePath}../../dist/iframe/${example.category}_${example.name}.html`;
+        return `${iframePath}/${example.category}_${example.name}.html`;
     }
 
     componentDidMount() {
@@ -53,7 +53,7 @@ class Example extends c {
 
     componentDidUpdate() {
         window.localStorage.removeItem(this.path);
-        delete window.editedFiles;
+        //delete window.editedFiles;
     }
 
     onSetPreferredGraphicsDevice(value) {

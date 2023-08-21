@@ -11,31 +11,13 @@ import { ControlLoader } from './control-loader.mjs';
 
 const MainLayout = () => {
     const [lintErrors, setLintErrors] = useState(false);
-    //const [counter, setCounter] = useState(0);
+
     /**
      * @param {boolean} value 
      */
     const updateShowMiniStats = (value) => {
         window._showMiniStats = value;
     };
-    const playButtonRef = createRef();
-
-    //window.addEventListener('exampleLoading', (e) => {
-    //    console.log("exampleLoading in MainLayout COUNTER=", counter);
-    //    setCounter(counter + 1);
-    //});
-
-    useEffect(() => {
-        if (playButtonRef.current) {
-            // @ts-ignore
-            playButtonRef.current.element.unbind();
-            // @ts-ignore
-            playButtonRef.current.element.on('click', () => {
-                // @ts-ignore
-                document.getElementById('exampleIframe').contentWindow.location.reload();
-            });
-        }
-    });
     return (
         jsx("div", { id: 'appInner' },
             jsx(HashRouter, null,
@@ -53,7 +35,6 @@ const MainLayout = () => {
                                     jsx(CodeEditor, {
                                         lintErrors,
                                         setLintErrors,
-                                        playButtonRef,
                                     }),
                                     jsx(Example, null,
                                         jsx(ControlLoader, {

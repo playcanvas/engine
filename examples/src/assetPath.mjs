@@ -57,7 +57,7 @@ function getIframePath() {
     if (i === -1) { // npm run serve
         return '/iframe/';
     }
-    return href.substring(0, i) + "/examples/src/iframe/";
+    return href.substring(0, i) + "/examples/dist/iframe/";
 }
 export const iframePath = getIframePath();
 

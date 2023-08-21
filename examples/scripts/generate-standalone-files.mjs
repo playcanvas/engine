@@ -90,9 +90,10 @@ ${exampleClass.example.toString()}
                 return 'webgl2';
             }
         }
+        let started = false;
+        var data = new observer.Observer({});
         async function main() {
             var canvas = document.getElementById("application-canvas");
-            var data = new observer.Observer({});
             window.top.observerData = data;
             var args = Object.fromEntries(
                 location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
@@ -113,8 +114,11 @@ ${exampleClass.example.toString()}
             }
             var filesObject = ${exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}'};
             Object.assign(files, filesObject);
-            const event = new CustomEvent("exampleLoading"); // just notify to clean UI
-            window.top.dispatchEvent(event);
+            if (!started) {
+                // console.log("Dispatch exampleLoading!");
+                const event = new CustomEvent("exampleLoading"); // just notify to clean UI, but not during hot-reload
+                window.top.dispatchEvent(event);
+            }
             const app = await example({
                 canvas,
                 deviceType,
@@ -130,6 +134,12 @@ ${exampleClass.example.toString()}
                 files,
             });
             window.app = app;
+            function resize() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                // console.log("resize", w, h);
+                app.resizeCanvas(w, h);
+            }
             /**
              * @param {pc.AppBase} app - The application.
              */
@@ -139,15 +149,8 @@ ${exampleClass.example.toString()}
                 var canvasContainerElement = canvas.parentElement;
                 canvas.setAttribute('width', window.innerWidth + 'px');
                 canvas.setAttribute('height', window.innerHeight + 'px');
-                var resizeTimeout = null;
                 app.setCanvasResolution(pc.RESOLUTION_AUTO);
-                // triggers resize every frame for camera/fly+orbit
-                // if (window.ResizeObserver) {
-                //     new ResizeObserver(function() {
-                //         canvas.width = canvasContainerElement.clientWidth;
-                //         canvas.height = canvasContainerElement.clientHeight;
-                //     }).observe(canvasContainerElement);
-                // }
+                window.onresize = resize;
                 if (app.graphicsDevice.deviceType !== 'webgpu' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
                     var miniStats = new pcx.MiniStats(app);
@@ -176,11 +179,14 @@ ${exampleClass.example.toString()}
             // Wait until assets loaded.
             // app.start() is called when assets loaded in examples
             app.once('start', () => {
-                // console.log("REAL START");
+                // console.log("REAL START!");
                 if (app.graphicsDevice?.canvas) {
                     setupApplication(app);
-                    const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
-                    window.top.dispatchEvent(event);
+                    if (!started) { // only one time, recalls of main() are caused by Monaco live coding
+                        const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
+                        window.top.dispatchEvent(event);
+                    }
+                    started = true;
                 } else {
                     console.warn("no canvas")
                 }
