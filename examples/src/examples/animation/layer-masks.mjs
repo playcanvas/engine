@@ -278,13 +278,14 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             });
         };
 
+        app.start();
+        
         app.on('update', () => {
             if (data.get('options.skeleton')) {
                 drawSkeleton(modelEntity, new pc.Color(1, 0, 0, modelEntity.anim.baseLayer.weight * 0.5));
             }
         });
 
-        app.start();
     });
     return app;
 }

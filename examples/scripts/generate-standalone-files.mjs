@@ -53,7 +53,10 @@ function generateExampleFile(category, example, exampleClass) {
                 <div style="width:100%; position:absolute; top:10px">
                     <div style="text-align: center;">
                         <a id="ar-link" rel="ar" download="asset.usdz">
-                            <img id="button" width="200" src="../arkit.png">
+                            <!-- Fallback image for npm serve vs build-free version -->
+                            <object data="../arkit.png" type="image/jpeg" id="button" width="200">
+                                <img src="../../../src/static/arkit.png" id="button" width="200"/>
+                            </object>
                         </a>    
                     </div>
                 </div>
@@ -176,9 +179,7 @@ ${exampleClass.example.toString()}
                     this.files = files;
                 }
             }
-            // Wait until assets loaded.
-            // app.start() is called when assets loaded in examples
-            app.once('start', () => {
+            const finalFunc = () => {
                 // console.log("REAL START!");
                 if (app.graphicsDevice?.canvas) {
                     setupApplication(app);
@@ -190,7 +191,15 @@ ${exampleClass.example.toString()}
                 } else {
                     console.warn("no canvas")
                 }
-            });
+            };
+            // Wait until example has called app.start()
+            // And if it already called start, we will know by app.frame > 0
+            // app.start() is called when assets loaded in examples
+            if (app.frame) { // app already started
+                finalFunc();
+            } else { // Wait for app.start()
+                app.once('start', finalFunc);
+            }
         }
         window.onload = main;
         </script>

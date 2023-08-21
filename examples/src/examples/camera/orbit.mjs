@@ -1,8 +1,4 @@
 import * as pc from 'playcanvas';
-import { loadAssets } from './loadAssets.shared.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ loadAssets });
 
 /**
  * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
@@ -21,6 +17,17 @@ async function example({ canvas, assetPath, scriptsPath }) {
         script: new pc.Asset('script', 'script',    { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
+    /**
+     * @param {pc.Asset[] | number[]} assetList - The asset list.
+     * @param {pc.AssetRegistry} assetRegistry - The asset registry.
+     * @returns {Promise<void>} The promise.
+     */
+    function loadAssets(assetList, assetRegistry) {
+        return new Promise(resolve => {
+            const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
+            assetListLoader.load(resolve);
+        });
+    }
     await loadAssets(Object.values(assets), app.assets);
     // Create an entity hierarchy representing the statue
     const statueEntity = assets.statue.resource.instantiateRenderEntity();

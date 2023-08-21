@@ -97,6 +97,7 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
+    app.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -404,8 +405,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
         characterEntity.addComponent("script");
         characterEntity.script.create('Locomotion', {});
-
-        app.start();
     });
     return app;
 }

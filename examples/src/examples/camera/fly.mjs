@@ -1,8 +1,4 @@
 import * as pc from 'playcanvas';
-import { loadAssets } from './loadAssets.shared.mjs';
-import { enableHotReload } from '../../enableHotReload.mjs';
-
-enableHotReload({ loadAssets });
 
 /**
  * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
@@ -20,6 +16,18 @@ async function example({ canvas, scriptsPath }) {
     const assets = {
         script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/fly-camera.js' })
     };
+
+    /**
+     * @param {pc.Asset[] | number[]} assetList - The asset list.
+     * @param {pc.AssetRegistry} assetRegistry - The asset registry.
+     * @returns {Promise<void>} The promise.
+     */
+    function loadAssets(assetList, assetRegistry) {
+        return new Promise(resolve => {
+            const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
+            assetListLoader.load(resolve);
+        });
+    }
     await loadAssets(Object.values(assets), app.assets);
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
     app.start();
