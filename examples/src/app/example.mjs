@@ -33,9 +33,6 @@ class Example extends c {
         return `${iframePath}/${example.category}_${example.name}.html`;
     }
 
-    componentDidMount() {
-        window.localStorage.removeItem(this.path);
-    }
     /**
      * @param {Readonly<Props>} nextProps 
      * @returns {boolean}
@@ -49,11 +46,6 @@ class Example extends c {
             this.props.match.params.example !== nextProps.match.params.example ||
             updateMobileOnFileChange()
         );
-    }
-
-    componentDidUpdate() {
-        window.localStorage.removeItem(this.path);
-        //delete window.editedFiles;
     }
 
     onSetPreferredGraphicsDevice(value) {

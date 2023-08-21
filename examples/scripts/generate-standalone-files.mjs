@@ -94,8 +94,25 @@ ${exampleClass.example.toString()}
             }
         }
         let started = false;
-        var data = new observer.Observer({});
-        async function main() {
+        const data = new observer.Observer({});
+        /**
+         * Keep it function in first run for nicer debug locations.
+         * @type {Record<string, string | Function>}
+         */
+        const files = {};
+        files['example.mjs'] = example.toString();
+        if (window.controls) {
+            files['controls.mjs'] = controls.toString();
+        }
+        var filesObject = ${exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}'};
+        function resolveFunction(_) {
+            if (_.call) {
+                return _;
+            }
+            return new Function('return ' + _)();
+        }
+        Object.assign(files, filesObject);
+        async function main(files) {
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
             var args = Object.fromEntries(
@@ -110,18 +127,13 @@ ${exampleClass.example.toString()}
                 console.warn("No deviceType given, defaulting to WebGL2");
                 deviceType = 'webgl2';
             }
-            const files = {};
-            files['example.mjs'] = example.toString();
-            if (window.controls) {
-                files['controls.mjs'] = controls.toString();
-            }
-            var filesObject = ${exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}'};
-            Object.assign(files, filesObject);
             if (!started) {
                 // console.log("Dispatch exampleLoading!");
                 const event = new CustomEvent("exampleLoading"); // just notify to clean UI, but not during hot-reload
                 window.top.dispatchEvent(event);
             }
+            const example = resolveFunction(files['example.mjs']);
+            files['example.mjs'] = files['example.mjs'].toString();
             const app = await example({
                 canvas,
                 deviceType,
@@ -201,7 +213,7 @@ ${exampleClass.example.toString()}
                 app.once('start', finalFunc);
             }
         }
-        window.onload = main;
+        window.onload = () => main(files);
         </script>
     </body>
 </html>`;

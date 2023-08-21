@@ -75,6 +75,7 @@ const CodeEditor = (props) => {
     };
 
     const editorDidMount = (editor) => {
+        window.editor = editor;
         monacoEditor = editor;
     };
 
@@ -85,10 +86,11 @@ const CodeEditor = (props) => {
         // console.log("got files", files);
         //frameWindow.location.reload();
         //frameWindow.app.destroy();
-        frameWindow.exampleString = files["example.mjs"];
-        frameWindow.eval("example = Function('return ' + exampleString)()");
+        //frameWindow.exampleString = files["example.mjs"];
+        //frameWindow.eval("example = Function('return ' + exampleString)()");
         frameWindow.eval("app.destroy();");
-        frameWindow.eval("main()");
+        frameWindow.eval("editedFiles = " + JSON.stringify(files));
+        frameWindow.eval("main(editedFiles)");
     }
 
     /**
@@ -102,21 +104,6 @@ const CodeEditor = (props) => {
             }
         });
         window.dispatchEvent(event);
-
-        const exampleFunction = files['example.mjs'];
-        const val = exampleFunction;
-        //console.log("onChange val", val);
-        window.localStorage.setItem(
-            window.location.hash.replace('#', ''),
-            exampleFunction
-        );
-        if (Object.keys(files).length > 1) {
-            window.editedFiles = {...files};
-            // console.log('editedFiles', window.editedFiles);
-            //files.slice(1).forEach((f) => {
-            //    window.editedFiles[f.name] = f.text;
-            //});
-        }
     };
 
     /**
