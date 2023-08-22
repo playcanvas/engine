@@ -4,7 +4,7 @@ import { controlsObserver } from './example.mjs';
 import { Controls } from './controls.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 
-const debug = true;
+const debug = false;
 
 /**
  * @typedef {object} Props

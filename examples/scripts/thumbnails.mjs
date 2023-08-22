@@ -9,7 +9,7 @@ import * as categories from "../src/examples/index.mjs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
-const debug = true;
+const debug = false;
 /** @type {{category: string, example: string}[]} */
 const exampleList = [];
 for (const category_ in categories) {
