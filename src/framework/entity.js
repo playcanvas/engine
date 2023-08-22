@@ -273,7 +273,7 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Fired when the entity enters a zone.
+     * Fired after the entity enters a zone.
      *
      * @event Entity#zoneEnter
      * @param {import('./components/zone/component').ZoneComponent} zone - The zone that entity entered.
@@ -284,7 +284,7 @@ class Entity extends GraphNode {
      */
 
     /**
-     * Fired when the entity leaves a zone.
+     * Fired after the entity leaves a zone.
      *
      * @event Entity#zoneLeave
      * @param {import('./components/zone/component').ZoneComponent} zone - The zone that entity left.
