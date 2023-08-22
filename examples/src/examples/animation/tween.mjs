@@ -6,7 +6,7 @@ import * as TWEEN from '@tweenjs/tween.js'
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
-    globalThis.TWEEN = TWEEN; // ES5 script depends on this global
+    globalThis.TWEEN = TWEEN; // animation/tween.js depends on this global
 
     const assets = {
         font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),
@@ -171,6 +171,8 @@ class TweenExample {
     static NAME = 'Tween';
     static WEBGPU_ENABLED = true;
     static example = example;
+    // added by examples/scripts/generate-standalone-files.mjs
+    static es5libs = ['https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js'];
 }
 
 export { TweenExample };

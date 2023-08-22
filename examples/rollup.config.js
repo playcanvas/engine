@@ -32,8 +32,9 @@ const staticFiles = [
     { src: 'src/iframe/index-serve.html', dest: 'dist/iframe/index.html' },
     { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
     { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
-    { src: 'node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' }, // todo drop dependency
+    { src: 'node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
     { src: 'src/example.css', dest: 'dist/iframe/example.css' },
+    { src: 'src/pathes.js', dest: 'dist/iframe/pathes.js' },
 ];
 
 function timestamp() {

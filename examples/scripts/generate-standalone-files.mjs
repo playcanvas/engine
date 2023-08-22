@@ -45,6 +45,7 @@ function generateExampleFile(category, example, exampleClass) {
         <link rel="stylesheet" href="./example.css">
         <!--<link rel="stylesheet" href="../styles.css">-->
         <title>${category}: ${example}</title>
+        ${exampleClass.es5libs?.map(_ => `<script src="${_}"></script>`).join('\n') || '<!-- no es5libs -->'}
     </head>
     <body>
         <div id="app">
