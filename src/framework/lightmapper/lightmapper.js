@@ -836,7 +836,7 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, bakeLight) {
+    renderShadowMap(comp, shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
         const isClustered = this.scene.clusteredLightingEnabled;
@@ -849,9 +849,9 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
+                this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
             } else {
-                this.renderer._shadowRendererLocal.cull(light, casters);
+                this.renderer._shadowRendererLocal.cull(light, comp, casters);
             }
 
             const insideRenderPass = false;
@@ -910,6 +910,7 @@ class Lightmapper {
     bakeInternal(passCount, bakeNodes, allNodes) {
 
         const scene = this.scene;
+        const comp = scene.layers;
         const device = this.device;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
@@ -917,7 +918,7 @@ class Lightmapper {
         this.setupScene();
 
         // update layer composition
-        scene.layers._update();
+        comp._update();
 
         // compute bounding boxes for nodes
         this.computeNodesBounds(bakeNodes);
@@ -927,7 +928,7 @@ class Lightmapper {
 
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
         const allLights = [], bakeLights = [];
-        this.prepareLightsToBake(scene.layers, allLights, bakeLights);
+        this.prepareLightsToBake(comp, allLights, bakeLights);
 
         // update transforms
         this.updateTransforms(allNodes);
@@ -1016,7 +1017,7 @@ class Lightmapper {
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(comp, shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
                         const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);

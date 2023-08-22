@@ -12,6 +12,7 @@ import { ChunkBuilder } from '../chunk-builder.js';
 import { ChunkUtils } from '../chunk-utils.js';
 import { StandardMaterialOptions } from '../../materials/standard-material-options.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
+import { ShaderGenerator } from './shader-generator.js';
 
 const _matTex2D = [];
 
@@ -21,13 +22,13 @@ const buildPropertiesList = (options) => {
         .sort();
 };
 
-const standard = {
+class ShaderGeneratorStandard extends ShaderGenerator {
     // Shared Standard Material option structures
-    optionsContext: new StandardMaterialOptions(),
-    optionsContextMin: new StandardMaterialOptions(),
+    optionsContext = new StandardMaterialOptions();
 
-    /** @type { Function } */
-    generateKey: function (options) {
+    optionsContextMin = new StandardMaterialOptions();
+
+    generateKey(options) {
         let props;
         if (options === this.optionsContextMin) {
             if (!this.propsMin) this.propsMin = buildPropertiesList(options);
@@ -44,7 +45,7 @@ const standard = {
             LitOptionsUtils.generateKey(options.litOptions);
 
         return key;
-    },
+    }
 
     // get the value to replace $UV with in Map Shader functions
 
@@ -57,7 +58,7 @@ const standard = {
      * @returns {string} The code used to replace "$UV" in the shader code.
      * @private
      */
-    _getUvSourceExpression: function (transformPropName, uVPropName, options) {
+    _getUvSourceExpression(transformPropName, uVPropName, options) {
         const transformId = options[transformPropName];
         const uvChannel = options[uVPropName];
         const isMainPass = options.litOptions.pass === SHADER_FORWARD || options.litOptions.pass === SHADER_FORWARDHDR;
@@ -82,19 +83,19 @@ const standard = {
         }
 
         return expression;
-    },
+    }
 
-    _addMapDef: function (name, enabled) {
+    _addMapDef(name, enabled) {
         return enabled ? `#define ${name}\n` : `#undef ${name}\n`;
-    },
+    }
 
-    _addMapDefs: function (float, color, vertex, map, invert) {
+    _addMapDefs(float, color, vertex, map, invert) {
         return this._addMapDef("MAPFLOAT", float) +
                this._addMapDef("MAPCOLOR", color) +
                this._addMapDef("MAPVERTEX", vertex) +
                this._addMapDef("MAPTEXTURE", map) +
                this._addMapDef("MAPINVERT", invert);
-    },
+    }
 
     /**
      * Add chunk for Map Types (used for all maps except Normal).
@@ -108,7 +109,7 @@ const standard = {
      * @returns {string} The shader code to support this map.
      * @private
      */
-    _addMap: function (propName, chunkName, options, chunks, mapping, encoding = null) {
+    _addMap(propName, chunkName, options, chunks, mapping, encoding = null) {
         const mapPropName = propName + "Map";
         const uVPropName = mapPropName + "Uv";
         const identifierPropName = mapPropName + "Identifier";
@@ -181,9 +182,9 @@ const standard = {
 
         subCode = this._addMapDefs(isFloatTint, isVecTint, vertexColorOption, textureOption, invertOption) + subCode;
         return subCode.replace(/\$/g, "");
-    },
+    }
 
-    _correctChannel: function (p, chan, _matTex2D) {
+    _correctChannel(p, chan, _matTex2D) {
         if (_matTex2D[p] > 0) {
             if (_matTex2D[p] < chan.length) {
                 return chan.substring(0, _matTex2D[p]);
@@ -196,7 +197,7 @@ const standard = {
             }
             return chan;
         }
-    },
+    }
 
     /**
      * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
@@ -205,7 +206,7 @@ const standard = {
      * @returns {object} Returns the created shader definition.
      * @ignore
      */
-    createShaderDefinition: function (device, options) {
+    createShaderDefinition(device, options) {
 
         const shaderPassInfo = ShaderPass.get(device).getByIndex(options.litOptions.pass);
         const isForwardPass = shaderPassInfo.isForward;
@@ -510,6 +511,8 @@ const standard = {
 
         return litShader.getDefinition();
     }
-};
+}
+
+const standard = new ShaderGeneratorStandard();
 
 export { _matTex2D, standard };

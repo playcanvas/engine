@@ -13,6 +13,7 @@ import {
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
+import { LightCube } from '../graphics/light-cube.js';
 
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
@@ -34,6 +35,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
 import { ShadowRenderer } from './shadow-renderer.js';
+import { WorldClustersAllocator } from './world-clusters-allocator.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -75,8 +77,15 @@ class Renderer {
      * skinning or morphing. Extracted during culling.
      *
      * @type {Set<import('../mesh-instance.js').MeshInstance>}
+     * @private
      */
     processingMeshInstances = new Set();
+
+    /**
+     * @type {WorldClustersAllocator}
+     * @ignore
+     */
+    worldClustersAllocator;
 
     /**
      * Create a new instance.
@@ -89,6 +98,9 @@ class Renderer {
 
         /** @type {import('../scene.js').Scene|null} */
         this.scene = null;
+
+        // TODO: allocate only when the scene has clustered lighting enabled
+        this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
 
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
@@ -158,6 +170,10 @@ class Renderer {
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
         this.morphTexParams = scope.resolve('morph_tex_params');
+
+        // a single instance of light cube
+        this.lightCube = new LightCube();
+        this.constantLightCube = scope.resolve('lightCube[0]');
     }
 
     destroy() {
@@ -916,8 +932,7 @@ class Renderer {
                 }
 
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightCompositionData[i].shadowCastersList;
-                    this._shadowRendererLocal.cull(light, casters);
+                    this._shadowRendererLocal.cull(light, comp);
                 }
             }
         }
@@ -927,12 +942,10 @@ class Renderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
-            const count = renderAction.directionalLightsIndices.length;
+            const count = renderAction.directionalLights.length;
             for (let j = 0; j < count; j++) {
-                const lightIndex = renderAction.directionalLightsIndices[j];
-                const light = comp._lights[lightIndex];
-                const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
-                this._shadowRendererDirectional.cull(light, casters, renderAction.camera.camera);
+                const light = renderAction.directionalLights[j];
+                this._shadowRendererDirectional.cull(light, comp, renderAction.camera.camera);
             }
         }
     }
@@ -1042,21 +1055,8 @@ class Renderer {
     }
 
     renderCookies(lights) {
-
         const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-
-            // skip clustered cookies with no assigned atlas slot
-            if (!light.atlasViewportAllocated)
-                continue;
-
-            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated)
-                continue;
-
-            this._cookieRenderer.render(light, cookieRenderTarget);
-        }
+        this._cookieRenderer.render(cookieRenderTarget, lights);
     }
 
     /**
@@ -1143,31 +1143,12 @@ class Renderer {
         const startTime = now();
         // #endif
 
-        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
-
         const renderActions = comp._renderActions;
-        for (let i = 0; i < renderActions.length; i++) {
-            const renderAction = renderActions[i];
-            const cluster = renderAction.lightClusters;
-
-            if (cluster && cluster !== emptyWorldClusters) {
-
-                // update each cluster only one time
-                if (!_tempSet.has(cluster)) {
-                    _tempSet.add(cluster);
-
-                    const layer = comp.layerList[renderAction.layerIndex];
-                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
-                }
-            }
-        }
-
-        // keep temp set empty
-        _tempSet.clear();
+        this.worldClustersAllocator.update(renderActions, this.scene.gammaCorrection, this.scene.lighting);
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
-        this._lightClusters = comp._worldClusters.length;
+        this._lightClusters = this.worldClustersAllocator.count;
         // #endif
     }
 
@@ -1215,7 +1196,7 @@ class Renderer {
         }
 
         // Update static layer data, if something's changed
-        const updated = comp._update(this.device, clusteredLightingEnabled);
+        const updated = comp._update();
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;

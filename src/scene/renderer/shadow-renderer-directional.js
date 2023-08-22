@@ -65,7 +65,7 @@ class ShadowRendererDirectional {
     }
 
     // cull directional shadow map
-    cull(light, drawCalls, camera) {
+    cull(light, comp, camera, casters = null) {
 
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
@@ -154,7 +154,7 @@ class ShadowRendererDirectional {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
             // find out AABB of visible shadow casters
             let emptyAabb = true;

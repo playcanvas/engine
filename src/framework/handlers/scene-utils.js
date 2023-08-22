@@ -1,17 +1,14 @@
 import { http } from '../../platform/net/http.js';
 
-const SceneUtils = {
+class SceneUtils {
     /**
-     * @private
-     * @function
-     * @static
-     * @name SceneUtils.load
-     * @description Loads the scene JSON file from a URL.
+     * Loads the scene JSON file from a URL.
+     *
      * @param {string} url - URL to scene JSON.
      * @param {number} maxRetries - Number of http load retry attempts.
      * @param {Function} callback - The callback to the JSON file is loaded.
      */
-    load: function (url, maxRetries, callback) {
+    static load(url, maxRetries, callback) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -40,6 +37,6 @@ const SceneUtils = {
             }
         });
     }
-};
+}
 
 export { SceneUtils };

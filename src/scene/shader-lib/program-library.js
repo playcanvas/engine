@@ -27,13 +27,19 @@ class ProgramLibrary {
     /**
      * A cache of shader definitions before processing.
      *
-     * @type {Map<string, object>}
+     * @type {Map<number, object>}
      */
     definitionsCache = new Map();
 
+    /**
+     * Named shader generators.
+     *
+     * @type {Map<string, import('./programs/shader-generator.js').ShaderGenerator>}
+     */
+    _generators = new Map();
+
     constructor(device, standardMaterial) {
         this._device = device;
-        this._generators = {};
         this._isClearingCache = false;
         this._precached = false;
 
@@ -57,22 +63,31 @@ class ProgramLibrary {
     }
 
     register(name, generator) {
-        if (!this.isRegistered(name)) {
-            this._generators[name] = generator;
+        if (!this._generators.has(name)) {
+            this._generators.set(name, generator);
         }
     }
 
     unregister(name) {
-        if (this.isRegistered(name)) {
-            delete this._generators[name];
+        if (this._generators.has(name)) {
+            this._generators.delete(name);
         }
     }
 
     isRegistered(name) {
-        const generator = this._generators[name];
-        return (generator !== undefined);
+        return this._generators.has(name);
     }
 
+    /**
+     * Returns a generated shader definition for the specified options. They key is used to cache the
+     * shader definition.
+     * @param {import('./programs/shader-generator.js').ShaderGenerator} generator - The generator
+     * to use.
+     * @param {string} name - The unique name of the shader generator.
+     * @param {number} key - A unique key representing the shader options.
+     * @param {object} options - The shader options.
+     * @returns {object} - The shader definition.
+     */
     generateShaderDefinition(generator, name, key, options) {
         let def = this.definitionsCache.get(key);
         if (!def) {
@@ -112,7 +127,7 @@ class ProgramLibrary {
     }
 
     getProgram(name, options, processingOptions, userMaterialId) {
-        const generator = this._generators[name];
+        const generator = this._generators.get(name);
         if (!generator) {
             Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             return null;
