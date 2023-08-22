@@ -102,8 +102,7 @@ class ZoneComponent extends Component {
      */
 
     /**
-     * Fired when an entity enters the zone. Event is fired after entity was added
-     * to the zone.
+     * Fired after an entity enters the zone.
      *
      * @event ZoneComponent#entityEnter
      * @param {import('../../entity').Entity} entity - The entity entering the zone.
@@ -114,8 +113,7 @@ class ZoneComponent extends Component {
      */
 
     /**
-     * Fired when an entity leaves the zone. Event is fired after entity was removed
-     * from the zone.
+     * Fired after an entity leaves the zone.
      *
      * @event ZoneComponent#entityLeave
      * @param {import('../../entity').Entity} entity - The entity leaving the zone.
