@@ -72,7 +72,8 @@ class ResourceLoader {
      * Get a {@link ResourceHandler} for a resource type.
      *
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {import('./handler.js').ResourceHandler} The registered handler.
+     * @returns {import('./handler.js').ResourceHandler|undefined} The registered handler, or
+     * undefined if the requested handler is not registered.
      */
     getHandler(type) {
         return this._handlers[type];

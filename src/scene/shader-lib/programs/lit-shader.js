@@ -23,10 +23,10 @@ import {
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
+import { ShaderGenerator } from './shader-generator.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -363,7 +363,7 @@ class LitShader {
         if (options.skin) {
             this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
             this.attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += skinCode(device, chunks);
+            code += ShaderGenerator.skinCode(device, chunks);
             code += "#define SKIN\n";
         } else if (options.useInstancing) {
             code += "#define INSTANCING\n";
@@ -417,10 +417,10 @@ class LitShader {
         code += this.varyingDefines;
         code += this.frontendDecl;
         code += this.frontendCode;
-        code += begin();
+        code += ShaderGenerator.begin();
         code += this.frontendFunc;
         code += "    gl_FragColor = uColor;\n";
-        code += end();
+        code += ShaderGenerator.end();
         return code;
     }
 
@@ -435,10 +435,10 @@ class LitShader {
         code += chunks.packDepthPS;
         code += this.frontendDecl;
         code += this.frontendCode;
-        code += begin();
+        code += ShaderGenerator.begin();
         code += this.frontendFunc;
         code += "    gl_FragColor = packFloat(vDepth);\n";
-        code += end();
+        code += ShaderGenerator.end();
 
         return code;
     }
@@ -503,7 +503,7 @@ class LitShader {
             code += shaderChunks.linearizeDepthPS;
         }
 
-        code += begin();
+        code += ShaderGenerator.begin();
 
         code += this.frontendFunc;
 
@@ -552,7 +552,7 @@ class LitShader {
             code += chunks.storeEVSMPS;
         }
 
-        code += end();
+        code += ShaderGenerator.end();
 
         return code;
     }
@@ -737,9 +737,9 @@ class LitShader {
         // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
         func.append(chunks.decodePS);
-        func.append(gammaCode(options.gamma, chunks));
-        func.append(tonemapCode(options.toneMap, chunks));
-        func.append(fogCode(options.fog, chunks));
+        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
+        func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
+        func.append(ShaderGenerator.fogCode(options.fog, chunks));
 
         // frontend
         func.append(this.frontendCode);
@@ -1504,7 +1504,7 @@ class LitShader {
 
         code.append("    evaluateBackend();");
 
-        code.append(end());
+        code.append(ShaderGenerator.end());
 
         const mergedCode = decl.code + func.code + code.code;
 

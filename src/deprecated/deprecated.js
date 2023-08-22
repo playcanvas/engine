@@ -35,7 +35,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../platform/graphics/constants.js';
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
+import { ShaderGenerator } from '../scene/shader-lib/programs/shader-generator.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
@@ -369,14 +369,14 @@ export function ContextCreationError(message) {
 ContextCreationError.prototype = Error.prototype;
 
 export const programlib = {
-    begin: begin,
+    begin: ShaderGenerator.begin,
     dummyFragmentCode: ShaderUtils.dummyFragmentCode,
-    end: end,
-    fogCode: fogCode,
-    gammaCode: gammaCode,
+    end: ShaderGenerator.end,
+    fogCode: ShaderGenerator.fogCode,
+    gammaCode: ShaderGenerator.gammaCode,
     precisionCode: ShaderUtils.precisionCode,
-    skinCode: skinCode,
-    tonemapCode: tonemapCode,
+    skinCode: ShaderGenerator.skinCode,
+    tonemapCode: ShaderGenerator.tonemapCode,
     versionCode: ShaderUtils.versionCode
 };
 
