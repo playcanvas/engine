@@ -50,8 +50,12 @@ async function takeScreenshots() {
             // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
             page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
         }
-        //const link = `http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`;
-        const link = `http://localhost/playcanvas-engine/examples/src/iframe/?category=${category}&example=${example}&miniStats=false`;
+        let link;
+        if (debug) {
+            link = `http://localhost/playcanvas-engine/examples/dist/iframe/${category}_${example}.html?miniStats=false`;
+        } else {
+            link = `http://localhost:${port}/iframe/${category}_${example}.html?miniStats=false`;
+        }
         if (debug) {
             console.log("goto", link);
         }
