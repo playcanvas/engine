@@ -130,7 +130,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
         app.root.addChild(entity);
     }
-    //app.start();
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent("camera", {
@@ -163,6 +162,7 @@ class LoadersGlExample {
         'shader.frag': fshader,
     };
     static example = example;
+    static imports = [ loadES5 ];
 }
 
 export { LoadersGlExample };

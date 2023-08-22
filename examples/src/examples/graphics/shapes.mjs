@@ -46,7 +46,10 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     app.scene.lighting.shadowsEnabled = false;
 
     // All render component primitive shape types
-    const shapes = ["box", "plane", "cone", "cylinder", "sphere", "capsule"];
+    const shapes = [
+        "box", "plane", "cone",
+        "cylinder", "sphere", "capsule",
+    ];
     let x = -1, y = -1;
 
     shapes.forEach(function (shape) {

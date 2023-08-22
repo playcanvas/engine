@@ -67,8 +67,12 @@ function generateExampleFile(category, example, exampleClass) {
         <script src='./playcanvas-extras.js'></script>
         <script src='./playcanvas-observer.js'></script>
         <script src='./pathes.js'></script>
+        <!-- imports (if any) -->
         <script>
-            // controls (if given)
+${exampleClass.imports?.map(_ => _.toString()).join('\n\n') || ''}
+        </script>
+        <!-- controls (if given) -->
+        <script>
 ${exampleClass.controls?.toString() || ''}
         </script>
         <script>

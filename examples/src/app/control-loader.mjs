@@ -4,6 +4,8 @@ import { controlsObserver } from './example.mjs';
 import { Controls } from './controls.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 
+const debug = true;
+
 /**
  * @typedef {object} Props
  * @property {string} path
@@ -32,6 +34,9 @@ class ControlLoader extends c {
         super(props);
         const self = this;
         window.addEventListener('exampleLoading', (e) => {
+            if (debug) {
+                console.log("ControlLoader event: exampleLoading, event=", e);
+            }
             self.setState({
                 exampleLoaded: false,
                 //controls: () => jsx('h1', null, 'state: reload'),
@@ -39,7 +44,9 @@ class ControlLoader extends c {
             });
         });
         window.addEventListener('exampleLoad', (event) => {
-            // console.log("e.detail", event.detail);
+            if (debug) {
+                console.log("ControlLoader event: exampleLoad, event =", event);
+            }
             /** @type {Record<string, string>} */
             const files = event.files;
             const controlsSrc = files['controls.mjs'];
@@ -57,15 +64,20 @@ class ControlLoader extends c {
                 });
                 // console.log("controlsSrc", controlsSrc);
             } else {
+                // When switching examples from one with controls to one without controls...
                 self.setState({
                     ...self.state,
                     exampleLoaded: true,
+                    controls: null,
                 });
             }
             const activeDevice = event.deviceType;
             controlsObserver.emit('updateActiveDevice', activeDevice);
         });
         window.addEventListener('updateFiles', (event) => {
+            if (debug) {
+                console.log("ControlLoader event: updateFiles, event =", event);
+            }
             const files = event.detail.files;
             // console.log("updateFiles", files);
             const controlsSrc = files['controls.mjs'] ?? 'null';

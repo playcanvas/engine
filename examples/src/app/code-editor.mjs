@@ -1,4 +1,4 @@
-import { LegacyRef, createRef, useEffect, useState } from 'react';
+import { LegacyRef, createRef, useEffect, useState, useRef } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
@@ -48,11 +48,13 @@ const CodeEditor = (props) => {
         /** @type {Record<string, string>} */
         const files = event.files;
         setFiles({...files});
+        document.querySelector(".spin").style.display = 'none';
     });
 
 
     window.addEventListener('exampleLoading', (e) => {
         setFiles({'example.mjs': '// reloading'});
+        document.querySelector(".spin").style.display = '';
     });
 
     /**
@@ -77,6 +79,8 @@ const CodeEditor = (props) => {
     const editorDidMount = (editor) => {
         window.editor = editor;
         monacoEditor = editor;
+        // Hot reload code via Shift + Enter
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, onPlayButton);
     };
 
     const onPlayButton = () => {
