@@ -166,7 +166,8 @@ ${exampleClass.example.toString()}
                 canvas.setAttribute('height', window.innerHeight + 'px');
                 app.setCanvasResolution(pc.RESOLUTION_AUTO);
                 window.onresize = resize;
-                if (app.graphicsDevice.deviceType !== 'webgpu' && ${Boolean(exampleClass.MINISTATS)}) {
+                const deviceType = app.graphicsDevice.deviceType;
+                if (deviceType !== 'webgpu' && deviceType !== 'null' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
                     var miniStats = new pcx.MiniStats(app);
                     if (urlParams.get('miniStats') === 'false') {

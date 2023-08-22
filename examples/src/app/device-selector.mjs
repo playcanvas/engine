@@ -1,13 +1,16 @@
 // Don't include all of 'playcanvas' for these defines, it just
 // causes bigger bundles and prolongs the build time by ~3s.
-import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU } from 'playcanvas/src/platform/graphics/constants.js';
+import {
+    DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_NULL
+} from 'playcanvas/src/platform/graphics/constants.js';
 import React, { Component } from 'react';
 import { jsxSelectInput } from './jsx.mjs';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
-    [DEVICETYPE_WEBGPU]: 'WebGPU'
+    [DEVICETYPE_WEBGPU]: 'WebGPU',
+    [DEVICETYPE_NULL  ]: 'Null',
 };
 
 /**
@@ -86,7 +89,7 @@ class DeviceSelector extends c {
             this.deviceTypeSelectInput.value = value;
         }
         this.setDisabledOptions(this.preferredGraphicsDevice, value);
-        document.getElementById('showMiniStatsButton').ui.enabled = value !== DEVICETYPE_WEBGPU;
+        document.getElementById('showMiniStatsButton').ui.enabled = (value !== DEVICETYPE_WEBGPU) && (value !== DEVICETYPE_NULL);
     }
 
     /**
@@ -106,7 +109,8 @@ class DeviceSelector extends c {
             options: [
                 { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
                 { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
-                { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU }
+                { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
+                { t: deviceTypeNames[DEVICETYPE_NULL  ], v: DEVICETYPE_NULL   },
             ],
             value: DEVICETYPE_WEBGL2,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
@@ -117,6 +121,4 @@ class DeviceSelector extends c {
     }
 }
 
-export {
-    DeviceSelector,
-};
+export { DeviceSelector };
