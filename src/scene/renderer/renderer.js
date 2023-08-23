@@ -715,7 +715,7 @@ class Renderer {
         device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
     }
 
-    setupMeshUniformBuffers(meshInstance, pass) {
+    setupMeshUniformBuffers(shaderInstance, meshInstance) {
 
         const device = this.device;
         if (device.supportsUniformBuffers) {
@@ -726,7 +726,8 @@ class Renderer {
             this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
 
             // update mesh bind group / uniform buffer
-            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            const meshBindGroup = shaderInstance.getBindGroup(device);
+
             meshBindGroup.defaultUniformBuffer.update();
             meshBindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
