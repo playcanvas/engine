@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
