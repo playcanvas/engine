@@ -54,10 +54,7 @@ function generateExampleFile(category, example, exampleClass) {
                 <div style="width:100%; position:absolute; top:10px">
                     <div style="text-align: center;">
                         <a id="ar-link" rel="ar" download="asset.usdz">
-                            <!-- Fallback image for npm serve vs build-free version -->
-                            <object data="../arkit.png" type="image/jpeg" id="button" width="200">
-                                <img src="../../../src/static/arkit.png" id="button" width="200"/>
-                            </object>
+                            <img src="./arkit.png" id="button" width="200"/>
                         </a>    
                     </div>
                 </div>
