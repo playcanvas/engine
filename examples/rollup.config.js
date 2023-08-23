@@ -11,9 +11,6 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
-// 3rd party Rollup plugins
-import sourcemaps from 'rollup-plugin-sourcemaps';
-
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
 
@@ -24,18 +21,18 @@ const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const staticFiles = [
-    { src: 'src/static', dest: 'dist/' },
-    { src: 'src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './assets', dest: 'dist/static/assets/' },
+    { src: './src/static', dest: 'dist/' },
+    { src: './src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
+    { src: './src/iframe/index-serve.html', dest: 'dist/iframe/index.html' },
+    { src: './src/example.css', dest: 'dist/iframe/example.css' },
+    { src: './src/pathes.js', dest: 'dist/iframe/pathes.js' },
     { src: './src/lib', dest: 'dist/static/lib/' },
+    { src: './assets', dest: 'dist/static/assets/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: 'src/iframe/index-serve.html', dest: 'dist/iframe/index.html' },
     { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
     { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
-    { src: 'node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
-    { src: 'src/example.css', dest: 'dist/iframe/example.css' },
-    { src: 'src/pathes.js', dest: 'dist/iframe/pathes.js' },
+    { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
 ];
 
 function timestamp() {
@@ -125,54 +122,6 @@ const builds = [
             timestamp()
         ]
     },
-    {
-        input: 'src/iframe/index.mjs',
-        external: [
-            'react', 'react-dom', "react-dom/client", '@playcanvas/pcui/react',
-            // '@playcanvas/observer' // we could make observer optional and drop this dependency
-            'playcanvas', 'playcanvas-extras',
-        ],
-        output: {
-            name: 'bundle',
-            format: 'umd',
-            dir: 'dist/iframe',
-            sourcemap: process.env.NODE_ENV === 'development' ? 'inline' : false
-        },
-        plugins: [
-            commonjs(),
-            resolve(),
-            replace({
-                'process.env.NODE_ENV': JSON.stringify(
-                    'production'
-                ),
-                preventAssignment: true
-            }),
-            process.env.NODE_ENV === 'development' ? sourcemaps() : null,
-            timestamp()
-        ]
-    },
-    /*
-    {
-        input: 'src/examples/index.mjs',
-        //external: ['../../../../', 'react', '@playcanvas/pcui/react', '@playcanvas/observer'],
-        output: {
-            name: 'examples',
-            format: 'es',
-            dir: `dist/examples`,
-            globals: {
-                '@playcanvas/pcui/react': 'pcui',
-                'react': 'React',
-                '@playcanvas/observer': 'observer',
-                [process.cwd().slice(0, process.cwd().length - 9)]: 'pc'
-            }
-        },
-        plugins: [
-            commonjs(),
-            resolve(),
-            timestamp()
-        ]
-    },
-    */
     {
         input: 'src/static/index.html',
         output: {
