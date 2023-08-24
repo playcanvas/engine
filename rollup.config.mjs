@@ -8,6 +8,7 @@ import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
+import alias from '@rollup/plugin-alias';
 
 // 3rd party Rollup plugins
 import dts from 'rollup-plugin-dts';
@@ -394,18 +395,29 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions(buildType)
     };
 
-    const rootFile = 'src/index.js';
+    // must be named entries
+    const entries = {
+        'playcanvas': './src/index.js',
+        'playcanvas-extras': './src/extras/index.js'
+    };
+
+    const rootFiles = moduleFormat === 'es6' ? ['src/index.js', 'src/extras/index.js'] : ['src/index.js'];
     return {
-        input: rootFile,
+        input: rootFiles,
         output: outputOptions,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks(buildType !== 'debug'),
-            engineLayerImportValidation(rootFile, buildType === 'debug'),
+            ...rootFiles.map(file => engineLayerImportValidation(file, buildType === 'debug')),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
+            alias({
+                entries
+            }),
+            resolve(), // bundle
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]
+        // external: ['fflate'] // dependency
     };
 }
 
