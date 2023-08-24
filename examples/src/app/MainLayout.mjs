@@ -1,7 +1,7 @@
 import { Component } from 'react';
 import { HashRouter, Switch, Route, Redirect } from "react-router-dom";
 import { SideBar       } from './sidebar.mjs';
-import { CodeEditor    } from './code-editor.mjs';
+import { CodeEditor, iframeHideStats, iframeShowStats    } from './code-editor.mjs';
 import { Menu          } from './menu.mjs';
 import { Example       } from './example.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
@@ -41,8 +41,12 @@ class MainLayout extends Component {
      * @param {boolean} value 
      */
     updateShowMiniStats = (value) => {
-        console.log("updateShowMiniStats");
-        window._showMiniStats = value;
+        // console.log("updateShowMiniStats", value);
+        if (value) {
+            iframeShowStats();
+        } else {
+            iframeHideStats();
+        }
     }
 
     render() {

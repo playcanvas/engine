@@ -164,10 +164,10 @@ export class SideBar extends TypedComponent {
         this.setState({...this.state, filteredCategories: updatedCategories});
     }
     onClickExample() {
-        this.setState({
-            ...this.state,
-            collapsed: true,
-        });
+        //this.setState({
+        //    ...this.state,
+        //    collapsed: true,
+        //});
         // console.log("load new example", category, example);
         const { pc } = window;
         if (pc) {

@@ -96,6 +96,7 @@ ${exampleClass.example.toString()}
             }
         }
         let started = false;
+        let miniStats;
         const data = new observer.Observer({});
         /**
          * Keep it function in first run for nicer debug locations.
@@ -118,6 +119,20 @@ ${exampleClass.example.toString()}
             const responseEvent = new CustomEvent("requestedFiles", { detail: files });
             window.top.dispatchEvent(responseEvent);
         });
+        function showStats() {
+            if (!miniStats) {
+                miniStats = new pcx.MiniStats(app);
+            }
+            miniStats.enabled = true;
+        }
+        function hideStats() {
+            if (!miniStats) {
+                return;
+            }
+            miniStats.enabled = false;
+        }
+        window.addEventListener('showStats', showStats);
+        window.addEventListener('hideStats', hideStats);
         async function main(files) {
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
@@ -175,15 +190,10 @@ ${exampleClass.example.toString()}
                 const deviceType = app.graphicsDevice.deviceType;
                 if (deviceType !== 'webgpu' && deviceType !== 'null' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
-                    var miniStats = new pcx.MiniStats(app);
+                    miniStats = new pcx.MiniStats(app);
                     if (urlParams.get('miniStats') === 'false') {
                         miniStats.enabled = false;
                     }
-                    false && app.on('update', function () {
-                        if (window.top._showMiniStats !== undefined) {
-                            miniStats.enabled = window.top._showMiniStats;
-                        }
-                    });
                 }
             }
             class ExampleLoadEvent extends CustomEvent {

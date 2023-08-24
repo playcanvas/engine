@@ -7,10 +7,10 @@ import * as pc from 'playcanvas';
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
-        'skeleton'   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
-        'atlas'      : new pc.Asset('atlas'           , 'text'   , { url: assetPath + '/spine/spineboy-pro.atlas' }),
-        'texture'    : new pc.Asset('spineboy-pro.png', 'texture', { url: assetPath + '/spine/spineboy-pro.png' }),
-        //'spinescript': new pc.Asset('spinescript'     , 'script' , { url:             '/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js' })
+        skeleton   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
+        atlas      : new pc.Asset('atlas'           , 'text'   , { url: assetPath + '/spine/spineboy-pro.atlas' }),
+        texture    : new pc.Asset('spineboy-pro.png', 'texture', { url: assetPath + '/spine/spineboy-pro.png' }),
+        spinescript: new pc.Asset('spinescript'     , 'script' , { url:             '/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js' })
     };
 
     const gfxOptions = {
@@ -52,8 +52,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.start();
 
-        globalThis.pc = pc;
-        await import(scriptsPath + "spine/playcanvas-spine.3.8.mjs");
+        //globalThis.pc = pc;
+        //await import(scriptsPath + "spine/playcanvas-spine.3.8.js");
 
         // create camera entity
         const camera = new pc.Entity('camera');
