@@ -1,6 +1,10 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
+        "paths": {
+            "playcanvas": ["src/index.js"],
+            "playcanvas-extras": ["src/extras/index.js"]
+        },
         "outDir": "types",
         "allowJs": true,
         "checkJs": true,
