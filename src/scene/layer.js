@@ -130,6 +130,7 @@ class Layer {
 
     /**
      * True if the objects rendered on the layer require light cube (emitters with lighting do).
+     * @type {boolean}
      */
     requiresLightCube = false;
 
