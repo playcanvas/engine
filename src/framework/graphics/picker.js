@@ -315,7 +315,7 @@ class Picker {
 
         // mark all meshes as transparent again
         tempSet.forEach((meshInstance) => {
-            meshInstance.transparent = false;
+            meshInstance.transparent = true;
         });
         tempSet.clear();
     }
