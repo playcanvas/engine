@@ -413,7 +413,7 @@ function buildTarget(buildType, moduleFormat) {
  * Build an ES5 target that rollup is supposed to build.
  *
  * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
+ * @param {string} input - The input file, like `src/extras/index.js`.
  * @param {string} [output] - If not given, input is used.
  * @returns {RollupOptions} One rollup target.
  */
@@ -442,7 +442,7 @@ function scriptTarget(name, input, output) {
  * Build an ES6 target that rollup is supposed to build.
  *
  * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
+ * @param {string} input - The input file, like `src/extras/index.js`.
  * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
  * @returns {RollupOptions} One rollup target.
  */
@@ -467,8 +467,8 @@ function scriptTargetEs6(name, input, output) {
 }
 
 const target_extras = [
-    scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
+    scriptTarget('pcx', 'src/extras/index.js', 'build/playcanvas-extras.js'),
+    scriptTargetEs6('pcx', 'src/extras/index.js', 'build/playcanvas-extras.mjs'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
