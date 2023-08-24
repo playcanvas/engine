@@ -335,14 +335,14 @@ class ZoneComponent extends Component {
                         continue;
                     } else if (collidingIndex !== -1) {
                         // Entity entered zone.
+                        this.entities.push(entity);
                         entity.fire('zoneEnter', this);
                         this.fire('entityEnter', entity);
-                        this.entities.push(entity);
                     } else if (inZoneIndex !== -1) {
                         // Entity left zone.
+                        this.entities.splice(inZoneIndex, 1);
                         entity.fire('zoneLeave', this);
                         this.fire('entityLeave', entity);
-                        this.entities.splice(inZoneIndex, 1);
                     }
                 }
             }
@@ -372,11 +372,12 @@ class ZoneComponent extends Component {
         this._destroyCollisionShape();
         this._toggleLifecycleListeners('off');
 
-        for (let i = 0, l = this.entities.length; i < l; i++) {
-            this.entities[i].fire('zoneLeave', this);
-        }
-
+        const entities = [...this.entities];
         this.entities.length = 0;
+
+        for (let i = 0, l = entities.length; i < l; i++) {
+            entities[i].fire('zoneLeave', this);
+        }
     }
 
     /**
