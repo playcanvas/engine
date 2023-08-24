@@ -6,7 +6,8 @@
     ],
     "recurseDepth": 10,
     "source": {
-        "include": ["src"]
+        "include": ["src"],
+        "exclude": ["src/extras"]
     },
     "sourceType": "module",
     "tags": {
