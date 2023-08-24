@@ -40,6 +40,7 @@ export class SideBar extends TypedComponent {
         hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
+        orientation: getOrientation(),
     }
 
     componentDidMount() {

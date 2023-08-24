@@ -4,6 +4,11 @@ import { pcTypes } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor from "@monaco-editor/react";
 
+export function iframeRequestFiles() {
+    const exampleIframe = document.getElementById('exampleIframe');
+    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("requestFiles"));
+}
+
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
     'shader': null,
@@ -34,6 +39,16 @@ class CodeEditor extends TypedComponent {
     };
 
     /**
+     * @param {Props} props - The props.
+     */
+    constructor(props) {
+        super(props);
+        this.handleExampleLoad = this.handleExampleLoad.bind(this);
+        this.handleExampleLoading = this.handleExampleLoading.bind(this);
+        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
+    }
+
+    /**
      * @param {Partial<State>} state - New partial state.
      */
     mergeState(state) {
@@ -41,21 +56,36 @@ class CodeEditor extends TypedComponent {
     }
 
     componentDidMount() {
-        window.addEventListener('exampleLoad', (event) => {
-            // console.log("CodeEditor got files event", event);
-            /** @type {Record<string, string>} */
-            const files = event.files;
-            this.mergeState({
-                files: {...files}
-            });
-            document.querySelector(".spin").style.display = 'none';
+        window.addEventListener('exampleLoad', this.handleExampleLoad);
+        window.addEventListener('exampleLoading', this.handleExampleLoading);
+        window.addEventListener("requestedFiles", this.handleRequestedFiles);
+        iframeRequestFiles();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("exampleLoad", this.handleExampleLoad);
+        window.removeEventListener("exampleLoading", this.handleExampleLoading);
+        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
+    }
+
+    handleExampleLoad(event) {
+        // console.log("CodeEditor got files event", event);
+        /** @type {Record<string, string>} */
+        const files = event.files;
+        this.mergeState({ files });
+        document.querySelector(".spin").style.display = 'none';
+    }
+
+    handleExampleLoading(event) {
+        this.mergeState({
+            files: {'example.mjs': '// reloading'}
         });
-        window.addEventListener('exampleLoading', (e) => {
-            this.mergeState({
-                files: {'example.mjs': '// reloading'}
-            });
-            document.querySelector(".spin").style.display = '';
-        });
+        document.querySelector(".spin").style.display = '';
+    }
+
+    handleRequestedFiles(event) {
+        const files = event.detail;
+        this.mergeState({ files });
     }
 
     /**
@@ -101,18 +131,13 @@ class CodeEditor extends TypedComponent {
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
-        });     
+        });
     }
 
     onPlayButton() {
-        const { files } = this.state;
         // @ts-ignore
         const frameWindow = document.getElementById('exampleIframe').contentWindow;
-        frameWindow.eval(`
-            app.destroy();
-            const editedFiles = ${JSON.stringify(files)};
-            main(editedFiles);
-        `);
+        frameWindow.eval('app.destroy(); main(files);');
     }
 
     /**

@@ -17,6 +17,7 @@ import ControlPanel from './control-panel.mjs';
 import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
 import React, { useRef, createRef, Component, useEffect } from 'react';
 import MonacoEditor from "@monaco-editor/react";
+import { iframeRequestFiles } from './code-editor.mjs';
 
 // What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
 // 1) We don't want to load React code in iframe
@@ -56,6 +57,7 @@ class Example extends TypedComponent {
         controls: () => undefined,
         showParameters: false,
         showCode: true,
+        files: {'example.mjs': '// loading'}
     };
 
     /**
@@ -77,8 +79,8 @@ class Example extends TypedComponent {
      */
     constructor(props) {
         super(props);
-
         this.onLayoutChange = this.onLayoutChange.bind(this);
+        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
         // todo did mount / unmount remove
         window.addEventListener("resize", this.onLayoutChange);
         screen.orientation.addEventListener("change", this.onLayoutChange);
@@ -110,6 +112,7 @@ class Example extends TypedComponent {
                 self.mergeState({
                     exampleLoaded: true,
                     controls,
+                    files,
                 });
                 // console.log("controlsSrc", controlsSrc);
             } else {
@@ -117,6 +120,7 @@ class Example extends TypedComponent {
                 self.mergeState({
                     exampleLoaded: true,
                     controls: null,
+                    files,
                 });
             }
             const activeDevice = event.deviceType;
@@ -156,21 +160,6 @@ class Example extends TypedComponent {
         const example = examples.paths[this.path];
         return `${iframePath}/${example.category}_${example.name}.html`;
     }
-
-    ///**
-    // * @param {Readonly<Props>} nextProps 
-    // * @returns {boolean}
-    // */
-    //shouldComponentUpdate(nextProps) {
-    //    const updateMobileOnFileChange = () => {
-    //        return window.top.innerWidth < MIN_DESKTOP_WIDTH;
-    //    };
-    //    return (
-    //        this.props.match.params.category !== nextProps.match.params.category ||
-    //        this.props.match.params.example !== nextProps.match.params.example ||
-    //        updateMobileOnFileChange()
-    //    );
-    //}
 
     onSetPreferredGraphicsDevice(value) {
         // reload the iframe after updating the device
@@ -228,10 +217,22 @@ class Example extends TypedComponent {
         const controlPanel = document.getElementById("controlPanel");
         const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
         controlPanelHeader.onclick = () => this.toggleCollapse();
+        window.addEventListener("requestedFiles", this.handleRequestedFiles);
+        iframeRequestFiles();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
+    }
+
+    handleRequestedFiles(event) {
+        // console.log('Example#handleRequestedFiles, files: ', event.detail);
+        const files = event.detail;
+        this.mergeState({ files });
     }
 
     renderPortrait() {
-        const { collapsed, controls, showCode, showParameters } = this.state;
+        const { collapsed, controls, showCode, showParameters, files } = this.state;
         return fragment(
             jsx(Panel,
                 {
@@ -289,7 +290,7 @@ class Example extends TypedComponent {
                                 readOnly: true
                             },
                             defaultLanguage: "typescript",
-                            value: '// loading portrait editor...'
+                            value: files['example.mjs'],
                         }
                     )
                 )

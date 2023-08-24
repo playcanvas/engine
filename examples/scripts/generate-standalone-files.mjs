@@ -114,6 +114,10 @@ ${exampleClass.example.toString()}
             return new Function('return ' + _)();
         }
         Object.assign(files, filesObject);
+        window.addEventListener('requestFiles', (event) => {
+            const responseEvent = new CustomEvent("requestedFiles", { detail: files });
+            window.top.dispatchEvent(responseEvent);
+        });
         async function main(files) {
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
