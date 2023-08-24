@@ -413,11 +413,11 @@ function buildTarget(buildType, moduleFormat) {
             alias({
                 entries
             }),
-            resolve(), // bundle
+            // resolve(), // bundle
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
-        ]
-        // external: ['fflate'] // dependency
+        ],
+        external: ['fflate'] // dependency
     };
 }
 
