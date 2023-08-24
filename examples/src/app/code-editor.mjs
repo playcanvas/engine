@@ -1,8 +1,8 @@
-import { LegacyRef, createRef, useEffect, useState, useRef } from 'react';
-import MonacoEditor from "@monaco-editor/react";
+import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
-import { fragment, jsx } from './jsx.mjs';
+import { jsx } from './jsx.mjs';
+import MonacoEditor from "@monaco-editor/react";
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
@@ -13,52 +13,55 @@ const FILE_TYPE_LANGUAGES = {
 
 let monacoEditor;
 
-function ObjectMap(object, fn) {
-    const ret = [];
-    for (const key in object) {
-        const value = object[key];
-        ret.push(fn(key, value));
-    }
-    return ret;
-}
-
 /**
  * @typedef {object} Props
  */
 
 /**
- * @param {Props} props
+ * @typedef {object} State
+ * @property {Record<string, string>} files
+ * @property {string} selectedFile
  */
-const CodeEditor = (props) => {
-    const [files, setFiles] = useState({'example.mjs': '// init'});
-    const [selectedFile, setSelectedFile] = useState('example.mjs');
 
-    const stateRefFiles = useRef();
-    // make stateRef always have the current files
-    // your "fixed" callbacks can refer to this object whenever
-    // they need the current value.  Note: the callbacks will not
-    // be reactive - they will not re-run the instant state changes,
-    // but they *will* see the current value whenever they do run
-    stateRefFiles.current = files;
+/** @type {typeof Component<Props, State>} TypedComponent */
+const TypedComponent = Component;
 
-    window.addEventListener('exampleLoad', (event) => {
-        // console.log("CodeEditor got files event", event);
-        /** @type {Record<string, string>} */
-        const files = event.files;
-        setFiles({...files});
-        document.querySelector(".spin").style.display = 'none';
-    });
+class CodeEditor extends TypedComponent {
+    /** @type {State} */
+    state = {
+        files: {'example.mjs': '// init'},
+        selectedFile: 'example.mjs',
+    };
 
+    /**
+     * @param {Partial<State>} state - New partial state.
+     */
+    mergeState(state) {
+        this.setState({ ...this.state, ...state });
+    }
 
-    window.addEventListener('exampleLoading', (e) => {
-        setFiles({'example.mjs': '// reloading'});
-        document.querySelector(".spin").style.display = '';
-    });
+    componentDidMount() {
+        window.addEventListener('exampleLoad', (event) => {
+            // console.log("CodeEditor got files event", event);
+            /** @type {Record<string, string>} */
+            const files = event.files;
+            this.mergeState({
+                files: {...files}
+            });
+            document.querySelector(".spin").style.display = 'none';
+        });
+        window.addEventListener('exampleLoading', (e) => {
+            this.mergeState({
+                files: {'example.mjs': '// reloading'}
+            });
+            document.querySelector(".spin").style.display = '';
+        });
+    }
 
     /**
      * @param {import('@monaco-editor/react').Monaco} monaco 
      */
-    const beforeMount = (monaco) => {
+    beforeMount(monaco) {
         fetch(pcTypes).then((r) => {
             return r.text();
         }).then((playcanvasDefs) => {
@@ -71,62 +74,19 @@ const CodeEditor = (props) => {
                 '@playcanvas/playcanvas.d.ts'
             );
         });
-    };
+    }
 
-    const editorDidMount = (editor) => {
+    editorDidMount(editor) {
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, onPlayButton);
-    };
-
-    const onPlayButton = () => {
-        const files = stateRefFiles.current;
-        // @ts-ignore
-        const frameWindow = document.getElementById('exampleIframe').contentWindow;
-        // console.log("got files", files);
-        //frameWindow.location.reload();
-        //frameWindow.app.destroy();
-        //frameWindow.exampleString = files["example.mjs"];
-        //frameWindow.eval("example = Function('return ' + exampleString)()");
-        frameWindow.eval("app.destroy();");
-        frameWindow.eval("editedFiles = " + JSON.stringify(files));
-        frameWindow.eval("main(editedFiles)");
-    }
-
-    /**
-     * @param {string} value 
-     */
-    const onChange = (value) => {
-        files[selectedFile] = value;
-        const event = new CustomEvent("updateFiles", {
-            detail: {
-                files
-            }
-        });
-        window.dispatchEvent(event);
-    };
-
-    /**
-     * @param {string} name
-     */
-    const selectFile = (name) => {
-        setSelectedFile(name);
-        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
-        //document.querySelectorAll('#codePane .tabs-container .pcui-button').forEach((node, i) => {
-        //    if (selectedFileIndex === i) {
-        //        node.classList.add('selected');
-        //    } else {
-        //        node.classList.remove('selected');
-        //    }
-        //});
-    };
-
-    useEffect(() => {
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, this.onPlayButton.bind(this));
         const codePane = document.getElementById('codePane');
         codePane.classList.add('multiple-files');
-        if (!files[selectedFile]) {
-            setSelectedFile('example.mjs');
+        if (!this.state.files[this.state.selectedFile]) {
+            this.mergeState({
+                selectedFile: 'example.mjs',
+            });
         }
         // @ts-ignore
         codePane.ui.on('resize', () => {
@@ -136,100 +96,140 @@ const CodeEditor = (props) => {
         if (codePaneStyle) {
             codePane.setAttribute('style', codePaneStyle);
         }
-        if (window.toggleEvent) {
-            return;
-        }
         // set up the code panel toggle button
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
-        });
-        window.toggleEvent = true;
-    });
-    return jsx(
-        Panel,
-        {
-            headerText: 'CODE',
-            id: 'codePane',
-            class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
-            resizable: 'left',
-            resizeMax: 2000
-        },
-        jsx(
-            "div",
-            {
-                className: 'panel-toggle',
-                id: 'codePane-panel-toggle'
+        });     
+    }
+
+    onPlayButton() {
+        const { files } = this.state;
+        // @ts-ignore
+        const frameWindow = document.getElementById('exampleIframe').contentWindow;
+        frameWindow.eval(`
+            app.destroy();
+            const editedFiles = ${JSON.stringify(files)};
+            main(editedFiles);
+        `);
+    }
+
+    /**
+     * @param {string} value 
+     */
+    onChange(value) {
+        const { files, selectedFile } = this.state;
+        files[selectedFile] = value;
+        const event = new CustomEvent("updateFiles", {
+            detail: {
+                files
             }
-        ),
-        jsx(
-            Container,
+        });
+        window.dispatchEvent(event);
+    }
+
+    /**
+     * @param {string} selectedFile - Newly selected filename.
+     */
+    selectFile(selectedFile) {
+        this.mergeState({ selectedFile });
+        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+    }
+
+    renderTabs() {
+        const { files, selectedFile } = this.state;
+        /** @type {JSX.Element[]} */
+        const tabs = [];
+        for (const name in files) {
+            const button = jsx(Button, {
+                key: name,
+                id: `code-editor-file-tab-${name}`,
+                text: name,
+                class: name === selectedFile ? 'selected' : null,
+                onClick: () => this.selectFile(name),
+            });
+            tabs.push(button);
+        }
+        return tabs;
+    }
+
+    render() {
+        const { files, selectedFile } = this.state;
+        return jsx(
+            Panel,
             {
-                class: 'tabs-wrapper'
+                headerText: 'CODE',
+                id: 'codePane',
+                class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
+                resizable: 'left',
+                resizeMax: 2000
             },
             jsx(
-                Container,
+                "div",
                 {
-                    class: 'code-editor-menu-container'
-                },
-                jsx(
-                    Button,
-                    {
-                        id: 'play-button',
-                        icon: 'E304',
-                        text: '',
-                        onClick: () => onPlayButton()
-                    }
-                ),
-                jsx(
-                    Button, {
-                        icon: 'E259',
-                        text: '',
-                        onClick: () => {
-                            const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
-                            window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.mjs`);
-                        }
-                    }
-                )
+                    className: 'panel-toggle',
+                    id: 'codePane-panel-toggle'
+                }
             ),
             jsx(
                 Container,
                 {
-                    class: 'tabs-container'
+                    class: 'tabs-wrapper'
                 },
-                ObjectMap(files, (name, text) => {
-                    const ext = name.split('.').pop();
-                    const button = jsx(Button, {
-                        key: name,
-                        id: `code-editor-file-tab-${name}`,
-                        text: name,
-                        class: name === selectedFile ? 'selected' : null,
-                        onClick: () => selectFile(name)
-                    });
-                    return button;
-                })
-            )
-        ),
-        jsx(
-            MonacoEditor,
-            {
-                language: FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()],
-                //language: "javascript",
-                value: files[selectedFile],
-                beforeMount,
-                onMount: editorDidMount,
-                onChange,
-                options: {
-                    scrollbar: {
-                        horizontal: 'visible'
+                jsx(
+                    Container,
+                    {
+                        class: 'code-editor-menu-container'
                     },
-                    readOnly: false,
-                    theme: "vs-dark",
+                    jsx(
+                        Button,
+                        {
+                            id: 'play-button',
+                            icon: 'E304',
+                            text: '',
+                            onClick: () => this.onPlayButton()
+                        }
+                    ),
+                    jsx(
+                        Button, {
+                            icon: 'E259',
+                            text: '',
+                            onClick: () => {
+                                const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
+                                window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.mjs`);
+                            }
+                        }
+                    )
+                ),
+                jsx(
+                    Container,
+                    {
+                        class: 'tabs-container'
+                    },
+                    this.renderTabs(),
+                )
+            ),
+            jsx(
+                MonacoEditor,
+                {
+                    language: FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()],
+                    //language: "javascript",
+                    value: files[selectedFile],
+                    beforeMount: this.beforeMount.bind(this),
+                    onMount: this.editorDidMount.bind(this),
+                    onChange: this.onChange.bind(this),
+                    options: {
+                        scrollbar: {
+                            horizontal: 'visible'
+                        },
+                        readOnly: false,
+                        theme: "vs-dark",
+                    }
                 }
-            }
-        )
-    );   
-};
+            )
+        );
+    };
+}
 
 export { CodeEditor };
