@@ -30,7 +30,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Build PlayCanvas
       run: npm run build
@@ -50,7 +50,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Build API reference manual
       run: npm run docs
@@ -70,7 +70,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Run ESLint
       run: npm run lint
@@ -90,7 +90,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Build TypeScript declarations
       run: npm run build:types
@@ -113,7 +113,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Run unit tests
       run: npm test
@@ -133,7 +133,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Build PlayCanvas (ES5-only)
       run: npm run build:es5
@@ -159,7 +159,7 @@ jobs:
         cache: 'npm'
 
     - name: Install dependencies
-      run: npm ci
+      run: npm clean-install --progress=false --no-fund
 
     - name: Build PlayCanvas (ES5-only)
       run: npm run build:es5
@@ -173,5 +173,5 @@ jobs:
     - name: Build Examples Browser
       working-directory: ./examples
       run: |
-        npm ci
+        npm clean-install --progress=false --no-fund
         npm run build
