@@ -79,7 +79,14 @@ class Material {
 
     id = id++;
 
-    variants = {};
+    /**
+     * The cache of shader variants generated for this material. The key represents the unique
+     * variant, the value is the shader.
+     *
+     * @type {Map<string, import('../../platform/graphics/shader.js').Shader>}
+     * @ignore
+     */
+    variants = new Map();
 
     parameters = {};
 
@@ -472,7 +479,7 @@ class Material {
     clearVariants() {
 
         // clear variants on the material
-        this.variants = {};
+        this.variants.clear();
 
         // but also clear them from all materials that reference them
         const meshInstances = this.meshInstances;
@@ -556,7 +563,7 @@ class Material {
      * are no other materials using it).
      */
     destroy() {
-        this.variants = {};
+        this.variants.clear();
         this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {
