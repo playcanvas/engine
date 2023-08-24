@@ -22,9 +22,9 @@ const deviceTypeNames = {
 /** @typedef {object} State */
 
 /** @type {typeof Component<Props, State>} */
-const c = Component;
+const TypedComponent = Component;
 
-class DeviceSelector extends c {
+class DeviceSelector extends TypedComponent {
     deviceTypeSelectInputRef = React.createRef();
 
     /**

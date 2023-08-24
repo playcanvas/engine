@@ -1,5 +1,4 @@
-import { useEffect, useState, createRef } from 'react';
-// @ts-ignore: library file import
+import { Component } from 'react';
 import { HashRouter, Switch, Route, Redirect } from "react-router-dom";
 import { SideBar       } from './sidebar.mjs';
 import { CodeEditor    } from './code-editor.mjs';
@@ -7,19 +6,48 @@ import { Menu          } from './menu.mjs';
 import { Example       } from './example.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { jsx, jsxContainer           } from './jsx.mjs';
-import { ControlLoader } from './control-loader.mjs';
+import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 
-const MainLayout = () => {
-    const [lintErrors, setLintErrors] = useState(false);
+/**
+ * @returns {'portrait'|'landscape'}
+ */
+export const getOrientation = () => window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'portrait': 'landscape';
+
+class MainLayout extends Component {
+    state = {
+        orientation: getOrientation(),
+    }
+
+    constructor() {
+        super();
+        this.onLayoutChange = this.onLayoutChange.bind(this);
+    }
+
+    componentDidMount() {
+        window.addEventListener("resize", this.onLayoutChange);
+        screen.orientation.addEventListener("change", this.onLayoutChange);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.onLayoutChange);
+        screen.orientation.removeEventListener("change", this.onLayoutChange);
+    }
+
+    onLayoutChange() {
+        this.setState({ ...this.state, orientation: getOrientation() });
+    }
 
     /**
      * @param {boolean} value 
      */
-    const updateShowMiniStats = (value) => {
+    updateShowMiniStats = (value) => {
+        console.log("updateShowMiniStats");
         window._showMiniStats = value;
-    };
-    return (
-        jsx("div", { id: 'appInner' },
+    }
+
+    render() {
+        const { orientation } = this.state;
+        return jsx("div", { id: 'appInner' },
             jsx(HashRouter, null,
                 jsx(Switch, null,
                     jsx(Route, { exact: true, path: '/' },
@@ -28,31 +56,20 @@ const MainLayout = () => {
                         jsx(SideBar, null),
                         jsxContainer({ id: 'main-view-wrapper' },
                             jsx(Menu, {
-                                setShowMiniStats: updateShowMiniStats
+                                setShowMiniStats: this.updateShowMiniStats.bind(this)
                             }),
                             jsxContainer({ id: 'main-view' },
                                 jsx(ErrorBoundary, null,
-                                    jsx(CodeEditor, {
-                                        lintErrors,
-                                        setLintErrors,
-                                    }),
-                                    jsx(Example, null,
-                                        jsx(ControlLoader, {
-                                            //path: this.props.path,
-                                            //files,
-                                            //setFiles: (files) => { console.log('ControlLoader#setFiles', files); setFiles(files); },
-                                            //setFiles,
-                                            //key: Math.random(),
-                                        })
-                                    )
+                                    orientation === 'landscape' && jsx(CodeEditor),
+                                    jsx(Example, null)
                                 )
                             )
                         )
                     )
                 )
             )
-        )
-    );
-};
+        );
+    }
+}
 
 export { MainLayout };

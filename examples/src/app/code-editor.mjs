@@ -23,13 +23,11 @@ function ObjectMap(object, fn) {
 }
 
 /**
- * @typedef {object} CodeEditorProps
- * @property {(value: boolean) => void} setLintErrors
- * @property {boolean} lintErrors
+ * @typedef {object} Props
  */
 
 /**
- * @param {CodeEditorProps} props
+ * @param {Props} props
  */
 const CodeEditor = (props) => {
     const [files, setFiles] = useState({'example.mjs': '// init'});
@@ -61,7 +59,6 @@ const CodeEditor = (props) => {
      * @param {import('@monaco-editor/react').Monaco} monaco 
      */
     const beforeMount = (monaco) => {
-        // todo: props
         fetch(pcTypes).then((r) => {
             return r.text();
         }).then((playcanvasDefs) => {
@@ -108,18 +105,6 @@ const CodeEditor = (props) => {
             }
         });
         window.dispatchEvent(event);
-    };
-
-    /**
-     * @param {any[]} markers 
-     */
-    const onValidate = (markers) => {
-        // filter out markers which are warnings
-        if (markers.filter(m => m.severity > 1).length === 0) {
-            props.setLintErrors(false);
-        } else {
-            props.setLintErrors(true);
-        }
     };
 
     /**
@@ -192,7 +177,6 @@ const CodeEditor = (props) => {
                     Button,
                     {
                         id: 'play-button',
-                        //enabled: !props.lintErrors,
                         icon: 'E304',
                         text: '',
                         onClick: () => onPlayButton()
@@ -236,7 +220,6 @@ const CodeEditor = (props) => {
                 beforeMount,
                 onMount: editorDidMount,
                 onChange,
-                onValidate,
                 options: {
                     scrollbar: {
                         horizontal: 'visible'
@@ -248,4 +231,5 @@ const CodeEditor = (props) => {
         )
     );   
 };
+
 export { CodeEditor };

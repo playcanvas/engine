@@ -1,13 +1,37 @@
-import { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
-import { jsx, jsxContainer, jsxPanel, jsxSelectInput, jsxSpinner } from './jsx.mjs';
+//import { fragment, jsx, jsxContainer, jsxPanel, jsxSelectInput, jsxSpinner } from './jsx.mjs';
 import { DeviceSelector } from './device-selector.mjs';
+import { getOrientation } from './MainLayout.mjs';
+//import { ControlLoader } from './control-loader.mjs';
+//import { Component } from 'react';
+//import { fragment, jsx } from './jsx.mjs';
+//import { controlsObserver } from './example.mjs';
+//import { Controls } from './controls.mjs';
+import { ErrorBoundary } from './error-boundary.mjs';
+import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner  } from './jsx.mjs';
+import ControlPanel from './control-panel.mjs';
+import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
+import React, { useRef, createRef, Component, useEffect } from 'react';
+import MonacoEditor from "@monaco-editor/react";
+
+// What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
+// 1) We don't want to load React code in iframe
+// 2) We don't want to load PlayCanvas code in Examples browser
+// (just to keep the file sizes as minimal as possible)
+Object.assign(window, {
+    BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container,
+    Observer,
+    jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner,
+    React, useRef, createRef, Component, useEffect,
+});
 
 const controlsObserver = new Observer();
+
+const debug = false;
 
 /**
  * @typedef {object} Props
@@ -16,13 +40,113 @@ const controlsObserver = new Observer();
 
 /**
  * @typedef {object} State
- * @property {any} codeError
+ * @property {'portrait' | 'landscape'} orientation - The orientation.
+ * @property {boolean} collapsed - Collapsed or not.
  */
 
 /** @type {typeof Component<Props, State>} */
-const c = Component;
+const TypedComponent = Component;
 
-class Example extends c {
+class Example extends TypedComponent {
+    state = {
+        orientation: getOrientation(),
+        collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
+        exampleLoaded: false,
+        //controls: () => jsx('pre', null, 'Status: initial'),
+        controls: () => undefined,
+        showParameters: false,
+        showCode: true,
+    };
+
+    /**
+     * @param {Partial<State>} state - The partial state to update.
+     */
+    mergeState(state) {
+        this.setState({ ...this.state, ...state});
+    }
+
+    /**
+     * Called for resizing and changing orientation of device.
+     */
+    onLayoutChange() {
+        this.mergeState({ orientation: getOrientation() });
+    }
+
+    /**
+     * @param {Props} props - The props.
+     */
+    constructor(props) {
+        super(props);
+
+        this.onLayoutChange = this.onLayoutChange.bind(this);
+        // todo did mount / unmount remove
+        window.addEventListener("resize", this.onLayoutChange);
+        screen.orientation.addEventListener("change", this.onLayoutChange);
+        const self = this;
+        window.addEventListener('exampleLoading', (e) => {
+            if (debug) {
+                console.log("ControlLoader event: exampleLoading, event=", e);
+            }
+            self.mergeState({
+                exampleLoaded: false,
+                //controls: () => jsx('h1', null, 'state: reload'),
+                controls: null,
+            });
+        });
+        window.addEventListener('exampleLoad', (event) => {
+            if (debug) {
+                console.log("ControlLoader event: exampleLoad, event =", event);
+            }
+            /** @type {Record<string, string>} */
+            const files = event.files;
+            const controlsSrc = files['controls.mjs'];
+            if (controlsSrc) {
+                let controls;
+                try {
+                    controls = Function('return ' + controlsSrc)();
+                } catch (e) {
+                    controls = () => jsx('pre', null, 'error: ' + e.toString());
+                }
+                self.mergeState({
+                    exampleLoaded: true,
+                    controls,
+                });
+                // console.log("controlsSrc", controlsSrc);
+            } else {
+                // When switching examples from one with controls to one without controls...
+                self.mergeState({
+                    exampleLoaded: true,
+                    controls: null,
+                });
+            }
+            const activeDevice = event.deviceType;
+            controlsObserver.emit('updateActiveDevice', activeDevice);
+        });
+        window.addEventListener('updateFiles', (event) => {
+            if (debug) {
+                console.log("ControlLoader event: updateFiles, event =", event);
+            }
+            const files = event.detail.files;
+            // console.log("updateFiles", files);
+            const controlsSrc = files['controls.mjs'] ?? 'null';
+            if (!files['controls.mjs']) {
+                this.mergeState({
+                    exampleLoaded: true,
+                    controls: null,
+                });
+            }
+            let controls;
+            try {
+                controls = Function('return ' + controlsSrc)();
+            } catch (e) {
+                controls = () => jsx('pre', null, e.toString());
+            }
+            this.mergeState({
+                exampleLoaded: true,
+                controls,
+            });
+        });        
+    }
 
     get path() {
         return `/${this.props.match.params.category}/${this.props.match.params.example}`;
@@ -33,20 +157,20 @@ class Example extends c {
         return `${iframePath}/${example.category}_${example.name}.html`;
     }
 
-    /**
-     * @param {Readonly<Props>} nextProps 
-     * @returns {boolean}
-     */
-    shouldComponentUpdate(nextProps) {
-        const updateMobileOnFileChange = () => {
-            return window.top.innerWidth < MIN_DESKTOP_WIDTH;
-        };
-        return (
-            this.props.match.params.category !== nextProps.match.params.category ||
-            this.props.match.params.example !== nextProps.match.params.example ||
-            updateMobileOnFileChange()
-        );
-    }
+    ///**
+    // * @param {Readonly<Props>} nextProps 
+    // * @returns {boolean}
+    // */
+    //shouldComponentUpdate(nextProps) {
+    //    const updateMobileOnFileChange = () => {
+    //        return window.top.innerWidth < MIN_DESKTOP_WIDTH;
+    //    };
+    //    return (
+    //        this.props.match.params.category !== nextProps.match.params.category ||
+    //        this.props.match.params.example !== nextProps.match.params.example ||
+    //        updateMobileOnFileChange()
+    //    );
+    //}
 
     onSetPreferredGraphicsDevice(value) {
         // reload the iframe after updating the device
@@ -55,9 +179,153 @@ class Example extends c {
         exampleIframe.contentWindow.location.reload();
     }
 
+    onClickParametersTab() {
+        this.mergeState({
+            showParameters: true,
+            showCode: false,
+        });
+    };
+
+    onClickCodeTab() {
+        this.mergeState({
+            showParameters: false,
+            showCode: true,
+        });
+    };
+
+    renderDeviceSelector() {
+        return jsx(DeviceSelector, {
+            onSelect: this.onSetPreferredGraphicsDevice,
+            observer: controlsObserver,
+        });
+    }
+
+    renderControls() {
+        const { exampleLoaded, controls } = this.state;
+        const ready = exampleLoaded && controls && window.pc?.app;
+        if (!ready) {
+            return;
+        }
+        return jsx(
+            ErrorBoundary,
+            null,
+            jsx(this.state.controls, {
+                observer: window.observerData
+            }),
+        );
+    }
+
+    toggleCollapse() {
+        const { collapsed } = this.state;
+        this.mergeState({
+            collapsed: !collapsed,
+        });
+        //console.log("Example#toggleCollapse> was ", collapsed);
+    }
+
+    // PCUI should just have a "onHeaderClick" but can't find anything
+    componentDidMount() {
+        const controlPanel = document.getElementById("controlPanel");
+        const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
+        controlPanelHeader.onclick = () => this.toggleCollapse();
+    }
+
+    renderPortrait() {
+        const { collapsed, controls, showCode, showParameters } = this.state;
+        return fragment(
+            jsx(Panel,
+                {
+                    id: 'controlPanel',
+                    class: ['mobile'],
+                    resizable: 'top',
+                    headerText: 'CODE & CONTROLS',
+                    collapsible: true,
+                    collapsed,
+                    //header: jsx('h1', null, "data header"),
+                    //onClick: this.toggleCollapse.bind(this),
+                    //onExpand: this.toggleCollapse.bind(this),
+                    
+                },
+                // jsx('button', null, "Example#renderPortrait()"),
+                this.renderDeviceSelector(),
+                //this.renderControls(),
+                jsx(
+                    Container,
+                    {
+                        id: 'controls-wrapper',
+                        class: controls ? 'has-controls' : null
+                    },
+                    
+                    jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-tabs',
+                            class: 'tabs-container'
+                        },
+                        jsxButton({
+                            text: 'CODE',
+                            id: 'codeButton',
+                            class: showCode ? 'selected' : null,
+                            onClick: this.onClickCodeTab.bind(this),
+                        }),
+                        jsxButton({
+                            text: 'PARAMETERS',
+                            class: showParameters ? 'selected' : null,
+                            id: 'paramButton',
+                            onClick: this.onClickParametersTab.bind(this),
+                        }),
+                    ),
+                    showParameters && jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-controls'
+                        },
+                        this.renderControls(),
+                    ),
+                    showCode && jsx(
+                        MonacoEditor,
+                        {
+                            options: {
+                                readOnly: true
+                            },
+                            defaultLanguage: "typescript",
+                            value: '// loading portrait editor...'
+                        }
+                    )
+                )
+            )
+        );
+    }
+
+    renderLandscape() {
+        const { collapsed } = this.state;
+        return fragment(
+            jsxPanel(
+                {
+                    id: 'controlPanel',
+                    class: ['landscape'],
+                    resizable: 'top',
+                    headerText: 'CONTROLS',
+                    collapsible: true,
+                    collapsed,
+                },
+                // jsx('button', null, "Example#renderLandscape"),
+                this.renderDeviceSelector(),
+                this.renderControls(),
+                //jsx(SideBar, null),
+                //jsx(CodeEditor, {
+                //    lintErrors: false,
+                //    setLintErrors: () => console.log("set lint errors", ...arguments),
+                //}),
+                //jsx('pre', null, JSON.stringify(this.state, null, 2)),
+            )
+        );
+    }
+
     render() {
         const { iframePath } = this;
-        const { children } = this.props;
+        const { orientation } = this.state;
+        //console.log("Example#render", JSON.stringify(this.state, null, 2));
         return jsxContainer(
             {
                 id: "canvas-container"
@@ -68,22 +336,13 @@ class Example extends c {
                 key: iframePath,
                 src: iframePath
             }),
-            jsxPanel(
-                {
-                    id: 'controlPanel',
-                    class: [window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'mobile' : null],
-                    resizable: 'top',
-                    headerText: window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'CODE & CONTROLS' : 'CONTROLS',
-                    collapsible: true,
-                    collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH
-                },
-                jsx(DeviceSelector, {onSelect: this.onSetPreferredGraphicsDevice, observer: controlsObserver}),
-                children,
-            )
+            orientation === 'portrait' ? this.renderPortrait() : this.renderLandscape(),
         );       
     }
 }
+
 const ExamptWithRouter = withRouter(Example);
+
 export {
     ExamptWithRouter as Example,
     controlsObserver,
