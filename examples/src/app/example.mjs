@@ -84,7 +84,7 @@ class Example extends TypedComponent {
             } catch (e) {
                 controls = () => jsx('pre', null, 'error: ' + e.toString());
             }
-            self.mergeState({
+            this.mergeState({
                 exampleLoaded: true,
                 controls,
                 files,
@@ -92,7 +92,7 @@ class Example extends TypedComponent {
             // console.log("controlsSrc", controlsSrc);
         } else {
             // When switching examples from one with controls to one without controls...
-            self.mergeState({
+            this.mergeState({
                 exampleLoaded: true,
                 controls: null,
                 files,
