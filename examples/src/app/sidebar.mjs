@@ -26,6 +26,7 @@ const toggleSideBar = () => {
  * @property {string} hash - The hash.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {string} orientation - Current orientation.
  */
 
 /**
@@ -34,6 +35,7 @@ const toggleSideBar = () => {
 const TypedComponent = Component;
 
 export class SideBar extends TypedComponent {
+    /** @type {State} */
     state = {
         defaultCategories: examples.categories,
         filteredCategories: null,
@@ -44,14 +46,22 @@ export class SideBar extends TypedComponent {
     }
 
     componentDidMount() {
-        window.addEventListener("resize", this.onLayoutChange);
-        screen.orientation.addEventListener("change", this.onLayoutChange);
         // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBar = document.getElementById("sideBar");
         const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
         sideBarHeader.onclick = () => this.toggleCollapse();
         this.setupControlPanelToggleButton();
+        // setup events
+        this.onLayoutChange = this.onLayoutChange.bind(this);
+        window.addEventListener("resize", this.onLayoutChange);
+        window.addEventListener("orientationchange", this.onLayoutChange);
     }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.onLayoutChange);
+        window.removeEventListener("orientationchange", this.onLayoutChange);
+    }
+
     setupControlPanelToggleButton() {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');
@@ -103,11 +113,6 @@ export class SideBar extends TypedComponent {
         // console.log("SideBar#toggleCollapse> was ", collapsed);
     }
 
-    componentWillUnmount() {
-        window.removeEventListener("resize", this.onLayoutChange);
-        screen.orientation.removeEventListener("change", this.onLayoutChange);
-    }
-
     onLayoutChange() {
         if (!this.state.filteredCategories && document.body.offsetWidth < MIN_DESKTOP_WIDTH) {
             // @ts-ignore
@@ -122,13 +127,6 @@ export class SideBar extends TypedComponent {
         });
     }
 
-    /**
-     * @param {Props} props 
-     */
-    constructor(props) {
-        super(props);
-        this.onLayoutChange = this.onLayoutChange.bind(this);
-    }
     /**
      * @param {string} filter - The filter string.
      */

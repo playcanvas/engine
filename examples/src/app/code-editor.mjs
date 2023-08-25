@@ -3,20 +3,7 @@ import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor from "@monaco-editor/react";
-
-export function iframeRequestFiles() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("requestFiles"));
-}
-
-export function iframeShowStats() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("showStats"));
-}
-export function iframeHideStats() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("hideStats"));
-}
+import { iframeRequestFiles } from './iframeUtils.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
@@ -37,7 +24,7 @@ let monacoEditor;
  * @property {string} selectedFile
  */
 
-/** @type {typeof Component<Props, State>} TypedComponent */
+/** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class CodeEditor extends TypedComponent {
@@ -48,16 +35,6 @@ class CodeEditor extends TypedComponent {
     };
 
     /**
-     * @param {Props} props - The props.
-     */
-    constructor(props) {
-        super(props);
-        this.handleExampleLoad = this.handleExampleLoad.bind(this);
-        this.handleExampleLoading = this.handleExampleLoading.bind(this);
-        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
-    }
-
-    /**
      * @param {Partial<State>} state - New partial state.
      */
     mergeState(state) {
@@ -65,6 +42,9 @@ class CodeEditor extends TypedComponent {
     }
 
     componentDidMount() {
+        this.handleExampleLoad = this.handleExampleLoad.bind(this);
+        this.handleExampleLoading = this.handleExampleLoading.bind(this);
+        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
         window.addEventListener('exampleLoad', this.handleExampleLoad);
         window.addEventListener('exampleLoading', this.handleExampleLoading);
         window.addEventListener("requestedFiles", this.handleRequestedFiles);

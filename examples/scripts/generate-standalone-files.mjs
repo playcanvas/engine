@@ -9,6 +9,9 @@ const exampleData = {};
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
 }
+if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
+    fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
+}
 for (const category_ in realExamples) {
     const category = toKebabCase(category_);
     exampleData[category] = {};

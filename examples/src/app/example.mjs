@@ -3,21 +3,14 @@ import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
-//import { fragment, jsx, jsxContainer, jsxPanel, jsxSelectInput, jsxSpinner } from './jsx.mjs';
 import { DeviceSelector } from './device-selector.mjs';
 import { getOrientation } from './MainLayout.mjs';
-//import { ControlLoader } from './control-loader.mjs';
-//import { Component } from 'react';
-//import { fragment, jsx } from './jsx.mjs';
-//import { controlsObserver } from './example.mjs';
-//import { Controls } from './controls.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner  } from './jsx.mjs';
-import ControlPanel from './control-panel.mjs';
 import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
 import React, { useRef, createRef, Component, useEffect } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeRequestFiles } from './code-editor.mjs';
+import { iframeRequestFiles } from './iframeUtils.mjs';
 
 // What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
 // 1) We don't want to load React code in iframe
@@ -31,8 +24,6 @@ Object.assign(window, {
 });
 
 const controlsObserver = new Observer();
-
-const debug = false;
 
 /**
  * @typedef {object} Props
@@ -74,82 +65,92 @@ class Example extends TypedComponent {
         this.mergeState({ orientation: getOrientation() });
     }
 
-    /**
-     * @param {Props} props - The props.
-     */
-    constructor(props) {
-        super(props);
-        this.onLayoutChange = this.onLayoutChange.bind(this);
-        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
-        // todo did mount / unmount remove
-        window.addEventListener("resize", this.onLayoutChange);
-        screen.orientation.addEventListener("change", this.onLayoutChange);
-        const self = this;
-        window.addEventListener('exampleLoading', (e) => {
-            if (debug) {
-                console.log("ControlLoader event: exampleLoading, event=", e);
-            }
-            self.mergeState({
-                exampleLoaded: false,
-                //controls: () => jsx('h1', null, 'state: reload'),
-                controls: null,
-            });
+    onExampleLoading() {
+        this.mergeState({
+            exampleLoaded: false,
+            //controls: () => jsx('h1', null, 'state: reload'),
+            controls: null,
         });
-        window.addEventListener('exampleLoad', (event) => {
-            if (debug) {
-                console.log("ControlLoader event: exampleLoad, event =", event);
-            }
-            /** @type {Record<string, string>} */
-            const files = event.files;
-            const controlsSrc = files['controls.mjs'];
-            if (controlsSrc) {
-                let controls;
-                try {
-                    controls = Function('return ' + controlsSrc)();
-                } catch (e) {
-                    controls = () => jsx('pre', null, 'error: ' + e.toString());
-                }
-                self.mergeState({
-                    exampleLoaded: true,
-                    controls,
-                    files,
-                });
-                // console.log("controlsSrc", controlsSrc);
-            } else {
-                // When switching examples from one with controls to one without controls...
-                self.mergeState({
-                    exampleLoaded: true,
-                    controls: null,
-                    files,
-                });
-            }
-            const activeDevice = event.deviceType;
-            controlsObserver.emit('updateActiveDevice', activeDevice);
-        });
-        window.addEventListener('updateFiles', (event) => {
-            if (debug) {
-                console.log("ControlLoader event: updateFiles, event =", event);
-            }
-            const files = event.detail.files;
-            // console.log("updateFiles", files);
-            const controlsSrc = files['controls.mjs'] ?? 'null';
-            if (!files['controls.mjs']) {
-                this.mergeState({
-                    exampleLoaded: true,
-                    controls: null,
-                });
-            }
+    }
+
+    onExampleLoad(event) {
+        /** @type {Record<string, string>} */
+        const files = event.files;
+        const controlsSrc = files['controls.mjs'];
+        if (controlsSrc) {
             let controls;
             try {
                 controls = Function('return ' + controlsSrc)();
             } catch (e) {
-                controls = () => jsx('pre', null, e.toString());
+                controls = () => jsx('pre', null, 'error: ' + e.toString());
             }
-            this.mergeState({
+            self.mergeState({
                 exampleLoaded: true,
                 controls,
+                files,
             });
-        });        
+            // console.log("controlsSrc", controlsSrc);
+        } else {
+            // When switching examples from one with controls to one without controls...
+            self.mergeState({
+                exampleLoaded: true,
+                controls: null,
+                files,
+            });
+        }
+        const activeDevice = event.deviceType;
+        controlsObserver.emit('updateActiveDevice', activeDevice);
+    }
+
+    onUpdateFiles(event) {
+        const files = event.detail.files;
+        // console.log("updateFiles", files);
+        const controlsSrc = files['controls.mjs'] ?? 'null';
+        if (!files['controls.mjs']) {
+            this.mergeState({
+                exampleLoaded: true,
+                controls: null,
+            });
+        }
+        let controls;
+        try {
+            controls = Function('return ' + controlsSrc)();
+        } catch (e) {
+            controls = () => jsx('pre', null, e.toString());
+        }
+        this.mergeState({
+            exampleLoaded: true,
+            controls,
+        });
+    }
+    
+    componentDidMount() {
+        // PCUI should just have a "onHeaderClick" but can't find anything
+        const controlPanel = document.getElementById("controlPanel");
+        const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
+        controlPanelHeader.onclick = () => this.toggleCollapse();
+        // Other events
+        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
+        this.onLayoutChange = this.onLayoutChange.bind(this);
+        this.onExampleLoading = this.onExampleLoading.bind(this);
+        this.onExampleLoad = this.onExampleLoad.bind(this);
+        this.onUpdateFiles = this.onUpdateFiles.bind(this);
+        window.addEventListener("requestedFiles", this.handleRequestedFiles);
+        window.addEventListener("resize", this.onLayoutChange);
+        window.addEventListener("orientationchange", this.onLayoutChange);
+        window.addEventListener('exampleLoading', this.onExampleLoading);
+        window.addEventListener('exampleLoad', this.onExampleLoad);
+        window.addEventListener('updateFiles', this.onUpdateFiles);
+        iframeRequestFiles();
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
+        window.removeEventListener("resize", this.onLayoutChange);
+        window.removeEventListener("orientationchange", this.onLayoutChange);
+        window.removeEventListener('exampleLoading', this.onExampleLoading);
+        window.removeEventListener('exampleLoad', this.onExampleLoad);
+        window.removeEventListener('updateFiles', this.onUpdateFiles);
     }
 
     get path() {
@@ -159,6 +160,8 @@ class Example extends TypedComponent {
     get iframePath() {
         const example = examples.paths[this.path];
         return `${iframePath}/${example.category}_${example.name}.html`;
+        // todo: Complete standalone ES6 version, currently ignored, because focus is on MVP
+        // return `${iframePath}/index.html?category=${example.category}&example=${example.name}`;
     }
 
     onSetPreferredGraphicsDevice(value) {
@@ -210,19 +213,6 @@ class Example extends TypedComponent {
             collapsed: !collapsed,
         });
         //console.log("Example#toggleCollapse> was ", collapsed);
-    }
-
-    // PCUI should just have a "onHeaderClick" but can't find anything
-    componentDidMount() {
-        const controlPanel = document.getElementById("controlPanel");
-        const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
-        controlPanelHeader.onclick = () => this.toggleCollapse();
-        window.addEventListener("requestedFiles", this.handleRequestedFiles);
-        iframeRequestFiles();
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
     }
 
     handleRequestedFiles(event) {
