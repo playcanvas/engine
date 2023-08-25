@@ -724,6 +724,10 @@ class Layer {
      * Removes all lights from this layer.
      */
     clearLights() {
+
+        // notify lights
+        this._lightsSet.forEach(light => light.removeLayer(this));
+
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
