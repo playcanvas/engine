@@ -1,5 +1,5 @@
 import { Debug } from '../core/debug.js';
-import { hashCode } from '../core/hash.js';
+import { hash32Fnv1a } from '../core/hash.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
@@ -11,15 +11,13 @@ import {
 } from './constants.js';
 import { Material } from './materials/material.js';
 
-let keyA, keyB, sortPos, sortDir;
-
 function sortManual(drawCallA, drawCallB) {
     return drawCallA.drawOrder - drawCallB.drawOrder;
 }
 
 function sortMaterialMesh(drawCallA, drawCallB) {
-    keyA = drawCallA._key[SORTKEY_FORWARD];
-    keyB = drawCallB._key[SORTKEY_FORWARD];
+    const keyA = drawCallA._key[SORTKEY_FORWARD];
+    const keyB = drawCallB._key[SORTKEY_FORWARD];
     if (keyA === keyB && drawCallA.mesh && drawCallB.mesh) {
         return drawCallB.mesh.id - drawCallA.mesh.id;
     }
@@ -42,6 +40,8 @@ function sortLights(lightA, lightB) {
 
 // Layers
 let layerCounter = 0;
+
+const lightKeys = [];
 
 class VisibleInstanceList {
     constructor() {
@@ -94,6 +94,8 @@ class InstanceList {
  * A Layer represents a renderable subset of the scene. It can contain a list of mesh instances,
  * lights and cameras, their render settings and also defines custom callbacks before, after or
  * during rendering. Layers are organized inside {@link LayerComposition} in a desired order.
+ *
+ * @category Graphics
  */
 class Layer {
     /**
@@ -342,15 +344,6 @@ class Layer {
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
         /**
-         * Visibility bit mask that interacts with {@link MeshInstance#mask}. Especially useful
-         * when combined with layerReference, allowing for the filtering of some objects, while
-         * sharing their list and culling.
-         *
-         * @type {number}
-         */
-        this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
-
-        /**
          * @type {import('./mesh-instance.js').MeshInstance[]}
          * @ignore
          */
@@ -415,9 +408,7 @@ class Layer {
         this._dirtyCameras = false;
 
         this._lightHash = 0;
-        this._staticLightHash = 0;
-        this._needsStaticPrepare = true;
-        this._staticPrepareDone = false;
+        this._lightHashDirty = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -608,27 +599,9 @@ class Layer {
      * @private
      */
     removeMeshInstanceFromArray(m, arr) {
-        let spliceOffset = -1;
-        let spliceCount = 0;
-        const len = arr.length;
-        for (let j = 0; j < len; j++) {
-            const drawCall = arr[j];
-            if (drawCall === m) {
-                spliceOffset = j;
-                spliceCount = 1;
-                break;
-            }
-            if (drawCall._staticSource === m) {
-                if (spliceOffset < 0) spliceOffset = j;
-                spliceCount++;
-            } else if (spliceOffset >= 0) {
-                break;
-            }
-        }
-
-        if (spliceOffset >= 0) {
-            arr.splice(spliceOffset, spliceCount);
-        }
+        const i = arr.indexOf(m);
+        if (i >= 0)
+            arr.splice(i, 1);
     }
 
     /**
@@ -696,7 +669,7 @@ class Layer {
 
             this._lights.push(l);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -718,7 +691,7 @@ class Layer {
 
             this._lights.splice(this._lights.indexOf(l), 1);
             this._dirtyLights = true;
-            this._generateLightHash();
+            this._lightHashDirty = true;
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -769,39 +742,34 @@ class Layer {
         this._dirtyLights = true;
     }
 
-    /** @private */
-    _generateLightHash() {
-        // generate hash to check if layers have the same set of static lights
-        // order of lights shouldn't matter
-        if (this._lights.length > 0) {
-            this._lights.sort(sortLights);
-            let str = '';
-            let strStatic = '';
+    getLightHash(isClustered) {
+        if (this._lightHashDirty) {
+            this._lightHashDirty = false;
 
-            for (let i = 0; i < this._lights.length; i++) {
-                if (this._lights[i].isStatic) {
-                    strStatic += this._lights[i].key;
-                } else {
-                    str += this._lights[i].key;
+            // generate hash to check if layers have the same set of lights independent of their order
+            this._lightHash = 0;
+
+            const lights = this._lights;
+            if (lights.length > 0) {
+                lights.sort(sortLights);
+
+                for (let i = 0; i < lights.length; i++) {
+
+                    // only directional lights affect the shader generation for clustered lighting
+                    if (isClustered && lights[i].type !== LIGHTTYPE_DIRECTIONAL)
+                        continue;
+
+                    lightKeys.push(lights[i].key);
+                }
+
+                if (lightKeys.length > 0) {
+                    this._lightHash = hash32Fnv1a(lightKeys);
+                    lightKeys.length = 0;
                 }
             }
-
-            if (str.length === 0) {
-                this._lightHash = 0;
-            } else {
-                this._lightHash = hashCode(str);
-            }
-
-            if (strStatic.length === 0) {
-                this._staticLightHash = 0;
-            } else {
-                this._staticLightHash = hashCode(strStatic);
-            }
-
-        } else {
-            this._lightHash = 0;
-            this._staticLightHash = 0;
         }
+
+        return this._lightHash;
     }
 
     /**
@@ -880,8 +848,8 @@ class Layer {
         const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
 
         if (sortMode === SORTMODE_CUSTOM) {
-            sortPos = cameraNode.getPosition();
-            sortDir = cameraNode.forward;
+            const sortPos = cameraNode.getPosition();
+            const sortDir = cameraNode.forward;
             if (this.customCalculateSortValues) {
                 this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
             }
@@ -895,8 +863,8 @@ class Layer {
             }
         } else {
             if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
-                sortPos = cameraNode.getPosition();
-                sortDir = cameraNode.forward;
+                const sortPos = cameraNode.getPosition();
+                const sortDir = cameraNode.forward;
                 this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
             }
 

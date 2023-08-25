@@ -11,11 +11,10 @@ import {
     LAYER_WORLD,
     MASK_AFFECT_DYNAMIC, MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
     RENDERSTYLE_SOLID,
-    SHADER_FORWARD, SHADER_FORWARDHDR,
     SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_TANGENTS, SHADERDEF_NOSHADOW, SHADERDEF_SKIN,
     SHADERDEF_SCREENSPACE, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_TEXTURE_BASED,
-    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT,
-    SORTKEY_FORWARD,
+    SHADERDEF_LM, SHADERDEF_DIRLM, SHADERDEF_LMAMBIENT, SHADERDEF_INSTANCING,
+    SORTKEY_FORWARD
 } from './constants.js';
 
 import { GraphNode } from './graph-node.js';
@@ -61,6 +60,85 @@ class Command {
 }
 
 /**
+ * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
+ */
+class ShaderInstance {
+    /**
+     * A shader.
+     *
+     * @type {import('../platform/graphics/shader.js').Shader|undefined}
+     */
+    shader;
+
+    /**
+     * A bind group storing mesh uniforms for the shader.
+     *
+     * @type {BindGroup|null}
+     */
+    bindGroup = null;
+
+    /**
+     * Returns the mesh bind group for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {BindGroup} - The mesh bind group.
+     */
+    getBindGroup(device) {
+
+        // create bind group
+        if (!this.bindGroup) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            // mesh uniform buffer
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
+
+            // mesh bind group
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
+        }
+
+        return this.bindGroup;
+    }
+
+    destroy() {
+        const group = this.bindGroup;
+        if (group) {
+            group.defaultUniformBuffer?.destroy();
+            group.destroy();
+            this.bindGroup = null;
+        }
+    }
+}
+
+/**
+ * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
+ * pass.
+ *
+ * @ignore
+ */
+class ShaderCacheEntry {
+    /**
+     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
+     *
+     * @type {Map<number, ShaderInstance>}
+     */
+    shaderInstances = new Map();
+
+    destroy() {
+        this.shaderInstances.forEach(instance => instance.destroy());
+        this.shaderInstances.clear();
+    }
+}
+
+/**
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
@@ -73,6 +151,8 @@ class Command {
 /**
  * An instance of a {@link Mesh}. A single mesh can be referenced by many mesh instances that can
  * have different transforms and materials.
+ *
+ * @category Graphics
  */
 class MeshInstance {
     /**
@@ -96,27 +176,26 @@ class MeshInstance {
     castShadow = false;
 
     /**
-     * @type {import('./materials/material.js').Material}
+     * True if the material of the mesh instance is transparent. Optimization to avoid accessing the
+     * material. Updated by the material instance itself.
+     *
+     * @ignore
+     */
+    transparent = false;
+
+    /**
+     * @type {import('./materials/material.js').Material|null}
      * @private
      */
-    _material;
+    _material = null;
 
     /**
-     * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
+     * An array of shader cache entries, indexed by the shader pass constant (SHADER_FORWARD..). The
+     * value stores all shaders and bind groups for the shader pass for various light combinations.
      *
-     * @type {Array<import('../platform/graphics/shader.js').Shader>}
-     * @ignore
+     * @type {Array<ShaderCacheEntry|null>}
      */
-    _shader = [];
-
-    /**
-     * An array of bind groups, storing uniforms per pass. This has 1:1 relation with the _shades array,
-     * and is indexed by the shader pass constant as well.
-     *
-     * @type {Array<BindGroup>}
-     * @ignore
-     */
-    _bindGroups = [];
+    _shaderCache = [];
 
     /**
      * Create a new MeshInstance instance.
@@ -153,10 +232,6 @@ class MeshInstance {
 
         this._key = [0, 0];
 
-        this.isStatic = false;
-        this._staticLightList = null;
-        this._staticSource = null;
-
         /**
          * The graph node defining the transform for this instance.
          *
@@ -172,8 +247,6 @@ class MeshInstance {
         this._shaderDefs |= mesh.vertexBuffer.format.hasUv1 ? SHADERDEF_UV1 : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
-
-        this._lightHash = 0;
 
         // Render options
         this.layer = LAYER_WORLD; // legacy
@@ -207,12 +280,13 @@ class MeshInstance {
         this.updateKey();
 
         /**
-         * @type {import('./skin-instance.js').SkinInstance}
+         * @type {import('./skin-instance.js').SkinInstance|null}
          * @private
          */
         this._skinInstance = null;
+
         /**
-         * @type {import('./morph-instance.js').MorphInstance}
+         * @type {import('./morph-instance.js').MorphInstance|null}
          * @private
          */
         this._morphInstance = null;
@@ -220,7 +294,7 @@ class MeshInstance {
         this.instancingData = null;
 
         /**
-         * @type {BoundingBox}
+         * @type {BoundingBox|null}
          * @private
          */
         this._customAabb = null;
@@ -395,65 +469,71 @@ class MeshInstance {
     }
 
     /**
-     * Clear the internal shader array.
+     * Clear the internal shader cache.
      *
      * @ignore
      */
     clearShaders() {
-        const shaders = this._shader;
-        for (let i = 0; i < shaders.length; i++) {
-            shaders[i] = null;
+        const shaderCache = this._shaderCache;
+        for (let i = 0; i < shaderCache.length; i++) {
+            shaderCache[i]?.destroy();
+            shaderCache[i] = null;
         }
-
-        this.destroyBindGroups();
-    }
-
-    destroyBindGroups() {
-
-        const groups = this._bindGroups;
-        for (let i = 0; i < groups.length; i++) {
-            const group = groups[i];
-            if (group) {
-                const uniformBuffer = group.defaultUniformBuffer;
-                if (uniformBuffer) {
-                    uniformBuffer.destroy();
-                }
-                group.destroy();
-            }
-        }
-        groups.length = 0;
     }
 
     /**
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {number} pass - Shader pass number.
-     * @returns {BindGroup} - The mesh bind group.
+     * Returns the shader instance for the specified shader pass and light hash that is compatible
+     * with this mesh instance.
+     *
+     * @param {number} shaderPass - The shader pass index.
+     * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
+     * @param {import('./scene.js').Scene} scene - The scene.
+     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - The
+     * format of the view uniform buffer.
+     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - The
+     * format of the view bind group.
+     * @param {any} [sortedLights] - Array of arrays of lights.
+     * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getBindGroup(device, pass) {
+    getShaderInstance(shaderPass, lightHash, scene, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
-        // create bind group
-        let bindGroup = this._bindGroups[pass];
-        if (!bindGroup) {
-            const shader = this._shader[pass];
-            Debug.assert(shader);
-
-            // mesh uniform buffer
-            const ubFormat = shader.meshUniformBufferFormat;
-            Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat);
-
-            // mesh bind group
-            const bindGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bindGroupFormat);
-            bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
-            DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
-
-            this._bindGroups[pass] = bindGroup;
+        let shaderInstance;
+        let passEntry = this._shaderCache[shaderPass];
+        if (passEntry) {
+            shaderInstance = passEntry.shaderInstances.get(lightHash);
+        } else {
+            passEntry = new ShaderCacheEntry();
+            this._shaderCache[shaderPass] = passEntry;
         }
 
-        return bindGroup;
+        // cache miss in the shader cache of the mesh instance
+        if (!shaderInstance) {
+
+            // get the shader from the material
+            const mat = this._material;
+            const shaderDefs = this._shaderDefs;
+            const variantKey = shaderPass + '_' + shaderDefs + '_' + lightHash;
+            shaderInstance = new ShaderInstance();
+            shaderInstance.shader = mat.variants.get(variantKey);
+
+            // cache miss in the material variants
+            if (!shaderInstance.shader) {
+
+                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
+                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+
+                // add it to the material variants cache
+                mat.variants.set(variantKey, shader);
+
+                shaderInstance.shader = shader;
+            }
+
+            // add it to the mesh instance cache
+            passEntry.shaderInstances.set(lightHash, shaderInstance);
+        }
+
+        return shaderInstance;
     }
 
     /**
@@ -478,6 +558,9 @@ class MeshInstance {
 
             // Record that the material is referenced by this mesh instance
             material.addMeshInstanceRef(this);
+
+            // update transparent flag based on material
+            this.transparent = material.transparent;
 
             this.updateKey();
 
@@ -507,6 +590,13 @@ class MeshInstance {
         return this._layer;
     }
 
+    _updateShaderDefs(shaderDefs) {
+        if (shaderDefs !== this._shaderDefs) {
+            this._shaderDefs = shaderDefs;
+            this.clearShaders();
+        }
+    }
+
     /**
      * In some circumstances mesh instances are sorted by a distance calculation to determine their
      * rendering order. Set this callback to override the default distance calculation, which gives
@@ -525,10 +615,10 @@ class MeshInstance {
     }
 
     set receiveShadow(val) {
-        this._receiveShadow = val;
-        this._shaderDefs = val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        if (this._receiveShadow !== val) {
+            this._receiveShadow = val;
+            this._updateShaderDefs(val ? (this._shaderDefs & ~SHADERDEF_NOSHADOW) : (this._shaderDefs | SHADERDEF_NOSHADOW));
+        }
     }
 
     get receiveShadow() {
@@ -542,15 +632,7 @@ class MeshInstance {
      */
     set skinInstance(val) {
         this._skinInstance = val;
-
-        let shaderDefs = this._shaderDefs;
-        shaderDefs = val ? (shaderDefs | SHADERDEF_SKIN) : (shaderDefs & ~SHADERDEF_SKIN);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SKIN) : (this._shaderDefs & ~SHADERDEF_SKIN));
         this._setupSkinUpdate();
     }
 
@@ -575,12 +657,7 @@ class MeshInstance {
         shaderDefs = (val && val.morph.useTextureMorph) ? (shaderDefs | SHADERDEF_MORPH_TEXTURE_BASED) : (shaderDefs & ~SHADERDEF_MORPH_TEXTURE_BASED);
         shaderDefs = (val && val.morph.morphPositions) ? (shaderDefs | SHADERDEF_MORPH_POSITION) : (shaderDefs & ~SHADERDEF_MORPH_POSITION);
         shaderDefs = (val && val.morph.morphNormals) ? (shaderDefs | SHADERDEF_MORPH_NORMAL) : (shaderDefs & ~SHADERDEF_MORPH_NORMAL);
-
-        // if shaderDefs have changed
-        if (shaderDefs !== this._shaderDefs) {
-            this._shaderDefs = shaderDefs;
-            this.clearShaders();
-        }
+        this._updateShaderDefs(shaderDefs);
     }
 
     get morphInstance() {
@@ -588,9 +665,10 @@ class MeshInstance {
     }
 
     set screenSpace(val) {
-        this._screenSpace = val;
-        this._shaderDefs = val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE);
-        this._shader[SHADER_FORWARD] = null;
+        if (this._screenSpace !== val) {
+            this._screenSpace = val;
+            this._updateShaderDefs(val ? (this._shaderDefs | SHADERDEF_SCREENSPACE) : (this._shaderDefs & ~SHADERDEF_SCREENSPACE));
+        }
     }
 
     get screenSpace() {
@@ -613,9 +691,7 @@ class MeshInstance {
      */
     set mask(val) {
         const toggles = this._shaderDefs & 0x0000FFFF;
-        this._shaderDefs = toggles | (val << 16);
-        this._shader[SHADER_FORWARD] = null;
-        this._shader[SHADER_FORWARDHDR] = null;
+        this._updateShaderDefs(toggles | (val << 16));
     }
 
     get mask() {
@@ -737,24 +813,8 @@ class MeshInstance {
             this.instancingData = null;
             this.cull = true;
         }
-    }
 
-    /**
-     * Obtain a shader variant required to render the mesh instance within specified pass.
-     *
-     * @param {import('./scene.js').Scene} scene - The scene.
-     * @param {number} pass - The render pass.
-     * @param {any} staticLightList - List of static lights.
-     * @param {any} sortedLights - Array of arrays of lights.
-     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - The
-     * format of the view uniform buffer.
-     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} viewBindGroupFormat - The
-     * format of the view bind group.
-     * @ignore
-     */
-    updatePassShader(scene, pass, staticLightList, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, staticLightList, pass, sortedLights,
-                                                            viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+        this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
     }
 
     ensureMaterial(device) {

@@ -8,36 +8,66 @@ let id = 0;
 
 /**
  * A render target is a rectangular rendering surface.
+ *
+ * @category Graphics
  */
 class RenderTarget {
-    /** @type {string} */
+    /**
+     * The name of the render target.
+     *
+     * @type {string}
+     */
     name;
 
-    /** @type {import('./graphics-device.js').GraphicsDevice} */
+    /**
+     * @type {import('./graphics-device.js').GraphicsDevice}
+     * @private
+     */
     _device;
 
-    /** @type {import('./texture.js').Texture} */
+    /**
+     * @type {import('./texture.js').Texture}
+     * @private
+     */
     _colorBuffer;
 
-    /** @type {import('./texture.js').Texture[]} */
+    /**
+     * @type {import('./texture.js').Texture[]}
+     * @private
+     */
     _colorBuffers;
 
-    /** @type {import('./texture.js').Texture} */
+    /**
+     * @type {import('./texture.js').Texture}
+     * @private
+     */
     _depthBuffer;
 
-    /** @type {boolean} */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _depth;
 
-    /** @type {boolean} */
+    /**
+     * @type {boolean}
+     * @private
+     */
     _stencil;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _samples;
 
     /** @type {boolean} */
     autoResolve;
 
-    /** @type {number} */
+    /**
+     * @type {number}
+     * @private
+     */
     _face;
 
     /** @type {boolean} */
@@ -288,6 +318,7 @@ class RenderTarget {
         this.impl.init(this._device, this);
     }
 
+    /** @ignore */
     get initialized() {
         return this.impl.initialized;
     }

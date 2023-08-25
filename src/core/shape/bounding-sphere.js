@@ -6,6 +6,8 @@ const tmpVecB = new Vec3();
 
 /**
  * A bounding sphere is a volume for facilitating fast intersection testing.
+ *
+ * @category Math
  */
 class BoundingSphere {
     /**

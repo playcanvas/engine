@@ -31,6 +31,16 @@ class ScriptHandler {
         this._cache = { };
     }
 
+    clearCache() {
+        for (const key in this._cache) {
+            const element = this._cache[key];
+            const parent = element.parentNode;
+            if (parent)
+                parent.removeChild(element);
+        }
+        this._cache = {};
+    }
+
     load(url, callback) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {

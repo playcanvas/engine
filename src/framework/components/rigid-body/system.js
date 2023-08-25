@@ -19,7 +19,7 @@ let ammoRayStart, ammoRayEnd, ammoVec3, ammoQuat, ammoTransform, ammoTransform2;
 let shapeTestBody;
 
 /**
- * Object holding the result of a successful hit.
+ * Object holding the result of a successful raycast hit.
  *
  * @category Physics
  */

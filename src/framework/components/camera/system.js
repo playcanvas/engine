@@ -15,6 +15,7 @@ const _schema = ['enabled'];
  * active cameras.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class CameraComponentSystem extends ComponentSystem {
     /**

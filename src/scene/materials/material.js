@@ -39,6 +39,8 @@ let id = 0;
 /**
  * A material determines how a particular mesh instance is rendered. It specifies the shader and
  * render state that is set before the mesh instance is submitted to the graphics device.
+ *
+ * @category Graphics
  */
 class Material {
     /**
@@ -66,9 +68,25 @@ class Material {
      */
     name = 'Untitled';
 
+    /**
+     * A unique id the user can assign to the material. The engine internally does not use this for
+     * anything, and the user can assign a value to this id for any purpose they like. Defaults to
+     * an empty string.
+     *
+     * @type {string}
+     */
+    userId = '';
+
     id = id++;
 
-    variants = {};
+    /**
+     * The cache of shader variants generated for this material. The key represents the unique
+     * variant, the value is the shader.
+     *
+     * @type {Map<string, import('../../platform/graphics/shader.js').Shader>}
+     * @ignore
+     */
+    variants = new Map();
 
     parameters = {};
 
@@ -231,6 +249,14 @@ class Material {
         return this._blendState.blend;
     }
 
+    _updateTransparency() {
+        const transparent = this.transparent;
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
+            meshInstances[i].transparent = transparent;
+        }
+    }
+
     // called when material changes transparency, for layer composition to add it to appropriate
     // queue (opaque or transparent)
     _markBlendDirty() {
@@ -253,6 +279,7 @@ class Material {
             this._markBlendDirty();
         }
         this._blendState.copy(value);
+        this._updateTransparency();
     }
 
     get blendState() {
@@ -296,6 +323,7 @@ class Material {
         const blend = type !== BLEND_NONE;
         if (this._blendState.blend !== blend) {
             this._blendState.blend = blend;
+            this._updateTransparency();
             this._markBlendDirty();
         }
         this._updateMeshInstanceKeys();
@@ -439,7 +467,8 @@ class Material {
     updateUniforms(device, scene) {
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    // TODO: unused parameter should be removed, but the Editor still uses this function
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // generate shader variant - its the same shader, but with different processing options
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
@@ -466,7 +495,7 @@ class Material {
     clearVariants() {
 
         // clear variants on the material
-        this.variants = {};
+        this.variants.clear();
 
         // but also clear them from all materials that reference them
         const meshInstances = this.meshInstances;
@@ -550,7 +579,7 @@ class Material {
      * are no other materials using it).
      */
     destroy() {
-        this.variants = {};
+        this.variants.clear();
         this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {

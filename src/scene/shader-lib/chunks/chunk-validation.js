@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62 } from '../../../platform/graphics/constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -41,22 +41,14 @@ const chunkVersions = {
     clusteredLightPS: CHUNKAPI_1_62,
     clusteredLightShadowPS: CHUNKAPI_1_62,
     combinePS: CHUNKAPI_1_62,
-    endPS: CHUNKAPI_1_62,
     falloffInvSquaredPS: CHUNKAPI_1_62,
     falloffLinearPS: CHUNKAPI_1_62,
-    fresnelSchlickPS: CHUNKAPI_1_62,
-    iridescenceDiffractionPS: CHUNKAPI_1_62,
     lightDiffuseLambertPS: CHUNKAPI_1_62,
     lightSheenPS: CHUNKAPI_1_62,
     lightSpecularAnisoGGXPS: CHUNKAPI_1_62,
     lightSpecularBlinnPS: CHUNKAPI_1_62,
     lightSpecularPhongPS: CHUNKAPI_1_62,
-    lightmapAddPS: CHUNKAPI_1_62,
-    lightmapDirAddPS: CHUNKAPI_1_62,
     ltcPS: CHUNKAPI_1_62,
-    metalnessModulatePS: CHUNKAPI_1_62,
-    outputAlphaPS: CHUNKAPI_1_62,
-    outputAlphaPremulPS: CHUNKAPI_1_62,
     reflDirPS: CHUNKAPI_1_62,
     reflDirAnisoPS: CHUNKAPI_1_62,
     reflectionCCPS: CHUNKAPI_1_62,
@@ -66,8 +58,6 @@ const chunkVersions = {
     reflectionSheenPS: CHUNKAPI_1_62,
     reflectionSpherePS: CHUNKAPI_1_62,
     reflectionSphereLowPS: CHUNKAPI_1_62,
-    refractionCubePS: CHUNKAPI_1_62,
-    refractionDynamicPS: CHUNKAPI_1_62,
     shadowCommonPS: CHUNKAPI_1_62,
     shadowCoordPS: CHUNKAPI_1_62,
     shadowCoordPerspZBufferPS: CHUNKAPI_1_62,
@@ -80,7 +70,18 @@ const chunkVersions = {
     TBNPS: CHUNKAPI_1_62,
     TBNObjectSpacePS: CHUNKAPI_1_62,
     TBNderivativePS: CHUNKAPI_1_62,
-    TBNfastPS: CHUNKAPI_1_62
+    TBNfastPS: CHUNKAPI_1_62,
+
+    endPS: CHUNKAPI_1_65,
+    metalnessModulatePS: CHUNKAPI_1_65,
+    outputAlphaPS: CHUNKAPI_1_65,
+    outputAlphaPremulPS: CHUNKAPI_1_65,
+    fresnelSchlickPS: CHUNKAPI_1_65,
+    iridescenceDiffractionPS: CHUNKAPI_1_65,
+    lightmapAddPS: CHUNKAPI_1_65,
+    lightmapDirAddPS: CHUNKAPI_1_65,
+    refractionCubePS: CHUNKAPI_1_65,
+    refractionDynamicPS: CHUNKAPI_1_65
 };
 
 // removed
@@ -135,7 +136,7 @@ const validateUserChunks = (userChunks) => {
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API.`);
+                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API: https://developer.playcanvas.com/en/user-manual/graphics/shader-chunk-migrations/`);
             }
         }
     }

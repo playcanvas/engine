@@ -40,6 +40,7 @@ import { Shader } from '../shader.js';
 import { BlendState } from '../blend-state.js';
 import { DepthState } from '../depth-state.js';
 import { StencilParameters } from '../stencil-parameters.js';
+import { WebglGpuProfiler } from './webgl-gpu-profiler.js';
 
 const invalidateAttachments = [];
 
@@ -247,6 +248,7 @@ function testTextureFloatHighPrecision(device) {
  * create a new graphics device against each.
  *
  * @augments GraphicsDevice
+ * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {
     /**
@@ -722,6 +724,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.postInit();
     }
 
+    postInit() {
+        super.postInit();
+
+        this.gpuProfiler = new WebglGpuProfiler(this);
+    }
+
     /**
      * Destroy the graphics device.
      */
@@ -832,6 +840,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return null;
     }
 
+    /** @ignore */
     get extDisjointTimerQuery() {
         // lazy evaluation as this is not typically used
         if (!this._extDisjointTimerQuery) {
@@ -850,8 +859,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     initializeExtensions() {
         const gl = this.gl;
-        const supportedExtensions = gl.getSupportedExtensions();
-        this.supportedExtensions = supportedExtensions;
+        this.supportedExtensions = gl.getSupportedExtensions() ?? [];
+        this._extDisjointTimerQuery = null;
 
         if (this.webgl2) {
             this.extBlendMinmax = true;
@@ -1122,6 +1131,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const target of this.targets) {
             target.loseContext();
         }
+
+        this.gpuProfiler.loseContext();
     }
 
     /**
@@ -1144,6 +1155,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         for (const buffer of this.buffers) {
             buffer.unlock();
         }
+
+        this.gpuProfiler.restoreContext();
     }
 
     /**
@@ -1296,6 +1309,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }));
         }
         return this._copyShader;
+    }
+
+    frameStart() {
+        super.frameStart();
+        this.gpuProfiler.frameStart();
+    }
+
+    frameEnd() {
+        super.frameEnd();
+        this.gpuProfiler.frameEnd();
+        this.gpuProfiler.request();
     }
 
     /**
@@ -2079,6 +2103,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
+    submit() {
+        this.gl.flush();
+    }
+
     /**
      * Reads a block of pixels from a specified rectangle of the current color framebuffer into an
      * ArrayBufferView object.
@@ -2118,7 +2146,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         const clientWaitAsync = (flags, interval_ms) => {
             const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gl.flush();
+            this.submit();
 
             return new Promise((resolve, reject) => {
                 function test() {

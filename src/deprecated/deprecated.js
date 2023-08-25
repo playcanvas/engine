@@ -77,7 +77,7 @@ import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
 import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
-import { LitOptions } from '../scene/materials/lit-options.js';
+import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
 import { Layer } from '../scene/layer.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
@@ -117,6 +117,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem, HitResult } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
+import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
 
@@ -517,6 +518,40 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
     });
 });
 
+// We only provide backwards compatibility in debug builds, production builds have to be
+// as fast and small as possible.
+
+// #if _DEBUG
+
+/**
+ * Helper function to ensure a bit of backwards compatibility.
+ *
+ * @example
+ * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
+ * @param {string} src - The shader source which may generate shader errors.
+ * @returns {string} The backwards compatible shader source.
+ * @ignore
+ */
+function compatibilityForLitArgs(src) {
+    if (src.includes('litShaderArgs')) {
+        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
+            const newSource = 'litArgs' + b.replace(/\./g, '_');
+            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
+            return newSource;
+        });
+    }
+    return src;
+}
+
+/**
+ * Add more backwards compatibility functions as needed.
+ */
+LitShader.prototype.handleCompatibility = function () {
+    this.fshader = compatibilityForLitArgs(this.fshader);
+};
+
+// #endif
+
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
     _glFrameBuffer: {
@@ -682,6 +717,7 @@ GraphicsDevice.prototype.getCullMode = function () {
 // SCENE
 
 export const PhongMaterial = StandardMaterial;
+export const LitOptions = LitShaderOptions;
 
 export const scene = {
     partitionSkin: partitionSkin,
@@ -818,12 +854,6 @@ Object.defineProperty(Batch.prototype, 'model', {
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
     getApplication().renderComposition(comp);
-};
-
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
-    Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
-    const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, staticLightList, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {
@@ -1018,14 +1048,14 @@ _defineAlias('sheenGloss', 'sheenGlossiess');
 _defineAlias('clearCoatGloss', 'clearCostGlossiness');
 
 function _defineOption(name, newName) {
-    if (name !== 'chunks' && name !== '_pass' && name !== '_isForwardPass') {
+    if (name !== 'pass') {
         Object.defineProperty(StandardMaterialOptions.prototype, name, {
             get: function () {
-                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
                 return this.litOptions[newName || name];
             },
             set: function (value) {
-                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitOptions#${newName || name}.`);
+                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
                 this.litOptions[newName || name] = value;
             }
         });
@@ -1033,7 +1063,7 @@ function _defineOption(name, newName) {
 }
 _defineOption('refraction', 'useRefraction');
 
-const tempOptions = new LitOptions();
+const tempOptions = new LitShaderOptions();
 const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
 for (const litOption in litOptionProperties) {
     _defineOption(litOptionProperties[litOption]);

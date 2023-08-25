@@ -23,6 +23,8 @@ let id = 0;
 /**
  * A texture is a container for texel data that can be utilized in a fragment shader. Typically,
  * the texel data represents an image that is mapped over geometry.
+ *
+ * @category Graphics
  */
 class Texture {
     /**
@@ -47,6 +49,13 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    /**
+     * A render version used to track the last time the texture properties requiring bind group
+     * to be updated were changed.
+     *
+     * @type {number}
+     * @ignore
+     */
     renderVersionDirty = 0;
 
     /**
@@ -693,7 +702,8 @@ class Texture {
             // allocate storage for this mip level
             const width = Math.max(1, this._width >> options.level);
             const height = Math.max(1, this._height >> options.level);
-            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, this._format));
+            const depth = Math.max(1, this._depth >> options.level);
+            const data = new ArrayBuffer(TextureUtils.calcLevelGpuSize(width, height, depth, this._format));
             levels[options.level] = new (getPixelFormatArrayType(this._format))(data);
         }
 

@@ -124,15 +124,15 @@ const matD = new Mat4();
  * override certain text styling properties on a per-character basis, the text can optionally
  * include markup tags contained within square brackets. Supported tags are:
  *
- * - `color` - override the element's `color` property. Examples:
- *   - `[color="#ff0000"]red text[/color]`
- *   - `[color="#00ff00"]green text[/color]`
- *   - `[color="#0000ff"]blue text[/color]`
- * - `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
- *   - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
- * - `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
- *   - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
- *   - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+ * 1. `color` - override the element's `color` property. Examples:
+ * - `[color="#ff0000"]red text[/color]`
+ * - `[color="#00ff00"]green text[/color]`
+ * - `[color="#0000ff"]blue text[/color]`
+ * 2. `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
+ * - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+ * 3. `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
+ * - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+ * - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
  *
  * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
  * true.
@@ -170,6 +170,7 @@ const matD = new Mat4();
  * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene,
  * but instead limit child elements to only be rendered where this element is rendered.
  * @augments Component
+ * @category User Interface
  */
 class ElementComponent extends Component {
     /**
@@ -348,26 +349,50 @@ class ElementComponent extends Component {
      * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
      */
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absLeft() {
         return this._localAnchor.x + this._margin.x;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absRight() {
         return this._localAnchor.z - this._margin.z;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absTop() {
         return this._localAnchor.w - this._margin.w;
     }
 
+    /**
+     * @type {number}
+     * @private
+     */
     get _absBottom() {
         return this._localAnchor.y + this._margin.y;
     }
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     get _hasSplitAnchorsX() {
         return Math.abs(this._anchor.x - this._anchor.z) > 0.001;
     }
 
+    /**
+     * @type {boolean}
+     * @private
+     */
     get _hasSplitAnchorsY() {
         return Math.abs(this._anchor.y - this._anchor.w) > 0.001;
     }

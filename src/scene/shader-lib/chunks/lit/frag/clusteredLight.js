@@ -333,9 +333,10 @@ void evaluateLight(
 #if defined(LIT_IRIDESCENCE)
     vec3 iridescenceFresnel,
 #endif
-    ClearcoatArgs clearcoat, 
-    SheenArgs sheen, 
-    IridescenceArgs iridescence
+    vec3 clearcoat_worldNormal,
+    float clearcoat_gloss,
+    float sheen_gloss,
+    float iridescence_intensity
 ) {
 
     vec3 cookieAttenuation = vec3(1.0);
@@ -524,11 +525,11 @@ void evaluateLight(
                     float areaLightSpecularCC;
 
                     if (isClusteredLightRect(light)) {
-                        areaLightSpecularCC = getRectLightSpecular(clearcoat.worldNormal, viewDir);
+                        areaLightSpecularCC = getRectLightSpecular(clearcoat_worldNormal, viewDir);
                     } else if (isClusteredLightDisk(light)) {
-                        areaLightSpecularCC = getDiskLightSpecular(clearcoat.worldNormal, viewDir);
+                        areaLightSpecularCC = getDiskLightSpecular(clearcoat_worldNormal, viewDir);
                     } else { // sphere
-                        areaLightSpecularCC = getSphereLightSpecular(clearcoat.worldNormal, viewDir);
+                        areaLightSpecularCC = getSphereLightSpecular(clearcoat_worldNormal, viewDir);
                     }
 
                     ccSpecularLight += ccLTCSpecFres * areaLightSpecularCC * falloffAttenuation * light.color  * cookieAttenuation;
@@ -573,7 +574,7 @@ void evaluateLight(
                             specularity
                         #if defined(LIT_IRIDESCENCE)
                             , iridescenceFresnel,
-                            iridescence
+                            iridescence_intensity
                         #endif
                             );
                 #else
@@ -582,14 +583,14 @@ void evaluateLight(
 
                 #ifdef LIT_CLEARCOAT
                     #ifdef LIT_SPECULAR_FRESNEL
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, dLightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation * getFresnelCC(dot(viewDir, halfDir));
                     #else
-                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat.worldNormal, viewDir, dLightDirNormW, clearcoat.gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
+                        ccSpecularLight += getLightSpecular(halfDir, clearcoatReflectionDir, clearcoat_worldNormal, viewDir, dLightDirNormW, clearcoat_gloss, tbn) * falloffAttenuation * light.color * cookieAttenuation; 
                     #endif
                 #endif
 
                 #ifdef LIT_SHEEN
-                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, dLightDirNormW, sheen.gloss) * falloffAttenuation * light.color * cookieAttenuation;
+                    sSpecularLight += getLightSpecularSheen(halfDir, worldNormal, viewDir, dLightDirNormW, sheen_gloss) * falloffAttenuation * light.color * cookieAttenuation;
                 #endif
 
             #endif
@@ -617,9 +618,10 @@ void evaluateClusterLight(
 #if defined(LIT_IRIDESCENCE)
     vec3 iridescenceFresnel,
 #endif
-    ClearcoatArgs clearcoat, 
-    SheenArgs sheen, 
-    IridescenceArgs iridescence
+    vec3 clearcoat_worldNormal,
+    float clearcoat_gloss,
+    float sheen_gloss,
+    float iridescence_intensity
 ) {
 
     // decode core light data from textures
@@ -643,9 +645,10 @@ void evaluateClusterLight(
 #if defined(LIT_IRIDESCENCE)
             iridescenceFresnel,
 #endif
-            clearcoat, 
-            sheen, 
-            iridescence
+            clearcoat_worldNormal,
+            clearcoat_gloss,
+            sheen_gloss,
+            iridescence_intensity
         );
 }
 
@@ -663,9 +666,10 @@ void addClusteredLights(
 #if defined(LIT_IRIDESCENCE)
     vec3 iridescenceFresnel,
 #endif
-    ClearcoatArgs clearcoat, 
-    SheenArgs sheen, 
-    IridescenceArgs iridescence
+    vec3 clearcoat_worldNormal,
+    float clearcoat_gloss,
+    float sheen_gloss,
+    float iridescence_intensity
 ) {
 
     // skip lights if no lights at all
@@ -711,9 +715,10 @@ void addClusteredLights(
 #if defined(LIT_IRIDESCENCE)
                     iridescenceFresnel,
 #endif
-                    clearcoat, 
-                    sheen, 
-                    iridescence
+                    clearcoat_worldNormal,
+                    clearcoat_gloss,
+                    sheen_gloss,
+                    iridescence_intensity
                 ); 
             }
 
@@ -745,9 +750,10 @@ void addClusteredLights(
 #if defined(LIT_IRIDESCENCE)
                     iridescenceFresnel,
 #endif
-                    clearcoat, 
-                    sheen, 
-                    iridescence
+                    clearcoat_worldNormal,
+                    clearcoat_gloss,
+                    sheen_gloss,
+                    iridescence_intensity
                 ); 
                 // end of the cell array
                 if (lightCellIndex >= clusterMaxCells) {

@@ -85,13 +85,7 @@ class Asset extends EventHandler {
         super();
 
         this._id = assetIdCounter--;
-
-        /**
-         * The name of the asset.
-         *
-         * @type {string}
-         */
-        this.name = name || '';
+        this._name = name || '';
 
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
@@ -220,6 +214,23 @@ class Asset extends EventHandler {
 
     get id() {
         return this._id;
+    }
+
+    /**
+     * The asset name.
+     *
+     * @type {string}
+     */
+    set name(value) {
+        if (this._name === value)
+            return;
+        const old = this._name;
+        this._name = value;
+        this.fire('name', this, this._name, old);
+    }
+
+    get name() {
+        return this._name;
     }
 
     /**

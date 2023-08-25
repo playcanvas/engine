@@ -5,6 +5,7 @@ import { EventHandler } from '../core/event-handler.js';
  * texture. The TextureAtlas is referenced by {@link Sprite}s.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class TextureAtlas extends EventHandler {
     /**
