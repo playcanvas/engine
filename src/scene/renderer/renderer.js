@@ -951,18 +951,20 @@ class Renderer {
                 const cameraLayers = camera.layers;
                 for (let l = 0; l < cameraLayers.length; l++) {
                     const cameraLayer = comp.getLayerById(cameraLayers[l]);
-                    const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
+                    if (cameraLayer) {
+                        const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
 
-                    for (let j = 0; j < layerDirLights.length; j++) {
-                        const light = layerDirLights[j];
+                        for (let j = 0; j < layerDirLights.length; j++) {
+                            const light = layerDirLights[j];
 
-                        // unique shadow casting lights
-                        if (light.castShadows && !_tempSet.has(light)) {
-                            _tempSet.add(light);
-                            renderAction.directionalLights.push(light);
+                            // unique shadow casting lights
+                            if (light.castShadows && !_tempSet.has(light)) {
+                                _tempSet.add(light);
+                                renderAction.directionalLights.push(light);
 
-                            // frustum culling for the directional shadow when rendering the camera
-                            this._shadowRendererDirectional.cull(light, comp, camera);
+                                // frustum culling for the directional shadow when rendering the camera
+                                this._shadowRendererDirectional.cull(light, comp, camera);
+                            }
                         }
                     }
                 }
