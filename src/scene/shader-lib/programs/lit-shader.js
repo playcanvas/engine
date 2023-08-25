@@ -3,6 +3,7 @@ import {
     SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT, SEMANTIC_COLOR, SEMANTIC_NORMAL, SEMANTIC_POSITION, SEMANTIC_TANGENT,
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1,
     SHADERTAG_MATERIAL,
+    // Magnopus patched
     SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3,
     SEMANTIC_TEXCOORD4,
@@ -36,6 +37,7 @@ const builtinAttributes = {
     vertex_tangent: SEMANTIC_TANGENT,
     vertex_texCoord0: SEMANTIC_TEXCOORD0,
     vertex_texCoord1: SEMANTIC_TEXCOORD1,
+    // Magnopus patched
     vertex_texCoord2: SEMANTIC_TEXCOORD2,
     vertex_texCoord3: SEMANTIC_TEXCOORD3,
     vertex_texCoord4: SEMANTIC_TEXCOORD4,
@@ -249,8 +251,8 @@ class LitShader {
                 codeBody += "   vObjectSpaceUpW = normalize(dNormalMatrix * vec3(0, 1, 0));\n";
             }
         }
-
-        const maxUvSets = 8;
+        // Magnopus patched
+        const maxUvSets = 5;
 
         for (let i = 0; i < maxUvSets; i++) {
             if (useUv[i]) {

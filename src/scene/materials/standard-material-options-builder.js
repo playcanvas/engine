@@ -12,7 +12,7 @@ import {
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR,
-    SPECULAR_PHONG,
+    SPECULAR_PHONG
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 
@@ -99,16 +99,10 @@ class StandardMaterialOptionsBuilder {
     _updateUVOptions(options, stdMat, objDefs, minimalOptions) {
         let hasUv0 = false;
         let hasUv1 = false;
-        let hasUv2 = false;
-        let hasUv3 = false;
-        let hasUv4 = false;
         let hasVcolor = false;
         if (objDefs) {
             hasUv0 = (objDefs & SHADERDEF_UV0) !== 0;
             hasUv1 = (objDefs & SHADERDEF_UV1) !== 0;
-            hasUv2 = hasUv1;
-            hasUv3 = hasUv1;
-            hasUv4 = hasUv1;
             hasVcolor = (objDefs & SHADERDEF_VCOLOR) !== 0;
         }
 
@@ -308,15 +302,12 @@ class StandardMaterialOptionsBuilder {
 
         // source of environment reflections is as follows:
         if (stdMat.envAtlas && stdMat.cubeMap && !isPhong) {
-            // magnopus patched, force envAtlas source due to missing reflections
-            options.litOptions.reflectionSource = 'envAtlas';
+            options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = stdMat.cubeMap.encoding;
         } else if (stdMat.envAtlas && !isPhong) {
             options.litOptions.reflectionSource = 'envAtlas';
             options.litOptions.reflectionEncoding = stdMat.envAtlas.encoding;
-            // Magnopus Patched
-            usingSceneEnv = true;
         } else if (stdMat.cubeMap) {
             options.litOptions.reflectionSource = 'cubeMap';
             options.litOptions.reflectionEncoding = stdMat.cubeMap.encoding;
@@ -324,8 +315,7 @@ class StandardMaterialOptionsBuilder {
             options.litOptions.reflectionSource = 'sphereMap';
             options.litOptions.reflectionEncoding = stdMat.sphereMap.encoding;
         } else if (stdMat.useSkybox && scene.envAtlas && scene.skybox && !isPhong) {
-            // magnopus patched, force envAtlas source due to missing reflections
-            options.litOptions.reflectionSource = 'envAtlas';
+            options.litOptions.reflectionSource = 'envAtlasHQ';
             options.litOptions.reflectionEncoding = scene.envAtlas.encoding;
             options.litOptions.reflectionCubemapEncoding = scene.skybox.encoding;
             usingSceneEnv = true;
@@ -359,7 +349,8 @@ class StandardMaterialOptionsBuilder {
 
         // TODO: add a test for if non skybox cubemaps have rotation (when this is supported) - for now assume no non-skybox cubemap rotation
         options.litOptions.skyboxIntensity = usingSceneEnv && (scene.skyboxIntensity !== 1 || scene.skyboxLuminance !== 0 || scene.physicalUnits);
-        options.litOptions.useCubeMapRotation = usingSceneEnv && scene._skyboxRotationShaderInclude && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
+        // magnopus patched, allow cubemap rotation on all cubemaps
+        options.litOptions.useCubeMapRotation = scene._skyboxRotationShaderInclude && scene.skyboxRotation && !scene.skyboxRotation.equals(Quat.IDENTITY);
     }
 
     _updateLightOptions(options, scene, stdMat, objDefs, sortedLights, staticLightList) {

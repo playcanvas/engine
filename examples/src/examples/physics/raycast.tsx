@@ -182,7 +182,7 @@ class RaycastExample {
                         app.drawLine(start, end, white);
 
                         const results = app.systems.rigidbody.raycastAll(start, end);
-                        results.forEach(function (result: pc.RaycastResult) {
+                        results.forEach(function (result: pc.HitResult) {
                             result.entity.render.material = red;
 
                             // Render the normal on the surface from the hit point

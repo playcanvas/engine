@@ -840,7 +840,7 @@ class StandardMaterial extends Material {
         if (!hasLocalEnvOverride && this.useSkybox) {
             if (scene.envAtlas && scene.skybox && !isPhong) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
-                this._setParameter('texture_cubeMap', scene.envAtlas);
+                this._setParameter('texture_cubeMap', scene.skybox);
             } else if (scene.envAtlas && !isPhong) {
                 this._setParameter('texture_envAtlas', scene.envAtlas);
             } else if (scene.skybox) {

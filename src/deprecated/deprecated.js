@@ -115,7 +115,7 @@ import {
     BODYTYPE_DYNAMIC, BODYTYPE_KINEMATIC, BODYTYPE_STATIC
 } from '../framework/components/rigid-body/constants.js';
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
-import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
+import { RigidBodyComponentSystem, HitResult } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
 
 // CORE
@@ -1204,7 +1204,7 @@ Object.defineProperty(MouseEvent.prototype, 'wheel', {
 });
 
 // FRAMEWORK
-
+export const RaycastResult = HitResult;
 export const RIGIDBODY_TYPE_STATIC = BODYTYPE_STATIC;
 export const RIGIDBODY_TYPE_DYNAMIC = BODYTYPE_DYNAMIC;
 export const RIGIDBODY_TYPE_KINEMATIC = BODYTYPE_KINEMATIC;
