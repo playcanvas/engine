@@ -889,6 +889,7 @@ class Light {
     layersDirty() {
         this.layers.forEach((layer) => {
             layer._dirtyLights = true;
+            layer._splitLightsDirty = true;
         });
     }
 
