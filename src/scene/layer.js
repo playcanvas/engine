@@ -2,7 +2,7 @@ import { Debug } from '../core/debug.js';
 import { hash32Fnv1a } from '../core/hash.js';
 
 import {
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL,
     LAYER_FX,
     SHADER_FORWARD,
     SORTKEY_FORWARD,
