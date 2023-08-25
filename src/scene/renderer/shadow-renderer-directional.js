@@ -247,16 +247,15 @@ class ShadowRendererDirectional {
      * Builds a frame graph for rendering of directional shadows for the render action.
      *
      * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
+     * @param {import('../light.js').Light[]} directionalLights - The
+     * directional lights.
      * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera.
      */
-    buildFrameGraph(frameGraph, renderAction, camera) {
+    buildFrameGraph(frameGraph, directionalLights, camera) {
 
         // create required render passes per light
-        const lights = renderAction.directionalLights;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
+        for (let i = 0; i < directionalLights.length; i++) {
+            const light = directionalLights[i];
             Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
             if (this.shadowRenderer.needsShadowRendering(light)) {

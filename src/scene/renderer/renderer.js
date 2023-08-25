@@ -938,15 +938,36 @@ class Renderer {
             }
         }
 
-        // shadow casters culling for global (directional) lights
-        // render actions store which directional lights are needed for each camera, so these are getting culled
+        // shadow casters culling for directional lights
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
-            const count = renderAction.directionalLights.length;
-            for (let j = 0; j < count; j++) {
-                const light = renderAction.directionalLights[j];
-                this._shadowRendererDirectional.cull(light, comp, renderAction.camera.camera);
+            const camera = renderAction.camera.camera;
+
+            // first use of each camera renders directional shadows
+            if (renderAction.firstCameraUse)  {
+
+                // get directional lights from all layers of the camera
+                const cameraLayers = camera.layers;
+                for (let l = 0; l < cameraLayers.length; l++) {
+                    const cameraLayer = comp.getLayerById(cameraLayers[l]);
+                    const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
+
+                    for (let j = 0; j < layerDirLights.length; j++) {
+                        const light = layerDirLights[j];
+
+                        // unique shadow casting lights
+                        if (light.castShadows && !_tempSet.has(light)) {
+                            _tempSet.add(light);
+                            renderAction.directionalLights.push(light);
+
+                            // frustum culling for the directional shadow when rendering the camera
+                            this._shadowRendererDirectional.cull(light, comp, camera);
+                        }
+                    }
+                }
+
+                _tempSet.clear();
             }
         }
     }

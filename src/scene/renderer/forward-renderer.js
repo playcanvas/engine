@@ -848,7 +848,7 @@ class ForwardRenderer extends Renderer {
 
             // directional shadows get re-rendered for each camera
             if (renderAction.hasDirectionalShadowLights && camera) {
-                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction, camera);
+                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction.directionalLights, camera);
             }
 
             // start of block of render actions rendering to the same render target
@@ -1125,7 +1125,7 @@ class ForwardRenderer extends Renderer {
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
                                visible,
-                               layer._splitLights,
+                               layer.splitLights,
                                shaderPass,
                                layer.onDrawCall,
                                layer,
