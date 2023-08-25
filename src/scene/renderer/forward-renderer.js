@@ -463,7 +463,7 @@ class ForwardRenderer extends Renderer {
     }
 
     // execute first pass over draw calls, in order to update materials / shaders
-    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, layer, pass) {
+    renderForwardPrepareMaterials(camera, drawCalls, drawCallsCount, sortedLights, cullingMask, layer, pass) {
 
         const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
@@ -487,6 +487,10 @@ class ForwardRenderer extends Renderer {
             const drawCall = drawCalls[i];
             // magnopus patched.  ensure empty drawcalls are skipped
             if (!drawCall.mesh) continue;
+
+            // apply visibility override
+            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
+                continue;
 
             // apply visibility override
             if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
@@ -691,14 +695,14 @@ class ForwardRenderer extends Renderer {
         }
     }
 
-    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, drawCallback, layer, flipFaces) {
+    renderForward(camera, allDrawCalls, allDrawCallsCount, sortedLights, pass, cullingMask, drawCallback, layer, flipFaces) {
 
         // #if _PROFILER
         const forwardStartTime = now();
         // #endif
 
         // run first pass over draw calls and handle material / shader updates
-        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, layer, pass);
+        const preparedCalls = this.renderForwardPrepareMaterials(camera, allDrawCalls, allDrawCallsCount, sortedLights, cullingMask, layer, pass);
 
         // render mesh instances
         this.renderForwardInternal(camera, preparedCalls, sortedLights, pass, drawCallback, flipFaces);
@@ -1137,6 +1141,7 @@ class ForwardRenderer extends Renderer {
                                visible.length,
                                layer._splitLights,
                                shaderPass,
+                               layer.cullingMask,
                                layer.onDrawCall,
                                layer,
                                flipFaces);

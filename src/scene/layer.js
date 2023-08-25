@@ -344,6 +344,15 @@ class Layer {
         this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
 
         /**
+         * Visibility bit mask that interacts with {@link MeshInstance#mask}. Especially useful
+         * when combined with layerReference, allowing for the filtering of some objects, while
+         * sharing their list and culling.
+         *
+         * @type {number}
+         */
+        this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
+
+        /**
          * @type {import('./mesh-instance.js').MeshInstance[]}
          * @ignore
          */
