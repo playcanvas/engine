@@ -10,7 +10,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         skeleton   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
         atlas      : new pc.Asset('atlas'           , 'text'   , { url: assetPath + '/spine/spineboy-pro.atlas' }),
         texture    : new pc.Asset('spineboy-pro.png', 'texture', { url: assetPath + '/spine/spineboy-pro.png' }),
-        spinescript: new pc.Asset('spinescript'     , 'script' , { url:             '/playcanvas-engine/scripts/spine/playcanvas-spine.3.8.js' })
+        spinescript: new pc.Asset('spinescript'     , 'script' , { url: scriptsPath + 'spine/playcanvas-spine.3.8.js' }),
     };
 
     const gfxOptions = {
