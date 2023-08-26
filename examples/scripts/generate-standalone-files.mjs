@@ -123,6 +123,10 @@ ${exampleClass.example.toString()}
             window.top.dispatchEvent(responseEvent);
         });
         function showStats() {
+            // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
+            if (${Boolean(exampleClass.MINISTATS)}) {
+                return;
+            }
             if (!miniStats) {
                 miniStats = new pcx.MiniStats(app);
             }
@@ -194,7 +198,7 @@ ${exampleClass.example.toString()}
                 if (deviceType !== 'webgpu' && deviceType !== 'null' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
                     miniStats = new pcx.MiniStats(app);
-                    if (urlParams.get('miniStats') === 'false') {
+                    if (args.miniStats === 'false') {
                         miniStats.enabled = false;
                     }
                 }
