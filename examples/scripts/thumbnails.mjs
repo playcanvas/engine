@@ -3,7 +3,6 @@ import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import getExamplesList from '../src/app/helpers/read-dir.mjs';
 import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
 import * as categories from "../src/examples/index.mjs";
 const __filename = fileURLToPath(import.meta.url);
@@ -33,10 +32,6 @@ async function takeScreenshots() {
         const categorySlug = exampleListItem.category;
         const example = kebabCaseToPascalCase(exampleListItem.example);
         const category = kebabCaseToPascalCase(exampleListItem.category);
-        // TODO use use index.mjs...
-        if (example.includes('.shared') || example === 'LitMaterial') {
-            continue;
-        }
         if (fs.existsSync(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}_large.png`)) {
             console.log(`skipped: ${category}/${example}`);
             continue;
