@@ -861,8 +861,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     initializeExtensions() {
         const gl = this.gl;
-        const supportedExtensions = gl.getSupportedExtensions();
-        this.supportedExtensions = supportedExtensions;
+        this.supportedExtensions = gl.getSupportedExtensions() ?? [];
         this._extDisjointTimerQuery = null;
 
         if (this.webgl2) {

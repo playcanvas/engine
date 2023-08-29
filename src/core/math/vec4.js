@@ -393,6 +393,7 @@ class Vec4 {
      * Returns this 4-dimensional vector converted to a unit vector in place. If the vector has a
      * length of zero, the vector's elements will be set to zero.
      *
+     * @param {Vec4} [src] - The vector to normalize. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
      * const v = new pc.Vec4(25, 0, 0, 0);
@@ -402,14 +403,14 @@ class Vec4 {
      * // Outputs 1, 0, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize() {
-        const lengthSq = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+    normalize(src = this) {
+        const lengthSq = src.x * src.x + src.y * src.y + src.z * src.z + src.w * src.w;
         if (lengthSq > 0) {
             const invLength = 1 / Math.sqrt(lengthSq);
-            this.x *= invLength;
-            this.y *= invLength;
-            this.z *= invLength;
-            this.w *= invLength;
+            this.x = src.x * invLength;
+            this.y = src.y * invLength;
+            this.z = src.z * invLength;
+            this.w = src.w * invLength;
         }
 
         return this;
@@ -418,39 +419,42 @@ class Vec4 {
     /**
      * Each element is set to the largest integer less than or equal to its value.
      *
+     * @param {Vec4} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    floor() {
-        this.x = Math.floor(this.x);
-        this.y = Math.floor(this.y);
-        this.z = Math.floor(this.z);
-        this.w = Math.floor(this.w);
+    floor(src = this) {
+        this.x = Math.floor(src.x);
+        this.y = Math.floor(src.y);
+        this.z = Math.floor(src.z);
+        this.w = Math.floor(src.w);
         return this;
     }
 
     /**
      * Each element is rounded up to the next largest integer.
      *
+     * @param {Vec4} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    ceil() {
-        this.x = Math.ceil(this.x);
-        this.y = Math.ceil(this.y);
-        this.z = Math.ceil(this.z);
-        this.w = Math.ceil(this.w);
+    ceil(src = this) {
+        this.x = Math.ceil(src.x);
+        this.y = Math.ceil(src.y);
+        this.z = Math.ceil(src.z);
+        this.w = Math.ceil(src.w);
         return this;
     }
 
     /**
      * Each element is rounded up or down to the nearest integer.
      *
+     * @param {Vec4} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    round() {
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
-        this.z = Math.round(this.z);
-        this.w = Math.round(this.w);
+    round(src = this) {
+        this.x = Math.round(src.x);
+        this.y = Math.round(src.y);
+        this.z = Math.round(src.z);
+        this.w = Math.round(src.w);
         return this;
     }
 

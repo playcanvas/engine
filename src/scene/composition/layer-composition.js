@@ -251,9 +251,6 @@ class LayerComposition extends EventHandler {
 
                 // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
-                    // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
-                    // and set these up on the first render action for the camera.
-                    this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
 
                     // mark the last render action as last one using the camera
                     lastRenderAction.lastCameraUse = true;
@@ -313,8 +310,6 @@ class LayerComposition extends EventHandler {
                 }
             }
 
-            // split layer lights lists by type
-            this._splitLightsArray(layer);
             layer._dirtyLights = false;
         }
 

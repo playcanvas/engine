@@ -40,7 +40,11 @@ const directionalCascades = [
 
 let id = 0;
 
-// Class storing shadow rendering related private information
+/**
+ * Class storing shadow rendering related private information
+ *
+ * @ignore
+ */
 class LightRenderData {
     constructor(device, camera, face, light) {
 
@@ -114,6 +118,13 @@ class LightRenderData {
  * @ignore
  */
 class Light {
+    /**
+     * The Layers the light is on.
+     *
+     * @type {Set<import('./layer.js').Layer>}
+     */
+    layers = new Set();
+
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         this.id = id++;
@@ -205,7 +216,6 @@ class Light {
         this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
         this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
-        this._scene = null;
         this._node = null;
 
         // private rendering data
@@ -235,6 +245,14 @@ class Light {
 
             this._renderData.length = 0;
         }
+    }
+
+    addLayer(layer) {
+        this.layers.add(layer);
+    }
+
+    removeLayer(layer) {
+        this.layers.delete(layer);
     }
 
     set numCascades(value) {
@@ -869,11 +887,17 @@ class Light {
     }
 
     layersDirty() {
-        if (this._scene?.layers) {
-            this._scene.layers._dirtyLights = true;
-        }
+        this.layers.forEach((layer) => {
+            layer._dirtyLights = true;
+            layer._splitLightsDirty = true;
+        });
     }
 
+    /**
+     * Updates a integer key for the light. The key is used to identify all shader related features
+     * of the light, and so needs to have all properties that modify the generated shader encoded.
+     * Properties without an effect on the shader (color, shadow intensity) should not be encoded.
+     */
     updateKey() {
         // Key definition:
         // Bit
@@ -911,9 +935,8 @@ class Light {
             key |= (chanId[this._cookieChannel.charAt(2)] << 14);
         }
 
-        if (key !== this.key && this._scene !== null) {
-            // TODO: most of the changes to the key should not invalidate the composition,
-            // probably only _type and _castShadows
+        if (key !== this.key) {
+            // The layer maintains lights split and sorted by the key, notify it when the key changes
             this.layersDirty();
         }
 

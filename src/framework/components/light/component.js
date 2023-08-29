@@ -183,6 +183,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     }
@@ -192,6 +193,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.removeLight(this);
+                this.light.removeLayer(layer);
             }
         }
     }
@@ -210,6 +212,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
+            this.light.addLayer(layer);
         }
     }
 
@@ -217,6 +220,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
     }
 
@@ -558,12 +562,14 @@ function _defineProps() {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
         for (let i = 0; i < newValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             if (this.enabled && this.entity.enabled) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     });
