@@ -1,8 +1,8 @@
 /**
  * Delayed Execution Runner - spread out calls to a function across a batch of entities across several frames
- * @param fn - callback
+ * @param fn - callback function
  * @param opts - options
- * @returns
+ * @returns functions to control the tasks add, remove, tick, getTotalSize
  */
  export const createDelayedExecutionRunner = (
     fn,
@@ -15,7 +15,7 @@
     const options = { ...defaultOpts, ...opts };
     // ensure queue size cannot be less than 1
     options.queueSize = Math.max(1, options.queueSize);
-    // the queue to exectute next
+    // the queue to execute next
     let queueTickIndex = 0;
     const queue = [];
   
