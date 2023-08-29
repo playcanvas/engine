@@ -799,7 +799,7 @@ class BatchManager {
 
             // Magnopus Patched
             meshInstance.renderStyle = batch.origMeshInstances[0].renderStyle;
-            
+
             const batchGroup = this._batchGroups[batchGroupId];
             if (batchGroup && batchGroup._ui)
                 meshInstance.cull = false;

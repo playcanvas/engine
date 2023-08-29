@@ -799,7 +799,7 @@ class Renderer {
 
                 // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                 if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
-                
+
                 if (!drawCall.visible && !drawCall.command)
                     continue;
 
