@@ -930,6 +930,14 @@ class Renderer {
                     if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
                         light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                     }
+                } else {
+
+                    // force rendering shadow at least once to allocate the shadow map needed by the shaders
+                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
+                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
+                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                        }
+                    }
                 }
 
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
