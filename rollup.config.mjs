@@ -13,6 +13,7 @@ import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} Plugin */
@@ -145,57 +146,6 @@ function engineLayerImportValidation(rootFile, enable) {
 
             // we don't process imports, return null to allow chaining
             return null;
-        }
-    };
-}
-
-/**
- * @param {boolean} enable - Enable or disable the plugin.
- * @returns {Plugin} The plugin.
- */
-function shaderChunks(enable) {
-    const filter = createFilter([
-        '**/*.vert.js',
-        '**/*.frag.js'
-    ], []);
-
-    return {
-        name: 'shaderChunks',
-        transform(code, id) {
-            if (!enable || !filter(id)) return undefined;
-
-            code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
-
-                // Remove carriage returns
-                glsl = glsl.replace(/\r/g, '');
-
-                // 4 spaces to tabs
-                glsl = glsl.replace(/ {4}/g, '\t');
-
-                // Remove comments
-                glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-
-                // Trim all whitespace from line endings
-                glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
-
-                // Restore final new line
-                glsl += '\n';
-
-                // Comment removal can leave an empty line so condense 2 or more to 1
-                glsl = glsl.replace(/\n{2,}/g, '\n');
-
-                // Remove new line character at the start of the string
-                if (glsl.length > 1 && glsl[0] === '\n') {
-                    glsl = glsl.substr(1);
-                }
-
-                return JSON.stringify(glsl);
-            });
-
-            return {
-                code: code,
-                map: null
-            };
         }
     };
 }
@@ -400,7 +350,7 @@ function buildTarget(buildType, moduleFormat) {
         output: outputOptions,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
-            shaderChunks(buildType !== 'debug'),
+            shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
