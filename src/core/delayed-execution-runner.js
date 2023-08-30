@@ -1,10 +1,3 @@
-/**
- * @name createDelayedExecutionRunner
- * @description Delayed Execution Runner - spread out calls to a function across a batch of entities across several frames
- * @param {fn} [fn] - The callback function
- * @param {options} [opts] - Including queueSize
- * @returns {functions} Functions tasks add, remove, tick, getTotalSize
- */
 export const createDelayedExecutionRunner = (fn, opts) => {
     const defaultOpts = {
         queueSize: 4
