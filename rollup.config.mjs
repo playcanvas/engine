@@ -13,7 +13,7 @@ import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { shaderChunks } from './utils/rollup-shader-chunks.js';
+import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} Plugin */
