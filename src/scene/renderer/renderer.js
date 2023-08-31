@@ -1209,7 +1209,7 @@ class Renderer {
 
         // update shaders if needed
         if (updateShaders) {
-            const onlyLitShaders = !scene.updateShaders && lightsChanged;
+            const onlyLitShaders = !scene.updateShaders;
             this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
             scene._shaderVersion++;
