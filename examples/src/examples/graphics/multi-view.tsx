@@ -96,14 +96,24 @@ class MultiViewExample {
                         shaderPassName: pc.SHADERPASS_FORWARD
                     });
 
+                    // get few existing layers and create a new layer for the spot light
+                    const worldLayer = app.scene.layers.getLayerByName("World");
+                    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+                    const spotLightLayer = new pc.Layer({ name: "SpotLightLayer" });
+                    app.scene.layers.insert(spotLightLayer, 0);
+
                     // get the instance of the chess board and set up with render component
                     const boardEntity = assets.board.resource.instantiateRenderEntity({
                         castShadows: true,
-                        receiveShadows: true
+                        receiveShadows: true,
+
+                        // add it to both layers with lights, as we want it to lit by directional light and spot light,
+                        // depending on the camera
+                        layers: [worldLayer.id, spotLightLayer.id]
                     });
                     app.root.addChild(boardEntity);
 
-                    // Create left camera
+                    // Create left camera, using default layers (including the World)
                     const cameraLeft = new pc.Entity('LeftCamera');
                     cameraLeft.addComponent("camera", {
                         farClip: 500,
@@ -111,9 +121,11 @@ class MultiViewExample {
                     });
                     app.root.addChild(cameraLeft);
 
-                    // Create right orthographic camera
+                    // Create right orthographic camera, using spot light layer and skybox layer,
+                    // so that it receives the light from the spot light but not from the directional light
                     const cameraRight = new pc.Entity('RightCamera');
                     cameraRight.addComponent("camera", {
+                        layers: [spotLightLayer.id, skyboxLayer.id],
                         farClip: 500,
                         rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
                         projection: pc.PROJECTION_ORTHOGRAPHIC,
@@ -123,7 +135,7 @@ class MultiViewExample {
                     cameraRight.lookAt(pc.Vec3.ZERO, pc.Vec3.RIGHT);
                     app.root.addChild(cameraRight);
 
-                    // Create top camera
+                    // Create top camera, using default layers (including the World)
                     const cameraTop = new pc.Entity('TopCamera');
                     cameraTop.addComponent("camera", {
                         farClip: 500,
@@ -146,12 +158,13 @@ class MultiViewExample {
                     cameraTop.script.create("orbitCameraInputMouse");
                     cameraTop.script.create("orbitCameraInputTouch");
 
-                    // Create a single directional light which casts shadows
+                    // Create a directional light which casts shadows
                     const dirLight = new pc.Entity();
                     dirLight.addComponent("light", {
                         type: "directional",
+                        layers: [worldLayer.id],
                         color: pc.Color.WHITE,
-                        intensity: 2,
+                        intensity: 5,
                         range: 500,
                         shadowDistance: 500,
                         castShadows: true,
@@ -161,14 +174,32 @@ class MultiViewExample {
                     app.root.addChild(dirLight);
                     dirLight.setLocalEulerAngles(45, 0, 30);
 
+                    // Create a single directional light which casts shadows
+                    const spotLight = new pc.Entity();
+                    spotLight.addComponent("light", {
+                        type: "spot",
+                        layers: [spotLightLayer.id],
+                        color: pc.Color.YELLOW,
+                        intensity: 7,
+                        innerConeAngle: 20,
+                        outerConeAngle: 80,
+                        range: 200,
+                        shadowDistance: 200,
+                        castShadows: true,
+                        shadowBias: 0.2,
+                        normalOffsetBias: 0.05
+                    });
+                    app.root.addChild(spotLight);
+
                     // set skybox - this DDS file was 'prefiltered' in the PlayCanvas Editor and then downloaded.
                     app.scene.envAtlas = assets.helipad.resource;
                     app.scene.toneMapping = pc.TONEMAP_ACES;
                     app.scene.skyboxMip = 1;
 
-                    // handle HUD changes - update the debug mode on the top camera
+                    // handle HUD changes - update the debug mode for the top and right cameras
                     data.on('*:set', (path: string, value: any) => {
                         cameraTop.camera.setShaderPass(value);
+                        cameraRight.camera.setShaderPass(value);
                     });
 
                     // update function called once per frame
@@ -179,6 +210,9 @@ class MultiViewExample {
                         // orbit camera left around
                         cameraLeft.setLocalPosition(100 * Math.sin(time * 0.2), 35, 100 * Math.cos(time * 0.2));
                         cameraLeft.lookAt(pc.Vec3.ZERO);
+
+                        // move the spot light around
+                        spotLight.setLocalPosition(40 * Math.sin(time * 0.5), 60, 40 * Math.cos(time * 0.5));
 
                         // zoom in and out the orthographic camera
                         cameraRight.camera.orthoHeight = 90 + Math.sin(time * 0.3) * 60;

@@ -242,7 +242,7 @@ class Scene extends EventHandler {
         // clustered lighting
         this._clusteredLightingEnabled = true;
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
-            this._layers._dirtyLights = true;
+            this.updateShaders = true;
         });
 
         this._stats = {
@@ -263,7 +263,6 @@ class Scene extends EventHandler {
         this.updateShaders = true;
 
         this._shaderVersion = 0;
-        this._statsUpdated = false;
 
         // immediate rendering
         this.immediate = new Immediate(this.device);
