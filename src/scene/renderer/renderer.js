@@ -896,8 +896,13 @@ class Renderer {
 
         // stats
         const stats = this.scene._stats;
+
+        // #if _PROFILER
+
         stats.dynamicLights = 0;
         stats.bakedLights = 0;
+
+        // #endif
 
         const count = comp.layerList.length;
         for (let i = 0; i < count; i++) {
