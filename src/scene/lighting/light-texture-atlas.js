@@ -210,7 +210,7 @@ class LightTextureAtlas {
         }
     }
 
-    collectLights(spotLights, omniLights, lightingParams) {
+    collectLights(localLights, lightingParams) {
 
         const cookiesEnabled = lightingParams.cookiesEnabled;
         const shadowsEnabled = lightingParams.shadowsEnabled;
@@ -239,8 +239,7 @@ class LightTextureAtlas {
         };
 
         if (cookiesEnabled || shadowsEnabled) {
-            processLights(spotLights);
-            processLights(omniLights);
+            processLights(localLights);
         }
 
         // sort lights by maxScreenSize - to have them ordered by atlas slot size
@@ -322,14 +321,14 @@ class LightTextureAtlas {
     }
 
     // update texture atlas for a list of lights
-    update(spotLights, omniLights, lightingParams) {
+    update(localLights, lightingParams) {
 
         // update texture resolutions
         this.shadowAtlasResolution = lightingParams.shadowAtlasResolution;
         this.cookieAtlasResolution = lightingParams.cookieAtlasResolution;
 
         // collect lights requiring atlas
-        const lights = this.collectLights(spotLights, omniLights, lightingParams);
+        const lights = this.collectLights(localLights, lightingParams);
         if (lights.length > 0) {
 
             // mark all slots as unused

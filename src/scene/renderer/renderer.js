@@ -8,7 +8,7 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
@@ -45,6 +45,8 @@ const viewMat = new Mat4();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
+const _tempLightSet = new Set();
+const _tempLayerSet = new Set();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -86,6 +88,20 @@ class Renderer {
      * @ignore
      */
     worldClustersAllocator;
+
+    /**
+     * A list of all unique lights in the layer composition.
+     *
+     * @type {import('../lighting/light.js').Light[]}
+     */
+    lights = [];
+
+    /**
+     * A list of all unique local lights (spot & omni) in the layer composition.
+     *
+     * @type {import('../lighting/light.js').Light[]}
+     */
+    localLights = [];
 
     /**
      * Create a new instance.
@@ -872,6 +888,63 @@ class Renderer {
         // #endif
     }
 
+    collectLights(comp) {
+
+        // build a list and of all unique lights from all layers
+        this.lights.length = 0;
+        this.localLights.length = 0;
+
+        // stats
+        const stats = this.scene._stats;
+        stats.dynamicLights = 0;
+        stats.bakedLights = 0;
+
+        const count = comp.layerList.length;
+        for (let i = 0; i < count; i++) {
+            const layer = comp.layerList[i];
+
+            // layer can be in the list two times (opaque, transp), process it only one time
+            if (!_tempLayerSet.has(layer)) {
+                _tempLayerSet.add(layer);
+
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
+                    const light = lights[j];
+
+                    // add new light
+                    if (!_tempLightSet.has(light)) {
+                        _tempLightSet.add(light);
+
+                        this.lights.push(light);
+
+                        if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+                            this.localLights.push(light);
+                        }
+
+                        // #if _PROFILER
+
+                        // if affects dynamic or baked objects in real-time
+                        if ((light.mask & MASK_AFFECT_DYNAMIC) || (light.mask & MASK_AFFECT_LIGHTMAPPED)) {
+                            stats.dynamicLights++;
+                        }
+
+                        // bake lights
+                        if (light.mask & MASK_BAKE) {
+                            stats.bakedLights++;
+                        }
+
+                        // #endif
+                    }
+                }
+            }
+        }
+
+        stats.lights = this.lights.length;
+
+        _tempLightSet.clear();
+        _tempLayerSet.clear();
+    }
+
     cullLights(camera, lights) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
@@ -921,8 +994,8 @@ class Renderer {
         const isClustered = this.scene.clusteredLightingEnabled;
 
         // shadow casters culling for local (point and spot) lights
-        for (let i = 0; i < comp._lights.length; i++) {
-            const light = comp._lights[i];
+        for (let i = 0; i < this.localLights.length; i++) {
+            const light = this.localLights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
 
                 if (isClustered) {
@@ -950,6 +1023,7 @@ class Renderer {
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
+            renderAction.directionalLights.length = 0;
             const camera = renderAction.camera.camera;
 
             // first use of each camera renders directional shadows
@@ -1042,7 +1116,7 @@ class Renderer {
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
         // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
         if (this.scene.clusteredLightingEnabled) {
-            this.updateLightTextureAtlas(comp);
+            this.updateLightTextureAtlas();
         }
 
         // cull shadow casters for all lights
@@ -1094,12 +1168,11 @@ class Renderer {
     /**
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
-     * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
-    beginFrame(comp, lightsChanged) {
+    beginFrame(comp) {
 
         const scene = this.scene;
-        const updateShaders = scene.updateShaders || lightsChanged;
+        const updateShaders = scene.updateShaders;
 
         let totalMeshInstances = 0;
         const layers = comp.layerList;
@@ -1150,7 +1223,7 @@ class Renderer {
         _tempMeshInstancesSkinned.length = 0;
 
         // clear light visibility
-        const lights = comp._lights;
+        const lights = this.lights;
         const lightCount = lights.length;
         for (let i = 0; i < lightCount; i++) {
             lights[i].beginFrame();
@@ -1161,8 +1234,8 @@ class Renderer {
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition.
      */
-    updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
+    updateLightTextureAtlas() {
+        this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }
 
     /**
@@ -1190,7 +1263,6 @@ class Renderer {
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
-     * @returns {number} - Flags of what was updated
      * @ignore
      */
     updateLayerComposition(comp, clusteredLightingEnabled) {
@@ -1227,14 +1299,12 @@ class Renderer {
             layer._postRenderCounterMax = layer._postRenderCounter;
         }
 
-        // Update static layer data, if something's changed
-        const updated = comp._update();
+        // update composition
+        comp._update();
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
         // #endif
-
-        return updated;
     }
 
     frameUpdate() {

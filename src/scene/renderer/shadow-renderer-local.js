@@ -112,13 +112,11 @@ class ShadowRendererLocal {
      * Prepare render pass for rendering of shadows for local clustered lights. This is done inside
      * a single render pass, as all shadows are part of a single render target atlas.
      */
-    prepareClusteredRenderPass(renderPass, lightsSpot, lightsOmni) {
+    prepareClusteredRenderPass(renderPass, localLights) {
 
         // prepare render targets / shadow cameras for rendering
         const shadowLights = this.shadowLights;
-        const shadowCamSpot = this.prepareLights(shadowLights, lightsSpot);
-        const shadowCamOmni = this.prepareLights(shadowLights, lightsOmni);
-        const shadowCamera = shadowCamSpot ?? shadowCamOmni;
+        const shadowCamera = this.prepareLights(shadowLights, localLights);
 
         // if any shadows need to be rendered
         const count = shadowLights.length;
@@ -169,27 +167,20 @@ class ShadowRendererLocal {
      * Prepare render passes for rendering of shadows for local non-clustered lights. Each shadow face
      * is a separate render pass as it renders to a separate render target.
      */
-    buildNonClusteredRenderPasses(frameGraph, lightsSpot, lightsOmni) {
+    buildNonClusteredRenderPasses(frameGraph, localLights) {
 
-        // spot lights
-        for (let i = 0; i < lightsSpot.length; i++) {
-            const light = lightsSpot[i];
-
-            if (this.shadowRenderer.needsShadowRendering(light)) {
-                this.setupNonClusteredFaceRenderPass(frameGraph, light, 0, true);
-            }
-        }
-
-        // omni lights
-        for (let i = 0; i < lightsOmni.length; i++) {
-            const light = lightsOmni[i];
+        for (let i = 0; i < localLights.length; i++) {
+            const light = localLights[i];
 
             if (this.shadowRenderer.needsShadowRendering(light)) {
+
+                // only spot lights support VSM
+                const applyVsm = light._type === LIGHTTYPE_SPOT;
 
                 // create render pass per face
                 const faceCount = light.numShadowFaces;
                 for (let face = 0; face < faceCount; face++) {
-                    this.setupNonClusteredFaceRenderPass(frameGraph, light, face, false);
+                    this.setupNonClusteredFaceRenderPass(frameGraph, light, face, applyVsm);
                 }
             }
         }
