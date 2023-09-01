@@ -15,7 +15,20 @@ import { SideBar                             } from './sidebar.mjs';
  */
 export const getOrientation = () => window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'portrait': 'landscape';
 
-class MainLayout extends Component {
+/**
+ * @typedef {object} Props
+ */
+
+/**
+ * @typedef {object} State
+ * @property {'portrait'|'landscape'} orientation - Current orientation.
+ */
+
+/** @type {typeof Component<Props, State>} */
+const TypedComponent = Component;
+
+class MainLayout extends TypedComponent {
+    /** @type {State} */
     state = {
         orientation: getOrientation(),
     };

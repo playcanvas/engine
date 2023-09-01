@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Component } from 'react';
+import { Component } from 'react';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 // @ts-ignore: library file import
 import { Link } from "react-router-dom";
@@ -6,14 +6,8 @@ import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
-import { fragment, jsx } from './jsx.mjs';
+import { jsx } from './jsx.mjs';
 import { getOrientation } from './MainLayout.mjs';
-const toggleSideBar = () => {
-    return;
-    console.log("SideBar toggleSideBar()");
-    const sideBar = document.getElementById('sideBar');
-    sideBar.classList.toggle('collapsed');
-};
 
 /**
  * @typedef {object} Props
@@ -65,13 +59,8 @@ export class SideBar extends TypedComponent {
     setupControlPanelToggleButton() {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');
-        const panelToggleDiv = document.querySelector('.sideBar-panel-toggle');
-        if (panelToggleDiv) {
-            panelToggleDiv.removeEventListener('click', toggleSideBar);
-            panelToggleDiv.addEventListener('click', toggleSideBar);
-        }
         window.addEventListener('hashchange', () => {
-            this.setState({ ...this.state, hash: location.hash });
+            this.mergeState({ hash: location.hash });
         });
         this.state.observer.on('largeThumbnails:set', () => {
             /** @type {HTMLElement} */
@@ -105,7 +94,6 @@ export class SideBar extends TypedComponent {
     }
 
     toggleCollapse() {
-        //return;
         const { collapsed } = this.state;
         this.mergeState({
             collapsed: !collapsed,
@@ -134,7 +122,7 @@ export class SideBar extends TypedComponent {
         const { defaultCategories } = this.state;
         const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
         if (!reg) {
-            this.setState({...this.state, filteredCategories: defaultCategories});
+            this.mergeState({ filteredCategories: defaultCategories });
             return;
         }
         /** @type {Record<string, Record<string, object>>} */
@@ -159,13 +147,10 @@ export class SideBar extends TypedComponent {
                 }
             });
         });
-        this.setState({...this.state, filteredCategories: updatedCategories});
+        this.mergeState({ filteredCategories: updatedCategories });
     }
     onClickExample() {
-        //this.setState({
-        //    ...this.state,
-        //    collapsed: true,
-        //});
+        //this.mergeState({ collapsed: true });
         // console.log("load new example", category, example);
         const { pc } = window;
         if (pc) {
@@ -250,7 +235,6 @@ export class SideBar extends TypedComponent {
         }
         return jsx(
             Panel, panelOptions,
-            //jsx('pre', null, JSON.stringify(this.state, null, 2)),
             jsx(TextInput, {
                 class: 'filter-input',
                 keyChange: true,
@@ -267,10 +251,6 @@ export class SideBar extends TypedComponent {
             jsx(Container, { id: 'sideBar-contents' },
                 this.renderContents()
             ),
-            jsx("div", {
-                className: 'panel-toggle sideBar-panel-toggle',
-                onClick: toggleSideBar
-            })
         )
     }
 }

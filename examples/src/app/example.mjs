@@ -34,12 +34,18 @@ const controlsObserver = new Observer();
  * @typedef {object} State
  * @property {'portrait' | 'landscape'} orientation - The orientation.
  * @property {boolean} collapsed - Collapsed or not.
+ * @property {boolean} exampleLoaded - Example is loaded or not.
+ * @property {Function} controls - Controls function from example.
+ * @property {boolean} showParameters - Used in case of mobile view.
+ * @property {boolean} showCode - Used in case of mobile view.
+ * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class Example extends TypedComponent {
+    /** @type {State} */
     state = {
         orientation: getOrientation(),
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
@@ -223,66 +229,62 @@ class Example extends TypedComponent {
 
     renderPortrait() {
         const { collapsed, controls, showCode, showParameters, files } = this.state;
-        return fragment(
-            jsx(Panel,
+        return jsx(Panel,
+            {
+                id: 'controlPanel',
+                class: ['mobile'],
+                resizable: 'top',
+                headerText: 'CODE & CONTROLS',
+                collapsible: true,
+                collapsed,
+                //header: jsx('h1', null, "data header"),
+                //onClick: this.toggleCollapse.bind(this),
+                //onExpand: this.toggleCollapse.bind(this),  
+            },
+            // jsx('button', null, "Example#renderPortrait()"),
+            this.renderDeviceSelector(),
+            //this.renderControls(),
+            jsx(
+                Container,
                 {
-                    id: 'controlPanel',
-                    class: ['mobile'],
-                    resizable: 'top',
-                    headerText: 'CODE & CONTROLS',
-                    collapsible: true,
-                    collapsed,
-                    //header: jsx('h1', null, "data header"),
-                    //onClick: this.toggleCollapse.bind(this),
-                    //onExpand: this.toggleCollapse.bind(this),
-                    
+                    id: 'controls-wrapper',
+                    class: controls ? 'has-controls' : null
                 },
-                // jsx('button', null, "Example#renderPortrait()"),
-                this.renderDeviceSelector(),
-                //this.renderControls(),
                 jsx(
                     Container,
                     {
-                        id: 'controls-wrapper',
-                        class: controls ? 'has-controls' : null
+                        id: 'controlPanel-tabs',
+                        class: 'tabs-container'
                     },
-                    
-                    jsx(
-                        Container,
-                        {
-                            id: 'controlPanel-tabs',
-                            class: 'tabs-container'
+                    jsxButton({
+                        text: 'CODE',
+                        id: 'codeButton',
+                        class: showCode ? 'selected' : null,
+                        onClick: this.onClickCodeTab.bind(this),
+                    }),
+                    jsxButton({
+                        text: 'PARAMETERS',
+                        class: showParameters ? 'selected' : null,
+                        id: 'paramButton',
+                        onClick: this.onClickParametersTab.bind(this),
+                    }),
+                ),
+                showParameters && jsx(
+                    Container,
+                    {
+                        id: 'controlPanel-controls'
+                    },
+                    this.renderControls(),
+                ),
+                showCode && jsx(
+                    MonacoEditor,
+                    {
+                        options: {
+                            readOnly: true
                         },
-                        jsxButton({
-                            text: 'CODE',
-                            id: 'codeButton',
-                            class: showCode ? 'selected' : null,
-                            onClick: this.onClickCodeTab.bind(this),
-                        }),
-                        jsxButton({
-                            text: 'PARAMETERS',
-                            class: showParameters ? 'selected' : null,
-                            id: 'paramButton',
-                            onClick: this.onClickParametersTab.bind(this),
-                        }),
-                    ),
-                    showParameters && jsx(
-                        Container,
-                        {
-                            id: 'controlPanel-controls'
-                        },
-                        this.renderControls(),
-                    ),
-                    showCode && jsx(
-                        MonacoEditor,
-                        {
-                            options: {
-                                readOnly: true
-                            },
-                            defaultLanguage: "typescript",
-                            value: files['example.mjs'],
-                        }
-                    )
+                        defaultLanguage: "typescript",
+                        value: files['example.mjs'],
+                    }
                 )
             )
         );
