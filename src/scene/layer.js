@@ -401,9 +401,6 @@ class Layer {
          */
         this.cameras = [];
 
-        // TODO: remove this when composition no longer updates lights
-        this._dirtyLights = false;
-
         this._dirtyCameras = false;
 
         // light hash based on the light keys
@@ -686,7 +683,6 @@ class Layer {
     }
 
     markLightsDirty() {
-        this._dirtyLights = true;
         this._lightHashDirty = true;
         this._lightIdHashDirty = true;
         this._splitLightsDirty = true;

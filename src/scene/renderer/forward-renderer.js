@@ -8,11 +8,9 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
-    COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
-    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     LAYERID_DEPTH
 } from '../constants.js';
 
@@ -738,38 +736,6 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     * @param {number} compUpdatedFlags - Flags of what was updated.
-     */
-    updateLightStats(comp, compUpdatedFlags) {
-
-        // #if _PROFILER
-        const scene = this.scene;
-        if (compUpdatedFlags & COMPUPDATED_LIGHTS || !scene._statsUpdated) {
-            const stats = scene._stats;
-            stats.lights = comp._lights.length;
-            stats.dynamicLights = 0;
-            stats.bakedLights = 0;
-
-            for (let i = 0; i < stats.lights; i++) {
-                const l = comp._lights[i];
-                if (l.enabled) {
-                    if ((l.mask & MASK_AFFECT_DYNAMIC) || (l.mask & MASK_AFFECT_LIGHTMAPPED)) { // if affects dynamic or baked objects in real-time
-                        stats.dynamicLights++;
-                    }
-                    if (l.mask & MASK_BAKE) { // if baked into lightmaps
-                        stats.bakedLights++;
-                    }
-                }
-            }
-        }
-
-        scene._statsUpdated = true;
-        // #endif
-    }
-
-    /**
      * Builds a frame graph for the rendering of the whole frame.
      *
      * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
@@ -792,7 +758,7 @@ class ForwardRenderer extends Renderer {
                 const renderPass = new RenderPass(this.device, () => {
                     // render cookies for all local visible lights
                     if (this.scene.lighting.cookiesEnabled) {
-                        this.renderCookies(layerComposition._lights);
+                        this.renderCookies(this.lights);
                     }
                 });
                 renderPass.requiresCubemaps = false;
@@ -809,8 +775,7 @@ class ForwardRenderer extends Renderer {
 
                 // render shadows only when needed
                 if (this.scene.lighting.shadowsEnabled) {
-                    const splitLights = layerComposition._splitLights;
-                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
+                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, this.localLights);
                 }
 
                 // update clusters all the time
@@ -822,8 +787,7 @@ class ForwardRenderer extends Renderer {
         } else {
 
             // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
-            const splitLights = layerComposition._splitLights;
-            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
+            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, this.localLights);
         }
 
         // main passes
@@ -975,14 +939,13 @@ class ForwardRenderer extends Renderer {
         // update the skybox, since this might change _meshInstances
         this.scene._updateSky(this.device);
 
-        // update layer composition if something has been invalidated
-        const updated = this.updateLayerComposition(comp, clusteredLightingEnabled);
-        const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
+        // update layer composition
+        this.updateLayerComposition(comp, clusteredLightingEnabled);
 
-        this.updateLightStats(comp, updated);
+        this.collectLights(comp);
 
         // Single per-frame calculations
-        this.beginFrame(comp, lightsChanged);
+        this.beginFrame(comp);
         this.setSceneConstants();
 
         // visibility culling of lights, meshInstances, shadows casters

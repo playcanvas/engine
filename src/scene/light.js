@@ -137,7 +137,7 @@ class Light {
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_AFFECT_DYNAMIC;
+        this._mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -280,6 +280,17 @@ class Light {
         return this._shadowMap;
     }
 
+    set mask(value) {
+        if (this._mask !== value) {
+            this._mask = value;
+            this.updateKey();
+        }
+    }
+
+    get mask() {
+        return this._mask;
+    }
+
     // returns number of render targets to render the shadow map
     get numShadowFaces() {
         const type = this._type;
@@ -391,7 +402,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
+        return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
     set shadowResolution(value) {
@@ -888,8 +899,7 @@ class Light {
 
     layersDirty() {
         this.layers.forEach((layer) => {
-            layer._dirtyLights = true;
-            layer._splitLightsDirty = true;
+            layer.markLightsDirty();
         });
     }
 
@@ -915,7 +925,8 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
-        //  7 : disable specular
+        //  7      : disable specular
+        //  6 -  4 : mask
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -928,7 +939,8 @@ class Light {
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
                ((this.numCascades - 1)                    <<  8) |
-               ((this.affectSpecularity ? 1 : 0)           <<  7);
+               ((this.affectSpecularity ? 1 : 0)          <<  7) |
+               ((this.mask)                               <<  6);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
