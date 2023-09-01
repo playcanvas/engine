@@ -1,12 +1,29 @@
-export function iframeRequestFiles() {
+/**
+ * @returns {Window} The example window.
+ */
+function getIframeWindow() {
     const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("requestFiles"));
+    return exampleIframe.contentWindow;
 }
-export function iframeShowStats() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("showStats"));
+function iframeRequestFiles() {
+    const exampleWindow = getIframeWindow();
+    exampleWindow.dispatchEvent(new CustomEvent("requestFiles"));
 }
-export function iframeHideStats() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    exampleIframe.contentWindow.dispatchEvent(new CustomEvent("hideStats"));
+function iframeShowStats() {
+    const exampleWindow = getIframeWindow();
+    exampleWindow.dispatchEvent(new CustomEvent("showStats"));
 }
+function iframeHideStats() {
+    const exampleWindow = getIframeWindow();
+    exampleWindow.dispatchEvent(new CustomEvent("hideStats"));
+}
+function iframeResize() {
+    const exampleWindow = getIframeWindow();
+    exampleWindow.dispatchEvent(new Event("resize"));
+}
+export {
+    iframeRequestFiles,
+    iframeShowStats,
+    iframeHideStats,
+    iframeResize
+};

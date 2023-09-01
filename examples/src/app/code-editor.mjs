@@ -3,7 +3,7 @@ import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeRequestFiles } from './iframeUtils.mjs';
+import { iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
@@ -169,6 +169,7 @@ class CodeEditor extends TypedComponent {
     }
 
     render() {
+        setTimeout(iframeResize, 50);
         const { files, selectedFile } = this.state;
         return jsx(
             Panel,
