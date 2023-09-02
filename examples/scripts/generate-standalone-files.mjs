@@ -200,7 +200,6 @@ ${exampleClass.example.toString()}
                 app.setCanvasResolution(pc.RESOLUTION_AUTO);
                 window.onresize = resize;
                 const deviceType = app.graphicsDevice.deviceType;
-                console.log("SETUP APPLICATION DEVICETYPE", deviceType);
                 if (deviceType !== 'webgpu' && deviceType !== 'null' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
                     miniStats = new pcx.MiniStats(app);

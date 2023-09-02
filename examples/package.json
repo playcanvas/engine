@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "npm run build:example:data && npm run build:standalone && npm run build:directory && cross-env NODE_ENV=production rollup -c",
-    "build:directory": "node ./scripts/example-directory/index.mjs",
+    "build:directory": "node ./scripts/example-directory.mjs",
     "build:example:data": "node ./scripts/example-data.mjs",
     "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "build:standalone": "node ./scripts/generate-standalone-files.mjs",
