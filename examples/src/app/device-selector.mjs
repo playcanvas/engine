@@ -81,6 +81,18 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
+     * Disable MiniStats because WebGPU / Null renderer can't use it.
+     * @param {string} value - Selected device.
+     */
+    updateMiniStats(value) {
+        const disableMiniStats = value === DEVICETYPE_WEBGPU || value === DEVICETYPE_NULL;
+        const miniStatsEnabled = document.getElementById('showMiniStatsButton').ui.class.contains('selected');
+        if (disableMiniStats && miniStatsEnabled) {
+            document.getElementById('showMiniStatsButton').ui.class.remove('selected');
+        }
+    }
+
+    /**
      * @param {string} value 
      */
     onSetActiveGraphicsDevice(value) {
@@ -89,7 +101,7 @@ class DeviceSelector extends TypedComponent {
             this.deviceTypeSelectInput.value = value;
         }
         this.setDisabledOptions(this.preferredGraphicsDevice, value);
-        document.getElementById('showMiniStatsButton').ui.enabled = (value !== DEVICETYPE_WEBGPU) && (value !== DEVICETYPE_NULL);
+        this.updateMiniStats(value);
     }
 
     /**
@@ -99,11 +111,11 @@ class DeviceSelector extends TypedComponent {
         this.deviceTypeSelectInput.disabledOptions = null;
         this.deviceTypeSelectInput.value = value;
         this.preferredGraphicsDevice = value;
+        this.updateMiniStats(value);
         this.props.onSelect(value);
     }
 
     render() {
-        this.props.onSelect
         return jsxSelectInput({
             id: 'deviceTypeSelectInput',
             options: [
@@ -112,7 +124,7 @@ class DeviceSelector extends TypedComponent {
                 { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
                 { t: deviceTypeNames[DEVICETYPE_NULL  ], v: DEVICETYPE_NULL   },
             ],
-            value: DEVICETYPE_WEBGL2,
+            value: this.preferredGraphicsDevice,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
             prefix: 'Active Device: ', 
             // @ts-ignore this is setting a legacy ref

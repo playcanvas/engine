@@ -100,6 +100,9 @@ ${exampleClass.example.toString()}
         }
         let started = false;
         let miniStats;
+        const args = Object.fromEntries(
+            location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
+        );
         const data = new observer.Observer({});
         /**
          * Keep it function in first run for nicer debug locations.
@@ -127,6 +130,11 @@ ${exampleClass.example.toString()}
             if (${Boolean(exampleClass.MINISTATS)}) {
                 return;
             }
+            const deviceType = app?.graphicsDevice?.deviceType;
+            if (deviceType === 'webgpu' || deviceType === 'null') {
+                alert("Sorry, WebGPU and Null renderer don't support MiniStats");
+                return;
+            }
             if (!miniStats) {
                 miniStats = new pcx.MiniStats(app);
             }
@@ -143,9 +151,6 @@ ${exampleClass.example.toString()}
         async function main(files) {
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
-            var args = Object.fromEntries(
-                location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
-            );
             var deviceType = getDeviceType();
             if (args.deviceType) {
                 console.warn("overwriting default deviceType from URL");
@@ -195,6 +200,7 @@ ${exampleClass.example.toString()}
                 app.setCanvasResolution(pc.RESOLUTION_AUTO);
                 window.onresize = resize;
                 const deviceType = app.graphicsDevice.deviceType;
+                console.log("SETUP APPLICATION DEVICETYPE", deviceType);
                 if (deviceType !== 'webgpu' && deviceType !== 'null' && ${Boolean(exampleClass.MINISTATS)}) {
                     // set up miniStats
                     miniStats = new pcx.MiniStats(app);
