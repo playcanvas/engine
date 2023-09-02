@@ -21,9 +21,14 @@ function iframeResize() {
     const exampleWindow = getIframeWindow();
     exampleWindow.dispatchEvent(new Event("resize"));
 }
+function iframeReload() {
+    const exampleWindow = getIframeWindow();
+    exampleWindow.location.reload();
+}
 export {
     iframeRequestFiles,
     iframeShowStats,
     iframeHideStats,
-    iframeResize
+    iframeResize,
+    iframeReload,
 };

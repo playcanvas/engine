@@ -10,7 +10,7 @@ import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButt
 import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
 import React, { useRef, createRef, Component, useEffect } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeRequestFiles } from './iframeUtils.mjs';
+import { iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
 
 // What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
 // 1) We don't want to load React code in iframe
@@ -170,13 +170,6 @@ class Example extends TypedComponent {
         // return `${iframePath}/index.html?category=${example.category}&example=${example.name}`;
     }
 
-    onSetPreferredGraphicsDevice(value) {
-        // reload the iframe after updating the device
-        /** @type {HTMLIFrameElement} */
-        const exampleIframe = document.getElementById('exampleIframe');
-        exampleIframe.contentWindow.location.reload();
-    }
-
     onClickParametersTab() {
         this.mergeState({
             showParameters: true,
@@ -193,7 +186,7 @@ class Example extends TypedComponent {
 
     renderDeviceSelector() {
         return jsx(DeviceSelector, {
-            onSelect: this.onSetPreferredGraphicsDevice,
+            onSelect: iframeReload, // reload the iframe after updating the device
             observer: controlsObserver,
         });
     }
