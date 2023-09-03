@@ -539,6 +539,8 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    userAttributes = new Map();
+
     /**
      * Create a new StandardMaterial instance.
      *
@@ -641,6 +643,22 @@ class StandardMaterial extends Material {
         }
 
         return this;
+    }
+
+    /**
+     * Sets a vertex shader attribute on a material.
+     *
+     * @param {string} name - The name of the parameter to set.
+     * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set on vertex stream
+     * of the mesh.
+     * @example
+     * mesh.setVertexStream(pc.SEMANTIC_ATTR0, offset, 3);
+     * material.setAttribute('offset', pc.SEMANTIC_ATTR0);
+     */
+    setAttribute(name, semantic) {
+        if (!this.userAttributes.has(semantic)) {
+            this.userAttributes.set(semantic, name);
+        }
     }
 
     _setParameter(name, value) {
@@ -862,7 +880,7 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat, this.userAttributes);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);

@@ -15,6 +15,9 @@ class ShaderProcessorOptions {
     /** @type {import('./vertex-format.js').VertexFormat[]} */
     vertexFormat;
 
+    /** @type {Map} */
+    userAttributes;
+
     /**
      * Constructs shader processing options, used to process the shader for uniform buffer support.
      *
@@ -24,6 +27,7 @@ class ShaderProcessorOptions {
      * the bind group.
      * @param {import('./vertex-format.js').VertexFormat} [vertexFormat] - Format of the vertex
      * buffer.
+     * @param {Map} [userAttributes] - Semantics map of the user set vertex attributes.
      */
     constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
@@ -32,6 +36,8 @@ class ShaderProcessorOptions {
         this.bindGroupFormats[BINDGROUP_VIEW] = viewBindGroupFormat;
 
         this.vertexFormat = vertexFormat;
+
+        this.userAttributes = userAttributes;
     }
 
     /**
