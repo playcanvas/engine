@@ -155,7 +155,7 @@ class ProgramLibrary {
                 for (const attr of processingOptions.userAttributes) {
                     generatedShaderDef.attributes[attr[1]] = attr[0];
                 }
-            }            
+            }
 
             // use shader pass name if known
             let passName = '';

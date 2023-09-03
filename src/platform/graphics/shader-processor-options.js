@@ -29,7 +29,7 @@ class ShaderProcessorOptions {
      * buffer.
      * @param {Map} [userAttributes] - Semantics map of the user set vertex attributes.
      */
-    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+    constructor(viewUniformFormat, viewBindGroupFormat, vertexFormat, userAttributes) {
 
         // construct a sparse array
         this.uniformFormats[BINDGROUP_VIEW] = viewUniformFormat;
