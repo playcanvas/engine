@@ -12,6 +12,7 @@ import { GlbContainerParser } from '../parsers/glb-container-parser.js';
  * @property {import('../asset/asset.js').Asset[]} materials An array of {@link Material} and/or {@link StandardMaterial} assets.
  * @property {import('../asset/asset.js').Asset[]} textures An array of the {@link Texture} assets.
  * @property {import('../asset/asset.js').Asset[]} animations An array of the {@link Animation} assets.
+ * @category Graphics
  */
 class ContainerResource {
     /**
@@ -98,8 +99,8 @@ class ContainerResource {
      *
      * @param {import('../../scene/mesh-instance').MeshInstance[]} instances - An array of mesh
      * instances.
-     * @param {string} [name] - The the name of the variant, as quered from getMaterialVariants,
-     * if null the variant will be reset to the default
+     * @param {string} [name] - The name of the variant, as queried by getMaterialVariants. If
+     * null, the variant will be reset to the default.
      * @example
      * // load a glb file and instantiate an entity with a render component based on it
      * app.assets.loadFromUrl("statue.glb", "container", function (err, asset) {
@@ -125,28 +126,24 @@ class ContainerResource {
  * the various resources at different stages of loading. The table below lists the resource types
  * and the corresponding supported process functions.
  *
- * ```
- * |---------------------------------------------------------------------|
- * |  resource   |  preprocess |   process   |processAsync | postprocess |
- * |-------------+-------------+-------------+-------------+-------------|
- * | global      |      x      |             |             |      x      |
- * | node        |      x      |      x      |             |      x      |
- * | light       |      x      |      x      |             |      x      |
- * | camera      |      x      |      x      |             |      x      |
- * | animation   |      x      |             |             |      x      |
- * | material    |      x      |      x      |             |      x      |
- * | image       |      x      |             |      x      |      x      |
- * | texture     |      x      |             |      x      |      x      |
- * | buffer      |      x      |             |      x      |      x      |
- * | bufferView  |      x      |             |      x      |      x      |
- * |---------------------------------------------------------------------|
- * ```
+ * | resource   | preprocess | process | processAsync | postprocess |
+ * | ---------- | :--------: | :-----: | :----------: | :---------: |
+ * | global     |      √     |         |              |      √      |
+ * | node       |      √     |    √    |              |      √      |
+ * | light      |      √     |    √    |              |      √      |
+ * | camera     |      √     |    √    |              |      √      |
+ * | animation  |      √     |         |              |      √      |
+ * | material   |      √     |    √    |              |      √      |
+ * | image      |      √     |         |      √       |      √      |
+ * | texture    |      √     |         |      √       |      √      |
+ * | buffer     |      √     |         |      √       |      √      |
+ * | bufferView |      √     |         |      √       |      √      |
  *
  * Additional options that can be passed for glTF files:
  * [options.morphPreserveData] - When true, the morph target keeps its data passed using the options,
  * allowing the clone operation.
  * [options.morphPreferHighPrecision] - When true, high precision storage for morph targets should
- * be prefered. This is faster to create and allows higher precision, but takes more memory and
+ * be preferred. This is faster to create and allows higher precision, but takes more memory and
  * might be slower to render. Defaults to false.
  * [options.skipMeshes] - When true, the meshes from the container are not created. This can be
  * useful if you only need access to textures or animations and similar.
@@ -156,12 +153,15 @@ class ContainerResource {
  * ```javascript
  * const containerAsset = new pc.Asset(filename, 'container', { url: url, filename: filename }, null, {
  *     texture: {
- *         preprocess(gltfTexture) { console.log("texture preprocess"); }
- *     },
+ *         preprocess: (gltfTexture) => {
+ *             console.log("texture preprocess");
+ *         }
+ *     }
  * });
  * ```
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class ContainerHandler {
     /**

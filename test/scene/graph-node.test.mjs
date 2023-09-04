@@ -634,6 +634,19 @@ describe('GraphNode', function () {
 
     });
 
+    describe('#remove', function () {
+
+        it('removes the node from its parent, unparenting it', function () {
+            const node = new GraphNode();
+            const child = new GraphNode();
+            node.addChild(child);
+            child.remove();
+            expect(node.children).to.be.an('array').with.lengthOf(0);
+            expect(child.parent).to.equal(null);
+        });
+
+    });
+
     describe('#removeChild()', function () {
 
         it('removes a child node', function () {

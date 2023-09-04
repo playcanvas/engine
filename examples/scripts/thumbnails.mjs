@@ -3,6 +3,7 @@ import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import getExamplesList from '../src/app/helpers/read-dir.mjs';
 /* eslint-disable no-await-in-loop */
 
 const __filename = fileURLToPath(import.meta.url);
@@ -14,7 +15,7 @@ const exampleList = [];
 let categories = fs.readdirSync(`${MAIN_DIR}/src/examples/`);
 categories = categories.filter(c => c !== 'index.mjs');
 categories.forEach(function (category) {
-    let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
+    let examples = getExamplesList(MAIN_DIR, category);
     examples = examples.filter(e => e !== 'index.mjs');
     examples.forEach((e) => {
         exampleList.push({
@@ -44,7 +45,7 @@ async function takeScreenshots() {
             continue;
         }
         const port = process.env.PORT || 5000;
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         await page.goto(`http://localhost:${port}/iframe/?category=${category}&example=${example}&miniStats=false`);
 

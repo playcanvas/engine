@@ -2,6 +2,8 @@ import { Vec3 } from './vec3.js';
 
 /**
  * A 3x3 matrix.
+ *
+ * @category Math
  */
 class Mat3 {
     /**

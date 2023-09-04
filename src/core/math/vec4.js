@@ -1,5 +1,7 @@
 /**
  * A 4-dimensional vector.
+ *
+ * @category Math
  */
 class Vec4 {
     /**

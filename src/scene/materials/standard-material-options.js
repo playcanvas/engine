@@ -1,18 +1,12 @@
-import { LitOptions } from "./lit-options.js";
+import { LitShaderOptions } from "../shader-lib/programs/lit-shader-options.js";
 
 /**
  * The standard material options define a set of options used to control the shader frontend shader
  * generation, such as textures, tints and multipliers.
+ *
+ * @category Graphics
  */
 class StandardMaterialOptions {
-    /** @private */
-    _pass = 0;
-
-    /** @private */
-    _isForwardPass = false;
-
-    chunks = [];
-
     /**
      * If UV1 (second set of texture coordinates) is required in the shader. Will be declared as
      * "vUv1" and passed to the fragment shader.
@@ -102,30 +96,16 @@ class StandardMaterialOptions {
      */
     clearCoatGlossInvert = false;
 
-    litOptions = new LitOptions();
-
     /**
-     * Value of {@link Layer#shaderPass} of the Layer being rendered. Must be set to the same in
-     * {@link LitOptions#pass}.
+     * Storage for the options for lit the shader and material.
      *
-     * @type {number}
+     * @type {LitShaderOptions}
      */
-    set pass(p) {
-        this._pass = p;
-        this.litOptions._pass = p;
-    }
+    litOptions = new LitShaderOptions();
 
+    // program-library assumes material options has a pass property
     get pass() {
-        return this._pass;
-    }
-
-    set isForwardPass(value) {
-        this._isForwardPass = value;
-        this.litOptions._isForwardPass = value;
-    }
-
-    get isForwardPass() {
-        return this._isForwardPass;
+        return this.litOptions.pass;
     }
 }
 

@@ -11,7 +11,7 @@ void addLightMap(
     mat3 tbn
 #if defined(LIT_IRIDESCENCE)
     vec3 iridescenceFresnel, 
-    IridescenceArgs iridescence
+    float iridescenceIntensity
 #endif
 ) {
     dDiffuseLight += lightmap;

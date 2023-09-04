@@ -15,7 +15,7 @@ const reservedScriptNames = new Set([
     '_onSetEnabled', '_checkState', '_onBeforeRemove',
     '_onInitializeAttributes', '_onInitialize', '_onPostInitialize',
     '_onUpdate', '_onPostUpdate',
-    '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+    '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
 ]);
 
 function getReservedScriptNames() {

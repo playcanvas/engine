@@ -14,7 +14,6 @@ class WebgpuMipmapRenderer {
 
     constructor(device) {
         this.device = device;
-        const wgpu = device.wgpu;
 
         // Shader that renders a fullscreen textured quad
         const code = `
@@ -54,7 +53,12 @@ class WebgpuMipmapRenderer {
         });
 
         // using minified rendering, so that's the only filter mode we need to set.
-        this.minSampler = wgpu.createSampler({ minFilter: 'linear' });
+        this.minSampler = device.wgpu.createSampler({ minFilter: 'linear' });
+    }
+
+    destroy() {
+        this.shader.destroy();
+        this.shader = null;
     }
 
     /**
@@ -77,11 +81,6 @@ class WebgpuMipmapRenderer {
         }
 
         const device = this.device;
-        DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
-
-        // cannot run this inside render pass
-        Debug.assert(!device.insideRenderPass, 'Mipmap generation cannot be run inside a render pass.', webgpuTexture.texture);
-
         const wgpu = device.wgpu;
 
         /** @type {import('./webgpu-shader.js').WebgpuShader} */
@@ -119,7 +118,11 @@ class WebgpuMipmapRenderer {
         }
 
         // loop through each mip level and render the previous level's contents into it.
-        const commandEncoder = wgpu.createCommandEncoder();
+        const commandEncoder = device.commandEncoder ?? wgpu.createCommandEncoder();
+        DebugHelper.setLabel(commandEncoder, 'MipmapRendererEncoder');
+
+        DebugGraphics.pushGpuMarker(device, 'MIPMAP-RENDERER');
+
         for (let i = 1; i < textureDescr.mipLevelCount; i++) {
 
             for (let face = 0; face < numFaces; face++) {
@@ -161,12 +164,18 @@ class WebgpuMipmapRenderer {
             }
         }
 
-        wgpu.queue.submit([commandEncoder.finish()]);
+        DebugGraphics.popGpuMarker(device);
+
+        // submit the encoded commands if we created the encoder
+        if (!device.commandEncoder) {
+
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'MipmapRenderer-CommandBuffer');
+            device.addCommandBuffer(cb);
+        }
 
         // clear invalidated state
         device.pipeline = null;
-
-        DebugGraphics.popGpuMarker(device);
     }
 }
 

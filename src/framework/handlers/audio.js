@@ -48,6 +48,7 @@ const supportedExtensions = [
  * Resource handler used for loading {@link Sound} resources.
  *
  * @implements {ResourceHandler}
+ * @category Sound
  */
 class AudioHandler {
     /**

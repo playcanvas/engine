@@ -480,6 +480,37 @@ class GraphNode extends EventHandler {
         return this;
     }
 
+
+    /**
+     * Detach a GraphNode from the hierarchy and recursively destroy all children.
+     *
+     * @example
+     * const firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    destroy() {
+        // Detach from parent
+        this.remove();
+
+        // Recursively destroy all children
+        const children = this._children;
+        while (children.length) {
+            // Remove last child from the array
+            const child = children.pop();
+            // Disconnect it from the parent: this is only an optimization step, to prevent calling
+            // GraphNode#removeChild which would try to refind it via this._children.indexOf (which
+            // will fail, because we just removed it).
+            child._parent = null;
+            child.destroy();
+        }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        this.off();
+    }
+
     /**
      * Search the graph node and all of its descendants for the nodes that satisfy some search
      * criteria.
@@ -925,17 +956,20 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Remove graph node from current parent.
+     */
+    remove() {
+        this._parent?.removeChild(this);
+    }
+
+    /**
      * Remove graph node from current parent and add as child to new parent.
      *
      * @param {GraphNode} parent - New parent to attach graph node to.
      * @param {number} [index] - The child index where the child node should be placed.
      */
     reparent(parent, index) {
-        const current = this._parent;
-
-        if (current)
-            current.removeChild(this);
-
+        this.remove();
         if (parent) {
             if (index >= 0) {
                 parent.insertChild(this, index);
@@ -1263,9 +1297,7 @@ class GraphNode extends EventHandler {
     _prepareInsertChild(node) {
 
         // remove it from the existing parent
-        if (node._parent) {
-            node._parent.removeChild(node);
-        }
+        node.remove();
 
         Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
         Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);

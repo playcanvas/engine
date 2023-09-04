@@ -179,6 +179,9 @@ class ShadowRendererDirectional {
             // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
             shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
             shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
+
+            lightRenderData.depthRangeCompensation = shadowCam.farClip;
+            lightRenderData.projectionCompensation = radius;
         }
     }
 

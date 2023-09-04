@@ -26,6 +26,7 @@ const _schema = [
  * Manages creation of {@link ButtonComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class ButtonComponentSystem extends ComponentSystem {
     /**

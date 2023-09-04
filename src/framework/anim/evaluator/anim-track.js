@@ -3,6 +3,8 @@ import { AnimEvents } from './anim-events.js';
 /**
  * An AnimTrack stores the curve data necessary to animate a set of target nodes. It can be linked
  * to the nodes it should animate using the {@link AnimComponent#assignAnimation} method.
+ *
+ * @category Animation
  */
 class AnimTrack {
     /**

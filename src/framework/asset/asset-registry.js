@@ -52,6 +52,12 @@ class AssetRegistry extends EventHandler {
     _urlToAsset = new Map();
 
     /**
+     * @type {Map<string, Set<Asset>>}
+     * @private
+     */
+    _nameToAsset = new Map();
+
+    /**
      * Index for looking up by tags.
      *
      * @private
@@ -240,6 +246,13 @@ class AssetRegistry extends EventHandler {
             this._urlToAsset.set(asset.file.url, asset);
         }
 
+        if (!this._nameToAsset.has(asset.name))
+            this._nameToAsset.set(asset.name, new Set());
+
+        this._nameToAsset.get(asset.name).add(asset);
+
+        asset.on('name', this._onNameChange, this);
+
         asset.registry = this;
 
         // tags cache
@@ -275,6 +288,16 @@ class AssetRegistry extends EventHandler {
 
         if (asset.file?.url) {
             this._urlToAsset.delete(asset.file.url);
+        }
+
+        asset.off('name', this._onNameChange, this);
+
+        if (this._nameToAsset.has(asset.name)) {
+            const items = this._nameToAsset.get(asset.name);
+            items.delete(asset);
+            if (items.size === 0) {
+                this._nameToAsset.delete(asset.name);
+            }
         }
 
         // tags cache
@@ -586,6 +609,23 @@ class AssetRegistry extends EventHandler {
         this._tags.remove(tag, asset);
     }
 
+    _onNameChange(asset, name, nameOld) {
+        // remove
+        if (this._nameToAsset.has(nameOld)) {
+            const items = this._nameToAsset.get(nameOld);
+            items.delete(asset);
+            if (items.size === 0) {
+                this._nameToAsset.delete(nameOld);
+            }
+        }
+
+        // add
+        if (!this._nameToAsset.has(asset.name))
+            this._nameToAsset.set(asset.name, new Set());
+
+        this._nameToAsset.get(asset.name).add(asset);
+    }
+
     /**
      * Return all Assets that satisfy the search query. Query can be simply a string, or comma
      * separated strings, to have inclusive results of assets that match at least one query. A
@@ -635,7 +675,16 @@ class AssetRegistry extends EventHandler {
      * const asset = app.assets.find("myTextureAsset", "texture");
      */
     find(name, type) {
-        return Array.from(this._assets).find(asset => asset.name === name && (!type || asset.type === type)) ?? null;
+        const items = this._nameToAsset.get(name);
+        if (!items) return null;
+
+        for (const asset of items) {
+            if (!type || asset.type === type) {
+                return asset;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -649,7 +698,11 @@ class AssetRegistry extends EventHandler {
      * console.log(`Found ${assets.length} texture assets named 'brick'`);
      */
     findAll(name, type) {
-        return Array.from(this._assets).filter(asset => asset.name === name && (!type || asset.type === type));
+        const items = this._nameToAsset.get(name);
+        if (!items) return [];
+        const results = Array.from(items);
+        if (!type) return results;
+        return results.filter(asset => asset.type === type);
     }
 }
 

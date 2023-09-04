@@ -10,6 +10,8 @@ const _invMatrix = new Mat4();
 /**
  * A skin instance is responsible for generating the matrix palette that is used to skin vertices
  * from object space to world space.
+ *
+ * @category Graphics
  */
 class SkinInstance {
     /**

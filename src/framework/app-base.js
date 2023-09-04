@@ -1192,6 +1192,10 @@ class AppBase extends EventHandler {
         this.graphicsDevice.frameStart();
     }
 
+    frameEnd() {
+        this.graphicsDevice.frameEnd();
+    }
+
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
@@ -2033,12 +2037,8 @@ class AppBase extends EventHandler {
         this.i18n.destroy();
         this.i18n = null;
 
-        for (const key in this.loader.getHandler('script')._cache) {
-            const element = this.loader.getHandler('script')._cache[key];
-            const parent = element.parentNode;
-            if (parent) parent.removeChild(element);
-        }
-        this.loader.getHandler('script')._cache = {};
+        const scriptHandler = this.loader.getHandler('script');
+        scriptHandler?.clearCache();
 
         this.loader.destroy();
         this.loader = null;
@@ -2073,8 +2073,8 @@ class AppBase extends EventHandler {
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        this?.xr.end();
-        this?.xr.destroy();
+        this.xr?.end();
+        this.xr?.destroy();
 
         this.renderer.destroy();
         this.renderer = null;
@@ -2086,10 +2086,8 @@ class AppBase extends EventHandler {
 
         this.off(); // remove all events
 
-        if (this._soundManager) {
-            this._soundManager.destroy();
-            this._soundManager = null;
-        }
+        this._soundManager?.destroy();
+        this._soundManager = null;
 
         script.app = null;
 
@@ -2214,6 +2212,7 @@ const makeTick = function (_app) {
                 application.updateCanvasSize();
                 application.frameStart();
                 application.render();
+                application.frameEnd();
                 application.renderNextFrame = false;
 
                 Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);

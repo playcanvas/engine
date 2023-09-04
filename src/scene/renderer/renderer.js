@@ -17,11 +17,11 @@ import { Material } from '../materials/material.js';
 import {
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
     CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -33,7 +33,6 @@ import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { CookieRenderer } from './cookie-renderer.js';
-import { StaticMeshes } from './static-meshes.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 
 let _skinUpdateIndex = 0;
@@ -638,22 +637,59 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewBindGroupFormat() {
+    initViewBindGroupFormat(isClustered) {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
-            this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
-            ]);
+            const uniforms = [
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
+                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
+                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
+                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
+                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
+                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                uniforms.push(...[
+                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
+                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
+                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
+                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                ]);
+            }
+
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+            const buffers = [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
+            ];
+
+            const textures = [
                 new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
-                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            ]);
+                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+
+                new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                textures.push(...[
+                    new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                ]);
+            }
+
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
         }
     }
 
@@ -665,7 +701,7 @@ class Renderer {
         Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
         while (viewBindGroups.length < viewCount) {
-            const ub = new UniformBuffer(device, viewUniformFormat);
+            const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
             DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
             viewBindGroups.push(bg);
@@ -680,7 +716,7 @@ class Renderer {
         device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
     }
 
-    setupMeshUniformBuffers(meshInstance, pass) {
+    setupMeshUniformBuffers(shaderInstance, meshInstance) {
 
         const device = this.device;
         if (device.supportsUniformBuffers) {
@@ -691,7 +727,8 @@ class Renderer {
             this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
 
             // update mesh bind group / uniform buffer
-            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            const meshBindGroup = shaderInstance.getBindGroup(device);
+
             meshBindGroup.defaultUniformBuffer.update();
             meshBindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
@@ -762,6 +799,9 @@ class Renderer {
 
                 // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
                 if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
+
+                if (!drawCall.visible && !drawCall.command)
+                    continue;
 
                 visibleList[visibleLength] = drawCall;
                 visibleLength++;
@@ -1148,22 +1188,6 @@ class Renderer {
             for (let j = 0; j < layer.cameras.length; j++) {
                 layer.instances.prepare(j);
             }
-
-            // Generate static lighting for meshes in this layer if needed
-            // Note: Static lighting is not used when clustered lighting is enabled
-            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
-                // TODO: reuse with the same staticLightHash
-                if (layer._staticPrepareDone) {
-                    StaticMeshes.revert(layer.opaqueMeshInstances);
-                    StaticMeshes.revert(layer.transparentMeshInstances);
-                }
-                StaticMeshes.prepare(this.device, scene, layer.opaqueMeshInstances, layer._lights);
-                StaticMeshes.prepare(this.device, scene, layer.transparentMeshInstances, layer._lights);
-                comp._dirty = true;
-                scene.updateShaders = true;
-                layer._needsStaticPrepare = false;
-                layer._staticPrepareDone = true;
-            }
         }
 
         // Update static layer data, if something's changed
@@ -1180,7 +1204,7 @@ class Renderer {
 
         this.clustersDebugRendered = false;
 
-        this.initViewBindGroupFormat();
+        this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
     }
 }
 

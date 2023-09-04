@@ -23,9 +23,67 @@ const tempClusterArray = [];
  * rendering order.
  *
  * @augments EventHandler
+ * @category Graphics
  */
 class LayerComposition extends EventHandler {
     // Composition can hold only 2 sublayers of each layer
+
+    /**
+     * A read-only array of {@link Layer} sorted in the order they will be rendered.
+     *
+     * @type {import('../layer.js').Layer[]}
+     */
+    layerList = [];
+
+    /**
+     * A mapping of {@link Layer#id} to {@link Layer}.
+     *
+     * @type {Map<number, import('../layer.js').Layer>}
+     * @ignore
+     */
+    layerIdMap = new Map();
+
+    /**
+     * A mapping of {@link Layer#name} to {@link Layer}.
+     *
+     * @type {Map<string, import('../layer.js').Layer>}
+     * @ignore
+     */
+    layerNameMap = new Map();
+
+    /**
+     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
+     * semi-transparent objects are rendered, and false means opaque.
+     *
+     * @type {boolean[]}
+     * @ignore
+     */
+    subLayerList = [];
+
+    /**
+     * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
+     * layer is rendered, false means it's skipped.
+     *
+     * @type {boolean[]}
+     */
+    subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
+
+    /**
+     * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
+     * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
+     * {@link Layer#onPostRender}.
+     *
+     * @type {import('../../framework/components/camera/component.js').CameraComponent[]}
+     */
+    cameras = [];
+
+    /**
+     * The actual rendering sequence, generated based on layers and cameras
+     *
+     * @type {RenderAction[]}
+     * @ignore
+     */
+    _renderActions = [];
 
     /**
      * Create a new layer composition.
@@ -37,29 +95,6 @@ class LayerComposition extends EventHandler {
         super();
 
         this.name = name;
-
-        /**
-         * A read-only array of {@link Layer} sorted in the order they will be rendered.
-         *
-         * @type {import('../layer.js').Layer[]}
-         */
-        this.layerList = [];
-
-        /**
-         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
-         * semi-transparent objects are rendered, and false means opaque.
-         *
-         * @type {boolean[]}
-         */
-        this.subLayerList = [];
-
-        /**
-         * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means the
-         * layer is rendered, false means it's skipped.
-         *
-         * @type {boolean[]}
-         */
-        this.subLayerEnabled = []; // more granular control on top of layer.enabled (ANDed)
 
         this._opaqueOrder = {};
         this._transparentOrder = {};
@@ -85,23 +120,6 @@ class LayerComposition extends EventHandler {
 
         // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
         this._splitLights = [[], [], []];
-
-        /**
-         * A read-only array of {@link CameraComponent} that can be used during rendering. e.g.
-         * Inside {@link Layer#onPreCull}, {@link Layer#onPostCull}, {@link Layer#onPreRender},
-         * {@link Layer#onPostRender}.
-         *
-         * @type {import('../../framework/components/camera/component.js').CameraComponent[]}
-         */
-        this.cameras = [];
-
-        /**
-         * The actual rendering sequence, generated based on layers and cameras
-         *
-         * @type {RenderAction[]}
-         * @ignore
-         */
-        this._renderActions = [];
 
         // all currently created light clusters, that need to be updated before rendering
         this._worldClusters = [];
@@ -145,17 +163,25 @@ class LayerComposition extends EventHandler {
 
     // function which splits list of lights on a a target object into separate lists of lights based on light type
     _splitLightsArray(target) {
-        const lights = target._lights;
-        target._splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-        target._splitLights[LIGHTTYPE_OMNI].length = 0;
-        target._splitLights[LIGHTTYPE_SPOT].length = 0;
 
+        const splitLights = target._splitLights;
+        splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
+        splitLights[LIGHTTYPE_OMNI].length = 0;
+        splitLights[LIGHTTYPE_SPOT].length = 0;
+
+        const lights = target._lights;
         for (let i = 0; i < lights.length; i++) {
             const light = lights[i];
             if (light.enabled) {
-                target._splitLights[light._type].push(light);
+                splitLights[light._type].push(light);
             }
         }
+
+        // sort the lights by their key, as the order of lights is used to generate shader generation key,
+        // and this avoids new shaders being generated when lights are reordered
+        splitLights[LIGHTTYPE_DIRECTIONAL].sort((a, b) => a.key - b.key);
+        splitLights[LIGHTTYPE_OMNI].sort((a, b) => a.key - b.key);
+        splitLights[LIGHTTYPE_SPOT].sort((a, b) => a.key - b.key);
     }
 
     _update(device, clusteredLightingEnabled = false) {
@@ -227,7 +253,7 @@ class LayerComposition extends EventHandler {
         function moveByBlendType(dest, src, moveTransparent) {
             for (let s = 0; s < src.length;) {
 
-                if (src[s].material?.transparent === moveTransparent) {
+                if (src[s].transparent === moveTransparent) {
 
                     // add it to dest
                     dest.push(src[s]);
@@ -720,17 +746,15 @@ class LayerComposition extends EventHandler {
     }
 
     _isLayerAdded(layer) {
-        if (this.layerList.indexOf(layer) >= 0) {
-            Debug.error('Layer is already added.');
-            return true;
-        }
-        return false;
+        const found = this.layerIdMap.get(layer.id) === layer;
+        Debug.assert(!found, `Layer is already added: ${layer.name}`);
+        return found;
     }
 
     _isSublayerAdded(layer, transparent) {
         for (let i = 0; i < this.layerList.length; i++) {
             if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                Debug.error('Sublayer is already added.');
+                Debug.error(`Sublayer ${layer.name}, transparent: ${transparent} is already added.`);
                 return true;
             }
         }
@@ -753,6 +777,8 @@ class LayerComposition extends EventHandler {
         this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -776,6 +802,8 @@ class LayerComposition extends EventHandler {
         this._updateOpaqueOrder(index, count - 1);
         this._updateTransparentOrder(index, count - 1);
         this.subLayerEnabled.splice(index, 0, true, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -809,6 +837,7 @@ class LayerComposition extends EventHandler {
         const count = this.layerList.length;
         this._updateOpaqueOrder(0, count - 1);
         this._updateTransparentOrder(0, count - 1);
+        this._updateLayerMaps();
     }
 
     // Sublayer API
@@ -825,6 +854,8 @@ class LayerComposition extends EventHandler {
         this.layerList.push(layer);
         this._opaqueOrder[layer.id] = this.subLayerList.push(false) - 1;
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -848,6 +879,8 @@ class LayerComposition extends EventHandler {
         this._updateOpaqueOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -877,9 +910,10 @@ class LayerComposition extends EventHandler {
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
-                return;
+                break;
             }
         }
+        this._updateLayerMaps();
     }
 
     /**
@@ -893,6 +927,8 @@ class LayerComposition extends EventHandler {
         this.layerList.push(layer);
         this._transparentOrder[layer.id] = this.subLayerList.push(true) - 1;
         this.subLayerEnabled.push(true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -915,6 +951,8 @@ class LayerComposition extends EventHandler {
         this._updateTransparentOrder(index, count - 1);
 
         this.subLayerEnabled.splice(index, 0, true);
+
+        this._updateLayerMaps();
         this._dirty = true;
         this._dirtyLights = true;
         this._dirtyCameras = true;
@@ -943,9 +981,10 @@ class LayerComposition extends EventHandler {
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
-                return;
+                break;
             }
         }
+        this._updateLayerMaps();
     }
 
     _getSublayerIndex(layer, transparent) {
@@ -984,6 +1023,21 @@ class LayerComposition extends EventHandler {
     }
 
     /**
+     * Update maps of layer IDs and names to match the layer list.
+     *
+     * @private
+     */
+    _updateLayerMaps() {
+        this.layerIdMap.clear();
+        this.layerNameMap.clear();
+        for (let i = 0; i < this.layerList.length; i++) {
+            const layer = this.layerList[i];
+            this.layerIdMap.set(layer.id, layer);
+            this.layerNameMap.set(layer.name, layer);
+        }
+    }
+
+    /**
      * Finds a layer inside this composition by its ID. Null is returned, if nothing is found.
      *
      * @param {number} id - An ID of the layer to find.
@@ -991,10 +1045,7 @@ class LayerComposition extends EventHandler {
      * Returns null if layer is not found.
      */
     getLayerById(id) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i].id === id) return this.layerList[i];
-        }
-        return null;
+        return this.layerIdMap.get(id) ?? null;
     }
 
     /**
@@ -1005,10 +1056,7 @@ class LayerComposition extends EventHandler {
      * Returns null if layer is not found.
      */
     getLayerByName(name) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i].name === name) return this.layerList[i];
-        }
-        return null;
+        return this.layerNameMap.get(name) ?? null;
     }
 
     _updateOpaqueOrder(startIndex, endIndex) {

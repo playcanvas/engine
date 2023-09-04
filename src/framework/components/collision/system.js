@@ -569,6 +569,7 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
  * Manages creation of {@link CollisionComponent}s.
  *
  * @augments ComponentSystem
+ * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
     /**

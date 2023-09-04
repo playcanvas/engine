@@ -521,7 +521,8 @@ function reprojectTexture(source, target, options = {}) {
             const renderTarget = new RenderTarget({
                 colorBuffer: target,
                 face: f,
-                depth: false
+                depth: false,
+                flipY: device.isWebGPU
             });
             params[0] = f;
             constantParams.setValue(params);

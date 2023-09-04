@@ -1,3 +1,4 @@
+import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 
@@ -314,7 +315,6 @@ class WebgpuTexture {
 
         const texture = this.texture;
         if (texture._levels) {
-            const wgpu = device.wgpu;
 
             // upload texture data if any
             let anyUploads = false;
@@ -337,7 +337,7 @@ class WebgpuTexture {
 
                                 } else if (ArrayBuffer.isView(faceSource)) { // typed array
 
-                                    this.uploadTypedArrayData(wgpu, faceSource, mipLevel, face);
+                                    this.uploadTypedArrayData(device, faceSource, mipLevel, face);
                                     anyUploads = true;
 
                                 } else {
@@ -360,7 +360,7 @@ class WebgpuTexture {
 
                         } else if (ArrayBuffer.isView(mipObject)) { // typed array
 
-                            this.uploadTypedArrayData(wgpu, mipObject, mipLevel, 0);
+                            this.uploadTypedArrayData(device, mipObject, mipLevel, 0);
                             anyUploads = true;
 
                         } else {
@@ -408,12 +408,17 @@ class WebgpuTexture {
             depthOrArrayLayers: 1   // single layer
         };
 
+        // submit existing scheduled commands to the queue before copying to preserve the order
+        device.submit();
+
+        Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
-    uploadTypedArrayData(wgpu, data, mipLevel, face) {
+    uploadTypedArrayData(device, data, mipLevel, face) {
 
         const texture = this.texture;
+        const wgpu = device.wgpu;
 
         /** @type {GPUImageCopyTexture} */
         const dest = {
@@ -427,7 +432,7 @@ class WebgpuTexture {
         const height = TextureUtils.calcLevelDimension(texture.height, mipLevel);
 
         // data sizes
-        const byteSize = TextureUtils.calcLevelGpuSize(width, height, texture.format);
+        const byteSize = TextureUtils.calcLevelGpuSize(width, height, 1, texture.format);
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
@@ -452,6 +457,10 @@ class WebgpuTexture {
             depthOrArrayLayers: 1
         };
 
+        // submit existing scheduled commands to the queue before copying to preserve the order
+        device.submit();
+
+        Debug.trace(TRACEID_RENDER_QUEUE, `WRITE-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         wgpu.queue.writeTexture(dest, data, dataLayout, size);
     }
 }

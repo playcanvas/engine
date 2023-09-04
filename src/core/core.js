@@ -4,14 +4,28 @@
  * @description Root namespace for the PlayCanvas Engine.
  */
 
+/**
+ * The engine version number. This is in semantic versioning format (MAJOR.MINOR.PATCH).
+ */
 const version = '$_CURRENT_SDK_VERSION';
+
+/**
+ * The engine revision number. This is the Git hash of the last commit made to the branch
+ * from which the engine was built.
+ */
 const revision = '$_CURRENT_SDK_REVISION';
+
 const config = { };
 const common = { };
 const apps = { }; // Storage for the applications using the PlayCanvas Engine
 const data = { }; // Storage for exported entity data
 
-// Create look up table for types.
+/**
+ * Create look up table for types.
+ *
+ * @returns {object} A hash table containing all types in this format: { '[object Type]': 'type' }
+ * @private
+ */
 const _typeLookup = function () {
     const result = { };
     const names = ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'];
