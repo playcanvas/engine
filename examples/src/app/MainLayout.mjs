@@ -1,19 +1,13 @@
 import { Component                           } from 'react';
-import { HashRouter, Switch, Route, Redirect } from "react-router-dom";
+import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { CodeEditor                          } from './code-editor.mjs';
-import { MIN_DESKTOP_WIDTH                   } from './constants.mjs';
 import { ErrorBoundary                       } from './error-boundary.mjs';
 import { Example                             } from './example.mjs';
 import { iframeHideStats, iframeShowStats    } from './iframeUtils.mjs';
 import { jsx, jsxContainer                   } from './jsx.mjs';
 import { Menu                                } from './menu.mjs';
 import { SideBar                             } from './sidebar.mjs';
-
-/**
- * @returns {'portrait'|'landscape'} Orientation, which is either 'portrait' (width < 601 px) or
- * 'landscape' (every width >= 601, not aspect related)
- */
-export const getOrientation = () => window.top.innerWidth < MIN_DESKTOP_WIDTH ? 'portrait': 'landscape';
+import { getOrientation                      } from './utils.mjs';
 
 /**
  * @typedef {object} Props

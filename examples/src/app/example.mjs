@@ -4,13 +4,13 @@ import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
 import { DeviceSelector } from './device-selector.mjs';
-import { getOrientation } from './MainLayout.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner  } from './jsx.mjs';
 import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
 import React, { useRef, createRef, Component, useEffect } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
+import { getOrientation } from './utils.mjs';
 
 // What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
 // 1) We don't want to load React code in iframe

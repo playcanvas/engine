@@ -1,13 +1,12 @@
 import { Component } from 'react';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
-// @ts-ignore: library file import
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
-import { getOrientation } from './MainLayout.mjs';
+import { getOrientation } from './utils.mjs';
 
 /**
  * @typedef {object} Props
