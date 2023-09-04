@@ -151,12 +151,6 @@ class ProgramLibrary {
             const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
             Debug.assert(generatedShaderDef);
 
-            if (processingOptions.userAttributes && processingOptions.userAttributes.size > 0) {
-                for (const attr of processingOptions.userAttributes) {
-                    generatedShaderDef.attributes[attr[1]] = attr[0];
-                }
-            }
-
             // use shader pass name if known
             let passName = '';
             let shaderPassInfo;

@@ -878,11 +878,15 @@ class StandardMaterial extends Material {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat, this.userAttributes);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions, this.userId);
+
+        for (const attr of this.userAttributes) {
+            shader.definition.attributes[attr[1]] = attr[0];
+        }
 
         this._dirtyShader = false;
         return shader;
