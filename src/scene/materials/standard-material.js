@@ -656,9 +656,7 @@ class StandardMaterial extends Material {
      * material.setAttribute('offset', pc.SEMANTIC_ATTR0);
      */
     setAttribute(name, semantic) {
-        if (!this.userAttributes.has(semantic)) {
-            this.userAttributes.set(semantic, name);
-        }
+        this.userAttributes.set(semantic, name);
     }
 
     _setParameter(name, value) {
