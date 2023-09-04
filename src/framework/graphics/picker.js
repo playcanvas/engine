@@ -52,6 +52,8 @@ class Picker {
             Debug.deprecated('pc.Picker now takes pc.AppBase as first argument. Passing pc.GraphicsDevice is deprecated.');
         }
 
+        // Note: The only reason this class needs the app is to access the renderer. Ideally we remove this dependency and move
+        // the Picker from framework to the scene level, or even the extras.
         this.renderer = app.renderer;
         this.device = app.graphicsDevice;
 
