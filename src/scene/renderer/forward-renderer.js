@@ -485,58 +485,51 @@ class ForwardRenderer extends Renderer {
             /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
 
-            if (drawCall.command) {
-
-                addCall(drawCall, null, false, false);
-
-            } else {
-
-                // #if _PROFILER
-                if (camera === ForwardRenderer.skipRenderCamera) {
-                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
-                        continue;
-                    ForwardRenderer._skipRenderCounter++;
-                }
-                if (layer) {
-                    if (layer._skipRenderCounter >= layer.skipRenderAfter)
-                        continue;
-                    layer._skipRenderCounter++;
-                }
-                // #endif
-
-                drawCall.ensureMaterial(device);
-                const material = drawCall.material;
-
-                const objDefs = drawCall._shaderDefs;
-                const lightMask = drawCall.mask;
-
-                if (material && material === prevMaterial && objDefs !== prevObjDefs) {
-                    prevMaterial = null; // force change shader if the object uses a different variant of the same material
-                }
-
-                if (material !== prevMaterial) {
-                    this._materialSwitches++;
-                    material._scene = scene;
-
-                    if (material.dirty) {
-                        material.updateUniforms(device, scene);
-                        material.dirty = false;
-                    }
-                }
-
-                // marker to allow us to see the source node for shader alloc
-                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-
-                const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
-
-                DebugGraphics.popGpuMarker(device);
-
-                addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
-
-                prevMaterial = material;
-                prevObjDefs = objDefs;
-                prevLightMask = lightMask;
+            // #if _PROFILER
+            if (camera === ForwardRenderer.skipRenderCamera) {
+                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                    continue;
+                ForwardRenderer._skipRenderCounter++;
             }
+            if (layer) {
+                if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                    continue;
+                layer._skipRenderCounter++;
+            }
+            // #endif
+
+            drawCall.ensureMaterial(device);
+            const material = drawCall.material;
+
+            const objDefs = drawCall._shaderDefs;
+            const lightMask = drawCall.mask;
+
+            if (material && material === prevMaterial && objDefs !== prevObjDefs) {
+                prevMaterial = null; // force change shader if the object uses a different variant of the same material
+            }
+
+            if (material !== prevMaterial) {
+                this._materialSwitches++;
+                material._scene = scene;
+
+                if (material.dirty) {
+                    material.updateUniforms(device, scene);
+                    material.dirty = false;
+                }
+            }
+
+            // marker to allow us to see the source node for shader alloc
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+
+            DebugGraphics.popGpuMarker(device);
+
+            addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+
+            prevMaterial = material;
+            prevObjDefs = objDefs;
+            prevLightMask = lightMask;
         }
 
         // process the batch of shaders created here
@@ -559,123 +552,115 @@ class ForwardRenderer extends Renderer {
 
             const drawCall = preparedCalls.drawCalls[i];
 
-            if (drawCall.command) {
+            // We have a mesh instance
+            const newMaterial = preparedCalls.isNewMaterial[i];
+            const lightMaskChanged = preparedCalls.lightMaskChanged[i];
+            const shaderInstance = preparedCalls.shaderInstances[i];
+            const material = drawCall.material;
+            const objDefs = drawCall._shaderDefs;
+            const lightMask = drawCall.mask;
 
-                // We have a command
-                drawCall.command();
+            if (newMaterial) {
 
-            } else {
-
-                // We have a mesh instance
-                const newMaterial = preparedCalls.isNewMaterial[i];
-                const lightMaskChanged = preparedCalls.lightMaskChanged[i];
-                const shaderInstance = preparedCalls.shaderInstances[i];
-                const material = drawCall.material;
-                const objDefs = drawCall._shaderDefs;
-                const lightMask = drawCall.mask;
-
-                if (newMaterial) {
-
-                    const shader = shaderInstance.shader;
-                    if (!shader.failed && !device.setShader(shader)) {
-                        Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
-                    }
-
-                    // skip rendering with the material if shader failed
-                    skipMaterial = shader.failed;
-                    if (skipMaterial)
-                        break;
-
-                    DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
-
-                    // Uniforms I: material
-                    material.setParameters(device);
-
-                    if (lightMaskChanged) {
-                        const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
-
-                        if (!clusteredLightingEnabled) {
-                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
-                        }
-                    }
-
-                    this.alphaTestId.setValue(material.alphaTest);
-
-                    device.setBlendState(material.blendState);
-                    device.setDepthState(material.depthState);
-
-                    device.setAlphaToCoverage(material.alphaToCoverage);
-
-                    if (material.depthBias || material.slopeDepthBias) {
-                        device.setDepthBias(true);
-                        device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
-                    } else {
-                        device.setDepthBias(false);
-                    }
-
-                    DebugGraphics.popGpuMarker(device);
+                const shader = shaderInstance.shader;
+                if (!shader.failed && !device.setShader(shader)) {
+                    Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                 }
 
-                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+                // skip rendering with the material if shader failed
+                skipMaterial = shader.failed;
+                if (skipMaterial)
+                    break;
 
-                this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
+                DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
 
-                const stencilFront = drawCall.stencilFront ?? material.stencilFront;
-                const stencilBack = drawCall.stencilBack ?? material.stencilBack;
-                device.setStencilState(stencilFront, stencilBack);
+                // Uniforms I: material
+                material.setParameters(device);
 
-                const mesh = drawCall.mesh;
+                if (lightMaskChanged) {
+                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
 
-                // Uniforms II: meshInstance overrides
-                drawCall.setParameters(device, passFlag);
-
-                this.setVertexBuffers(device, mesh);
-                this.setMorphing(device, drawCall.morphInstance);
-                this.setSkinning(device, drawCall);
-
-                this.setupMeshUniformBuffers(shaderInstance, drawCall);
-
-                const style = drawCall.renderStyle;
-                device.setIndexBuffer(mesh.indexBuffer[style]);
-
-                drawCallback?.(drawCall, i);
-
-                if (camera.xr && camera.xr.session && camera.xr.views.length) {
-                    const views = camera.xr.views;
-
-                    for (let v = 0; v < views.length; v++) {
-                        const view = views[v];
-
-                        device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
-
-                        this.projId.setValue(view.projMat.data);
-                        this.projSkyboxId.setValue(view.projMat.data);
-                        this.viewId.setValue(view.viewOffMat.data);
-                        this.viewInvId.setValue(view.viewInvOffMat.data);
-                        this.viewId3.setValue(view.viewMat3.data);
-                        this.viewProjId.setValue(view.projViewOffMat.data);
-                        this.viewPosId.setValue(view.position);
-
-                        if (v === 0) {
-                            this.drawInstance(device, drawCall, mesh, style, true);
-                        } else {
-                            this.drawInstance2(device, drawCall, mesh, style);
-                        }
-
-                        this._forwardDrawCalls++;
+                    if (!clusteredLightingEnabled) {
+                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
                     }
+                }
+
+                this.alphaTestId.setValue(material.alphaTest);
+
+                device.setBlendState(material.blendState);
+                device.setDepthState(material.depthState);
+
+                device.setAlphaToCoverage(material.alphaToCoverage);
+
+                if (material.depthBias || material.slopeDepthBias) {
+                    device.setDepthBias(true);
+                    device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
                 } else {
-                    this.drawInstance(device, drawCall, mesh, style, true);
-                    this._forwardDrawCalls++;
-                }
-
-                // Unset meshInstance overrides back to material values if next draw call will use the same material
-                if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                    material.setParameters(device, drawCall.parameters);
+                    device.setDepthBias(false);
                 }
 
                 DebugGraphics.popGpuMarker(device);
             }
+
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+
+            this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
+
+            const stencilFront = drawCall.stencilFront ?? material.stencilFront;
+            const stencilBack = drawCall.stencilBack ?? material.stencilBack;
+            device.setStencilState(stencilFront, stencilBack);
+
+            const mesh = drawCall.mesh;
+
+            // Uniforms II: meshInstance overrides
+            drawCall.setParameters(device, passFlag);
+
+            this.setVertexBuffers(device, mesh);
+            this.setMorphing(device, drawCall.morphInstance);
+            this.setSkinning(device, drawCall);
+
+            this.setupMeshUniformBuffers(shaderInstance, drawCall);
+
+            const style = drawCall.renderStyle;
+            device.setIndexBuffer(mesh.indexBuffer[style]);
+
+            drawCallback?.(drawCall, i);
+
+            if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                const views = camera.xr.views;
+
+                for (let v = 0; v < views.length; v++) {
+                    const view = views[v];
+
+                    device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
+
+                    this.projId.setValue(view.projMat.data);
+                    this.projSkyboxId.setValue(view.projMat.data);
+                    this.viewId.setValue(view.viewOffMat.data);
+                    this.viewInvId.setValue(view.viewInvOffMat.data);
+                    this.viewId3.setValue(view.viewMat3.data);
+                    this.viewProjId.setValue(view.projViewOffMat.data);
+                    this.viewPosId.setValue(view.position);
+
+                    if (v === 0) {
+                        this.drawInstance(device, drawCall, mesh, style, true);
+                    } else {
+                        this.drawInstance2(device, drawCall, mesh, style);
+                    }
+
+                    this._forwardDrawCalls++;
+                }
+            } else {
+                this.drawInstance(device, drawCall, mesh, style, true);
+                this._forwardDrawCalls++;
+            }
+
+            // Unset meshInstance overrides back to material values if next draw call will use the same material
+            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
+                material.setParameters(device, drawCall.parameters);
+            }
+
+            DebugGraphics.popGpuMarker(device);
         }
     }
 
