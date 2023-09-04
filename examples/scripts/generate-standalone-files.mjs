@@ -132,7 +132,6 @@ ${exampleClass.example.toString()}
             }
             const deviceType = app?.graphicsDevice?.deviceType;
             if (deviceType === 'webgpu' || deviceType === 'null') {
-                alert("Sorry, WebGPU and Null renderer don't support MiniStats");
                 return;
             }
             if (!miniStats) {
