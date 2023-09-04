@@ -35,6 +35,22 @@ for (const category_ in realExamples) {
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category_}_${dropEnding}.html`, out);
     }
 }
+
+/**
+ * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
+ * static ENGINE = 'PERFORMANCE';
+ * @param {'PERFORMANCE'|'DEBUG'|undefined} str 
+ */
+function engineFor(str) {
+    switch (str) {
+        case 'PERFORMANCE':
+            return './playcanvas.prf.js';
+        case 'DEBUG':
+            return './playcanvas.dbg.js';
+    }
+    return './playcanvas.js';
+}
+
 /**
  * @param {string} category - The category.
  * @param {string} example - The example.
@@ -64,8 +80,6 @@ function generateExampleFile(category, example, exampleClass) {
                 <canvas id='application-canvas'></canvas>
             </div>
         </div>
-        <script src='./playcanvas.js'></script>
-        <script src='./playcanvas-extras.js'></script>
         <script src='./playcanvas-observer.js'></script>
         <script src='./pathes.js'></script>
         <!-- imports (if any) -->
@@ -80,7 +94,18 @@ ${exampleClass.controls?.toString() || ''}
 ${exampleClass.example.toString()}
         </script>
         <script>
-        window.top.pc = pc;
+        const ENGINE_PATH = '${process.env.ENGINE_PATH ?? ''}';
+        const NODE_ENV = '${process.env.NODE_ENV ?? ''}';
+        function loadScript(src) {
+            return new Promise(resolve => {
+                const script = document.createElement('script');
+                document.body.append(script);
+                script.src = src;
+                script.onload = () => {
+                    resolve();
+                }
+            });
+        }
         /**
          * @returns {string}
          */
@@ -147,7 +172,22 @@ ${exampleClass.example.toString()}
         }
         window.addEventListener('showStats', showStats);
         window.addEventListener('hideStats', hideStats);
+        let specifiedEngine = '${engineFor(exampleClass.ENGINE)}';
+        // Doesn't matter what Example class specifies otherwise:
+        if (NODE_ENV === 'development') {
+            specifiedEngine = '${engineFor('DEBUG')}'
+        }
         async function main(files) {
+            // ENGINE_PATH takes precedence over Example#ENGINE
+            if (ENGINE_PATH) {
+                window.pc = await import('./ENGINE_PATH/index.js');
+            } else {
+                // Load ES5 version instead
+                await loadScript(specifiedEngine);
+            }
+            await loadScript('./playcanvas-extras.js');
+            window.top.pc = pc;
+
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
             var deviceType = getDeviceType();

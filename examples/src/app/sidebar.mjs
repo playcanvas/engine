@@ -154,7 +154,6 @@ export class SideBar extends TypedComponent {
         const { pc } = window;
         if (pc) {
             pc.app?.destroy();
-            pc.app = null;
         }
     }
     renderContents() {

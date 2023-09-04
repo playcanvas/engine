@@ -30,9 +30,17 @@ const staticFiles = [
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
     { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
+    { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
+    { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
     { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
 ];
+
+if (process.env.ENGINE_PATH) {
+    const src = path.dirname(path.resolve(process.env.ENGINE_PATH));
+    const dest = 'dist/iframe/ENGINE_PATH';
+    staticFiles.push({ src, dest });
+}
 
 function timestamp() {
     return {
