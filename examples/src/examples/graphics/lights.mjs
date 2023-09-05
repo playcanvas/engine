@@ -1,38 +1,87 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } from '@playcanvas/pcui/react';
-import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'OMNI LIGHT [KEY_1]' },
             jsx(LabelGroup, { text: 'enabled' },
-                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.enabled' } })),
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.omni.enabled' }
+                })
+            ),
             jsx(LabelGroup, { text: 'intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.intensity' } })),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.omni.intensity' }
+                })
+            ),
             jsx(LabelGroup, { text: 'shadow intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.shadowIntensity' } })),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.omni.shadowIntensity' }
+                })
+            ),
             jsx(LabelGroup, { text: 'cookie' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.omni.cookieIntensity' } }))),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.omni.cookieIntensity' }
+                })
+            )
+        ),
         jsx(Panel, { headerText: 'SPOT LIGHT [KEY_2]' },
             jsx(LabelGroup, { text: 'enabled' },
-                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.enabled' } })),
+                jsx(BooleanInput, { type: 'toggle',
+                binding: new BindingTwoWay(),
+                link: { observer, path: 'lights.spot.enabled' }
+            })
+        ),
             jsx(LabelGroup, { text: 'intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.intensity' } })),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.spot.intensity' }
+                })
+            ),
             jsx(LabelGroup, { text: 'shadow intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.shadowIntensity' } })),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.spot.shadowIntensity' }
+                })
+            ),
             jsx(LabelGroup, { text: 'cookie' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.spot.cookieIntensity' } }))),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.spot.cookieIntensity' }
+                })
+            )
+        ),
         jsx(Panel, { headerText: 'DIRECTIONAL LIGHT [KEY_3]' },
             jsx(LabelGroup, { text: 'enabled' },
-                jsx(BooleanInput, { type: 'toggle', binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.enabled' } })),
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.directional.enabled' }
+                })
+            ),
             jsx(LabelGroup, { text: 'intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.intensity' } })),
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.directional.intensity' }
+                })
+            ),
             jsx(LabelGroup, { text: 'shadow intensity' },
-                jsx(SliderInput, { binding: new BindingTwoWay(), link: { observer, path: 'lights.directional.shadowIntensity' } }))));
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'lights.directional.shadowIntensity' }
+                })
+            )
+        )
+    );
 }
 
 /**

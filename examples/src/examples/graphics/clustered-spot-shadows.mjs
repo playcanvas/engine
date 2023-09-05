@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, BooleanInput, Button, Label, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, BooleanInput, Button, Label, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Atlas' },
             jsx(LabelGroup, { text: 'Resolution' },

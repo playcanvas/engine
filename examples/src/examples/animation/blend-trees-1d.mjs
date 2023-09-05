@@ -1,12 +1,13 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, LabelGroup, SliderInput } from '@playcanvas/pcui/react';
-import { jsx } from '../../app/jsx.mjs';
-import React from 'react';
 
-function controls(props) {
+/**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx }) {
+    const { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } = ReactPCUI;
     class JsxControls extends React.Component {
         render() {
-            const { observer } = this.props;
             const binding = new BindingTwoWay();
             const link = {
                 observer,
@@ -17,7 +18,7 @@ function controls(props) {
             );
         }
     }
-    return jsx(JsxControls, props);
+    return jsx(JsxControls);
 }
 
 /**

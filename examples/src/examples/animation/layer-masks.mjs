@@ -1,16 +1,15 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, LabelGroup, Panel } from '@playcanvas/pcui/react';
-import { fragment, jsx, jsxBooleanInput, jsxSelectInput, jsxSliderInput } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Full Body Layer' },
             jsx(LabelGroup, { text: 'active state' },
-                jsxSelectInput({
+                jsx(SelectInput, {
                     options: ['Idle', 'Walk'].map(_ => ({v: _, t: _})),
                     binding: new BindingTwoWay(),
                     link: {
@@ -22,7 +21,7 @@ function controls({observer}) {
         ),
         jsx(Panel, { headerText: 'Upper Body Layer' },
             jsx(LabelGroup, { text: 'active state' },
-                jsxSelectInput({
+                jsx(SelectInput, {
                     options: ['Eager', 'Idle', 'Dance'].map(_ => ({v: _, t: _})),
                     binding: new BindingTwoWay(),
                     link: {
@@ -32,7 +31,7 @@ function controls({observer}) {
                 })
             ),
             jsx(LabelGroup, { text: 'blend type' },
-                jsxSelectInput({
+                jsx(SelectInput, {
                     options: [
                         { v: pc.ANIM_LAYER_OVERWRITE, t: 'Overwrite' },
                         { v: pc.ANIM_LAYER_ADDITIVE, t: 'Additive' }
@@ -46,7 +45,7 @@ function controls({observer}) {
                 })
             ),
             jsx(LabelGroup, { text: 'use mask' },
-                jsxBooleanInput({
+                jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: {
@@ -58,7 +57,7 @@ function controls({observer}) {
         ),
         jsx(Panel, { headerText: 'Options' },
             jsx(LabelGroup, { text: 'blend' },
-                jsxSliderInput({
+                jsx(SliderInput, {
                     min: 0.01,
                     max: 0.99,
                     binding: new BindingTwoWay(),
@@ -70,7 +69,7 @@ function controls({observer}) {
                 })
             ),
             jsx(LabelGroup, { text: 'skeleton' },
-                jsxBooleanInput({
+                jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: {

@@ -1,14 +1,17 @@
-import React, { createRef, Component } from 'react';
 import * as pc from 'playcanvas';
-import { fragment, jsx } from '../../app/jsx.mjs';
 
-function controls(props) {
+/**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { createRef, Component } = React;
     class JsxControls extends Component {
         position = new pc.Vec2();
         /** @type {React.RefObject<HTMLCanvasElement>} */
         refCanvas = createRef();
         mouseEvent(e) {
-            const { position, modelEntity, width } = this;
+            const { position, modelEntity, width, canvas } = this;
             if (e.targetTouches) {
                 const offset = canvas.getBoundingClientRect();
                 position.set(e.targetTouches[0].clientX - offset.x, e.targetTouches[0].clientY - offset.y).mulScalar(1 / (width / 2)).sub(pc.Vec2.ONE);
@@ -115,7 +118,7 @@ function controls(props) {
             );
         }
     }
-    return jsx(JsxControls, props);
+    return jsx(JsxControls);
 }
 
 /**

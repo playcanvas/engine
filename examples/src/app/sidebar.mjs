@@ -154,6 +154,11 @@ export class SideBar extends TypedComponent {
         const { pc } = window;
         if (pc) {
             pc.app?.destroy();
+            try {
+                pc.app = null;
+            } catch (e) {
+                console.warn("pc.app = null - Needed but disallowed in ES6.");
+            }
         }
     }
     renderContents() {

@@ -1,13 +1,11 @@
 import * as pc from 'playcanvas';
 
-import { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } from '@playcanvas/pcui/react';
-import { fragment, jsx } from '../../app/jsx.mjs';
-
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SelectInput, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Shadow Cascade Settings' },
             jsx(LabelGroup, { text: 'Filtering' },
@@ -22,7 +20,9 @@ function controls({observer}) {
                         { v: pc.SHADOW_VSM8, t: 'VSM8' },
                         { v: pc.SHADOW_VSM16, t: 'VSM16' },
                         { v: pc.SHADOW_VSM32, t: 'VSM32' }
-                    ] })),
+                    ]
+                })
+            ),
             jsx(LabelGroup, { text: 'Count' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -30,14 +30,16 @@ function controls({observer}) {
                     min: 1,
                     max: 4,
                     precision: 0
-                })),
+                })
+            ),
             jsx(LabelGroup, { text: 'Every Frame' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'settings.light.everyFrame' },
                     value: observer.get('settings.light.everyFrame')
-                })),
+                })
+            ),
             jsx(LabelGroup, { text: 'Resolution' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -45,7 +47,8 @@ function controls({observer}) {
                     min: 128,
                     max: 2048,
                     precision: 0
-                })),
+                })
+            ),
             jsx(LabelGroup, { text: 'Distribution' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -53,7 +56,8 @@ function controls({observer}) {
                     min: 0,
                     max: 1,
                     precision: 2
-                })),
+                })
+            ),
             jsx(LabelGroup, { text: 'VSM Blur' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),

@@ -1,12 +1,12 @@
 import * as pc from 'playcanvas';
-import { jsxButton } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - todo
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
-    return jsxButton({
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { Button } = ReactPCUI;
+    return jsx(Button, {
         text: 'Download GLTF',
         onClick: () => observer.emit('download')
     });

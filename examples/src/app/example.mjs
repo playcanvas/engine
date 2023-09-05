@@ -6,18 +6,30 @@ import { iframePath } from '../assetPath.mjs';
 import { DeviceSelector } from './device-selector.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner  } from './jsx.mjs';
-import { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } from '@playcanvas/pcui/react';
+import { Panel, Container } from '@playcanvas/pcui/react';
 import React, { useRef, createRef, Component, useEffect } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
 import { getOrientation } from './utils.mjs';
+import * as PCUI from '@playcanvas/pcui';
+import * as ReactPCUI from '@playcanvas/pcui/react';
 
+/**
+ * @typedef {object} ControlOptions
+ * @property {import('@playcanvas/observer').Observer} observer - The observer.
+ * @property {import('@playcanvas/pcui')} PCUI - The PCUI vanilla module.
+ * @property {import('@playcanvas/pcui/react')} ReactPCUI - The PCUI React module.
+ * @property {import('react')} React - The PCUI React module.
+ * @property {import('./jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
+ * @property {import('./jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
+ */
+
+// Obsolete - Refactor away entirely TODO
 // What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
 // 1) We don't want to load React code in iframe
 // 2) We don't want to load PlayCanvas code in Examples browser
 // (just to keep the file sizes as minimal as possible)
 Object.assign(window, {
-    BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container,
     Observer,
     jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner,
     React, useRef, createRef, Component, useEffect,
@@ -201,7 +213,12 @@ class Example extends TypedComponent {
             ErrorBoundary,
             null,
             jsx(this.state.controls, {
-                observer: window.observerData
+                observer: window.observerData,
+                PCUI,
+                ReactPCUI,
+                React,
+                jsx,
+                fragment,
             }),
         );
     }

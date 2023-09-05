@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react';
 import * as pc from 'playcanvas';
-import { fragment, jsx } from '../../app/jsx.mjs';
 
-function controls() {
+/**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { useEffect, useRef } = React;
     /** @type {React.MutableRefObject<HTMLCanvasElement>} */
     const canvasRef = useRef(null);
     useEffect(() => {

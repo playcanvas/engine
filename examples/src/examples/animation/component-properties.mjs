@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import { Button } from '@playcanvas/pcui/react';
-import { fragment, jsx } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} props - The props.
- * @returns {JSX.Element}
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { Button } = ReactPCUI;
     return fragment(
         jsx(Button, {
             text: 'Flash',

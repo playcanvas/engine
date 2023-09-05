@@ -1,19 +1,18 @@
 import * as pc from 'playcanvas';
-import { BindingTwoWay, LabelGroup } from '@playcanvas/pcui/react';
-import { fragment, jsx, jsxBooleanInput, jsxButton } from '../../app/jsx.mjs';
 
 /**
- * @param {{observer: import('@playcanvas/observer').Observer}} data - todo
- * @returns {JSX.Element} todo
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({observer}) {
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, LabelGroup, BooleanInput, Button } = ReactPCUI;
     const binding = new BindingTwoWay();
     const link = {
         observer,
         path: 'jogToggle'
     };
     return fragment(
-        jsxButton({
+        jsx(Button, {
             text: 'Jump',
             onClick: () => observer.emit('jump')
         }),
@@ -22,7 +21,7 @@ function controls({observer}) {
             {
                 text: 'Run: '
             },
-            jsxBooleanInput({
+            jsx(BooleanInput, {
                 type: 'toggle',
                 binding,
                 link
