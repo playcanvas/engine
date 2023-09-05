@@ -21,6 +21,7 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 
+let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
@@ -40,22 +41,6 @@ class InstancingData {
      */
     constructor(numObjects) {
         this.count = numObjects;
-    }
-}
-
-class Command {
-    constructor(layer, blendType, command) {
-        this._key = [];
-        this._key[SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
-        this.command = command;
-    }
-
-    set key(val) {
-        this._key[SORTKEY_FORWARD] = val;
-    }
-
-    get key() {
-        return this._key[SORTKEY_FORWARD];
     }
 }
 
@@ -194,8 +179,20 @@ class MeshInstance {
      * value stores all shaders and bind groups for the shader pass for various light combinations.
      *
      * @type {Array<ShaderCacheEntry|null>}
+     * @private
      */
     _shaderCache = [];
+
+    /** @ignore */
+    id = id++;
+
+    /**
+     * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    pick = true;
 
     /**
      * Create a new MeshInstance instance.
@@ -263,14 +260,6 @@ class MeshInstance {
          * @type {boolean}
          */
         this.cull = true;
-
-        /**
-         * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.pick = true;
 
         this._updateAabb = true;
         this._updateAabbFunc = null;
@@ -776,10 +765,22 @@ class MeshInstance {
     }
 
     updateKey() {
+
+        // render alphatest/atoc after opaque
         const material = this.material;
-        this._key[SORTKEY_FORWARD] = getKey(this.layer,
-                                            (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
-                                            false, material.id);
+        const blendType = (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType;
+
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : unused
+        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
+        this._key[SORTKEY_FORWARD] =
+            ((this.layer & 0x0f) << 27) |
+            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
+            ((material.id & 0x1ffffff) << 0);
     }
 
     /**
@@ -957,18 +958,4 @@ class MeshInstance {
     }
 }
 
-function getKey(layer, blendType, isCommand, materialId) {
-    // Key definition:
-    // Bit
-    // 31      : sign bit (leave)
-    // 27 - 30 : layer
-    // 26      : translucency type (opaque/transparent)
-    // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-    return ((layer & 0x0f) << 27) |
-           ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-           ((isCommand ? 1 : 0) << 25) |
-           ((materialId & 0x1ffffff) << 0);
-}
-
-export { Command, MeshInstance };
+export { MeshInstance };

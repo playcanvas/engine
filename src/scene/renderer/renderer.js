@@ -859,14 +859,7 @@ class Renderer {
 
         for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.command) {
-
-                // commands are always visible in both opaque and transparent buckets
-                drawCall.visibleThisFrame = true;
-                opaque.push(drawCall);
-                transparent.push(drawCall);
-
-            } else if (drawCall.visible) {
+            if (drawCall.visible) {
 
                 const visible = !doCull || drawCall._isVisible(camera);
                 if (visible) {

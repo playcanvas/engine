@@ -869,7 +869,6 @@ class Layer {
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
         for (let i = 0; i < drawCallsCount; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.command) continue;
             if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             if (drawCall.calculateSortDistance) {
                 drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
