@@ -159,6 +159,9 @@ ${exampleClass.example.toString()}
             if (deviceType === 'webgpu' || deviceType === 'null') {
                 return;
             }
+            if (args.miniStats === 'false') {
+                return;
+            }
             if (!miniStats) {
                 miniStats = new pcx.MiniStats(app);
             }

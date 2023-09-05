@@ -5,6 +5,8 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
 import * as categories from "../src/examples/index.mjs";
+import { spawn } from 'node:child_process';
+const port = process.env.PORT || '12321';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
@@ -36,7 +38,6 @@ async function takeScreenshots() {
             console.log(`skipped: ${category}/${example}`);
             continue;
         }
-        const port = process.env.PORT || 5000;
         const browser = await puppeteer.launch({ headless: 'new' });
         const page = await browser.newPage();
         if (debug) {
@@ -45,12 +46,8 @@ async function takeScreenshots() {
             // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
             page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
         }
-        let link;
-        if (debug) {
-            link = `http://localhost/playcanvas-engine/examples/dist/iframe/${category}_${example}.html?miniStats=false`;
-        } else {
-            link = `http://localhost:${port}/iframe/${category}_${example}.html?miniStats=false`;
-        }
+        // const link = `http://localhost/playcanvas-engine/examples/dist/iframe/${category}_${example}.html?miniStats=false`;
+        const link = `http://localhost:${port}/iframe/${category}_${example}.html?miniStats=false`;
         if (debug) {
             console.log("goto", link);
         }
@@ -58,7 +55,7 @@ async function takeScreenshots() {
         if (debug) {
             console.log("wait for", link);
         }
-        await page.waitForFunction("pc.app?._time > 1000");
+        await page.waitForFunction("window?.pc?.app?._time > 1000");
         await page.screenshot({ path: `${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png` });
         await sharp(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png`)
             .resize(320, 240)
@@ -71,5 +68,26 @@ async function takeScreenshots() {
         await browser.close();
     }
 }
-
-takeScreenshots();
+async function sleep(ms) {
+    return new Promise(resolve => {
+        setTimeout(resolve, ms);
+    });
+}
+async function main() {
+    console.log('Spawn server on', port);
+    // We need this kind of command:
+    // npx serve dist --config ../serve.json
+    // Reason: https://github.com/vercel/serve/issues/732
+    // (who *ever* thought that stripping .html was a good idea in the first place...)
+    const server = spawn('serve', ['dist', '-l', port, '--no-request-logging', '--config', '../serve.json']);
+    await sleep(1000); // give a second to spawn server
+    console.log("Starting puppeteer screenshot process");
+    try {
+        await takeScreenshots();
+    } catch (e) {
+        console.error(e);
+    }
+    console.log('Kill server on', port);
+    server.kill();
+}
+main();
