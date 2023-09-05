@@ -119,6 +119,9 @@ export class SideBar extends TypedComponent {
      */
     onChangeFilter(filter) {
         const { defaultCategories } = this.state;
+        // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
+        // show "MESH DECALS" but internally it's just "MeshDecals".
+        filter = filter.replace(/\s/g, ".*");
         const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
         if (!reg) {
             this.mergeState({ filteredCategories: defaultCategories });
@@ -132,16 +135,17 @@ export class SideBar extends TypedComponent {
                 return null;
             }
             Object.keys(defaultCategories[category].examples).forEach((example) => {
-                if (defaultCategories[category].examples[example].search(reg) !== -1) {
+                const title = defaultCategories[category].examples[example];
+                if (title.search(reg) !== -1) {
                     if (!updatedCategories[category]) {
                         updatedCategories[category] = {
                             name: defaultCategories[category].name,
                             examples: {
-                                [example]: defaultCategories[category].examples[example]
+                                [example]: title
                             }
                         };
                     } else {
-                        updatedCategories[category].examples[example] = defaultCategories[category].examples[example];
+                        updatedCategories[category].examples[example] = title;
                     }
                 }
             });
