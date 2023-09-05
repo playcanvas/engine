@@ -813,16 +813,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
             const fragmentShaderPrecisionHighpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT);
             const fragmentShaderPrecisionMediumpFloat = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT);
 
-            const highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
-            const mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
+            if (vertexShaderPrecisionHighpFloat && vertexShaderPrecisionMediumpFloat && fragmentShaderPrecisionHighpFloat && fragmentShaderPrecisionMediumpFloat) {
 
-            if (!highpAvailable) {
-                if (mediumpAvailable) {
-                    precision = "mediump";
-                    Debug.warn("WARNING: highp not supported, using mediump");
-                } else {
-                    precision = "lowp";
-                    Debug.warn("WARNING: highp and mediump not supported, using lowp");
+                const highpAvailable = vertexShaderPrecisionHighpFloat.precision > 0 && fragmentShaderPrecisionHighpFloat.precision > 0;
+                const mediumpAvailable = vertexShaderPrecisionMediumpFloat.precision > 0 && fragmentShaderPrecisionMediumpFloat.precision > 0;
+
+                if (!highpAvailable) {
+                    if (mediumpAvailable) {
+                        precision = "mediump";
+                        Debug.warn("WARNING: highp not supported, using mediump");
+                    } else {
+                        precision = "lowp";
+                        Debug.warn("WARNING: highp and mediump not supported, using lowp");
+                    }
                 }
             }
         }
@@ -1131,7 +1134,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             target.loseContext();
         }
 
-        this.gpuProfiler.loseContext();
+        this.gpuProfiler?.loseContext();
     }
 
     /**
@@ -1155,7 +1158,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             buffer.unlock();
         }
 
-        this.gpuProfiler.restoreContext();
+        this.gpuProfiler?.restoreContext();
     }
 
     /**
