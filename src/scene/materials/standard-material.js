@@ -884,9 +884,9 @@ class StandardMaterial extends Material {
         library.register('standard', standard);
         const shader = library.getProgram('standard', options, processingOptions, this.userId);
 
-        if (this.userAttributes) {
-            for (const attr of this.userAttributes) {
-                shader.definition.attributes[attr[1]] = attr[0];
+        if (options.userAttributes) {
+            for (const [semantic, name] of Object.entries(options.userAttributes)) {
+                shader.definition.attributes[name] = semantic;
             }
         }
 
