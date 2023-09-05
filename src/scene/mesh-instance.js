@@ -764,19 +764,6 @@ class MeshInstance {
         return false;
     }
 
-    _getKey(layer, blendType, isCommand, materialId) {
-        // Key definition:
-        // Bit
-        // 31      : sign bit (leave)
-        // 27 - 30 : layer
-        // 26      : translucency type (opaque/transparent)
-        // 25      : unused
-        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-        return ((layer & 0x0f) << 27) |
-               ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-               ((materialId & 0x1ffffff) << 0);
-    }
-
     updateKey() {
 
         // render alphatest/atoc after opaque
