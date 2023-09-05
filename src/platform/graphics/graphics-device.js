@@ -145,10 +145,34 @@ class GraphicsDevice extends EventHandler {
     /**
      * Currently active render target.
      *
-     * @type {import('./render-target.js').RenderTarget}
+     * @type {import('./render-target.js').RenderTarget|null}
      * @ignore
      */
     renderTarget = null;
+
+    /**
+     * Array of objects that need to be re-initialized after a context restore event
+     *
+     * @type {import('./shader.js').Shader[]}
+     * @ignore
+     */
+    shaders = [];
+
+    /**
+     * An array of currently created textures.
+     *
+     * @type {import('./texture.js').Texture[]}
+     * @ignore
+     */
+    textures = [];
+
+    /**
+     * A set of currently created render targets.
+     *
+     * @type {Set<import('./render-target.js').RenderTarget>}
+     * @ignore
+     */
+    targets = new Set();
 
     /**
      * A version number that is incremented every frame. This is used to detect if some object were
@@ -289,17 +313,7 @@ class GraphicsDevice extends EventHandler {
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        // Array of objects that need to be re-initialized after a context restore event
-        /** @type {import('./shader.js').Shader[]} */
-        this.shaders = [];
-
         this.buffers = [];
-
-        /** @type {import('./texture.js').Texture[]} */
-        this.textures = [];
-
-        /** @type {import('./render-target.js').RenderTarget[]} */
-        this.targets = [];
 
         this._vram = {
             // #if _PROFILER
@@ -466,7 +480,7 @@ class GraphicsDevice extends EventHandler {
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
-     * @param {import('./render-target.js').RenderTarget} renderTarget - The render target to
+     * @param {import('./render-target.js').RenderTarget|null} renderTarget - The render target to
      * activate.
      * @example
      * // Set a render target to receive all rendering output
@@ -539,7 +553,7 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         target.init();
-        this.targets.push(target);
+        this.targets.add(target);
 
         // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;

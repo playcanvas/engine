@@ -263,9 +263,9 @@ class Texture {
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
-        if (this.device) {
+        const device = this.device;
+        if (device) {
             // stop tracking the texture
-            const device = this.device;
             const idx = device.textures.indexOf(this);
             if (idx !== -1) {
                 device.textures.splice(idx, 1);
@@ -283,6 +283,31 @@ class Texture {
             this._levels = null;
             this.device = null;
         }
+    }
+
+    /**
+     * Resizes the texture. Only supported for render target textures, as it does not resize the
+     * existing content of the texture, but only the allocated buffer for rendering into.
+     *
+     * @param {number} width - The new width of the texture.
+     * @param {number} height - The new height of the texture.
+     * @param {number} [depth] - The new depth of the texture. Defaults to 1.
+     * @ignore
+     */
+    resize(width, height, depth = 1) {
+
+        // destroy texture impl
+        const device = this.device;
+        this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+        this.impl.destroy(device);
+
+        this._width = width;
+        this._height = height;
+        this._depth = depth;
+
+        // re-create the implementation
+        this.impl = device.createTextureImpl(this);
+        this.dirtyAll();
     }
 
     /**
