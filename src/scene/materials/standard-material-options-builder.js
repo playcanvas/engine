@@ -66,7 +66,7 @@ class StandardMaterialOptionsBuilder {
 
         // USER ATTRIBUTES
         if (stdMat.userAttributes) {
-            options.userAttributes = Object.fromEntries(stdMat.userAttributes.entries());
+            options.litOptions.userAttributes = Object.fromEntries(stdMat.userAttributes.entries());
         }
 
         options.litOptions.chunks = stdMat.chunks || {};
