@@ -112,7 +112,7 @@
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.36",
     "mocha": "^10.2.0",
-    "rollup": "^3.26.3",
+    "rollup": "^3.29.0",
     "rollup-plugin-dts": "^5.3.0",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.9.2",
