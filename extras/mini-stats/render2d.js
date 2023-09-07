@@ -100,9 +100,12 @@ class Render2d {
 
         this.indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, maxQuads * 6, BUFFER_STATIC, indices);
 
-        this.prims = [];
-        this.prim = null;
-        this.primIndex = -1;
+        this.prim = {
+            type: PRIMITIVE_TRIANGLES,
+            indexed: true,
+            base: 0,
+            count: 0
+        };
         this.quads = 0;
 
         // colors
@@ -127,32 +130,11 @@ class Render2d {
                                          BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
     }
 
-    quad(texture, x, y, w, h, u, v, uw, uh, enabled) {
+    quad(x, y, w, h, u, v, uw, uh, enabled) {
         const quad = this.quads++;
 
         // update primitive
-        let prim = this.prim;
-        if (prim && prim.texture === texture) {
-            prim.count += 6;
-        } else {
-            this.primIndex++;
-            if (this.primIndex === this.prims.length) {
-                prim = {
-                    type: PRIMITIVE_TRIANGLES,
-                    indexed: true,
-                    base: quad * 6,
-                    count: 6,
-                    texture: texture
-                };
-                this.prims.push(prim);
-            } else {
-                prim = this.prims[this.primIndex];
-                prim.base = quad * 6;
-                prim.count = 6;
-                prim.texture = texture;
-            }
-            this.prim = prim;
-        }
+        this.prim.count += 6;
 
         const x1 = x + w;
         const y1 = y + h;
@@ -168,7 +150,7 @@ class Render2d {
         ], 4 * 7 * quad);
     }
 
-    render(clr, height) {
+    render(texture, clr, height) {
         const device = this.device;
         const buffer = this.buffer;
 
@@ -198,21 +180,18 @@ class Render2d {
         this.watermarkId.setValue(this.watermark);
         this.backgroundId.setValue(this.background);
 
-        for (let i = 0; i <= this.primIndex; ++i) {
-            const prim = this.prims[i];
-            this.screenTextureSize[2] = prim.texture.width;
-            this.screenTextureSize[3] = prim.texture.height;
-            this.screenTextureSizeId.setValue(this.screenTextureSize);
-            device.constantTexSource.setValue(prim.texture);
-            this.watermarkSizeId.setValue(0.5 / height);
-            device.draw(prim);
-        }
+        const prim = this.prim;
+        this.screenTextureSize[2] = texture.width;
+        this.screenTextureSize[3] = texture.height;
+        this.screenTextureSizeId.setValue(this.screenTextureSize);
+        device.constantTexSource.setValue(texture);
+        this.watermarkSizeId.setValue(0.5 / height);
+        device.draw(prim);
 
         device.updateEnd();
 
         // reset
-        this.prim = null;
-        this.primIndex = -1;
+        this.prim.count = 0;
         this.quads = 0;
     }
 }

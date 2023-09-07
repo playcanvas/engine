@@ -312,7 +312,7 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.clr, height);
+        render2d.render(this.texture, this.clr, height);
     }
 
     resize(width, height, showGraphs) {
