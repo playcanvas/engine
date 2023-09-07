@@ -1,11 +1,13 @@
 {
+    "$schema": "https://json.schemastore.org/jsdoc-1.0.0.json",
     "plugins": [
         "plugins/markdown",
         "./node_modules/jsdoc-tsimport-plugin/index.js"
     ],
     "recurseDepth": 10,
     "source": {
-        "include": ["src"]
+        "include": ["src"],
+        "exclude": ["src/extras"]
     },
     "sourceType": "module",
     "tags": {
