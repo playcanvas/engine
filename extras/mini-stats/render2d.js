@@ -16,7 +16,11 @@ import {
     VertexBuffer,
     VertexFormat,
     BlendState,
-    DepthState
+    DepthState,
+    Mesh,
+    MeshInstance,
+    Material,
+    GraphNode
 } from 'playcanvas';
 
 // render 2d textured quads
@@ -49,9 +53,9 @@ class Render2d {
             'uniform vec4 watermark;\n' +
             'uniform float watermarkSize;\n' +
             'uniform vec4 background;\n' +
-            'uniform sampler2D source;\n' +
+            'uniform sampler2D data;\n' +
             'void main (void) {\n' +
-            '    vec4 tex = texture2D(source, uv0.xy);\n' +
+            '    vec4 tex = texture2D(data, uv0.xy);\n' +
             '    if (!(tex.rgb == vec3(1.0, 1.0, 1.0))) {\n' +  // pure white is text
             '       if (enabled < 0.5)\n' +
             '           tex = background;\n' +
@@ -69,15 +73,10 @@ class Render2d {
             '    gl_FragColor = tex * clr;\n' +
             '}\n';
 
-        const format = new VertexFormat(device, [{
-            semantic: SEMANTIC_POSITION,
-            components: 3,
-            type: TYPE_FLOAT32
-        }, {
-            semantic: SEMANTIC_TEXCOORD0,
-            components: 4,
-            type: TYPE_FLOAT32
-        }]);
+        const format = new VertexFormat(device, [
+            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
+        ]);
 
         // generate quad indices
         const indices = new Uint16Array(maxQuads * 6);
@@ -91,10 +90,7 @@ class Render2d {
         }
 
         this.device = device;
-        this.shader = shaderChunks.createShaderFromCode(device,
-                                                        vertexShader,
-                                                        fragmentShader,
-                                                        'mini-stats');
+        const shader = shaderChunks.createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
 
@@ -108,10 +104,25 @@ class Render2d {
         };
         this.quads = 0;
 
+        this.mesh = new Mesh(device);
+        this.mesh.vertexBuffer = this.buffer;
+        this.mesh.indexBuffer[0] = this.indexBuffer;
+        this.mesh.primitive = [this.prim];
+
+        const material = new Material();
+        this.material = material;
+        material.cull = CULLFACE_NONE;
+        material.shader = shader;
+        material.depthState = DepthState.NODEPTH;
+        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                             BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        material.update();
+
+        this.meshInstance = new MeshInstance(this.mesh, material, new GraphNode('MiniStatsMesh'));
+
         // colors
         const setupColor = (name, value) => {
             this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
-            this[name + 'Id'] = device.scope.resolve(name);
         };
         setupColor('col0', colors.graph0);
         setupColor('col1', colors.graph1);
@@ -119,15 +130,8 @@ class Render2d {
         setupColor('watermark', colors.watermark);
         setupColor('background', colors.background);
 
-        this.watermarkSizeId = device.scope.resolve('watermarkSize');
-        this.clrId = device.scope.resolve('clr');
         this.clr = new Float32Array(4);
-
-        this.screenTextureSizeId = device.scope.resolve('screenAndTextureSize');
         this.screenTextureSize = new Float32Array(4);
-
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-                                         BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
     }
 
     quad(x, y, w, h, u, v, uw, uh, enabled) {
@@ -150,49 +154,37 @@ class Render2d {
         ], 4 * 7 * quad);
     }
 
-    render(texture, clr, height) {
-        const device = this.device;
-        const buffer = this.buffer;
-
-        // set vertex data (swap storage)
-        buffer.setData(this.data.buffer);
-
-        device.updateBegin();
-        device.setCullMode(CULLFACE_NONE);
-        device.setBlendState(this.blendState);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState(null, null);
-
-        device.setVertexBuffer(buffer, 0);
-        device.setIndexBuffer(this.indexBuffer);
-        device.setShader(this.shader);
-
-        // set shader uniforms
-        this.clr.set(clr, 0);
-        this.clrId.setValue(this.clr);
-        this.screenTextureSize[0] = device.canvas.scrollWidth;
-        this.screenTextureSize[1] = device.canvas.scrollHeight;
-
-        // colors
-        this.col0Id.setValue(this.col0);
-        this.col1Id.setValue(this.col1);
-        this.col2Id.setValue(this.col2);
-        this.watermarkId.setValue(this.watermark);
-        this.backgroundId.setValue(this.background);
-
-        const prim = this.prim;
-        this.screenTextureSize[2] = texture.width;
-        this.screenTextureSize[3] = texture.height;
-        this.screenTextureSizeId.setValue(this.screenTextureSize);
-        device.constantTexSource.setValue(texture);
-        this.watermarkSizeId.setValue(0.5 / height);
-        device.draw(prim);
-
-        device.updateEnd();
-
-        // reset
+    startFrame() {
         this.prim.count = 0;
         this.quads = 0;
+    }
+
+    render(app, texture, clr, height) {
+
+        // set vertex data (swap storage)
+        this.buffer.setData(this.data.buffer);
+
+        // material params
+        this.clr.set(clr, 0);
+        this.material.setParameter('clr', this.clr);
+
+        this.material.setParameter('col0', this.col0);
+        this.material.setParameter('col1', this.col1);
+        this.material.setParameter('col2', this.col2);
+        this.material.setParameter('watermark', this.watermark);
+        this.material.setParameter('background', this.background);
+        this.material.setParameter('watermarkSize', 0.5 / height);
+
+        const canvas = this.device.canvas;
+        this.screenTextureSize[0] = canvas.scrollWidth;
+        this.screenTextureSize[1] = canvas.scrollHeight;
+        this.screenTextureSize[2] = texture.width;
+        this.screenTextureSize[3] = texture.height;
+        this.material.setParameter('screenAndTextureSize', this.screenTextureSize);
+
+        this.material.setParameter('data', texture);
+
+        app.drawMeshInstance(this.meshInstance);
     }
 }
 
