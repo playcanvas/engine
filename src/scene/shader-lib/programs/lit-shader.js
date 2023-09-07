@@ -67,6 +67,12 @@ class LitShader {
             vertex_position: SEMANTIC_POSITION
         };
 
+        if (options.userAttributes) {
+            for (const [semantic, name] of Object.entries(options.userAttributes)) {
+                this.attributes[name] = semantic;
+            }
+        }
+
         if (options.chunks) {
             const userChunks = options.chunks;
 
