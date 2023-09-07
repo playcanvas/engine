@@ -15,6 +15,7 @@ import { Render2d } from './render2d.js';
 class MiniStats {
     constructor(app, options) {
 
+        this.app = app;
         const device = app.graphicsDevice;
 
         // handle context lost
@@ -284,6 +285,8 @@ class MiniStats {
         const height = this.height;
         const gspacing = this.gspacing;
 
+        render2d.startFrame();
+
         for (let i = 0; i < graphs.length; ++i) {
             const graph = graphs[i];
 
@@ -312,7 +315,7 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.clr, height);
+        render2d.render(this.app, this.texture, this.clr, height);
     }
 
     resize(width, height, showGraphs) {
