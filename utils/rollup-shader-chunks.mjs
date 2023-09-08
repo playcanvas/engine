@@ -35,7 +35,7 @@ export function shaderChunks({
                     .trim() // trim whitespace
                     .replace(/\r/g, '') // Remove carriage returns
                     .replace(/ {4}/g, '\t') // 4 spaces to tabs
-                    .replace(/[ \t]*\/\/.*\n/g, '') // remove single line comments
+                    .replace(/[ \t]*\/\/.*/g, '') // remove single line comments
                     .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '') // remove multi line comments
                     .concat('\n') // ensure final new line
                     .replace(/\n{2,}/g, '\n'); // condense 2 or more empty lines to 1
