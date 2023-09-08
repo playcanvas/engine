@@ -70,14 +70,14 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         material.update();
 
         // Create a Entity with a cylinder render component and the instancing material
-        const box = new pc.Entity("InstancingEntity");
-        box.addComponent("render", {
+        const cylinder = new pc.Entity("InstancingEntity");
+        cylinder.addComponent("render", {
             material: material,
             type: "cylinder"
         });
 
         // add the box entity to the hierarchy
-        app.root.addChild(box);
+        app.root.addChild(cylinder);
 
         if (app.graphicsDevice.supportsInstancing) {
             // number of instances to render
@@ -110,8 +110,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
                                                         instanceCount, pc.BUFFER_STATIC, matrices);
 
             // initialize instancing using the vertex buffer on meshInstance of the created box
-            const boxMeshInst = box.render.meshInstances[0];
-            boxMeshInst.setInstancing(vertexBuffer);
+            const cylinderMeshInst = cylinder.render.meshInstances[0];
+            cylinderMeshInst.setInstancing(vertexBuffer);
         }
 
         // Set an update function on the app's update event
