@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.65.3",
+  "version": "1.65.3-OW1466",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -99,7 +99,7 @@
     "@rollup/plugin-node-resolve": "^15.1.0",
     "@rollup/plugin-strip": "^3.0.2",
     "@rollup/plugin-terser": "^0.4.3",
-    "@rollup/pluginutils": "^5.0.2",
+    "@rollup/pluginutils": "^5.0.4",
     "@webgpu/types": "^0.1.34",
     "c8": "^8.0.0",
     "chai": "^4.3.7",
@@ -125,7 +125,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "deploy": "npm run build:release && npm run build:types && yarn rollup -i build/playcanvas.mjs/index.js -o build/playcanvas.rel.mjs && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.rel.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cp -rf package.json ../oly-web-client/libs/overrides/playcanvas",
+    "deploy": "npm run build:release && npm run build:types && yarn rollup -i build/playcanvas.mjs/index.js -o build/playcanvas.rel.mjs && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.rel.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cat package.json | sed -e 's?\"module\": \"build/playcanvas.mjs/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../oly-web-client/libs/overrides/playcanvas/package.json",
     "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
     "build:dts": "tsc src/index.js --outDir types --allowJs --declaration --emitDeclarationOnly",
