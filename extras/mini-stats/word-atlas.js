@@ -91,8 +91,7 @@ class WordAtlas {
         const p = this.placements[this.wordMap[word]];
         if (p) {
             const padding = 1;
-            render2d.quad(this.texture,
-                          x + p.l - padding,
+            render2d.quad(x + p.l - padding,
                           y - p.d + padding,
                           p.w + padding * 2,
                           p.h + padding * 2,
