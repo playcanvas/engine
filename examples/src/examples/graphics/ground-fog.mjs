@@ -158,7 +158,6 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
         material.shader = shader;
         material.setParameter('uTexture', assets.texture.resource);
         material.depthWrite = false;
-        material.depthWrite = false;
         material.blendType = pc.BLEND_NORMAL;
         material.update();
 
