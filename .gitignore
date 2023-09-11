@@ -15,3 +15,6 @@ typedocs
 stats.html
 .npmrc
 examples/.npmrc
+.yarn
+.yarnrc.yml
+yarn.lock
