@@ -802,6 +802,14 @@ class StandardMaterial extends Material {
 
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
+        if (this._prefilteredCubemaps && this._prefilteredCubemaps[0]) {
+            let isOtherTexturesNull= this._prefilteredCubemaps.slice(1).every(cubemap => !cubemap);
+
+            if (isOtherTexturesNull) {
+                this.envAtlas = this._prefilteredCubemaps[0];
+            }
+        }
+
         // set overridden environment textures
         if (this.envAtlas && this.cubeMap && !isPhong) {
             this._setParameter('texture_envAtlas', this.envAtlas);
@@ -825,11 +833,13 @@ class StandardMaterial extends Material {
     }
 
     updateEnvUniforms(device, scene) {
+
         const isPhong = this.shadingModel === SPECULAR_PHONG;
         const hasLocalEnvOverride = (this.envAtlas && !isPhong) || this.cubeMap || this.sphereMap;
 
         if (!hasLocalEnvOverride && this.useSkybox) {
             if (scene.envAtlas && scene.skybox && !isPhong) {
+
                 this._setParameter('texture_envAtlas', scene.envAtlas);
                 this._setParameter('texture_cubeMap', scene.skybox);
             } else if (scene.envAtlas && !isPhong) {
@@ -1253,7 +1263,6 @@ function _defineMaterialProps() {
     // prefiltered cubemap setter
     const setterFunc = function (value) {
         const cubemaps = this._prefilteredCubemaps;
-
         value = value || [];
 
         let changed = false;
@@ -1264,9 +1273,9 @@ function _defineMaterialProps() {
                 cubemaps[i] = v;
                 changed = true;
             }
+
             complete = complete && (!!cubemaps[i]);
         }
-
         if (changed) {
             if (complete) {
                 this.envAtlas = EnvLighting.generatePrefilteredAtlas(cubemaps, {
