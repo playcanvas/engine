@@ -803,7 +803,7 @@ class StandardMaterial extends Material {
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
         if (this._prefilteredCubemaps && this._prefilteredCubemaps[0]) {
-            let isOtherTexturesNull= this._prefilteredCubemaps.slice(1).every(cubemap => !cubemap);
+            const isOtherTexturesNull = this._prefilteredCubemaps.slice(1).every(cubemap => !cubemap);
 
             if (isOtherTexturesNull) {
                 this.envAtlas = this._prefilteredCubemaps[0];
