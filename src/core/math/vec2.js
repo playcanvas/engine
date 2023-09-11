@@ -1,3 +1,5 @@
+import { math } from './math.js';
+
 /**
  * A 2-dimensional vector.
  *
@@ -408,20 +410,20 @@ class Vec2 {
     }
 
     /**
-     * Rotate a vector by radians.
+     * Rotate a vector by Euler angle.
      *
-     * @param {number} radians - The number to rotate by in radians.
+     * @param {number} degrees - The number to rotate by Euler angle.
      * @returns {Vec2} Self for chaining.
      * @example
-     * const vec = new pc.Vec2(0, 10);
+     * const v = new pc.Vec2(0, 10);
      *
-     * vec.rotate(Math.PI * 0.25); // rotates by 45 degrees
+     * v.rotate(45); // rotates by 45 degrees
      *
      * // Outputs [7.071068.., 7.071068..]
-     * console.log("Vector after rotation is: " + vec.toString());
+     * console.log("Vector after rotation is: " + v.toString());
      */
-    rotate(radians) {
-        const angle = Math.atan2(this.x, this.y) + radians;
+    rotate(degrees) {
+        const angle = Math.atan2(this.x, this.y) + (degrees / math.RAD_TO_DEG);
         const len = Math.sqrt(this.x * this.x + this.y * this.y);
         this.x = Math.sin(angle) * len;
         this.y = Math.cos(angle) * len;
@@ -429,17 +431,33 @@ class Vec2 {
     }
 
     /**
-     * Returns the angle in radians of the specified 2-dimensional vector.
+     * Returns the Euler angle of the specified 2-dimensional vector.
      *
-     * @returns {number} The angle in radians of the specified 2-dimensional vector.
+     * @returns {number} The Euler angle of the specified 2-dimensional vector.
      * @example
-     * const vec = new pc.Vec2(6, 0);
-     * const rad = vec.radians();
-     * // Outputs 1.5707963..
-     * console.log("The angle of the vector is: " + rad);
+     * const v = new pc.Vec2(6, 0);
+     * const angle = v.angle();
+     * // Outputs 90..
+     * console.log("The angle of the vector is: " + angle);
      */
-    radians() {
-        return Math.atan2(this.x, this.y);
+    angle() {
+        return Math.atan2(this.x, this.y) * math.RAD_TO_DEG;
+    }
+
+    /**
+     * Returns the shortest Euler angle between two 2-dimensional vectors.
+     *
+     * @param {Vec2} rhs - The 2-dimensional vector to calculate angle to.
+     * @returns {number} The Euler angle of the shortest angle between two 2-dimensional vectors.
+     * @example
+     * const a = new pc.Vec2(0, 10); // up
+     * const b = new pc.Vec2(1, -1); // down-right
+     * const angle = a.angleTo(b);
+     * // Outputs 135..
+     * console.log("The angle between vecotrs a and b: " + angle);
+     */
+    angleTo(rhs) {
+        return Math.atan2(this.x * rhs.y + this.y * rhs.x, this.x * rhs.x + this.y * rhs.y) * math.RAD_TO_DEG;
     }
 
     /**
