@@ -28,11 +28,13 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
-     * The render target representing the main framebuffer.
+     * The render target representing the main back-buffer.
      *
      * @type {RenderTarget}
      */
-    frameBuffer;
+    backBuffer;
+
+    backBufferDimensions = new Vec2();
 
     /**
      * Object responsible for caching and creation of render pipelines.
@@ -281,7 +283,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         };
         this.gpuContext.configure(this.canvasConfig);
 
-        this.createFramebuffer();
+        this.createBackbuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
         this.mipmapRenderer = new WebgpuMipmapRenderer(this);
@@ -301,10 +303,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
     }
 
-    createFramebuffer() {
+    createBackbuffer() {
         this.supportsStencil = this.initOptions.stencil;
-        this.frameBufferDimensions = new Vec2();
-        this.frameBuffer = new RenderTarget({
+        this.backBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
@@ -338,20 +339,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // current frame color output buffer
         const outColorBuffer = this.gpuContext.getCurrentTexture();
-        DebugHelper.setLabel(outColorBuffer, `${this.frameBuffer.name}`);
+        DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
-        if (this.frameBufferDimensions.x !== outColorBuffer.width || this.frameBufferDimensions.y !== outColorBuffer.height) {
+        if (this.backBufferDimensions.x !== outColorBuffer.width || this.backBufferDimensions.y !== outColorBuffer.height) {
 
-            this.frameBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
+            this.backBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
 
-            this.frameBuffer.destroy();
-            this.frameBuffer = null;
+            this.backBuffer.destroy();
+            this.backBuffer = null;
 
-            this.createFramebuffer();
+            this.createBackbuffer();
         }
 
-        const rt = this.frameBuffer;
+        const rt = this.backBuffer;
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
@@ -561,10 +562,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
-        const rt = renderPass.renderTarget || this.frameBuffer;
-        Debug.assert(rt);
-
+        const rt = renderPass.renderTarget || this.backBuffer;
         this.renderTarget = rt;
+        Debug.assert(rt);
 
         /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
@@ -574,7 +574,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
 
         // framebuffer is initialized at the start of the frame
-        if (rt !== this.frameBuffer) {
+        if (rt !== this.backBuffer) {
             this.initRenderTarget(rt);
         }
 

@@ -36,7 +36,7 @@ class FrameGraph {
             const renderPass = renderPasses[i];
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default framebuffer
+            // if using a target, or null which represents the default back-buffer
             if (renderTarget !== undefined) {
 
                 // previous pass using the same render target
@@ -98,6 +98,7 @@ class FrameGraph {
             }
         }
 
+        /*
         // handle what's left in the map - last passes rendering to each render target
         renderTargetMap.forEach((renderPass, renderTarget) => {
 
@@ -112,6 +113,7 @@ class FrameGraph {
                 renderPass.colorOps.mipmaps = false;
             }
         });
+        */
 
         renderTargetMap.clear();
     }
