@@ -408,6 +408,41 @@ class Vec2 {
     }
 
     /**
+     * Rotate a vector by radians.
+     *
+     * @param {number} radians - The number to rotate by in radians.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const vec = new pc.Vec2(0, 10);
+     *
+     * vec.rotate(Math.PI * 0.25); // rotates by 45 degrees
+     *
+     * // Outputs [7.071068.., 7.071068..]
+     * console.log("Vector after rotation is: " + vec.toString());
+     */
+    rotate(radians) {
+        const angle = Math.atan2(this.x, this.y) + radians;
+        const len = Math.sqrt(this.x * this.x + this.y * this.y);
+        this.x = Math.sin(angle) * len;
+        this.y = Math.cos(angle) * len;
+        return this;
+    }
+
+    /**
+     * Returns the angle in radians of the specified 2-dimensional vector.
+     *
+     * @returns {number} The angle in radians of the specified 2-dimensional vector.
+     * @example
+     * const vec = new pc.Vec2(6, 0);
+     * const rad = vec.radians();
+     * // Outputs 1.5707963..
+     * console.log("The angle of the vector is: " + rad);
+     */
+    radians() {
+        return Math.atan2(this.x, this.y);
+    }
+
+    /**
      * Each element is set to the largest integer less than or equal to its value.
      *
      * @param {Vec2} [src] - The vector to floor. If not set, the operation is done in place.
