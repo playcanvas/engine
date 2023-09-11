@@ -124,6 +124,85 @@ class ShaderCacheEntry {
 }
 
 /**
+ * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
+ */
+class ShaderInstance {
+    /**
+     * A shader.
+     *
+     * @type {import('../platform/graphics/shader.js').Shader|undefined}
+     */
+    shader;
+
+    /**
+     * A bind group storing mesh uniforms for the shader.
+     *
+     * @type {BindGroup|null}
+     */
+    bindGroup = null;
+
+    /**
+     * Returns the mesh bind group for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {BindGroup} - The mesh bind group.
+     */
+    getBindGroup(device) {
+
+        // create bind group
+        if (!this.bindGroup) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            // mesh uniform buffer
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
+
+            // mesh bind group
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
+        }
+
+        return this.bindGroup;
+    }
+
+    destroy() {
+        const group = this.bindGroup;
+        if (group) {
+            group.defaultUniformBuffer?.destroy();
+            group.destroy();
+            this.bindGroup = null;
+        }
+    }
+}
+
+/**
+ * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
+ * pass.
+ *
+ * @ignore
+ */
+class ShaderCacheEntry {
+    /**
+     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
+     *
+     * @type {Map<number, ShaderInstance>}
+     */
+    shaderInstances = new Map();
+
+    destroy() {
+        this.shaderInstances.forEach(instance => instance.destroy());
+        this.shaderInstances.clear();
+    }
+}
+
+/**
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
