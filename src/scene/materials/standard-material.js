@@ -818,14 +818,6 @@ class StandardMaterial extends Material {
 
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
-        if (this._prefilteredCubemaps && this._prefilteredCubemaps[0]) {
-            const isOtherTexturesNull = this._prefilteredCubemaps.slice(1).every(cubemap => !cubemap);
-
-            if (isOtherTexturesNull) {
-                this.envAtlas = this._prefilteredCubemaps[0];
-            }
-        }
-
         // set overridden environment textures
         if (this.envAtlas && this.cubeMap && !isPhong) {
             this._setParameter('texture_envAtlas', this.envAtlas);
@@ -1276,12 +1268,15 @@ function _defineMaterialProps() {
 
     // prefiltered cubemap setter
     const setterFunc = function (value) {
+
         const cubemaps = this._prefilteredCubemaps;
 
         value = value || [];
 
+        const isNewType = value.slice(1).every(cubemap => !cubemap);
         let changed = false;
         let complete = true;
+
         for (let i = 0; i < 6; ++i) {
             const v = value[i] || null;
             if (cubemaps[i] !== v) {
@@ -1297,9 +1292,13 @@ function _defineMaterialProps() {
                     target: this.envAtlas
                 });
             } else {
-                if (this.envAtlas) {
-                    this.envAtlas.destroy();
-                    this.envAtlas = null;
+                if (isNewType) {
+                    this.envAtlas = cubemaps[0];
+                } else {
+                    if (this.envAtlas) {
+                        this.envAtlas.destroy();
+                        this.envAtlas = null;
+                    }
                 }
             }
             this._dirtyShader = true;
