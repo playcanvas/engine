@@ -2675,8 +2675,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     resizeCanvas(width, height) {
 
         // store the client sizes in CSS pixels, without pixel ratio applied
-        this._height = height;
         this._width = width;
+        this._height = height;
 
         const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
 
