@@ -423,7 +423,7 @@ class Vec2 {
      * console.log("Vector after rotation is: " + v.toString());
      */
     rotate(degrees) {
-        const angle = Math.atan2(this.x, this.y) + (degrees / math.RAD_TO_DEG);
+        const angle = Math.atan2(this.x, this.y) + (degrees * math.DEG_TO_RAD);
         const len = Math.sqrt(this.x * this.x + this.y * this.y);
         this.x = Math.sin(angle) * len;
         this.y = Math.cos(angle) * len;
