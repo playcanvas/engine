@@ -98,23 +98,6 @@ class FrameGraph {
             }
         }
 
-        /*
-        // handle what's left in the map - last passes rendering to each render target
-        renderTargetMap.forEach((renderPass, renderTarget) => {
-
-            // default framebuffer
-            if (renderTarget === null) {
-
-                // store the multisampled buffer
-                renderPass.colorOps.store = true;
-
-                // no resolve, no mipmaps
-                renderPass.colorOps.resolve = false;
-                renderPass.colorOps.mipmaps = false;
-            }
-        });
-        */
-
         renderTargetMap.clear();
     }
 
