@@ -1,5 +1,6 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { math } from '../../../core/math/math.js';
+import { Vec2 } from '../../../core/math/vec2.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
@@ -795,8 +796,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     updateBackbuffer() {
 
-        if (this._defaultFramebufferChanged) {
+        const resolutionChanged = this.canvas.width !== this.backBufferDimensions.x || this.canvas.height !== this.backBufferDimensions.y;
+        if (this._defaultFramebufferChanged || resolutionChanged) {
             this._defaultFramebufferChanged = false;
+            this.backBufferDimensions.set(this.canvas.width, this.canvas.height);
 
             // recreate the backbuffer with newly supplied framebuffer
             this.backBuffer.destroy();

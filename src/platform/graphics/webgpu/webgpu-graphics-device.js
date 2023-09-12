@@ -28,15 +28,6 @@ import { WebgpuResolver } from './webgpu-resolver.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
-     * The render target representing the main back-buffer.
-     *
-     * @type {RenderTarget}
-     */
-    backBuffer;
-
-    backBufferDimensions = new Vec2();
-
-    /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
