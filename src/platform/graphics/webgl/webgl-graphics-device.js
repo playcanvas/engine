@@ -1490,11 +1490,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (!renderPass.depthStencilOps.storeDepth) {
-                    invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
-                }
-                if (!renderPass.depthStencilOps.storeStencil) {
-                    invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                // we cannot invalidate depth/stencil buffers of the backbuffer
+                if (target !== this.backBuffer) {
+                    if (!renderPass.depthStencilOps.storeDepth) {
+                        invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
+                    }
+                    if (!renderPass.depthStencilOps.storeStencil) {
+                        invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                    }
                 }
 
                 if (invalidateAttachments.length > 0) {
@@ -1572,18 +1575,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // Set the render target
-        const target = this.renderTarget;
-        if (target) {
-            // Create a new WebGL frame buffer object
-            if (!target.impl.initialized) {
-                this.initRenderTarget(target);
-            } else {
-                this.setFramebuffer(target.impl._glFrameBuffer);
-            }
-        } else {
-            // rendering to the default WebGL frame buffer
-            this.setFramebuffer(null);
+        const target = this.renderTarget ?? this.backBuffer;
+        Debug.assert(target);
+
+        // Initialize the framebuffer
+        const targetImpl = target.impl;
+        if (!targetImpl.initialized) {
+            this.initRenderTarget(target);
         }
+
+        // Bind the framebuffer
+        this.setFramebuffer(targetImpl._glFrameBuffer);
 
         DebugGraphics.popGpuMarker(this);
     }
