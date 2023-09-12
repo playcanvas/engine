@@ -50,7 +50,7 @@ class GraphicsDevice extends EventHandler {
      *
      * @ignore
      */
-    backBufferDimensions = new Vec2();
+    backBufferSize = new Vec2();
 
     /**
      * True if the deviceType is WebGPU

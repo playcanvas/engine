@@ -796,10 +796,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     updateBackbuffer() {
 
-        const resolutionChanged = this.canvas.width !== this.backBufferDimensions.x || this.canvas.height !== this.backBufferDimensions.y;
+        const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
         if (this._defaultFramebufferChanged || resolutionChanged) {
             this._defaultFramebufferChanged = false;
-            this.backBufferDimensions.set(this.canvas.width, this.canvas.height);
+            this.backBufferSize.set(this.canvas.width, this.canvas.height);
 
             // recreate the backbuffer with newly supplied framebuffer
             this.backBuffer.destroy();

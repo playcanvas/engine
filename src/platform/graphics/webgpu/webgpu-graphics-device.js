@@ -333,9 +333,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
-        if (this.backBufferDimensions.x !== outColorBuffer.width || this.backBufferDimensions.y !== outColorBuffer.height) {
+        if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
 
-            this.backBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
+            this.backBufferDimebackBufferSizensions.set(outColorBuffer.width, outColorBuffer.height);
 
             this.backBuffer.destroy();
             this.backBuffer = null;
