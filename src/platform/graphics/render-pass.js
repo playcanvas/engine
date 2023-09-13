@@ -3,7 +3,6 @@ import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
 import { DebugGraphics } from '../graphics/debug-graphics.js';
-import { GraphicsDeviceAccess } from './graphics-device-access.js';
 
 class ColorAttachmentOps {
     /**

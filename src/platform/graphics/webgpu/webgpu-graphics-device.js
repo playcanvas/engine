@@ -1,6 +1,5 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU

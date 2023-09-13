@@ -1,6 +1,5 @@
 import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { math } from '../../../core/math/math.js';
-import { Vec2 } from '../../../core/math/vec2.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
 import { Color } from '../../../core/math/color.js';
