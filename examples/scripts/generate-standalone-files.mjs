@@ -96,6 +96,24 @@ ${exampleClass.example.toString()}
         <script>
         const ENGINE_PATH = '${process.env.ENGINE_PATH ?? ''}';
         const NODE_ENV = '${process.env.NODE_ENV ?? ''}';
+        /**
+         * Used in outline and posteffects to make ES5 scripts work in ES6
+         * @example
+         * // doesn't start with 'class', so not changing any behaviour
+         * debugger; // step through with F11 to debug
+         * Object.prototype.toString.call(1) === '[object Number]'
+         */
+        function enablePolyfillFunctionCall() {
+            const functionCall = Function.prototype.call;
+            function polyCall(thisArg, ...args) {
+                if (this.toString().startsWith('class')) {
+                    return Object.assign(thisArg, new this(...args));
+                }
+                return functionCall.bind(this)(thisArg, ...args);
+            }
+            Function.prototype.call = polyCall;
+        }
+        enablePolyfillFunctionCall();
         async function loadScript(name, src) {
             // console.log('loadScript>', { name, src });
             if (src.includes('mjs')) {
