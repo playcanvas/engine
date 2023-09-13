@@ -2681,16 +2681,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._height = height;
 
         const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
-
-        console.log("client sizes: ", width, height, "ratio", ratio);
-
         width = Math.floor(width * ratio);
         height = Math.floor(height * ratio);
 
         if (this.canvas.width !== width || this.canvas.height !== height) {
-
-            console.warn("resizeCanvas", this.canvas.width, this.canvas.height, "=>", width, height, "frame", this.renderVersion);
-            this._defaultFramebufferChanged = true;
 
             this.canvas.width = width;
             this.canvas.height = height;
