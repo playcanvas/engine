@@ -53,6 +53,14 @@ class GraphicsDevice extends EventHandler {
     backBufferSize = new Vec2();
 
     /**
+     * The pixel format of the back buffer. Typically PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8 or
+     * PIXELFORMAT_RGB8.
+     *
+     * @ignore
+     */
+    backBufferFormat;
+
+    /**
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
