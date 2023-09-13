@@ -630,7 +630,10 @@ class XrManager extends EventHandler {
             alpha: true,
             depth: true,
             stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor
+            framebufferScaleFactor: framebufferScaleFactor,
+
+            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
+            antialias: false
         });
 
         session.updateRenderState({
