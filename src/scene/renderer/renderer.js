@@ -861,7 +861,7 @@ class Renderer {
             const drawCall = drawCalls[i];
             if (drawCall.visible) {
 
-                const visible = !doCull || drawCall._isVisible(camera);
+                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
                     drawCall.visibleThisFrame = true;
 
