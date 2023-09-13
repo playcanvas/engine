@@ -271,6 +271,22 @@ class WebglGraphicsDevice extends GraphicsDevice {
     webgl2;
 
     /**
+     * WebGLFramebuffer object that represents the backbuffer of the device for a rendering frame.
+     * When null, this is a framebuffer created when the device was created, otherwise it is a
+     * framebuffer supplied by the XR session.
+     *
+     * @ignore
+     */
+    _defaultFramebuffer = null;
+
+    /**
+     * True if the default framebuffer has changed since the last frame.
+     *
+     * @ignore
+     */
+    _defaultFramebufferChanged = false;
+
+    /**
      * Creates a new WebglGraphicsDevice instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas to which the graphics device will render.
@@ -315,8 +331,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
-        this.defaultFramebuffer = null;
-
         this.updateClientRect();
 
         // Add handlers for when the WebGL context is lost or restored
@@ -346,6 +360,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         let gl = null;
+
+        // we always allocate the default framebuffer without antialiasing, so remove that option
+        const antialias = options.antialias;
+        options.antialias = false;
 
         // Retrieve the WebGL context
         if (options.gl) {
@@ -395,6 +413,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeCapabilities();
         this.initializeRenderState();
         this.initializeContextCaches();
+
+        // handle anti-aliasing internally
+        this.samples = antialias ? 4 : 1;
+        this.createBackbuffer(null);
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
@@ -754,6 +776,34 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.gl = null;
 
         super.postDestroy();
+    }
+
+    createBackbuffer(frameBuffer) {
+        this.supportsStencil = this.initOptions.stencil;
+
+        this.backBuffer = new RenderTarget({
+            name: 'WebglFramebuffer',
+            graphicsDevice: this,
+            depth: this.initOptions.depth,
+            stencil: this.supportsStencil,
+            samples: this.samples
+        });
+
+        // use the default WebGL framebuffer for rendering
+        this.backBuffer.impl.suppliedColorFramebuffer = frameBuffer;
+    }
+
+    updateBackbuffer() {
+
+        const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
+        if (this._defaultFramebufferChanged || resolutionChanged) {
+            this._defaultFramebufferChanged = false;
+            this.backBufferSize.set(this.canvas.width, this.canvas.height);
+
+            // recreate the backbuffer with newly supplied framebuffer
+            this.backBuffer.destroy();
+            this.createBackbuffer(this._defaultFramebuffer);
+        }
     }
 
     // provide webgl implementation for the vertex buffer
@@ -1235,6 +1285,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
     copyRenderTarget(source, dest, color, depth) {
         const gl = this.gl;
 
+        // if copying from the backbuffer
+        if (source === this.backBuffer) {
+            source = null;
+        }
+
         if (!this.webgl2 && depth) {
             Debug.error("Depth is not copyable on WebGL 1.0");
             return false;
@@ -1277,14 +1332,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
             const prevRt = this.renderTarget;
             this.renderTarget = dest;
             this.updateBegin();
-            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, source ? source.impl._glFrameBuffer : null);
-            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dest.impl._glFrameBuffer);
+
+            // copy from single sampled framebuffer
+            const src = source ? source.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
+
+            const dst = dest.impl._glFrameBuffer;
+            Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
+
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
+            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
             const w = source ? source.width : dest.width;
             const h = source ? source.height : dest.height;
+
             gl.blitFramebuffer(0, 0, w, h,
                                0, 0, w, h,
                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
                                gl.NEAREST);
+
+            // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
             this.renderTarget = prevRt;
             gl.bindFramebuffer(gl.FRAMEBUFFER, prevRt ? prevRt.impl._glFrameBuffer : null);
         } else {
@@ -1318,6 +1383,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     frameStart() {
         super.frameStart();
+
+        this.updateBackbuffer();
+
         this.gpuProfiler.frameStart();
     }
 
@@ -1338,7 +1406,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
-        this.setRenderTarget(renderPass.renderTarget);
+        const rt = renderPass.renderTarget || this.backBuffer;
+        this.renderTarget = rt;
+        Debug.assert(rt);
+
         this.updateBegin();
 
         // clear the render target
@@ -1417,11 +1488,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     }
                 }
 
-                if (!renderPass.depthStencilOps.storeDepth) {
-                    invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
-                }
-                if (!renderPass.depthStencilOps.storeStencil) {
-                    invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                // we cannot invalidate depth/stencil buffers of the backbuffer
+                if (target !== this.backBuffer) {
+                    if (!renderPass.depthStencilOps.storeDepth) {
+                        invalidateAttachments.push(gl.DEPTH_ATTACHMENT);
+                    }
+                    if (!renderPass.depthStencilOps.storeStencil) {
+                        invalidateAttachments.push(gl.STENCIL_ATTACHMENT);
+                    }
                 }
 
                 if (invalidateAttachments.length > 0) {
@@ -1465,6 +1539,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.popGpuMarker(this);
     }
 
+    set defaultFramebuffer(value) {
+        if (this._defaultFramebuffer !== value) {
+            this._defaultFramebuffer = value;
+            this._defaultFramebufferChanged = true;
+        }
+    }
+
+    get defaultFramebuffer() {
+        return this._defaultFramebuffer;
+    }
+
     /**
      * Marks the beginning of a block of rendering. Internally, this function binds the render
      * target currently set on the device. This function should be matched with a call to
@@ -1488,17 +1573,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // Set the render target
-        const target = this.renderTarget;
-        if (target) {
-            // Create a new WebGL frame buffer object
-            if (!target.impl.initialized) {
-                this.initRenderTarget(target);
-            } else {
-                this.setFramebuffer(target.impl._glFrameBuffer);
-            }
-        } else {
-            this.setFramebuffer(this.defaultFramebuffer);
+        const target = this.renderTarget ?? this.backBuffer;
+        Debug.assert(target);
+
+        // Initialize the framebuffer
+        const targetImpl = target.impl;
+        if (!targetImpl.initialized) {
+            this.initRenderTarget(target);
         }
+
+        // Bind the framebuffer
+        this.setFramebuffer(targetImpl._glFrameBuffer);
 
         DebugGraphics.popGpuMarker(this);
     }
@@ -1518,7 +1603,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // Unset the render target
         const target = this.renderTarget;
-        if (target) {
+        if (target && target !== this.backBuffer) {
             // Resolve MSAA if needed
             if (this.webgl2 && target._samples > 1 && target.autoResolve) {
                 target.resolve();
@@ -2589,6 +2674,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     resizeCanvas(width, height) {
 
+        // store the client sizes in CSS pixels, without pixel ratio applied
         this._width = width;
         this._height = height;
 
@@ -2597,8 +2683,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         height = Math.floor(height * ratio);
 
         if (this.canvas.width !== width || this.canvas.height !== height) {
+
             this.canvas.width = width;
             this.canvas.height = height;
+
             this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
         }
     }
