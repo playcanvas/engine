@@ -120,7 +120,7 @@ class SceneGrab {
     // texture format of the source texture the grab pass needs to copy
     getSourceColorFormat(texture) {
         // based on the RT the camera renders to, otherwise framebuffer
-        return texture?.format ?? this.device.framebufferFormat;
+        return texture?.format ?? this.device.backBufferFormat;
     }
 
     shouldReallocate(targetRT, sourceTexture, testFormat) {

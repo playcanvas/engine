@@ -389,7 +389,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // pixel format of the framebuffer
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
-        this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
         const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
