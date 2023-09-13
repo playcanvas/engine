@@ -192,7 +192,7 @@ describe('pc.BundleRegistry', function () {
         expect(this.bundles.hasUrl('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns false if bundle not loaded', function () {
+    it('urlIsLoadedOrLoading() returns false if bundle not loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -203,10 +203,10 @@ describe('pc.BundleRegistry', function () {
         });
         this.assets.add(bundleAsset);
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(false);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns false if bundle loaded without a resource', function () {
+    it('urlIsLoadedOrLoading() returns false if bundle loaded without a resource', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -218,10 +218,10 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
         bundleAsset.loaded = true;
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(false);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns true if bundle loaded', function () {
+    it('urlIsLoadedOrLoading() returns true if bundle loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -235,10 +235,10 @@ describe('pc.BundleRegistry', function () {
         bundleAsset.loaded = true;
         bundleAsset.resource = sinon.fake();
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(true);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(true);
     });
 
-    it('canLoadUrl() returns true if bundle being loaded', function () {
+    it('urlIsLoadedOrLoading() returns true if bundle being loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -250,7 +250,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
         bundleAsset.loading = true;
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(true);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(true);
     });
 
     it('loadUrl() calls callback if bundle loaded', function (done) {
@@ -398,6 +398,7 @@ describe('pc.BundleRegistry', function () {
         }.bind(this));
     });
 
+    // TODO
     it('loadUrl() calls callback with error if bundle fails to load', function (done) {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'

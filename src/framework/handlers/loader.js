@@ -156,9 +156,14 @@ class ResourceLoader {
 
             const normalizedUrl = url.split('?')[0];
             if (this._app.enableBundles && this._app.bundles.hasUrl(normalizedUrl)) {
-                if (!this._app.bundles.canLoadUrl(normalizedUrl)) {
-                    handleLoad(`Bundle for ${url} not loaded yet`);
-                    return;
+                // if there is no loaded bundle with asset, then start loading a bundle
+                if (!this._app.bundles.urlIsLoadedOrLoading(normalizedUrl)) {
+                    const bundles = this._app.bundles.listBundlesForAsset(asset);
+                    // prioritize smallest bundle
+                    bundles?.sort((a, b) => {
+                        return a.file.size - b.file.size;
+                    });
+                    this._app.assets?.load(bundles[0]);
                 }
 
                 this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {

@@ -5,18 +5,22 @@
  */
 class Bundle {
     /**
+     * index of asset file names to Blob
+     * @type {Map<string, Blob>}
+     * @private
+     */
+    _fileNameToBlob = new Map();
+
+    /**
      * Create a new Bundle instance.
      *
      * @param {object[]} files - An array of objects that have a name field and contain a
      * getBlobUrl() function.
      */
     constructor(files) {
-        this._blobUrls = {};
-
-        for (let i = 0, len = files.length; i < len; i++) {
-            if (files[i].url) {
-                this._blobUrls[files[i].name] = files[i].url;
-            }
+        for (let i = 0; i < files.length; i++) {
+            if (!files[i].url) continue;
+            this._fileNameToBlob.set(files[i].name, files[i].url);
         }
     }
 
@@ -28,7 +32,7 @@ class Bundle {
      * @returns {boolean} True of false.
      */
     hasBlobUrl(url) {
-        return !!this._blobUrls[url];
+        return this._fileNameToBlob.has(url);
     }
 
     /**
@@ -36,20 +40,21 @@ class Bundle {
      *
      * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on
      * the URL first.
-     * @returns {string} A blob URL.
+     * @returns {Blob|null} A blob URL.
      */
     getBlobUrl(url) {
-        return this._blobUrls[url];
+        return this._fileNameToBlob.get(url) || null;
     }
 
     /**
      * Destroys the bundle and frees up blob URLs.
      */
     destroy() {
-        for (const key in this._blobUrls) {
-            URL.revokeObjectURL(this._blobUrls[key]);
+        for (const url in this._fileNameToBlob.values()) {
+            URL.revokeObjectURL(url);
         }
-        this._blobUrls = null;
+        this._fileNameToBlob.clear();
+        this._fileNameToBlob = null;
     }
 }
 

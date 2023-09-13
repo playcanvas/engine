@@ -72,6 +72,13 @@ class AssetRegistry extends EventHandler {
     prefix = null;
 
     /**
+     * BundleRegistry
+     *
+     * @type {import('../bundle/bundle-registry.js').BundleRegistry|null}
+     */
+    bundles = null;
+
+    /**
      * Create an instance of an AssetRegistry.
      *
      * @param {import('../handlers/loader.js').ResourceLoader} loader - The ResourceLoader used to
@@ -345,6 +352,8 @@ class AssetRegistry extends EventHandler {
      * out when it is loaded.
      *
      * @param {Asset} asset - The asset to load.
+     * @param {object} [options] - Options for asset loading.
+     * @param {boolean} [options.bundlesIgnore] - Default to false. If true, then asset that is in bundle will still load directly.
      * @example
      * // load some assets
      * const assetsToLoad = [
@@ -362,11 +371,11 @@ class AssetRegistry extends EventHandler {
      *     app.assets.load(assetToLoad);
      * });
      */
-    load(asset) {
+    load(asset, options) {
         // do nothing if asset is already loaded
         // note: lots of code calls assets.load() assuming this check is present
         // don't remove it without updating calls to assets.load() with checks for the asset.loaded state
-        if (asset.loading || asset.loaded) {
+        if ((asset.loading || asset.loaded) && !options?.force) {
             return;
         }
 
@@ -388,6 +397,16 @@ class AssetRegistry extends EventHandler {
             if (file && file.url)
                 this.fire('load:url:' + file.url, asset);
             asset.fire('load', asset);
+
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for(let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (assetInBundle && !assetInBundle.loaded) {
+                        this.load(assetInBundle, { force: true });
+                    }
+                }
+            }
         };
 
         // load has completed on the resource
@@ -419,7 +438,25 @@ class AssetRegistry extends EventHandler {
             this.fire('load:' + asset.id + ':start', asset);
 
             asset.loading = true;
-            this._loader.load(asset.getFileUrl(), asset.type, _loaded, asset);
+
+            const fileUrl = asset.getFileUrl();
+            
+            // mark bundle assets as loading
+            if (asset.type === 'bundle') {
+                const assetIds = asset.data.assets;
+                for(let i = 0; i < assetIds.length; i++) {
+                    const assetInBundle = this._idToAsset.get(assetIds[i]);
+                    if (!assetInBundle)
+                        continue;
+                    
+                    if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading)
+                        continue;
+
+                    assetInBundle.loading = true;
+                }
+            }
+
+            this._loader.load(fileUrl, asset.type, _loaded, asset);
         } else {
             // asset has no file to load, open it directly
             const resource = this._loader.open(asset.type, asset.data);
