@@ -152,9 +152,10 @@ class RenderToTextureExample {
                 const excludedLayer = new pc.Layer({ name: "Excluded" });
                 app.scene.layers.insert(excludedLayer, 1);
 
-                // get world and skybox layers
+                // get existing layers
                 const worldLayer = app.scene.layers.getLayerByName("World");
                 const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
 
                 // create ground plane and 3 primitives, visible in world layer
                 const plane = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(3, 4, 2), [worldLayer.id]);
@@ -177,7 +178,7 @@ class RenderToTextureExample {
                 const camera = new pc.Entity("Camera");
                 camera.addComponent("camera", {
                     fov: 100,
-                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id]
+                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
                 });
                 camera.translate(0, 9, 15);
                 camera.lookAt(1, 4, 0);
