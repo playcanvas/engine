@@ -61,7 +61,7 @@ class WebglRenderTarget {
      * framebuffer. Null represents the default framebuffer. A value represents a user-supplied
      * framebuffer.
      */
-    suppliedColorFramebuffer = undefined;
+    suppliedColorFramebuffer;
 
     _isInitialized = false;
 

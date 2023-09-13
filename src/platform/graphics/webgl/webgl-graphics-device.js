@@ -272,8 +272,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     /**
      * WebGLFramebuffer object that represents the backbuffer of the device for a rendering frame.
-     * When null, this is a framebuffer created when the device was created (rep), otherwise it is
-     * a framebuffer supplied by the XR session.
+     * When null, this is a framebuffer created when the device was created, otherwise it is a
+     * framebuffer supplied by the XR session.
      *
      * @ignore
      */
