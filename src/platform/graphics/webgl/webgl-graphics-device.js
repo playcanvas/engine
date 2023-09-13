@@ -1334,7 +1334,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.renderTarget = dest;
             this.updateBegin();
 
-            const src = source ? source.impl._glFrameBuffer : null;
+            // copy from single sampled framebuffer
+            const src = source ? source.impl._glFrameBuffer : this.backBuffer?.impl._glFrameBuffer;
+
             const dst = dest.impl._glFrameBuffer;
             Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
 
@@ -1347,9 +1349,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
                                0, 0, w, h,
                                (color ? gl.COLOR_BUFFER_BIT : 0) | (depth ? gl.DEPTH_BUFFER_BIT : 0),
                                gl.NEAREST);
-
-
-
 
             // TODO: not sure we need to restore the prev target, as this only should run in-between render passes
             this.renderTarget = prevRt;
