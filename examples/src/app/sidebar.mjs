@@ -158,11 +158,10 @@ export class SideBar extends TypedComponent {
         const { pc } = window;
         if (pc) {
             pc.app?.destroy();
-            try {
-                pc.app = null;
-            } catch (e) {
-                console.warn("pc.app = null - Needed but disallowed in ES6.");
-            }
+            // pc.app = null, but we don't have a setter for that in ES6
+            // We need to know if we can render Controls, using frame count now.
+            // The ready check happens in ./examples.mjs Example#renderControls
+            pc.app.frame = 0;
         }
     }
     renderContents() {

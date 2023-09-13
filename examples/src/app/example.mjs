@@ -205,7 +205,7 @@ class Example extends TypedComponent {
 
     renderControls() {
         const { exampleLoaded, controls } = this.state;
-        const ready = exampleLoaded && controls && window.pc?.app;
+        const ready = exampleLoaded && controls && window.pc?.app?.frame;
         if (!ready) {
             return;
         }
