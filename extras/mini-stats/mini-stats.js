@@ -1,5 +1,6 @@
 import {
     FILTER_NEAREST,
+    LAYERID_UI,
     math,
     Color,
     Texture
@@ -16,6 +17,8 @@ class MiniStats {
     constructor(app, options) {
 
         this.app = app;
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
+
         const device = app.graphicsDevice;
 
         // handle context lost
@@ -315,7 +318,7 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.app, this.texture, this.clr, height);
+        render2d.render(this.app, this.drawLayer, this.texture, this.clr, height);
     }
 
     resize(width, height, showGraphs) {
