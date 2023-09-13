@@ -96,12 +96,18 @@ ${exampleClass.example.toString()}
         <script>
         const ENGINE_PATH = '${process.env.ENGINE_PATH ?? ''}';
         const NODE_ENV = '${process.env.NODE_ENV ?? ''}';
-        function loadScript(src) {
+        async function loadScript(name, src) {
+            // console.log('loadScript>', { name, src });
+            if (src.includes('mjs')) {
+                window[name] = await import(src);
+                return;
+            }
             return new Promise(resolve => {
                 const script = document.createElement('script');
                 document.body.append(script);
                 script.src = src;
                 script.onload = () => {
+                    // console.log('loadScript> got', window[name]);
                     resolve();
                 }
             });
@@ -122,6 +128,27 @@ ${exampleClass.example.toString()}
             } else {
                 return 'webgl2';
             }
+        }
+        /**
+         * Get the specified engine, picking the right choice from three sources:
+         *  - Example#ENGINE (lowest priority)
+         *  - NODE_ENV (2nd lowest priority)
+         *  - ENGINE_PATH (highest priority)
+         * If none of these sources are given, we simply pick build/playcanvas.js (ES5)
+         */
+        function getSpecifiedEngine() {
+            let specifiedEngine = '${engineFor(exampleClass.ENGINE)}';
+            // Doesn't matter what Example class specifies otherwise, because
+            // NODE_ENV has a higher priority
+            if (NODE_ENV === 'development') {
+                specifiedEngine = '${engineFor('DEBUG')}'
+            }
+            // ENGINE_PATH has the highest priority.
+            if (ENGINE_PATH.length) {
+                const entryPoint = ENGINE_PATH.split('/').pop();
+                specifiedEngine = './ENGINE_PATH/' + entryPoint;
+            }
+            return specifiedEngine;
         }
         let started = false;
         let miniStats;
@@ -175,22 +202,10 @@ ${exampleClass.example.toString()}
         }
         window.addEventListener('showStats', showStats);
         window.addEventListener('hideStats', hideStats);
-        let specifiedEngine = '${engineFor(exampleClass.ENGINE)}';
-        // Doesn't matter what Example class specifies otherwise:
-        if (NODE_ENV === 'development') {
-            specifiedEngine = '${engineFor('DEBUG')}'
-        }
         async function main(files) {
-            // ENGINE_PATH takes precedence over Example#ENGINE
-            if (ENGINE_PATH) {
-                window.pc = await import('./ENGINE_PATH/index.js');
-            } else {
-                // Load ES5 version instead
-                await loadScript(specifiedEngine);
-            }
-            await loadScript('./playcanvas-extras.js');
+            await loadScript('pc', getSpecifiedEngine());
+            await loadScript('pcx', './playcanvas-extras.js');
             window.top.pc = pc;
-
             var canvas = document.getElementById("application-canvas");
             window.top.observerData = data;
             var deviceType = getDeviceType();

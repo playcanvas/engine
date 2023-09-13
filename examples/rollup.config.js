@@ -36,10 +36,20 @@ const staticFiles = [
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
 ];
 
-if (process.env.ENGINE_PATH) {
-    const src = path.dirname(path.resolve(process.env.ENGINE_PATH));
-    const dest = 'dist/iframe/ENGINE_PATH';
-    staticFiles.push({ src, dest });
+const { ENGINE_PATH } = process.env;
+if (ENGINE_PATH) {
+    const src = path.resolve(ENGINE_PATH);
+    if (ENGINE_PATH.includes('.mjs')) {
+        // Copy entire folder for MJS versions
+        const srcDir = path.dirname(src);
+        const dest = 'dist/iframe/ENGINE_PATH';
+        staticFiles.push({ src: srcDir, dest });
+    } else { // if (stats.isFile()) {
+        // Copy single-file ES5 version
+        const entryPoint = ENGINE_PATH.split("/").pop();
+        const dest = 'dist/iframe/ENGINE_PATH/' + entryPoint;
+        staticFiles.push({ src, dest });
+    }
 }
 
 function timestamp() {
