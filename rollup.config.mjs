@@ -393,7 +393,7 @@ function scriptTarget(name, input, output) {
  *
  * @param {string} name - The name, like `pcx` or `VoxParser`.
  * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `build/playcanvas-extras.js`.
+ * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
  * @returns {RollupOptions} One rollup target.
  */
 function scriptTargetEs6(name, input, output) {
