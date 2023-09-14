@@ -111,6 +111,7 @@ class LitShader {
             (options.clusteredLightingEnabled && !this.shadowPass) ||
             options.useClearCoatNormals;
         this.needsNormal = this.needsNormal && !this.shadowPass;
+        this.needsNormal ||= options.useDisplacement;
         this.needsSceneColor = options.useDynamicRefraction;
         this.needsScreenSize = options.useDynamicRefraction;
         this.needsTransforms = options.useDynamicRefraction;
@@ -379,9 +380,6 @@ class LitShader {
         }
         if (options.pixelSnap) {
             code += "#define PIXELSNAP\n";
-        }
-        if (options.useDisplacement) {
-            code += "#define DISPLACEMENT\n";
         }
 
         code = this._vsAddTransformCode(code, device, chunks, options);

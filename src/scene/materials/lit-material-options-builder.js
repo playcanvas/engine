@@ -81,7 +81,6 @@ class LitMaterialOptionsBuilder {
         litOptions.vertexColors = false;
         litOptions.lightMapEnabled = material.hasLighting;
         litOptions.dirLightMapEnabled = material.dirLightMap;
-        litOptions.useDisplacement = material.hasDisplacement;
         litOptions.useHeights = material.hasHeights;
         litOptions.useNormals = material.hasNormals;
         litOptions.useClearCoatNormals = material.hasClearCoatNormals;
