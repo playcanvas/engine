@@ -90,8 +90,6 @@ const standardMaterialParameterTypes = {
     heightMapFactor: 'number',
 
     useDisplacement: "boolean",
-    ..._textureParameter("displacement", true, false),
-    displacementMapFactor: "number",
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',

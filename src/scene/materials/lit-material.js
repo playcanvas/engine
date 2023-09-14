@@ -72,8 +72,6 @@ class LitMaterial extends Material {
 
     hasHeights = false;
 
-    hasDisplacement = false;
-
     hasNormals = false;
 
     hasSheen = false;

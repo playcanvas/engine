@@ -415,18 +415,6 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
- * @property {import('../../platform/graphics/texture.js').Texture|null} displacementMap The displacement map
- * of the material (default is null). Used for a vertex displacement effect. The texture must
- * represent the displacement of the surface where darker pixels are lower and lighter pixels are higher.
- * @property {number} displacementMapUv Displacement map UV channel.
- * @property {string} displacementMapChannel Color channel of the displacement map to use. Can be "r", "g", "b"
- * or "a".
- * @property {Vec2} displacementMapTiling Controls the 2D tiling of the displacement map.
- * @property {Vec2} displacementMapOffset Controls the 2D offset of the displacement map. Each component is
- * between 0 and 1.
- * @property {number} displacementMapRotation Controls the 2D rotation (in degrees) of the displacement map.
- * @property {number} displacementMapFactor Displacement map multiplier. Affects the strength of the displacement
- * effect.
  * @property {import('../../platform/graphics/texture.js').Texture|null} envAtlas The prefiltered
  * environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and
  * will replace the scene lighting environment.
@@ -811,9 +799,6 @@ class StandardMaterial extends Material {
         if (this.heightMap) {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
-        if (this.displacementMap) {
-            this._setParameter("material_displacementMapFactor", getUniform("displacementMapFactor"));
-        }
 
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
@@ -1143,9 +1128,6 @@ function _defineMaterialProps() {
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
-    _defineFloat('displacementMapFactor', 1, (material, device, scene) => {
-        return material.displacementMapFactor;
-    });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
@@ -1244,7 +1226,6 @@ function _defineMaterialProps() {
     _defineTex2D('opacity', 'a');
     _defineTex2D('refraction', 'g');
     _defineTex2D('height', 'g', false);
-    _defineTex2D('displacement', 'g', false);
     _defineTex2D('ao', 'g');
     _defineTex2D('light', 'rgb', true, 1);
     _defineTex2D('msdf', '');
