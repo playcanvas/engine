@@ -424,7 +424,7 @@ const target_extras = [
 
 /** @type {RollupOptions} */
 const target_types = {
-    input: 'types/index.d.ts',
+    input: 'types/index.d.mts',
     output: [{
         file: 'build/playcanvas.d.ts',
         footer: 'export as namespace pc;',
