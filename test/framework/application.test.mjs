@@ -1,17 +1,17 @@
-import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.js';
-import { Application } from '../../src/framework/application.js';
-import { AssetRegistry } from '../../src/framework/asset/asset-registry.js';
-import { BatchManager } from '../../src/scene/batching/batch-manager.js';
-import { ComponentSystemRegistry } from '../../src/framework/components/registry.js';
-import { Entity } from '../../src/framework/entity.js';
-import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.js';
-import { I18n } from '../../src/framework/i18n/i18n.js';
-import { Lightmapper } from '../../src/framework/lightmapper/lightmapper.js';
-import { ResourceLoader } from '../../src/framework/handlers/loader.js';
-import { Scene } from '../../src/scene/scene.js';
-import { SceneRegistry } from '../../src/framework/scene-registry.js';
-import { ScriptRegistry } from '../../src/framework/script/script-registry.js';
-import { XrManager } from '../../src/framework/xr/xr-manager.js';
+import { FILLMODE_KEEP_ASPECT, RESOLUTION_FIXED } from '../../src/framework/constants.mjs';
+import { Application } from '../../src/framework/application.mjs';
+import { AssetRegistry } from '../../src/framework/asset/asset-registry.mjs';
+import { BatchManager } from '../../src/scene/batching/batch-manager.mjs';
+import { ComponentSystemRegistry } from '../../src/framework/components/registry.mjs';
+import { Entity } from '../../src/framework/entity.mjs';
+import { GraphicsDevice } from '../../src/platform/graphics/graphics-device.mjs';
+import { I18n } from '../../src/framework/i18n/i18n.mjs';
+import { Lightmapper } from '../../src/framework/lightmapper/lightmapper.mjs';
+import { ResourceLoader } from '../../src/framework/handlers/loader.mjs';
+import { Scene } from '../../src/scene/scene.mjs';
+import { SceneRegistry } from '../../src/framework/scene-registry.mjs';
+import { ScriptRegistry } from '../../src/framework/script/script-registry.mjs';
+import { XrManager } from '../../src/framework/xr/xr-manager.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

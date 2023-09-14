@@ -1,7 +1,7 @@
 // vox loading
 
-import { Component } from '../../src/framework/components/component.js';
-import { ComponentSystem } from '../../src/framework/components/system.js';
+import { Component } from '../../src/framework/components/component.mjs';
+import { ComponentSystem } from '../../src/framework/components/system.mjs';
 
 const defaultPalette = new Uint8Array(new Uint32Array([
     0x00000000, 0xffffffff, 0xffccffff, 0xff99ffff, 0xff66ffff, 0xff33ffff, 0xff00ffff, 0xffffccff, 0xffccccff, 0xff99ccff, 0xff66ccff, 0xff33ccff, 0xff00ccff, 0xffff99ff, 0xffcc99ff, 0xff9999ff,

@@ -1,4 +1,4 @@
-import { IndexedList } from '../../src/core/indexed-list.js';
+import { IndexedList } from '../../src/core/indexed-list.mjs';
 
 import { expect } from 'chai';
 

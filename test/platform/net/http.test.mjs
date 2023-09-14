@@ -1,4 +1,4 @@
-import { http, Http } from '../../../src/platform/net/http.js';
+import { http, Http } from '../../../src/platform/net/http.mjs';
 
 import { expect } from 'chai';
 import { restore, spy } from 'sinon';

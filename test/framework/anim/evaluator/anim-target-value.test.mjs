@@ -1,5 +1,5 @@
-import { AnimTargetValue } from '../../../../src/framework/anim/evaluator/anim-target-value.js';
-import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/framework/anim/controller/constants.js';
+import { AnimTargetValue } from '../../../../src/framework/anim/evaluator/anim-target-value.mjs';
+import { ANIM_LAYER_ADDITIVE, ANIM_LAYER_OVERWRITE } from '../../../../src/framework/anim/controller/constants.mjs';
 import { expect } from 'chai';
 
 describe('AnimTargetValue', function () {

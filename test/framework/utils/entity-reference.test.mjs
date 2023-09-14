@@ -1,6 +1,6 @@
-import { Application } from '../../../src/framework/application.js';
-import { Entity } from '../../../src/framework/entity.js';
-import { EntityReference } from '../../../src/framework/utils/entity-reference.js';
+import { Application } from '../../../src/framework/application.mjs';
+import { Entity } from '../../../src/framework/entity.mjs';
+import { EntityReference } from '../../../src/framework/utils/entity-reference.mjs';
 
 import { DummyComponentSystem } from '../test-component/system.mjs';
 
@@ -9,7 +9,7 @@ import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/component.js').Component} Component */
+/** @typedef {import('../../../../src/framework/components/component.mjs').Component} Component */
 
 describe('EntityReference', function () {
     /** @type {Application} */

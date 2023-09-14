@@ -1,5 +1,5 @@
-import { Component } from '../../../src/framework/components/component.js';
-import { ComponentSystem } from '../../../src/framework/components/system.js';
+import { Component } from '../../../src/framework/components/component.mjs';
+import { ComponentSystem } from '../../../src/framework/components/system.mjs';
 
 import { DummyComponent } from './component.mjs';
 import { DummyComponentData } from './data.mjs';

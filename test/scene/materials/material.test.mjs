@@ -1,6 +1,6 @@
-import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.js';
-import { BLEND_NONE } from '../../../src/scene/constants.js';
-import { Material } from '../../../src/scene/materials/material.js';
+import { CULLFACE_BACK, FUNC_LESSEQUAL } from '../../../src/platform/graphics/constants.mjs';
+import { BLEND_NONE } from '../../../src/scene/constants.mjs';
+import { Material } from '../../../src/scene/materials/material.mjs';
 
 import { expect } from 'chai';
 

@@ -1,5 +1,5 @@
-import { Layer } from '../../../src/scene/layer.js';
-import { LayerComposition } from '../../../src/scene/composition/layer-composition.js';
+import { Layer } from '../../../src/scene/layer.mjs';
+import { LayerComposition } from '../../../src/scene/composition/layer-composition.mjs';
 
 import { expect } from 'chai';
 

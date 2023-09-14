@@ -1,6 +1,6 @@
-import { AnimCache } from '../../../../src/framework/anim/evaluator/anim-cache.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { INTERPOLATION_STEP, INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimCache } from '../../../../src/framework/anim/evaluator/anim-cache.mjs';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.mjs';
+import { INTERPOLATION_STEP, INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.mjs';
 import { expect } from 'chai';
 
 describe('AnimCache', function () {

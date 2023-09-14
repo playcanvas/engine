@@ -1,4 +1,4 @@
-import { createURI, URI } from '../../src/core/uri.js';
+import { createURI, URI } from '../../src/core/uri.mjs';
 
 import { expect } from 'chai';
 

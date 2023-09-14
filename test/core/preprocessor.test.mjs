@@ -1,4 +1,4 @@
-import { Preprocessor } from '../../src/core/preprocessor.js';
+import { Preprocessor } from '../../src/core/preprocessor.mjs';
 
 import { expect } from 'chai';
 

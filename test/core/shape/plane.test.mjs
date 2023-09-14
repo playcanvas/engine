@@ -1,5 +1,5 @@
-import { Plane } from '../../../src/core/shape/plane.js';
-import { Vec3 } from '../../../src/core/math/vec3.js';
+import { Plane } from '../../../src/core/shape/plane.mjs';
+import { Vec3 } from '../../../src/core/math/vec3.mjs';
 
 import { expect } from 'chai';
 

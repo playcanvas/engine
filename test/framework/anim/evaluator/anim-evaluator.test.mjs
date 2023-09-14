@@ -1,13 +1,13 @@
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
-import { Application } from '../../../../src/framework/application.js';
-import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.js';
-import { GraphNode } from '../../../../src/scene/graph-node.js';
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.mjs';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.mjs';
+import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.mjs';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.mjs';
+import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.mjs';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.mjs';
+import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.mjs';
+import { Application } from '../../../../src/framework/application.mjs';
+import { DefaultAnimBinder } from '../../../../src/framework/anim/binder/default-anim-binder.mjs';
+import { GraphNode } from '../../../../src/scene/graph-node.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

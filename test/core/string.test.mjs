@@ -1,4 +1,4 @@
-import { string } from '../../src/core/string.js';
+import { string } from '../../src/core/string.mjs';
 
 import { expect } from 'chai';
 

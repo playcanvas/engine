@@ -1,4 +1,4 @@
-import { BitPacking } from '../../../src/core/math/bit-packing.js';
+import { BitPacking } from '../../../src/core/math/bit-packing.mjs';
 
 import { expect } from 'chai';
 

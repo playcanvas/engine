@@ -1,8 +1,8 @@
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.mjs';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.mjs';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.mjs';
+import { AnimSnapshot } from '../../../../src/framework/anim/evaluator/anim-snapshot.mjs';
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.mjs';
 import { expect } from 'chai';
 
 describe('AnimTrack', function () {

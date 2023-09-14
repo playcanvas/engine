@@ -1,4 +1,4 @@
-import { path } from '../../src/core/path.js';
+import { path } from '../../src/core/path.mjs';
 
 import { expect } from 'chai';
 

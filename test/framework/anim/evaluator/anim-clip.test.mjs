@@ -1,9 +1,9 @@
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.js';
-import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.mjs';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.mjs';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.mjs';
+import { AnimClip } from '../../../../src/framework/anim/evaluator/anim-clip.mjs';
+import { AnimEvents } from '../../../../src/framework/anim/evaluator/anim-events.mjs';
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.mjs';
 import { expect } from 'chai';
 
 describe('AnimClip', function () {

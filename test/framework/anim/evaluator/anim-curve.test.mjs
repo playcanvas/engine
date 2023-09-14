@@ -1,5 +1,5 @@
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { INTERPOLATION_CUBIC } from '../../../../src/framework/anim/constants.js';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.mjs';
+import { INTERPOLATION_CUBIC } from '../../../../src/framework/anim/constants.mjs';
 import { expect } from 'chai';
 
 describe('AnimCurve', function () {

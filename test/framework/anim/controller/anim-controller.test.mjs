@@ -1,13 +1,13 @@
-import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.js';
-import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.js';
-import { Application } from '../../../../src/framework/application.js';
-import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.js';
-import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.js';
-import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.js';
-import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.js';
-import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.js';
+import { AnimController } from '../../../../src/framework/anim/controller/anim-controller.mjs';
+import { Entity } from '../../../../src/framework/entity.mjs';
+import { AnimComponentBinder } from '../../../../src/framework/components/anim/component-binder.mjs';
+import { AnimEvaluator } from '../../../../src/framework/anim/evaluator/anim-evaluator.mjs';
+import { Application } from '../../../../src/framework/application.mjs';
+import { AnimTrack } from '../../../../src/framework/anim/evaluator/anim-track.mjs';
+import { AnimData } from '../../../../src/framework/anim/evaluator/anim-data.mjs';
+import { AnimCurve } from '../../../../src/framework/anim/evaluator/anim-curve.mjs';
+import { INTERPOLATION_LINEAR } from '../../../../src/framework/anim/constants.mjs';
+import { ANIM_LESS_THAN } from '../../../../src/framework/anim/controller/constants.mjs';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 

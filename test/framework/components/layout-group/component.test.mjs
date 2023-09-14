@@ -1,13 +1,13 @@
-import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.js';
-import { Application } from '../../../../src/framework/application.js';
-import { Entity } from '../../../../src/framework/entity.js';
+import { ELEMENTTYPE_GROUP } from '../../../../src/framework/components/element/constants.mjs';
+import { Application } from '../../../../src/framework/application.mjs';
+import { Entity } from '../../../../src/framework/entity.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
 import { restore, spy, stub } from 'sinon';
 
-/** @typedef {import('../../../../src/framework/components/layout-group/system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
+/** @typedef {import('../../../../src/framework/components/layout-group/system.mjs').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
 describe('LayoutGroupComponent', function () {
     /** @type {Application} */

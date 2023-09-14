@@ -1,6 +1,6 @@
-import { BasicMaterial } from '../../../src/scene/materials/basic-material.js';
-import { Color } from '../../../src/core/math/color.js';
-import { Material } from '../../../src/scene/materials/material.js';
+import { BasicMaterial } from '../../../src/scene/materials/basic-material.mjs';
+import { Color } from '../../../src/core/math/color.mjs';
+import { Material } from '../../../src/scene/materials/material.mjs';
 
 import { expect } from 'chai';
 

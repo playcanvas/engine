@@ -3,10 +3,10 @@ import fs from 'fs';
 // Create a regex that matches any string starting with Class< and ending with >
 const regex = /Class<(.*?)>/g;
 const paths = [
-    './types/framework/components/script/component.d.ts',
-    './types/framework/script/script-attributes.d.ts',
-    './types/framework/script/script-registry.d.ts',
-    './types/framework/script/script.d.ts'
+    './types/framework/components/script/component.d.mts',
+    './types/framework/script/script-attributes.d.mts',
+    './types/framework/script/script-registry.d.mts',
+    './types/framework/script/script.d.mts'
 ];
 
 paths.forEach((path, index) => {
@@ -15,11 +15,11 @@ paths.forEach((path, index) => {
     // The .d.ts files don't know what a ScriptType is, so import it
     if (index === 0) {
         dts += `
-import { ScriptType } from '../../script/script-type.js';
+import { ScriptType } from '../../script/script-type.mjs';
 `;
     } else {
         dts += `
-import { ScriptType } from './script-type.js';
+import { ScriptType } from './script-type.mjs';
 `;
     }
     fs.writeFileSync(path, dts);
@@ -27,7 +27,7 @@ import { ScriptType } from './script-type.js';
 
 // Fix up description parameter for VertexFormat constructor because tsc
 // doesn't recognize it as an array
-let path = './types/platform/graphics/vertex-format.d.ts';
+let path = './types/platform/graphics/vertex-format.d.mts';
 let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
 fs.writeFileSync(path, dts);
@@ -53,7 +53,7 @@ const componentProps = [
     ['enabled', 'boolean']
 ];
 
-path = './types/framework/components/component.d.ts';
+path = './types/framework/components/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
 fs.writeFileSync(path, dts);
@@ -75,14 +75,14 @@ const buttonComponentProps = [
     ['transitionMode', 'number']
 ];
 
-path = './types/framework/components/button/component.d.ts';
+path = './types/framework/components/button/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Vec4 } from '../../../core/math/vec4.js';
-import { Entity } from '../../../framework/entity.js';
-import { Asset } from '../../../framework/asset/asset.js';
+import { Vec4 } from '../../../core/math/vec4.mjs';
+import { Entity } from '../../../framework/entity.mjs';
+import { Asset } from '../../../framework/asset/asset.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -95,13 +95,13 @@ const collisionComponentProps = [
     ['type', 'string']
 ];
 
-path = './types/framework/components/collision/component.d.ts';
+path = './types/framework/components/collision/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Vec3 } from '../../../core/math/vec3.js';
-import { Model } from '../../../scene/model.js';
+import { Vec3 } from '../../../core/math/vec3.mjs';
+import { Model } from '../../../scene/model.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -145,18 +145,18 @@ const elementComponentProps = [
     ['wrapLines', 'boolean']
 ];
 
-path = './types/framework/components/element/component.d.ts';
+path = './types/framework/components/element/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Color } from '../../../core/math/color.js';
-import { Texture } from '../../../platform/graphics/texture.js';
-import { Sprite } from '../../../scene/sprite.js';
-import { Material } from '../../../scene/materials/material.js';
-import { Entity } from '../../../framework/entity.js';
-import { CanvasFont } from '../../../framework/font/canvas-font.js';
-import { Font } from '../../../framework/font/font.js';
+import { Color } from '../../../core/math/color.mjs';
+import { Texture } from '../../../platform/graphics/texture.mjs';
+import { Sprite } from '../../../scene/sprite.mjs';
+import { Material } from '../../../scene/materials/material.mjs';
+import { Entity } from '../../../framework/entity.mjs';
+import { CanvasFont } from '../../../framework/font/canvas-font.mjs';
+import { Font } from '../../../framework/font/font.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -200,13 +200,13 @@ const lightComponentProps = [
     ['vsmBlurSize', 'number']
 ];
 
-path = './types/framework/components/light/component.d.ts';
+path = './types/framework/components/light/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Color } from '../../../core/math/color.js';
-import { Vec2 } from '../../../core/math/vec2.js';
+import { Color } from '../../../core/math/color.mjs';
+import { Vec2 } from '../../../core/math/vec2.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -269,7 +269,7 @@ const particleSystemComponentProps = [
     ['wrapBounds', 'Vec3']
 ];
 
-path = './types/framework/components/particle-system/component.d.ts';
+path = './types/framework/components/particle-system/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 // TypeScript compiler is defining enabled in ParticleSystemComponent because it doesn't
 // know about the declaration in the Component base class, so remove it.
@@ -277,10 +277,10 @@ dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemCompo
 dts = dts.replace('enabled: any;', '');
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Vec3 } from '../../../core/math/vec3.js';
-import { Curve } from '../../../core/math/curve.js';
-import { CurveSet } from '../../../core/math/curve-set.js';
-import { Asset } from '../../../framework/asset/asset.js';
+import { Vec3 } from '../../../core/math/vec3.mjs';
+import { Curve } from '../../../core/math/curve.mjs';
+import { CurveSet } from '../../../core/math/curve-set.mjs';
+import { Asset } from '../../../framework/asset/asset.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -290,12 +290,12 @@ const scrollbarComponentProps = [
     ['orientation', 'number']
 ];
 
-path = './types/framework/components/scrollbar/component.d.ts';
+path = './types/framework/components/scrollbar/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Entity } from '../../../framework/entity.js';
+import { Entity } from '../../../framework/entity.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -315,12 +315,12 @@ const scrollViewComponentProps = [
     ['viewportEntity', 'Entity']
 ];
 
-path = './types/framework/components/scroll-view/component.d.ts';
+path = './types/framework/components/scroll-view/component.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Entity } from '../../../framework/entity.js';
+import { Entity } from '../../../framework/entity.mjs';
 `;
 fs.writeFileSync(path, dts);
 
@@ -507,19 +507,19 @@ const standardMaterialProps = [
     ['useSkybox', 'boolean']
 ];
 
-path = './types/scene/materials/standard-material.d.ts';
+path = './types/scene/materials/standard-material.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('reset(): void;', 'reset(): void;\n' + getDeclarations(standardMaterialProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
-import { Color } from '../../core/math/color.js';
-import { Vec2 } from '../../core/math/vec2.js';
-import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Texture } from '../../platform/graphics/texture.js';
+import { Color } from '../../core/math/color.mjs';
+import { Vec2 } from '../../core/math/vec2.mjs';
+import { BoundingBox } from '../../core/shape/bounding-box.mjs';
+import { Texture } from '../../platform/graphics/texture.mjs';
 `;
 fs.writeFileSync(path, dts);
 
-path = './types/framework/script/script-type.d.ts';
+path = './types/framework/script/script-type.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
     /**
@@ -550,7 +550,7 @@ dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
 `);
 fs.writeFileSync(path, dts);
 
-path = './types/framework/handlers/handler.d.ts';
+path = './types/framework/handlers/handler.d.mts';
 dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');

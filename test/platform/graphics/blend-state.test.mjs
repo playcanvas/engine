@@ -1,8 +1,8 @@
-import { BlendState } from '../../../src/platform/graphics/blend-state.js';
+import { BlendState } from '../../../src/platform/graphics/blend-state.mjs';
 import {
     BLENDEQUATION_ADD, BLENDEQUATION_MAX, BLENDEQUATION_MIN, BLENDMODE_ONE, BLENDMODE_ZERO,
     BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA_SATURATE
-} from '../../../src/platform/graphics/constants.js';
+} from '../../../src/platform/graphics/constants.mjs';
 
 import { expect } from 'chai';
 

@@ -1,5 +1,5 @@
-import { Application } from '../../src/framework/application.js';
-import { SceneRegistry } from '../../src/framework/scene-registry.js';
+import { Application } from '../../src/framework/application.mjs';
+import { SceneRegistry } from '../../src/framework/scene-registry.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

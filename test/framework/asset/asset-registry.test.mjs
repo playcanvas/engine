@@ -1,9 +1,9 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { AssetRegistry } from '../../../src/framework/asset/asset-registry.js';
-import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.js';
-import { ResourceLoader } from '../../../src/framework/handlers/loader.js';
-import { http, Http } from '../../../src/platform/net/http.js';
+import { Application } from '../../../src/framework/application.mjs';
+import { Asset } from '../../../src/framework/asset/asset.mjs';
+import { AssetRegistry } from '../../../src/framework/asset/asset-registry.mjs';
+import { GlbContainerResource } from '../../../src/framework/parsers/glb-container-resource.mjs';
+import { ResourceLoader } from '../../../src/framework/handlers/loader.mjs';
+import { http, Http } from '../../../src/platform/net/http.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

@@ -72,7 +72,7 @@ function getBanner(config) {
  */
 function spacesToTabs(enable) {
     const filter = createFilter([
-        '**/*.js'
+        '**/*.mjs'
     ], []);
 
     return {
@@ -98,7 +98,7 @@ function spacesToTabs(enable) {
 /**
  * Validate and print warning if an engine module on a lower level imports module on a higher level
  *
- * @param {string} rootFile - The root file, typically `src/index.js`.
+ * @param {string} rootFile - The root file, typically `src/index.mjs`.
  * @param {boolean} enable - Enable or disable the plugin.
  * @returns {Plugin} The plugin.
  */
@@ -393,7 +393,7 @@ function scriptTarget(name, input, output) {
  *
  * @param {string} name - The name, like `pcx` or `VoxParser`.
  * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
+ * @param {string} output - The output file, like `build/playcanvas-extras.js`.
  * @returns {RollupOptions} One rollup target.
  */
 function scriptTargetEs6(name, input, output) {

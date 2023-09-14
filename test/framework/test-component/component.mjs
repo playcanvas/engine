@@ -1,4 +1,4 @@
-import { Component } from '../../../src/framework/components/component.js';
+import { Component } from '../../../src/framework/components/component.mjs';
 
 class DummyComponent extends Component {}
 

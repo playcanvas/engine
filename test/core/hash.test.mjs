@@ -1,4 +1,4 @@
-import { hashCode, hash32Fnv1a } from '../../src/core/hash.js';
+import { hashCode, hash32Fnv1a } from '../../src/core/hash.mjs';
 
 import { expect } from 'chai';
 

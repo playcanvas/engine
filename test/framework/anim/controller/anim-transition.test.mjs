@@ -1,4 +1,4 @@
-import { AnimTransition } from '../../../../src/framework/anim/controller/anim-transition.js';
+import { AnimTransition } from '../../../../src/framework/anim/controller/anim-transition.mjs';
 import { expect } from 'chai';
 
 describe('AnimTransition', function () {

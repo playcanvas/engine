@@ -1,4 +1,4 @@
-import { EventHandler } from '../../src/core/event-handler.js';
+import { EventHandler } from '../../src/core/event-handler.mjs';
 
 import { expect } from 'chai';
 

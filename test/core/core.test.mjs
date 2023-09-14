@@ -1,4 +1,4 @@
-import { extend, type } from '../../src/core/core.js';
+import { extend, type } from '../../src/core/core.mjs';
 
 import { expect } from 'chai';
 

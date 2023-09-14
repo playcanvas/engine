@@ -1,7 +1,7 @@
-import { DepthState } from '../../../src/platform/graphics/depth-state.js';
+import { DepthState } from '../../../src/platform/graphics/depth-state.mjs';
 import {
     FUNC_LESSEQUAL, FUNC_ALWAYS, FUNC_NOTEQUAL
-} from '../../../src/platform/graphics/constants.js';
+} from '../../../src/platform/graphics/constants.mjs';
 
 import { expect } from 'chai';
 

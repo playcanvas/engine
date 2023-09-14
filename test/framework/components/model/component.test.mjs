@@ -1,7 +1,7 @@
-import { Application } from '../../../../src/framework/application.js';
-import { Asset } from '../../../../src/framework/asset/asset.js';
-import { Entity } from '../../../../src/framework/entity.js';
-import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.js';
+import { Application } from '../../../../src/framework/application.mjs';
+import { Asset } from '../../../../src/framework/asset/asset.mjs';
+import { Entity } from '../../../../src/framework/entity.mjs';
+import { LAYERID_WORLD, LAYERID_UI } from '../../../../src/scene/constants.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

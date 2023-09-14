@@ -130,7 +130,7 @@
     "build": "rollup -c",
     "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
-    "build:dts": "tsc src/index.js --outDir types --allowJs --declaration --emitDeclarationOnly",
+    "build:dts": "tsc src/index.mjs --outDir types --allowJs --declaration --emitDeclarationOnly",
     "build:extras": "rollup -c --environment target:extras",
     "build:es5": "rollup -c --environment target:es5",
     "build:es6": "rollup -c --environment target:es6",

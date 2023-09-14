@@ -1,4 +1,4 @@
-import { AnimTarget } from '../../../../src/framework/anim/evaluator/anim-target.js';
+import { AnimTarget } from '../../../../src/framework/anim/evaluator/anim-target.mjs';
 import { expect } from 'chai';
 
 describe('AnimTarget', function () {

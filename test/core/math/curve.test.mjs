@@ -1,5 +1,5 @@
-import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from '../../../src/core/math/constants.js';
-import { Curve } from '../../../src/core/math/curve.js';
+import { CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from '../../../src/core/math/constants.mjs';
+import { Curve } from '../../../src/core/math/curve.mjs';
 
 import { expect } from 'chai';
 

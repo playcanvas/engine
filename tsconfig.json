@@ -20,7 +20,7 @@
             "checkJs": false,
             "typeRoots": [ "./node_modules/@types" ]
         },
-        "entryPoints": [ "./src/index.js" ],
+        "entryPoints": [ "./src/index.mjs" ],
         "excludeNotDocumented": true,
         "excludeNotDocumentedKinds": [
             "Module",
@@ -60,5 +60,5 @@
         ],
         "readme": "none"
     },
-    "include": ["src/**/*.js", "rollup.config.mjs"]
+    "include": ["src/**/*.mjs", "rollup.config.mjs"]
 }

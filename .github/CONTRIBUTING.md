@@ -339,7 +339,7 @@ export { Class };
 You can also extend existing classes:
 
 ```javascript
-import { Class } from './class.js';
+import { Class } from './class.mjs';
 
 class SubClass extends Class {
     constructor() {

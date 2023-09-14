@@ -1,6 +1,6 @@
-import { Application } from '../../../src/framework/application.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
-import { JsonHandler } from '../../../src/framework/handlers/json.js';
+import { Application } from '../../../src/framework/application.mjs';
+import { Asset } from '../../../src/framework/asset/asset.mjs';
+import { JsonHandler } from '../../../src/framework/handlers/json.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

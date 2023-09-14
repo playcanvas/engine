@@ -1,6 +1,6 @@
-import { Application } from '../../../src/framework/application.js';
-import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.js';
-import { Asset } from '../../../src/framework/asset/asset.js';
+import { Application } from '../../../src/framework/application.mjs';
+import { AssetListLoader } from '../../../src/framework/asset/asset-list-loader.mjs';
+import { Asset } from '../../../src/framework/asset/asset.mjs';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 

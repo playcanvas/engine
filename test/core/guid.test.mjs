@@ -1,4 +1,4 @@
-import { guid } from '../../src/core/guid.js';
+import { guid } from '../../src/core/guid.mjs';
 
 import { expect } from 'chai';
 

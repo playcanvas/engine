@@ -1,4 +1,4 @@
-import { SortedLoopArray } from '../../src/core/sorted-loop-array.js';
+import { SortedLoopArray } from '../../src/core/sorted-loop-array.mjs';
 
 import { expect } from 'chai';
 

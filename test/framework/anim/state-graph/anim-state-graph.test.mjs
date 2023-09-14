@@ -1,4 +1,4 @@
-import { AnimStateGraph } from '../../../../src/framework/anim/state-graph/anim-state-graph.js';
+import { AnimStateGraph } from '../../../../src/framework/anim/state-graph/anim-state-graph.mjs';
 import { expect } from 'chai';
 
 describe('AnimStateGraph', function () {
