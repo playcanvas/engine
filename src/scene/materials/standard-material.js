@@ -865,9 +865,8 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth and Shadow passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        // ! Temporary Flag for Displacement effect
-        // const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
-        const minimalOptions = false;
+        const minimalOptions = this._useDisplacement ? false : pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
