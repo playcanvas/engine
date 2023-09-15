@@ -290,7 +290,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
 
         options.litOptions.useDisplacement = stdMat.useDisplacement;
-
+        options.litOptions.displacementOffset = stdMat.displacementOffset;
     }
 
     _updateEnvOptions(options, stdMat, scene) {
