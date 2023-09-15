@@ -10,18 +10,12 @@ class MeshDisplacementExample {
 
     controls(data: Observer) {
         return <>
-            <Panel headerText='Area light'>
+            <Panel headerText='Displacement Effect'>
                 <LabelGroup text='Enabled'>
-                    <BooleanInput id='area-light' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.enabled' }} />
+                    <BooleanInput id='displacment-effect' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.useDisplacement.enabled' }} />
                 </LabelGroup>
-                <LabelGroup text='Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.intensity' }} min={0.0} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.size' }} min={0.01} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.area.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
+                <LabelGroup text='Height Map Factor'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.useDisplacement.heightMapFactor' }} min={-2.0} max={2.0}/>
                 </LabelGroup>
             </Panel>
             <Panel headerText='Point light'>
@@ -36,28 +30,6 @@ class MeshDisplacementExample {
                 </LabelGroup>
                 <LabelGroup text='Shadows'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.point.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Directional light'>
-                <LabelGroup text='Enabled'>
-                    <BooleanInput id='directional-light' binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.enabled' }} />
-                </LabelGroup>
-                <LabelGroup text='Intensity'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.intensity' }} min={0.0} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Softness'>
-                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.size' }} min={0.01} max={32.0}/>
-                </LabelGroup>
-                <LabelGroup text='Shadows'>
-                    <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.directional.shadowType' }} options={[{ v: pc.SHADOW_PCSS, t: 'PCSS' }, { v: pc.SHADOW_PCF5, t: 'PCF' }]} />
-                </LabelGroup>
-            </Panel>
-            <Panel headerText='Animate'>
-                <LabelGroup text='Cycle Active Light'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.cycle' }} />
-                </LabelGroup>
-                <LabelGroup text='Animate Lights'>
-                    <BooleanInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.animate' }} />
                 </LabelGroup>
             </Panel>
         </>;
@@ -79,12 +51,11 @@ class MeshDisplacementExample {
             const assets = {
                 orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
                 helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-                cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
-                luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
                 asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/robot-arm.glb' }),
-                normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/flakes5n.png" }),
-                diffuse: new pc.Asset("diffuse", "texture", { url: "/static/assets/textures/flakes5c.png" }),
-                other: new pc.Asset("other", "texture", { url: "/static/assets/textures/flakes5o.png" })
+                normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
+                diffuse: new pc.Asset("diffuse", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
+                other: new pc.Asset("other", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" }),
+                height: new pc.Asset("other", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" })
             };
 
             const gfxOptions = {
@@ -150,10 +121,6 @@ class MeshDisplacementExample {
                     app.scene.clusteredLightingEnabled = false;
                     app.scene.skyboxIntensity = 0.1;
 
-                    // set the loaded area light LUT data
-                    const luts = assets.luts.resource;
-                    app.setAreaLightLuts(luts.LTC_MAT_1, luts.LTC_MAT_2);
-
                     const planeMaterial = new pc.StandardMaterial();
                     planeMaterial.gloss = 0.0;
                     planeMaterial.metalness = 0.7;
@@ -170,42 +137,35 @@ class MeshDisplacementExample {
                     app.root.addChild(plane);
 
                     data.set('script', {
-                        cycle: false,
-                        animate: false,
-                        area: {
-                            enabled: false,
-                            intensity: 16.0,
-                            size: 2,
-                            shadowType: pc.SHADOW_PCSS
-                        },
                         point: {
-                            enabled: false,
+                            enabled: true,
                             intensity: 4.0,
-                            size: 2,
+                            size: 32,
                             shadowType: pc.SHADOW_PCSS
                         },
-                        directional: {
+                        useDisplacement: {
                             enabled: true,
-                            intensity: 2.0,
-                            size: 1,
-                            shadowType: pc.SHADOW_PCSS
+                            heightMapFactor: -0.25
                         }
                     });
 
 
-                    const createSphere = function (x: number, y: number, z: number, material: pc.Material) {
+                    const createSphere = function (x: number, y: number, z: number, material: pc.Material, hiDef: boolean) {
                         const sphere = new pc.Entity();
-                        // const sphereHidef = pc.createSphere(device, {
-                        //     radius: 0.5,
-                        //     latitudeBands: 128,
-                        //     longitudeBands: 128,
-                        //     calculateTangents: true
-                        // });
-
                         sphere.addComponent("render", {
                             material: material,
                             type: "sphere"
                         });
+                        if (hiDef) {
+                            const sphereHidef = pc.createSphere(device, {
+                                radius: 0.5,
+                                latitudeBands: 512,
+                                longitudeBands: 512,
+                                calculateTangents: true
+                            });
+                            sphere.render.meshInstances[0].mesh = sphereHidef;
+                        }
+
                         sphere.setLocalPosition(x, y, z);
                         sphere.setLocalScale(3.0, 3.0, 3.0);
                         app.root.addChild(sphere);
@@ -220,87 +180,30 @@ class MeshDisplacementExample {
                     material.normalMap = assets.normal.resource;
                     material.diffuse = new pc.Color(0.6, 0.6, 0.9);
                     material.diffuseTint = true;
-                    material.metalness = 1.0;
-                    material.gloss = 0.9;
+                    material.metalness = 0.6;
+                    material.gloss = 0.8;
                     material.bumpiness = 0.7;
                     material.useMetalness = true;
-                    material.heightMap = assets.diffuse.resource;
-                    material.heightMapFactor = 2;
-                    material.useDisplacement = true;
+                    material.heightMap = assets.height.resource;
+                    material.heightMapFactor = data.get('script.useDisplacement.heightMapFactor');
+                    material.useDisplacement = data.get('script.useDisplacement.enabled');
                     material.update();
 
-                    const sphere = createSphere(0, 1.5, 0, material);
-
+                    const sphere = createSphere(0, 2.5, 0, material, true);
 
                     app.scene.envAtlas = assets.helipad.resource;
-
-                    const areaLight = new pc.Entity();
-                    areaLight.addComponent("light", {
-                        type: "spot",
-                        shape: pc.LIGHTSHAPE_RECT,
-                        color: new pc.Color(0.25, 1, 0.25),
-                        castShadows: true,
-                        range: 150,
-                        shadowResolution: 2048,
-                        shadowDistance: 100,
-                        penumbraSize: data.get('script.area.size'),
-                        shadowType: data.get('script.area.shadowType'),
-                        intensity: data.get('script.area.intensity'),
-                        falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
-                        innerConeAngle: 45,
-                        outerConeAngle: 50,
-                        normalOffsetBias: 0.1
-                    });
-                    areaLight.setLocalScale(3, 1, 3);
-                    areaLight.setEulerAngles(45, 90, 0);
-                    areaLight.setLocalPosition(4, 7, 0);
-
-                    // emissive material that is the light source color
-                    const brightMaterial = new pc.StandardMaterial();
-                    brightMaterial.emissive = areaLight.light.color;
-                    brightMaterial.emissiveIntensity = areaLight.light.intensity;
-                    brightMaterial.useLighting = false;
-                    brightMaterial.cull = pc.CULLFACE_NONE;
-                    brightMaterial.update();
-
-                    const brightShape = new pc.Entity();
-                    // primitive shape that matches light source shape
-                    brightShape.addComponent("render", {
-                        type: "plane",
-                        material: brightMaterial,
-                        castShadows: false
-                    });
-                    areaLight.addChild(brightShape);
-                    app.root.addChild(areaLight);
-
-                    const directionalLight = new pc.Entity();
-                    directionalLight.addComponent("light", {
-                        type: "directional",
-                        color: new pc.Color(1, 1, 1),
-                        castShadows: true,
-                        numCascades: 1,
-                        penumbraSize: data.get('script.directional.size'),
-                        shadowType: data.get('script.directional.shadowType'),
-                        intensity: data.get('script.directional.intensity'),
-                        shadowBias: 0.5,
-                        shadowDistance: 50,
-                        normalOffsetBias: 0.1,
-                        shadowResolution: 8192
-                    });
-                    directionalLight.setEulerAngles(65, 35, 0);
-                    app.root.addChild(directionalLight);
 
                     const lightOmni = new pc.Entity("Omni");
                     lightOmni.addComponent("light", {
                         type: "omni",
-                        color: new pc.Color(1, 0.25, 0.25),
+                        color: new pc.Color(1, 1, 1),
                         range: 25,
                         penumbraSize: data.get('script.point.size'),
                         shadowType: data.get('script.point.shadowType'),
                         intensity: data.get('script.point.intensity'),
                         castShadows: true,
-                        shadowBias: 0.2,
-                        normalOffsetBias: 0.2,
+                        shadowBias: 0.01,
+                        normalOffsetBias: 0.01,
                         shadowResolution: 2048
                     });
                     lightOmni.setLocalPosition(-4, 7, 0);
@@ -345,32 +248,6 @@ class MeshDisplacementExample {
 
                     data.on('*:set', (path: string, value: any) => {
                         switch (path) {
-                            case 'script.area.enabled':
-                                areaLight.enabled = value;
-                                break;
-                            case 'script.area.intensity':
-                                areaLight.light.intensity = value;
-                                brightMaterial.emissiveIntensity = value;
-                                brightMaterial.update();
-                                break;
-                            case 'script.area.size':
-                                areaLight.light.penumbraSize = value;
-                                break;
-                            case 'script.area.shadowType':
-                                areaLight.light.shadowType = parseInt(value);
-                                break;
-                            case 'script.directional.enabled':
-                                directionalLight.enabled = value;
-                                break;
-                            case 'script.directional.intensity':
-                                directionalLight.light.intensity = value;
-                                break;
-                            case 'script.directional.size':
-                                directionalLight.light.penumbraSize = value;
-                                break;
-                            case 'script.directional.shadowType':
-                                directionalLight.light.shadowType = parseInt(value);
-                                break;
                             case 'script.point.enabled':
                                 lightOmni.enabled = value;
                                 break;
@@ -386,57 +263,12 @@ class MeshDisplacementExample {
                         }
                     });
 
-                    const areaLightElement = window.top.document.getElementById('area-light');
-                    const pointLightElement = window.top.document.getElementById('point-light');
-                    const directionalLightElement = window.top.document.getElementById('directional-light');
-
                     let resizeControlPanel = true;
-                    let time = 0;
-                    let timeDiff = 0;
-                    let index = 0;
                     app.on("update", function (dt) {
-
-                        if (time === 0) {
-                            // @ts-ignore engine-tsd
-                            camera.script.orbitCamera.distance = 25;
-                        }
-                        timeDiff += dt;
-
-                        if (data.get('script.cycle')) {
-                            if ((timeDiff / 5) > 1) {
-                                index = (index + 1) % 3;
-                                timeDiff = 0;
-                            }
-                            areaLight.enabled = index === 0;
-                            directionalLight.enabled = index === 1;
-                            lightOmni.enabled = index === 2;
-
-                            if (areaLightElement) {
-                                areaLightElement.ui.enabled = false;
-                                pointLightElement.ui.enabled = false;
-                                directionalLightElement.ui.enabled = false;
-                            }
-                        } else {
-                            if (areaLightElement) {
-                                areaLightElement.ui.enabled = true;
-                                pointLightElement.ui.enabled = true;
-                                directionalLightElement.ui.enabled = true;
-                            }
-
-                            areaLight.enabled = data.get('script.area.enabled');
-                            directionalLight.enabled = data.get('script.directional.enabled');
-                            lightOmni.enabled = data.get('script.point.enabled');
-                        }
-
-                        if (data.get('script.animate')) {
-                            time += dt;
-                            const x = Math.sin(time * 0.2);
-                            const z = Math.cos(time * 0.2);
-                            lightOmni.setLocalPosition(x * 4, 5, z * 4);
-                            directionalLight.setEulerAngles(65, 35 + (time * 2), 0);
-                            areaLight.setEulerAngles(45, 180 + time * 0.2 * 180.0 / Math.PI, 0);
-                            areaLight.setLocalPosition(-x * 4, 7, -z * 4);
-                        }
+						// update material options
+                        material.heightMapFactor = data.get('script.useDisplacement.heightMapFactor');
+                        material.useDisplacement = data.get('script.useDisplacement.enabled');
+                        material.update();
 
                         // resize control panel to fit the content better
                         if (resizeControlPanel) {
