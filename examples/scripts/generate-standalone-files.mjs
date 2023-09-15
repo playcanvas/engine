@@ -114,21 +114,18 @@ ${exampleClass.example.toString()}
             Function.prototype.call = polyCall;
         }
         enablePolyfillFunctionCall();
+        /**
+         * Can load UMD and ESM. UMD registers itself into globalThis, while ESM is handled
+         * to specifically to do the same, so we achieve the same result, no matter which
+         * target build/src we linked to.
+         */
         async function loadScript(name, src) {
             // console.log('loadScript>', { name, src });
-            if (src.includes('mjs')) {
-                window[name] = await import(src);
-                return;
+            const module = await import(src);
+            const isESM = Object.keys(module).length;
+            if (isESM) {
+                window[name] = module;
             }
-            return new Promise(resolve => {
-                const script = document.createElement('script');
-                document.body.append(script);
-                script.src = src;
-                script.onload = () => {
-                    // console.log('loadScript> got', window[name]);
-                    resolve();
-                }
-            });
         }
         /**
          * @returns {string}
