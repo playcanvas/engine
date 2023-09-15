@@ -17,6 +17,9 @@ class MeshDisplacementExample {
                 <LabelGroup text='Height Map Factor'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.useDisplacement.heightMapFactor' }} min={-2.0} max={2.0}/>
                 </LabelGroup>
+                <LabelGroup text='Displacement Offset'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'script.useDisplacement.displacementOffset' }} min={-2.0} max={2.0}/>
+                </LabelGroup>
             </Panel>
             <Panel headerText='Point light'>
                 <LabelGroup text='Enabled'>
@@ -145,7 +148,8 @@ class MeshDisplacementExample {
                         },
                         useDisplacement: {
                             enabled: true,
-                            heightMapFactor: -0.25
+                            heightMapFactor: -0.25,
+                            displacementOffset: 0.2
                         }
                     });
 
@@ -187,6 +191,13 @@ class MeshDisplacementExample {
                     material.heightMap = assets.height.resource;
                     material.heightMapFactor = data.get('script.useDisplacement.heightMapFactor');
                     material.useDisplacement = data.get('script.useDisplacement.enabled');
+                    material.displacementOffset = data.get('script.useDisplacement.displacementOffset');
+                    const tiling = new pc.Vec2(2, 2);
+                    material.heightMapTiling = tiling;
+                    material.diffuseMapTiling = tiling;
+                    material.metalnessMapTiling = tiling;
+                    material.glossMapTiling = tiling;
+                    material.normalMapTiling = tiling;
                     material.update();
 
                     const sphere = createSphere(0, 2.5, 0, material, true);
@@ -265,9 +276,11 @@ class MeshDisplacementExample {
 
                     let resizeControlPanel = true;
                     app.on("update", function (dt) {
-						// update material options
+                        // update material options
                         material.heightMapFactor = data.get('script.useDisplacement.heightMapFactor');
                         material.useDisplacement = data.get('script.useDisplacement.enabled');
+                        material.displacementOffset = data.get('script.useDisplacement.displacementOffset');
+
                         material.update();
 
                         // resize control panel to fit the content better

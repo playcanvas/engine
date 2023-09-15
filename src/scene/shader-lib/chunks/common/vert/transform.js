@@ -59,13 +59,14 @@ mat4 getModelMatrix() {
 #ifdef DISPLACEMENT
 uniform sampler2D texture_heightMap;
 uniform float material_heightMapFactor;
+uniform float material_displacementOffset;
 #endif
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
 
     #ifdef DISPLACEMENT
     vec4 dMapSample = texture2D(texture_heightMap, vertex_texCoord0.xy);
-    float displacer = dMapSample.r * material_heightMapFactor * 10.;
+    float displacer = dMapSample.r * material_heightMapFactor * 10. + material_displacementOffset;
     vec3 localPos = vertex_position + vertex_normal * displacer;
     #else
     vec3 localPos = vertex_position;

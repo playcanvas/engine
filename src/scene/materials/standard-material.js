@@ -800,6 +800,11 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
+        if (this.useDisplacement) {
+            this._setParameter('material_displacementOffset', this.displacementOffset);
+            console.log(this.displacementOffset)
+        }
+
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
         // set overridden environment textures

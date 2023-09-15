@@ -374,6 +374,7 @@ const standardMaterialProps = [
     ['cubeMap', 'Texture|null'],
     ['cubeMapProjection', 'number'],
     ['cubeMapProjectionBox', 'BoundingBox'],
+    ['displacementOffset', 'number'],
     ['diffuse', 'Color'],
     ['diffuseDetailMap', 'Texture|null'],
     ['diffuseDetailMapChannel', 'string'],
