@@ -818,7 +818,6 @@ class StandardMaterial extends Material {
 
         if (this.useDisplacement) {
             this._setParameter('material_displacementOffset', this.displacementOffset);
-            console.log(this.displacementOffset)
         }
 
         const isPhong = this.shadingModel === SPECULAR_PHONG;
