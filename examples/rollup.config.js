@@ -36,16 +36,45 @@ const staticFiles = [
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
 ];
 
+// ^ = beginning of line
+// \s* = whitespace
+// $ = end of line
+// .* = any character
+const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
+const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
+const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
+/**
+ * If one of this RegExp's match, it's likely an ESM with external dependencies.
+ * @example
+ * isModuleWithExternalDependencies(`
+ *    // Testing variants:
+ *    export * from './index.mjs';
+ *    export { Ray } from './core/shape/ray.js';
+ *    import './polyfill/OESVertexArrayObject.js';
+ *`);
+ * @param {string} content - The file content to test.
+ * @returns {boolean}
+ */
+function isModuleWithExternalDependencies(content) {
+    const a = regexpExportStarFrom.test(content);
+    const b = regexpExportFrom.test(content);
+    const c = regexpImport.test(content);
+    // console.log('isModuleWithExternalDependencies', { a, b, c });
+    return a || b || c;
+}
+
 const { ENGINE_PATH } = process.env;
 if (ENGINE_PATH) {
     const src = path.resolve(ENGINE_PATH);
-    if (ENGINE_PATH.includes('.mjs')) {
-        // Copy entire folder for MJS versions
+    const content = fs.readFileSync(src, 'utf8');
+    const copyDir = isModuleWithExternalDependencies(content);
+    if (copyDir) {
+        // Copy entire folder for MJS versions with external dependencies
         const srcDir = path.dirname(src);
         const dest = 'dist/iframe/ENGINE_PATH';
         staticFiles.push({ src: srcDir, dest });
-    } else { // if (stats.isFile()) {
-        // Copy single-file ES5 version
+    } else {
+        // This can be both UMD/ESM as a single file
         const entryPoint = ENGINE_PATH.split("/").pop();
         const dest = 'dist/iframe/ENGINE_PATH/' + entryPoint;
         staticFiles.push({ src, dest });

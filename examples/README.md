@@ -30,7 +30,7 @@ Where `../build/playcanvas.mjs/index.js` is the path to the es6 version of the e
 Or directly from the source:
 
 ```
-ENGINE_PATH=../src/index.mjs npm run develop
+ENGINE_PATH=../src/index.js npm run develop
 ```
 
 To create the side bar thumbnails run the following script:
