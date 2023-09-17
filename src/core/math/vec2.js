@@ -412,7 +412,7 @@ class Vec2 {
     /**
      * Rotate a vector by Euler angle.
      *
-     * @param {number} degrees - The number to rotate by Euler angle.
+     * @param {number} degrees - The number to degrees to rotate the vector by.
      * @returns {Vec2} Self for chaining.
      * @example
      * const v = new pc.Vec2(0, 10);
