@@ -433,7 +433,7 @@ class Vec2 {
     /**
      * Returns the angle in degrees of the specified 2-dimensional vector.
      *
-     * @returns {number} The Euler angle of the specified 2-dimensional vector.
+     * @returns {number} The angle in degrees of the specified 2-dimensional vector.
      * @example
      * const v = new pc.Vec2(6, 0);
      * const angle = v.angle();
