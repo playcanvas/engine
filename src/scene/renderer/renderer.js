@@ -92,14 +92,14 @@ class Renderer {
     /**
      * A list of all unique lights in the layer composition.
      *
-     * @type {import('../lighting/light.js').Light[]}
+     * @type {import('../light.js').Light[]}
      */
     lights = [];
 
     /**
      * A list of all unique local lights (spot & omni) in the layer composition.
      *
-     * @type {import('../lighting/light.js').Light[]}
+     * @type {import('../light.js').Light[]}
      */
     localLights = [];
 

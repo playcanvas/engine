@@ -143,7 +143,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             clearColorBuffer: true,
 
             // cubemap camera will render objects on world layer and also skybox
-            layers: [worldLayer.id, skyboxLayer.id, uiLayer.id],
+            layers: [worldLayer.id, skyboxLayer.id],
 
             // priority - render before world camera
             priority: -1,
@@ -194,7 +194,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const camera = new pc.Entity("MainCamera");
         camera.addComponent("camera", {
             fov: 60,
-            layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id]
+            layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id]
         });
         app.root.addChild(camera);
 

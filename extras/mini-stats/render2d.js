@@ -159,7 +159,7 @@ class Render2d {
         this.quads = 0;
     }
 
-    render(app, texture, clr, height) {
+    render(app, layer, texture, clr, height) {
 
         // set vertex data (swap storage)
         this.buffer.setData(this.data.buffer);
@@ -184,7 +184,7 @@ class Render2d {
 
         this.material.setParameter('data', texture);
 
-        app.drawMeshInstance(this.meshInstance);
+        app.drawMeshInstance(this.meshInstance, layer);
     }
 }
 
