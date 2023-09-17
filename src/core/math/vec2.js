@@ -454,7 +454,7 @@ class Vec2 {
      * const b = new pc.Vec2(1, -1); // down-right
      * const angle = a.angleTo(b);
      * // Outputs 135..
-     * console.log("The angle between vecotrs a and b: " + angle);
+     * console.log("The angle between vectors a and b: " + angle);
      */
     angleTo(rhs) {
         return Math.atan2(this.x * rhs.y + this.y * rhs.x, this.x * rhs.x + this.y * rhs.y) * math.RAD_TO_DEG;
