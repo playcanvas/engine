@@ -63,7 +63,15 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-const { ENGINE_PATH } = process.env;
+const { NODE_ENV } = process.env;
+let { ENGINE_PATH } = process.env;
+
+// If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
+// requires no additional build shells.
+if (!ENGINE_PATH && NODE_ENV === 'development') {
+    ENGINE_PATH = '../src/index.js';
+}
+
 if (ENGINE_PATH) {
     const src = path.resolve(ENGINE_PATH);
     const content = fs.readFileSync(src, 'utf8');
