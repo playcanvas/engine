@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import fse from 'fs-extra';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { exec } from 'node:child_process';
 
 // 1st party Rollup plugins
 import alias from '@rollup/plugin-alias';
@@ -99,43 +100,45 @@ function timestamp() {
 }
 
 /**
+ * @param {import('rollup').Plugin} - The Rollup plugin.
+ * @param {string} src - File or path to watch.
+ */
+function watch(plugin, src) {
+    const srcStats = fs.statSync(src);
+    if (srcStats.isFile()) {
+        plugin.addWatchFile(path.resolve(__dirname, src));
+        return;
+    }
+    const filesToWatch = fs.readdirSync(src);
+    for (const file of filesToWatch) {
+        const fullPath = path.join(src, file);
+        const stats = fs.statSync(fullPath);
+        if (stats.isFile()) {
+            plugin.addWatchFile(path.resolve(__dirname, fullPath));
+        } else if (stats.isDirectory()) {
+            watch(plugin, fullPath);
+        }
+    }
+}
+
+/**
  * This plugin copies static files from source to destination.
  *
  * @param {staticFiles} targets - Array of source and destination objects.
  * @returns {RollupPlugin} The plugin.
  */
 function copyStaticFiles(targets) {
-    function watch(src) {
-        const srcStats = fs.statSync(src);
-        if (srcStats.isFile()) {
-            this.addWatchFile(path.resolve(__dirname, src));
-            return;
-        }
-
-        const filesToWatch = fs.readdirSync(src);
-
-        for (const file of filesToWatch) {
-            const fullPath = path.join(src, file);
-            const stats = fs.statSync(fullPath);
-
-            if (stats.isFile()) {
-                this.addWatchFile(path.resolve(__dirname, fullPath));
-
-            } else if (stats.isDirectory()) {
-                watch.bind(this)(fullPath);
-            }
-        }
-    }
     return {
         name: 'copy-and-watch',
         load() {
             return 'console.log("This temp file is created when copying static files, it should be removed during the build process.");';
         },
         buildStart() {
-            if (process.env.NODE_ENV !== 'development') return;
-            targets.forEach((target) => {
-                watch.bind(this)(target.src, target.dest);
-            });
+            if (NODE_ENV === 'development') {
+                targets.forEach((target) => {
+                    watch(this, target.src);
+                });
+            }
         },
         generateBundle() {
             targets.forEach((target) => {
@@ -144,6 +147,28 @@ function copyStaticFiles(targets) {
         },
         writeBundle() {
             fs.unlinkSync('dist/copy.tmp');
+        }
+    };
+}
+
+
+/**
+ * This plugin builds the standalone html files.
+ *
+ * @returns {RollupPlugin} The plugin.
+ */
+function buildAndWatchStandaloneExamples() {
+    return {
+        name: 'build-and-watch-standalone-examples',
+        buildStart() {
+            if (NODE_ENV === 'development') {
+                watch(this, 'src/examples');
+            }
+        },
+        generateBundle() {
+            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} npm run build:standalone`;
+            console.log(cmd);
+            exec(cmd);
         }
     };
 }
@@ -183,6 +208,7 @@ const builds = [
         },
         plugins: [
             copyStaticFiles(staticFiles),
+            buildAndWatchStandaloneExamples(),
             timestamp()
         ]
     }
