@@ -448,7 +448,7 @@ class Vec2 {
      * Returns the shortest Euler angle between two 2-dimensional vectors.
      *
      * @param {Vec2} rhs - The 2-dimensional vector to calculate angle to.
-     * @returns {number} The Euler angle of the shortest angle between two 2-dimensional vectors.
+     * @returns {number} The shortest angle in degrees between two 2-dimensional vectors.
      * @example
      * const a = new pc.Vec2(0, 10); // up
      * const b = new pc.Vec2(1, -1); // down-right
