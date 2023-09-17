@@ -1368,7 +1368,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @returns {Shader} The copy shader (based on `fullscreenQuadVS` and `outputTex2DPS` in
      * `shaderChunks`).
-     * @ignore
      */
     getCopyShader() {
         if (!this._copyShader) {
