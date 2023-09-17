@@ -144,7 +144,7 @@
     "build:types:extras": "tsc extras/index.js --allowJs --declaration --emitDeclarationOnly --outDir build/playcanvas-extras.mjs",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run build:types",
-    "check:jsdocs": "tsc src/index.js --allowJs --checkJs --noEmit --target ES6",
+    "check:tsdocs": "tsc src/index.js --allowJs --checkJs --noEmit --target ES6",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build:release -- -w",
     "watch:debug": "npm run build:debug -- -w",
