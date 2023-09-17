@@ -117,6 +117,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             return primitive;
         }
 
+        // get existing layers
+        const worldLayer = app.scene.layers.getLayerByName("World");
+        const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+        const immediateLayer = app.scene.layers.getLayerByName("Immediate");
+        const uiLayer = app.scene.layers.getLayerByName("UI");
+
         // create a layer for object that do not render into texture
         const excludedLayer = new pc.Layer({ name: "Excluded" });
         app.scene.layers.push(excludedLayer);
@@ -129,11 +135,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         shinyBall.setLocalPosition(0, 0, 0);
         shinyBall.setLocalScale(10, 10, 10);
 
-        // get world and skybox layers
-        const worldLayer = app.scene.layers.getLayerByName("World");
-        const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-        const immediateLayer = app.scene.layers.getLayerByName("Immediate");
-
         // add camera component to shiny ball - this defines camera properties for cubemap rendering
         shinyBall.addComponent('camera', {
 
@@ -142,7 +143,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             clearColorBuffer: true,
 
             // cubemap camera will render objects on world layer and also skybox
-            layers: [worldLayer.id, skyboxLayer.id],
+            layers: [worldLayer.id, skyboxLayer.id, uiLayer.id],
 
             // priority - render before world camera
             priority: -1,

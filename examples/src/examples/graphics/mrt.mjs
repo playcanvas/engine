@@ -74,9 +74,10 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
 
-        // get world and skybox layers
+        // get existing layers
         const worldLayer = app.scene.layers.getLayerByName("World");
         const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+        const uiLayer = app.scene.layers.getLayerByName("UI");
 
         // create a layer for object that render into texture, add it right after the world layer
         const rtLayer = new pc.Layer({ name: "RTLayer" });
@@ -162,7 +163,7 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            layers: [worldLayer.id, skyboxLayer.id]
+            layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
         });
         app.root.addChild(camera);
 
