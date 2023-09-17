@@ -431,7 +431,7 @@ class Vec2 {
     }
 
     /**
-     * Returns the Euler angle of the specified 2-dimensional vector.
+     * Returns the angle in degrees of the specified 2-dimensional vector.
      *
      * @returns {number} The Euler angle of the specified 2-dimensional vector.
      * @example
