@@ -817,6 +817,7 @@ class StandardMaterial extends Material {
         }
 
         if (this.useDisplacement) {
+            this._setParameter('material_displacementFactor', this.displacementFactor);
             this._setParameter('material_displacementOffset', this.displacementOffset);
         }
 
@@ -1149,6 +1150,9 @@ function _defineMaterialProps() {
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
+    _defineFloat('displacementFactor', 0, (material, device, scene) => {
+        return material.displacementFactor;
+    });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
@@ -1234,7 +1238,9 @@ function _defineMaterialProps() {
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
 
-    _defineFlag('useDisplacement', false);
+    _defineFlag('useDisplacement', (material, device, scene) => {
+        return material.displacementFactor !== 0;
+    });
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

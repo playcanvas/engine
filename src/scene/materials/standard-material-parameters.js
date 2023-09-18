@@ -90,6 +90,7 @@ const standardMaterialParameterTypes = {
     heightMapFactor: 'number',
 
     useDisplacement: "boolean",
+    displacementFactor: "number",
     displacementOffset: "number",
 
     alphaToCoverage: 'boolean',
