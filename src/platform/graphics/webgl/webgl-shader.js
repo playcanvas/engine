@@ -149,13 +149,18 @@ class WebglShader {
         if (this.glProgram)
             return;
 
+        // if the device is lost, silently ignore
+        const gl = device.gl;
+        if (gl.isContextLost()) {
+            return;
+        }
+
         let startTime = 0;
         Debug.call(() => {
             this.compileDuration = 0;
             startTime = now();
         });
 
-        const gl = device.gl;
         const glProgram = gl.createProgram();
         this.glProgram = glProgram;
 
@@ -235,6 +240,11 @@ class WebglShader {
 
             glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
 
+            // if the device is lost, silently ignore
+            if (!glShader && gl.isContextLost()) {
+                return glShader;
+            }
+
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);
 
@@ -268,11 +278,16 @@ class WebglShader {
      */
     finalize(device, shader) {
 
+        // if the device is lost, silently ignore
+        const gl = device.gl;
+        if (gl.isContextLost()) {
+            return true;
+        }
+
         // if the program wasn't linked yet (shader was not created in batch)
         if (!this.glProgram)
             this.link(device, shader);
 
-        const gl = device.gl;
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
