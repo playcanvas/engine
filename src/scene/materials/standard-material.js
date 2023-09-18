@@ -539,6 +539,8 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    userAttributes = new Map();
+
     /**
      * Create a new StandardMaterial instance.
      *
@@ -641,6 +643,20 @@ class StandardMaterial extends Material {
         }
 
         return this;
+    }
+
+    /**
+     * Sets a vertex shader attribute on a material.
+     *
+     * @param {string} name - The name of the parameter to set.
+     * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set on vertex stream
+     * of the mesh.
+     * @example
+     * mesh.setVertexStream(pc.SEMANTIC_ATTR15, offset, 3);
+     * material.setAttribute('offset', pc.SEMANTIC_ATTR15);
+     */
+    setAttribute(name, semantic) {
+        this.userAttributes.set(semantic, name);
     }
 
     _setParameter(name, value) {

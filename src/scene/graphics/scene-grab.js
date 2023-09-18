@@ -120,7 +120,7 @@ class SceneGrab {
     // texture format of the source texture the grab pass needs to copy
     getSourceColorFormat(texture) {
         // based on the RT the camera renders to, otherwise framebuffer
-        return texture?.format ?? this.device.framebufferFormat;
+        return texture?.format ?? this.device.backBufferFormat;
     }
 
     shouldReallocate(targetRT, sourceTexture, testFormat) {
@@ -266,10 +266,27 @@ class SceneGrab {
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
                     }
 
-                    // copy depth
-                    DebugGraphics.pushGpuMarker(device, 'GRAB-DEPTH');
-                    device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
-                    DebugGraphics.popGpuMarker(device);
+                    // WebGL2 multisampling depth handling: we resolve multi-sampled depth buffer to a single-sampled destination buffer.
+                    // We could use existing API and resolve depth first and then blit it to destination, but this avoids the extra copy.
+                    if (device.webgl2 && device.renderTarget.samples > 1) {
+
+                        // multi-sampled buffer
+                        const src = device.renderTarget.impl._glFrameBuffer;
+
+                        // single sampled destination buffer
+                        const dest = this.depthRenderTarget;
+                        device.renderTarget = dest;
+                        device.updateBegin();
+
+                        this.depthRenderTarget.impl.internalResolve(device, src, dest.impl._glFrameBuffer, this.depthRenderTarget, device.gl.DEPTH_BUFFER_BIT);
+
+                    } else {
+
+                        // copy depth
+                        DebugGraphics.pushGpuMarker(device, 'GRAB-DEPTH');
+                        device.copyRenderTarget(device.renderTarget, this.depthRenderTarget, false, true);
+                        DebugGraphics.popGpuMarker(device);
+                    }
 
                     // assign uniform
                     self.setupUniform(device, true, useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer);

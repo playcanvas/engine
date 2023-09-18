@@ -8,11 +8,9 @@ import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
-    COMPUPDATED_LIGHTS,
     FOG_NONE, FOG_LINEAR,
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT, LIGHTTYPE_DIRECTIONAL,
     LIGHTSHAPE_PUNCTUAL,
-    MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC, MASK_BAKE,
     LAYERID_DEPTH
 } from '../constants.js';
 
@@ -26,11 +24,13 @@ const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 2
 
 const _drawCallList = {
     drawCalls: [],
+    shaderInstances: [],
     isNewMaterial: [],
     lightMaskChanged: [],
 
     clear: function () {
         this.drawCalls.length = 0;
+        this.shaderInstances.length = 0;
         this.isNewMaterial.length = 0;
         this.lightMaskChanged.length = 0;
     }
@@ -463,8 +463,9 @@ class ForwardRenderer extends Renderer {
     // execute first pass over draw calls, in order to update materials / shaders
     renderForwardPrepareMaterials(camera, drawCalls, sortedLights, layer, pass) {
 
-        const addCall = (drawCall, isNewMaterial, lightMaskChanged) => {
+        const addCall = (drawCall, shaderInstance, isNewMaterial, lightMaskChanged) => {
             _drawCallList.drawCalls.push(drawCall);
+            _drawCallList.shaderInstances.push(shaderInstance);
             _drawCallList.isNewMaterial.push(isNewMaterial);
             _drawCallList.lightMaskChanged.push(lightMaskChanged);
         };
@@ -484,71 +485,51 @@ class ForwardRenderer extends Renderer {
             /** @type {import('../mesh-instance.js').MeshInstance} */
             const drawCall = drawCalls[i];
 
-            if (drawCall.command) {
-
-                addCall(drawCall, false, false);
-
-            } else {
-
-                // #if _PROFILER
-                if (camera === ForwardRenderer.skipRenderCamera) {
-                    if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
-                        continue;
-                    ForwardRenderer._skipRenderCounter++;
-                }
-                if (layer) {
-                    if (layer._skipRenderCounter >= layer.skipRenderAfter)
-                        continue;
-                    layer._skipRenderCounter++;
-                }
-                // #endif
-
-                drawCall.ensureMaterial(device);
-                const material = drawCall.material;
-
-                const objDefs = drawCall._shaderDefs;
-                const lightMask = drawCall.mask;
-
-                if (material && material === prevMaterial && objDefs !== prevObjDefs) {
-                    prevMaterial = null; // force change shader if the object uses a different variant of the same material
-                }
-
-                if (material !== prevMaterial) {
-                    this._materialSwitches++;
-                    material._scene = scene;
-
-                    if (material.dirty) {
-                        material.updateUniforms(device, scene);
-                        material.dirty = false;
-                    }
-                }
-
-                if (!drawCall._shader[pass] || drawCall._shaderDefs !== objDefs || drawCall._lightHash !== lightHash) {
-
-                    // marker to allow us to see the source node for shader alloc
-                    DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
-
-                    // use variants cache on material to quickly find the shader, as they are all
-                    // the same for the same pass, using all lights of the scene
-                    const variantKey = pass + '_' + objDefs + '_' + lightHash;
-                    drawCall._shader[pass] = material.variants[variantKey];
-                    if (!drawCall._shader[pass]) {
-                        drawCall.updatePassShader(scene, pass, sortedLights, this.viewUniformFormat, this.viewBindGroupFormat);
-                        material.variants[variantKey] = drawCall._shader[pass];
-                    }
-                    drawCall._lightHash = lightHash;
-
-                    DebugGraphics.popGpuMarker(device);
-                }
-
-                Debug.assert(drawCall._shader[pass], "no shader for pass", material);
-
-                addCall(drawCall, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
-
-                prevMaterial = material;
-                prevObjDefs = objDefs;
-                prevLightMask = lightMask;
+            // #if _PROFILER
+            if (camera === ForwardRenderer.skipRenderCamera) {
+                if (ForwardRenderer._skipRenderCounter >= ForwardRenderer.skipRenderAfter)
+                    continue;
+                ForwardRenderer._skipRenderCounter++;
             }
+            if (layer) {
+                if (layer._skipRenderCounter >= layer.skipRenderAfter)
+                    continue;
+                layer._skipRenderCounter++;
+            }
+            // #endif
+
+            drawCall.ensureMaterial(device);
+            const material = drawCall.material;
+
+            const objDefs = drawCall._shaderDefs;
+            const lightMask = drawCall.mask;
+
+            if (material && material === prevMaterial && objDefs !== prevObjDefs) {
+                prevMaterial = null; // force change shader if the object uses a different variant of the same material
+            }
+
+            if (material !== prevMaterial) {
+                this._materialSwitches++;
+                material._scene = scene;
+
+                if (material.dirty) {
+                    material.updateUniforms(device, scene);
+                    material.dirty = false;
+                }
+            }
+
+            // marker to allow us to see the source node for shader alloc
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+
+            const shaderInstance = drawCall.getShaderInstance(pass, lightHash, scene, this.viewUniformFormat, this.viewBindGroupFormat, sortedLights);
+
+            DebugGraphics.popGpuMarker(device);
+
+            addCall(drawCall, shaderInstance, material !== prevMaterial, !prevMaterial || lightMask !== prevLightMask);
+
+            prevMaterial = material;
+            prevObjDefs = objDefs;
+            prevLightMask = lightMask;
         }
 
         // process the batch of shaders created here
@@ -571,122 +552,115 @@ class ForwardRenderer extends Renderer {
 
             const drawCall = preparedCalls.drawCalls[i];
 
-            if (drawCall.command) {
+            // We have a mesh instance
+            const newMaterial = preparedCalls.isNewMaterial[i];
+            const lightMaskChanged = preparedCalls.lightMaskChanged[i];
+            const shaderInstance = preparedCalls.shaderInstances[i];
+            const material = drawCall.material;
+            const objDefs = drawCall._shaderDefs;
+            const lightMask = drawCall.mask;
 
-                // We have a command
-                drawCall.command();
+            if (newMaterial) {
 
-            } else {
-
-                // We have a mesh instance
-                const newMaterial = preparedCalls.isNewMaterial[i];
-                const lightMaskChanged = preparedCalls.lightMaskChanged[i];
-                const material = drawCall.material;
-                const objDefs = drawCall._shaderDefs;
-                const lightMask = drawCall.mask;
-
-                if (newMaterial) {
-
-                    const shader = drawCall._shader[pass];
-                    if (!shader.failed && !device.setShader(shader)) {
-                        Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
-                    }
-
-                    // skip rendering with the material if shader failed
-                    skipMaterial = shader.failed;
-                    if (skipMaterial)
-                        break;
-
-                    DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
-
-                    // Uniforms I: material
-                    material.setParameters(device);
-
-                    if (lightMaskChanged) {
-                        const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
-
-                        if (!clusteredLightingEnabled) {
-                            this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
-                        }
-                    }
-
-                    this.alphaTestId.setValue(material.alphaTest);
-
-                    device.setBlendState(material.blendState);
-                    device.setDepthState(material.depthState);
-
-                    device.setAlphaToCoverage(material.alphaToCoverage);
-
-                    if (material.depthBias || material.slopeDepthBias) {
-                        device.setDepthBias(true);
-                        device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
-                    } else {
-                        device.setDepthBias(false);
-                    }
-
-                    DebugGraphics.popGpuMarker(device);
+                const shader = shaderInstance.shader;
+                if (!shader.failed && !device.setShader(shader)) {
+                    Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
                 }
 
-                DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+                // skip rendering with the material if shader failed
+                skipMaterial = shader.failed;
+                if (skipMaterial)
+                    break;
 
-                this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
+                DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
 
-                const stencilFront = drawCall.stencilFront ?? material.stencilFront;
-                const stencilBack = drawCall.stencilBack ?? material.stencilBack;
-                device.setStencilState(stencilFront, stencilBack);
+                // Uniforms I: material
+                material.setParameters(device);
 
-                const mesh = drawCall.mesh;
+                if (lightMaskChanged) {
+                    const usedDirLights = this.dispatchDirectLights(sortedLights[LIGHTTYPE_DIRECTIONAL], scene, lightMask, camera);
 
-                // Uniforms II: meshInstance overrides
-                drawCall.setParameters(device, passFlag);
-
-                this.setVertexBuffers(device, mesh);
-                this.setMorphing(device, drawCall.morphInstance);
-                this.setSkinning(device, drawCall);
-
-                this.setupMeshUniformBuffers(drawCall, pass);
-
-                const style = drawCall.renderStyle;
-                device.setIndexBuffer(mesh.indexBuffer[style]);
-
-                drawCallback?.(drawCall, i);
-
-                if (camera.xr && camera.xr.session && camera.xr.views.length) {
-                    const views = camera.xr.views;
-
-                    for (let v = 0; v < views.length; v++) {
-                        const view = views[v];
-
-                        device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
-
-                        this.projId.setValue(view.projMat.data);
-                        this.projSkyboxId.setValue(view.projMat.data);
-                        this.viewId.setValue(view.viewOffMat.data);
-                        this.viewInvId.setValue(view.viewInvOffMat.data);
-                        this.viewId3.setValue(view.viewMat3.data);
-                        this.viewProjId.setValue(view.projViewOffMat.data);
-                        this.viewPosId.setValue(view.position);
-
-                        if (v === 0) {
-                            this.drawInstance(device, drawCall, mesh, style, true);
-                        } else {
-                            this.drawInstance2(device, drawCall, mesh, style);
-                        }
-
-                        this._forwardDrawCalls++;
+                    if (!clusteredLightingEnabled) {
+                        this.dispatchLocalLights(sortedLights, scene, lightMask, usedDirLights);
                     }
+                }
+
+                this.alphaTestId.setValue(material.alphaTest);
+
+                device.setBlendState(material.blendState);
+                device.setDepthState(material.depthState);
+
+                device.setAlphaToCoverage(material.alphaToCoverage);
+
+                if (material.depthBias || material.slopeDepthBias) {
+                    device.setDepthBias(true);
+                    device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
                 } else {
-                    this.drawInstance(device, drawCall, mesh, style, true);
-                    this._forwardDrawCalls++;
-                }
-
-                // Unset meshInstance overrides back to material values if next draw call will use the same material
-                if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
-                    material.setParameters(device, drawCall.parameters);
+                    device.setDepthBias(false);
                 }
 
                 DebugGraphics.popGpuMarker(device);
             }
+
+            DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+
+            this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
+
+            const stencilFront = drawCall.stencilFront ?? material.stencilFront;
+            const stencilBack = drawCall.stencilBack ?? material.stencilBack;
+            device.setStencilState(stencilFront, stencilBack);
+
+            const mesh = drawCall.mesh;
+
+            // Uniforms II: meshInstance overrides
+            drawCall.setParameters(device, passFlag);
+
+            this.setVertexBuffers(device, mesh);
+            this.setMorphing(device, drawCall.morphInstance);
+            this.setSkinning(device, drawCall);
+
+            this.setupMeshUniformBuffers(shaderInstance, drawCall);
+
+            const style = drawCall.renderStyle;
+            device.setIndexBuffer(mesh.indexBuffer[style]);
+
+            drawCallback?.(drawCall, i);
+
+            if (camera.xr && camera.xr.session && camera.xr.views.length) {
+                const views = camera.xr.views;
+
+                for (let v = 0; v < views.length; v++) {
+                    const view = views[v];
+
+                    device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
+
+                    this.projId.setValue(view.projMat.data);
+                    this.projSkyboxId.setValue(view.projMat.data);
+                    this.viewId.setValue(view.viewOffMat.data);
+                    this.viewInvId.setValue(view.viewInvOffMat.data);
+                    this.viewId3.setValue(view.viewMat3.data);
+                    this.viewProjId.setValue(view.projViewOffMat.data);
+                    this.viewPosId.setValue(view.position);
+
+                    if (v === 0) {
+                        this.drawInstance(device, drawCall, mesh, style, true);
+                    } else {
+                        this.drawInstance2(device, drawCall, mesh, style);
+                    }
+
+                    this._forwardDrawCalls++;
+                }
+            } else {
+                this.drawInstance(device, drawCall, mesh, style, true);
+                this._forwardDrawCalls++;
+            }
+
+            // Unset meshInstance overrides back to material values if next draw call will use the same material
+            if (i < preparedCallsCount - 1 && !preparedCalls.isNewMaterial[i + 1]) {
+                material.setParameters(device, drawCall.parameters);
+            }
+
+            DebugGraphics.popGpuMarker(device);
         }
     }
 
@@ -747,38 +721,6 @@ class ForwardRenderer extends Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     * @param {number} compUpdatedFlags - Flags of what was updated.
-     */
-    updateLightStats(comp, compUpdatedFlags) {
-
-        // #if _PROFILER
-        const scene = this.scene;
-        if (compUpdatedFlags & COMPUPDATED_LIGHTS || !scene._statsUpdated) {
-            const stats = scene._stats;
-            stats.lights = comp._lights.length;
-            stats.dynamicLights = 0;
-            stats.bakedLights = 0;
-
-            for (let i = 0; i < stats.lights; i++) {
-                const l = comp._lights[i];
-                if (l.enabled) {
-                    if ((l.mask & MASK_AFFECT_DYNAMIC) || (l.mask & MASK_AFFECT_LIGHTMAPPED)) { // if affects dynamic or baked objects in real-time
-                        stats.dynamicLights++;
-                    }
-                    if (l.mask & MASK_BAKE) { // if baked into lightmaps
-                        stats.bakedLights++;
-                    }
-                }
-            }
-        }
-
-        scene._statsUpdated = true;
-        // #endif
-    }
-
-    /**
      * Builds a frame graph for the rendering of the whole frame.
      *
      * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
@@ -801,7 +743,7 @@ class ForwardRenderer extends Renderer {
                 const renderPass = new RenderPass(this.device, () => {
                     // render cookies for all local visible lights
                     if (this.scene.lighting.cookiesEnabled) {
-                        this.renderCookies(layerComposition._lights);
+                        this.renderCookies(this.lights);
                     }
                 });
                 renderPass.requiresCubemaps = false;
@@ -818,8 +760,7 @@ class ForwardRenderer extends Renderer {
 
                 // render shadows only when needed
                 if (this.scene.lighting.shadowsEnabled) {
-                    const splitLights = layerComposition._splitLights;
-                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
+                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, this.localLights);
                 }
 
                 // update clusters all the time
@@ -831,8 +772,7 @@ class ForwardRenderer extends Renderer {
         } else {
 
             // non-clustered local shadows - these are shared by all cameras (not entirely correctly)
-            const splitLights = layerComposition._splitLights;
-            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, splitLights[LIGHTTYPE_SPOT], splitLights[LIGHTTYPE_OMNI]);
+            this._shadowRendererLocal.buildNonClusteredRenderPasses(frameGraph, this.localLights);
         }
 
         // main passes
@@ -857,7 +797,7 @@ class ForwardRenderer extends Renderer {
 
             // directional shadows get re-rendered for each camera
             if (renderAction.hasDirectionalShadowLights && camera) {
-                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction, camera);
+                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction.directionalLights, camera);
             }
 
             // start of block of render actions rendering to the same render target
@@ -984,14 +924,13 @@ class ForwardRenderer extends Renderer {
         // update the skybox, since this might change _meshInstances
         this.scene._updateSky(this.device);
 
-        // update layer composition if something has been invalidated
-        const updated = this.updateLayerComposition(comp, clusteredLightingEnabled);
-        const lightsChanged = (updated & COMPUPDATED_LIGHTS) !== 0;
+        // update layer composition
+        this.updateLayerComposition(comp, clusteredLightingEnabled);
 
-        this.updateLightStats(comp, updated);
+        this.collectLights(comp);
 
         // Single per-frame calculations
-        this.beginFrame(comp, lightsChanged);
+        this.beginFrame(comp);
         this.setSceneConstants();
 
         // visibility culling of lights, meshInstances, shadows casters
@@ -1134,7 +1073,7 @@ class ForwardRenderer extends Renderer {
             const draws = this._forwardDrawCalls;
             this.renderForward(camera.camera,
                                visible,
-                               layer._splitLights,
+                               layer.splitLights,
                                shaderPass,
                                layer.onDrawCall,
                                layer,

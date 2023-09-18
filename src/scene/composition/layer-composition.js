@@ -3,16 +3,8 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { sortPriority } from '../../core/sort.js';
-
-import {
-    LAYERID_DEPTH,
-    COMPUPDATED_CAMERAS, COMPUPDATED_LIGHTS,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
-} from '../constants.js';
-
+import { LAYERID_DEPTH } from '../constants.js';
 import { RenderAction } from './render-action.js';
-
-const tempSet = new Set();
 
 /**
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
@@ -95,17 +87,7 @@ class LayerComposition extends EventHandler {
         this._opaqueOrder = {};
         this._transparentOrder = {};
 
-        this._dirtyLights = false;
         this._dirtyCameras = false;
-
-        // an array of all unique lights from all layers
-        this._lights = [];
-
-        // a map of Light to index in _lights for fast lookup
-        this._lightsMap = new Map();
-
-        // _lights split into arrays per type of light, indexed by LIGHTTYPE_*** constants
-        this._splitLights = [[], [], []];
     }
 
     destroy() {
@@ -114,57 +96,22 @@ class LayerComposition extends EventHandler {
         this._renderActions = null;
     }
 
-    // function which splits list of lights on a a target object into separate lists of lights based on light type
-    _splitLightsArray(target) {
-
-        const splitLights = target._splitLights;
-        splitLights[LIGHTTYPE_DIRECTIONAL].length = 0;
-        splitLights[LIGHTTYPE_OMNI].length = 0;
-        splitLights[LIGHTTYPE_SPOT].length = 0;
-
-        const lights = target._lights;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-            if (light.enabled) {
-                splitLights[light._type].push(light);
-            }
-        }
-
-        // sort the lights by their key, as the order of lights is used to generate shader generation key,
-        // and this avoids new shaders being generated when lights are reordered
-        splitLights[LIGHTTYPE_DIRECTIONAL].sort((a, b) => a.key - b.key);
-        splitLights[LIGHTTYPE_OMNI].sort((a, b) => a.key - b.key);
-        splitLights[LIGHTTYPE_SPOT].sort((a, b) => a.key - b.key);
-    }
-
     _update() {
         const len = this.layerList.length;
-        let result = 0;
 
-        // if composition dirty flags are not set, test if layers are marked dirty
-        if (!this._dirtyLights || !this._dirtyCameras) {
+        // if composition dirty flag is not set, test if layers are marked dirty
+        if (!this._dirtyCameras) {
             for (let i = 0; i < len; i++) {
-                const layer = this.layerList[i];
-                if (layer._dirtyLights) {
-                    this._dirtyLights = true;
-                }
-                if (layer._dirtyCameras) {
+                if (this.layerList[i]._dirtyCameras) {
                     this._dirtyCameras = true;
+                    break;
                 }
             }
         }
 
-        if (this._dirtyLights) {
-            result |= COMPUPDATED_LIGHTS;
-            this._dirtyLights = false;
-
-            this.updateLights();
-        }
-
-        if (this._dirtyCameras || (result & COMPUPDATED_LIGHTS)) {
+        if (this._dirtyCameras) {
 
             this._dirtyCameras = false;
-            result |= COMPUPDATED_CAMERAS;
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
@@ -251,9 +198,6 @@ class LayerComposition extends EventHandler {
 
                 // if the camera renders any layers.
                 if (cameraFirstRenderActionIndex < renderActionCount) {
-                    // based on all layers this camera renders, prepare a list of directional lights the camera needs to render shadow for
-                    // and set these up on the first render action for the camera.
-                    this._renderActions[cameraFirstRenderActionIndex].collectDirectionalLights(cameraLayers, this._splitLights[LIGHTTYPE_DIRECTIONAL], this._lights);
 
                     // mark the last render action as last one using the camera
                     lastRenderAction.lastCameraUse = true;
@@ -276,52 +220,9 @@ class LayerComposition extends EventHandler {
                 this._renderActions[i].destroy();
             }
             this._renderActions.length = renderActionCount;
-        }
 
-        if (result & (COMPUPDATED_LIGHTS | COMPUPDATED_LIGHTS)) {
             this._logRenderActions();
         }
-
-        return result;
-    }
-
-    updateLights() {
-
-        // build a list and map of all unique lights from all layers
-        this._lights.length = 0;
-        this._lightsMap.clear();
-
-        const count = this.layerList.length;
-        for (let i = 0; i < count; i++) {
-            const layer = this.layerList[i];
-
-            // layer can be in the list two times (opaque, transp), process it only one time
-            if (!tempSet.has(layer)) {
-                tempSet.add(layer);
-
-                const lights = layer._lights;
-                for (let j = 0; j < lights.length; j++) {
-                    const light = lights[j];
-
-                    // add new light
-                    let lightIndex = this._lightsMap.get(light);
-                    if (lightIndex === undefined) {
-                        lightIndex = this._lights.length;
-                        this._lightsMap.set(light, lightIndex);
-                        this._lights.push(light);
-                    }
-                }
-            }
-
-            // split layer lights lists by type
-            this._splitLightsArray(layer);
-            layer._dirtyLights = false;
-        }
-
-        tempSet.clear();
-
-        // split light list by type
-        this._splitLightsArray(this);
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
@@ -372,7 +273,6 @@ class LayerComposition extends EventHandler {
         }
 
         // store the properties - write all as we reuse previously allocated class instances
-        renderAction.reset();
         renderAction.triggerPostprocess = false;
         renderAction.layerIndex = layerIndex;
         renderAction.layer = layer;
@@ -434,7 +334,6 @@ class LayerComposition extends EventHandler {
                 const enabled = layer.enabled && this.subLayerEnabled[layerIndex];
                 const transparent = this.subLayerList[layerIndex];
                 const camera = layer.cameras[ra.cameraIndex];
-                const dirLightCount = ra.directionalLights.length;
                 const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
                 Debug.trace(TRACEID_RENDER_ACTION, i +
@@ -446,8 +345,7 @@ class LayerComposition extends EventHandler {
                     ' Clear: ' + clear +
                     (ra.firstCameraUse ? ' CAM-FIRST' : '') +
                     (ra.lastCameraUse ? ' CAM-LAST' : '') +
-                    (ra.triggerPostprocess ? ' POSTPROCESS' : '') +
-                    (dirLightCount ? (' DirLights: ' + dirLightCount) : '')
+                    (ra.triggerPostprocess ? ' POSTPROCESS' : '')
                 );
             }
         }
@@ -488,7 +386,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -512,7 +409,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true, true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -534,7 +430,6 @@ class LayerComposition extends EventHandler {
             this.subLayerList.splice(id, 1);
             this.subLayerEnabled.splice(id, 1);
             id = this.layerList.indexOf(layer);
-            this._dirtyLights = true;
             this._dirtyCameras = true;
             this.fire('remove', layer);
         }
@@ -562,7 +457,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -586,7 +480,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -608,7 +501,6 @@ class LayerComposition extends EventHandler {
                 this._updateOpaqueOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
@@ -632,7 +524,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -655,7 +546,6 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirtyLights = true;
         this._dirtyCameras = true;
         this.fire('add', layer);
     }
@@ -676,7 +566,6 @@ class LayerComposition extends EventHandler {
                 this._updateTransparentOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirtyLights = true;
                 this._dirtyCameras = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left

@@ -67,7 +67,7 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
-import { MeshInstance, Command } from '../scene/mesh-instance.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Picker } from '../framework/graphics/picker.js';
@@ -731,7 +731,6 @@ export const scene = {
         createBox: createBox
     },
     BasicMaterial: BasicMaterial,
-    Command: Command,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -866,12 +865,6 @@ Object.defineProperty(Batch.prototype, 'model', {
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
     getApplication().renderComposition(comp);
-};
-
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, unused, pass, sortedLights) {
-    Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
-    const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {

@@ -21,6 +21,7 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 
+let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
@@ -43,19 +44,82 @@ class InstancingData {
     }
 }
 
-class Command {
-    constructor(layer, blendType, command) {
-        this._key = [];
-        this._key[SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
-        this.command = command;
+/**
+ * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
+ */
+class ShaderInstance {
+    /**
+     * A shader.
+     *
+     * @type {import('../platform/graphics/shader.js').Shader|undefined}
+     */
+    shader;
+
+    /**
+     * A bind group storing mesh uniforms for the shader.
+     *
+     * @type {BindGroup|null}
+     */
+    bindGroup = null;
+
+    /**
+     * Returns the mesh bind group for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {BindGroup} - The mesh bind group.
+     */
+    getBindGroup(device) {
+
+        // create bind group
+        if (!this.bindGroup) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            // mesh uniform buffer
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
+
+            // mesh bind group
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
+        }
+
+        return this.bindGroup;
     }
 
-    set key(val) {
-        this._key[SORTKEY_FORWARD] = val;
+    destroy() {
+        const group = this.bindGroup;
+        if (group) {
+            group.defaultUniformBuffer?.destroy();
+            group.destroy();
+            this.bindGroup = null;
+        }
     }
+}
 
-    get key() {
-        return this._key[SORTKEY_FORWARD];
+/**
+ * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
+ * pass.
+ *
+ * @ignore
+ */
+class ShaderCacheEntry {
+    /**
+     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
+     *
+     * @type {Map<number, ShaderInstance>}
+     */
+    shaderInstances = new Map();
+
+    destroy() {
+        this.shaderInstances.forEach(instance => instance.destroy());
+        this.shaderInstances.clear();
     }
 }
 
@@ -105,27 +169,30 @@ class MeshInstance {
     transparent = false;
 
     /**
-     * @type {import('./materials/material.js').Material}
+     * @type {import('./materials/material.js').Material|null}
      * @private
      */
-    _material;
+    _material = null;
 
     /**
-     * An array of shaders used by the mesh instance, indexed by the shader pass constant (SHADER_FORWARD..)
+     * An array of shader cache entries, indexed by the shader pass constant (SHADER_FORWARD..). The
+     * value stores all shaders and bind groups for the shader pass for various light combinations.
      *
-     * @type {Array<import('../platform/graphics/shader.js').Shader>}
-     * @ignore
+     * @type {Array<ShaderCacheEntry|null>}
+     * @private
      */
-    _shader = [];
+    _shaderCache = [];
+
+    /** @ignore */
+    id = id++;
 
     /**
-     * An array of bind groups, storing uniforms per pass. This has 1:1 relation with the _shades array,
-     * and is indexed by the shader pass constant as well.
+     * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
      *
-     * @type {Array<BindGroup>}
+     * @type {boolean}
      * @ignore
      */
-    _bindGroups = [];
+    pick = true;
 
     /**
      * Create a new MeshInstance instance.
@@ -178,8 +245,6 @@ class MeshInstance {
         this._shaderDefs |= mesh.vertexBuffer.format.hasColor ? SHADERDEF_VCOLOR : 0;
         this._shaderDefs |= mesh.vertexBuffer.format.hasTangents ? SHADERDEF_TANGENTS : 0;
 
-        this._lightHash = 0;
-
         // Render options
         this.layer = LAYER_WORLD; // legacy
         /** @private */
@@ -196,14 +261,6 @@ class MeshInstance {
          */
         this.cull = true;
 
-        /**
-         * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.pick = true;
-
         this._updateAabb = true;
         this._updateAabbFunc = null;
         this._calculateSortDistance = null;
@@ -212,12 +269,13 @@ class MeshInstance {
         this.updateKey();
 
         /**
-         * @type {import('./skin-instance.js').SkinInstance}
+         * @type {import('./skin-instance.js').SkinInstance|null}
          * @private
          */
         this._skinInstance = null;
+
         /**
-         * @type {import('./morph-instance.js').MorphInstance}
+         * @type {import('./morph-instance.js').MorphInstance|null}
          * @private
          */
         this._morphInstance = null;
@@ -225,7 +283,7 @@ class MeshInstance {
         this.instancingData = null;
 
         /**
-         * @type {BoundingBox}
+         * @type {BoundingBox|null}
          * @private
          */
         this._customAabb = null;
@@ -400,65 +458,71 @@ class MeshInstance {
     }
 
     /**
-     * Clear the internal shader array.
+     * Clear the internal shader cache.
      *
      * @ignore
      */
     clearShaders() {
-        const shaders = this._shader;
-        for (let i = 0; i < shaders.length; i++) {
-            shaders[i] = null;
+        const shaderCache = this._shaderCache;
+        for (let i = 0; i < shaderCache.length; i++) {
+            shaderCache[i]?.destroy();
+            shaderCache[i] = null;
         }
-
-        this.destroyBindGroups();
-    }
-
-    destroyBindGroups() {
-
-        const groups = this._bindGroups;
-        for (let i = 0; i < groups.length; i++) {
-            const group = groups[i];
-            if (group) {
-                const uniformBuffer = group.defaultUniformBuffer;
-                if (uniformBuffer) {
-                    uniformBuffer.destroy();
-                }
-                group.destroy();
-            }
-        }
-        groups.length = 0;
     }
 
     /**
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @param {number} pass - Shader pass number.
-     * @returns {BindGroup} - The mesh bind group.
+     * Returns the shader instance for the specified shader pass and light hash that is compatible
+     * with this mesh instance.
+     *
+     * @param {number} shaderPass - The shader pass index.
+     * @param {number} lightHash - The hash value of the lights that are affecting this mesh instance.
+     * @param {import('./scene.js').Scene} scene - The scene.
+     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} [viewUniformFormat] - The
+     * format of the view uniform buffer.
+     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} [viewBindGroupFormat] - The
+     * format of the view bind group.
+     * @param {any} [sortedLights] - Array of arrays of lights.
+     * @returns {ShaderInstance} - the shader instance.
      * @ignore
      */
-    getBindGroup(device, pass) {
+    getShaderInstance(shaderPass, lightHash, scene, viewUniformFormat, viewBindGroupFormat, sortedLights) {
 
-        // create bind group
-        let bindGroup = this._bindGroups[pass];
-        if (!bindGroup) {
-            const shader = this._shader[pass];
-            Debug.assert(shader);
-
-            // mesh uniform buffer
-            const ubFormat = shader.meshUniformBufferFormat;
-            Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
-
-            // mesh bind group
-            const bindGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bindGroupFormat);
-            bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
-            DebugHelper.setName(bindGroup, `MeshBindGroup_${bindGroup.id}`);
-
-            this._bindGroups[pass] = bindGroup;
+        let shaderInstance;
+        let passEntry = this._shaderCache[shaderPass];
+        if (passEntry) {
+            shaderInstance = passEntry.shaderInstances.get(lightHash);
+        } else {
+            passEntry = new ShaderCacheEntry();
+            this._shaderCache[shaderPass] = passEntry;
         }
 
-        return bindGroup;
+        // cache miss in the shader cache of the mesh instance
+        if (!shaderInstance) {
+
+            // get the shader from the material
+            const mat = this._material;
+            const shaderDefs = this._shaderDefs;
+            const variantKey = shaderPass + '_' + shaderDefs + '_' + lightHash;
+            shaderInstance = new ShaderInstance();
+            shaderInstance.shader = mat.variants.get(variantKey);
+
+            // cache miss in the material variants
+            if (!shaderInstance.shader) {
+
+                const shader = mat.getShaderVariant(this.mesh.device, scene, shaderDefs, null, shaderPass, sortedLights,
+                                                    viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
+
+                // add it to the material variants cache
+                mat.variants.set(variantKey, shader);
+
+                shaderInstance.shader = shader;
+            }
+
+            // add it to the mesh instance cache
+            passEntry.shaderInstances.set(lightHash, shaderInstance);
+        }
+
+        return shaderInstance;
     }
 
     /**
@@ -701,10 +765,22 @@ class MeshInstance {
     }
 
     updateKey() {
+
+        // render alphatest/atoc after opaque
         const material = this.material;
-        this._key[SORTKEY_FORWARD] = getKey(this.layer,
-                                            (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
-                                            false, material.id);
+        const blendType = (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType;
+
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : unused
+        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
+        this._key[SORTKEY_FORWARD] =
+            ((this.layer & 0x0f) << 27) |
+            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
+            ((material.id & 0x1ffffff) << 0);
     }
 
     /**
@@ -729,23 +805,6 @@ class MeshInstance {
         }
 
         this._updateShaderDefs(vertexBuffer ? (this._shaderDefs | SHADERDEF_INSTANCING) : (this._shaderDefs & ~SHADERDEF_INSTANCING));
-    }
-
-    /**
-     * Obtain a shader variant required to render the mesh instance within specified pass.
-     *
-     * @param {import('./scene.js').Scene} scene - The scene.
-     * @param {number} pass - The render pass.
-     * @param {any} sortedLights - Array of arrays of lights.
-     * @param {import('../platform/graphics/uniform-buffer-format.js').UniformBufferFormat} viewUniformFormat - The
-     * format of the view uniform buffer.
-     * @param {import('../platform/graphics/bind-group-format.js').BindGroupFormat} viewBindGroupFormat - The
-     * format of the view bind group.
-     * @ignore
-     */
-    updatePassShader(scene, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
-        this._shader[pass] = this.material.getShaderVariant(this.mesh.device, scene, this._shaderDefs, null, pass, sortedLights,
-                                                            viewUniformFormat, viewBindGroupFormat, this._mesh.vertexBuffer.format);
     }
 
     ensureMaterial(device) {
@@ -899,18 +958,4 @@ class MeshInstance {
     }
 }
 
-function getKey(layer, blendType, isCommand, materialId) {
-    // Key definition:
-    // Bit
-    // 31      : sign bit (leave)
-    // 27 - 30 : layer
-    // 26      : translucency type (opaque/transparent)
-    // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-    return ((layer & 0x0f) << 27) |
-           ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-           ((isCommand ? 1 : 0) << 25) |
-           ((materialId & 0x1ffffff) << 0);
-}
-
-export { Command, MeshInstance };
+export { MeshInstance };

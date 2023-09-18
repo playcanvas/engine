@@ -1,5 +1,6 @@
 import {
     FILTER_NEAREST,
+    LAYERID_UI,
     math,
     Color,
     Texture
@@ -14,6 +15,9 @@ import { Render2d } from './render2d.js';
 // MiniStats rendering of CPU and GPU timing information
 class MiniStats {
     constructor(app, options) {
+
+        this.app = app;
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
 
         const device = app.graphicsDevice;
 
@@ -284,6 +288,8 @@ class MiniStats {
         const height = this.height;
         const gspacing = this.gspacing;
 
+        render2d.startFrame();
+
         for (let i = 0; i < graphs.length; ++i) {
             const graph = graphs[i];
 
@@ -312,7 +318,7 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.clr, height);
+        render2d.render(this.app, this.drawLayer, this.texture, this.clr, height);
     }
 
     resize(width, height, showGraphs) {

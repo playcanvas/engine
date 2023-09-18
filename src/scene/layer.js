@@ -33,14 +33,6 @@ function sortFrontToBack(drawCallA, drawCallB) {
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
-function sortLights(lightA, lightB) {
-    return lightB.key - lightA.key;
-}
-
-function sortLightsIds(lightA, lightB) {
-    return lightB.id - lightA.id;
-}
-
 // Layers
 let layerCounter = 0;
 
@@ -137,7 +129,28 @@ class Layer {
     _clusteredLightsSet = new Set();
 
     /**
+     * Lights separated by light type. Lights in the individual arrays are sorted by the key,
+     * to match their order in _lightIdHash, so that their order matches the order expected by the
+     * generated shader code.
+     *
+     * @type {import('./light.js').Light[][]}
+     * @private
+     */
+    _splitLights = [[], [], []];
+
+    /**
+     * True if _splitLights needs to be updated, which means if lights were added or removed from
+     * the layer, or their key changed.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _splitLightsDirty = true;
+
+    /**
      * True if the objects rendered on the layer require light cube (emitters with lighting do).
+     *
+     * @type {boolean}
      */
     requiresLightCube = false;
 
@@ -383,20 +396,11 @@ class Layer {
         this.customCalculateSortValues = null;
 
         /**
-         * Lights separated by light type.
-         *
-         * @type {import('./light.js').Light[][]}
-         * @ignore
-         */
-        this._splitLights = [[], [], []];
-
-        /**
          * @type {import('../framework/components/camera/component.js').CameraComponent[]}
          * @ignore
          */
         this.cameras = [];
 
-        this._dirtyLights = false;
         this._dirtyCameras = false;
 
         // light hash based on the light keys
@@ -679,9 +683,9 @@ class Layer {
     }
 
     markLightsDirty() {
-        this._dirtyLights = true;
         this._lightHashDirty = true;
         this._lightIdHashDirty = true;
+        this._splitLightsDirty = true;
     }
 
     /**
@@ -731,33 +735,64 @@ class Layer {
      * Removes all lights from this layer.
      */
     clearLights() {
+
+        // notify lights
+        this._lightsSet.forEach(light => light.removeLayer(this));
+
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
         this.markLightsDirty();
     }
 
+    get splitLights() {
+
+        if (this._splitLightsDirty) {
+            this._splitLightsDirty = false;
+
+            const splitLights = this._splitLights;
+            for (let i = 0; i < splitLights.length; i++)
+                splitLights[i].length = 0;
+
+            const lights = this._lights;
+            for (let i = 0; i < lights.length; i++) {
+                const light = lights[i];
+                if (light.enabled) {
+                    splitLights[light._type].push(light);
+                }
+            }
+
+            // sort the lights by their key, as the order of lights is used to generate shader generation key,
+            // and this avoids new shaders being generated when lights are reordered
+            for (let i = 0; i < splitLights.length; i++)
+                splitLights[i].sort((a, b) => a.key - b.key);
+        }
+
+        return this._splitLights;
+    }
+
     evaluateLightHash(localLights, directionalLights, useIds) {
 
         let hash = 0;
 
+        // select local/directional lights based on request
         const lights = this._lights;
-        if (lights.length > 0) {
-            lights.sort(useIds ? sortLightsIds : sortLights);
+        for (let i = 0; i < lights.length; i++) {
 
-            for (let i = 0; i < lights.length; i++) {
+            const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
 
-                const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
-
-                if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
-                    lightKeys.push(useIds ? lights[i].id : lights[i].key);
-                }
+            if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
+                lightKeys.push(useIds ? lights[i].id : lights[i].key);
             }
+        }
 
-            if (lightKeys.length > 0) {
-                hash = hash32Fnv1a(lightKeys);
-                lightKeys.length = 0;
-            }
+        if (lightKeys.length > 0) {
+
+            // sort the keys to make sure the hash is the same for the same set of lights
+            lightKeys.sort();
+
+            hash = hash32Fnv1a(lightKeys);
+            lightKeys.length = 0;
         }
 
         return hash;
@@ -834,7 +869,6 @@ class Layer {
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
         for (let i = 0; i < drawCallsCount; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.command) continue;
             if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             if (drawCall.calculateSortDistance) {
                 drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);

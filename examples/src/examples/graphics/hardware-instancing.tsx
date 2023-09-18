@@ -72,14 +72,14 @@ class HardwareInstancingExample {
                 material.update();
 
                 // Create a Entity with a cylinder render component and the instancing material
-                const box = new pc.Entity("InstancingEntity");
-                box.addComponent("render", {
+                const cylinder = new pc.Entity("InstancingEntity");
+                cylinder.addComponent("render", {
                     material: material,
                     type: "cylinder"
                 });
 
-                // add the box entity to the hierarchy
-                app.root.addChild(box);
+                // add the cylinder entity to the hierarchy
+                app.root.addChild(cylinder);
 
                 if (app.graphicsDevice.supportsInstancing) {
                     // number of instances to render
@@ -111,9 +111,9 @@ class HardwareInstancingExample {
                     const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
                                                              instanceCount, pc.BUFFER_STATIC, matrices);
 
-                    // initialize instancing using the vertex buffer on meshInstance of the created box
-                    const boxMeshInst = box.render.meshInstances[0];
-                    boxMeshInst.setInstancing(vertexBuffer);
+                    // initialize instancing using the vertex buffer on meshInstance of the created cylinder
+                    const cylinderMeshInst = cylinder.render.meshInstances[0];
+                    cylinderMeshInst.setInstancing(vertexBuffer);
                 }
 
                 // Set an update function on the app's update event

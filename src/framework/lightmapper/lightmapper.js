@@ -32,7 +32,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
-    MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
+    MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
 import { Camera } from '../../scene/camera.js';
@@ -647,7 +647,7 @@ class Lightmapper {
         }
 
         // scene lights
-        const sceneLights = layerComposition._lights;
+        const sceneLights = this.renderer.lights;
         for (let i = 0; i < sceneLights.length; i++) {
             const light = sceneLights[i];
 
@@ -657,7 +657,7 @@ class Lightmapper {
 
             // bake light
             if (light.enabled && (light.mask & MASK_BAKE) !== 0) {
-                light.mask = 0xFFFFFFFF;
+                light.mask = MASK_BAKE | MASK_AFFECT_LIGHTMAPPED | MASK_AFFECT_DYNAMIC;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
                 bakeLights.push(bakeLight);
             }
@@ -927,6 +927,7 @@ class Lightmapper {
         this.allocateTextures(bakeNodes, passCount);
 
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
+        this.renderer.collectLights(comp);
         const allLights = [], bakeLights = [];
         this.prepareLightsToBake(comp, allLights, bakeLights);
 
@@ -976,6 +977,7 @@ class Lightmapper {
         for (i = 0; i < bakeLights.length; i++) {
             const bakeLight = bakeLights[i];
             const isAmbientLight = bakeLight instanceof BakeLightAmbient;
+            const isDirectional = bakeLight.light.type === LIGHTTYPE_DIRECTIONAL;
 
             // light can be baked using many virtual lights to create soft effect
             let numVirtualLights = bakeLight.numVirtualLights;
@@ -1011,16 +1013,16 @@ class Lightmapper {
                     }
 
                     this.setupLightArray(lightArray, bakeLight.light);
+                    const clusterLights = isDirectional ? [] : [bakeLight.light];
 
                     if (clusteredLightingEnabled) {
-                        this.renderer.lightTextureAtlas.update(lightArray[LIGHTTYPE_SPOT], lightArray[LIGHTTYPE_OMNI], this.lightingParams);
+                        this.renderer.lightTextureAtlas.update(clusterLights, this.lightingParams);
                     }
 
                     // render light shadow map needs to be rendered
                     shadowMapRendered = this.renderShadowMap(comp, shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
-                        const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
                         this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
                     }
 

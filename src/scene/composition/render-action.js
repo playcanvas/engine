@@ -43,10 +43,8 @@ class RenderAction {
         // true if this is the last render action using this camera
         this.lastCameraUse = false;
 
-        // directional lights that needs to update their shadows for this render action, stored as a set
-        this.directionalLightsSet = new Set();
-
-        // and also store them as an array
+        // directional lights that needs to update their shadows for this render action. The array is
+        // filled in during light culling each frame.
         this.directionalLights = [];
 
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
@@ -67,13 +65,6 @@ class RenderAction {
         return this.directionalLights.length > 0;
     }
 
-    // prepares render action for re-use
-    reset() {
-        this.lightClusters = null;
-        this.directionalLightsSet.clear();
-        this.directionalLights.length = 0;
-    }
-
     /**
      * @param {import('./layer-composition.js').LayerComposition} layerComposition - The layer
      * composition.
@@ -82,31 +73,6 @@ class RenderAction {
     isLayerEnabled(layerComposition) {
         const layer = layerComposition.layerList[this.layerIndex];
         return layer.enabled && layerComposition.subLayerEnabled[this.layerIndex];
-    }
-
-    // store directional lights that are needed for this camera based on layers it renders
-    collectDirectionalLights(cameraLayers, dirLights, allLights) {
-
-        this.directionalLightsSet.clear();
-        this.directionalLights.length = 0;
-
-        for (let i = 0; i < dirLights.length; i++) {
-            const light = dirLights[i];
-
-            // only shadow casting lights
-            if (light.castShadows) {
-                for (let l = 0; l < cameraLayers.length; l++) {
-
-                    // if layer has the light
-                    if (cameraLayers[l]._lightsSet.has(light)) {
-                        if (!this.directionalLightsSet.has(light)) {
-                            this.directionalLightsSet.add(light);
-                            this.directionalLights.push(light);
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

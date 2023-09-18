@@ -40,7 +40,11 @@ const directionalCascades = [
 
 let id = 0;
 
-// Class storing shadow rendering related private information
+/**
+ * Class storing shadow rendering related private information
+ *
+ * @ignore
+ */
 class LightRenderData {
     constructor(device, camera, face, light) {
 
@@ -114,6 +118,13 @@ class LightRenderData {
  * @ignore
  */
 class Light {
+    /**
+     * The Layers the light is on.
+     *
+     * @type {Set<import('./layer.js').Layer>}
+     */
+    layers = new Set();
+
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         this.id = id++;
@@ -126,7 +137,7 @@ class Light {
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_AFFECT_DYNAMIC;
+        this._mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -205,7 +216,6 @@ class Light {
         this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
         this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
-        this._scene = null;
         this._node = null;
 
         // private rendering data
@@ -237,6 +247,14 @@ class Light {
         }
     }
 
+    addLayer(layer) {
+        this.layers.add(layer);
+    }
+
+    removeLayer(layer) {
+        this.layers.delete(layer);
+    }
+
     set numCascades(value) {
         if (!this.cascades || this.numCascades !== value) {
             this.cascades = directionalCascades[value - 1];
@@ -260,6 +278,17 @@ class Light {
 
     get shadowMap() {
         return this._shadowMap;
+    }
+
+    set mask(value) {
+        if (this._mask !== value) {
+            this._mask = value;
+            this.updateKey();
+        }
+    }
+
+    get mask() {
+        return this._mask;
     }
 
     // returns number of render targets to render the shadow map
@@ -373,7 +402,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
+        return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
     set shadowResolution(value) {
@@ -869,11 +898,16 @@ class Light {
     }
 
     layersDirty() {
-        if (this._scene?.layers) {
-            this._scene.layers._dirtyLights = true;
-        }
+        this.layers.forEach((layer) => {
+            layer.markLightsDirty();
+        });
     }
 
+    /**
+     * Updates a integer key for the light. The key is used to identify all shader related features
+     * of the light, and so needs to have all properties that modify the generated shader encoded.
+     * Properties without an effect on the shader (color, shadow intensity) should not be encoded.
+     */
     updateKey() {
         // Key definition:
         // Bit
@@ -891,7 +925,8 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
-        //  7 : disable specular
+        //  7      : disable specular
+        //  6 -  4 : mask
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -904,16 +939,16 @@ class Light {
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
                ((this.numCascades - 1)                    <<  8) |
-               ((this.affectSpecularity ? 1 : 0)           <<  7);
+               ((this.affectSpecularity ? 1 : 0)          <<  7) |
+               ((this.mask)                               <<  6);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
             key |= (chanId[this._cookieChannel.charAt(2)] << 14);
         }
 
-        if (key !== this.key && this._scene !== null) {
-            // TODO: most of the changes to the key should not invalidate the composition,
-            // probably only _type and _castShadows
+        if (key !== this.key) {
+            // The layer maintains lights split and sorted by the key, notify it when the key changes
             this.layersDirty();
         }
 
