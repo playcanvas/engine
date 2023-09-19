@@ -99,7 +99,7 @@ function drawTexture(device, texture, target, shader, rect, scissorRect) {
     const useBlend = arguments[6];
     Debug.call(() => {
         if (useBlend !== undefined) {
-            Debug.warnOnce('pc.drawTexture no longer accepts useBlend parameter, and blending state needs to be set up using WebglGraphicsDevice.setBlendState.');
+            Debug.warnOnce('pc.drawTexture no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
         }
     });
 
