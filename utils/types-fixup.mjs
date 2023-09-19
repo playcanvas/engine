@@ -501,7 +501,6 @@ const standardMaterialProps = [
     ['sheenVertexColorChannel', 'string'],
     ['sphereMap', 'Texture|null'],
     ['twoSidedLighting', 'boolean'],
-    ['useDisplacement', 'boolean'],
     ['useFog', 'boolean'],
     ['useGammaTonemap', 'boolean'],
     ['useLighting', 'boolean'],
