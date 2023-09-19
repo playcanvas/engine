@@ -1,3 +1,5 @@
+import { math } from './math.js';
+
 /**
  * A 2-dimensional vector.
  *
@@ -405,6 +407,57 @@ class Vec2 {
         }
 
         return this;
+    }
+
+    /**
+     * Rotate a vector by an angle in degrees.
+     *
+     * @param {number} degrees - The number to degrees to rotate the vector by.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const v = new pc.Vec2(0, 10);
+     *
+     * v.rotate(45); // rotates by 45 degrees
+     *
+     * // Outputs [7.071068.., 7.071068..]
+     * console.log("Vector after rotation is: " + v.toString());
+     */
+    rotate(degrees) {
+        const angle = Math.atan2(this.x, this.y) + (degrees * math.DEG_TO_RAD);
+        const len = Math.sqrt(this.x * this.x + this.y * this.y);
+        this.x = Math.sin(angle) * len;
+        this.y = Math.cos(angle) * len;
+        return this;
+    }
+
+    /**
+     * Returns the angle in degrees of the specified 2-dimensional vector.
+     *
+     * @returns {number} The angle in degrees of the specified 2-dimensional vector.
+     * @example
+     * const v = new pc.Vec2(6, 0);
+     * const angle = v.angle();
+     * // Outputs 90..
+     * console.log("The angle of the vector is: " + angle);
+     */
+    angle() {
+        return Math.atan2(this.x, this.y) * math.RAD_TO_DEG;
+    }
+
+    /**
+     * Returns the shortest Euler angle between two 2-dimensional vectors.
+     *
+     * @param {Vec2} rhs - The 2-dimensional vector to calculate angle to.
+     * @returns {number} The shortest angle in degrees between two 2-dimensional vectors.
+     * @example
+     * const a = new pc.Vec2(0, 10); // up
+     * const b = new pc.Vec2(1, -1); // down-right
+     * const angle = a.angleTo(b);
+     * // Outputs 135..
+     * console.log("The angle between vectors a and b: " + angle);
+     */
+    angleTo(rhs) {
+        return Math.atan2(this.x * rhs.y + this.y * rhs.x, this.x * rhs.x + this.y * rhs.y) * math.RAD_TO_DEG;
     }
 
     /**

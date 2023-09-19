@@ -35,9 +35,13 @@ class LightTextureAtlas {
         // This needs to be a pixel more than a shadow filter needs to access.
         this.shadowEdgePixels = 3;
 
-        this.cookieAtlasResolution = 2048;
-        this.cookieAtlas = null;
-        this.cookieRenderTarget = null;
+        this.cookieAtlasResolution = 4;
+        this.cookieAtlas = CookieRenderer.createTexture(this.device, this.cookieAtlasResolution);
+        this.cookieRenderTarget = new RenderTarget({
+            colorBuffer: this.cookieAtlas,
+            depth: false,
+            flipY: true
+        });
 
         // available slots (of type Slot)
         this.slots = [];
@@ -69,24 +73,20 @@ class LightTextureAtlas {
     }
 
     destroyShadowAtlas() {
-        if (this.shadowAtlas) {
-            this.shadowAtlas.destroy();
-            this.shadowAtlas = null;
-        }
+        this.shadowAtlas?.destroy();
+        this.shadowAtlas = null;
     }
 
     destroyCookieAtlas() {
-        if (this.cookieAtlas) {
-            this.cookieAtlas.destroy();
-            this.cookieAtlas = null;
-        }
-        if (this.cookieRenderTarget) {
-            this.cookieRenderTarget.destroy();
-            this.cookieRenderTarget = null;
-        }
+        this.cookieAtlas?.destroy();
+        this.cookieAtlas = null;
+
+        this.cookieRenderTarget?.destroy();
+        this.cookieRenderTarget = null;
     }
 
     allocateShadowAtlas(resolution) {
+
         if (!this.shadowAtlas || this.shadowAtlas.texture.width !== resolution) {
 
             // content of atlas is lost, force re-render of static shadows
@@ -106,19 +106,14 @@ class LightTextureAtlas {
     }
 
     allocateCookieAtlas(resolution) {
-        if (!this.cookieAtlas || this.cookieAtlas.width !== resolution) {
+
+        // resize atlas
+        if (this.cookieAtlas.width !== resolution) {
+
+            this.cookieRenderTarget.resize(resolution, resolution);
 
             // content of atlas is lost, force re-render of static cookies
             this.version++;
-
-            this.destroyCookieAtlas();
-            this.cookieAtlas = CookieRenderer.createTexture(this.device, resolution);
-
-            this.cookieRenderTarget = new RenderTarget({
-                colorBuffer: this.cookieAtlas,
-                depth: false,
-                flipY: true
-            });
         }
     }
 

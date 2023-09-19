@@ -346,8 +346,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextRestoredHandler = () => {
             Debug.log('pc.GraphicsDevice: WebGL context restored.');
-            this.restoreContext();
             this.contextLost = false;
+            this.restoreContext();
             this.fire('devicerestored');
         };
 
@@ -1165,6 +1165,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     loseContext() {
+
+        // force the backbuffer to be recreated on restore
+        this.backBufferSize.set(-1, -1);
+
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
