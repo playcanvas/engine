@@ -638,6 +638,7 @@ class Scene extends EventHandler {
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
      *
      * Defaults to {@link TONEMAP_LINEAR}.
      *
