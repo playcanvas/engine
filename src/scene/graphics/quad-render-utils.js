@@ -81,7 +81,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 /**
  * Draws a texture in screen-space. Mostly used by post-effects.
  *
- * @param {import('../../platform/graphics/webgl/webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device used to draw
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device used to draw
  * the texture.
  * @param {import('../../platform/graphics/texture.js').Texture} texture - The source texture to be drawn. Accessible as
  * `uniform sampler2D * source` in shader.
