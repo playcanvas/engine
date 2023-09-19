@@ -816,8 +816,6 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
-        this.useDisplacement = this.displacementFactor !== 0;
-
         if (this.useDisplacement) {
             this._setParameter('material_displacementFactor', this.displacementFactor);
             this._setParameter('material_displacementOffset', this.displacementOffset);
@@ -872,7 +870,7 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth and Shadow passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = this._useDisplacement ? false : pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+        const minimalOptions = this.useDisplacement ? false : pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
 
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 

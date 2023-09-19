@@ -64,12 +64,12 @@ uniform float material_displacementOffset;
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
 
+    vec3 localPos = vertex_position;
+
     #ifdef DISPLACEMENT
     vec4 dMapSample = texture2D(texture_heightMap, vertex_texCoord0.xy);
     float displacer = dMapSample.r * material_displacementFactor + material_displacementOffset;
-    vec3 localPos = vertex_position + vertex_normal * displacer;
-    #else
-    vec3 localPos = vertex_position;
+    localPos += vertex_normal * displacer;
     #endif
 
     #ifdef NINESLICED
