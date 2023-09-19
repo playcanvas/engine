@@ -64,8 +64,7 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-const { NODE_ENV } = process.env;
-let { ENGINE_PATH } = process.env;
+let { NODE_ENV = '', ENGINE_PATH = '' } = process.env;
 
 // If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
 // requires no additional build shells.
@@ -182,10 +181,11 @@ const aliasEntries = {
 /** @type {RollupOptions[]} */
 const builds = [
     {
+        // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
         output: {
             dir: 'dist',
-            format: 'es'
+            format: 'umd'
         },
         plugins: [
             alias({ entries: aliasEntries }),
@@ -193,11 +193,11 @@ const builds = [
             resolve(),
             replace({
                 values: {
-                    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+                    'process.env.NODE_ENV': JSON.stringify(NODE_ENV)
                 },
                 preventAssignment: true
             }),
-            (process.env.NODE_ENV === 'production' && terser()),
+            (NODE_ENV === 'production' && terser()),
             timestamp()
         ]
     },
