@@ -150,7 +150,6 @@ function copyStaticFiles(targets) {
     };
 }
 
-
 /**
  * This plugin builds the standalone html files.
  *
@@ -177,6 +176,32 @@ const aliasEntries = {
     '@playcanvas/pcui/react': PCUI_REACT_PATH,
     '@playcanvas/pcui/styles': PCUI_STYLES_PATH
 };
+
+/**
+ * Build an ES5 target that rollup is supposed to build.
+ *
+ * @param {string} name - The name, like `pcx` or `VoxParser`.
+ * @param {string} input - The input file, like `extras/index.js`.
+ * @param {string} output - The output file, like `dist/iframe/playcanvas-extras.js`.
+ * @returns {RollupOptions} One rollup target.
+ */
+function scriptTarget(name, input, output) {
+    return {
+        input: input,
+        output: {
+            name: name,
+            file: output,
+            format: 'umd',
+            indent: '\t',
+            globals: { playcanvas: 'pc' }
+        },
+        plugins: [
+            resolve()
+        ],
+        external: ['playcanvas'],
+        cache: false
+    };
+}
 
 /** @type {RollupOptions[]} */
 const builds = [
@@ -211,7 +236,8 @@ const builds = [
             buildAndWatchStandaloneExamples(),
             timestamp()
         ]
-    }
+    },
+    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
 ];
 
 export default builds;
