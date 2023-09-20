@@ -822,8 +822,15 @@ class ForwardRenderer extends Renderer {
             if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
                 nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
 
-                // render the render actions in the range
-                this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i, isGrabPass);
+                if (isDepthLayer && camera.renderSceneColorMap) {
+
+                    frameGraph.addRenderPass(camera.camera.colorGrabPass);
+
+                } else {
+
+                    // render the render actions in the range
+                    this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i, isGrabPass);
+                }
 
                 // postprocessing
                 if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
