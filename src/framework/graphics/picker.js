@@ -4,19 +4,15 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA8 } from '../../
 import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
-import { SHADER_PICK } from '../../scene/constants.js';
 import { Camera } from '../../scene/camera.js';
 import { Layer } from '../../scene/layer.js';
 
 import { getApplication } from '../globals.js';
-import { Debug, DebugHelper } from '../../core/debug.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { Debug } from '../../core/debug.js';
+import { RenderPassPicker } from './render-pass-picker.js';
 
 const tempSet = new Set();
-const tempMeshInstances = [];
 
 /**
  * Picker object used to select mesh instances from screen coordinates.
@@ -31,9 +27,6 @@ const tempMeshInstances = [];
 class Picker {
     // internal render target
     renderTarget = null;
-
-    // uniform for the mesh index encoded into rgba
-    pickColor = new Float32Array(4);
 
     // mapping table from ids to meshInstances
     mapping = new Map();
@@ -56,6 +49,8 @@ class Picker {
         // the Picker from framework to the scene level, or even the extras.
         this.renderer = app.renderer;
         this.device = app.graphicsDevice;
+
+        this.renderPass = new RenderPassPicker(this.device, app.renderer);
 
         this.width = 0;
         this.height = 0;
@@ -194,73 +189,7 @@ class Picker {
         // clear registered meshes mapping
         this.mapping.clear();
 
-        // create a render pass
-        const device = this.device;
-        const renderPass = new RenderPass(device, () => {
-
-            DebugGraphics.pushGpuMarker(device, 'PICKER');
-
-            const renderer = this.renderer;
-            const srcLayers = scene.layers.layerList;
-            const subLayerEnabled = scene.layers.subLayerEnabled;
-            const isTransparent = scene.layers.subLayerList;
-
-            const pickColorId = device.scope.resolve('uColor');
-            const pickColor = this.pickColor;
-
-            for (let i = 0; i < srcLayers.length; i++) {
-                const srcLayer = srcLayers[i];
-
-                // skip the layer if it does not match the provided ones
-                if (layers && layers.indexOf(srcLayer) < 0) {
-                    continue;
-                }
-
-                if (srcLayer.enabled && subLayerEnabled[i]) {
-
-                    // if the layer is rendered by the camera
-                    const layerCamId = srcLayer.cameras.indexOf(camera);
-                    if (layerCamId >= 0) {
-
-                        // if the layer clears the depth
-                        if (srcLayer._clearDepthBuffer) {
-                            renderer.clear(camera.camera, false, true, false);
-                        }
-
-                        const culledInstances = srcLayer.getCulledInstances(camera.camera);
-                        const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;
-
-                        // only need mesh instances with a pick flag
-                        for (let j = 0; j < meshInstances.length; j++) {
-                            const meshInstance = meshInstances[j];
-                            if (meshInstance.pick) {
-                                tempMeshInstances.push(meshInstance);
-
-                                // keep the index -> meshInstance index mapping
-                                this.mapping.set(meshInstance.id, meshInstance);
-                            }
-                        }
-
-                        const lights = [[], [], []];
-                        renderer.renderForward(camera.camera, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
-                            const miId = meshInstance.id;
-                            pickColor[0] = ((miId >> 16) & 0xff) / 255;
-                            pickColor[1] = ((miId >> 8) & 0xff) / 255;
-                            pickColor[2] = (miId & 0xff) / 255;
-                            pickColor[3] = ((miId >> 24) & 0xff) / 255;
-                            pickColorId.setValue(pickColor);
-                            device.setBlendState(BlendState.NOBLEND);
-                        });
-
-                        tempMeshInstances.length = 0;
-                    }
-                }
-            }
-
-            DebugGraphics.popGpuMarker(device);
-        });
-
-        DebugHelper.setName(renderPass, `RenderPass-Picker`);
+        const renderPass = this.renderPass;
         renderPass.init(this.renderTarget);
 
         // set up clears
@@ -269,6 +198,7 @@ class Picker {
         renderPass.depthStencilOps.clearDepth = true;
 
         // render the pass to update the render target
+        renderPass.setup(camera, scene, layers, this.mapping);
         renderPass.render();
     }
 
