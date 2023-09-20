@@ -176,6 +176,9 @@ class RenderPass {
         this._execute = execute;
     }
 
+    destroy() {
+    }
+
     /**
      * @param {import('../graphics/render-target.js').RenderTarget} renderTarget - The render
      * target to render into (output). This function should be called only for render passes which

@@ -1,3 +1,4 @@
+import { Debug } from '../core/debug.js';
 import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
@@ -10,6 +11,7 @@ import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
+import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -27,7 +29,12 @@ class Camera {
     /**
      * @type {import('./shader-pass.js').ShaderPassInfo|null}
      */
-    shaderPassInfo;
+    shaderPassInfo = null;
+
+    /**
+     * @type {RenderPassColorGrab|null}
+     */
+    colorGrabPass = null;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -419,6 +426,16 @@ class Camera {
         this._projMatDirty = true;
 
         return this;
+    }
+
+    _enableColorGrabPass(device, enable) {
+        if (enable) {
+            Debug.assert(!this.colorGrabPass);
+            this.colorGrabPass = new RenderPassColorGrab(device, this);
+        } else {
+            this.colorGrabPass?.destroy();
+            this.colorGrabPass = null;
+        }
     }
 
     _updateViewProjMat() {
