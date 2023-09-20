@@ -13,7 +13,6 @@ import { Debug } from '../../core/debug.js';
 import { RenderPassPicker } from './render-pass-picker.js';
 
 const tempSet = new Set();
-// const tempMeshInstances = [];
 
 /**
  * Picker object used to select mesh instances from screen coordinates.
@@ -190,11 +189,6 @@ class Picker {
         // clear registered meshes mapping
         this.mapping.clear();
 
-
-
-
-
-        /////////// !!!!!!!! todo  - this should be done once and RT resized when needed
         const renderPass = this.renderPass;
         renderPass.init(this.renderTarget);
 
