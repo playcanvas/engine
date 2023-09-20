@@ -231,7 +231,7 @@ class ShadowRendererDirectional {
             }
         });
 
-        renderPass.after = () => {
+        renderPass._after = () => {
             // after the pass is done, apply VSM blur if needed
             this.shadowRenderer.renderVsm(light, camera);
         };

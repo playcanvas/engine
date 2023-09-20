@@ -764,7 +764,7 @@ class ForwardRenderer extends Renderer {
                 }
 
                 // update clusters all the time
-                renderPass.after = () => {
+                renderPass._after = () => {
                     this.updateClusters(layerComposition);
                 };
             }
@@ -863,14 +863,14 @@ class ForwardRenderer extends Renderer {
 
             // callback on the camera component before rendering with this camera for the first time
             if (startRenderAction.firstCameraUse && camera.onPreRender) {
-                renderPass.before = () => {
+                renderPass._before = () => {
                     camera.onPreRender();
                 };
             }
 
             // callback on the camera component when we're done rendering with this camera
             if (endRenderAction.lastCameraUse && camera.onPostRender) {
-                renderPass.after = () => {
+                renderPass._after = () => {
                     camera.onPostRender();
                 };
             }
