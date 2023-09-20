@@ -127,7 +127,7 @@ class ShadowRendererLocal {
             this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, false);
 
             // render shadows inside the pass
-            renderPass.execute = () => {
+            renderPass._execute = () => {
 
                 for (let i = 0; i < count; i++) {
                     const light = shadowLights[i];
@@ -154,7 +154,7 @@ class ShadowRendererLocal {
 
         // apply vsm
         if (applyVsm) {
-            renderPass.after = () => {
+            renderPass._after = () => {
                 // after the pass is done, apply VSM blur if needed
                 this.shadowRenderer.renderVsm(light, shadowCamera);
             };
