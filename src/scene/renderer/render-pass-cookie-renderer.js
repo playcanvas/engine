@@ -10,7 +10,7 @@ import { QuadRender } from '../graphics/quad-render.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from "../../platform/graphics/render-pass.js";
 
-const textureBlitVertexShader = `
+const textureBlitVertexShader = /* glsl */ `
     attribute vec2 vertex_position;
     varying vec2 uv0;
     void main(void) {
@@ -21,7 +21,7 @@ const textureBlitVertexShader = `
         #endif
     }`;
 
-const textureBlitFragmentShader = `
+const textureBlitFragmentShader = /* glsl */ `
     varying vec2 uv0;
     uniform sampler2D blitTexture;
     void main(void) {
@@ -29,7 +29,7 @@ const textureBlitFragmentShader = `
     }`;
 
 // shader runs for each face, with inViewProj matrix representing a face camera
-const textureCubeBlitFragmentShader = `
+const textureCubeBlitFragmentShader = /* glsl */ `
     varying vec2 uv0;
     uniform samplerCube blitTexture;
     uniform mat4 invViewProj;
