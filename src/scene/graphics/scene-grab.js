@@ -261,7 +261,12 @@ class SceneGrab {
                     }
 
                     // reallocate RT if needed
-                    if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                    if (
+                        self.shouldReallocate(
+                            this.depthRenderTarget,
+                            camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer
+                        )
+                    ) {
                         self.releaseRenderTarget(this.depthRenderTarget);
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
                     }
@@ -346,7 +351,13 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                    if (
+                        !this.depthRenderTarget?.colorBuffer ||
+                        self.shouldReallocate(
+                            this.depthRenderTarget,
+                            camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer
+                        )
+                    ) {
                         this.depthRenderTarget?.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
 
