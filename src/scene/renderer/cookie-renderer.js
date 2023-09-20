@@ -1,4 +1,4 @@
-import { DebugHelper } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
@@ -60,6 +60,8 @@ class CookieRenderer {
 
         this.blitTextureId = this.device.scope.resolve('blitTexture');
         this.invViewProjId = this.device.scope.resolve('invViewProj');
+
+        this.renderPass = this.createRenderPass(lightTextureAtlas.cookieRenderTarget);
     }
 
     destroy() {
@@ -143,12 +145,9 @@ class CookieRenderer {
         }
     }
 
-    render(renderTarget, lights) {
+    createRenderPass(renderTarget) {
 
-        // pick lights we need to update the cookies for
-        this.filter(lights);
-        if (_filteredLights.length <= 0)
-            return;
+        Debug.assert(renderTarget);
 
         // prepare a single render pass to render all quads to the render target
         const device = this.device;
@@ -208,10 +207,20 @@ class CookieRenderer {
         renderPass.colorOps.clear = false;
         renderPass.depthStencilOps.clearDepth = false;
 
-        // render the pass
-        renderPass.render();
+        return renderPass;
+    }
 
-        _filteredLights.length = 0;
+    render(lights) {
+
+        // pick lights we need to update the cookies for
+        this.filter(lights);
+        if (_filteredLights.length > 0) {
+
+            // render the pass
+            this.renderPass.render();
+
+            _filteredLights.length = 0;
+        }
     }
 }
 

@@ -169,6 +169,7 @@ class RenderPass {
      * @param {Function} [execute] - Custom function that is called to render the pass.
      */
     constructor(graphicsDevice, execute) {
+        Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
 
         /** @type {Function} */
@@ -284,7 +285,7 @@ class RenderPass {
     log(device, index) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            const rt = this.renderTarget === null ? this.renderTarget ?? device.backBuffer : null;
+            const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
             const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;

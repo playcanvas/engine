@@ -1159,8 +1159,7 @@ class Renderer {
     }
 
     renderCookies(lights) {
-        const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
-        this._cookieRenderer.render(cookieRenderTarget, lights);
+        this._cookieRenderer.render(lights);
     }
 
     /**
