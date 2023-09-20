@@ -123,14 +123,14 @@ class ReflectionPlanarExample {
                     return primitive;
                 }
 
-                // create a layer for objects that do not render into texture
-                const excludedLayer = new pc.Layer({ name: "Excluded" });
-                app.scene.layers.push(excludedLayer);
-
                 // get existing layers
                 const worldLayer = app.scene.layers.getLayerByName("World");
                 const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
                 const uiLayer = app.scene.layers.getLayerByName("UI");
+
+                // create a layer for objects that do not render into texture
+                const excludedLayer = new pc.Layer({ name: "Excluded" });
+                app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
                 // Create the shader from the vertex and fragment shaders
                 const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {

@@ -1,5 +1,5 @@
-module.exports = {
-    rules: {
+{
+    "rules": {
         "import/no-unresolved": "off"
     }
-};
+}
