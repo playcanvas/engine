@@ -4,7 +4,8 @@ import {
     DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_NULL
 } from 'playcanvas/src/platform/graphics/constants.js';
 import React, { Component } from 'react';
-import { jsxSelectInput } from './jsx.mjs';
+import { jsx } from './jsx.mjs';
+import { SelectInput } from '@playcanvas/pcui/react';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
@@ -116,7 +117,7 @@ class DeviceSelector extends TypedComponent {
     }
 
     render() {
-        return jsxSelectInput({
+        return jsx(SelectInput, {
             id: 'deviceTypeSelectInput',
             options: [
                 { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },

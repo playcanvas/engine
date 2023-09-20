@@ -4,10 +4,11 @@ import { CodeEditor                          } from './code-editor.mjs';
 import { ErrorBoundary                       } from './error-boundary.mjs';
 import { Example                             } from './example.mjs';
 import { iframeHideStats, iframeShowStats    } from './iframeUtils.mjs';
-import { jsx, jsxContainer                   } from './jsx.mjs';
+import { jsx                                 } from './jsx.mjs';
 import { Menu                                } from './menu.mjs';
 import { SideBar                             } from './sidebar.mjs';
 import { getOrientation                      } from './utils.mjs';
+import { Container                           } from '@playcanvas/pcui/react';
 
 /**
  * @typedef {object} Props
@@ -63,11 +64,11 @@ class MainLayout extends TypedComponent {
                         jsx(Redirect, { to: "/misc/hello-world" })),
                     jsx(Route, { path: '/:category/:example' },
                         jsx(SideBar, null),
-                        jsxContainer({ id: 'main-view-wrapper' },
+                        jsx(Container, { id: 'main-view-wrapper' },
                             jsx(Menu, {
                                 setShowMiniStats: this.updateShowMiniStats.bind(this)
                             }),
-                            jsxContainer({ id: 'main-view' },
+                            jsx(Container, { id: 'main-view' },
                                 jsx(ErrorBoundary, null,
                                     orientation === 'landscape' && jsx(CodeEditor),
                                     jsx(Example, null)

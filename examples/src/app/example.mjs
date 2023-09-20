@@ -5,14 +5,16 @@ import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
 import { DeviceSelector } from './device-selector.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
-import { jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner  } from './jsx.mjs';
-import { Panel, Container } from '@playcanvas/pcui/react';
-import React, { useRef, createRef, Component, useEffect } from 'react';
+import { jsx, fragment } from './jsx.mjs';
+import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
+import React, { Component } from 'react';
 import MonacoEditor from "@monaco-editor/react";
 import { iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
 import { getOrientation } from './utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
+
+const controlsObserver = new Observer();
 
 /**
  * @typedef {object} ControlOptions
@@ -23,19 +25,6 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
  * @property {import('./jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
  * @property {import('./jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
  */
-
-// Obsolete - Refactor away entirely TODO
-// What the UI "controls" function needs. We are mixing React and PlayCanvas code in the examples and:
-// 1) We don't want to load React code in iframe
-// 2) We don't want to load PlayCanvas code in Examples browser
-// (just to keep the file sizes as minimal as possible)
-Object.assign(window, {
-    Observer,
-    jsx, fragment, jsxBooleanInput, jsxSelectInput, jsxSliderInput, jsxButton, jsxContainer, jsxPanel, jsxSpinner,
-    React, useRef, createRef, Component, useEffect,
-});
-
-const controlsObserver = new Observer();
 
 /**
  * @typedef {object} Props
@@ -266,13 +255,13 @@ class Example extends TypedComponent {
                         id: 'controlPanel-tabs',
                         class: 'tabs-container'
                     },
-                    jsxButton({
+                    jsx(Button, {
                         text: 'CODE',
                         id: 'codeButton',
                         class: showCode ? 'selected' : null,
                         onClick: this.onClickCodeTab.bind(this),
                     }),
-                    jsxButton({
+                    jsx(Button, {
                         text: 'PARAMETERS',
                         class: showParameters ? 'selected' : null,
                         id: 'paramButton',
@@ -303,7 +292,7 @@ class Example extends TypedComponent {
     renderLandscape() {
         const { collapsed } = this.state;
         return fragment(
-            jsxPanel(
+            jsx(Panel,
                 {
                     id: 'controlPanel',
                     class: ['landscape'],
@@ -329,11 +318,11 @@ class Example extends TypedComponent {
         const { iframePath } = this;
         const { orientation } = this.state;
         //console.log("Example#render", JSON.stringify(this.state, null, 2));
-        return jsxContainer(
+        return jsx(Container,
             {
                 id: "canvas-container"
             },
-            jsxSpinner({ size: 50 }),
+            jsx(Spinner, { size: 50 }),
             jsx("iframe", {
                 id: "exampleIframe",
                 key: iframePath,

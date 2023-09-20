@@ -1,10 +1,7 @@
 import * as React from 'react';
-import {
-    BindingTwoWay, BooleanInput, Button, Container, LabelGroup, Panel, SelectInput, SliderInput, Spinner
-} from '@playcanvas/pcui/react';
 export const jsx = React.createElement;
 export const fragment = (...args) => jsx(React.Fragment, null, ...args);
-import * as ReactDOMClient from "react-dom/client";
+import { createRoot } from "react-dom/client";
 
 /**
  * @param {Function} fn - todo
@@ -21,67 +18,11 @@ export function jsxTry(fn) {
 }
 
 /**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxButton(options) {
-    return React.createElement(Button, options);
-}
-
-/**
- * @param {object} options - todo
- * @returns {JSX.Element} todo
- */
-export function jsxBooleanInput(options) {
-    return React.createElement(BooleanInput, options);
-}
-
-/**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxSelectInput(options) {
-    return React.createElement(SelectInput, options);
-}
-
-/**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxSliderInput(options) {
-    return React.createElement(SliderInput, options);
-}
-
-/**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxSpinner(options) {
-    return React.createElement(Spinner, options);
-}
-
-/**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxPanel(options, ...children) {
-    return React.createElement(Panel, options, ...children);
-}
-
-/**
- * @param {object} options  - todo
- * @returns {JSX.Element}
- */
-export function jsxContainer(options, ...children) {
-    return React.createElement(Container, options, ...children);
-}
-
-/**
  * @param {JSX.Element} jsx - todo
  */
 export function appendReactToBody(jsx) {
     const div = document.createElement("div");
-    const root = ReactDOMClient.createRoot(div);
+    const root = createRoot(div);
     root.render(jsx);
     document.body.append(div);
 }
