@@ -123,19 +123,19 @@ class SceneGrab {
         return texture?.format ?? this.device.backBufferFormat;
     }
 
-    shouldReallocate(targetRT, sourceRT, testFormat) {
+    shouldReallocate(targetRT, sourceTexture, testFormat) {
 
         // need to reallocate if format does not match
         if (testFormat) {
             const targetFormat = targetRT?.colorBuffer.format;
-            const sourceFormat = this.getSourceColorFormat(sourceRT);
+            const sourceFormat = this.getSourceColorFormat(sourceTexture);
             if (targetFormat !== sourceFormat)
                 return true;
         }
 
         // need to reallocate if dimensions don't match
-        const width = sourceRT?.width || this.device.width;
-        const height = sourceRT?.height || this.device.height;
+        const width = sourceTexture?.width || this.device.width;
+        const height = sourceTexture?.height || this.device.height;
         return !targetRT || width !== targetRT.width || height !== targetRT.height;
     }
 
@@ -346,7 +346,10 @@ class SceneGrab {
                 if (camera.renderSceneDepthMap) {
 
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget)) {
+                    if (
+                        !this.depthRenderTarget?.colorBuffer ||
+                        self.shouldReallocate(this.depthRenderTarget, camera.renderTarget)
+                    ) {
                         this.depthRenderTarget?.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
 
