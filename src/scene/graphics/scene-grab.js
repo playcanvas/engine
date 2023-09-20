@@ -211,7 +211,7 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // allocate / resize existing RT as needed
-                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer, true)) {
+                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget, true)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
                         const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, true, false);
@@ -261,12 +261,7 @@ class SceneGrab {
                     }
 
                     // reallocate RT if needed
-                    if (
-                        self.shouldReallocate(
-                            this.depthRenderTarget,
-                            camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer
-                        )
-                    ) {
+                    if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
                     }
@@ -353,10 +348,7 @@ class SceneGrab {
                     // reallocate RT if needed
                     if (
                         !this.depthRenderTarget?.colorBuffer ||
-                        self.shouldReallocate(
-                            this.depthRenderTarget,
-                            camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer
-                        )
+                        self.shouldReallocate(this.depthRenderTarget, camera.renderTarget)
                     ) {
                         this.depthRenderTarget?.destroyTextureBuffers();
                         this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
@@ -416,7 +408,7 @@ class SceneGrab {
                 if (camera.renderSceneColorMap) {
 
                     // reallocate RT if needed
-                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer)) {
+                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget)) {
                         self.releaseRenderTarget(this.colorRenderTarget);
                         const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
                         this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, false, false);
