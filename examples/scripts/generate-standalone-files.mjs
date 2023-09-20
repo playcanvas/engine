@@ -131,7 +131,10 @@ ${exampleClass.example.toString()}
          * @returns {string}
          */
         function getDeviceType() {
-            if (${Boolean(exampleClass.WEBGPU_ENABLED)}) {
+            const last = localStorage.getItem('preferredGraphicsDevice');
+            if (last !== null) {
+                return last;
+            } else if (${Boolean(exampleClass.WEBGPU_ENABLED)}) {
                 let preferredDevice = 'webgpu';
                 // Lack of Chrome's WebGPU support on Linux
                 if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {

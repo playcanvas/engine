@@ -47,6 +47,7 @@ class DeviceSelector extends TypedComponent {
      * @type {string}
      */
     set preferredGraphicsDevice(value) {
+        localStorage.setItem('preferredGraphicsDevice', value);
         window.preferredGraphicsDevice = value;
     }
 
