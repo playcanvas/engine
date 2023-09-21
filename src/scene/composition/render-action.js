@@ -13,9 +13,6 @@ class RenderAction {
         // the layer
         this.layer = null;
 
-        // index into a camera array of the layer, stored in Layer.cameras
-        this.cameraIndex = 0;
-
         // camera of type CameraComponent
         this.camera = null;
 
