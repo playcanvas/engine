@@ -20,7 +20,7 @@ class RenderPassPicker extends RenderPass {
         this.renderer = renderer;
     }
 
-    setup(camera, scene, layers, mapping) {
+    update(camera, scene, layers, mapping) {
         this.camera = camera;
         this.scene = scene;
         this.layers = layers;

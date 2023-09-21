@@ -198,7 +198,7 @@ class Picker {
         renderPass.depthStencilOps.clearDepth = true;
 
         // render the pass to update the render target
-        renderPass.setup(camera, scene, layers, this.mapping);
+        renderPass.update(camera, scene, layers, this.mapping);
         renderPass.render();
     }
 
