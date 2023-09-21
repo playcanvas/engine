@@ -9,7 +9,7 @@ import { jsx, fragment } from './jsx.mjs';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
+import { iframeEval, iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
 import { getOrientation } from './utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
@@ -194,7 +194,7 @@ class Example extends TypedComponent {
 
     renderControls() {
         const { exampleLoaded, controls } = this.state;
-        const ready = exampleLoaded && controls && window.pc?.app?.frame;
+        const ready = exampleLoaded && controls && iframeEval('ready === true');
         if (!ready) {
             return;
         }

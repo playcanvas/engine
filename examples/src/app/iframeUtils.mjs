@@ -1,6 +1,14 @@
+// The PlayCanvas Examples browser basically comes in two parts: React and PlayCanvas code:
+// 1) We don't want to load UI/React code in the <iframe>
+// 2) We don't want to load PlayCanvas code in Examples browser
+// Because:
+// 1) This keeps the file sizes as minimal as possible.
+// 2) this keeps the build/rebuild times as short as possible.
+// 3) Separation of Concerns: Don't mix up UI/PC.
+// 4) Reducing mental overhead: everything becomes easier to debug/argue-about.
 /**
  * @throws {string} In case the <iframe> is missing.
- * @returns {Window} The example window.
+ * @returns {Window|null} The example window.
  */
 function getIframeWindow() {
     const e = document.getElementById('exampleIframe');
@@ -10,39 +18,57 @@ function getIframeWindow() {
     // 2) Have a different type than expected.
     // These situations happen during refactoring etc.
     if (!(e instanceof HTMLIFrameElement)) {
-        throw 'Missing <iframe> with id exampleIframe';
+        console.warn("<iframe id='exampleIframe'> doesn't exist yet.");
+        return null;
     }
     return e.contentWindow;
 }
 function iframeRequestFiles() {
-    getIframeWindow().dispatchEvent(new CustomEvent('requestFiles'));
+    getIframeWindow()?.dispatchEvent(new CustomEvent('requestFiles'));
 }
 function iframeShowStats() {
-    getIframeWindow().dispatchEvent(new CustomEvent('showStats'));
+    getIframeWindow()?.dispatchEvent(new CustomEvent('showStats'));
 }
 function iframeHideStats() {
-    getIframeWindow().dispatchEvent(new CustomEvent('hideStats'));
+    getIframeWindow()?.dispatchEvent(new CustomEvent('hideStats'));
 }
 function iframeResize() {
-    getIframeWindow().dispatchEvent(new Event('resize'));
+    getIframeWindow()?.dispatchEvent(new Event('resize'));
 }
 function iframeReload() {
-    getIframeWindow().location.reload();
+    getIframeWindow()?.location.reload();
 }
 /**
  * Instead of reloading the entire iframe, we simply reevaluate the example function.
  * This makes the hot reload nearly instant, while iframeReload() can take seconds.
- * Only drawback is App#destroy is sometimes buggy - hence hot-reload is only configured
- * on Shift+Enter, while the CodeEditor reload button is calling iframeReload().
  */
 function iframeHotReload() {
-    getIframeWindow().dispatchEvent(new Event('hotReload'));
+    getIframeWindow()?.dispatchEvent(new CustomEvent('hotReload'));
+}
+function iframeDestroy() {
+    getIframeWindow()?.dispatchEvent(new CustomEvent('destroy'));
+}
+/**
+ * Please use this only for small checks which don't justify event juggling:
+ * const appReady = iframeEval('!!app');
+ * @param {string} code - The code.
+ */
+function iframeEval_(code) {
+    return getIframeWindow()?.eval(code);
+}
+function iframeEval(code) {
+    const ret = iframeEval_(code);
+    console.log("eval", code, "=", ret);
+    return ret;
 }
 export {
+    getIframeWindow,
     iframeRequestFiles,
     iframeShowStats,
     iframeHideStats,
     iframeResize,
     iframeReload,
     iframeHotReload,
+    iframeDestroy,
+    iframeEval,
 };

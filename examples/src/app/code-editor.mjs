@@ -3,7 +3,7 @@ import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
+import { iframeHotReload, iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
@@ -99,7 +99,7 @@ class CodeEditor extends TypedComponent {
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, this.onPlayButton.bind(this));
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
         const codePane = document.getElementById('codePane');
         codePane.classList.add('multiple-files');
         if (!this.state.files[this.state.selectedFile]) {
@@ -121,12 +121,6 @@ class CodeEditor extends TypedComponent {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
         });
-    }
-
-    onPlayButton() {
-        // @ts-ignore
-        const frameWindow = document.getElementById('exampleIframe').contentWindow;
-        frameWindow.eval('app.destroy(); main(files);');
     }
 
     /**
@@ -203,7 +197,7 @@ class CodeEditor extends TypedComponent {
                             id: 'play-button',
                             icon: 'E304',
                             text: '',
-                            onClick: () => this.onPlayButton()
+                            onClick: iframeHotReload
                         }
                     ),
                     jsx(

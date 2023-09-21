@@ -7,6 +7,7 @@ import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import { getOrientation } from './utils.mjs';
+import { iframeDestroy } from './iframeUtils.mjs';
 
 /**
  * @typedef {object} Props
@@ -153,16 +154,8 @@ export class SideBar extends TypedComponent {
         this.mergeState({ filteredCategories: updatedCategories });
     }
     onClickExample() {
-        //this.mergeState({ collapsed: true });
-        // console.log("load new example", category, example);
-        const { pc } = window;
-        if (pc) {
-            pc.app?.destroy();
-            // pc.app = null, but we don't have a setter for that in ES6
-            // We need to know if we can render Controls, using frame count now.
-            // The ready check happens in ./examples.mjs Example#renderControls
-            pc.app.frame = 0;
-        }
+        // this.mergeState({ collapsed: true });
+        iframeDestroy();
     }
     renderContents() {
         const categories = this.state.filteredCategories || this.state.defaultCategories;

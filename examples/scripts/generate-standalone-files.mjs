@@ -168,12 +168,13 @@ ${exampleClass.example.toString()}
             }
             return specifiedEngine;
         }
+        let ready = false; // Used in indicate if UI can render Controls
         let started = false;
         let miniStats;
         const args = Object.fromEntries(
             location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
         );
-        const data = new observer.Observer({});
+        let data = new observer.Observer({});
         /**
          * Keep it function in first run for nicer debug locations.
          * @type {Record<string, string | Function>}
@@ -191,10 +192,10 @@ ${exampleClass.example.toString()}
             return new Function('return ' + _)();
         }
         Object.assign(files, filesObject);
-        window.addEventListener('requestFiles', (event) => {
+        function requestFiles() {
             const responseEvent = new CustomEvent("requestedFiles", { detail: files });
             window.top.dispatchEvent(responseEvent);
-        });
+        }
         function showStats() {
             // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
             if (${Boolean(exampleClass.MINISTATS)}) {
@@ -218,8 +219,31 @@ ${exampleClass.example.toString()}
             }
             miniStats.enabled = false;
         }
-        window.addEventListener('showStats', showStats);
-        window.addEventListener('hideStats', hideStats);
+        function destroy() {
+            // @todo PR: either make it reusable or implement proper MiniStats#destroy
+            miniStats = null;
+            app?.destroy();
+            app = null;
+            ready = false;
+        }
+        function hotReload() {
+            destroy();
+            data = new observer.Observer({});
+            main(files);
+        }
+        window.addEventListener('requestFiles', requestFiles);
+        window.addEventListener('showStats'   , showStats   );
+        window.addEventListener('hideStats'   , hideStats   );
+        window.addEventListener('destroy'     , destroy     );
+        window.addEventListener('hotReload'   , hotReload   );
+        function updateControls() {
+            const event = new CustomEvent("updateFiles", {
+                detail: {
+                    files
+                }
+            });
+            window.top.dispatchEvent(event);
+        }
         async function main(files) {
             await loadScript('pc', getSpecifiedEngine());
             await loadScript('pcx', './playcanvas-extras.js');
@@ -257,6 +281,7 @@ ${exampleClass.example.toString()}
                 files,
             });
             window.app = app;
+            ready = true;
             function resize() {
                 const w = window.innerWidth;
                 const h = window.innerHeight;
@@ -298,8 +323,9 @@ ${exampleClass.example.toString()}
                         window.top.dispatchEvent(event);
                     }
                     started = true;
+                    updateControls();
                 } else {
-                    console.warn("no canvas")
+                    console.warn('main> no canvas');
                 }
             };
             // Wait until example has called app.start()
