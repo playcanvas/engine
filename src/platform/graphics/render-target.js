@@ -347,6 +347,11 @@ class RenderTarget {
         return this.impl.initialized;
     }
 
+    /** @ignore */
+    get device() {
+        return this._device;
+    }
+
     /**
      * Called when the device context was lost. It releases all context related resources.
      *

@@ -1,8 +1,9 @@
+import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { LIGHTTYPE_OMNI } from '../constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI } from '../constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
 import { LightCamera } from './light-camera.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
@@ -62,6 +63,8 @@ class RenderPassCookieRenderer extends RenderPass {
         super(device);
         this._cubeSlotsOffsets = cubeSlotsOffsets;
 
+        this.requiresCubemaps = false;
+
         this.blitTextureId = device.scope.resolve('blitTexture');
         this.invViewProjId = device.scope.resolve('invViewProj');
     }
@@ -72,6 +75,52 @@ class RenderPassCookieRenderer extends RenderPass {
 
         this._quadRendererCube?.destroy();
         this._quadRendererCube = null;
+    }
+
+    static create(renderTarget, cubeSlotsOffsets) {
+
+        Debug.assert(renderTarget);
+
+        // prepare a single render pass to render all quads to the render target
+        const renderPass = new RenderPassCookieRenderer(renderTarget.device, cubeSlotsOffsets);
+        renderPass.init(renderTarget);
+        renderPass.colorOps.clear = false;
+        renderPass.depthStencilOps.clearDepth = false;
+
+        return renderPass;
+    }
+
+    update(lights) {
+
+        // pick lights we need to update the cookies for
+        const filteredLights = this._filteredLights;
+        this.filter(lights, filteredLights);
+
+        // enabled / disable the pass
+        this.executeEnabled = filteredLights.length > 0;
+    }
+
+    filter(lights, filteredLights) {
+
+        for (let i = 0; i < lights.length; i++) {
+            const light = lights[i];
+
+            // skip directional lights
+            if (light._type === LIGHTTYPE_DIRECTIONAL)
+                continue;
+
+            // skip clustered cookies with no assigned atlas slot
+            if (!light.atlasViewportAllocated)
+                continue;
+
+            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
+            if (!light.atlasSlotUpdated)
+                continue;
+
+            if (light.enabled && light.cookie && light.visibleThisFrame) {
+                filteredLights.push(light);
+            }
+        }
     }
 
     initInvViewProjMatrices() {
@@ -155,6 +204,8 @@ class RenderPassCookieRenderer extends RenderPass {
 
             DebugGraphics.popGpuMarker(device);
         }
+
+        filteredLights.length = 0;
     }
 }
 

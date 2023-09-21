@@ -738,17 +738,11 @@ class ForwardRenderer extends Renderer {
         // clustered lighting render passes
         if (clusteredLightingEnabled) {
 
-            // cookies
-            {
-                const renderPass = new RenderPass(this.device, () => {
-                    // render cookies for all local visible lights
-                    if (this.scene.lighting.cookiesEnabled) {
-                        this.renderCookies(this.lights);
-                    }
-                });
-                renderPass.requiresCubemaps = false;
-                DebugHelper.setName(renderPass, 'ClusteredCookies');
-                frameGraph.addRenderPass(renderPass);
+            // render cookies for all local visible lights
+            if (this.scene.lighting.cookiesEnabled) {
+                const cookiesRenderPass = this.cookiesRenderPass;
+                cookiesRenderPass.update(this.lights);
+                frameGraph.addRenderPass(cookiesRenderPass);
             }
 
             // local shadows - these are shared by all cameras (not entirely correctly)
