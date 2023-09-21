@@ -1082,9 +1082,8 @@ class Renderer {
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
 
             // camera
-            const cameraPass = renderAction.cameraIndex;
             /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-            const camera = layer.cameras[cameraPass];
+            const camera = renderAction.camera;
 
             if (camera) {
 
@@ -1101,13 +1100,15 @@ class Renderer {
                 this.cullLights(camera.camera, layer._lights);
 
                 // cull mesh instances
-                layer.onPreCull?.(cameraPass);
+                if (layer.onPreCull)
+                    layer.onPreCull(comp.camerasMap.get(camera));
 
                 const culledInstances = layer.getCulledInstances(camera.camera);
                 const drawCalls = layer.meshInstances;
                 this.cull(camera.camera, drawCalls, culledInstances);
 
-                layer.onPostCull?.(cameraPass);
+                if (layer.onPostCull)
+                    layer.onPostCull(comp.camerasMap.get(camera));
             }
         }
 
