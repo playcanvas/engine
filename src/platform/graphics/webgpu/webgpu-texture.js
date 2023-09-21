@@ -456,7 +456,9 @@ class WebgpuTexture {
             };
         } else if (formatInfo.blockSize) {
             // compressed format
-            const blockDim = (size) => Math.floor((size + 3) / 4);
+            const blockDim = (size) => {
+                return Math.floor((size + 3) / 4);
+            };
             dataLayout = {
                 offset: 0,
                 bytesPerRow: formatInfo.blockSize * blockDim(width),
