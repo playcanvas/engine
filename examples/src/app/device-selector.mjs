@@ -3,7 +3,7 @@
 import {
     DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_NULL
 } from 'playcanvas/src/platform/graphics/constants.js';
-import React, { Component } from 'react';
+import { Component } from 'react';
 import { jsx } from './jsx.mjs';
 import { SelectInput } from '@playcanvas/pcui/react';
 
@@ -17,30 +17,41 @@ const deviceTypeNames = {
 /**
  * @typedef {object} Props
  * @property {Function} onSelect
- * @property {import('@playcanvas/observer').Observer} [observer]
  */
 
-/** @typedef {object} State */
+/**
+ * @typedef {object} State
+ * @property {any} fallbackOrder - The fallbackOrder.
+ * @property {any} disabledOptions - The disabledOptions.
+ * @property {string} activeDevice - The active device reported from the running example.
+ */
 
 /** @type {typeof Component<Props, State>} */
 const TypedComponent = Component;
 
 class DeviceSelector extends TypedComponent {
-    deviceTypeSelectInputRef = React.createRef();
+    state = {
+        fallbackOrder: null,
+        disabledOptions: null,
+        activeDevice: this.preferredGraphicsDevice,
+    };
 
     /**
      * @param {Props} props 
      */
     constructor(props) {
         super(props);
-        this.props.observer?.on('updateActiveDevice', this.onSetActiveGraphicsDevice.bind(this));
+        window.addEventListener('updateActiveDevice', event => {
+            const activeDevice = event.detail;
+            this.onSetActiveGraphicsDevice(activeDevice);
+        });
     }
 
     /**
-     * @type {SelectInput|undefined}
+     * @param {Partial<State>} state - New partial state.
      */
-    get deviceTypeSelectInput() {
-        return this.deviceTypeSelectInputRef.current?.element;
+    mergeState(state) {
+        this.setState({ ...this.state, ...state });
     }
 
     /**
@@ -56,29 +67,34 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
-     * @param {string} preferredDevice 
-     * @param {string} activeDevice 
+     * If our preferred device was e.g. WebGPU, but our active device is suddenly e.g. WebGL 2,
+     * then we basically infer that WebGPU wasn't supported and mark it like that.
+     * @param {string} preferredDevice - The preferred device.
+     * @param {string} activeDevice - The active device reported from the example iframe.
      */
     setDisabledOptions(preferredDevice = 'webgpu', activeDevice) {
-        const selectInput = this.deviceTypeSelectInput;
         if ((preferredDevice === DEVICETYPE_WEBGL2 || preferredDevice === DEVICETYPE_WEBGPU) && activeDevice === DEVICETYPE_WEBGL1) {
-            selectInput.fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
-            selectInput.disabledOptions = {
+            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
+            const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)',
                 [DEVICETYPE_WEBGL2]: 'WebGL 2 (not supported)'
             };
+            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else if (preferredDevice === DEVICETYPE_WEBGL1 && activeDevice === DEVICETYPE_WEBGL2) {
-            selectInput.fallbackOrder = [DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU];
-            selectInput.disabledOptions = {
+            const fallbackOrder = [DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU];
+            const disabledOptions = {
                 [DEVICETYPE_WEBGL1]: 'WebGL 1 (not supported)'
             };
+            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else if (preferredDevice === DEVICETYPE_WEBGPU && activeDevice !== DEVICETYPE_WEBGPU) {
-            selectInput.fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
-            selectInput.disabledOptions = {
+            const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
+            const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)'
             };
+            this.mergeState({ fallbackOrder, disabledOptions, activeDevice });
         } else {
-            selectInput.disabledOptions = null;
+            const disabledOptions = null;
+            this.mergeState({ disabledOptions, activeDevice });
         }
     }
 
@@ -100,24 +116,23 @@ class DeviceSelector extends TypedComponent {
     onSetActiveGraphicsDevice(value) {
         if (!this.preferredGraphicsDevice) {
             this.preferredGraphicsDevice = value;
-            this.deviceTypeSelectInput.value = value;
         }
         this.setDisabledOptions(this.preferredGraphicsDevice, value);
         this.updateMiniStats(value);
     }
 
     /**
-     * @param {string} value - todo
+     * @param {string} value - The newly picked graphics device. 
      */
     onSetPreferredGraphicsDevice(value) {
-        this.deviceTypeSelectInput.disabledOptions = null;
-        this.deviceTypeSelectInput.value = value;
+        this.mergeState({ disabledOptions: null, activeDevice: value });
         this.preferredGraphicsDevice = value;
         this.updateMiniStats(value);
         this.props.onSelect(value);
     }
 
     render() {
+        const { fallbackOrder, disabledOptions, activeDevice } = this.state;
         return jsx(SelectInput, {
             id: 'deviceTypeSelectInput',
             options: [
@@ -126,11 +141,11 @@ class DeviceSelector extends TypedComponent {
                 { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
                 { t: deviceTypeNames[DEVICETYPE_NULL  ], v: DEVICETYPE_NULL   },
             ],
-            value: this.preferredGraphicsDevice,
+            value: activeDevice,
+            fallbackOrder,
+            disabledOptions,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
-            prefix: 'Active Device: ', 
-            // @ts-ignore this is setting a legacy ref
-            ref: this.deviceTypeSelectInputRef
+            prefix: 'Active Device: '
         })
     }
 }

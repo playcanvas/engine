@@ -1,5 +1,4 @@
 import { withRouter } from 'react-router-dom';
-import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
 import { iframePath } from '../assetPath.mjs';
@@ -13,8 +12,6 @@ import { iframeEval, iframeReload, iframeRequestFiles } from './iframeUtils.mjs'
 import { getOrientation } from './utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
-
-const controlsObserver = new Observer();
 
 /**
  * @typedef {object} ControlOptions
@@ -105,8 +102,6 @@ class Example extends TypedComponent {
                 files,
             });
         }
-        const activeDevice = event.deviceType;
-        controlsObserver.emit('updateActiveDevice', activeDevice);
     }
 
     onUpdateFiles(event) {
@@ -188,7 +183,6 @@ class Example extends TypedComponent {
     renderDeviceSelector() {
         return jsx(DeviceSelector, {
             onSelect: iframeReload, // reload the iframe after updating the device
-            observer: controlsObserver,
         });
     }
 
@@ -337,6 +331,5 @@ class Example extends TypedComponent {
 const ExamptWithRouter = withRouter(Example);
 
 export {
-    ExamptWithRouter as Example,
-    controlsObserver,
+    ExamptWithRouter as Example
 };

@@ -244,6 +244,12 @@ ${exampleClass.example.toString()}
             });
             window.top.dispatchEvent(event);
         }
+        function updateActiveDevice() {
+            const event = new CustomEvent("updateActiveDevice", {
+                detail: pc.app.graphicsDevice.deviceType
+            });
+            window.top.dispatchEvent(event);
+        }
         async function main(files) {
             await loadScript('pc', getSpecifiedEngine());
             await loadScript('pcx', './playcanvas-extras.js');
@@ -303,27 +309,20 @@ ${exampleClass.example.toString()}
                 showStats();
             }
             class ExampleLoadEvent extends CustomEvent {
-                /** @type {string} */
-                deviceType;
-                /**
-                 * @param {string} deviceType
-                 */
                 constructor(deviceType) {
                     super("exampleLoad");
-                    this.deviceType = deviceType;
                     this.files = files;
                 }
             }
             const finalFunc = () => {
-                // console.log("REAL START!");
                 if (app.graphicsDevice?.canvas) {
                     setupApplication(app);
                     if (!started) { // only one time, recalls of main() are caused by Monaco live coding
-                        const event = new ExampleLoadEvent(app.graphicsDevice.deviceType);
-                        window.top.dispatchEvent(event);
+                        window.top.dispatchEvent(new ExampleLoadEvent());
                     }
                     started = true;
                     updateControls();
+                    updateActiveDevice();
                 } else {
                     console.warn('main> no canvas');
                 }
