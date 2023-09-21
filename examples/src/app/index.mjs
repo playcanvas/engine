@@ -1,15 +1,7 @@
-import React from 'react';
-import * as pcui from '@playcanvas/pcui/react';
 import { createRoot } from 'react-dom/client';
-import '@playcanvas/pcui/styles';
-import { jsx          } from './jsx.mjs';
+import { jsx } from './jsx.mjs';
 import { MainLayout } from './MainLayout.mjs';
 import '@playcanvas/pcui/styles';
-
-Object.assign(window, {
-    pcui,
-    React,
-});
 
 function main() {
     // render out the app
