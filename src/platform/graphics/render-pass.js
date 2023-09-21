@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
@@ -143,23 +143,29 @@ class RenderPass {
     /**
      * Custom function that is called to render the pass.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    execute;
+    _execute;
+
+    /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
 
     /**
      * Custom function that is called before the pass has started.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    before;
+    _before;
 
     /**
      * Custom function that is called after the pass has fnished.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    after;
+    _after;
 
     /**
      * Creates an instance of the RenderPass.
@@ -169,10 +175,14 @@ class RenderPass {
      * @param {Function} [execute] - Custom function that is called to render the pass.
      */
     constructor(graphicsDevice, execute) {
+        DebugHelper.setName(this, this.constructor.name);
+        Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
 
-        /** @type {Function} */
-        this.execute = execute;
+        this._execute = execute;
+    }
+
+    destroy() {
     }
 
     /**
@@ -208,6 +218,18 @@ class RenderPass {
                 colorOps.mipmaps = true;
             }
         }
+    }
+
+    before() {
+        this._before?.();
+    }
+
+    execute() {
+        this._execute?.();
+    }
+
+    after() {
+        this._after?.();
     }
 
     /**
@@ -260,19 +282,21 @@ class RenderPass {
             this.log(device, device.renderPassIndex);
         });
 
-        this.before?.();
+        this.before();
 
-        if (realPass) {
-            device.startPass(this);
+        if (this.executeEnabled) {
+            if (realPass) {
+                device.startPass(this);
+            }
+
+            this.execute();
+
+            if (realPass) {
+                device.endPass(this);
+            }
         }
 
-        this.execute?.();
-
-        if (realPass) {
-            device.endPass(this);
-        }
-
-        this.after?.();
+        this.after();
 
         device.renderPassIndex++;
 
@@ -284,7 +308,7 @@ class RenderPass {
     log(device, index) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            const rt = this.renderTarget === null ? this.renderTarget ?? device.backBuffer : null;
+            const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
             const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
@@ -297,6 +321,7 @@ class RenderPass {
 
             Debug.trace(TRACEID_RENDER_PASS,
                         `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}` +
                         rtInfo.padEnd(30));
 
             for (let i = 0; i < numColor; i++) {

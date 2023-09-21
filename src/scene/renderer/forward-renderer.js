@@ -738,17 +738,11 @@ class ForwardRenderer extends Renderer {
         // clustered lighting render passes
         if (clusteredLightingEnabled) {
 
-            // cookies
-            {
-                const renderPass = new RenderPass(this.device, () => {
-                    // render cookies for all local visible lights
-                    if (this.scene.lighting.cookiesEnabled) {
-                        this.renderCookies(this.lights);
-                    }
-                });
-                renderPass.requiresCubemaps = false;
-                DebugHelper.setName(renderPass, 'ClusteredCookies');
-                frameGraph.addRenderPass(renderPass);
+            // render cookies for all local visible lights
+            if (this.scene.lighting.cookiesEnabled) {
+                const cookiesRenderPass = this.cookiesRenderPass;
+                cookiesRenderPass.update(this.lights);
+                frameGraph.addRenderPass(cookiesRenderPass);
             }
 
             // local shadows - these are shared by all cameras (not entirely correctly)
@@ -764,7 +758,7 @@ class ForwardRenderer extends Renderer {
                 }
 
                 // update clusters all the time
-                renderPass.after = () => {
+                renderPass._after = () => {
                     this.updateClusters(layerComposition);
                 };
             }
@@ -785,7 +779,7 @@ class ForwardRenderer extends Renderer {
 
             const renderAction = renderActions[i];
             const layer = layerComposition.layerList[renderAction.layerIndex];
-            const camera = layer.cameras[renderAction.cameraIndex];
+            const camera = renderAction.camera;
 
             // skip disabled layers
             if (!renderAction.isLayerEnabled(layerComposition)) {
@@ -822,13 +816,20 @@ class ForwardRenderer extends Renderer {
             if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
                 nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
 
-                // render the render actions in the range
-                this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i, isGrabPass);
+                if (isDepthLayer && camera.renderSceneColorMap) {
+
+                    frameGraph.addRenderPass(camera.camera.colorGrabPass);
+
+                } else {
+
+                    // render the render actions in the range
+                    this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i, isGrabPass);
+                }
 
                 // postprocessing
                 if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
                     const renderPass = new RenderPass(this.device, () => {
-                        this.renderPassPostprocessing(renderAction, layerComposition);
+                        this.renderPassPostprocessing(renderAction);
                     });
                     renderPass.requiresCubemaps = false;
                     DebugHelper.setName(renderPass, `Postprocess`);
@@ -856,21 +857,20 @@ class ForwardRenderer extends Renderer {
         const renderActions = layerComposition._renderActions;
         const startRenderAction = renderActions[startIndex];
         const endRenderAction = renderActions[endIndex];
-        const startLayer = layerComposition.layerList[startRenderAction.layerIndex];
-        const camera = startLayer.cameras[startRenderAction.cameraIndex];
+        const camera = startRenderAction.camera;
 
         if (camera) {
 
             // callback on the camera component before rendering with this camera for the first time
             if (startRenderAction.firstCameraUse && camera.onPreRender) {
-                renderPass.before = () => {
+                renderPass._before = () => {
                     camera.onPreRender();
                 };
             }
 
             // callback on the camera component when we're done rendering with this camera
             if (endRenderAction.lastCameraUse && camera.onPostRender) {
-                renderPass.after = () => {
+                renderPass._after = () => {
                     camera.onPostRender();
                 };
             }
@@ -941,10 +941,9 @@ class ForwardRenderer extends Renderer {
         this.gpuUpdate(this.processingMeshInstances);
     }
 
-    renderPassPostprocessing(renderAction, layerComposition) {
+    renderPassPostprocessing(renderAction) {
 
-        const layer = layerComposition.layerList[renderAction.layerIndex];
-        const camera = layer.cameras[renderAction.cameraIndex];
+        const camera = renderAction.camera;
         Debug.assert(renderAction.triggerPostprocess && camera.onPostprocessing);
 
         // trigger postprocessing for camera
@@ -983,8 +982,8 @@ class ForwardRenderer extends Renderer {
         const layer = comp.layerList[layerIndex];
         const transparent = comp.subLayerList[layerIndex];
 
-        const cameraPass = renderAction.cameraIndex;
-        const camera = layer.cameras[cameraPass];
+        const camera = renderAction.camera;
+        const cameraPass = comp.camerasMap.get(camera);
 
         if (!renderAction.isLayerEnabled(comp)) {
             return;

@@ -2,7 +2,7 @@ import { Debug } from '../../core/debug.js';
 
 import {
     ADDRESS_CLAMP_TO_EDGE,
-    FILTER_NEAREST, FILTER_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
+    FILTER_NEAREST,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
 } from '../../platform/graphics/constants.js';
 
@@ -20,18 +20,11 @@ import { Layer } from '../layer.js';
 
 // uniform names (first is current name, second one is deprecated name for compatibility)
 const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
-const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
 
 /**
- * Internal class abstracting the access to the depth and color texture of the scene.
- * color frame buffer is copied to a texture
+ * Internal class abstracting the access to the depth texture of the scene.
  * For webgl 2 devices, the depth buffer is copied to a texture
  * for webgl 1 devices, the scene's depth is rendered to a separate RGBA texture
- *
- * TODO: implement mipmapped color buffer support for WebGL 1 as well, which requires
- * the texture to be a power of two, by first downscaling the captured framebuffer
- * texture to smaller power of 2 texture, and then generate mipmaps and use it for rendering
- * TODO: or even better, implement blur filter to have smoother lower levels
  *
  * @ignore
  */
@@ -94,14 +87,13 @@ class SceneGrab {
         return camera.renderSceneDepthMap;
     }
 
-    setupUniform(device, depth, buffer) {
+    setupUniform(device, buffer) {
 
         // assign it to scopes to expose it to shaders
-        const names = depth ? _depthUniformNames : _colorUniformNames;
-        names.forEach(name => device.scope.resolve(name).setValue(buffer));
+        _depthUniformNames.forEach(name => device.scope.resolve(name).setValue(buffer));
     }
 
-    allocateTexture(device, source, name, format, isDepth, mipmaps) {
+    allocateTexture(device, source, name, format) {
 
         // allocate texture that will store the depth
         return new Texture(device, {
@@ -109,9 +101,9 @@ class SceneGrab {
             format,
             width: source ? source.colorBuffer.width : device.width,
             height: source ? source.colorBuffer.height : device.height,
-            mipmaps,
-            minFilter: isDepth ? FILTER_NEAREST : (mipmaps ? FILTER_LINEAR_MIPMAP_LINEAR : FILTER_LINEAR),
-            magFilter: isDepth ? FILTER_NEAREST : FILTER_LINEAR,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
@@ -123,15 +115,7 @@ class SceneGrab {
         return texture?.format ?? this.device.backBufferFormat;
     }
 
-    shouldReallocate(targetRT, sourceTexture, testFormat) {
-
-        // need to reallocate if format does not match
-        if (testFormat) {
-            const targetFormat = targetRT?.colorBuffer.format;
-            const sourceFormat = this.getSourceColorFormat(sourceTexture);
-            if (targetFormat !== sourceFormat)
-                return true;
-        }
+    shouldReallocate(targetRT, sourceTexture) {
 
         // need to reallocate if dimensions don't match
         const width = sourceTexture?.width || this.device.width;
@@ -139,13 +123,10 @@ class SceneGrab {
         return !targetRT || width !== targetRT.width || height !== targetRT.height;
     }
 
-    allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth, mipmaps, isDepthUniforms) {
-
-        // texture / uniform names: new one (first), as well as old one  (second) for compatibility
-        const names = isDepthUniforms ? _depthUniformNames : _colorUniformNames;
+    allocateRenderTarget(renderTarget, sourceRenderTarget, device, format, isDepth) {
 
         // allocate texture buffer
-        const buffer = this.allocateTexture(device, sourceRenderTarget, names[0], format, isDepth, mipmaps);
+        const buffer = this.allocateTexture(device, sourceRenderTarget, _depthUniformNames[0], format);
 
         if (renderTarget) {
 
@@ -198,52 +179,12 @@ class SceneGrab {
             onDisable: function () {
                 self.releaseRenderTarget(this.depthRenderTarget);
                 this.depthRenderTarget = null;
-
-                self.releaseRenderTarget(this.colorRenderTarget);
-                this.colorRenderTarget = null;
             },
 
             onPreRenderOpaque: function (cameraPass) { // resize depth map if needed
 
                 /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
-
-                if (camera.renderSceneColorMap) {
-
-                    // allocate / resize existing RT as needed
-                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer, true)) {
-                        self.releaseRenderTarget(this.colorRenderTarget);
-                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, true, false);
-                    }
-
-                    // copy color from the current render target
-                    DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
-
-                    const colorBuffer = this.colorRenderTarget.colorBuffer;
-
-                    if (device.isWebGPU) {
-
-                        device.copyRenderTarget(camera.renderTarget, this.colorRenderTarget, true, false);
-
-                        // generate mipmaps
-                        device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
-
-                    } else {
-
-                        device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
-
-                        // generate mipmaps
-                        device.activeTexture(device.maxCombinedTextures - 1);
-                        device.bindTexture(colorBuffer);
-                        device.gl.generateMipmap(colorBuffer.impl._glTarget);
-                    }
-
-                    DebugGraphics.popGpuMarker(device);
-
-                    // assign unifrom
-                    self.setupUniform(device, false, colorBuffer);
-                }
 
                 if (camera.renderSceneDepthMap) {
 
@@ -260,10 +201,12 @@ class SceneGrab {
                         }
                     }
 
+                    const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
+
                     // reallocate RT if needed
-                    if (self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                    if (self.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
                         self.releaseRenderTarget(this.depthRenderTarget);
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, format, useDepthBuffer);
                     }
 
                     // WebGL2 multisampling depth handling: we resolve multi-sampled depth buffer to a single-sampled destination buffer.
@@ -289,7 +232,7 @@ class SceneGrab {
                     }
 
                     // assign uniform
-                    self.setupUniform(device, true, useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer);
+                    self.setupUniform(device, useDepthBuffer ? this.depthRenderTarget.depthBuffer : this.depthRenderTarget.colorBuffer);
                 }
             },
 
@@ -333,9 +276,6 @@ class SceneGrab {
                 // only release depth texture, but not the render target itself
                 this.depthRenderTarget.destroyTextureBuffers();
                 this.renderTarget = null;
-
-                self.releaseRenderTarget(this.colorRenderTarget);
-                this.colorRenderTarget = null;
             },
 
             onPostCull: function (cameraPass) {
@@ -345,10 +285,12 @@ class SceneGrab {
 
                 if (camera.renderSceneDepthMap) {
 
+                    const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
+
                     // reallocate RT if needed
-                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, camera.renderTarget?.depthBuffer)) {
+                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
                         this.depthRenderTarget?.destroyTextureBuffers();
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false, false, true);
+                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false);
 
                         // assign it so the render actions knows to render to it
                         // TODO: avoid this as this API is deprecated
@@ -402,42 +344,9 @@ class SceneGrab {
                 /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
                 const camera = this.cameras[cameraPass];
 
-                if (camera.renderSceneColorMap) {
-
-                    // reallocate RT if needed
-                    if (self.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer)) {
-                        self.releaseRenderTarget(this.colorRenderTarget);
-                        const format = self.getSourceColorFormat(camera.renderTarget?.colorBuffer);
-                        this.colorRenderTarget = self.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, format, false, false, false);
-                    }
-
-                    // copy out the color buffer
-                    DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
-
-                    // initialize the texture
-                    const colorBuffer = this.colorRenderTarget._colorBuffer;
-                    if (!colorBuffer.impl._glTexture) {
-                        colorBuffer.impl.initialize(device, colorBuffer);
-                    }
-
-                    // copy framebuffer to it
-                    device.bindTexture(colorBuffer);
-                    const gl = device.gl;
-                    gl.copyTexImage2D(gl.TEXTURE_2D, 0, colorBuffer.impl._glFormat, 0, 0, colorBuffer.width, colorBuffer.height, 0);
-
-                    // stop the device from updating this texture further
-                    colorBuffer._needsUpload = false;
-                    colorBuffer._needsMipmapsUpload = false;
-
-                    DebugGraphics.popGpuMarker(device);
-
-                    // assign unifrom
-                    self.setupUniform(device, false, colorBuffer);
-                }
-
                 if (camera.renderSceneDepthMap) {
                     // assign unifrom
-                    self.setupUniform(device, true, this.depthRenderTarget.colorBuffer);
+                    self.setupUniform(device, this.depthRenderTarget.colorBuffer);
                 }
             },
 

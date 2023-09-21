@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
@@ -21,6 +23,7 @@ class FrameGraph {
      * pass to add.
      */
     addRenderPass(renderPass) {
+        Debug.assert(renderPass);
         this.renderPasses.push(renderPass);
     }
 

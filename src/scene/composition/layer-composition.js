@@ -66,6 +66,14 @@ class LayerComposition extends EventHandler {
     cameras = [];
 
     /**
+     * A mapping of {@link CameraComponent} to its index in {@link LayerComposition#cameras}.
+     *
+     * @type {Map<import('../../framework/components/camera/component.js').CameraComponent, number>}
+     * @ignore
+     */
+    camerasMap = new Map();
+
+    /**
      * The actual rendering sequence, generated based on layers and cameras
      *
      * @type {RenderAction[]}
@@ -134,6 +142,12 @@ class LayerComposition extends EventHandler {
                 sortPriority(this.cameras);
             }
 
+            // update camera map
+            this.camerasMap.clear();
+            for (let i = 0; i < this.cameras.length; i++) {
+                this.camerasMap.set(this.cameras[i], i);
+            }
+
             // collect a list of layers this camera renders
             const cameraLayers = [];
 
@@ -181,16 +195,11 @@ class LayerComposition extends EventHandler {
                                     }
                                 }
 
-                                // camera index in the layer array
-                                const cameraIndex = layer.cameras.indexOf(camera);
-                                if (cameraIndex >= 0) {
-
-                                    // add render action to describe rendering step
-                                    lastRenderAction = this.addRenderAction(this._renderActions, renderActionCount, layer, j, cameraIndex,
-                                                                            cameraFirstRenderAction, postProcessMarked);
-                                    renderActionCount++;
-                                    cameraFirstRenderAction = false;
-                                }
+                                // add render action to describe rendering step
+                                lastRenderAction = this.addRenderAction(this._renderActions, renderActionCount, layer, j, camera,
+                                                                        cameraFirstRenderAction, postProcessMarked);
+                                renderActionCount++;
+                                cameraFirstRenderAction = false;
                             }
                         }
                     }
@@ -226,7 +235,7 @@ class LayerComposition extends EventHandler {
     }
 
     // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
-    addRenderAction(renderActions, renderActionIndex, layer, layerIndex, cameraIndex, cameraFirstRenderAction, postProcessMarked) {
+    addRenderAction(renderActions, renderActionIndex, layer, layerIndex, camera, cameraFirstRenderAction, postProcessMarked) {
 
         // try and reuse object, otherwise allocate new
         /** @type {RenderAction} */
@@ -237,8 +246,6 @@ class LayerComposition extends EventHandler {
 
         // render target from the camera takes precedence over the render target from the layer
         let rt = layer.renderTarget;
-        /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-        const camera = layer.cameras[cameraIndex];
         if (camera && camera.renderTarget) {
             if (layer.id !== LAYERID_DEPTH) {   // ignore depth layer
                 rt = camera.renderTarget;
@@ -276,7 +283,6 @@ class LayerComposition extends EventHandler {
         renderAction.triggerPostprocess = false;
         renderAction.layerIndex = layerIndex;
         renderAction.layer = layer;
-        renderAction.cameraIndex = cameraIndex;
         renderAction.camera = camera;
         renderAction.renderTarget = rt;
         renderAction.clearColor = clearColor;
@@ -333,7 +339,7 @@ class LayerComposition extends EventHandler {
                 const layer = this.layerList[layerIndex];
                 const enabled = layer.enabled && this.subLayerEnabled[layerIndex];
                 const transparent = this.subLayerList[layerIndex];
-                const camera = layer.cameras[ra.cameraIndex];
+                const camera = ra.camera;
                 const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
                 Debug.trace(TRACEID_RENDER_ACTION, i +

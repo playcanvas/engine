@@ -33,9 +33,9 @@ import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../plat
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
-import { CookieRenderer } from './cookie-renderer.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
+import { RenderPassCookieRenderer } from './render-pass-cookie-renderer.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -128,7 +128,7 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // cookies
-        this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
+        this.cookiesRenderPass = RenderPassCookieRenderer.create(this.lightTextureAtlas.cookieRenderTarget, this.lightTextureAtlas.cubeSlotsOffsets);
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -200,8 +200,8 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._cookieRenderer.destroy();
-        this._cookieRenderer = null;
+        this.cookiesRenderPass.destroy();
+        this.cookiesRenderPass = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
@@ -1082,9 +1082,8 @@ class Renderer {
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
 
             // camera
-            const cameraPass = renderAction.cameraIndex;
             /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-            const camera = layer.cameras[cameraPass];
+            const camera = renderAction.camera;
 
             if (camera) {
 
@@ -1101,13 +1100,15 @@ class Renderer {
                 this.cullLights(camera.camera, layer._lights);
 
                 // cull mesh instances
-                layer.onPreCull?.(cameraPass);
+                if (layer.onPreCull)
+                    layer.onPreCull(comp.camerasMap.get(camera));
 
                 const culledInstances = layer.getCulledInstances(camera.camera);
                 const drawCalls = layer.meshInstances;
                 this.cull(camera.camera, drawCalls, culledInstances);
 
-                layer.onPostCull?.(cameraPass);
+                if (layer.onPostCull)
+                    layer.onPostCull(comp.camerasMap.get(camera));
             }
         }
 
@@ -1156,10 +1157,6 @@ class Renderer {
 
         // keep temp set empty
         _tempSet.clear();
-    }
-
-    renderCookies(lights) {
-        this._cookieRenderer.render(lights);
     }
 
     /**
