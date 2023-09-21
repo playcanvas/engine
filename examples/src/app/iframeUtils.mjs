@@ -1,29 +1,42 @@
 /**
+ * @throws {string} In case the <iframe> is missing.
  * @returns {Window} The example window.
  */
 function getIframeWindow() {
-    const exampleIframe = document.getElementById('exampleIframe');
-    return exampleIframe.contentWindow;
+    const e = document.getElementById('exampleIframe');
+    // Never simply cast getElementById, it's important to properly check and
+    // handle the returned element, as it is possible for the element to:
+    // 1) Not exist.
+    // 2) Have a different type than expected.
+    // These situations happen during refactoring etc.
+    if (!(e instanceof HTMLIFrameElement)) {
+        throw 'Missing <iframe> with id exampleIframe';
+    }
+    return e.contentWindow;
 }
 function iframeRequestFiles() {
-    const exampleWindow = getIframeWindow();
-    exampleWindow.dispatchEvent(new CustomEvent("requestFiles"));
+    getIframeWindow().dispatchEvent(new CustomEvent('requestFiles'));
 }
 function iframeShowStats() {
-    const exampleWindow = getIframeWindow();
-    exampleWindow.dispatchEvent(new CustomEvent("showStats"));
+    getIframeWindow().dispatchEvent(new CustomEvent('showStats'));
 }
 function iframeHideStats() {
-    const exampleWindow = getIframeWindow();
-    exampleWindow.dispatchEvent(new CustomEvent("hideStats"));
+    getIframeWindow().dispatchEvent(new CustomEvent('hideStats'));
 }
 function iframeResize() {
-    const exampleWindow = getIframeWindow();
-    exampleWindow.dispatchEvent(new Event("resize"));
+    getIframeWindow().dispatchEvent(new Event('resize'));
 }
 function iframeReload() {
-    const exampleWindow = getIframeWindow();
-    exampleWindow.location.reload();
+    getIframeWindow().location.reload();
+}
+/**
+ * Instead of reloading the entire iframe, we simply reevaluate the example function.
+ * This makes the hot reload nearly instant, while iframeReload() can take seconds.
+ * Only drawback is App#destroy is sometimes buggy - hence hot-reload is only configured
+ * on Shift+Enter, while the CodeEditor reload button is calling iframeReload().
+ */
+function iframeHotReload() {
+    getIframeWindow().dispatchEvent(new Event('hotReload'));
 }
 export {
     iframeRequestFiles,
@@ -31,4 +44,5 @@ export {
     iframeHideStats,
     iframeResize,
     iframeReload,
+    iframeHotReload,
 };
