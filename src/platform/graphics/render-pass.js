@@ -148,6 +148,12 @@ class RenderPass {
     _execute;
 
     /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
+
+    /**
      * Custom function that is called before the pass has started.
      *
      * @type {Function|undefined}
@@ -278,14 +284,16 @@ class RenderPass {
 
         this.before();
 
-        if (realPass) {
-            device.startPass(this);
-        }
+        if (this.executeEnabled) {
+            if (realPass) {
+                device.startPass(this);
+            }
 
-        this.execute();
+            this.execute();
 
-        if (realPass) {
-            device.endPass(this);
+            if (realPass) {
+                device.endPass(this);
+            }
         }
 
         this.after();
@@ -313,6 +321,7 @@ class RenderPass {
 
             Debug.trace(TRACEID_RENDER_PASS,
                         `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}` +
                         rtInfo.padEnd(30));
 
             for (let i = 0; i < numColor; i++) {
