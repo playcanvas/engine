@@ -4,11 +4,15 @@ import { pcTypes } from '../assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor from "@monaco-editor/react";
 import { iframeHotReload, iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
+import { removeRedundantSpaces } from './helpers/strings.mjs';
 
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
     'shader': null,
+    'vert': null,
+    'frag': null,
     'javascript': 'javascript',
+    'js': 'javascript',
     'mjs': 'javascript',
 };
 
@@ -165,6 +169,30 @@ class CodeEditor extends TypedComponent {
     render() {
         setTimeout(iframeResize, 50);
         const { files, selectedFile } = this.state;
+        const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()];
+        const value = removeRedundantSpaces(files[selectedFile]);
+        /** @type {import('@monaco-editor/react').EditorProps} */
+        const options = {
+            value,
+            language,
+            beforeMount: this.beforeMount.bind(this),
+            onMount: this.editorDidMount.bind(this),
+            onChange: this.onChange.bind(this),
+            options: {
+                scrollbar: {
+                    horizontal: 'visible'
+                },
+                readOnly: false,
+                theme: 'vs-dark',
+            },
+            /**
+             * @todo Without a key the syntax highlighting mode isn't updated.
+             * But WITH a key the theme information isn't respected any longer... this
+             * is probably a Monaco bug, which we need to file. Related:
+             * https://github.com/microsoft/monaco-editor/issues/1713
+            */
+            //key: selectedFile,
+        };
         return jsx(
             Panel,
             {
@@ -219,24 +247,7 @@ class CodeEditor extends TypedComponent {
                     this.renderTabs(),
                 )
             ),
-            jsx(
-                MonacoEditor,
-                {
-                    language: FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()],
-                    //language: "javascript",
-                    value: files[selectedFile],
-                    beforeMount: this.beforeMount.bind(this),
-                    onMount: this.editorDidMount.bind(this),
-                    onChange: this.onChange.bind(this),
-                    options: {
-                        scrollbar: {
-                            horizontal: 'visible'
-                        },
-                        readOnly: false,
-                        theme: "vs-dark",
-                    }
-                }
-            )
+            jsx(MonacoEditor, options)
         );
     };
 }

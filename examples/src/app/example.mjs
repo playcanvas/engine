@@ -279,9 +279,10 @@ class Example extends TypedComponent {
                     MonacoEditor,
                     {
                         options: {
-                            readOnly: true
+                            readOnly: true,
+                            theme: 'vs-dark',
                         },
-                        defaultLanguage: "typescript",
+                        defaultLanguage: "javascript",
                         value: files['example.mjs'],
                     }
                 )

@@ -42,4 +42,33 @@ function kebabCaseToPascalCase(str) {
         .replace('3d', '3D');
 }
 
-export { capitalizeFirstLetter, toKebabCase, kebabCaseToPascalCase };
+/**
+ * @example
+ * countLeadingSpaces('  Hello!'); // Result: 2
+ * @param {string} str - String with leading spaces.
+ * @returns {number} Number of spaces.
+ */
+function countLeadingSpaces(str) {
+    let count = 0;
+    for (let i = 0; i < str.length; i++) {
+        if (str[i] === " ") {
+            count++;
+        } else {
+            break;
+        }
+    }
+    return count;
+}
+
+/**
+ * @param {string} code - Code with redundant spaces over many lines.
+ * @returns {string} Same code, but removed reduddant spaces.
+ */
+function removeRedundantSpaces(code) {
+    const n = Math.min(...code.split('\n').filter(Boolean).map(countLeadingSpaces));
+    const removeSpacesRegExp = new RegExp(' '.repeat(n), 'g');
+    const prettyCode = code.replace(removeSpacesRegExp, '');
+    return prettyCode;
+}
+
+export { capitalizeFirstLetter, toKebabCase, kebabCaseToPascalCase, removeRedundantSpaces };
