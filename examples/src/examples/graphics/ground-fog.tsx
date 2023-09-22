@@ -257,6 +257,7 @@ class GroundFogExample {
                 let firstFrame = true;
                 let currentTime = 0;
                 app.on("update", function (dt) {
+
                     // on the first frame, when camera is updated, move it further away from the focus tree
                     if (firstFrame) {
                         firstFrame = false;
