@@ -708,7 +708,7 @@ class CameraComponent extends Component {
             Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
         }
 
-        this.camera._enableColorGrabPass(this.system.app.graphicsDevice, this.renderSceneColorMap);
+        this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
     }
 
     /**
