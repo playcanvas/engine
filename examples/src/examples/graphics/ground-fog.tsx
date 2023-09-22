@@ -256,8 +256,9 @@ class GroundFogExample {
 
                 let firstFrame = true;
                 let currentTime = 0;
+                let c = 0;
                 app.on("update", function (dt) {
-
+                    c++;
                     // on the first frame, when camera is updated, move it further away from the focus tree
                     if (firstFrame) {
                         firstFrame = false;
@@ -274,6 +275,11 @@ class GroundFogExample {
 
                     // debug rendering of the deptht texture in the corner
                     app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
+
+                    pc.Tracing.set(pc.TRACEID_RENDER_PASS, c === 20);
+                    pc.Tracing.set(pc.TRACEID_RENDER_PASS_DETAIL, c === 20);
+
+
                 });
             });
         });

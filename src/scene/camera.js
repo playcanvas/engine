@@ -34,7 +34,7 @@ class Camera {
     /**
      * @type {RenderPassColorGrab|null}
      */
-    colorGrabPass = null;
+    renderPassColorGrab = null;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -428,13 +428,13 @@ class Camera {
         return this;
     }
 
-    _enableColorGrabPass(device, enable) {
+    _enableRenderPassColorGrab(device, enable) {
         if (enable) {
-            Debug.assert(!this.colorGrabPass);
-            this.colorGrabPass = new RenderPassColorGrab(device, this);
+            Debug.assert(!this.renderPassColorGrab);
+            this.renderPassColorGrab = new RenderPassColorGrab(device, this);
         } else {
-            this.colorGrabPass?.destroy();
-            this.colorGrabPass = null;
+            this.renderPassColorGrab?.destroy();
+            this.renderPassColorGrab = null;
         }
     }
 
