@@ -992,8 +992,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
-        this.supportsMsaa = contextAttribs.antialias;
-        this.supportsStencil = contextAttribs.stencil;
+        this.supportsMsaa = contextAttribs?.antialias ?? false;
+        this.supportsStencil = contextAttribs?.stencil ?? false;
 
         this.supportsInstancing = !!this.extInstancing;
 
