@@ -731,6 +731,7 @@ class ForwardRenderer extends Renderer {
     buildFrameGraph(frameGraph, layerComposition) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        const webgl1 = this.device.isWebGl1;
         frameGraph.reset();
 
         this.update(layerComposition);
@@ -781,12 +782,25 @@ class ForwardRenderer extends Renderer {
             const layer = layerComposition.layerList[renderAction.layerIndex];
             const camera = renderAction.camera;
 
+            // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
+            const depthPass = camera.camera.renderPassDepthGrab;
+            if (depthPass && webgl1 && renderAction.firstCameraUse) {
+
+                depthPass.update(this.scene);
+                frameGraph.addRenderPass(depthPass);
+            }
+
             // skip disabled layers
             if (!renderAction.isLayerEnabled(layerComposition)) {
                 continue;
             }
 
             const isDepthLayer = layer.id === LAYERID_DEPTH;
+
+            // skip depth layer on webgl1 as depth pass renders ahead of the main camera
+            if (webgl1 && isDepthLayer)
+                continue;
+
             const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
             // directional shadows get re-rendered for each camera
@@ -810,7 +824,7 @@ class ForwardRenderer extends Renderer {
             // info about the next render action
             const nextRenderAction = renderActions[nextIndex];
             const isNextLayerDepth = nextRenderAction ? layerComposition.layerList[nextRenderAction.layerIndex].id === LAYERID_DEPTH : false;
-            const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
+            const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
 
             // end of the block using the same render target
             if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||

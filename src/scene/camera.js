@@ -12,6 +12,7 @@ import {
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -35,6 +36,11 @@ class Camera {
      * @type {RenderPassColorGrab|null}
      */
     renderPassColorGrab = null;
+
+    /**
+     * @type {RenderPassDepth|null}
+     */
+    renderPassDepthGrab = null;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -86,6 +92,15 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+    }
+
+    destroy() {
+
+        this.renderPassColorGrab?.destroy();
+        this.renderPassColorGrab = null;
+
+        this.renderPassDepthGrab?.destroy();
+        this.renderPassDepthGrab = null;
     }
 
     /**
@@ -435,6 +450,17 @@ class Camera {
         } else {
             this.renderPassColorGrab?.destroy();
             this.renderPassColorGrab = null;
+        }
+    }
+
+    _enableRenderPassDepthGrab(device, renderer, enable) {
+        if (enable) {
+            Debug.assert(!this.renderPassDepthGrab);
+            if (device.isWebGl1)
+                this.renderPassDepthGrab = new RenderPassDepth(device, renderer, this);
+        } else {
+            this.renderPassDepthGrab?.destroy();
+            this.renderPassDepthGrab = null;
         }
     }
 

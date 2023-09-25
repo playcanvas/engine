@@ -120,6 +120,9 @@ class Lightmapper {
         this.scene = null;
         this.renderer = null;
         this.assets = null;
+
+        this.camera?.destroy();
+        this.camera = null;
     }
 
     initBake(device) {

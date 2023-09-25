@@ -385,6 +385,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.gl = gl;
         this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+        this.isWebGl2 = this.webgl2;
+        this.isWebGl1 = !this.webgl2;
         this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer

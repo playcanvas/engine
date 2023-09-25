@@ -5,6 +5,7 @@ import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { SHADER_PICK } from '../../scene/constants.js';
 
 const tempMeshInstances = [];
+const lights = [[], [], []];
 
 /**
  * A render pass implementing rendering of mesh instances into a pick buffer.
@@ -50,8 +51,7 @@ class RenderPassPicker extends RenderPass {
             if (srcLayer.enabled && subLayerEnabled[i]) {
 
                 // if the layer is rendered by the camera
-                const layerCamId = srcLayer.cameras.indexOf(camera);
-                if (layerCamId >= 0) {
+                if (srcLayer.camerasSet.has(camera.camera)) {
 
                     // if the layer clears the depth
                     if (srcLayer._clearDepthBuffer) {
@@ -72,7 +72,6 @@ class RenderPassPicker extends RenderPass {
                         }
                     }
 
-                    const lights = [[], [], []];
                     renderer.renderForward(camera.camera, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
                         const miId = meshInstance.id;
                         pickColor[0] = ((miId >> 16) & 0xff) / 255;
