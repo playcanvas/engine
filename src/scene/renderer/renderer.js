@@ -401,11 +401,11 @@ class Renderer {
      *
      * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
      * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
-     * from the camra if not supplied.
+     * from the camera if not supplied.
      * @param {boolean} [clearDepth] - True if the depth buffer should be cleared. Uses the value
-     * from the camra if not supplied.
+     * from the camera if not supplied.
      * @param {boolean} [clearStencil] - True if the stencil buffer should be cleared. Uses the
-     * value from the camra if not supplied.
+     * value from the camera if not supplied.
      */
     clear(camera, clearColor, clearDepth, clearStencil) {
 

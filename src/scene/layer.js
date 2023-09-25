@@ -161,6 +161,12 @@ class Layer {
      */
     cameras = [];
 
+    /**
+     * @type {Set<import('./camera.js').Camera>}
+     * @ignore
+     */
+    camerasSet = new Set();
+
     _dirtyCameras = false;
 
     /**
@@ -841,9 +847,11 @@ class Layer {
      * {@link CameraComponent}.
      */
     addCamera(camera) {
-        if (this.cameras.indexOf(camera) >= 0) return;
-        this.cameras.push(camera);
-        this._dirtyCameras = true;
+        if (!this.camerasSet.has(camera.camera)) {
+            this.camerasSet.add(camera.camera);
+            this.cameras.push(camera);
+            this._dirtyCameras = true;
+        }
     }
 
     /**
@@ -853,8 +861,9 @@ class Layer {
      * {@link CameraComponent}.
      */
     removeCamera(camera) {
-        const index = this.cameras.indexOf(camera);
-        if (index >= 0) {
+        if (this.camerasSet.has(camera.camera)) {
+            this.camerasSet.delete(camera.camera);
+            const index = this.cameras.indexOf(camera);
             this.cameras.splice(index, 1);
             this._dirtyCameras = true;
         }
@@ -865,6 +874,7 @@ class Layer {
      */
     clearCameras() {
         this.cameras.length = 0;
+        this.camerasSet.clear();
         this._dirtyCameras = true;
     }
 

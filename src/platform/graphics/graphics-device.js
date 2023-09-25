@@ -69,6 +69,22 @@ class GraphicsDevice extends EventHandler {
     isWebGPU = false;
 
     /**
+     * True if the deviceType is WebGL1
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGl1 = false;
+
+    /**
+     * True if the deviceType is WebGL2
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGl2 = false;
+
+    /**
      * The scope namespace for shader attributes and variables.
      *
      * @type {ScopeSpace}

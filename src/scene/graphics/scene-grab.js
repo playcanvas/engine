@@ -3,16 +3,15 @@ import { Debug } from '../../core/debug.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
-    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F, PIXELFORMAT_RGBA8
+    PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F
 } from '../../platform/graphics/constants.js';
 
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 import {
-    LAYERID_DEPTH, LAYERID_WORLD,
+    LAYERID_DEPTH,
     SHADER_DEPTH
 } from '../constants.js';
 
@@ -241,14 +240,9 @@ class SceneGrab {
         });
     }
 
-    // fallback path, where copy is not possible and the scene gets re-rendered
+    // unused but left till the above path is converted to a render pass
     initFallbackPath() {
 
-        const self = this;
-        const device = this.device;
-        const scene = this.scene;
-
-        // WebGL 1 depth layer renders the same objects as in World, but with RGBA-encoded depth shader to get depth
         this.layer = new Layer({
             enabled: false,
             name: "Depth",
@@ -256,115 +250,21 @@ class SceneGrab {
             shaderPass: SHADER_DEPTH,
 
             onEnable: function () {
-
-                // create RT without textures, those will be created as needed later
-                this.depthRenderTarget = new RenderTarget({
-                    name: 'depthRenderTarget-webgl1',
-                    depth: true,
-                    stencil: device.supportsStencil,
-                    autoResolve: false,
-                    graphicsDevice: device
-                });
-
-                // assign it so the render actions knows to render to it
-                // TODO: avoid this as this API is deprecated
-                this.renderTarget = this.depthRenderTarget;
             },
 
             onDisable: function () {
-
-                // only release depth texture, but not the render target itself
-                this.depthRenderTarget.destroyTextureBuffers();
-                this.renderTarget = null;
             },
 
             onPostCull: function (cameraPass) {
-
-                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-                const camera = this.cameras[cameraPass];
-
-                if (camera.renderSceneDepthMap) {
-
-                    const sourceTexture = camera.renderTarget?.depthBuffer ?? camera.renderTarget?.colorBuffer;
-
-                    // reallocate RT if needed
-                    if (!this.depthRenderTarget?.colorBuffer || self.shouldReallocate(this.depthRenderTarget, sourceTexture)) {
-                        this.depthRenderTarget?.destroyTextureBuffers();
-                        this.depthRenderTarget = self.allocateRenderTarget(this.depthRenderTarget, camera.renderTarget, device, PIXELFORMAT_RGBA8, false);
-
-                        // assign it so the render actions knows to render to it
-                        // TODO: avoid this as this API is deprecated
-                        this.renderTarget = this.depthRenderTarget;
-                    }
-
-                    // Collect all rendered mesh instances on the layers prior to the depth layer.
-                    // Store them in a visible list of instances on the depth layer.
-                    const culledDepthInstances = this.getCulledInstances(camera.camera);
-                    const depthOpaque = culledDepthInstances.opaque;
-                    depthOpaque.length = 0;
-
-                    const layerComposition = scene.layers;
-                    const subLayerEnabled = layerComposition.subLayerEnabled;
-                    const isTransparent = layerComposition.subLayerList;
-
-                    // can't use self.defaultLayerWorld.renderTarget because projects that use the editor override default layers
-                    const rt = layerComposition.getLayerById(LAYERID_WORLD).renderTarget;
-
-                    const layers = layerComposition.layerList;
-                    for (let i = 0; i < layers.length; i++) {
-                        const layer = layers[i];
-
-                        // only use the layers before the depth layer
-                        if (layer === this) break;
-
-                        if (layer.renderTarget !== rt || !layer.enabled || !subLayerEnabled[i]) continue;
-                        if (layer.cameras.indexOf(camera) < 0) continue;
-
-                        // visible instances for the camera for the layer
-                        const transparent = isTransparent[i];
-                        const layerCulledInstances = layer.getCulledInstances(camera.camera);
-                        const layerMeshInstances = transparent ? layerCulledInstances.transparent : layerCulledInstances.opaque;
-
-                        // copy them to a visible list of the depth layer
-                        const count = layerMeshInstances.length;
-                        for (let j = 0; j < count; j++) {
-                            const drawCall = layerMeshInstances[j];
-
-                            // only collect meshes that update the depth
-                            if (drawCall.material?.depthWrite && !drawCall._noDepthDrawGl1) {
-                                depthOpaque.push(drawCall);
-                            }
-                        }
-                    }
-                }
             },
 
             onPreRenderOpaque: function (cameraPass) {
-
-                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-                const camera = this.cameras[cameraPass];
-
-                if (camera.renderSceneDepthMap) {
-                    // assign unifrom
-                    self.setupUniform(device, this.depthRenderTarget.colorBuffer);
-                }
             },
 
             onDrawCall: function () {
-                // writing depth to color render target, force no blending and writing to all channels
-                device.setBlendState(BlendState.NOBLEND);
             },
 
             onPostRenderOpaque: function (cameraPass) {
-
-                /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-                const camera = this.cameras[cameraPass];
-
-                if (camera.renderSceneDepthMap) {
-                    // just clear the list of visible objects to avoid keeping references
-                    const culledDepthInstances = this.getCulledInstances(camera.camera);
-                    culledDepthInstances.opaque.length = 0;
-                }
             }
         });
     }
