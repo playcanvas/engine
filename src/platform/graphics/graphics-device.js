@@ -2,6 +2,7 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
@@ -35,6 +36,21 @@ class GraphicsDevice extends EventHandler {
      * @readonly
      */
     canvas;
+
+    /**
+     * The render target representing the main back-buffer.
+     *
+     * @type {import('./render-target.js').RenderTarget|null}
+     * @ignore
+     */
+    backBuffer = null;
+
+    /**
+     * The dimensions of the back buffer.
+     *
+     * @ignore
+     */
+    backBufferSize = new Vec2();
 
     /**
      * True if the deviceType is WebGPU

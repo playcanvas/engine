@@ -344,7 +344,7 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions(buildType)
     };
 
-    const rootFile = 'src/index.js';
+    const rootFile = 'src/index.mjs';
     return {
         input: rootFile,
         output: outputOptions,

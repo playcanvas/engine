@@ -284,11 +284,9 @@ class RenderPass {
     log(device, index) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            let rt = this.renderTarget;
-            if (rt === null && device.isWebGPU) {
-                rt = device.frameBuffer;
-            }
-            const numColor = rt?._colorBuffers?.length ?? (rt?.impl.assignedColorTexture ? 1 : 0);
+            const rt = this.renderTarget === null ? this.renderTarget ?? device.backBuffer : null;
+            const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
+            const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
             const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
