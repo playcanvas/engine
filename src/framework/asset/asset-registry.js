@@ -27,6 +27,14 @@ import { Asset } from './asset.js';
  */
 
 /**
+ * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
+ * to load from. Return a single bundle to ensure asset is loaded from it.
+ *
+ * @callback BundlesFilterCallback
+ * @param {import('../bundle/bundle.js').Bundle[]} bundles - List of bundles which contain the asset.
+ */
+
+/**
  * Container for all assets that are available to this application. Note that PlayCanvas scripts
  * are provided with an AssetRegistry instance as `app.assets`.
  *
@@ -353,7 +361,12 @@ class AssetRegistry extends EventHandler {
      *
      * @param {Asset} asset - The asset to load.
      * @param {object} [options] - Options for asset loading.
-     * @param {boolean} [options.bundlesIgnore] - Default to false. If true, then asset that is in bundle will still load directly.
+     * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
+     * from a bundle. Defaults to false.
+     * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * when loading an asset that is contained in any of the bundles. It provides an array of
+     * bundles and will ensure asset is loaded from bundle returned from a callback. By default
+     * smallest filesize bundle is choosen.
      * @example
      * // load some assets
      * const assetsToLoad = [

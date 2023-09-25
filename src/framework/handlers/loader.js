@@ -9,14 +9,6 @@ import { Debug } from '../../core/debug.js';
  */
 
 /**
- * Callback used by {@link ResourceLoader#load} and called when an asset is choosing a bundle
- * to load from. Return a single bundle to ensure asset is loaded from it.
- *
- * @callback BundlesFilterCallback
- * @param {Bundle[]} bundles - List of bundles which contain the asset.
- */
-
-/**
  * Load resource data, potentially from remote sources. Caches resource on load to prevent multiple
  * requests. Add ResourceHandlers to handle different types of resources.
  */
@@ -105,7 +97,7 @@ class ResourceLoader {
      * @param {object} [options] - Additional options for loading.
      * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
      * from a bundle. Defaults to false.
-     * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
+     * @param {import('../asset/asset-registry.js').BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
      * bundles and will ensure asset is loaded from bundle returned from a callback. By default
      * smallest filesize bundle is choosen.
