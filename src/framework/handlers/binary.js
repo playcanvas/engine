@@ -33,6 +33,10 @@ class BinaryHandler {
         });
     }
 
+    openBinary(data) {
+        return data.buffer;
+    }
+
     open(url, data) {
         return data;
     }

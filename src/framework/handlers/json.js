@@ -8,6 +8,14 @@ class JsonHandler {
      */
     handlerType = "json";
 
+    /**
+     * TextDecoder for decoding binary data.
+     *
+     * @type {TextDecoder}
+     * @private
+     */
+    decoder = new TextDecoder('utf-8');
+
     constructor(app) {
         this.maxRetries = 0;
     }
@@ -37,6 +45,10 @@ class JsonHandler {
                 callback(`Error loading JSON resource: ${url.original} [${err}]`);
             }
         });
+    }
+
+    openBinary(data) {
+        return JSON.parse(this.decoder.decode(data));
     }
 
     open(url, data) {

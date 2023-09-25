@@ -8,6 +8,14 @@ class ShaderHandler {
      */
     handlerType = "shader";
 
+    /**
+     * TextDecoder for decoding binary data.
+     *
+     * @type {TextDecoder}
+     * @private
+     */
+    decoder = new TextDecoder('utf-8');
+
     constructor(app) {
         this.maxRetries = 0;
     }
@@ -30,6 +38,10 @@ class ShaderHandler {
                 callback(`Error loading shader resource: ${url.original} [${err}]`);
             }
         });
+    }
+
+    openBinary(data) {
+        return this.decoder.decode(data);
     }
 
     open(url, data) {

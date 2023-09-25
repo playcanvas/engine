@@ -55,6 +55,7 @@ class BundleRegistry {
         // index its referenced assets
         if (asset.type === 'bundle') {
             this._idToBundle.set(asset.id, asset);
+            this._assets.on(`load:start:${asset.id}`, this._onBundleLoadStart, this);
             this._assets.on(`load:${asset.id}`, this._onBundleLoad, this);
             this._assets.on(`error:${asset.id}`, this._onBundleError, this);
 
@@ -71,6 +72,7 @@ class BundleRegistry {
     }
 
     _unbindAssetEvents(id) {
+        this._assets.off('load:start:' + id, this._onBundleLoadStart, this);
         this._assets.off('load:' + id, this._onBundleLoad, this);
         this._assets.off('error:' + id, this._onBundleError, this);
     }
@@ -84,7 +86,7 @@ class BundleRegistry {
             bundles = new Set();
             this._assetToBundles.set(id, bundles);
         }
-    
+
         bundles.add(bundle);
 
         const asset = this._assets.get(id);
@@ -134,7 +136,7 @@ class BundleRegistry {
 
             // remove bundle from _assetToBundles and _urlInBundles indexes
             const assetIds = asset.data.assets;
-            for(let i = 0; i < assetIds.length; i++) {
+            for (let i = 0; i < assetIds.length; i++) {
                 const bundles = this._assetToBundles.get(assetIds[i]);
                 if (!bundles) continue;
                 bundles.delete(asset);
@@ -166,6 +168,17 @@ class BundleRegistry {
         }
     }
 
+    _onBundleLoadStart(asset) {
+        asset.resource.on('add', (url, data) => {
+            const callbacks = this._fileRequests.get(url);
+            if (!callbacks) return;
+            for (let i = 0; i < callbacks.length; i++) {
+                callbacks[i](null, data);
+            }
+            this._fileRequests.delete(url);
+        });
+    }
+
     // If we have any pending file requests
     // that can be satisfied by the specified bundle
     // then resolve them
@@ -177,33 +190,31 @@ class BundleRegistry {
             return;
         }
 
-        
+        // make sure the registry hasn't been destroyed already
+        if (!this._fileRequests)
+            return;
 
-        // on next tick resolve the pending asset requests
-        // don't do it on the same tick because that ties the loading
-        // of the bundle to the loading of all the assets
-        requestAnimationFrame(() => {
-            // make sure the registry hasn't been destroyed already
-            if (!this._fileRequests)
-                return;
+        for (const [url, requests] of this._fileRequests) {
+            const bundles = this._urlsToBundles.get(url);
+            if (!bundles || !bundles.has(asset)) continue;
 
-            for (const [url, requests] of this._fileRequests) {
-                const bundles = this._urlsToBundles.get(url);
-                if (!bundles || !bundles.has(asset)) continue;
+            const decodedUrl = decodeURIComponent(url);
 
-                const decodedUrl = decodeURIComponent(url);
-                let err = null;
-                if (!asset.resource.hasBlobUrl(decodedUrl)) {
-                    err = `Bundle ${asset.id} does not contain URL ${url}`;
-                }
+            let err, data;
 
-                for (let i = 0; i < requests.length; i++) {
-                    requests[i](err, err ? null : asset.resource.getBlobUrl(decodedUrl));
-                }
-
-                this._fileRequests.delete(url);
+            if (asset.resource.has(decodedUrl)) {
+                data = asset.resource.get(decodedUrl);
+            } else if (asset.resource.loaded) {
+                err = `Bundle ${asset.id} does not contain URL ${url}`;
+            } else {
+                continue;
             }
-        });
+
+            for (let i = 0; i < requests.length; i++) {
+                requests[i](err, err || data);
+            }
+            this._fileRequests.delete(url);
+        }
     }
 
     // If we have outstanding file requests for any
@@ -231,7 +242,7 @@ class BundleRegistry {
 
         let candidate = null;
 
-        for(const bundle of bundles) {
+        for (const bundle of bundles) {
             if (bundle.loaded && bundle.resource) {
                 return bundle;
             } else if (bundle.loading) {
@@ -295,8 +306,8 @@ class BundleRegistry {
      * the second argument is the file blob URL.
      * @example
      * const url = asset.getFileUrl().split('?')[0]; // get normalized asset URL
-     * this.app.bundles.loadFile(url, function (err, blobUrl) {
-     *     // do something with the blob URL
+     * this.app.bundles.loadFile(url, function (err, data) {
+     *     // do something with the data
      * });
      */
     loadUrl(url, callback) {
@@ -309,20 +320,22 @@ class BundleRegistry {
         // Only load files from bundles that're explicitly requested to be loaded.
         if (bundle.loaded) {
             const decodedUrl = decodeURIComponent(url);
-            if (!bundle.resource.hasBlobUrl(decodedUrl)) {
+
+            if (bundle.resource.has(decodedUrl)) {
+                callback(null, bundle.resource.get(decodedUrl));
+                return;
+            } else if (bundle.resource.loaded) {
                 callback(`Bundle ${bundle.id} does not contain URL ${url}`);
                 return;
             }
-
-            callback(null, bundle.resource.getBlobUrl(decodedUrl));
-        } else {
-            let callbacks = this._fileRequests.get(url);
-            if (!callbacks) {
-                callbacks = [];
-                this._fileRequests.set(url, callbacks);
-            }
-            callbacks.push(callback);
         }
+
+        let callbacks = this._fileRequests.get(url);
+        if (!callbacks) {
+            callbacks = [];
+            this._fileRequests.set(url, callbacks);
+        }
+        callbacks.push(callback);
     }
 
     /**

@@ -1,27 +1,59 @@
+import { EventHandler } from '../../core/event-handler.js';
+
 /**
- * Represents the resource of a Bundle Asset, which contains an index that maps URLs to blob URLs.
+ * Represents the resource of a Bundle Asset, which contains an index that maps URLs to DataViews.
  *
  * @ignore
  */
-class Bundle {
+class Bundle extends EventHandler {
     /**
-     * index of asset file names to Blob
-     * @type {Map<string, Blob>}
+     * index of file urls to to DataView
+     * @type {Map<string, DataView>}
      * @private
      */
-    _fileNameToBlob = new Map();
+    _index = new Map();
 
     /**
-     * Create a new Bundle instance.
-     *
-     * @param {object[]} files - An array of objects that have a name field and contain a
-     * getBlobUrl() function.
+     * if Bundle has all files loaded
+     * @type {boolean}
+     * @private
      */
-    constructor(files) {
-        for (let i = 0; i < files.length; i++) {
-            if (!files[i].url) continue;
-            this._fileNameToBlob.set(files[i].name, files[i].url);
-        }
+    _loaded = false;
+
+    /**
+     * Fired when a file has been added to a Bundle.
+     *
+     * @event Bundle#add
+     * @param {string} url - A url of a file
+     * @param {DataView} data - A DataView of a file
+     * @example
+     * bundle.on("add", function (url, data) {
+     *     console.log("file added: " + url);
+     * });
+     */
+
+    /**
+     * Fired when all files of a Bundle has been loaded.
+     *
+     * @event Bundle#load
+     * @example
+     * bundle.on("load", function () {
+     *     console.log("All Bundle files has been loaded");
+     * });
+     */
+
+    /**
+     * Add file to a Bundle.
+     *
+     * @param {string} url - A url of a file.
+     * @param {DataView} data - A DataView of a file.
+     * @internal
+     */
+    addFile(url, data) {
+        if (this._index.has(url))
+            return;
+        this._index.set(url, data);
+        this.fire('add', url, data);
     }
 
     /**
@@ -31,30 +63,42 @@ class Bundle {
      * the URL first.
      * @returns {boolean} True of false.
      */
-    hasBlobUrl(url) {
-        return this._fileNameToBlob.has(url);
+    has(url) {
+        return this._index.has(url);
     }
 
     /**
-     * Returns a blob URL for the specified URL.
+     * Returns a DataView for the specified URL.
      *
      * @param {string} url - The original file URL. Make sure you have called decodeURIComponent on
      * the URL first.
-     * @returns {Blob|null} A blob URL.
+     * @returns {DataView|null} A DataView.
      */
-    getBlobUrl(url) {
-        return this._fileNameToBlob.get(url) || null;
+    get(url) {
+        return this._index.get(url) || null;
     }
 
     /**
-     * Destroys the bundle and frees up blob URLs.
+     * Destroys the bundle.
      */
     destroy() {
-        for (const url in this._fileNameToBlob.values()) {
-            URL.revokeObjectURL(url);
-        }
-        this._fileNameToBlob.clear();
-        this._fileNameToBlob = null;
+        this._index.clear();
+    }
+
+    /**
+     * True if all files of a Bundle are loaded
+     * @type {boolean}
+     */
+    set loaded(value) {
+        if (!value || this._loaded)
+            return;
+
+        this._loaded = true;
+        this.fire('load');
+    }
+
+    get loaded() {
+        return this._loaded;
     }
 }
 

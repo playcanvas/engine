@@ -381,6 +381,14 @@ class AssetRegistry extends EventHandler {
 
         const file = asset.file;
 
+        const _fireLoad = () => {
+            this.fire('load', asset);
+            this.fire('load:' + asset.id, asset);
+            if (file && file.url)
+                this.fire('load:url:' + file.url, asset);
+            asset.fire('load', asset);
+        };
+
         // open has completed on the resource
         const _opened = (resource) => {
             if (resource instanceof Array) {
@@ -392,20 +400,27 @@ class AssetRegistry extends EventHandler {
             // let handler patch the resource
             this._loader.patch(asset, this);
 
-            this.fire('load', asset);
-            this.fire('load:' + asset.id, asset);
-            if (file && file.url)
-                this.fire('load:url:' + file.url, asset);
-            asset.fire('load', asset);
-
             if (asset.type === 'bundle') {
                 const assetIds = asset.data.assets;
-                for(let i = 0; i < assetIds.length; i++) {
+                for (let i = 0; i < assetIds.length; i++) {
                     const assetInBundle = this._idToAsset.get(assetIds[i]);
                     if (assetInBundle && !assetInBundle.loaded) {
                         this.load(assetInBundle, { force: true });
                     }
                 }
+
+                if (asset.resource.loaded) {
+                    _fireLoad();
+                } else {
+                    this.fire('load:start', asset);
+                    this.fire('load:start:' + asset.id, asset);
+                    if (file && file.url)
+                        this.fire('load:start:url:' + file.url, asset);
+                    asset.fire('load:start', asset);
+                    asset.resource.on('load', _fireLoad);
+                }
+            } else {
+                _fireLoad();
             }
         };
 
@@ -440,15 +455,15 @@ class AssetRegistry extends EventHandler {
             asset.loading = true;
 
             const fileUrl = asset.getFileUrl();
-            
+
             // mark bundle assets as loading
             if (asset.type === 'bundle') {
                 const assetIds = asset.data.assets;
-                for(let i = 0; i < assetIds.length; i++) {
+                for (let i = 0; i < assetIds.length; i++) {
                     const assetInBundle = this._idToAsset.get(assetIds[i]);
                     if (!assetInBundle)
                         continue;
-                    
+
                     if (assetInBundle.loaded || assetInBundle.resource || assetInBundle.loading)
                         continue;
 
@@ -456,7 +471,8 @@ class AssetRegistry extends EventHandler {
                 }
             }
 
-            this._loader.load(fileUrl, asset.type, _loaded, asset);
+
+            this._loader.load(fileUrl, asset.type, _loaded, asset, options);
         } else {
             // asset has no file to load, open it directly
             const resource = this._loader.open(asset.type, asset.data);

@@ -8,6 +8,14 @@ class CssHandler {
      */
     handlerType = "css";
 
+    /**
+     * TextDecoder for decoding binary data.
+     *
+     * @type {TextDecoder}
+     * @private
+     */
+    decoder = new TextDecoder('utf-8');
+
     constructor(app) {
         this.maxRetries = 0;
     }
@@ -30,6 +38,10 @@ class CssHandler {
                 callback(`Error loading css resource: ${url.original} [${err}]`);
             }
         });
+    }
+
+    openBinary(data) {
+        return this.decoder.decode(data);
     }
 
     open(url, data) {
