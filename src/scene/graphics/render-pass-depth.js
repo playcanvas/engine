@@ -14,7 +14,7 @@ const lights = [[], [], []];
 const _depthUniformNames = ['uSceneDepthMap', 'uDepthMap'];
 
 /**
- * A render pass implementing rendering a depth. In current implementation, the depth is encoded in
+ * A render pass implementing rendering of depth. In current implementation, the depth is encoded in
  * RGBA8 texture, and is used on WebGL1 devices as a fallback for missing depth grab functionality.
  *
  * @ignore
