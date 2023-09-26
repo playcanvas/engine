@@ -417,7 +417,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeContextCaches();
 
         // handle anti-aliasing internally
-        this.samples = antialias ? 4 : 1;
+        this.samples = this.isWebGl2 && antialias ? 4 : 1;
         this.createBackbuffer(null);
 
         // only enable ImageBitmap on chrome
