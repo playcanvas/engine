@@ -2,7 +2,6 @@ import { now } from '../../core/time.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
-import { Color } from '../../core/math/color.js';
 
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
@@ -17,10 +16,7 @@ import {
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-import { SceneGrab } from '../graphics/scene-grab.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-
-const webgl1DepthClearColor = new Color(254.0 / 255, 254.0 / 255, 254.0 / 255, 254.0 / 255);
 
 const _drawCallList = {
     drawCalls: [],
@@ -797,8 +793,8 @@ class ForwardRenderer extends Renderer {
 
             const isDepthLayer = layer.id === LAYERID_DEPTH;
 
-            // skip depth layer on webgl1 as depth pass renders ahead of the main camera
-            if (webgl1 && isDepthLayer)
+            // skip depth layer on webgl1 if color grab pass is not enabled, as depth pass renders ahead of the main camera
+            if (webgl1 && isDepthLayer && !camera.renderSceneColorMap)
                 continue;
 
             const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
@@ -830,14 +826,22 @@ class ForwardRenderer extends Renderer {
             if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
                 nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
 
-                if (isDepthLayer && camera.renderSceneColorMap) {
+                // render the render actions in the range
+                const isDepthOnly = isDepthLayer && startIndex === i;
+                if (!isDepthOnly) {
+                    this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i);
+                }
 
-                    frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
+                // depth layer triggers grab passes if enabled
+                if (isDepthLayer) {
 
-                } else {
+                    if (camera.renderSceneColorMap) {
+                        frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
+                    }
 
-                    // render the render actions in the range
-                    this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i, isGrabPass);
+                    if (camera.renderSceneDepthMap && !webgl1) {
+                        frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
+                    }
                 }
 
                 // postprocessing
@@ -860,7 +864,7 @@ class ForwardRenderer extends Renderer {
      * @param {import('../composition/layer-composition.js').LayerComposition} layerComposition - The
      * layer composition.
      */
-    addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex, isGrabPass) {
+    addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
         // render the render actions in the range
         const range = { start: startIndex, end: endIndex };
@@ -890,36 +894,24 @@ class ForwardRenderer extends Renderer {
             }
         }
 
-        // depth grab pass on webgl1 is normal render pass (scene gets re-rendered)
-        const grabPassRequired = isGrabPass && SceneGrab.requiresRenderPass(this.device, camera);
-        const isRealPass = !isGrabPass || grabPassRequired;
+        renderPass.init(renderTarget);
+        renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
-        if (isRealPass) {
+        // if camera rendering covers the full viewport
+        if (renderPass.fullSizeClearRect) {
 
-            renderPass.init(renderTarget);
-            renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
-
-            if (grabPassRequired) {
-
-                // webgl1 depth rendering clear values
-                renderPass.setClearColor(webgl1DepthClearColor);
-                renderPass.setClearDepth(1.0);
-
-            } else if (renderPass.fullSizeClearRect) { // if camera rendering covers the full viewport
-
-                if (startRenderAction.clearColor) {
-                    renderPass.setClearColor(camera.camera.clearColor);
-                }
-                if (startRenderAction.clearDepth) {
-                    renderPass.setClearDepth(camera.camera.clearDepth);
-                }
-                if (startRenderAction.clearStencil) {
-                    renderPass.setClearStencil(camera.camera.clearStencil);
-                }
+            if (startRenderAction.clearColor) {
+                renderPass.setClearColor(camera.camera.clearColor);
+            }
+            if (startRenderAction.clearDepth) {
+                renderPass.setClearDepth(camera.camera.clearDepth);
+            }
+            if (startRenderAction.clearStencil) {
+                renderPass.setClearStencil(camera.camera.clearStencil);
             }
         }
 
-        DebugHelper.setName(renderPass, `${isGrabPass ? 'SceneGrab' : 'RenderAction'} ${startIndex}-${endIndex} ` +
+        DebugHelper.setName(renderPass, `RenderAction ${startIndex}-${endIndex} ` +
                             `Cam: ${camera ? camera.entity.name : '-'}`);
         frameGraph.addRenderPass(renderPass);
     }

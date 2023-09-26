@@ -1,4 +1,3 @@
-import { Debug } from '../core/debug.js';
 import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
@@ -12,6 +11,7 @@ import {
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
 import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
@@ -38,7 +38,7 @@ class Camera {
     renderPassColorGrab = null;
 
     /**
-     * @type {RenderPassDepth|null}
+     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
      */
     renderPassDepthGrab = null;
 
@@ -445,8 +445,9 @@ class Camera {
 
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
-            Debug.assert(!this.renderPassColorGrab);
-            this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+            if (!this.renderPassColorGrab) {
+                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+            }
         } else {
             this.renderPassColorGrab?.destroy();
             this.renderPassColorGrab = null;
@@ -455,9 +456,11 @@ class Camera {
 
     _enableRenderPassDepthGrab(device, renderer, enable) {
         if (enable) {
-            Debug.assert(!this.renderPassDepthGrab);
-            if (device.isWebGl1)
-                this.renderPassDepthGrab = new RenderPassDepth(device, renderer, this);
+            if (!this.renderPassDepthGrab) {
+                this.renderPassDepthGrab = device.isWebGl1 ?
+                    new RenderPassDepth(device, renderer, this) :
+                    new RenderPassDepthGrab(device, this);
+            }
         } else {
             this.renderPassDepthGrab?.destroy();
             this.renderPassDepthGrab = null;
