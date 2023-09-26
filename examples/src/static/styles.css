@@ -735,3 +735,8 @@ body {
     background-color: rgba(0, 0, 0, .5);
     font-family: "Proxima Nova", Arial, sans-serif;
 }
+
+/* Prevent that number slider bar inputs are cropped */
+.pcui-slider > .pcui-numeric-input {
+    flex: 1.5 !important;
+}
