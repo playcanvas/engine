@@ -169,7 +169,7 @@ class WebglShader {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
-        if (device.isWebGl2 && definition.useTransformFeedback) {
+        if (device.isWebGL2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
             const outNames = [];
             for (const attr in attrs) {
@@ -363,7 +363,7 @@ class WebglShader {
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
-                (device.isWebGl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                (device.isWebGL2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
             ) {
                 this.samplers.push(shaderInput);
             } else {

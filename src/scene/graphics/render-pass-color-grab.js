@@ -48,7 +48,7 @@ class RenderPassColorGrab extends RenderPass {
     allocateRenderTarget(renderTarget, sourceRenderTarget, device, format) {
 
         // allocate texture buffer
-        const mipmaps = device.isWebGl2;
+        const mipmaps = device.isWebGL2;
         const texture = new Texture(device, {
             name: _colorUniformNames[0],
             format,
@@ -126,7 +126,7 @@ class RenderPassColorGrab extends RenderPass {
             // generate mipmaps
             device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
 
-        } else if (device.isWebGl2) {
+        } else if (device.isWebGL2) {
 
             device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
 

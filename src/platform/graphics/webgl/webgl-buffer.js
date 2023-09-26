@@ -42,7 +42,7 @@ class WebglBuffer {
                 glUsage = gl.STREAM_DRAW;
                 break;
             case BUFFER_GPUDYNAMIC:
-                glUsage = device.isWebGl2 ? gl.DYNAMIC_COPY : gl.STATIC_DRAW;
+                glUsage = device.isWebGL2 ? gl.DYNAMIC_COPY : gl.STATIC_DRAW;
                 break;
         }
 

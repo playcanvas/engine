@@ -74,7 +74,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      * @readonly
      */
-    isWebGl1 = false;
+    isWebGL1 = false;
 
     /**
      * True if the deviceType is WebGL2
@@ -82,7 +82,7 @@ class GraphicsDevice extends EventHandler {
      * @type {boolean}
      * @readonly
      */
-    isWebGl2 = false;
+    isWebGL2 = false;
 
     /**
      * The scope namespace for shader attributes and variables.

@@ -614,8 +614,8 @@ Object.defineProperties(Texture.prototype, {
 
 Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
     get: function () {
-        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGl2 instead.');
-        return this.isWebGl2;
+        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
     }
 });
 

@@ -727,7 +727,7 @@ class ForwardRenderer extends Renderer {
     buildFrameGraph(frameGraph, layerComposition) {
 
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-        const webgl1 = this.device.isWebGl1;
+        const webgl1 = this.device.isWebGL1;
         frameGraph.reset();
 
         this.update(layerComposition);
