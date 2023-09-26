@@ -61,6 +61,11 @@ class GraphicsDevice extends EventHandler {
     backBufferFormat;
 
     /**
+     * True if the back buffer should use anti-aliasing.
+     */
+    backBufferAntialias = false;
+
+    /**
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
