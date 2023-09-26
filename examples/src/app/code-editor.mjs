@@ -170,7 +170,12 @@ class CodeEditor extends TypedComponent {
         setTimeout(iframeResize, 50);
         const { files, selectedFile } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()];
-        const value = removeRedundantSpaces(files[selectedFile]);
+        let value = files[selectedFile];
+        if (value) {
+            value = removeRedundantSpaces(value);
+        } else {
+            value = '// reloading, please wait';
+        }
         /** @type {import('@monaco-editor/react').EditorProps} */
         const options = {
             value,
