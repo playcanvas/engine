@@ -7,14 +7,14 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class Bundle extends EventHandler {
     /**
-     * index of file urls to to DataView
+     * Index of file url to to DataView.
      * @type {Map<string, DataView>}
      * @private
      */
     _index = new Map();
 
     /**
-     * if Bundle has all files loaded
+     * If Bundle has all files loaded.
      * @type {boolean}
      * @private
      */
@@ -86,7 +86,7 @@ class Bundle extends EventHandler {
     }
 
     /**
-     * True if all files of a Bundle are loaded
+     * True if all files of a Bundle are loaded.
      * @type {boolean}
      */
     set loaded(value) {

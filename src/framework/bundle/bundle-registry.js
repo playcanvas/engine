@@ -5,28 +5,28 @@
  */
 class BundleRegistry {
     /**
-     * index of bundle assets
+     * Index of bundle assets.
      * @type {Map<number, import('../asset/asset.js').Asset>}
      * @private
      */
     _idToBundle = new Map();
 
     /**
-     * index of asset id to set of bundle assets
+     * Index of asset id to set of bundle assets.
      * @type {Map<number, Set<import('../asset/asset.js').Asset>>}
      * @private
      */
     _assetToBundles = new Map();
 
     /**
-     * index of file urls to set of bundle assets
+     * Index of file url to set of bundle assets.
      * @type {Map<string, Set<import('../asset/asset.js').Asset>>}
      * @private
      */
     _urlsToBundles = new Map();
 
     /**
-     * index of file requests to load callbacks
+     * Index of file request to load callbacks.
      * @type {Map<string, function[]>}
      * @private
      */
@@ -45,7 +45,7 @@ class BundleRegistry {
     }
 
     /**
-     * Called when asset is added to AssetRegisry
+     * Called when asset is added to AssetRegistry.
      *
      * @param {import('../asset/asset.js').Asset} asset - The asset that has been added.
      * @private

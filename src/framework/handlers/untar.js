@@ -1,9 +1,8 @@
 import { EventHandler } from '../../core/event-handler.js';
 
 /**
- * An utility class for un-tar'ing archives, from a fetch requests.
- * It processes files in tar in streamed manned, so assets parsing
- * can happen in parallel instead of all at once at the end.
+ * A utility class for untaring archives from a fetch request. It processes files from a tar file
+ * in a streamed manner, so asset parsing can happen in parallel instead of all at once at the end.
  *
  * @augments EventHandler
  * @ignore
@@ -107,7 +106,7 @@ class Untar extends EventHandler {
     }
 
     /**
-     * This method is called multiple times when stream provides a data.
+     * This method is called multiple times when the stream provides data.
      *
      * @param {boolean} done - True when reading data is complete.
      * @param {Uint8Array} value - Chunk of data read from a stream.
@@ -139,8 +138,8 @@ class Untar extends EventHandler {
     /**
      * Attempt to read file from an available data buffer
      *
-     * @returns {boolean} True if file were sucessfully read and potentially more
-     * data is available for processing.
+     * @returns {boolean} True if file was successfully read and more data is potentially available for
+     * processing.
      * @ignore
      */
     readFile() {
@@ -173,7 +172,6 @@ class Untar extends EventHandler {
             // normal file
             if (this.fileType === '' || this.fileType === '0') {
                 const dataView = new DataView(this.data.buffer, this.bytesRead, this.fileSize);
-                // const blob = URL.createObjectURL(new Blob([dataView]));
 
                 const file = {
                     name: this.prefix + this.fileName,
