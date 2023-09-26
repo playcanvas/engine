@@ -375,7 +375,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.gl = gl;
-        this.isWebGl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;;
+        this.isWebGl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
         this.isWebGl1 = !this.isWebGl2;
         this._deviceType = this.isWebGl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
