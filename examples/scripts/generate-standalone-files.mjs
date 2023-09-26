@@ -133,6 +133,10 @@ ${exampleClass.example.toString()}
         function getDeviceType() {
             const last = localStorage.getItem('preferredGraphicsDevice');
             if (last !== null) {
+                if (last === 'webgpu' && ${Boolean(exampleClass.WEBGPU_CRASH)}) {
+                    console.warn('Picked WebGPU but example is known to crash, defaulting to WebGL2');
+                    return 'webgl2';
+                }
                 return last;
             } else if (${Boolean(exampleClass.WEBGPU_ENABLED)}) {
                 let preferredDevice = 'webgpu';
