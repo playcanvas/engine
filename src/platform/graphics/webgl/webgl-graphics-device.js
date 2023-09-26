@@ -353,7 +353,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
-        const antialias = options.antialias;
+        this.backBufferAntialias = options.antialias ?? false;
         options.antialias = false;
 
         // Retrieve the WebGL context
@@ -406,8 +406,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // handle anti-aliasing internally
-        this.samples = this.isWebGL2 && antialias ? 4 : 1;
         this.createBackbuffer(null);
 
         // only enable ImageBitmap on chrome
@@ -1033,8 +1031,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
         ext = this.extTextureFilterAnisotropic;
         this.maxAnisotropy = ext ? gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1;
 
-        this.samples = gl.getParameter(gl.SAMPLES);
-        this.maxSamples = this.isWebGL2 && !this.forceDisableMultisampling ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+        const antialiasSupported = this.isWebGL2 && !this.forceDisableMultisampling;
+        this.maxSamples = antialiasSupported ? gl.getParameter(gl.MAX_SAMPLES) : 1;
+
+        // some devices incorrectly report max samples larger than 4
+        this.maxSamples = Math.min(this.maxSamples, 4);
+
+        // we handle anti-aliasing internally by allocating multi-sampled backbuffer
+        this.samples = antialiasSupported && this.backBufferAntialias ? this.maxSamples : 1;
 
         // Don't allow area lights on old android devices, they often fail to compile the shader, run it incorrectly or are very slow.
         this.supportsAreaLights = this.isWebGL2 || !platform.android;
