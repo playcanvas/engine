@@ -53,13 +53,8 @@ function iframeDestroy() {
  * const appReady = iframeEval('!!app');
  * @param {string} code - The code.
  */
-function iframeEval_(code) {
-    return getIframeWindow()?.eval(code);
-}
 function iframeEval(code) {
-    const ret = iframeEval_(code);
-    console.log("eval", code, "=", ret);
-    return ret;
+    return getIframeWindow()?.eval(code);
 }
 export {
     getIframeWindow,
