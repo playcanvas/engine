@@ -125,7 +125,7 @@ class RenderPassDepthGrab extends RenderPass {
 
         // WebGL2 multisampling depth handling: we resolve multi-sampled depth buffer to a single-sampled destination buffer.
         // We could use existing API and resolve depth first and then blit it to destination, but this avoids the extra copy.
-        if (device.isWebGl2 && device.renderTarget.samples > 1) {
+        if (device.isWebGL2 && device.renderTarget.samples > 1) {
 
             // multi-sampled buffer
             const src = device.renderTarget.impl._glFrameBuffer;
