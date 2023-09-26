@@ -6,7 +6,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * can happen in parallel instead of all at once at the end.
  *
  * @augments EventHandler
- * @internal
+ * @ignore
  */
 class Untar extends EventHandler {
     /**
@@ -92,7 +92,7 @@ class Untar extends EventHandler {
      *
      * @param {Promise} fetchPromise - A Promise object returned from a fetch request.
      * @param {string} assetsPrefix - Assets registry files prefix.
-     * @internal
+     * @ignore
      */
     constructor(fetchPromise, assetsPrefix = '') {
         super();
@@ -112,7 +112,7 @@ class Untar extends EventHandler {
      * @param {boolean} done - True when reading data is complete.
      * @param {Uint8Array} value - Chunk of data read from a stream.
      * @returns {Promise|null} Return new pump Promise or null when no more data is available.
-     * @internal
+     * @ignore
      */
     pump(done, value) {
         if (done) {
@@ -141,7 +141,7 @@ class Untar extends EventHandler {
      *
      * @returns {boolean} True if file were sucessfully read and potentially more
      * data is available for processing.
-     * @internal
+     * @ignore
      */
     readFile() {
         if (!this.headerRead && this.bytesReceived > (this.bytesRead + this.headerSize)) {

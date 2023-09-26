@@ -47,7 +47,7 @@ class Bundle extends EventHandler {
      *
      * @param {string} url - A url of a file.
      * @param {DataView} data - A DataView of a file.
-     * @internal
+     * @ignore
      */
     addFile(url, data) {
         if (this._index.has(url))

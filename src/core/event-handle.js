@@ -97,7 +97,7 @@ class EventHandle {
     /**
      * Mark if event has been removed.
      * @type {boolean}
-     * @internal
+     * @ignore
      */
     set removed(value) {
         if (!value) return;
