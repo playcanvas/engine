@@ -96,12 +96,13 @@ class ReflectionBoxExample {
                     reflectivity: 0.5
                 });
 
+                // get existing layers
+                const worldLayer = app.scene.layers.getLayerByName("World");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
+
                 // create a layer for object that do not render into reflection cubemap
                 const excludedLayer = new pc.Layer({ name: "Excluded" });
-                app.scene.layers.push(excludedLayer);
-
-                // get world layer
-                const worldLayer = app.scene.layers.getLayerByName("World");
+                app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
                 // create an envAtlas texture, which will hold a prefiltered lighting generated from the cubemap.
                 // This represents a reflection prefiltered for different levels of roughness
@@ -270,10 +271,10 @@ class ReflectionBoxExample {
                 app.root.addChild(lightOmni);
 
                 // create an Entity with a camera component
-                const camera = new pc.Entity();
+                const camera = new pc.Entity("MainCamera");
                 camera.addComponent("camera", {
                     fov: 100,
-                    layers: [worldLayer.id, excludedLayer.id],
+                    layers: [worldLayer.id, excludedLayer.id, uiLayer.id],
                     farClip: 1500
                 });
                 camera.setLocalPosition(270, 90, -260);
@@ -292,7 +293,7 @@ class ReflectionBoxExample {
                 app.root.addChild(camera);
 
                 // create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
-                const probe = new pc.Entity();
+                const probe = new pc.Entity('probeCamera');
                 probe.addComponent('script');
 
                 // add camera component to the probe - this defines camera properties for cubemap rendering

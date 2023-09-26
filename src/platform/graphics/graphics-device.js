@@ -53,12 +53,36 @@ class GraphicsDevice extends EventHandler {
     backBufferSize = new Vec2();
 
     /**
+     * The pixel format of the back buffer. Typically PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8 or
+     * PIXELFORMAT_RGB8.
+     *
+     * @ignore
+     */
+    backBufferFormat;
+
+    /**
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
      * @readonly
      */
     isWebGPU = false;
+
+    /**
+     * True if the deviceType is WebGL1
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGl1 = false;
+
+    /**
+     * True if the deviceType is WebGL2
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGl2 = false;
 
     /**
      * The scope namespace for shader attributes and variables.

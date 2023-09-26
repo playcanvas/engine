@@ -249,7 +249,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // pixel format of the framebuffer is the most efficient one on the system
         const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        this.framebufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
+        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
 
         /**
          * Configuration of the main colorframebuffer we obtain using getCurrentTexture

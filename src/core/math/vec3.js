@@ -295,6 +295,24 @@ class Vec3 {
     }
 
     /**
+     * Reports whether two vectors are equal using an absolute error tolerance.
+     *
+     * @param {Vec3} rhs - The vector to be compared against.
+     * @param {number} [epsilon] - The maximum difference between each component of the two
+     * vectors. Defaults to 1e-6.
+     * @returns {boolean} True if the vectors are equal and false otherwise.
+     * @example
+     * const a = new pc.Vec3();
+     * const b = new pc.Vec3();
+     * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
+     */
+    equalsApprox(rhs, epsilon = 1e-6) {
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon);
+    }
+
+    /**
      * Returns the magnitude of the specified 3-dimensional vector.
      *
      * @returns {number} The magnitude of the specified 3-dimensional vector.

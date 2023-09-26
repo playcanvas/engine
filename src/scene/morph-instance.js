@@ -9,7 +9,7 @@ import { createShaderFromCode } from './shader-lib/utils.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 
 // vertex shader used to add morph targets from textures into render target
-const textureMorphVertexShader = `
+const textureMorphVertexShader = /* glsl */ `
     attribute vec2 vertex_position;
     varying vec2 uv0;
     void main(void) {

@@ -210,7 +210,7 @@ class WebglRenderTarget {
                 const buffer = gl.createRenderbuffer();
                 this._glMsaaColorBuffers.push(buffer);
 
-                const internalFormat = device.framebufferFormat === PIXELFORMAT_RGBA8 ? gl.RGBA8 : gl.RGB8;
+                const internalFormat = device.backBufferFormat === PIXELFORMAT_RGBA8 ? gl.RGBA8 : gl.RGB8;
 
                 gl.bindRenderbuffer(gl.RENDERBUFFER, buffer);
                 gl.renderbufferStorageMultisample(gl.RENDERBUFFER, target._samples, internalFormat, target.width, target.height);

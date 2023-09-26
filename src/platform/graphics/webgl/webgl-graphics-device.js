@@ -346,8 +346,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextRestoredHandler = () => {
             Debug.log('pc.GraphicsDevice: WebGL context restored.');
-            this.restoreContext();
             this.contextLost = false;
+            this.restoreContext();
             this.fire('devicerestored');
         };
 
@@ -385,11 +385,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.gl = gl;
         this.webgl2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
+        this.isWebGl2 = this.webgl2;
+        this.isWebGl1 = !this.webgl2;
         this._deviceType = this.webgl2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
         const alphaBits = gl.getParameter(gl.ALPHA_BITS);
-        this.framebufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
 
         const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
@@ -992,8 +994,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.maxPrecision = this.precision = this.getPrecision();
 
         const contextAttribs = gl.getContextAttributes();
-        this.supportsMsaa = contextAttribs.antialias;
-        this.supportsStencil = contextAttribs.stencil;
+        this.supportsMsaa = contextAttribs?.antialias ?? false;
+        this.supportsStencil = contextAttribs?.stencil ?? false;
 
         this.supportsInstancing = !!this.extInstancing;
 
@@ -1165,6 +1167,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     loseContext() {
+
+        // force the backbuffer to be recreated on restore
+        this.backBufferSize.set(-1, -1);
+
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
