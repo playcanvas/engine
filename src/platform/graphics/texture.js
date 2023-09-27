@@ -181,9 +181,9 @@ class Texture {
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
         Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
-        Debug.assert(!options.width || math.isInt(options.width), "Texture width must be an integer number, got", options);
-        Debug.assert(!options.height || math.isInt(options.height), "Texture height must be an integer number, got", options);
-        Debug.assert(!options.depth || math.isInt(options.depth), "Texture depth must be an integer number, got", options);
+        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
+        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
+        Debug.assert(!options.depth || Number.isInteger(options.depth), "Texture depth must be an integer number, got", options);
 
         this.name = options.name ?? '';
 
