@@ -271,6 +271,14 @@ class GraphicsDevice extends EventHandler {
       */
     textureHalfFloatRenderable;
 
+     /**
+      * True if filtering can be applied when sampling float textures.
+      *
+      * @type {boolean}
+      * @readonly
+      */
+    textureFloatFilterable = true;
+
     /**
      * A vertex buffer representing a quad.
      *
