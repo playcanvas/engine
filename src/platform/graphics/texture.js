@@ -181,18 +181,21 @@ class Texture {
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
         Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
+        Debug.assert(!options.width || math.isInt(options.width), "Texture width must be an integer number, got", options);
+        Debug.assert(!options.height || math.isInt(options.height), "Texture height must be an integer number, got", options);
+        Debug.assert(!options.depth || math.isInt(options.depth), "Texture depth must be an integer number, got", options);
 
-        this.name = options.name ?? null;
+        this.name = options.name ?? '';
 
-        this._width = options.width ?? 4;
-        this._height = options.height ?? 4;
+        this._width = Math.floor(options.width ?? 4);
+        this._height = Math.floor(options.height ?? 4);
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
 
         if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
-            this._depth = options.depth ?? 1;
+            this._depth = Math.floor(options.depth ?? 1);
         } else {
             this._volume = false;
             this._depth = 1;

@@ -19,6 +19,17 @@ const math = {
     RAD_TO_DEG: 180 / Math.PI,
 
     /**
+     * Returns true if the specified value is a valid whole number.
+     *
+     * @param {object} value - The value to test.
+     * @returns {boolean} True if the value is a valid whole number.
+     * @ignore
+     */
+    isInt: function (value) {
+        return Number.isFinite(value) && Math.floor(value) === value;
+    },
+
+    /**
      * Clamp a number between min and max inclusive.
      *
      * @param {number} value - Number to clamp.
