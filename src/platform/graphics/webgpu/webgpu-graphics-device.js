@@ -86,11 +86,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
+        this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        // WebGPU currently only supports 1 and 4 samples
-        this.samples = options.antialias ? 4 : 1;
 
         this.setupPassEncoderDefaults();
     }
@@ -151,6 +149,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extBlendMinmax = true;
         this.areaLightLutFormat = this.floatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
+
+        // WebGPU currently only supports 1 and 4 samples
+        this.samples = this.backBufferAntialias ? 4 : 1;
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {

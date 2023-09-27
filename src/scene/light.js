@@ -788,7 +788,7 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
                 break;
@@ -799,7 +799,7 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = (this.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
                 break;

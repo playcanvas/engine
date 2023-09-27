@@ -54,7 +54,7 @@ class ShadowMap {
             return PIXELFORMAT_DEPTH;
         } else if ((shadowType === SHADOW_PCF1 || shadowType === SHADOW_PCF3) && device.supportsDepthShadow) {
             return PIXELFORMAT_DEPTH;
-        } else if ((shadowType === SHADOW_PCSS) && (device.webgl2 || device.isWebGPU)) {
+        } else if ((shadowType === SHADOW_PCSS) && !device.isWebGL1) {
             return PIXELFORMAT_R32F;
         }
 
@@ -147,7 +147,7 @@ class ShadowMap {
 
     static createCubemap(device, size, shadowType) {
 
-        const format = (shadowType === SHADOW_PCSS && (device.webgl2 || device.isWebGPU)) ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
+        const format = (shadowType === SHADOW_PCSS && !device.isWebGL1) ? PIXELFORMAT_R32F : PIXELFORMAT_RGBA8;
         const cubemap = new Texture(device, {
             // #if _PROFILER
             profilerHint: TEXHINT_SHADOWMAP,

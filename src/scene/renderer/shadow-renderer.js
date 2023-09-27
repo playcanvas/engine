@@ -209,7 +209,7 @@ class ShadowRenderer {
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
 
         // depth bias
-        if (device.webgl2 || device.isWebGPU) {
+        if (device.isWebGL2 || device.isWebGPU) {
             if (light._type === LIGHTTYPE_OMNI && !isClustered) {
                 device.setDepthBias(false);
             } else {
@@ -229,7 +229,7 @@ class ShadowRenderer {
         }
 
         // Set standard shadowmap states
-        const gpuOrGl2 = device.webgl2 || device.isWebGPU;
+        const gpuOrGl2 = device.isWebGL2 || device.isWebGPU;
         const useShadowSampler = isClustered ?
             light._isPcf && gpuOrGl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
             light._isPcf && gpuOrGl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
@@ -241,7 +241,7 @@ class ShadowRenderer {
 
     restoreRenderState(device) {
 
-        if (device.webgl2 || device.isWebGPU) {
+        if (device.isWebGL2 || device.isWebGPU) {
             device.setDepthBias(false);
         } else if (device.extStandardDerivatives) {
             this.polygonOffset[0] = 0;

@@ -708,7 +708,7 @@ class CameraComponent extends Component {
             Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
         }
 
-        this.camera._enableColorGrabPass(this.system.app.graphicsDevice, this.renderSceneColorMap);
+        this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
     }
 
     /**
@@ -724,6 +724,8 @@ class CameraComponent extends Component {
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
         }
+
+        this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
     }
 
     dirtyLayerCompositionCameras() {
@@ -882,6 +884,8 @@ class CameraComponent extends Component {
     onRemove() {
         this.onDisable();
         this.off();
+
+        this.camera.destroy();
     }
 
     /**

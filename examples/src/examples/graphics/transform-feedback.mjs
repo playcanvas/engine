@@ -75,7 +75,7 @@ async function example({ canvas, files, assetPath }) {
         const directionSampler = app.graphicsDevice.scope.resolve("directionSampler");
 
         // @ts-ignore engine-tsd
-        if (app.graphicsDevice.webgl2) {
+        if (app.graphicsDevice.isWebGL2) {
 
             // simulated particles
             const maxNumPoints = 200000;

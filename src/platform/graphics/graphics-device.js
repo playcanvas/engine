@@ -61,12 +61,33 @@ class GraphicsDevice extends EventHandler {
     backBufferFormat;
 
     /**
+     * True if the back buffer should use anti-aliasing.
+     */
+    backBufferAntialias = false;
+
+    /**
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
      * @readonly
      */
     isWebGPU = false;
+
+    /**
+     * True if the deviceType is WebGL1
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGL1 = false;
+
+    /**
+     * True if the deviceType is WebGL2
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGL2 = false;
 
     /**
      * The scope namespace for shader attributes and variables.

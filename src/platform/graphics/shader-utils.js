@@ -60,7 +60,7 @@ class ShaderUtils {
         const getDefines = (gpu, gl2, gl1, isVertex) => {
 
             const deviceIntro = device.isWebGPU ? gpu :
-                (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+                (device.isWebGL2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
@@ -140,7 +140,7 @@ class ShaderUtils {
         if (device.isWebGPU) {
             return '#version 450\n';
         }
-        return device.webgl2 ? "#version 300 es\n" : "";
+        return device.isWebGL2 ? "#version 300 es\n" : "";
     }
 
     static precisionCode(device, forcePrecision) {
@@ -166,7 +166,7 @@ class ShaderUtils {
 
             code = `precision ${precision} float;\n`;
 
-            if (device.webgl2) {
+            if (device.isWebGL2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
             }
 

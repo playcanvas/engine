@@ -243,6 +243,20 @@ describe('Vec2', function () {
             expect(v1.equals(v2)).to.be.false;
         });
 
+        it('checks for equality of different vectors that are close enough', function () {
+            const v1 = new Vec2(0.1, 0.2);
+            const v2 = new Vec2(0.10000000000000001, 0.2);
+            const epsilon = 0.000001;
+            expect(v1.equalsApprox(v2, epsilon)).to.be.true;
+            expect(v1.equalsApprox(v2)).to.be.true;
+
+            const v3 = new Vec2(0.1 + epsilon - Number.EPSILON, 0.2);
+            expect(v1.equalsApprox(v3, epsilon)).to.be.true;
+
+            const v4 = new Vec2(0.1 + epsilon + Number.EPSILON, 0.2);
+            expect(v1.equalsApprox(v4, epsilon)).to.be.false;
+        });
+
     });
 
     describe('#floor', function () {

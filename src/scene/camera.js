@@ -1,4 +1,3 @@
-import { Debug } from '../core/debug.js';
 import { Color } from '../core/math/color.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Vec3 } from '../core/math/vec3.js';
@@ -12,6 +11,8 @@ import {
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
 import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -34,7 +35,12 @@ class Camera {
     /**
      * @type {RenderPassColorGrab|null}
      */
-    colorGrabPass = null;
+    renderPassColorGrab = null;
+
+    /**
+     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     */
+    renderPassDepthGrab = null;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -86,6 +92,15 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+    }
+
+    destroy() {
+
+        this.renderPassColorGrab?.destroy();
+        this.renderPassColorGrab = null;
+
+        this.renderPassDepthGrab?.destroy();
+        this.renderPassDepthGrab = null;
     }
 
     /**
@@ -428,13 +443,27 @@ class Camera {
         return this;
     }
 
-    _enableColorGrabPass(device, enable) {
+    _enableRenderPassColorGrab(device, enable) {
         if (enable) {
-            Debug.assert(!this.colorGrabPass);
-            this.colorGrabPass = new RenderPassColorGrab(device, this);
+            if (!this.renderPassColorGrab) {
+                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+            }
         } else {
-            this.colorGrabPass?.destroy();
-            this.colorGrabPass = null;
+            this.renderPassColorGrab?.destroy();
+            this.renderPassColorGrab = null;
+        }
+    }
+
+    _enableRenderPassDepthGrab(device, renderer, enable) {
+        if (enable) {
+            if (!this.renderPassDepthGrab) {
+                this.renderPassDepthGrab = device.isWebGL1 ?
+                    new RenderPassDepth(device, renderer, this) :
+                    new RenderPassDepthGrab(device, this);
+            }
+        } else {
+            this.renderPassDepthGrab?.destroy();
+            this.renderPassDepthGrab = null;
         }
     }
 
