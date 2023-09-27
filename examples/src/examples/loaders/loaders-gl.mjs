@@ -161,7 +161,7 @@ class LoadersGlExample {
         'shader.vert': vshader,
         'shader.frag': fshader,
     };
-    static WEBGPU_CRASH = true;
+    static WEBGPU_ENABLED = false;
     static example = example;
     static imports = [ loadES5 ];
 }
