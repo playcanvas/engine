@@ -51,7 +51,9 @@ class DeviceSelector extends TypedComponent {
      * @param {Partial<State>} state - New partial state.
      */
     mergeState(state) {
-        this.setState({ ...this.state, ...state });
+        // new state is always calculated from the current state,
+        // avoiding any potential issues with asynchronous updates
+        this.setState(prevState => ({ ...prevState, ...state }));
     }
 
     /**

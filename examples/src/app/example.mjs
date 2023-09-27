@@ -59,7 +59,9 @@ class Example extends TypedComponent {
      * @param {Partial<State>} state - The partial state to update.
      */
     mergeState(state) {
-        this.setState({ ...this.state, ...state});
+        // new state is always calculated from the current state,
+        // avoiding any potential issues with asynchronous updates
+        this.setState(prevState => ({ ...prevState, ...state }));
     }
 
     /**
