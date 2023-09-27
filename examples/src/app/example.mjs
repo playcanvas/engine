@@ -34,8 +34,7 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {Function} controls - Controls function from example.
- * @property {boolean} showParameters - Used in case of mobile view.
- * @property {boolean} showCode - Used in case of mobile view.
+ * @property {'code' | 'parameters'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  */
 
@@ -50,8 +49,7 @@ class Example extends TypedComponent {
         exampleLoaded: false,
         //controls: () => jsx('pre', null, 'Status: initial'),
         controls: () => undefined,
-        showParameters: false,
-        showCode: true,
+        show: 'code',
         files: {'example.mjs': '// loading'}
     };
 
@@ -168,20 +166,6 @@ class Example extends TypedComponent {
         // return `${iframePath}/index.html?category=${example.category}&example=${example.name}`;
     }
 
-    onClickParametersTab() {
-        this.mergeState({
-            showParameters: true,
-            showCode: false,
-        });
-    };
-
-    onClickCodeTab() {
-        this.mergeState({
-            showParameters: false,
-            showCode: true,
-        });
-    };
-
     renderDeviceSelector() {
         return jsx(DeviceSelector, {
             onSelect: iframeReload, // reload the iframe after updating the device
@@ -208,11 +192,22 @@ class Example extends TypedComponent {
         );
     }
 
+    /**
+     * Not the nicest way to fetch UI state from a CSS class, but we are
+     * lacking a onHeaderClick panel callback which could hand us the state.
+     * This is still better than:
+     * 1) Hoping that the toggle functionality just happens to be calibrated
+     * to the on/off toggling.
+     * 2) Setting "collapsed" state everywhere via informed guesses.
+     */
+    get collapsed() {
+        const controlPanel = document.getElementById("controlPanel");
+        const collapsed = controlPanel.classList.contains("pcui-collapsed");
+        return collapsed;
+    }
+
     toggleCollapse() {
-        const { collapsed } = this.state;
-        this.mergeState({
-            collapsed: !collapsed,
-        });
+        this.mergeState({ collapsed: !this.collapsed });
         //console.log("Example#toggleCollapse> was ", collapsed);
     }
 
@@ -223,7 +218,7 @@ class Example extends TypedComponent {
     }
 
     renderPortrait() {
-        const { collapsed, controls, showCode, showParameters, files } = this.state;
+        const { collapsed, controls, show, files } = this.state;
         return jsx(Panel,
             {
                 id: 'controlPanel',
@@ -254,24 +249,25 @@ class Example extends TypedComponent {
                     jsx(Button, {
                         text: 'CODE',
                         id: 'codeButton',
-                        class: showCode ? 'selected' : null,
-                        onClick: this.onClickCodeTab.bind(this),
+                        class: show === 'code' ? 'selected' : null,
+                        onClick: () => this.mergeState({ show: 'code' })
                     }),
                     jsx(Button, {
                         text: 'PARAMETERS',
-                        class: showParameters ? 'selected' : null,
+                        class: show === 'parameters' ? 'selected' : null,
                         id: 'paramButton',
-                        onClick: this.onClickParametersTab.bind(this),
+                        onClick: () => this.mergeState({ show: 'parameters' })
                     }),
                 ),
-                showParameters && jsx(
+                // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderPortrait"),
+                show === 'parameters' && jsx(
                     Container,
                     {
                         id: 'controlPanel-controls'
                     },
                     this.renderControls(),
                 ),
-                showCode && jsx(
+                show === 'code' && jsx(
                     MonacoEditor,
                     {
                         options: {
@@ -298,15 +294,9 @@ class Example extends TypedComponent {
                     collapsible: true,
                     collapsed,
                 },
-                // jsx('button', null, "Example#renderLandscape"),
+                // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderLandscape"),
                 this.renderDeviceSelector(),
                 this.renderControls(),
-                //jsx(SideBar, null),
-                //jsx(CodeEditor, {
-                //    lintErrors: false,
-                //    setLintErrors: () => console.log("set lint errors", ...arguments),
-                //}),
-                //jsx('pre', null, JSON.stringify(this.state, null, 2)),
             )
         );
     }
@@ -314,7 +304,7 @@ class Example extends TypedComponent {
     render() {
         const { iframePath } = this;
         const { orientation } = this.state;
-        //console.log("Example#render", JSON.stringify(this.state, null, 2));
+        // console.log("Example#render", JSON.stringify(this.state, null, 2));
         return jsx(Container,
             {
                 id: "canvas-container"
