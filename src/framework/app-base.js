@@ -2037,6 +2037,7 @@ class AppBase extends EventHandler {
 
         this.tick = null;
 
+        this.fire('destroy', this); // fire destroy event
         this.off(); // remove all events
 
         this._soundManager?.destroy();
