@@ -723,7 +723,9 @@ class Mesh extends RefCountedObject {
             } else {
                 // destination data is array
                 indices.length = 0;
-                indices.push(streamIndices);
+                for (const index of streamIndices) {
+                    indices.push(index);
+                }
             }
         } else {
             // get data from IndexBuffer
