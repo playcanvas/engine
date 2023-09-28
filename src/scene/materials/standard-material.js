@@ -415,6 +415,13 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
+ * @property {boolean} useDisplacement Use heightMap as vertex displacement. When enabled, vertex'
+ * displaced according to heightMap's red channel. This effect takes UV0 channel for displacement
+ * and does not support offsetting or translating maps.
+ * @property {number} displacementFactor Displacement multiplier. Affects the strength of the
+ * displacement effect.
+ * @property {number} displacementOffset Displacement height offset. Shifts displacement effect in
+ * initial vertex normal direction.
  * @property {import('../../platform/graphics/texture.js').Texture|null} envAtlas The prefiltered
  * environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and
  * will replace the scene lighting environment.
