@@ -1,5 +1,5 @@
-import { execSync } from 'child_process';
-import fs from 'node:fs';
+import { execSync } from 'node:child_process';
+import * as fs from 'node:fs';
 
 // 1st party Rollup plugins
 import { babel } from '@rollup/plugin-babel';
@@ -354,6 +354,12 @@ export default (args) => {
     let targets = [];
 
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+
+    if ((envTarget === null) && fs.existsSync('build')) {
+        // no targets specified, clean build directory
+        fs.rmSync('build', { recursive: true });
+    }
+
     if (envTarget === 'types') {
         targets.push(target_types);
     } else if (envTarget === 'extras') {
