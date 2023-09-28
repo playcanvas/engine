@@ -147,7 +147,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
-        this.areaLightLutFormat = this.floatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
+        this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
 
         // WebGPU currently only supports 1 and 4 samples
@@ -215,7 +215,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
             return supported;
         };
-        this.floatFilterable = requireFeature('float32-filterable');
+        this.textureFloatFilterable = requireFeature('float32-filterable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');

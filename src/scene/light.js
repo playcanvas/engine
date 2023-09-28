@@ -363,10 +363,12 @@ class Light {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }
 
-        if (value === SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
+        // fallback from vsm32 to vsm16
+        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable))
             value = SHADOW_VSM16;
 
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
+        // fallback from vsm16 to vsm8
+        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable)
             value = SHADOW_VSM8;
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
