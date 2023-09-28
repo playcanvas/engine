@@ -58,12 +58,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * helper function to create a primitive with shape type, position, scale, color
-         * @param {string} primitiveType - todo
-         * @param {pc.Vec3} position - todo
-         * @param {pc.Vec3} scale - todo
-         * @param {pc.Color} color - todo
-         * @param {any} assetManifest - todo
-         * @returns {pc.Entity} todo
+         * @param {string} primitiveType - The primitive type.
+         * @param {pc.Vec3} position - The position.
+         * @param {pc.Vec3} scale - The scale.
+         * @param {pc.Color} color - The color.
+         * @param {any} assetManifest - The asset manifest.
+         * @returns {pc.Entity} The returned entity.
          */
         function createPrimitive(primitiveType, position, scale, color, assetManifest) {
             // create material of specified color
@@ -101,16 +101,16 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         }
 
         /**
-         * helper function to create area light including its visual representation in the world
-         * @param {string} type - todo
-         * @param {number} shape - todo
-         * @param {pc.Vec3} position - todo
-         * @param {number} scale - todo
-         * @param {pc.Color} color - todo
-         * @param {number} intensity - todo
-         * @param {boolean} shadows - todo
-         * @param {number} range - todo
-         * @returns {pc.Entity} todo
+         * Helper function to create area light including its visual representation in the world.
+         * @param {string} type - The light component's type.
+         * @param {number} shape - The light component's shape.
+         * @param {pc.Vec3} position - The position.
+         * @param {number} scale - The scale.
+         * @param {pc.Color} color - The color.
+         * @param {number} intensity - The light component's intensity.
+         * @param {boolean} shadows - Casting shadows or not.
+         * @param {number} range - The light component's range.
+         * @returns {pc.Entity} The returned entity.
          */
         function createAreaLight(type, shape, position, scale, color, intensity, shadows, range) {
             const lightParent = new pc.Entity();

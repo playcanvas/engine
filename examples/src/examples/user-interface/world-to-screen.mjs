@@ -134,10 +134,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         }
 
         /**
-         * @param {number} id - todo
-         * @param {number} startingAngle - todo
-         * @param {number} speed - todo
-         * @param {number} radius - todo
+         * @param {number} id - The player ID.
+         * @param {number} startingAngle - The starting angle.
+         * @param {number} speed - The speed.
+         * @param {number} radius - The radius.
          */
         function createPlayer(id, startingAngle, speed, radius) {
             // Create a capsule entity to represent a player in the 3d world
@@ -157,7 +157,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
                 if (angle > 360) {
                     angle -= 360;
                 }
-                entity.setLocalPosition(radius * Math.sin(angle * pc.math.DEG_TO_RAD), height, radius * Math.cos(angle * pc.math.DEG_TO_RAD));
+                entity.setLocalPosition(
+                    radius * Math.sin(angle * pc.math.DEG_TO_RAD),
+                    height,
+                    radius * Math.cos(angle * pc.math.DEG_TO_RAD)
+                );
                 entity.setLocalEulerAngles(0, angle + 90, 0);
             });
 

@@ -38,10 +38,10 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
     /**
      * helper function to create a primitive with shape type, position, scale
-     * @param {string} primitiveType - todo
-     * @param {pc.Vec3} position - todo
-     * @param {pc.Vec3} scale - todo
-     * @returns {pc.Entity} todo
+     * @param {string} primitiveType - The primitive type.
+     * @param {pc.Vec3} position - The position.
+     * @param {pc.Vec3} scale - The scale.
+     * @returns {pc.Entity} The returned entity.
      */
     function createPrimitive(primitiveType, position, scale) {
         // create material of random color

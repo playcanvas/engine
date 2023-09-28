@@ -107,8 +107,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * Create the text entities.
-         * @param {number} y - todo
-         * @param {string} text - todo
+         * @param {number} y - The y coordinate.
+         * @param {string} text - The element component's text.
          */
         function createText(y, text) {
             const canvasElementEntity = new pc.Entity();

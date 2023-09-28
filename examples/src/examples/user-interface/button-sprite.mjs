@@ -154,8 +154,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         atlas.texture = texture;
 
         /**
-         * @param {string} frame - todo
-         * @returns {pc.Asset} todo
+         * @param {string} frame - Frame key for pc.Sprite.
+         * @returns {pc.Asset} The asset.
          */
         const createSpriteAsset = function (frame) {
             const sprite = new pc.Sprite(app.graphicsDevice, {

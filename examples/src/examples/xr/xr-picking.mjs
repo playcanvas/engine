@@ -57,9 +57,9 @@ async function example({ canvas }) {
     const cubes = [];
 
     /**
-     * @param {number} x - todo
-     * @param {number} y - todo
-     * @param {number} z - todo
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} z - The z coordinate.
      */
     const createCube = function (x, y, z) {
         const cube = new pc.Entity();

@@ -71,10 +71,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * function to create sphere
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @param {number} z - todo
-         * @param {pc.Material} material - todo
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @param {number} z - The z coordinate.
+         * @param {pc.Material} material - The material.
          */
         const createSphere = function (x, y, z, material) {
             const sphere = new pc.Entity();

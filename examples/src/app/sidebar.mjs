@@ -15,8 +15,8 @@ import { iframeDestroy } from './iframeUtils.mjs';
 
 /**
  * @typedef {object} State
- * @property {Record<string, Record<string, object>>} defaultCategories - todo
- * @property {Record<string, Record<string, object>>|null} filteredCategories - todo
+ * @property {Record<string, Record<string, object>>} defaultCategories - The default categories.
+ * @property {Record<string, Record<string, object>>|null} filteredCategories - The filtered categories.
  * @property {string} hash - The hash.
  * @property {Observer} observer - The observer.
  * @property {boolean} collapsed - Collapsed or not.

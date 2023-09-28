@@ -93,10 +93,10 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         app.scene.layers.remove(depthLayer);
         app.scene.layers.insertOpaque(depthLayer, 2);
         /**
-         * @param {pc.Asset} fontAsset - todo
-         * @param {string} message - todo
-         * @param {number} x - todo
-         * @param {number} z - todo
+         * @param {pc.Asset} fontAsset - The font asset.
+         * @param {string} message - The message.
+         * @param {number} x - The x coordinate.
+         * @param {number} z - The z coordinate.
          */
         const createText = (fontAsset, message, x, z) => {
             // Create a text element-based entity
@@ -115,10 +115,10 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         };
 
         /**
-         * @param {any} resource - todo
-         * @param {pc.Vec3} pos - todo
-         * @param {number} scale - todo
-         * @returns {pc.Entity} todo
+         * @param {any} resource - The asset resource.
+         * @param {pc.Vec3} pos - The position.
+         * @param {number} scale - The scale.
+         * @returns {pc.Entity} The returned entity.
          */
         const createVisual = (resource, pos, scale) => {
             const entity = resource.instantiateRenderEntity({
@@ -225,7 +225,7 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
             }
         }, false);
         /**
-         * @param {number} offset - todo
+         * @param {number} offset - The offset to jump to.
          */
         function jumpToAsset(offset) {
 

@@ -29,7 +29,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     app.init(createOptions);
     app.start();
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    // Set the canvas to fill the window and automatically
+    // change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -49,14 +50,15 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     app.root.addChild(camera);
 
     /**
-     * helper function to return the shortest distance from point [x, y, z] to a plane defined by [a, b, c] normal
-     * @param {number} x - todo
-     * @param {number} y - todo
-     * @param {number} z - todo
-     * @param {number} a - todo
-     * @param {number} b - todo
-     * @param {number} c - todo
-     * @returns {number} todo
+     * Helper function to return the shortest distance from point [x, y, z] to a
+     * plane defined by [a, b, c] normal.
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} z - The z coordinate.
+     * @param {number} a - The plane normal's x coordinate.
+     * @param {number} b - The plane normal's y coordinate.
+     * @param {number} c - The plane normal's z coordinate.
+     * @returns {number} The shortest distance.
      */
     const shortestDistance = function (x, y, z, a, b, c) {
         const d = Math.abs(a * x + b * y + c * z);
@@ -65,14 +67,15 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     };
 
     /**
-     * helper function that creates a morph target from original positions, normals and indices, and a plane normal [nx, ny, nz]
-     * @param {number[]} positions 
-     * @param {number[]} normals 
-     * @param {number[]} indices 
-     * @param {number} nx 
-     * @param {number} ny 
-     * @param {number} nz 
-     * @returns {pc.MorphTarget}
+     * Helper function that creates a morph target from original positions, normals
+     * and indices, and a plane normal [nx, ny, nz].
+     * @param {number[]} positions - The positions.
+     * @param {number[]} normals - The normals.
+     * @param {number[]} indices - The indices.
+     * @param {number} nx - The plane normal's x coordinate.
+     * @param {number} ny - The plane normal's y coordinate.
+     * @param {number} nz - The plane normal's z coordinate.
+     * @returns {pc.MorphTarget} The morph target.
      */
     const createMorphTarget = function (positions, normals, indices, nx, ny, nz) {
 
@@ -118,10 +121,10 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     };
 
     /**
-     * @param {number} x - todo
-     * @param {number} y - todo
-     * @param {number} z - todo
-     * @returns {pc.MorphInstance} todo
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} z - The z coordinate.
+     * @returns {pc.MorphInstance} The morph instance.
      */
     const createMorphInstance = function (x, y, z) {
         // create the base mesh - a sphere, with higher amount of vertices / triangles

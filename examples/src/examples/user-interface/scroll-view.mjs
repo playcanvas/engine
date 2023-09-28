@@ -79,8 +79,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
             scaleBlend: 0.5
         });
         /**
-         * @param {boolean} horizontal - todo
-         * @returns {pc.Entity} todo
+         * @param {boolean} horizontal - True means horizontal, false means vertical.
+         * @returns {pc.Entity} The returned entity.
          */
         function createScrollbar(horizontal) {
             const handle = new pc.Entity('Handle');

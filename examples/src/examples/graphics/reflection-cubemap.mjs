@@ -60,9 +60,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         /**
          * helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
-         * @param {pc.Material} material - todo
-         * @param {number[]} layer - todo
-         * @returns {pc.Entity} todo
+         * @param {pc.Material} material - The material.
+         * @param {number[]} layer - The render component's layers.
+         * @returns {pc.Entity} The returned entity.
          */
         const createHighQualitySphere = function (material, layer) {
 
@@ -85,12 +85,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         /**
          * helper function to create a primitive with shape type, position, scale, color and layer
-         * @param {string} primitiveType - todo
-         * @param {number | pc.Vec3} position - todo
-         * @param {number | pc.Vec3} scale - todo
-         * @param {pc.Color} color - todo
-         * @param {number[]} layer - todo
-         * @returns {pc.Entity} todo
+         * @param {string} primitiveType - The primitive type.
+         * @param {number | pc.Vec3} position - The entity's position.
+         * @param {number | pc.Vec3} scale - The entisy's scale.
+         * @param {pc.Color} color - The color.
+         * @param {number[]} layer - The render component's layers.
+         * @returns {pc.Entity} The returned entity.
          */
         function createPrimitive(primitiveType, position, scale, color, layer) {
             // create material of specified color
@@ -215,9 +215,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         /**
          * helper function to create a texture that can be used to project cubemap to
-         * @param {string} projection - todo
-         * @param {number} size - todo
-         * @returns {pc.Texture} todo
+         * @param {string} projection - The texture's projection.
+         * @param {number} size - Width and height of texture.
+         * @returns {pc.Texture} The texture.
          */
         function createReprojectionTexture(projection, size) {
             return new pc.Texture(app.graphicsDevice, {

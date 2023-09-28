@@ -230,12 +230,12 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
         /**
          * helper function to create a 3d primitive including its material
-         * @param {string} primitiveType - todo
-         * @param {pc.Vec3} position - todo
-         * @param {pc.Vec3} scale - todo
-         * @param {number} brightness - todo
-         * @param {boolean} [allowEmissive] - todo
-         * @returns {pc.Entity}
+         * @param {string} primitiveType - The primitive type.
+         * @param {pc.Vec3} position - The position (unused).
+         * @param {pc.Vec3} scale - The scale.
+         * @param {number} brightness - The brightness (unused).
+         * @param {boolean} [allowEmissive] - Allow emissive (unused).
+         * @returns {pc.Entity} The returned entity.
          */
         function createPrimitive(primitiveType, position, scale, brightness, allowEmissive = true) {
 

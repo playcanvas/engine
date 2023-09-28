@@ -84,11 +84,11 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
         app.scene.layers.insert(rtLayer, 1);
 
         /**
-         * helper function to create a texture to render to
-         * @param {string} name - todo
-         * @param {number} width - todo
-         * @param {number} height - todo
-         * @returns {pc.Texture} todo
+         * Helper function to create a texture to render to.
+         * @param {string} name - The name.
+         * @param {number} width - The width.
+         * @param {number} height - The height.
+         * @returns {pc.Texture} The returned texture.
          */
         const createTexture = (name, width, height) => {
             return new pc.Texture(app.graphicsDevice, {

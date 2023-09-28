@@ -74,9 +74,9 @@ async function example({ canvas, assetPath }) {
         );
 
         /**
-         * @param {*} asset - todo
-         * @param {*} animTilesX - todo
-         * @param {*} animTilesY - todo
+         * @param {pc.Asset} asset - The asset.
+         * @param {number} animTilesX - The anim tiles X coordinate.
+         * @param {number} animTilesY - The anim tiles Y coordinate.
          */
         const particleSystemConfiguration = function (asset, animTilesX, animTilesY) {
             return {

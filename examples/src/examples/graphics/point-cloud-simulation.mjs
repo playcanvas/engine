@@ -38,7 +38,7 @@ async function example({ canvas, files }) {
 
     /**
      * helper function to update vertex of the mesh
-     * @param {pc.Mesh} mesh - todo
+     * @param {pc.Mesh} mesh - The mesh.
      */
     function updateMesh(mesh) {
         // Set current positions on mesh - this reallocates vertex buffer if more space is needed to test it.

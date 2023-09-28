@@ -130,9 +130,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         }
 
         /**
-         * Helper function to generate a decal with index i at position pos. It fills up information for all 4 vertices of a quad
-         * @param {number} i - todo
-         * @param {pc.Vec3} pos - todo
+         * Helper function to generate a decal with index i at position
+         * pos. It fills up information for all 4 vertices of a quad.
+         * @param {number} i - The decal index.
+         * @param {pc.Vec3} pos - The position.
          */
         function createDecal(i, pos) {
 
@@ -171,11 +172,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         }
 
         /**
-         * helper function to update required vertex streams
-         * @param {pc.Mesh} mesh - todo
-         * @param {any} updatePositions - todo
-         * @param {any} updateColors - todo
-         * @param {boolean} [initAll] - todo
+         * Helper function to update required vertex streams.
+         * @param {pc.Mesh} mesh - The mesh.
+         * @param {boolean} updatePositions - Update positions.
+         * @param {boolean} updateColors - Update colors.
+         * @param {boolean} [initAll] - Set UV's and indices.
          */
         function updateMesh(mesh, updatePositions, updateColors, initAll) {
 

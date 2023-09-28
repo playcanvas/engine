@@ -76,9 +76,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         const NUM_SPHERES_Z = 6;
         /**
          * 
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @param {number} z - todo
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @param {number} z - The z coordinate.
          */
         const createSphere = function (x, y, z) {
             const material = new pc.StandardMaterial();
@@ -100,13 +100,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
             app.root.addChild(sphere);
         };
         /**
-         * @param {pc.Asset} fontAsset - todo
-         * @param {string} message - todo
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @param {number} z - todo
-         * @param {number} rotx - todo
-         * @param {number} roty - todo
+         * @param {pc.Asset} fontAsset - The font asset.
+         * @param {string} message - The message.
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @param {number} z - The z coordinate.
+         * @param {number} rotx - Rotation around x coordinate (euler angles).
+         * @param {number} roty - Rotation around y coordinate (euler angles).
          */
         const createText = function (fontAsset, message, x, y, z, rotx, roty) {
             // Create a text element-based entity

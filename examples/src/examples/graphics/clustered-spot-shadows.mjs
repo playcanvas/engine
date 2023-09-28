@@ -241,12 +241,12 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         cubeMaterial.update();
 
         /**
-         * helper function to create a 3d primitive including its material
-         * @param {string} primitiveType - todo
-         * @param {pc.Vec3} position - todo
-         * @param {pc.Vec3} scale - todo
-         * @param {pc.Material} mat - todo
-         * @returns {pc.Entity} todo
+         * Helper function to create a 3d primitive including its material.
+         * @param {string} primitiveType - The primitive type.
+         * @param {pc.Vec3} position - The position.
+         * @param {pc.Vec3} scale - The scale.
+         * @param {pc.Material} mat - The material.
+         * @returns {pc.Entity} The returned entity.
          */
         function createPrimitive(primitiveType, position, scale, mat) {
 
@@ -288,8 +288,8 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         const cookieChannels = ["r", "g", "b", "a", "rgb"];
 
         /**
-         * helper function to create a light
-         * @param {number} index - todo
+         * Helper function to create a light.
+         * @param {number} index - The light index.
          */
         function createLight(index) {
             const intensity = 1.5;

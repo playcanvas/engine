@@ -100,10 +100,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * helper function to generate elevation of a point with [x, y] coordinates
-         * @param {number} time - todo
-         * @param {number} x - todo
-         * @param {number} z - todo
-         * @returns {number} todo
+         * @param {number} time - The time.
+         * @param {number} x - The x coordinate.
+         * @param {number} z - The z coordinate.
+         * @returns {number} The returned ground elevation.
          */
         function groundElevation(time, x, z) {
             return Math.sin(time + 0.2 * x) * 2 + Math.cos(time * 0.2 + 0.5 * z + 0.2 * x);
@@ -112,8 +112,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         /**
          * helper function to generate a color for 3d point by lerping between green and red color
          * based on its y coordinate
-         * @param {pc.Color} color - todo
-         * @param {pc.Vec3} point - todo
+         * @param {pc.Color} color - The color.
+         * @param {pc.Vec3} point - The point.
          */
         function groundColor(color, point) {
             color.lerp(pc.Color.GREEN, pc.Color.RED, pc.math.clamp((point.y + 3) * 0.25, 0, 1));

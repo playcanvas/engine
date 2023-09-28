@@ -34,9 +34,9 @@ async function example({ canvas, files, assetPath }) {
 
         /**
          * helper function to create high polygon version of a sphere and sets up an entity to allow it to be added to the scene
-         * @param {pc.Material} material - todo
-         * @param {number[]} layer - todo
-         * @returns {pc.Entity} todo
+         * @param {pc.Material} material - The material.
+         * @param {number[]} layer - The render component's layers.
+         * @returns {pc.Entity} The returned entity.
          */
         const createHighQualitySphere = function (material, layer) {
 

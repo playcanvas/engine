@@ -69,10 +69,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         ];
 
         /**
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @param {number} z - todo
-         * @returns {pc.Entity} todo
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @param {number} z - The z coordinate.
+         * @returns {pc.Entity} The returned entity.
          */
         const createPrimitive = function (x, y, z) {
 
@@ -116,12 +116,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
             }
         }
         /**
-         * @param {pc.Asset} fontAsset - todo
-         * @param {string} message - todo
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @param {number} z - todo
-         * @param {number} rot - todo
+         * @param {pc.Asset} fontAsset - The font asset.
+         * @param {string} message - The message.
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @param {number} z - The z coordinate.
+         * @param {number} rot - The z coordinate rotation (euler angles).
          */
         const createText = function (fontAsset, message, x, y, z, rot) {
             // Create a text element-based entity

@@ -49,9 +49,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * helper function to create a light
-         * @param {pc.Color} color - todo
-         * @param {number} scale - todo
-         * @returns {pc.Entity} todo
+         * @param {pc.Color} color - The color.
+         * @param {number} scale - The scale.
+         * @returns {pc.Entity} The returned entity.
          */
         function createLight(color, scale) {
 
@@ -135,8 +135,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         /**
          * helper function to update required vertex / index streams
-         * @param {pc.Mesh} mesh - todo
-         * @param {boolean} [initAll] - todo
+         * @param {pc.Mesh} mesh - The mesh.
+         * @param {boolean} [initAll] - Also set UV's and indices.
          */
         function updateMesh(mesh, initAll) {
 

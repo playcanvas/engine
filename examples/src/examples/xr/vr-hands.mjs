@@ -7,7 +7,7 @@ import * as pc from 'playcanvas';
  */
 async function example({ canvas }) {
     /**
-     * @param {string} msg - todo
+     * @param {string} msg - The message.
      */
     const message = function (msg) {
         /** @type {HTMLDivElement} */
@@ -53,9 +53,9 @@ async function example({ canvas }) {
     l.setEulerAngles(45, 135, 0);
     app.root.addChild(l);
     /**
-     * @param {number} x - todo
-     * @param {number} y - todo
-     * @param {number} z - todo
+     * @param {number} x - The x coordinate.
+     * @param {number} y - The y coordinate.
+     * @param {number} z - The z coordinate.
      */
     const createCube = function (x, y, z) {
         const cube = new pc.Entity();

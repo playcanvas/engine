@@ -125,10 +125,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         screen.addChild(text);
 
         /**
-         * @param {string} labelText - todo
-         * @param {number} x - todo
-         * @param {number} y - todo
-         * @returns {pc.Entity} todo
+         * @param {string} labelText - The label text.
+         * @param {number} x - The x coordinate.
+         * @param {number} y - The y coordinate.
+         * @returns {pc.Entity} The returned entity.
          */
         function createButton(labelText, x, y) {
             // Create a simple button
