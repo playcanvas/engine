@@ -175,6 +175,7 @@ ${exampleClass.example.toString()}
         let ready = false; // Used in indicate if UI can render Controls
         let started = false;
         let miniStats;
+        let allowRestart = 'true';
         const args = Object.fromEntries(
             location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
         );
@@ -231,6 +232,10 @@ ${exampleClass.example.toString()}
             ready = false;
         }
         function hotReload() {
+            if (!allowRestart) {
+                console.warn('hotReload> Dropping restart while still restarting');
+                return;
+            }
             destroy();
             data = new observer.Observer({});
             main(files);
@@ -255,6 +260,7 @@ ${exampleClass.example.toString()}
             window.top.dispatchEvent(event);
         }
         async function main(files) {
+            allowRestart = false;
             await loadScript('pc', getSpecifiedEngine());
             await loadScript('pcx', './playcanvas-extras.js');
             window.top.pc = pc;
@@ -327,6 +333,7 @@ ${exampleClass.example.toString()}
                     started = true;
                     updateControls();
                     updateActiveDevice();
+                    allowRestart = true;
                 } else {
                     console.warn('main> no canvas');
                 }
