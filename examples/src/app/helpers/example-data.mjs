@@ -11,33 +11,16 @@ Object.keys(exampleData).forEach((categorySlug) => {
     };
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
         const name = kebabCaseToPascalCase(exampleSlug);
-        /*
-        let realClass;
-        try {
-            realClass = realExamples[category][name + "Example"];
-        } catch (e) {
-            // slow process of porting everything to proper MJS
-            debugger;
-            return;
-        }
-        if (!realClass) {
-            return;
-        }
-        */
-        //debugger;
-        //console.log({category, name, realClass });
         categories[categorySlug].examples[exampleSlug] = name;
         const data = exampleData[categorySlug][exampleSlug];
         const files = [
             {
                 name: 'example.js',
-                //text: realClass.example.toString(),
                 text: data.example,
                 type: 'javascript'
             },
         ];
         const extraFiles = data.files;
-        //const extraFiles = realClass.FILES;
         if (extraFiles) {
             Object.keys(extraFiles).forEach((name) => {
                 files.push({
@@ -56,7 +39,4 @@ Object.keys(exampleData).forEach((categorySlug) => {
     });
 });
 
-export default {
-    categories,
-    paths
-};
+export default { categories, paths };

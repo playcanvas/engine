@@ -97,24 +97,11 @@ export class SideBar extends TypedComponent {
 
     toggleCollapse() {
         const { collapsed } = this.state;
-        this.mergeState({
-            collapsed: !collapsed,
-        });
-        // console.log("SideBar#toggleCollapse> was ", collapsed);
+        this.mergeState({ collapsed: !collapsed });
     }
 
     onLayoutChange() {
-        if (!this.state.filteredCategories && document.body.offsetWidth < MIN_DESKTOP_WIDTH) {
-            // @ts-ignore
-            //const sideBar = document.getElementById('sideBar');
-            //if (sideBar) {
-            //    sideBar.ui.collapsed = true;
-            //}
-        }
-
-        this.mergeState({
-            orientation: getOrientation(),
-        });
+        this.mergeState({ orientation: getOrientation() });
     }
 
     /**
@@ -216,21 +203,18 @@ export class SideBar extends TypedComponent {
         });
     }
     render() {
-        //console.log("SideBar#render> state", JSON.stringify(this.state, null, 2));
         const { observer, collapsed, orientation } = this.state;
         const panelOptions = {
             headerText: "EXAMPLES",
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            //class: ,
             class: [
                 'small-thumbnails',
                 collapsed ? 'collapsed' : null
             ]
         };
         if (orientation === 'portrait') {
-            // console.log("DO PORTRAIT OPTIONS");
             panelOptions.class = 'small-thumbnails';
             panelOptions.collapsed = collapsed;
         }
