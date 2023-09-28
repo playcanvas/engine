@@ -67,7 +67,7 @@ class CodeEditor extends TypedComponent {
         // console.log("CodeEditor got files event", event);
         /** @type {Record<string, string>} */
         const files = event.files;
-        this.mergeState({ files });
+        this.mergeState({ files, selectedFile: 'example.mjs' });
         document.querySelector(".spin").style.display = 'none';
     }
 
