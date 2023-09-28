@@ -99,7 +99,7 @@ class LightsBuffer {
     // active light texture format, initialized at app start
     static lightTextureFormat = LightsBuffer.FORMAT_8BIT;
 
-    // on webgl2 we use texelFetch instruction to read data textures
+    // on webgl2 and WebGPU we use texelFetch instruction to read data textures
     static useTexelFetch = false;
 
     // defines used for unpacking of light textures to allow CPU packing to match the GPU unpacking
