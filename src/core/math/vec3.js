@@ -120,9 +120,8 @@ class Vec3 {
      * @returns {Vec3} Self for chaining.
      * @example
      * var vec = new pc.Vec3(1, 2, 3);
-     * var normal = pc.Vec3.UP;
      *
-     * vec.addScaled(normal, 2);
+     * vec.addScaled(pc.Vec3.UP, 2);
      *
      * // Outputs [1, 4, 3]
      * console.log("The result of the addition is: " + vec.toString());
