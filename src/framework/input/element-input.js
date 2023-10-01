@@ -631,8 +631,6 @@ class ElementInput {
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
-
             // check if touch was released over previously touch
             // element in order to fire click event
             const coords = this._calcTouchCoords(touch);
@@ -648,6 +646,8 @@ class ElementInput {
 
                 }
             }
+
+            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
         }
     }
 
