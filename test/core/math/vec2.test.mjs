@@ -76,6 +76,17 @@ describe('Vec2', function () {
 
     });
 
+    describe('#addScaled', function () {
+
+        it('adds a scaled vector', function () {
+            const v = new Vec2(1, 2);
+            v.addScaled(Vec2.UP, 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(4);
+        });
+
+    });
+
     describe('#ceil', function () {
 
         it('leaves integers unchanged', function () {
