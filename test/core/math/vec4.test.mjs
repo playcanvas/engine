@@ -92,6 +92,19 @@ describe('Vec4', function () {
 
     });
 
+    describe('#addScaled', function () {
+
+        it('adds a scaled vector', function () {
+            const v = new Vec4(1, 2, 3, 4);
+            v.addScaled(Vec4.ONE, 2);
+            expect(v.x).to.equal(3);
+            expect(v.y).to.equal(4);
+            expect(v.z).to.equal(5);
+            expect(v.w).to.equal(6);
+        });
+
+    });
+
     describe('#ceil', function () {
 
         it('leaves integers unchanged', function () {
