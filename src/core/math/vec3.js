@@ -113,6 +113,29 @@ class Vec3 {
     }
 
     /**
+     * Adds a 3-dimensional vector scaled by scalar value. Does not modify the vector being added.
+     *
+     * @param {Vec3} rhs - The vector to add to the specified vector.
+     * @param {*} scalar - The number to multiply the added vector with.
+     * @returns {Vec3} Self for chaining.
+     * @example
+     * var vec = new pc.Vec3(1, 2, 3);
+     * var normal = pc.Vec3.UP;
+     *
+     * vec.addScaled(normal, 2);
+     *
+     * // Outputs [1, 4, 3]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScaled(rhs, scalar) {
+        this.x += rhs.x * scalar;
+        this.y += rhs.y * scalar;
+        this.z += rhs.z * scalar;
+
+        return this;
+    }
+
+    /**
      * Returns an identical copy of the specified 3-dimensional vector.
      *
      * @returns {this} A 3-dimensional vector containing the result of the cloning.

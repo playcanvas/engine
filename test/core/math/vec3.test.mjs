@@ -84,6 +84,19 @@ describe('Vec3', function () {
 
     });
 
+    describe('#addScaled', function () {
+
+        it('adds a scaled vector', function () {
+            const v = new Vec3(1, 2, 3);
+            const n = Vec3.UP;
+            v.addScaled(n, 2);
+            expect(v.x).to.equal(1);
+            expect(v.y).to.equal(4);
+            expect(v.z).to.equal(3);
+        });
+
+    });
+
     describe('#ceil', function () {
 
         it('leaves integers unchanged', function () {
