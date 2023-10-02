@@ -68,8 +68,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
     // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
     if (device.isWebGPU && target === null) {
-        const { samples } = device;
-        if (samples > 1)
+        if (device.samples > 1)
             renderPass.colorOps.store = true;
     }
 
