@@ -67,9 +67,8 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     // in a separate render pass B (e.g. rendering UI). Those two render passes need to be merged into one, as they both render into
     // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
     // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
-    if (device.isWebGPU && target === null) {
-        if (device.samples > 1)
-            renderPass.colorOps.store = true;
+    if (device.isWebGPU && target === null && device.samples > 1) {
+        renderPass.colorOps.store = true;
     }
 
     renderPass.render();
