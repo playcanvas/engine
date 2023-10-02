@@ -14,7 +14,7 @@ const _tempRect = new Vec4();
  *
  * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device used to draw
  * the quad.
- * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} target - The destination render
+ * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} target - The destination render
  * target. If undefined, target is the frame buffer.
  * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader used for rendering the quad. Vertex
  * shader should contain `attribute vec2 vertex_position`.
@@ -68,7 +68,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
     // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
     if (device.isWebGPU && target === null) {
-        const samples = target?.samples ?? device.samples;
+        const { samples } = device;
         if (samples > 1)
             renderPass.colorOps.store = true;
     }

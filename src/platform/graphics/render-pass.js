@@ -93,7 +93,7 @@ class RenderPass {
     /** @type {string} */
     name;
 
-    /** @type {import('../graphics/render-target.js').RenderTarget} */
+    /** @type {import('../graphics/render-target.js').RenderTarget|null} */
     renderTarget;
 
     /**
@@ -186,7 +186,7 @@ class RenderPass {
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget} renderTarget - The render
+     * @param {import('../graphics/render-target.js').RenderTarget|null} renderTarget - The render
      * target to render into (output). This function should be called only for render passes which
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
