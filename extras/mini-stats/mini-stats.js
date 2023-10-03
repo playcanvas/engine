@@ -77,6 +77,7 @@ class MiniStats {
 
         // create click region so we can resize
         const div = document.createElement('div');
+        div.setAttribute('id', 'mini-stats');
         div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
 
@@ -229,27 +230,26 @@ class MiniStats {
     }
 
     initWordAtlas(device, words, maxWidth, numGraphs) {
+        const width = math.nextPowerOfTwo(maxWidth);
+
+        const data = new Uint8Array(width * 64 * 4);
+        const init = [0, 0, 0, 255]
+        for (let i = 0; i < width * numGraphs; ++i) {
+            data.set(init, i * 4);
+        }
 
         // create the texture for storing word atlas and graph data
         const texture = new Texture(device, {
             name: 'mini-stats',
-            width: math.nextPowerOfTwo(maxWidth),
+            width: width,
             height: 64,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
+            magFilter: FILTER_NEAREST,
+            levels: [data]
         });
 
         const wordAtlas = new WordAtlas(texture, words);
-
-        const dest = texture.lock();
-        for (let i = 0; i < texture.width * numGraphs; ++i) {
-            dest.set([0, 0, 0, 255], i * 4);
-        }
-        texture.unlock();
-
-        // ensure texture is uploaded
-        device.setTexture(texture, 0);
 
         return { atlas: wordAtlas, texture: texture };
     }

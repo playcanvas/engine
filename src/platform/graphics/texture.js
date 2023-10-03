@@ -157,7 +157,7 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]} [options.levels] - Array of Uint8Array.
+     * @param {Uint8Array[]|HTMLCanvasElement|HTMLImageElement|HTMLVideoElement|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} [options.levels] - Array of Uint8Array.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new pc.Texture(graphicsDevice, {

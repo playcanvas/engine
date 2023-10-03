@@ -85,6 +85,8 @@ class WordAtlas {
                 dest[offset + 3] = alpha * (red > 150 ? 1 : 0.7);
             }
         }
+
+        texture.upload();
     }
 
     render(render2d, word, x, y) {
