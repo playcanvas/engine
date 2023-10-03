@@ -29,7 +29,7 @@ const _lightPropsDefault = [];
  *
  * ```javascript
  * // Add a pc.LightComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('light', {
  *     type: "omni",
  *     color: new pc.Color(1, 0, 0),
@@ -37,7 +37,7 @@ const _lightPropsDefault = [];
  * });
  *
  * // Get the pc.LightComponent on an entity
- * var lightComponent = entity.light;
+ * const lightComponent = entity.light;
  *
  * // Update a property on a light component
  * entity.light.range = 20;
@@ -63,6 +63,8 @@ const _lightPropsDefault = [];
  * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+ * @property {boolean} affectSpecularity If enabled and the light type is pc.LIGHTTYPE_DIRECTIONAL, material specularity
+ * will not be affected by this light. Defaults to true.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
@@ -87,6 +89,9 @@ const _lightPropsDefault = [];
  * angle is specified in degrees. Affects spot lights only. Defaults to 40.
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
+ * @property {number} penumbraSize Size of penumbra for contact hardening shadows. For area lights
+ * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
+ * it's the area size of the light. Defaults to 1.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *
@@ -127,6 +132,7 @@ const _lightPropsDefault = [];
  * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
  * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
  * sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+ * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps. Can be:
  *
  * - {@link BLUR_BOX}: Box filter.
@@ -152,6 +158,7 @@ const _lightPropsDefault = [];
  * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
  * instead.
  * @augments Component
+ * @category Graphics
  */
 class LightComponent extends Component {
     /**
@@ -176,6 +183,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     }
@@ -185,6 +193,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.removeLight(this);
+                this.light.removeLayer(layer);
             }
         }
     }
@@ -203,6 +212,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
+            this.light.addLayer(layer);
         }
     }
 
@@ -210,6 +220,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
     }
 
@@ -330,6 +341,14 @@ class LightComponent extends Component {
     get shadowUpdateOverrides() {
         return this.light.shadowUpdateOverrides;
     }
+
+    set penumbraSize(value) {
+        this.light.penumbraSize = value;
+    }
+
+    get penumbraSize() {
+        return this.light.penumbraSize;
+    }
 }
 
 function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
@@ -374,6 +393,9 @@ function _defineProps() {
     });
     _defineProperty('shape', LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
+    });
+    _defineProperty('affectSpecularity', true, function (newValue, oldValue) {
+        this.light.affectSpecularity = newValue;
     });
     _defineProperty('castShadows', false, function (newValue, oldValue) {
         this.light.castShadows = newValue;
@@ -540,15 +562,20 @@ function _defineProps() {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
         for (let i = 0; i < newValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             if (this.enabled && this.entity.enabled) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     });
+
+    _lightProps.push("penumbraSize");
+    _lightPropsDefault.push(1);
 }
 
 _defineProps();

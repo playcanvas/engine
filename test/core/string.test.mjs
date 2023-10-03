@@ -29,25 +29,6 @@ describe('string', function () {
 
     });
 
-    describe('#toBool', function () {
-
-        it('handles strict conversion', function () {
-            expect(string.toBool('true', true)).to.be.true;
-            expect(string.toBool('false', true)).to.be.false;
-            expect(function () {
-                string.toBool('abc', true);
-            }).to.throw;
-        });
-
-        it('handles non-strict conversion', function () {
-            expect(string.toBool('true')).to.be.true;
-            expect(string.toBool('false')).to.be.false;
-            expect(string.toBool('abc')).to.be.false;
-            expect(string.toBool(undefined)).to.be.false;
-        });
-
-    });
-
     describe('#getSymbols', function () {
 
         it('returns an array of the expected length', function () {

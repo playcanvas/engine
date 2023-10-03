@@ -1,8 +1,9 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { CULLFACE_NONE, DEVICETYPE_WEBGPU } from '../../platform/graphics/constants.js';
+import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
 
@@ -21,28 +22,22 @@ const _tempRect = new Vec4();
  * pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle of the
  * quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend = false) {
+function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
     // a valid target or a null target (framebuffer) are supported
     Debug.assert(target !== undefined);
 
-    DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
+    const useBlend = arguments[5];
+    Debug.call(() => {
+        if (useBlend !== undefined) {
+            Debug.warnOnce('pc.drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+        }
+    });
 
-    const oldDepthTest = device.getDepthTest();
-    const oldDepthWrite = device.getDepthWrite();
-    const oldCullMode = device.getCullMode();
-    const oldWR = device.writeRed;
-    const oldWG = device.writeGreen;
-    const oldWB = device.writeBlue;
-    const oldWA = device.writeAlpha;
-
-    device.setDepthTest(false);
-    device.setDepthWrite(false);
     device.setCullMode(CULLFACE_NONE);
-    device.setColorWrite(true, true, true, true);
-    if (!useBlend) device.setBlending(false);
+    device.setDepthState(DepthState.NODEPTH);
+    device.setStencilState(null, null);
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
@@ -58,27 +53,29 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
 
     // prepare a render pass to render the quad to the render target
     const renderPass = new RenderPass(device, () => {
+        DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
         quad.render(rect, scissorRect);
+        DebugGraphics.popGpuMarker(device);
     });
-    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : ''}`);
+    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : 'Framebuffer'}`);
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;
 
-    // TODO: this is temporary, till the webgpu supports setDepthTest
-    if (device.deviceType === DEVICETYPE_WEBGPU) {
-        renderPass.depthStencilOps.clearDepth = true;
+    // TODO: This is a workaround for the case where post-effects are used together with multi-sampled framebuffer. Last post-effect
+    // renders into multi-sampled framebuffer (render pass A), which is typically followed by further rendering to this framebuffer,
+    // in a separate render pass B (e.g. rendering UI). Those two render passes need to be merged into one, as they both render into
+    // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
+    // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
+    if (device.isWebGPU && target === null) {
+        const samples = target?.samples ?? device.samples;
+        if (samples > 1)
+            renderPass.colorOps.store = true;
     }
 
     renderPass.render();
+
     quad.destroy();
-
-    device.setDepthTest(oldDepthTest);
-    device.setDepthWrite(oldDepthWrite);
-    device.setCullMode(oldCullMode);
-    device.setColorWrite(oldWR, oldWG, oldWB, oldWA);
-
-    DebugGraphics.popGpuMarker(device);
 }
 
 /**
@@ -90,19 +87,25 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend 
  * `uniform sampler2D * source` in shader.
  * @param {import('../../platform/graphics/render-target.js').RenderTarget} [target] - The destination render target.
  * Defaults to the frame buffer.
- * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The shader used for rendering the texture.
- * Defaults to {@link GraphicsDevice#getCopyShader}.
+ * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The optional custom shader used for rendering the texture.
  * @param {import('../../core/math/vec4.js').Vec4} [rect] - The viewport rectangle to use for the
  * texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle to use for
  * the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
- * @param {boolean} [useBlend] - True to enable blending. Defaults to false, disabling blending.
  */
-function drawTexture(device, texture, target, shader, rect, scissorRect, useBlend = false) {
-    Debug.assert(device.deviceType !== DEVICETYPE_WEBGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
+function drawTexture(device, texture, target, shader, rect, scissorRect) {
+    Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');
+
+    const useBlend = arguments[6];
+    Debug.call(() => {
+        if (useBlend !== undefined) {
+            Debug.warnOnce('pc.drawTexture no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
+        }
+    });
+
     shader = shader || device.getCopyShader();
     device.constantTexSource.setValue(texture);
-    drawQuadWithShader(device, target, shader, rect, scissorRect, useBlend);
+    drawQuadWithShader(device, target, shader, rect, scissorRect);
 }
 
 export { drawQuadWithShader, drawTexture };

@@ -2,11 +2,13 @@ import AreaLightsExample from "./area-lights";
 import AreaPickerExample from "./area-picker";
 import AssetViewerExample from "./asset-viewer";
 import BatchingDynamicExample from "./batching-dynamic";
-import BoxReflectionExample from "./box-reflection";
+import ReflectionBoxExample from "./reflection-box";
 import ClusteredAreaLightsExample from "./clustered-area-lights";
 import ClusteredLightingExample from "./clustered-lighting";
 import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
 import ClusteredSpotShadowsExample from "./clustered-spot-shadows";
+import ContactHardeningShadowsExample from "./contact-hardening-shadows";
+// import LitMaterialExample from "./lit-material";   // note that this is also excluded in read-dir.mjs
 import GrabPassExample from "./grab-pass";
 import GroundFogExample from "./ground-fog";
 import HardwareInstancingExample from "./hardware-instancing";
@@ -31,6 +33,7 @@ import ModelAssetExample from "./model-asset";
 import ModelOutlineExample from "./model-outline";
 import ModelTexturedBoxExample from "./model-textured-box";
 import MultiViewExample from "./multi-view";
+import MrtExample from "./mrt";
 import PainterExample from "./painter";
 import PaintMeshExample from "./paint-mesh";
 import ParticlesAnimIndexExample from "./particles-anim-index";
@@ -41,8 +44,9 @@ import PointCloudSimulationExample from "./point-cloud-simulation";
 import PointCloudExample from "./point-cloud";
 import PortalExample from "./portal";
 import PostEffectsExample from "./post-effects";
+import ReflectionPlanarExample from "./reflection-planar";
 import RenderAssetExample from "./render-asset";
-import RenderCubemapExample from "./render-cubemap";
+import ReflectionCubemapExample from "./reflection-cubemap";
 import RenderToTextureExample from "./render-to-texture";
 import ShaderBurnExample from "./shader-burn";
 import ShaderCompileExample from "./shader-compile";
@@ -59,11 +63,13 @@ export {
     AreaPickerExample,
     AssetViewerExample,
     BatchingDynamicExample,
-    BoxReflectionExample,
+    ReflectionBoxExample,
     ClusteredAreaLightsExample,
     ClusteredLightingExample,
     ClusteredOmniShadowsExample,
     ClusteredSpotShadowsExample,
+    ContactHardeningShadowsExample,
+    // LitMaterialExample,
     GrabPassExample,
     GroundFogExample,
     HardwareInstancingExample,
@@ -88,6 +94,7 @@ export {
     ModelOutlineExample,
     ModelTexturedBoxExample,
     MultiViewExample,
+    MrtExample,
     PainterExample,
     PaintMeshExample,
     ParticlesAnimIndexExample,
@@ -98,8 +105,9 @@ export {
     PointCloudExample,
     PortalExample,
     PostEffectsExample,
+    ReflectionPlanarExample,
     RenderAssetExample,
-    RenderCubemapExample,
+    ReflectionCubemapExample,
     RenderToTextureExample,
     ShaderBurnExample,
     ShaderCompileExample,

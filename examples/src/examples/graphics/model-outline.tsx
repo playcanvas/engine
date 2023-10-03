@@ -3,14 +3,21 @@ import * as pc from '../../../../';
 class ModelOutlineExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Model Outline';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'outline': new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -93,8 +100,9 @@ class ModelOutlineExample {
                 const outlineLayer = new pc.Layer({ name: "OutlineLayer" });
                 app.scene.layers.insert(outlineLayer, 0);
 
-                // get world layer
+                // get existing layers
                 const worldLayer = app.scene.layers.getLayerByName("World");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
 
                 // create ground plane and 3 primitives, visible in both layers
                 createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [worldLayer.id]);
@@ -106,7 +114,7 @@ class ModelOutlineExample {
                 const camera = new pc.Entity();
                 camera.addComponent("camera", {
                     clearColor: new pc.Color(0.2, 0.2, 0.4),
-                    layers: [worldLayer.id]
+                    layers: [worldLayer.id, uiLayer.id]
                 });
                 camera.translate(0, 20, 25);
                 camera.lookAt(pc.Vec3.ZERO);

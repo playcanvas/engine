@@ -26,7 +26,7 @@ class AssetReference {
      * unload(propertyName, parent, asset).
      * @param {object} [scope] - The scope to call the callbacks in.
      * @example
-     * var reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
+     * const reference = new pc.AssetReference('textureAsset', this, this.app.assets, {
      *     load: this.onTextureAssetLoad,
      *     add: this.onTextureAssetAdd,
      *     remove: this.onTextureAssetRemove

@@ -86,8 +86,7 @@ class Graph {
     }
 
     render(render2d, x, y, w, h) {
-        render2d.quad(this.texture,
-                      x + w,
+        render2d.quad(x + w,
                       y,
                       -w,
                       h,

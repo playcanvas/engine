@@ -6,13 +6,17 @@
  */
 class ObjectPool {
     /**
-     * @type {object[]} - Array of object instances.
+     * Array of object instances.
+     *
+     * @type {object[]}
      * @private
      */
     _pool = [];
 
     /**
-     * @type {number} - The number of object instances that are currently allocated.
+     * The number of object instances that are currently allocated.
+     *
+     * @type {number}
      * @private
      */
     _count = 0;

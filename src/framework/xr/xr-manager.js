@@ -16,6 +16,7 @@ import { XrImageTracking } from './xr-image-tracking.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
+import { XrAnchors } from './xr-anchors.js';
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -28,6 +29,7 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  * Manage and update XR session and its states.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrManager extends EventHandler {
     /**
@@ -74,7 +76,7 @@ class XrManager extends EventHandler {
 
     /**
      * @type {XRReferenceSpace|null}
-     * @private
+     * @ignore
      */
     _referenceSpace = null;
 
@@ -210,6 +212,7 @@ class XrManager extends EventHandler {
         this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
+        this.anchors = new XrAnchors(this);
 
         // TODO
         // 1. HMD class with its params
@@ -336,6 +339,8 @@ class XrManager extends EventHandler {
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.anchors] - Set to true to attempt to enable
+     * {@link XrAnchors}.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
@@ -360,6 +365,8 @@ class XrManager extends EventHandler {
      * @example
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+     *         anchors: true,
+     *         imageTracking: true,
      *         depthSensing: { }
      *     });
      * });
@@ -415,6 +422,10 @@ class XrManager extends EventHandler {
             if (this.domOverlay.supported && this.domOverlay.root) {
                 opts.optionalFeatures.push('dom-overlay');
                 opts.domOverlay = { root: this.domOverlay.root };
+            }
+
+            if (options && options.anchors && this.anchors.supported) {
+                opts.optionalFeatures.push('anchors');
             }
 
             if (options && options.depthSensing && this.depthSensing.supported) {
@@ -619,7 +630,10 @@ class XrManager extends EventHandler {
             alpha: true,
             depth: true,
             stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor
+            framebufferScaleFactor: framebufferScaleFactor,
+
+            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
+            antialias: false
         });
 
         session.updateRenderState({
@@ -694,32 +708,28 @@ class XrManager extends EventHandler {
         const lengthOld = this.views.length;
         const lengthNew = pose.views.length;
 
-        if (lengthNew > this.views.length) {
-            // add new views into list
-            for (let i = 0; i <= (lengthNew - this.views.length); i++) {
-                let view = this.viewsPool.pop();
-                if (!view) {
-                    view = {
-                        viewport: new Vec4(),
-                        projMat: new Mat4(),
-                        viewMat: new Mat4(),
-                        viewOffMat: new Mat4(),
-                        viewInvMat: new Mat4(),
-                        viewInvOffMat: new Mat4(),
-                        projViewOffMat: new Mat4(),
-                        viewMat3: new Mat3(),
-                        position: new Float32Array(3),
-                        rotation: new Quat()
-                    };
-                }
+        while (lengthNew > this.views.length) {
+            let view = this.viewsPool.pop();
+            if (!view) {
+                view = {
+                    viewport: new Vec4(),
+                    projMat: new Mat4(),
+                    viewMat: new Mat4(),
+                    viewOffMat: new Mat4(),
+                    viewInvMat: new Mat4(),
+                    viewInvOffMat: new Mat4(),
+                    projViewOffMat: new Mat4(),
+                    viewMat3: new Mat3(),
+                    position: new Float32Array(3),
+                    rotation: new Quat()
+                };
+            }
 
-                this.views.push(view);
-            }
-        } else if (lengthNew <= this.views.length) {
-            // remove views from list into pool
-            for (let i = 0; i < (this.views.length - lengthNew); i++) {
-                this.viewsPool.push(this.views.pop());
-            }
+            this.views.push(view);
+        }
+        // remove views from list into pool
+        while (lengthNew < this.views.length) {
+            this.viewsPool.push(this.views.pop());
         }
 
         // reset position
@@ -789,6 +799,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.anchors.supported)
+                this.anchors.update(frame);
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);

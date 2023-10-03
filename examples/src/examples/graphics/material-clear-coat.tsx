@@ -3,17 +3,24 @@ import * as pc from '../../../../';
 class MaterialClearCoatExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Material Clear Coat';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/flakes5n.png' }),
             'diffuse': new pc.Asset('diffuse', 'texture', { url: '/static/assets/textures/flakes5c.png' }),
             'other': new pc.Asset('other', 'texture', { url: '/static/assets/textures/flakes5o.png' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -87,7 +94,7 @@ class MaterialClearCoatExample {
                 material.diffuse = new pc.Color(0.6, 0.6, 0.9);
                 material.diffuseTint = true;
                 material.metalness = 1.0;
-                material.shininess = 90.0;
+                material.gloss = 0.9;
                 material.bumpiness = 0.7;
                 material.useMetalness = true;
                 material.update();
@@ -104,7 +111,7 @@ class MaterialClearCoatExample {
                 clearCoatMaterial.diffuse = new pc.Color(0.6, 0.6, 0.9);
                 clearCoatMaterial.diffuseTint = true;
                 clearCoatMaterial.metalness = 1.0;
-                clearCoatMaterial.shininess = 90;
+                clearCoatMaterial.gloss = 0.9;
                 clearCoatMaterial.bumpiness = 0.7;
                 clearCoatMaterial.useMetalness = true;
                 clearCoatMaterial.clearCoat = 0.25;

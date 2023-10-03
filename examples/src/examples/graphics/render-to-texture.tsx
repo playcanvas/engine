@@ -3,8 +3,9 @@ import * as pc from '../../../../';
 class RenderToTextureExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Render to Texture';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // Overview:
         // There are 3 layers used:
@@ -16,11 +17,18 @@ class RenderToTextureExample {
         // - camera - this camera renders into main framebuffer, objects from World, Excluded and also Skybox layers
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+            checkerboard: new pc.Asset('checkerboard', 'texture', { url: '/static/assets/textures/checkboard.png' }),
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -136,7 +144,7 @@ class RenderToTextureExample {
                     name: `RT`,
                     colorBuffer: texture,
                     depth: true,
-                    flipY: true,
+                    flipY: !app.graphicsDevice.isWebGPU,
                     samples: 2
                 });
 
@@ -144,12 +152,21 @@ class RenderToTextureExample {
                 const excludedLayer = new pc.Layer({ name: "Excluded" });
                 app.scene.layers.insert(excludedLayer, 1);
 
-                // get world and skybox layers
+                // get existing layers
                 const worldLayer = app.scene.layers.getLayerByName("World");
                 const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
 
                 // create ground plane and 3 primitives, visible in world layer
-                const plane = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.2, 0.4, 0.2), [worldLayer.id]);
+                const plane = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(3, 4, 2), [worldLayer.id]);
+                const planeMaterial: pc.StandardMaterial = plane.render.meshInstances[0].material as pc.StandardMaterial;
+
+                // make the texture tiles and use anisotropic filtering to prevent blurring
+                planeMaterial.diffuseMap = assets.checkerboard.resource;
+                planeMaterial.diffuseTint = true;
+                planeMaterial.diffuseMapTiling.set(10, 10);
+                planeMaterial.anisotropy = 16;
+
                 createPrimitive("sphere", new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.RED, [worldLayer.id]);
                 createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), pc.Color.CYAN, [worldLayer.id]);
                 createPrimitive("box", new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), pc.Color.YELLOW, [worldLayer.id]);
@@ -161,7 +178,7 @@ class RenderToTextureExample {
                 const camera = new pc.Entity("Camera");
                 camera.addComponent("camera", {
                     fov: 100,
-                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id]
+                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
                 });
                 camera.translate(0, 9, 15);
                 camera.lookAt(1, 4, 0);
@@ -247,6 +264,11 @@ class RenderToTextureExample {
                             textureCamera.camera.orthoHeight = 5;
                         }
                     }
+
+                    // debug draw the texture on the screen in the excludedLayer layer of the main camera
+                    // @ts-ignore engine-tsd
+                    app.drawTexture(0.7, -0.7, 0.5, 0.5, texture, null, excludedLayer);
+
                 });
             });
         });

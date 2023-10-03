@@ -10,6 +10,9 @@ import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
+import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -24,6 +27,21 @@ const _frustumPoints = [new Vec3(), new Vec3(), new Vec3(), new Vec3(), new Vec3
  * @ignore
  */
 class Camera {
+    /**
+     * @type {import('./shader-pass.js').ShaderPassInfo|null}
+     */
+    shaderPassInfo = null;
+
+    /**
+     * @type {RenderPassColorGrab|null}
+     */
+    renderPassColorGrab = null;
+
+    /**
+     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     */
+    renderPassDepthGrab = null;
+
     constructor() {
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
@@ -35,7 +53,6 @@ class Camera {
         this._clearDepthBuffer = true;
         this._clearStencil = 0;
         this._clearStencilBuffer = true;
-        this._cullingMask = 0xFFFFFFFF;
         this._cullFaces = true;
         this._farClip = 1000;
         this._flipFaces = false;
@@ -75,6 +92,15 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+    }
+
+    destroy() {
+
+        this.renderPassColorGrab?.destroy();
+        this.renderPassColorGrab = null;
+
+        this.renderPassDepthGrab?.destroy();
+        this.renderPassDepthGrab = null;
     }
 
     /**
@@ -170,14 +196,6 @@ class Camera {
 
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
-    }
-
-    set cullingMask(newValue) {
-        this._cullingMask = newValue;
-    }
-
-    get cullingMask() {
-        return this._cullingMask;
     }
 
     set cullFaces(newValue) {
@@ -406,7 +424,6 @@ class Camera {
         this.clearStencil = other.clearStencil;
         this.clearStencilBuffer = other.clearStencilBuffer;
         this.cullFaces = other.cullFaces;
-        this.cullingMask = other.cullingMask;
         this.flipFaces = other.flipFaces;
         this.frustumCulling = other.frustumCulling;
         this.layers = other.layers;
@@ -419,9 +436,35 @@ class Camera {
         this.shutter = other.shutter;
         this.sensitivity = other.sensitivity;
 
+        this.shaderPassInfo = other.shaderPassInfo;
+
         this._projMatDirty = true;
 
         return this;
+    }
+
+    _enableRenderPassColorGrab(device, enable) {
+        if (enable) {
+            if (!this.renderPassColorGrab) {
+                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+            }
+        } else {
+            this.renderPassColorGrab?.destroy();
+            this.renderPassColorGrab = null;
+        }
+    }
+
+    _enableRenderPassDepthGrab(device, renderer, enable) {
+        if (enable) {
+            if (!this.renderPassDepthGrab) {
+                this.renderPassDepthGrab = device.isWebGL1 ?
+                    new RenderPassDepth(device, renderer, this) :
+                    new RenderPassDepthGrab(device, this);
+            }
+        } else {
+            this.renderPassDepthGrab?.destroy();
+            this.renderPassDepthGrab = null;
+        }
     }
 
     _updateViewProjMat() {
@@ -625,7 +668,7 @@ class Camera {
      * @param {number} [properties.nearClip] - Near clip.
      */
     setXrProperties(properties) {
-        Object.assign(properties, this._xrProperties);
+        Object.assign(this._xrProperties, properties);
         this._projMatDirty = true;
     }
 }

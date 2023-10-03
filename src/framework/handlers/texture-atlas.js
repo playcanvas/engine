@@ -34,6 +34,7 @@ const regexFrame = /^data\.frames\.(\d+)$/;
  * Resource handler used for loading {@link TextureAtlas} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class TextureAtlasHandler {
     /**
@@ -91,7 +92,7 @@ class TextureAtlasHandler {
                 }
             });
         } else {
-            return handler.load(url, callback);
+            handler.load(url, callback);
         }
     }
 

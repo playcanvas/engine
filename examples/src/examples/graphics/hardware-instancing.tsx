@@ -3,14 +3,21 @@ import * as pc from '../../../../';
 class HardwareInstancingExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Hardware Instancing';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -59,24 +66,20 @@ class HardwareInstancingExample {
 
                 // create standard material and enable instancing on it
                 const material = new pc.StandardMaterial();
-                material.onUpdateShader = function (options) {
-                    options.litOptions.useInstancing = true;
-                    return options;
-                };
-                material.shininess = 60;
+                material.gloss = 0.6;
                 material.metalness = 0.7;
                 material.useMetalness = true;
                 material.update();
 
                 // Create a Entity with a cylinder render component and the instancing material
-                const box = new pc.Entity("InstancingEntity");
-                box.addComponent("render", {
+                const cylinder = new pc.Entity("InstancingEntity");
+                cylinder.addComponent("render", {
                     material: material,
                     type: "cylinder"
                 });
 
-                // add the box entity to the hierarchy
-                app.root.addChild(box);
+                // add the cylinder entity to the hierarchy
+                app.root.addChild(cylinder);
 
                 if (app.graphicsDevice.supportsInstancing) {
                     // number of instances to render
@@ -108,9 +111,9 @@ class HardwareInstancingExample {
                     const vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
                                                              instanceCount, pc.BUFFER_STATIC, matrices);
 
-                    // initialize instancing using the vertex buffer on meshInstance of the created box
-                    const boxMeshInst = box.render.meshInstances[0];
-                    boxMeshInst.setInstancing(vertexBuffer);
+                    // initialize instancing using the vertex buffer on meshInstance of the created cylinder
+                    const cylinderMeshInst = cylinder.render.meshInstances[0];
+                    cylinderMeshInst.setInstancing(vertexBuffer);
                 }
 
                 // Set an update function on the app's update event

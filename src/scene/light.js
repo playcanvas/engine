@@ -9,7 +9,7 @@ import {
     BLUR_GAUSSIAN,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_BAKE, MASK_AFFECT_DYNAMIC,
-    SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32,
+    SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SHADOWUPDATE_NONE, SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME,
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
@@ -40,7 +40,11 @@ const directionalCascades = [
 
 let id = 0;
 
-// Class storing shadow rendering related private information
+/**
+ * Class storing shadow rendering related private information
+ *
+ * @ignore
+ */
 class LightRenderData {
     constructor(device, camera, face, light) {
 
@@ -64,6 +68,10 @@ class LightRenderData {
 
         // scissor rectangle for the shadow rendering to the texture (x, y, width, height)
         this.shadowScissor = new Vec4(0, 0, 1, 1);
+
+        // depth range compensation for PCSS with directional lights
+        this.depthRangeCompensation = 0;
+        this.projectionCompensation = 0;
 
         // face index, value is based on light type:
         // - spot: always 0
@@ -110,6 +118,13 @@ class LightRenderData {
  * @ignore
  */
 class Light {
+    /**
+     * The Layers the light is on.
+     *
+     * @type {Set<import('./layer.js').Layer>}
+     */
+    layers = new Set();
+
     constructor(graphicsDevice) {
         this.device = graphicsDevice;
         this.id = id++;
@@ -118,10 +133,11 @@ class Light {
         this._type = LIGHTTYPE_DIRECTIONAL;
         this._color = new Color(0.8, 0.8, 0.8);
         this._intensity = 1;
+        this._affectSpecularity = true;
         this._luminance = 0;
         this._castShadows = false;
         this._enabled = false;
-        this.mask = MASK_AFFECT_DYNAMIC;
+        this._mask = MASK_AFFECT_DYNAMIC;
         this.isStatic = false;
         this.key = 0;
         this.bakeDir = true;
@@ -176,6 +192,7 @@ class Light {
         // Shadow mapping resources
         this._shadowMap = null;
         this._shadowRenderParams = [];
+        this._shadowCameraParams = [];
 
         // Shadow mapping properties
         this.shadowDistance = 40;
@@ -185,6 +202,7 @@ class Light {
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
         this.shadowUpdateOverrides = null;
+        this._penumbraSize = 1.0;
         this._isVsm = false;
         this._isPcf = true;
 
@@ -198,7 +216,6 @@ class Light {
         this.atlasSlotIndex = 0;    // allocated slot index, used for more persistent slot allocation
         this.atlasSlotUpdated = false;  // true if the atlas slot was reassigned this frame (and content needs to be updated)
 
-        this._scene = null;
         this._node = null;
 
         // private rendering data
@@ -230,6 +247,14 @@ class Light {
         }
     }
 
+    addLayer(layer) {
+        this.layers.add(layer);
+    }
+
+    removeLayer(layer) {
+        this.layers.delete(layer);
+    }
+
     set numCascades(value) {
         if (!this.cascades || this.numCascades !== value) {
             this.cascades = directionalCascades[value - 1];
@@ -253,6 +278,17 @@ class Light {
 
     get shadowMap() {
         return this._shadowMap;
+    }
+
+    set mask(value) {
+        if (this._mask !== value) {
+            this._mask = value;
+            this.updateKey();
+        }
+    }
+
+    get mask() {
+        return this._mask;
     }
 
     // returns number of render targets to render the shadow map
@@ -319,22 +355,24 @@ class Light {
 
         const device = this.device;
 
-        if (this._type === LIGHTTYPE_OMNI)
+        if (this._type === LIGHTTYPE_OMNI && value !== SHADOW_PCF3 && value !== SHADOW_PCSS)
             value = SHADOW_PCF3; // VSM or HW PCF for omni lights is not supported yet
 
-        const supportsPCF5 = device.supportsDepthShadow;
-        if (value === SHADOW_PCF5 && !supportsPCF5) {
+        const supportsDepthShadow = device.supportsDepthShadow;
+        if (value === SHADOW_PCF5 && !supportsDepthShadow) {
             value = SHADOW_PCF3; // fallback from HW PCF to old PCF
         }
 
-        if (value === SHADOW_VSM32 && !device.textureFloatRenderable) // fallback from vsm32 to vsm16
+        // fallback from vsm32 to vsm16
+        if (value === SHADOW_VSM32 && (!device.textureFloatRenderable || !device.textureFloatFilterable))
             value = SHADOW_VSM16;
 
-        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable) // fallback from vsm16 to vsm8
+        // fallback from vsm16 to vsm8
+        if (value === SHADOW_VSM16 && !device.textureHalfFloatRenderable)
             value = SHADOW_VSM8;
 
         this._isVsm = value >= SHADOW_VSM8 && value <= SHADOW_VSM32;
-        this._isPcf = value === SHADOW_PCF5 || value === SHADOW_PCF3;
+        this._isPcf = value === SHADOW_PCF1 || value === SHADOW_PCF3 || value === SHADOW_PCF5;
 
         this._shadowType = value;
         this._destroyShadowMap();
@@ -366,7 +404,7 @@ class Light {
     }
 
     get castShadows() {
-        return this._castShadows && this.mask !== MASK_BAKE && this.mask !== 0;
+        return this._castShadows && this._mask !== MASK_BAKE && this._mask !== 0;
     }
 
     set shadowResolution(value) {
@@ -454,6 +492,14 @@ class Light {
         return this._outerConeAngle;
     }
 
+    set penumbraSize(value) {
+        this._penumbraSize = value;
+    }
+
+    get penumbraSize() {
+        return this._penumbraSize;
+    }
+
     _updateOuterAngle(angle) {
         const radAngle = angle * Math.PI / 180;
         this._outerConeAngleCos = Math.cos(radAngle);
@@ -469,6 +515,17 @@ class Light {
 
     get intensity() {
         return this._intensity;
+    }
+
+    set affectSpecularity(value) {
+        if (this._type === LIGHTTYPE_DIRECTIONAL) {
+            this._affectSpecularity = value;
+            this.updateKey();
+        }
+    }
+
+    get affectSpecularity() {
+        return this._affectSpecularity;
     }
 
     set luminance(value) {
@@ -640,6 +697,7 @@ class Light {
         clone.type = this._type;
         clone.setColor(this._color);
         clone.intensity = this._intensity;
+        clone.affectSpecularity = this._affectSpecularity;
         clone.luminance = this._luminance;
         clone.castShadows = this.castShadows;
         clone._enabled = this._enabled;
@@ -652,6 +710,7 @@ class Light {
         clone.vsmBlurSize = this._vsmBlurSize;
         clone.vsmBlurMode = this.vsmBlurMode;
         clone.vsmBias = this.vsmBias;
+        clone.penumbraSize = this.penumbraSize;
         clone.shadowUpdateMode = this.shadowUpdateMode;
         clone.mask = this.mask;
 
@@ -731,7 +790,7 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = this.shadowBias * 20; // approx remap from old bias values
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (this.attenuationEnd / 7.0) : this._normalOffsetBias;
                 break;
@@ -742,7 +801,7 @@ class Light {
                     tmpBiases.bias = -0.00001 * 20;
                 } else {
                     tmpBiases.bias = (this.shadowBias / farClip) * 100;
-                    if (!this.device.webgl2 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
+                    if (this.device.isWebGL1 && this.device.extStandardDerivatives) tmpBiases.bias *= -100;
                 }
                 tmpBiases.normalBias = this._isVsm ? this.vsmBias / (farClip / 7.0) : this._normalOffsetBias;
                 break;
@@ -841,11 +900,16 @@ class Light {
     }
 
     layersDirty() {
-        if (this._scene?.layers) {
-            this._scene.layers._dirtyLights = true;
-        }
+        this.layers.forEach((layer) => {
+            layer.markLightsDirty();
+        });
     }
 
+    /**
+     * Updates a integer key for the light. The key is used to identify all shader related features
+     * of the light, and so needs to have all properties that modify the generated shader encoded.
+     * Properties without an effect on the shader (color, shadow intensity) should not be encoded.
+     */
     updateKey() {
         // Key definition:
         // Bit
@@ -863,6 +927,8 @@ class Light {
         // 12      : cookie transform
         // 10 - 11 : light source shape
         //  8 -  9 : light num cascades
+        //  7      : disable specular
+        //  6 -  4 : mask
         let key =
                (this._type                                << 29) |
                ((this._castShadows ? 1 : 0)               << 28) |
@@ -874,16 +940,17 @@ class Light {
                (chanId[this._cookieChannel.charAt(0)]     << 18) |
                ((this._cookieTransform ? 1 : 0)           << 12) |
                ((this._shape)                             << 10) |
-               ((this.numCascades - 1)                    <<  8);
+               ((this.numCascades - 1)                    <<  8) |
+               ((this.affectSpecularity ? 1 : 0)          <<  7) |
+               ((this.mask)                               <<  6);
 
         if (this._cookieChannel.length === 3) {
             key |= (chanId[this._cookieChannel.charAt(1)] << 16);
             key |= (chanId[this._cookieChannel.charAt(2)] << 14);
         }
 
-        if (key !== this.key && this._scene !== null) {
-            // TODO: most of the changes to the key should not invalidate the composition,
-            // probably only _type and _castShadows
+        if (key !== this.key) {
+            // The layer maintains lights split and sorted by the key, notify it when the key changes
             this.layersDirty();
         }
 

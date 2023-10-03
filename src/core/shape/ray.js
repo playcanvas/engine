@@ -2,6 +2,8 @@ import { Vec3 } from '../math/vec3.js';
 
 /**
  * An infinite ray.
+ *
+ * @category Math
  */
 class Ray {
     /**
@@ -31,7 +33,7 @@ class Ray {
      * @example
      * // Create a new ray starting at the position of this entity and pointing down
      * // the entity's negative Z axis
-     * var ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
+     * const ray = new pc.Ray(this.entity.getPosition(), this.entity.forward);
      */
     constructor(origin, direction) {
         if (origin) {

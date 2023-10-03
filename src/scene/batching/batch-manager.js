@@ -5,7 +5,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN,
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_BLENDINDICES,
     TYPE_FLOAT32,
     typedArrayIndexFormats, typedArrayTypes, typedArrayTypesByteSize
@@ -47,34 +47,19 @@ function equalParamSets(params1, params2) {
     return true;
 }
 
-function equalLightLists(lightList1, lightList2) {
-    for (let k = 0; k < lightList1.length; k++) {
-        if (lightList2.indexOf(lightList1[k]) < 0)
-            return false;
-    }
-    for (let k = 0; k < lightList2.length; k++) {
-        if (lightList1.indexOf(lightList2[k]) < 0)
-            return false;
-    }
-    return true;
-}
+const _triFanIndices = [0, 1, 3, 2, 3, 1];
+const _triStripIndices = [0, 1, 3, 0, 3, 2];
 
 const mat3 = new Mat3();
 
-const worldMatX = new Vec3();
-const worldMatY = new Vec3();
-const worldMatZ = new Vec3();
 function getScaleSign(mi) {
-    const wt = mi.node.worldTransform;
-    wt.getX(worldMatX);
-    wt.getY(worldMatY);
-    wt.getZ(worldMatZ);
-    worldMatX.cross(worldMatX, worldMatY);
-    return worldMatX.dot(worldMatZ) >= 0 ? 1 : -1;
+    return mi.node.worldTransform.scaleSign;
 }
 
 /**
  * Glues many mesh instances into a single one for better performance.
+ *
+ * @category Graphics
  */
 class BatchManager {
     /**
@@ -272,26 +257,7 @@ class BatchManager {
 
     _extractRender(node, arr, group, groupMeshInstances) {
         if (node.render) {
-
-            if (node.render.isStatic) {
-                // static mesh instances can be in both drawCall array with _staticSource linking to original
-                // and in the original array as well, if no triangle splitting was done
-                const drawCalls = this.scene.drawCalls;
-                const nodeMeshInstances = node.render.meshInstances;
-                for (let i = 0; i < drawCalls.length; i++) {
-                    if (!drawCalls[i]._staticSource) continue;
-                    if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                    arr.push(drawCalls[i]);
-                }
-                for (let i = 0; i < nodeMeshInstances.length; i++) {
-                    if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                        arr.push(nodeMeshInstances[i]);
-                    }
-                }
-            } else {
-                arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
-            }
-
+            arr = groupMeshInstances[node.render.batchGroupId] = arr.concat(node.render.meshInstances);
             node.render.removeFromLayers();
         }
 
@@ -300,25 +266,7 @@ class BatchManager {
 
     _extractModel(node, arr, group, groupMeshInstances) {
         if (node.model && node.model.model) {
-            if (node.model.isStatic) {
-                // static mesh instances can be in both drawCall array with _staticSource linking to original
-                // and in the original array as well, if no triangle splitting was done
-                const drawCalls = this.scene.drawCalls;
-                const nodeMeshInstances = node.model.meshInstances;
-                for (let i = 0; i < drawCalls.length; i++) {
-                    if (!drawCalls[i]._staticSource) continue;
-                    if (nodeMeshInstances.indexOf(drawCalls[i]._staticSource) < 0) continue;
-                    arr.push(drawCalls[i]);
-                }
-                for (let i = 0; i < nodeMeshInstances.length; i++) {
-                    if (drawCalls.indexOf(nodeMeshInstances[i]) >= 0) {
-                        arr.push(nodeMeshInstances[i]);
-                    }
-                }
-            } else {
-                arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
-            }
-
+            arr = groupMeshInstances[node.model.batchGroupId] = arr.concat(node.model.meshInstances);
             node.model.removeModelFromLayers();
 
             // #if _DEBUG
@@ -526,7 +474,6 @@ class BatchManager {
             const defs = meshInstancesLeftA[0]._shaderDefs;
             const params = meshInstancesLeftA[0].parameters;
             const stencil = meshInstancesLeftA[0].stencilFront;
-            const lightList = meshInstancesLeftA[0]._staticLightList;
             let vertCount = meshInstancesLeftA[0].mesh.vertexBuffer.getNumVertices();
             const drawOrder = meshInstancesLeftA[0].drawOrder;
             aabb.copy(meshInstancesLeftA[0].aabb);
@@ -581,17 +528,6 @@ class BatchManager {
                     skipMesh(mi);
                     continue;
                 }
-                // Split by static light list
-                const staticLights = mi._staticLightList;
-                if (lightList && staticLights) {
-                    if (!equalLightLists(lightList, staticLights)) {
-                        skipMesh(mi);
-                        continue;
-                    }
-                } else if (lightList || staticLights) { // Split by static/non static
-                    skipMesh(mi);
-                    continue;
-                }
 
                 if (translucent && skipTranslucentAabb && skipTranslucentAabb.intersects(mi.aabb) && mi.drawOrder !== drawOrder) {
                     skipMesh(mi);
@@ -625,9 +561,17 @@ class BatchManager {
                 const numVerts = mesh.vertexBuffer.numVertices;
                 batchNumVerts += numVerts;
 
-                // index counts (handles special case of TRI-FAN-type non-indexed primitive used by UI)
-                batchNumIndices += mesh.primitive[0].indexed ? mesh.primitive[0].count :
-                    (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4 ? 6 : 0);
+                // index count
+                if (mesh.primitive[0].indexed) {
+                    batchNumIndices += mesh.primitive[0].count;
+                } else {
+                    // special case of fan / strip non-indexed primitive used by UI
+                    const primitiveType = mesh.primitive[0].type;
+                    if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
+                        if (mesh.primitive[0].count === 4)
+                            batchNumIndices += 6;
+                    }
+                }
 
                 // if first mesh
                 if (!streams) {
@@ -768,8 +712,7 @@ class BatchManager {
                             } else if (semantic === SEMANTIC_NORMAL || semantic === SEMANTIC_TANGENT) {
 
                                 // handle non-uniform scale by using transposed inverse matrix to transform vectors
-                                transform.invertTo3x3(mat3);
-                                mat3.transpose();
+                                mat3.invertMat4(transform).transpose();
 
                                 for (let j = 0; j < totalComponents; j += stream.numComponents) {
                                     vec.set(subarray[j], subarray[j + 1], subarray[j + 2]);
@@ -798,14 +741,20 @@ class BatchManager {
                     // source index buffer data mapped to its format
                     const srcFormat = mesh.indexBuffer[0].getFormat();
                     indexData = new typedArrayIndexFormats[srcFormat](mesh.indexBuffer[0].storage);
-                } else if (mesh.primitive[0].type === PRIMITIVE_TRIFAN && mesh.primitive[0].count === 4) {
-                    // Special case for UI image elements
-                    indexBase = 0;
-                    numIndices = 6;
-                    indexData = [0, 1, 3, 2, 3, 1];
-                } else {
-                    numIndices = 0;
-                    continue;
+
+                } else { // non-indexed
+
+                    const primitiveType = mesh.primitive[0].type;
+                    if (primitiveType === PRIMITIVE_TRIFAN || primitiveType === PRIMITIVE_TRISTRIP) {
+                        if (mesh.primitive[0].count === 4) {
+                            indexBase = 0;
+                            numIndices = 6;
+                            indexData = primitiveType === PRIMITIVE_TRIFAN ? _triFanIndices : _triStripIndices;
+                        } else {
+                            numIndices = 0;
+                            continue;
+                        }
+                    }
                 }
 
                 for (let j = 0; j < numIndices; j++) {
@@ -841,9 +790,7 @@ class BatchManager {
             const meshInstance = new MeshInstance(mesh, material, this.rootNode);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
             meshInstance.parameters = batch.origMeshInstances[0].parameters;
-            meshInstance.isStatic = batch.origMeshInstances[0].isStatic;
             meshInstance.layer = batch.origMeshInstances[0].layer;
-            meshInstance._staticLightList = batch.origMeshInstances[0]._staticLightList;
             meshInstance._shaderDefs = batch.origMeshInstances[0]._shaderDefs;
 
             // meshInstance culling - don't cull UI elements, as they use custom culling Component.isVisibleForCamera
@@ -867,7 +814,7 @@ class BatchManager {
             meshInstance.drawOrder = batch.origMeshInstances[0].drawOrder;
             meshInstance.stencilFront = batch.origMeshInstances[0].stencilFront;
             meshInstance.stencilBack = batch.origMeshInstances[0].stencilBack;
-            meshInstance.flipFaces = getScaleSign(batch.origMeshInstances[0]) < 0;
+            meshInstance.flipFacesFactor = getScaleSign(batch.origMeshInstances[0]);
             meshInstance.castShadow = batch.origMeshInstances[0].castShadow;
 
             batch.meshInstance = meshInstance;
@@ -927,10 +874,8 @@ class BatchManager {
         batch2.meshInstance = new MeshInstance(batch.meshInstance.mesh, batch.meshInstance.material, batch.meshInstance.node);
         batch2.meshInstance._updateAabb = false;
         batch2.meshInstance.parameters = clonedMeshInstances[0].parameters;
-        batch2.meshInstance.isStatic = clonedMeshInstances[0].isStatic;
         batch2.meshInstance.cull = clonedMeshInstances[0].cull;
         batch2.meshInstance.layer = clonedMeshInstances[0].layer;
-        batch2.meshInstance._staticLightList = clonedMeshInstances[0]._staticLightList;
 
         if (batch.dynamic) {
             batch2.meshInstance.skinInstance = new SkinBatchInstance(this.device, nodes, this.rootNode);

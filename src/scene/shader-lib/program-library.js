@@ -1,4 +1,5 @@
 import { Debug } from '../../core/debug.js';
+import { hashCode } from '../../core/hash.js';
 import { version, revision } from '../../core/core.js';
 
 import { Shader } from '../../platform/graphics/shader.js';
@@ -26,13 +27,19 @@ class ProgramLibrary {
     /**
      * A cache of shader definitions before processing.
      *
-     * @type {Map<string, object>}
+     * @type {Map<number, object>}
      */
     definitionsCache = new Map();
 
+    /**
+     * Named shader generators.
+     *
+     * @type {Map<string, import('./programs/shader-generator.js').ShaderGenerator>}
+     */
+    _generators = new Map();
+
     constructor(device, standardMaterial) {
         this._device = device;
-        this._generators = {};
         this._isClearingCache = false;
         this._precached = false;
 
@@ -44,7 +51,7 @@ class ProgramLibrary {
         standardMaterial.shaderOptBuilder.updateRef(
             this._defaultStdMatOption, {}, standardMaterial, null, [], SHADER_FORWARD, null);
         standardMaterial.shaderOptBuilder.updateMinRef(
-            this._defaultStdMatOptionMin, {}, standardMaterial, null, [], SHADER_SHADOW, null);
+            this._defaultStdMatOptionMin, {}, standardMaterial, null, SHADER_SHADOW, null);
 
         device.on('destroy:shader', (shader) => {
             this.removeFromCache(shader);
@@ -56,22 +63,31 @@ class ProgramLibrary {
     }
 
     register(name, generator) {
-        if (!this.isRegistered(name)) {
-            this._generators[name] = generator;
+        if (!this._generators.has(name)) {
+            this._generators.set(name, generator);
         }
     }
 
     unregister(name) {
-        if (this.isRegistered(name)) {
-            delete this._generators[name];
+        if (this._generators.has(name)) {
+            this._generators.delete(name);
         }
     }
 
     isRegistered(name) {
-        const generator = this._generators[name];
-        return (generator !== undefined);
+        return this._generators.has(name);
     }
 
+    /**
+     * Returns a generated shader definition for the specified options. They key is used to cache the
+     * shader definition.
+     * @param {import('./programs/shader-generator.js').ShaderGenerator} generator - The generator
+     * to use.
+     * @param {string} name - The unique name of the shader generator.
+     * @param {number} key - A unique key representing the shader options.
+     * @param {object} options - The shader options.
+     * @returns {object} - The shader definition.
+     */
     generateShaderDefinition(generator, name, key, options) {
         let def = this.definitionsCache.get(key);
         if (!def) {
@@ -110,8 +126,8 @@ class ProgramLibrary {
         this.processedCache.set(key, shader);
     }
 
-    getProgram(name, options, processingOptions) {
-        const generator = this._generators[name];
+    getProgram(name, options, processingOptions, userMaterialId) {
+        const generator = this._generators.get(name);
         if (!generator) {
             Debug.warn(`ProgramLibrary#getProgram: No program library functions registered for: ${name}`);
             return null;
@@ -119,8 +135,12 @@ class ProgramLibrary {
 
         // we have a key for shader source code generation, a key for its further processing to work with
         // uniform buffers, and a final key to get the processed shader from the cache
-        const generationKey = generator.generateKey(options);
-        const processingKey = processingOptions.generateKey();
+        const generationKeyString = generator.generateKey(options);
+        const generationKey = hashCode(generationKeyString);
+
+        const processingKeyString = processingOptions.generateKey(this._device);
+        const processingKey = hashCode(processingKeyString);
+
         const totalKey = `${generationKey}#${processingKey}`;
 
         // do we have final processed shader
@@ -131,9 +151,25 @@ class ProgramLibrary {
             const generatedShaderDef = this.generateShaderDefinition(generator, name, generationKey, options);
             Debug.assert(generatedShaderDef);
 
+            // use shader pass name if known
+            let passName = '';
+            let shaderPassInfo;
+            if (options.pass !== undefined) {
+                shaderPassInfo = ShaderPass.get(this._device).getByIndex(options.pass);
+                passName = `-${shaderPassInfo.name}`;
+            }
+
+            // fire an event to allow the shader to be modified by the user. Note that any modifications are applied
+            // to all materials using the same generated shader, as the cache key is not modified.
+            this._device.fire('shader:generate', {
+                userMaterialId,
+                shaderPassInfo,
+                definition: generatedShaderDef
+            });
+
             // create a shader definition for the shader that will include the processingOptions
             const shaderDefinition = {
-                name: `${generatedShaderDef.name}-processed`,
+                name: `${generatedShaderDef.name}${passName}-proc`,
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
@@ -142,6 +178,13 @@ class ProgramLibrary {
 
             // add new shader to the processed cache
             processedShader = new Shader(this._device, shaderDefinition);
+
+            // keep the keys in the debug mode
+            Debug.call(() => {
+                processedShader._generationKey = generationKeyString;
+                processedShader._processingKey = processingKeyString;
+            });
+
             this.setCachedShader(totalKey, processedShader);
         }
 
@@ -224,7 +267,8 @@ class ProgramLibrary {
     }
 
     _getDefaultStdMatOptions(pass) {
-        return (pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass)) ?
+        const shaderPassInfo = ShaderPass.get(this._device).getByIndex(pass);
+        return (pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow) ?
             this._defaultStdMatOptionMin : this._defaultStdMatOption;
     }
 

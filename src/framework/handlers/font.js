@@ -35,6 +35,7 @@ function upgradeDataSchema(data) {
  * Resource handler used for loading {@link Font} resources.
  *
  * @implements {ResourceHandler}
+ * @category User Interface
  */
 class FontHandler {
     /**
@@ -74,12 +75,14 @@ class FontHandler {
                 if (!err) {
                     const data = upgradeDataSchema(response);
                     self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
-                        if (err) return callback(err);
-
-                        callback(null, {
-                            data: data,
-                            textures: textures
-                        });
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, {
+                                data: data,
+                                textures: textures
+                            });
+                        }
                     });
                 } else {
                     callback(`Error loading font resource: ${url.original} [${err}]`);
@@ -109,7 +112,8 @@ class FontHandler {
 
                 if (err) {
                     error = err;
-                    return callback(err);
+                    callback(err);
+                    return;
                 }
 
                 texture.upload();

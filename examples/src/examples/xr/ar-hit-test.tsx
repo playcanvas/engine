@@ -4,7 +4,7 @@ class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {

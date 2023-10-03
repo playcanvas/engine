@@ -5,9 +5,7 @@
     ],
     "recurseDepth": 10,
     "source": {
-        "include": ["src"],
-        "includePattern": ".+\\.js(doc|x)?$",
-        "excludePattern": "(^|\\/|\\\\)_"
+        "include": ["src"]
     },
     "sourceType": "module",
     "tags": {

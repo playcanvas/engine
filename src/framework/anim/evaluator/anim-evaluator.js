@@ -146,6 +146,15 @@ class AnimEvaluator {
         }
     }
 
+    updateClipTrack(name, animTrack) {
+        this._clips.forEach((clip) => {
+            if (clip.name.includes(name)) {
+                clip.track = animTrack;
+            }
+        });
+        this.rebind();
+    }
+
     /**
      * Returns the first clip which matches the given name, or null if no such clip was found.
      *
@@ -183,8 +192,10 @@ class AnimEvaluator {
      *
      * @param {number} deltaTime - The amount of time that has passed since the last update, in
      * seconds.
+     * @param {boolean} [outputAnimation] - Whether the evaluator should output the results of the
+     * update to the bound animation targets.
      */
-    update(deltaTime) {
+    update(deltaTime, outputAnimation = true) {
         // copy clips
         const clips = this._clips;
 
@@ -207,6 +218,7 @@ class AnimEvaluator {
             if (blendWeight > 0.0) {
                 clip._update(deltaTime);
             }
+            if (!outputAnimation) break;
 
             let input;
             let output;
@@ -266,11 +278,10 @@ class AnimEvaluator {
                 target.blendCounter = 0;
             }
         }
-
         // give the binder an opportunity to update itself
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
-        binder.update(deltaTime);
+        this._binder.update(deltaTime);
     }
 }
 

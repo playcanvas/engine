@@ -49,6 +49,15 @@ function getDepthRange(cameraViewMatrix, aabbMin, aabbMax) {
  * @ignore
  */
 class ShadowRendererDirectional {
+    /** @type {import('./renderer.js').Renderer} */
+    renderer;
+
+    /** @type {import('./shadow-renderer.js').ShadowRenderer} */
+    shadowRenderer;
+
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    device;
+
     constructor(renderer, shadowRenderer) {
         this.renderer = renderer;
         this.shadowRenderer = shadowRenderer;
@@ -56,7 +65,7 @@ class ShadowRendererDirectional {
     }
 
     // cull directional shadow map
-    cull(light, drawCalls, camera) {
+    cull(light, comp, camera, casters = null) {
 
         // force light visibility if function was manually called
         light.visibleThisFrame = true;
@@ -67,7 +76,7 @@ class ShadowRendererDirectional {
 
         // generate splits for the cascades
         const nearDist = camera._nearClip;
-        this.generateSplitDistances(light, nearDist, light.shadowDistance);
+        this.generateSplitDistances(light, nearDist, Math.min(camera._farClip, light.shadowDistance));
 
         const shadowUpdateOverrides = light.shadowUpdateOverrides;
         for (let cascade = 0; cascade < light.numCascades; cascade++) {
@@ -145,7 +154,7 @@ class ShadowRendererDirectional {
 
             // cull shadow casters
             this.renderer.updateCameraFrustum(shadowCam);
-            this.shadowRenderer.cullShadowCasters(drawCalls, lightRenderData.visibleCasters, shadowCam);
+            this.shadowRenderer.cullShadowCasters(comp, light, lightRenderData.visibleCasters, shadowCam, casters);
 
             // find out AABB of visible shadow casters
             let emptyAabb = true;
@@ -169,6 +178,9 @@ class ShadowRendererDirectional {
             // of values stored in the shadow map. Make it slightly larger to avoid clipping on near / far plane.
             shadowCamNode.translateLocal(0, 0, depthRange.max + 0.1);
             shadowCam.farClip = depthRange.max - depthRange.min + 0.2;
+
+            lightRenderData.depthRangeCompensation = shadowCam.farClip;
+            lightRenderData.projectionCompensation = radius;
         }
     }
 
@@ -219,9 +231,9 @@ class ShadowRendererDirectional {
             }
         });
 
-        renderPass.after = () => {
+        renderPass._after = () => {
             // after the pass is done, apply VSM blur if needed
-            this.shadowRenderer.renderVms(light, camera);
+            this.shadowRenderer.renderVsm(light, camera);
         };
 
         // setup render pass using any of the cameras, they all have the same pass related properties
@@ -235,16 +247,15 @@ class ShadowRendererDirectional {
      * Builds a frame graph for rendering of directional shadows for the render action.
      *
      * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
+     * @param {import('../light.js').Light[]} directionalLights - The
+     * directional lights.
      * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera.
      */
-    buildFrameGraph(frameGraph, renderAction, camera) {
+    buildFrameGraph(frameGraph, directionalLights, camera) {
 
         // create required render passes per light
-        const lights = renderAction.directionalLights;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
+        for (let i = 0; i < directionalLights.length; i++) {
+            const light = directionalLights[i];
             Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
             if (this.shadowRenderer.needsShadowRendering(light)) {

@@ -7,12 +7,14 @@ import { Observer } from '@playcanvas/observer';
 class ShadowCascadesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Shadow Cascades';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
             <Panel headerText='Shadow Cascade Settings'>
                 {<LabelGroup text='Filtering'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.light.shadowType' }} type="number" options={[
+                        { v: pc.SHADOW_PCF1, t: 'PCF1' },
                         { v: pc.SHADOW_PCF3, t: 'PCF3' },
                         { v: pc.SHADOW_PCF5, t: 'PCF5' },
                         { v: pc.SHADOW_VSM8, t: 'VSM8' },
@@ -39,15 +41,21 @@ class ShadowCascadesExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'terrain': new pc.Asset('terrain', 'container', { url: '/static/assets/models/terrain.glb' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;

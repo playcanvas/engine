@@ -15,6 +15,7 @@ const _transform = new Mat4();
  * positions in the ScreenComponent's space.
  *
  * @augments Component
+ * @category User Interface
  */
 class ScreenComponent extends Component {
     /**

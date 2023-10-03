@@ -2,6 +2,8 @@
  * A skin contains data about the bones in a hierarchy that drive a skinned mesh animation.
  * Specifically, the skin stores the bone name and inverse bind matrix and for each bone. Inverse
  * bind matrices are instrumental in the mathematics of vertex skinning.
+ *
+ * @category Graphics
  */
 class Skin {
     /**

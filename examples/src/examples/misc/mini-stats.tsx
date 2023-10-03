@@ -7,7 +7,7 @@ class MiniStatsExample {
     static ENGINE = 'PERFORMANCE';
     static MINISTATS = true;
 
-    example(canvas: HTMLCanvasElement, pcx: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, pcx: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();

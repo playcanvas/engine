@@ -454,13 +454,13 @@ class Http {
 
     _guessResponseType(url) {
         const uri = new URI(url);
-        const ext = path.getExtension(uri.path);
+        const ext = path.getExtension(uri.path).toLowerCase();
 
         if (Http.binaryExtensions.indexOf(ext) >= 0) {
             return Http.ResponseType.ARRAY_BUFFER;
-        }
-
-        if (ext === '.xml') {
+        } else if (ext === '.json') {
+            return Http.ResponseType.JSON;
+        } else if (ext === '.xml') {
             return Http.ResponseType.DOCUMENT;
         }
 
@@ -535,12 +535,12 @@ class Http {
         }
         try {
             // Check the content type to see if we want to parse it
-            if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
-                // It's a JSON response
-                response = JSON.parse(xhr.responseText);
-            } else if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
+            if (this._isBinaryContentType(contentType) || this._isBinaryResponseType(xhr.responseType)) {
                 // It's a binary response
                 response = xhr.response;
+            } else if (contentType === Http.ContentType.JSON || url.split('?')[0].endsWith('.json')) {
+                // It's a JSON response
+                response = JSON.parse(xhr.responseText);
             } else if (xhr.responseType === Http.ResponseType.DOCUMENT || contentType === Http.ContentType.XML) {
                 // It's an XML response
                 response = xhr.responseXML;

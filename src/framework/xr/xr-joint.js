@@ -19,6 +19,8 @@ for (let i = 0; i < tipJointIds.length; i++) {
 
 /**
  * Represents the joint of a finger.
+ *
+ * @category XR
  */
 class XrJoint {
     /**

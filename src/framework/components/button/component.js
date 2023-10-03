@@ -62,6 +62,7 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
  * @augments Component
+ * @category User Interface
  */
 class ButtonComponent extends Component {
     /**
@@ -551,28 +552,28 @@ function toColor3(color4) {
  * Fired when the mouse is pressed while the cursor is on the component.
  *
  * @event ButtonComponent#mousedown
- * @param {ElementMouseEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
  * Fired when the mouse is released while the cursor is on the component.
  *
  * @event ButtonComponent#mouseup
- * @param {ElementMouseEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
  * Fired when the mouse cursor enters the component.
  *
  * @event ButtonComponent#mouseenter
- * @param {ElementMouseEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
  * Fired when the mouse cursor leaves the component.
  *
  * @event ButtonComponent#mouseleave
- * @param {ElementMouseEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
@@ -580,63 +581,63 @@ function toColor3(color4) {
  * the component.
  *
  * @event ButtonComponent#click
- * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
  * Fired when a touch starts on the component.
  *
  * @event ButtonComponent#touchstart
- * @param {ElementTouchEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
  * Fired when a touch ends on the component.
  *
  * @event ButtonComponent#touchend
- * @param {ElementTouchEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
  * Fired when a touch is canceled on the component.
  *
  * @event ButtonComponent#touchcancel
- * @param {ElementTouchEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
  * Fired when a touch leaves the component.
  *
  * @event ButtonComponent#touchleave
- * @param {ElementTouchEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
  * Fired when a xr select starts on the component.
  *
  * @event ButtonComponent#selectstart
- * @param {ElementSelectEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
  * Fired when a xr select ends on the component.
  *
  * @event ButtonComponent#selectend
- * @param {ElementSelectEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
  * Fired when a xr select now hovering over the component.
  *
  * @event ButtonComponent#selectenter
- * @param {ElementSelectEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
  * Fired when a xr select not hovering over the component.
  *
  * @event ButtonComponent#selectleave
- * @param {ElementSelectEvent} event - The event.
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**

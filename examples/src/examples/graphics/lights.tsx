@@ -7,6 +7,7 @@ import { Observer } from '@playcanvas/observer';
 class LightsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights';
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
@@ -52,7 +53,7 @@ class LightsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data:any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data:any): void {
         function createMaterial(colors: any) {
             const material: any = new pc.StandardMaterial();
             for (const param in colors) {
@@ -73,7 +74,13 @@ class LightsExample {
             "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
