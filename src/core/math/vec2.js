@@ -110,7 +110,7 @@ class Vec2 {
      * @param {*} scalar - The number to multiply the added vector with.
      * @returns {Vec2} Self for chaining.
      * @example
-     * var vec = new pc.Vec2(1, 2);
+     * const vec = new pc.Vec2(1, 2);
      *
      * vec.addScaled(pc.Vec2.UP, 2);
      *
