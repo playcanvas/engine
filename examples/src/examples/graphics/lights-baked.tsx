@@ -4,9 +4,15 @@ class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -32,6 +38,13 @@ class LightsBakedExample {
 
             app.start();
 
+            // create material used on the geometry
+            const material = new pc.StandardMaterial();
+            material.gloss = 0.6;
+            material.metalness = 0.4;
+            material.useMetalness = true;
+            material.update();
+
             // All render component primitive shape types
             const shapes = ["box", "cone", "cylinder", "sphere", "capsule", "torus"];
 
@@ -44,7 +57,8 @@ class LightsBakedExample {
                     castShadows: false,
                     castShadowsLightmap: true,
                     lightmapped: true,
-                    type: shape
+                    type: shape,
+                    material: material
                 });
                 app.root.addChild(entity);
 
@@ -57,7 +71,8 @@ class LightsBakedExample {
                 castShadows: false,
                 castShadowsLightmap: false,
                 lightmapped: true,
-                type: "plane"
+                type: "plane",
+                material: material
             });
             app.root.addChild(ground);
             ground.setLocalPosition(0, -1, 0);
@@ -117,7 +132,7 @@ class LightsBakedExample {
             app.scene.lightmapSizeMultiplier = 32;
 
             // bake lightmaps
-            app.lightmapper.bake(null, pc.BAKE_COLOR);
+            app.lightmapper.bake(null, pc.BAKE_COLORDIR);
 
             // Set an update function on the app's update event
             let time = 4;

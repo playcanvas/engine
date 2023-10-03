@@ -3,10 +3,17 @@ import * as pc from '../../../../';
 class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Batching Dynamic';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -39,14 +46,14 @@ class BatchingDynamicExample {
             // create two material
             const material1 = new pc.StandardMaterial();
             material1.diffuse = new pc.Color(1, 1, 0);
-            material1.shininess = 40;
+            material1.gloss = 0.4;
             material1.metalness = 0.5;
             material1.useMetalness = true;
             material1.update();
 
             const material2 = new pc.StandardMaterial();
             material2.diffuse = new pc.Color(0, 1, 1);
-            material2.shininess = 40;
+            material2.gloss = 0.4;
             material2.metalness = 0.5;
             material2.useMetalness = true;
             material2.update();

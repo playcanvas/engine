@@ -77,7 +77,7 @@ class Asset extends EventHandler {
      * For more details on crossOrigin and its use, see
      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/crossOrigin.
      * @example
-     * var asset = new pc.Asset("a texture", "texture", {
+     * const asset = new pc.Asset("a texture", "texture", {
      *     url: "http://example.com/my/assets/here/texture.png"
      * });
      */
@@ -85,13 +85,7 @@ class Asset extends EventHandler {
         super();
 
         this._id = assetIdCounter--;
-
-        /**
-         * The name of the asset.
-         *
-         * @type {string}
-         */
-        this.name = name || '';
+        this._name = name || '';
 
         /**
          * The type of the asset. One of ["animation", "audio", "binary", "container", "cubemap",
@@ -145,7 +139,7 @@ class Asset extends EventHandler {
         /**
          * The asset registry that this Asset belongs to.
          *
-         * @type {import('./asset-registry.js').AssetRegistry}
+         * @type {import('./asset-registry.js').AssetRegistry|null}
          */
         this.registry = null;
 
@@ -220,6 +214,23 @@ class Asset extends EventHandler {
 
     get id() {
         return this._id;
+    }
+
+    /**
+     * The asset name.
+     *
+     * @type {string}
+     */
+    set name(value) {
+        if (this._name === value)
+            return;
+        const old = this._name;
+        this._name = value;
+        this.fire('name', this, this._name, old);
+    }
+
+    get name() {
+        return this._name;
     }
 
     /**
@@ -367,8 +378,8 @@ class Asset extends EventHandler {
      *
      * @returns {string|null} The URL. Returns null if the asset has no associated file.
      * @example
-     * var assets = app.assets.find("My Image", "texture");
-     * var img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
+     * const assets = app.assets.find("My Image", "texture");
+     * const img = "&lt;img src='" + assets[0].getFileUrl() + "'&gt;";
      */
     getFileUrl() {
         const file = this.file;
@@ -456,7 +467,7 @@ class Asset extends EventHandler {
      * the (asset) arguments.
      * @param {object} [scope] - Scope object to use when calling the callback.
      * @example
-     * var asset = app.assets.find("My Asset");
+     * const asset = app.assets.find("My Asset");
      * asset.ready(function (asset) {
      *   // asset loaded
      * });
@@ -486,7 +497,7 @@ class Asset extends EventHandler {
      * Destroys the associated resource and marks asset as unloaded.
      *
      * @example
-     * var asset = app.assets.find("My Asset");
+     * const asset = app.assets.find("My Asset");
      * asset.unload();
      * // asset.resource is null
      */

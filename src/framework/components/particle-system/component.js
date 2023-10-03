@@ -196,7 +196,7 @@ let depthLayer;
  *
  * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer
  * is used. Vertex buffer must contain local position at first 3 floats of each vertex.
- * @property {number} blend Controls how particles are blended when being written to the currently
+ * @property {number} blendType Controls how particles are blended when being written to the currently
  * active render target. Can be:
  *
  * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
@@ -253,6 +253,7 @@ let depthLayer;
  * system should belong. Don't push/pop/splice or modify this array, if you want to change it - set
  * a new one instead.
  * @augments Component
+ * @category Graphics
  */
 class ParticleSystemComponent extends Component {
     /** @private */
@@ -758,6 +759,11 @@ class ParticleSystemComponent extends Component {
                     this.system.app.assets.load(asset);
                 }
             }
+        }
+
+        // WebGPU does not support particle systems, ignore them
+        if (this.system.app.graphicsDevice.disableParticleSystem) {
+            return;
         }
 
         if (!this.emitter) {

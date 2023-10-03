@@ -13,6 +13,7 @@ import { LightComponentData } from './data.js';
  * A Light Component is used to dynamically light the scene.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class LightComponentSystem extends ComponentSystem {
     /**
@@ -72,7 +73,6 @@ class LightComponentSystem extends ComponentSystem {
         const light = new Light(this.app.graphicsDevice);
         light.type = lightTypes[data.type];
         light._node = component.entity;
-        light._scene = this.app.scene;
         component.data.light = light;
 
         super.initializeComponentData(component, data, properties);

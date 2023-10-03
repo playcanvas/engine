@@ -54,24 +54,24 @@ class UniformFormat {
     scopeId;
 
     /**
-     * Count of elements for arrays, otherwise 1.
+     * Count of elements for arrays, otherwise 0.
      *
      * @type {number}
      */
     count;
 
-    constructor(name, type, count = 1) {
+    constructor(name, type, count = 0) {
 
         // just a name
         this.shortName = name;
 
         // name with [0] if this is an array
-        this.name = count > 1 ? `${name}[0]` : name;
+        this.name = count ? `${name}[0]` : name;
 
         this.type = type;
 
         this.updateType = type;
-        if (count > 1) {
+        if (count) {
 
             switch (type) {
                 case UNIFORMTYPE_FLOAT: this.updateType = UNIFORMTYPE_FLOATARRAY; break;
@@ -100,10 +100,13 @@ class UniformFormat {
         Debug.assert(elementSize, `Unhandled uniform format ${type} used for ${name}`);
 
         // element size for arrays is aligned up to vec4
-        if (count > 1)
+        if (count)
             elementSize = math.roundUp(elementSize, 4);
 
-        this.byteSize = count * elementSize * 4;
+        this.byteSize = elementSize * 4;
+        if (count)
+            this.byteSize *= count;
+
         Debug.assert(this.byteSize, `Unknown byte size for uniform format ${type} used for ${name}`);
     }
 
@@ -115,7 +118,7 @@ class UniformFormat {
         let alignment = this.byteSize <= 8 ? this.byteSize : 16;
 
         // arrays have vec4 alignments
-        if (this.count > 1)
+        if (this.count)
             alignment = 16;
 
         // align the start offset
@@ -183,7 +186,7 @@ class UniformBufferFormat {
         this.uniforms.forEach((uniform) => {
             const typeString = uniformTypeToName[uniform.type];
             Debug.assert(typeString.length > 0, `Uniform type ${uniform.type} is not handled.`);
-            code += `    ${typeString} ${uniform.shortName}${uniform.count !== 1 ? `[${uniform.count}]` : ''};\n`;
+            code += `    ${typeString} ${uniform.shortName}${uniform.count ? `[${uniform.count}]` : ''};\n`;
         });
 
         return code + '};\n';

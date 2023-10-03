@@ -8,21 +8,21 @@ import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
 import {
     SORTKEY_DEPTH, SORTKEY_FORWARD,
     VIEW_CENTER, PROJECTION_ORTHOGRAPHIC,
-    LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
+    LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED, MASK_BAKE,
     SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
 } from '../constants.js';
 import { LightTextureAtlas } from '../lighting/light-texture-atlas.js';
 import { Material } from '../materials/material.js';
+import { LightCube } from '../graphics/light-cube.js';
 
 import {
-    DEVICETYPE_WEBGPU,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH, CLEARFLAG_STENCIL,
     BINDGROUP_MESH, BINDGROUP_VIEW, UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
-    UNIFORMTYPE_MAT4,
+    UNIFORMTYPE_MAT4, UNIFORMTYPE_MAT3, UNIFORMTYPE_VEC3, UNIFORMTYPE_VEC2, UNIFORMTYPE_FLOAT, UNIFORMTYPE_INT,
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     SEMANTIC_ATTR,
-    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK, CULLFACE_NONE,
-    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT
+    CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_NONE,
+    TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { UniformBuffer } from '../../platform/graphics/uniform-buffer.js';
@@ -33,21 +33,20 @@ import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from '../../plat
 import { ShadowMapCache } from './shadow-map-cache.js';
 import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
-import { CookieRenderer } from './cookie-renderer.js';
-import { StaticMeshes } from './static-meshes.js';
 import { ShadowRenderer } from './shadow-renderer.js';
+import { WorldClustersAllocator } from './world-clusters-allocator.js';
+import { RenderPassCookieRenderer } from './render-pass-cookie-renderer.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
-const worldMatX = new Vec3();
-const worldMatY = new Vec3();
-const worldMatZ = new Vec3();
 const viewMat3 = new Mat3();
 const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
+const _tempLightSet = new Set();
+const _tempLayerSet = new Set();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -63,6 +62,9 @@ const _tempProjMat2 = new Mat4();
 const _tempProjMat3 = new Mat4();
 const _tempSet = new Set();
 
+const _tempMeshInstances = [];
+const _tempMeshInstancesSkinned = [];
+
 /**
  * The base renderer functionality to allow implementation of specialized renderers.
  *
@@ -71,6 +73,35 @@ const _tempSet = new Set();
 class Renderer {
     /** @type {boolean} */
     clustersDebugRendered = false;
+
+    /**
+     * A set of visible mesh instances which need further processing before being rendered, e.g.
+     * skinning or morphing. Extracted during culling.
+     *
+     * @type {Set<import('../mesh-instance.js').MeshInstance>}
+     * @private
+     */
+    processingMeshInstances = new Set();
+
+    /**
+     * @type {WorldClustersAllocator}
+     * @ignore
+     */
+    worldClustersAllocator;
+
+    /**
+     * A list of all unique lights in the layer composition.
+     *
+     * @type {import('../light.js').Light[]}
+     */
+    lights = [];
+
+    /**
+     * A list of all unique local lights (spot & omni) in the layer composition.
+     *
+     * @type {import('../light.js').Light[]}
+     */
+    localLights = [];
 
     /**
      * Create a new instance.
@@ -84,6 +115,9 @@ class Renderer {
         /** @type {import('../scene.js').Scene|null} */
         this.scene = null;
 
+        // TODO: allocate only when the scene has clustered lighting enabled
+        this.worldClustersAllocator = new WorldClustersAllocator(graphicsDevice);
+
         // texture atlas managing shadow map / cookie texture atlassing for omni and spot lights
         this.lightTextureAtlas = new LightTextureAtlas(graphicsDevice);
 
@@ -94,7 +128,7 @@ class Renderer {
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
         // cookies
-        this._cookieRenderer = new CookieRenderer(graphicsDevice, this.lightTextureAtlas);
+        this.cookiesRenderPass = RenderPassCookieRenderer.create(this.lightTextureAtlas.cookieRenderTarget, this.lightTextureAtlas.cubeSlotsOffsets);
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -145,12 +179,17 @@ class Renderer {
 
         this.exposureId = scope.resolve('exposure');
         this.twoSidedLightingNegScaleFactorId = scope.resolve('twoSidedLightingNegScaleFactor');
+        this.twoSidedLightingNegScaleFactorId.setValue(0);
 
         this.morphWeightsA = scope.resolve('morph_weights_a');
         this.morphWeightsB = scope.resolve('morph_weights_b');
         this.morphPositionTex = scope.resolve('morphPositionTex');
         this.morphNormalTex = scope.resolve('morphNormalTex');
         this.morphTexParams = scope.resolve('morph_tex_params');
+
+        // a single instance of light cube
+        this.lightCube = new LightCube();
+        this.constantLightCube = scope.resolve('lightCube[0]');
     }
 
     destroy() {
@@ -161,8 +200,8 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this._cookieRenderer.destroy();
-        this._cookieRenderer = null;
+        this.cookiesRenderPass.destroy();
+        this.cookiesRenderPass = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
@@ -235,7 +274,7 @@ class Renderer {
         let h = Math.floor(rect.w * pixelHeight);
         device.setViewport(x, y, w, h);
 
-        // by default clear is using viewport rectangle. Use scissor rectangle when required.
+        // use viewport rectangle by default. Use scissor rectangle when required.
         if (camera._scissorRectClear) {
             const scissorRect = camera.scissorRect;
             x = Math.floor(scissorRect.x * pixelWidth);
@@ -246,34 +285,6 @@ class Renderer {
         device.setScissor(x, y, w, h);
 
         DebugGraphics.popGpuMarker(device);
-    }
-
-    /**
-     * Clear the current render target, using currently set up viewport.
-     *
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - Render action
-     * containing the clear flags.
-     * @param {import('../camera.js').Camera} camera - Camera containing the clear values.
-     */
-    clear(renderAction, camera) {
-
-        const flags = (renderAction.clearColor ? CLEARFLAG_COLOR : 0) |
-                      (renderAction.clearDepth ? CLEARFLAG_DEPTH : 0) |
-                      (renderAction.clearStencil ? CLEARFLAG_STENCIL : 0);
-
-        if (flags) {
-            const device = this.device;
-            DebugGraphics.pushGpuMarker(device, 'CLEAR-VIEWPORT');
-
-            device.clear({
-                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
-                depth: camera._clearDepth,
-                stencil: camera._clearStencil,
-                flags: flags
-            });
-
-            DebugGraphics.popGpuMarker(device);
-        }
     }
 
     setCameraUniforms(camera, target) {
@@ -326,7 +337,7 @@ class Renderer {
             }
 
             // update depth range of projection matrices (-1..1 to 0..1)
-            if (this.device.deviceType === DEVICETYPE_WEBGPU) {
+            if (this.device.isWebGPU) {
                 projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
                 projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
             }
@@ -385,6 +396,38 @@ class Renderer {
         return viewCount;
     }
 
+    /**
+     * Clears the active render target. If the viewport is already set up, only its area is cleared.
+     *
+     * @param {import('../camera.js').Camera} camera - The camera supplying the value to clear to.
+     * @param {boolean} [clearColor] - True if the color buffer should be cleared. Uses the value
+     * from the camera if not supplied.
+     * @param {boolean} [clearDepth] - True if the depth buffer should be cleared. Uses the value
+     * from the camera if not supplied.
+     * @param {boolean} [clearStencil] - True if the stencil buffer should be cleared. Uses the
+     * value from the camera if not supplied.
+     */
+    clear(camera, clearColor, clearDepth, clearStencil) {
+
+        const flags = ((clearColor ?? camera._clearColorBuffer) ? CLEARFLAG_COLOR : 0) |
+                      ((clearDepth ?? camera._clearDepthBuffer) ? CLEARFLAG_DEPTH : 0) |
+                      ((clearStencil ?? camera._clearStencilBuffer) ? CLEARFLAG_STENCIL : 0);
+
+        if (flags) {
+            const device = this.device;
+            DebugGraphics.pushGpuMarker(device, 'CLEAR');
+
+            device.clear({
+                color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
+                depth: camera._clearDepth,
+                stencil: camera._clearStencil,
+                flags: flags
+            });
+
+            DebugGraphics.popGpuMarker(device);
+        }
+    }
+
     // make sure colorWrite is set to true to all channels, if you want to fully clear the target
     // TODO: this function is only used from outside of forward renderer, and should be deprecated
     // when the functionality moves to the render passes. Note that Editor uses it as well.
@@ -412,9 +455,9 @@ class Renderer {
         this.setupViewport(camera, target);
 
         if (clear) {
+
             // use camera clear options if any
             const options = camera._clearOptions;
-
             device.clear(options ? options : {
                 color: [camera._clearColor.r, camera._clearColor.g, camera._clearColor.b, camera._clearColor.a],
                 depth: camera._clearDepth,
@@ -428,27 +471,14 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    setCullMode(cullFaces, flip, drawCall) {
+    setupCullMode(cullFaces, flipFactor, drawCall) {
         const material = drawCall.material;
         let mode = CULLFACE_NONE;
         if (cullFaces) {
             let flipFaces = 1;
 
-            if (material.cull > CULLFACE_NONE && material.cull < CULLFACE_FRONTANDBACK) {
-                if (drawCall.flipFaces)
-                    flipFaces *= -1;
-
-                if (flip)
-                    flipFaces *= -1;
-
-                const wt = drawCall.node.worldTransform;
-                wt.getX(worldMatX);
-                wt.getY(worldMatY);
-                wt.getZ(worldMatZ);
-                worldMatX.cross(worldMatX, worldMatY);
-                if (worldMatX.dot(worldMatZ) < 0) {
-                    flipFaces *= -1;
-                }
+            if (material.cull === CULLFACE_FRONT || material.cull === CULLFACE_BACK) {
+                flipFaces = flipFactor * drawCall.flipFacesFactor * drawCall.node.worldScaleSign;
             }
 
             if (flipFaces < 0) {
@@ -460,12 +490,7 @@ class Renderer {
         this.device.setCullMode(mode);
 
         if (mode === CULLFACE_NONE && material.cull === CULLFACE_NONE) {
-            const wt2 = drawCall.node.worldTransform;
-            wt2.getX(worldMatX);
-            wt2.getY(worldMatY);
-            wt2.getZ(worldMatZ);
-            worldMatX.cross(worldMatX, worldMatY);
-            this.twoSidedLightingNegScaleFactorId.setValue(worldMatX.dot(worldMatZ) < 0 ? -1.0 : 1.0);
+            this.twoSidedLightingNegScaleFactorId.setValue(drawCall.node.worldScaleSign);
         }
     }
 
@@ -506,6 +531,8 @@ class Renderer {
         // Alpha test
         if (material.opacityMap) {
             this.opacityMapId.setValue(material.opacityMap);
+        }
+        if (material.opacityMap || material.alphaTest > 0) {
             this.alphaTestId.setValue(material.alphaTest);
         }
     }
@@ -534,20 +561,24 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update skin matrices ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing skinInstance.
+     * @ignore
+     */
     updateGpuSkinMatrices(drawCalls) {
         // #if _PROFILER
         const skinTime = now();
         // #endif
 
-        const count = drawCalls.length;
-        for (let i = 0; i < count; i++) {
-            const drawCall = drawCalls[i];
-            if (drawCall.visibleThisFrame) {
-                const skin = drawCall.skinInstance;
-                if (skin && skin._dirty) {
-                    skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
-                    skin._dirty = false;
-                }
+        for (const drawCall of drawCalls) {
+            const skin = drawCall.skinInstance;
+
+            if (skin && skin._dirty) {
+                skin.updateMatrixPalette(drawCall.node, _skinUpdateIndex);
+                skin._dirty = false;
             }
         }
 
@@ -556,26 +587,40 @@ class Renderer {
         // #endif
     }
 
+    /**
+     * Update morphing ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing morphInstance.
+     * @ignore
+     */
     updateMorphing(drawCalls) {
         // #if _PROFILER
         const morphTime = now();
         // #endif
 
-        const drawCallsCount = drawCalls.length;
-        for (let i = 0; i < drawCallsCount; i++) {
-            const drawCall = drawCalls[i];
+        for (const drawCall of drawCalls) {
             const morphInst = drawCall.morphInstance;
-            if (morphInst && morphInst._dirty && drawCall.visibleThisFrame) {
+            if (morphInst && morphInst._dirty) {
                 morphInst.update();
             }
         }
+
         // #if _PROFILER
         this._morphTime += now() - morphTime;
         // #endif
     }
 
+    /**
+     * Update draw calls ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * requiring updates.
+     * @ignore
+     */
     gpuUpdate(drawCalls) {
-        // skip everything with visibleThisFrame === false
+        // Note that drawCalls can be either a Set or an Array and contains mesh instances
+        // that are visible in this frame
         this.updateGpuSkinMatrices(drawCalls);
         this.updateMorphing(drawCalls);
     }
@@ -652,21 +697,59 @@ class Renderer {
         this.viewPosId.setValue(vp);
     }
 
-    initViewBindGroupFormat() {
+    initViewBindGroupFormat(isClustered) {
 
         if (this.device.supportsUniformBuffers && !this.viewUniformFormat) {
 
             // format of the view uniform buffer
-            this.viewUniformFormat = new UniformBufferFormat(this.device, [
-                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4)
-            ]);
+            const uniforms = [
+                new UniformFormat("matrix_viewProjection", UNIFORMTYPE_MAT4),
+                new UniformFormat("cubeMapRotationMatrix", UNIFORMTYPE_MAT3),
+                new UniformFormat("view_position", UNIFORMTYPE_VEC3),
+                new UniformFormat("skyboxIntensity", UNIFORMTYPE_FLOAT),
+                new UniformFormat("exposure", UNIFORMTYPE_FLOAT),
+                new UniformFormat("textureBias", UNIFORMTYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                uniforms.push(...[
+                    new UniformFormat("clusterCellsCountByBoundsSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterTextureSize", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsMin", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterBoundsDelta", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsDot", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCellsMax", UNIFORMTYPE_VEC3),
+                    new UniformFormat("clusterCompressionLimit0", UNIFORMTYPE_VEC2),
+                    new UniformFormat("shadowAtlasParams", UNIFORMTYPE_VEC2),
+                    new UniformFormat("clusterMaxCells", UNIFORMTYPE_INT),
+                    new UniformFormat("clusterSkip", UNIFORMTYPE_FLOAT)
+                ]);
+            }
+
+            this.viewUniformFormat = new UniformBufferFormat(this.device, uniforms);
 
             // format of the view bind group - contains single uniform buffer, and some textures
-            this.viewBindGroupFormat = new BindGroupFormat(this.device, [
+            const buffers = [
                 new BindBufferFormat(UNIFORM_BUFFER_DEFAULT_SLOT_NAME, SHADERSTAGE_VERTEX | SHADERSTAGE_FRAGMENT)
-            ], [
-                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
-            ]);
+            ];
+
+            const textures = [
+                new BindTextureFormat('lightsTextureFloat', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('lightsTexture8', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT),
+                new BindTextureFormat('shadowAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_DEPTH),
+                new BindTextureFormat('cookieAtlasTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+
+                new BindTextureFormat('areaLightsLutTex1', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT),
+                new BindTextureFormat('areaLightsLutTex2', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_FLOAT)
+            ];
+
+            if (isClustered) {
+                textures.push(...[
+                    new BindTextureFormat('clusterWorldTexture', SHADERSTAGE_FRAGMENT, TEXTUREDIMENSION_2D, SAMPLETYPE_UNFILTERABLE_FLOAT)
+                ]);
+            }
+
+            this.viewBindGroupFormat = new BindGroupFormat(this.device, buffers, textures);
         }
     }
 
@@ -678,7 +761,7 @@ class Renderer {
         Debug.assert(viewCount === 1, "This code does not handle the viewCount yet");
 
         while (viewBindGroups.length < viewCount) {
-            const ub = new UniformBuffer(device, viewUniformFormat);
+            const ub = new UniformBuffer(device, viewUniformFormat, false);
             const bg = new BindGroup(device, viewBindGroupFormat, ub);
             DebugHelper.setName(bg, `ViewBindGroup_${bg.id}`);
             viewBindGroups.push(bg);
@@ -693,7 +776,7 @@ class Renderer {
         device.setBindGroup(BINDGROUP_VIEW, viewBindGroup);
     }
 
-    setupMeshUniformBuffers(meshInstance, pass) {
+    setupMeshUniformBuffers(shaderInstance, meshInstance) {
 
         const device = this.device;
         if (device.supportsUniformBuffers) {
@@ -704,7 +787,8 @@ class Renderer {
             this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
 
             // update mesh bind group / uniform buffer
-            const meshBindGroup = meshInstance.getBindGroup(device, pass);
+            const meshBindGroup = shaderInstance.getBindGroup(device);
+
             meshBindGroup.defaultUniformBuffer.update();
             meshBindGroup.update();
             device.setBindGroup(BINDGROUP_MESH, meshBindGroup);
@@ -755,67 +839,108 @@ class Renderer {
         DebugGraphics.popGpuMarker(device);
     }
 
-    cull(camera, drawCalls, visibleList) {
+    /**
+     * @param {import('../camera.js').Camera} camera - The camera used for culling.
+     * @param {import('../mesh-instance.js').MeshInstance[]} drawCalls - Draw calls to cull.
+     * @param {import('../layer.js').CulledInstances} culledInstances - Stores culled instances.
+     */
+    cull(camera, drawCalls, culledInstances) {
         // #if _PROFILER
         const cullTime = now();
-        let numDrawCallsCulled = 0;
         // #endif
 
-        let visibleLength = 0;
-        const drawCallsCount = drawCalls.length;
+        const opaque = culledInstances.opaque;
+        opaque.length = 0;
+        const transparent = culledInstances.transparent;
+        transparent.length = 0;
 
-        const cullingMask = camera.cullingMask || 0xFFFFFFFF; // if missing assume camera's default value
+        const doCull = camera.frustumCulling;
+        const count = drawCalls.length;
 
-        if (!camera.frustumCulling) {
-            for (let i = 0; i < drawCallsCount; i++) {
-                // need to copy array anyway because sorting will happen and it'll break original draw call order assumption
-                const drawCall = drawCalls[i];
-                if (!drawCall.visible && !drawCall.command) continue;
-
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
-
-                visibleList[visibleLength] = drawCall;
-                visibleLength++;
-                drawCall.visibleThisFrame = true;
-            }
-            return visibleLength;
-        }
-
-        for (let i = 0; i < drawCallsCount; i++) {
+        for (let i = 0; i < count; i++) {
             const drawCall = drawCalls[i];
-            if (!drawCall.command) {
-                if (!drawCall.visible) continue; // use visible property to quickly hide/show meshInstances
-                let visible = true;
+            if (drawCall.visible) {
 
-                // if the object's mask AND the camera's cullingMask is zero then the game object will be invisible from the camera
-                if (drawCall.mask && (drawCall.mask & cullingMask) === 0) continue;
-
-                if (drawCall.cull) {
-                    visible = drawCall._isVisible(camera);
-                    // #if _PROFILER
-                    numDrawCallsCulled++;
-                    // #endif
-                }
-
+                const visible = !doCull || !drawCall.cull || drawCall._isVisible(camera);
                 if (visible) {
-                    visibleList[visibleLength] = drawCall;
-                    visibleLength++;
                     drawCall.visibleThisFrame = true;
+
+                    // sort mesh instance into the right bucket based on its transparency
+                    const bucket = drawCall.transparent ? transparent : opaque;
+                    bucket.push(drawCall);
+
+                    if (drawCall.skinInstance || drawCall.morphInstance)
+                        this.processingMeshInstances.add(drawCall);
                 }
-            } else {
-                visibleList[visibleLength] = drawCall;
-                visibleLength++;
-                drawCall.visibleThisFrame = true;
             }
         }
 
         // #if _PROFILER
         this._cullTime += now() - cullTime;
-        this._numDrawCallsCulled += numDrawCallsCulled;
+        this._numDrawCallsCulled += doCull ? count : 0;
+        // #endif
+    }
+
+    collectLights(comp) {
+
+        // build a list and of all unique lights from all layers
+        this.lights.length = 0;
+        this.localLights.length = 0;
+
+        // stats
+        const stats = this.scene._stats;
+
+        // #if _PROFILER
+
+        stats.dynamicLights = 0;
+        stats.bakedLights = 0;
+
         // #endif
 
-        return visibleLength;
+        const count = comp.layerList.length;
+        for (let i = 0; i < count; i++) {
+            const layer = comp.layerList[i];
+
+            // layer can be in the list two times (opaque, transp), process it only one time
+            if (!_tempLayerSet.has(layer)) {
+                _tempLayerSet.add(layer);
+
+                const lights = layer._lights;
+                for (let j = 0; j < lights.length; j++) {
+                    const light = lights[j];
+
+                    // add new light
+                    if (!_tempLightSet.has(light)) {
+                        _tempLightSet.add(light);
+
+                        this.lights.push(light);
+
+                        if (light._type !== LIGHTTYPE_DIRECTIONAL) {
+                            this.localLights.push(light);
+                        }
+
+                        // #if _PROFILER
+
+                        // if affects dynamic or baked objects in real-time
+                        if ((light.mask & MASK_AFFECT_DYNAMIC) || (light.mask & MASK_AFFECT_LIGHTMAPPED)) {
+                            stats.dynamicLights++;
+                        }
+
+                        // bake lights
+                        if (light.mask & MASK_BAKE) {
+                            stats.bakedLights++;
+                        }
+
+                        // #endif
+                    }
+                }
+            }
+        }
+
+        stats.lights = this.lights.length;
+
+        _tempLightSet.clear();
+        _tempLayerSet.clear();
     }
 
     cullLights(camera, lights) {
@@ -867,8 +992,8 @@ class Renderer {
         const isClustered = this.scene.clusteredLightingEnabled;
 
         // shadow casters culling for local (point and spot) lights
-        for (let i = 0; i < comp._lights.length; i++) {
-            const light = comp._lights[i];
+        for (let i = 0; i < this.localLights.length; i++) {
+            const light = this.localLights[i];
             if (light._type !== LIGHTTYPE_DIRECTIONAL) {
 
                 if (isClustered) {
@@ -876,33 +1001,62 @@ class Renderer {
                     if (light.atlasSlotUpdated && light.shadowUpdateMode === SHADOWUPDATE_NONE) {
                         light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
                     }
+                } else {
+
+                    // force rendering shadow at least once to allocate the shadow map needed by the shaders
+                    if (light.shadowUpdateMode === SHADOWUPDATE_NONE && light.castShadows) {
+                        if (!light.getRenderData(null, 0).shadowCamera.renderTarget) {
+                            light.shadowUpdateMode = SHADOWUPDATE_THISFRAME;
+                        }
+                    }
                 }
 
                 if (light.visibleThisFrame && light.castShadows && light.shadowUpdateMode !== SHADOWUPDATE_NONE) {
-                    const casters = comp._lightCompositionData[i].shadowCastersList;
-                    this._shadowRendererLocal.cull(light, casters);
+                    this._shadowRendererLocal.cull(light, comp);
                 }
             }
         }
 
-        // shadow casters culling for global (directional) lights
-        // render actions store which directional lights are needed for each camera, so these are getting culled
+        // shadow casters culling for directional lights
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
             const renderAction = renderActions[i];
-            const count = renderAction.directionalLightsIndices.length;
-            for (let j = 0; j < count; j++) {
-                const lightIndex = renderAction.directionalLightsIndices[j];
-                const light = comp._lights[lightIndex];
-                const casters = comp._lightCompositionData[lightIndex].shadowCastersList;
-                this._shadowRendererDirectional.cull(light, casters, renderAction.camera.camera);
+            renderAction.directionalLights.length = 0;
+            const camera = renderAction.camera.camera;
+
+            // first use of each camera renders directional shadows
+            if (renderAction.firstCameraUse)  {
+
+                // get directional lights from all layers of the camera
+                const cameraLayers = camera.layers;
+                for (let l = 0; l < cameraLayers.length; l++) {
+                    const cameraLayer = comp.getLayerById(cameraLayers[l]);
+                    if (cameraLayer) {
+                        const layerDirLights = cameraLayer.splitLights[LIGHTTYPE_DIRECTIONAL];
+
+                        for (let j = 0; j < layerDirLights.length; j++) {
+                            const light = layerDirLights[j];
+
+                            // unique shadow casting lights
+                            if (light.castShadows && !_tempSet.has(light)) {
+                                _tempSet.add(light);
+                                renderAction.directionalLights.push(light);
+
+                                // frustum culling for the directional shadow when rendering the camera
+                                this._shadowRendererDirectional.cull(light, comp, camera);
+                            }
+                        }
+                    }
+                }
+
+                _tempSet.clear();
             }
         }
     }
 
     /**
      * visibility culling of lights, meshInstances, shadows casters
-     * Also applies meshInstance.visible and camera.cullingMask
+     * Also applies meshInstance.visible
      *
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition.
@@ -912,6 +1066,8 @@ class Renderer {
         // #if _PROFILER
         const cullTime = now();
         // #endif
+
+        this.processingMeshInstances.clear();
 
         const renderActions = comp._renderActions;
         for (let i = 0; i < renderActions.length; i++) {
@@ -924,12 +1080,10 @@ class Renderer {
             /** @type {import('../layer.js').Layer} */
             const layer = comp.layerList[layerIndex];
             if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
-            const transparent = comp.subLayerList[layerIndex];
 
             // camera
-            const cameraPass = renderAction.cameraIndex;
             /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-            const camera = layer.cameras[cameraPass];
+            const camera = renderAction.camera;
 
             if (camera) {
 
@@ -946,33 +1100,22 @@ class Renderer {
                 this.cullLights(camera.camera, layer._lights);
 
                 // cull mesh instances
-                const objects = layer.instances;
+                if (layer.onPreCull)
+                    layer.onPreCull(comp.camerasMap.get(camera));
 
-                // collect them into layer arrays
-                const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+                const culledInstances = layer.getCulledInstances(camera.camera);
+                const drawCalls = layer.meshInstances;
+                this.cull(camera.camera, drawCalls, culledInstances);
 
-                // shared objects are only culled once
-                if (!visible.done) {
-
-                    if (layer.onPreCull) {
-                        layer.onPreCull(cameraPass);
-                    }
-
-                    const drawCalls = transparent ? layer.transparentMeshInstances : layer.opaqueMeshInstances;
-                    visible.length = this.cull(camera.camera, drawCalls, visible.list);
-                    visible.done = true;
-
-                    if (layer.onPostCull) {
-                        layer.onPostCull(cameraPass);
-                    }
-                }
+                if (layer.onPostCull)
+                    layer.onPostCull(comp.camerasMap.get(camera));
             }
         }
 
         // update shadow / cookie atlas allocation for the visible lights. Update it after the ligthts were culled,
         // but before shadow maps were culling, as it might force some 'update once' shadows to cull.
         if (this.scene.clusteredLightingEnabled) {
-            this.updateLightTextureAtlas(comp);
+            this.updateLightTextureAtlas();
         }
 
         // cull shadow casters for all lights
@@ -1016,52 +1159,65 @@ class Renderer {
         _tempSet.clear();
     }
 
-    renderCookies(lights) {
-
-        const cookieRenderTarget = this.lightTextureAtlas.cookieRenderTarget;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
-
-            // skip clustered cookies with no assigned atlas slot
-            if (!light.atlasViewportAllocated)
-                continue;
-
-            // only render cookie when the slot is reassigned (assuming the cookie texture is static)
-            if (!light.atlasSlotUpdated)
-                continue;
-
-            this._cookieRenderer.render(light, cookieRenderTarget);
-        }
-    }
-
     /**
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
-     * @param {boolean} lightsChanged - True if lights of the composition has changed.
      */
-    beginFrame(comp, lightsChanged) {
-        const meshInstances = comp._meshInstances;
+    beginFrame(comp) {
 
-        // Update shaders if needed
         const scene = this.scene;
-        if (scene.updateShaders || lightsChanged) {
-            const onlyLitShaders = !scene.updateShaders && lightsChanged;
-            this.updateShaders(meshInstances, onlyLitShaders);
+        const updateShaders = scene.updateShaders;
+
+        let totalMeshInstances = 0;
+        const layers = comp.layerList;
+        const layerCount = layers.length;
+        for (let i = 0; i < layerCount; i++) {
+            const layer = layers[i];
+
+            const meshInstances = layer.meshInstances;
+            const count = meshInstances.length;
+            totalMeshInstances += count;
+
+            for (let j = 0; j < count; j++) {
+                const meshInst = meshInstances[j];
+
+                // clear visibility
+                meshInst.visibleThisFrame = false;
+
+                // collect all mesh instances if we need to update their shaders. Note that there could
+                // be duplicates, which is not a problem for the shader updates, so we do not filter them out.
+                if (updateShaders) {
+                    _tempMeshInstances.push(meshInst);
+                }
+
+                // collect skinned mesh instances
+                if (meshInst.skinInstance) {
+                    _tempMeshInstancesSkinned.push(meshInst);
+                }
+            }
+        }
+
+        // #if _PROFILER
+        scene._stats.meshInstances = totalMeshInstances;
+        // #endif
+
+        // update shaders if needed
+        if (updateShaders) {
+            const onlyLitShaders = !scene.updateShaders;
+            this.updateShaders(_tempMeshInstances, onlyLitShaders);
             scene.updateShaders = false;
             scene._shaderVersion++;
         }
 
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
-        this.updateCpuSkinMatrices(meshInstances);
+        this.updateCpuSkinMatrices(_tempMeshInstancesSkinned);
 
-        // clear mesh instance visibility
-        const miCount = meshInstances.length;
-        for (let i = 0; i < miCount; i++) {
-            meshInstances[i].visibleThisFrame = false;
-        }
+        // clear light arrays
+        _tempMeshInstances.length = 0;
+        _tempMeshInstancesSkinned.length = 0;
 
         // clear light visibility
-        const lights = comp._lights;
+        const lights = this.lights;
         const lightCount = lights.length;
         for (let i = 0; i < lightCount; i++) {
             lights[i].beginFrame();
@@ -1072,8 +1228,8 @@ class Renderer {
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition.
      */
-    updateLightTextureAtlas(comp) {
-        this.lightTextureAtlas.update(comp._splitLights[LIGHTTYPE_SPOT], comp._splitLights[LIGHTTYPE_OMNI], this.scene.lighting);
+    updateLightTextureAtlas() {
+        this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }
 
     /**
@@ -1086,31 +1242,12 @@ class Renderer {
         const startTime = now();
         // #endif
 
-        const emptyWorldClusters = comp.getEmptyWorldClusters(this.device);
-
         const renderActions = comp._renderActions;
-        for (let i = 0; i < renderActions.length; i++) {
-            const renderAction = renderActions[i];
-            const cluster = renderAction.lightClusters;
-
-            if (cluster && cluster !== emptyWorldClusters) {
-
-                // update each cluster only one time
-                if (!_tempSet.has(cluster)) {
-                    _tempSet.add(cluster);
-
-                    const layer = comp.layerList[renderAction.layerIndex];
-                    cluster.update(layer.clusteredLightsSet, this.scene.gammaCorrection, this.scene.lighting);
-                }
-            }
-        }
-
-        // keep temp set empty
-        _tempSet.clear();
+        this.worldClustersAllocator.update(renderActions, this.scene.gammaCorrection, this.scene.lighting);
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
-        this._lightClusters = comp._worldClusters.length;
+        this._lightClusters = this.worldClustersAllocator.count;
         // #endif
     }
 
@@ -1120,7 +1257,6 @@ class Renderer {
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
      * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
-     * @returns {number} - Flags of what was updated
      * @ignore
      */
     updateLayerComposition(comp, clusteredLightingEnabled) {
@@ -1155,44 +1291,21 @@ class Renderer {
                 layer._postRenderCounter |= 1;
             }
             layer._postRenderCounterMax = layer._postRenderCounter;
-
-            // prepare layer for culling with the camera
-            for (let j = 0; j < layer.cameras.length; j++) {
-                layer.instances.prepare(j);
-            }
-
-            // Generate static lighting for meshes in this layer if needed
-            // Note: Static lighting is not used when clustered lighting is enabled
-            if (layer._needsStaticPrepare && layer._staticLightHash && !this.scene.clusteredLightingEnabled) {
-                // TODO: reuse with the same staticLightHash
-                if (layer._staticPrepareDone) {
-                    StaticMeshes.revert(layer.opaqueMeshInstances);
-                    StaticMeshes.revert(layer.transparentMeshInstances);
-                }
-                StaticMeshes.prepare(this.device, scene, layer.opaqueMeshInstances, layer._lights);
-                StaticMeshes.prepare(this.device, scene, layer.transparentMeshInstances, layer._lights);
-                comp._dirty = true;
-                scene.updateShaders = true;
-                layer._needsStaticPrepare = false;
-                layer._staticPrepareDone = true;
-            }
         }
 
-        // Update static layer data, if something's changed
-        const updated = comp._update(this.device, clusteredLightingEnabled);
+        // update composition
+        comp._update();
 
         // #if _PROFILER
         this._layerCompositionUpdateTime += now() - layerCompositionUpdateTime;
         // #endif
-
-        return updated;
     }
 
     frameUpdate() {
 
         this.clustersDebugRendered = false;
 
-        this.initViewBindGroupFormat();
+        this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
     }
 }
 

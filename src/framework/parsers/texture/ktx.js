@@ -62,7 +62,7 @@ class KtxParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const textureData = this.parse(data);
 
         if (!textureData) {
@@ -80,7 +80,9 @@ class KtxParser {
             height: textureData.height,
             format: textureData.format,
             cubemap: textureData.cubemap,
-            levels: textureData.levels
+            levels: textureData.levels,
+
+            ...textureOptions
         });
 
         texture.upload();

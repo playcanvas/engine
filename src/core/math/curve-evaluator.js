@@ -47,7 +47,7 @@ class CurveEvaluator {
      * changed since the last evaluation.
      *
      * @param {number} time - Time to evaluate the curve at.
-     * @param {boolean} [forceReset=false] - Force reset of the curve.
+     * @param {boolean} [forceReset] - Force reset of the curve.
      * @returns {number} The evaluated value.
      */
     evaluate(time, forceReset = false) {

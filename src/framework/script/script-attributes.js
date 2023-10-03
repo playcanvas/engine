@@ -167,7 +167,7 @@ class ScriptAttributes {
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+        '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ]);
 
     /**
@@ -287,7 +287,7 @@ class ScriptAttributes {
                 if (old && args.type !== 'json' && args.type !== 'entity' && old.clone) {
                     // check if an event handler is there
                     // before cloning for performance
-                    if (this._callbacks[evt] || this._callbacks[evtName]) {
+                    if (this.hasEvent(evt) || this.hasEvent(evtName)) {
                         oldCopy = old.clone();
                     }
                 }

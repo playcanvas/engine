@@ -8,13 +8,16 @@ class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';
-
+    static WEBGPU_ENABLED = true;
 
     controls(data: Observer) {
         return <>
             <Panel headerText='Atlas'>
-                <LabelGroup text='Resolution'>
+                <LabelGroup text='Shadow Res'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={256} max={4096} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Cookie Res'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookieAtlasResolution' }} min={128} max={4096} precision={0}/>
                 </LabelGroup>
                 {<LabelGroup text='Split'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.atlasSplit' }} type="number" options={[
@@ -62,17 +65,23 @@ class ClusteredSpotShadowsExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, data: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             "channels": new pc.Asset("channels", "texture", { url: "/static/assets/textures/channels.png" }),
             "heart": new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
             'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
-            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP })
+            helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -110,6 +119,7 @@ class ClusteredSpotShadowsExample {
 
                 data.set('settings', {
                     shadowAtlasResolution: 1024,     // shadow map resolution storing all shadows
+                    cookieAtlasResolution: 1024,     // cookie map resolution storing all cookies
                     shadowType: pc.SHADOW_PCF3,      // shadow filter type
                     shadowsEnabled: true,
                     cookiesEnabled: true,
@@ -147,7 +157,7 @@ class ClusteredSpotShadowsExample {
 
                 // resolution of the shadow and cookie atlas
                 lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
-                lighting.cookieAtlasResolution = 1500;
+                lighting.cookieAtlasResolution = data.get('settings.cookieAtlasResolution');;
 
                 const splitOptions = [
                     null,               // automatic - split atlas each frame to give all required lights an equal size
@@ -172,7 +182,7 @@ class ClusteredSpotShadowsExample {
 
                 // ground material
                 const groundMaterial = new pc.StandardMaterial();
-                groundMaterial.shininess = 55;
+                groundMaterial.gloss = 0.55;
                 groundMaterial.metalness = 0.4;
                 groundMaterial.useMetalness = true;
                 groundMaterial.normalMap = assets.normal.resource;
@@ -182,7 +192,7 @@ class ClusteredSpotShadowsExample {
 
                 // cube material
                 const cubeMaterial = new pc.StandardMaterial();
-                cubeMaterial.shininess = 55;
+                cubeMaterial.gloss = 0.55;
                 cubeMaterial.metalness = 0.4;
                 cubeMaterial.useMetalness = true;
                 cubeMaterial.normalMap = assets.normal.resource;

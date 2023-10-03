@@ -8,7 +8,6 @@ import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
-import './polyfill/request-animation-frame.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
 import './polyfill/OESVertexArrayObject.js';
@@ -58,6 +57,8 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
+export { BlendState } from './platform/graphics/blend-state.js';
+export { DepthState } from './platform/graphics/depth-state.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
@@ -65,6 +66,7 @@ export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
 export { Texture } from './platform/graphics/texture.js';
+export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
@@ -75,6 +77,9 @@ export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-de
 
 // PLATFORM / GRAPHICS / webgpu
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
+
+// PLATFORM / GRAPHICS / null
+export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-device.js';
 
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
@@ -106,6 +111,7 @@ export { BatchGroup } from './scene/batching/batch-group.js';
 export { SkinBatchInstance } from './scene/batching/skin-batch-instance.js';
 export { BatchManager } from './scene/batching/batch-manager.js';
 export { Camera } from './scene/camera.js';
+export { LitMaterial } from './scene/materials/lit-material.js';
 export { WorldClusters } from './scene/lighting/world-clusters.js';
 export { ForwardRenderer } from './scene/renderer/forward-renderer.js';
 export { GraphNode } from './scene/graph-node.js';
@@ -113,10 +119,10 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { LitOptions } from './scene/materials/lit-options.js';
+export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
-export { MeshInstance, Command } from './scene/mesh-instance.js';
+export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
@@ -124,12 +130,13 @@ export { MorphTarget } from './scene/morph-target.js';
 export { ParticleEmitter } from './scene/particle-system/particle-emitter.js';
 export { QuadRender } from './scene/graphics/quad-render.js';
 export { Scene } from './scene/scene.js';
+export { ShaderPass } from './scene/shader-pass.js';
 export { Skin } from './scene/skin.js';
 export { SkinInstance } from './scene/skin-instance.js';
 export { Sprite } from './scene/sprite.js';
 export { StandardMaterial } from './scene/materials/standard-material.js';
 export { StandardMaterialOptions } from './scene/materials/standard-material-options.js';
-export { StencilParameters } from './scene/stencil-parameters.js';
+export { StencilParameters } from './platform/graphics/stencil-parameters.js';
 export { TextureAtlas } from './scene/texture-atlas.js';
 
 // SCENE / ANIMATION
@@ -147,6 +154,7 @@ export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js'
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
+export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -265,7 +273,8 @@ export { BundleRegistry } from './framework/bundle/bundle-registry.js';
 export { Picker } from './framework/graphics/picker.js';
 
 // FRAMEWORK / HANDLERS
-export { basisInitialize, basisTranscode } from './framework/handlers/basis.js';
+export { basisInitialize } from './framework/handlers/basis.js';
+export { dracoInitialize } from './framework/parsers/draco-decoder.js';
 export { AnimClipHandler } from './framework/handlers/anim-clip.js';
 export { AnimStateGraphHandler } from './framework/handlers/anim-state-graph.js';
 export { AnimationHandler } from './framework/handlers/animation.js';
@@ -273,7 +282,7 @@ export { AudioHandler } from './framework/handlers/audio.js';
 export { BinaryHandler } from './framework/handlers/binary.js';
 export { BundleHandler } from './framework/handlers/bundle.js';
 export { ContainerHandler, ContainerResource } from './framework/handlers/container.js';
-export { createStyle, CssHandler } from './framework/handlers/css.js';
+export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
@@ -322,6 +331,8 @@ export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
 export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
 export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
 export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
 

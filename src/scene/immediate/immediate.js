@@ -41,7 +41,6 @@ class Immediate {
     createMaterial(depthTest) {
         const material = new BasicMaterial();
         material.vertexColors = true;
-        material.blend = true;
         material.blendType = BLEND_NORMAL;
         material.depthTest = depthTest;
         material.update();
@@ -82,52 +81,57 @@ class Immediate {
         return batches.getBatch(material, layer);
     }
 
-    // shared vertex shader for textured quad rendering
-    static getTextureVS() {
-        return `
-            attribute vec2 vertex_position;
-            uniform mat4 matrix_model;
-            varying vec2 uv0;
-            void main(void) {
-                gl_Position = matrix_model * vec4(vertex_position, 0, 1);
-                uv0 = vertex_position.xy + 0.5;
-            }
-        `;
+    getShader(id, fragment) {
+        if (!this[id]) {
+            // shared vertex shader for textured quad rendering
+            const vertex = /* glsl */ `
+                attribute vec2 vertex_position;
+                uniform mat4 matrix_model;
+                varying vec2 uv0;
+                void main(void) {
+                    gl_Position = matrix_model * vec4(vertex_position, 0, 1);
+                    uv0 = vertex_position.xy + 0.5;
+                }
+            `;
+
+            this[id] = createShaderFromCode(this.device, vertex, fragment, `DebugShader:${id}`);
+        }
+        return this[id];
     }
 
     // shader used to display texture
     getTextureShader() {
-        if (!this.textureShader) {
-            const fshader = `
-                varying vec2 uv0;
-                uniform sampler2D colorMap;
-                void main (void) {
-                    gl_FragColor = vec4(texture2D(colorMap, uv0).xyz, 1);
-                }
-            `;
+        return this.getShader('textureShader', /* glsl */ `
+            varying vec2 uv0;
+            uniform sampler2D colorMap;
+            void main (void) {
+                gl_FragColor = vec4(texture2D(colorMap, uv0).xyz, 1);
+            }
+        `);
+    }
 
-            this.textureShader = createShaderFromCode(this.device, Immediate.getTextureVS(), fshader, 'DebugTextureShader');
-        }
-
-        return this.textureShader;
+    // shader used to display infilterable texture sampled using texelFetch
+    getUnfilterableTextureShader() {
+        return this.getShader('textureShaderUnfilterable', /* glsl */ `
+            varying vec2 uv0;
+            uniform highp sampler2D colorMap;
+            void main (void) {
+                ivec2 uv = ivec2(uv0 * textureSize(colorMap, 0));
+                gl_FragColor = vec4(texelFetch(colorMap, uv, 0).xyz, 1);
+            }
+        `);
     }
 
     // shader used to display depth texture
     getDepthTextureShader() {
-        if (!this.depthTextureShader) {
-            const fshader = `
-                ${shaderChunks.screenDepthPS}
-                varying vec2 uv0;
-                void main() {
-                    float depth = getLinearScreenDepth(uv0) * camera_params.x;
-                    gl_FragColor = vec4(vec3(depth), 1.0);
-                }
-            `;
-
-            this.depthTextureShader = createShaderFromCode(this.device, Immediate.getTextureVS(), fshader, 'DebugDepthTextureShader');
-        }
-
-        return this.depthTextureShader;
+        return this.getShader('depthTextureShader', /* glsl */ `
+            ${shaderChunks.screenDepthPS}
+            varying vec2 uv0;
+            void main() {
+                float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                gl_FragColor = vec4(vec3(depth), 1.0);
+            }
+        `);
     }
 
     // creates mesh used to render a quad
@@ -236,9 +240,8 @@ class Immediate {
             const meshInstances = this.layerMeshInstances.get(layer);
             if (meshInstances) {
                 for (let i = 0; i < meshInstances.length; i++) {
-                    visibleList.list[visibleList.length + i] = meshInstances[i];
+                    visibleList.push(meshInstances[i]);
                 }
-                visibleList.length += meshInstances.length;
                 meshInstances.length = 0;
             }
         }

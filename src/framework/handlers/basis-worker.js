@@ -182,6 +182,7 @@ function BasisWorker() {
                 // https://www.khronos.org/registry/webgl/extensions/rejected/WEBGL_compressed_texture_atc/
                 return true;
         }
+        return false;
     };
 
     const transcodeKTX2 = (url, data, options) => {
@@ -325,9 +326,18 @@ function BasisWorker() {
             const dst = new Uint8Array(dstSize);
 
             if (!basisFile.transcodeImage(dst, 0, mip, basisFormat, 0, 0)) {
-                basisFile.close();
-                basisFile.delete();
-                throw new Error('Failed to transcode image url=' + url);
+                if (mip === levels - 1 && dstSize === levelData[mip - 1].buffer.byteLength) {
+                    // https://github.com/BinomialLLC/basis_universal/issues/358
+                    // there is a regression on iOS/safari 17 where the last mipmap level
+                    // fails to transcode. this is a workaround which copies the previous mip
+                    // level data instead of failing.
+                    dst.set(new Uint8Array(levelData[mip - 1].buffer));
+                    console.warn('Failed to transcode last mipmap level, using previous level instead url=' + url);
+                } else {
+                    basisFile.close();
+                    basisFile.delete();
+                    throw new Error('Failed to transcode image url=' + url);
+                }
             }
 
             const is16BitFormat = (basisFormat === BASIS_FORMAT.cTFRGB565 || basisFormat === BASIS_FORMAT.cTFRGBA4444);

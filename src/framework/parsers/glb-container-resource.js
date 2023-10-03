@@ -123,7 +123,7 @@ class GlbContainerResource {
                     if (gltfNode.hasOwnProperty('mesh')) {
                         const meshGroup = glb.renders[gltfNode.mesh].meshes;
                         renderAsset = this.renders[gltfNode.mesh];
-                        for (var mi = 0; mi < meshGroup.length; mi++) {
+                        for (let mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
                                 const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode);
@@ -304,7 +304,7 @@ class GlbContainerResource {
                 const gltfNode = glb.gltf.nodes[i];
                 if (gltfNode.hasOwnProperty('mesh')) {
                     const meshGroup = glb.renders[gltfNode.mesh].meshes;
-                    for (var mi = 0; mi < meshGroup.length; mi++) {
+                    for (let mi = 0; mi < meshGroup.length; mi++) {
                         const mesh = meshGroup[mi];
                         if (mesh) {
                             createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);

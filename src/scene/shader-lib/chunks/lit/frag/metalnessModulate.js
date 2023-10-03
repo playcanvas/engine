@@ -1,10 +1,11 @@
 export default /* glsl */`
 
-uniform float material_f0;
+vec3 getSpecularModulate(in vec3 specularity, in vec3 albedo, in float metalness, in float f0) {
+    vec3 dielectricF0 = f0 * specularity;
+    return mix(dielectricF0, albedo, metalness);
+}
 
-void getMetalnessModulate() {
-    vec3 dielectricF0 = material_f0 * dSpecularity;
-    dSpecularity = mix(dielectricF0, dAlbedo, dMetalness);
-    dAlbedo *= 1.0 - dMetalness;
+vec3 getAlbedoModulate(in vec3 albedo, in float metalness) {
+    return albedo * (1.0 - metalness);
 }
 `;

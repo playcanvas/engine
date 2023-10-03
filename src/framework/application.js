@@ -74,12 +74,12 @@ import { XrManager } from './xr/xr-manager.js';
  *
  * MyScript.prototype.initialize = function() {
  *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     var app = this.app;
+ *     const app = this.app;
  * };
  *
  * MyScript.prototype.update = function(dt) {
  *     // ...and update functions.
- *     var app = this.app;
+ *     const app = this.app;
  * };
  * ```
  *
@@ -92,7 +92,7 @@ class Application extends AppBase {
     /**
      * Create a new Application instance.
      *
-     * @param {Element} canvas - The canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
      * @param {object} [options] - The options object to configure the Application.
      * @param {import('./input/element-input.js').ElementInput} [options.elementInput] - Input
      * handler for {@link ElementComponent}s.
@@ -111,7 +111,7 @@ class Application extends AppBase {
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
      * @example
      * // Engine-only example: create the application manually
-     * var app = new pc.Application(canvas, options);
+     * const app = new pc.Application(canvas, options);
      *
      * // Start the application's main loop
      * app.start();

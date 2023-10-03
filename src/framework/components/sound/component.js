@@ -10,6 +10,7 @@ import { SoundSlot } from './slot.js';
  * The Sound Component controls playback of {@link Sound}s.
  *
  * @augments Component
+ * @category Sound
  */
 class SoundComponent extends Component {
     /**
@@ -343,23 +344,25 @@ class SoundComponent extends Component {
      *
      * @param {string} name - The name of the slot.
      * @param {object} [options] - Settings for the slot.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the end.
-     * @param {number} [options.startTime=0] - The start time from which the sound will start playing.
-     * @param {number} [options.duration=null] - The duration of the sound that the slot will play
-     * starting from startTime.
-     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be
-     * played independently of each other. Otherwise the slot will first stop the current sound
-     * before starting the new one.
-     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as
-     * its audio asset is loaded.
-     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be
-     * played by this slot.
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * Defaults to false.
+     * @param {number} [options.startTime] - The start time from which the sound will start playing.
+     * Defaults to 0 to start at the beginning.
+     * @param {number} [options.duration] - The duration of the sound that the slot will play
+     * starting from startTime. Defaults to `null` which means play to end of the sound.
+     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * independently of each other. Otherwise the slot will first stop the current sound before
+     * starting the new one. Defaults to false.
+     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * audio asset is loaded. Defaults to false.
+     * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
+     * by this slot.
      * @returns {SoundSlot|null} The new slot or null if the slot already exists.
      * @example
      * // get an asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // add a slot
      * this.entity.sound.addSlot('beep', {
      *     asset: asset
@@ -415,6 +418,68 @@ class SoundComponent extends Component {
     }
 
     /**
+     * Return a property from the slot with the specified name.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @param {string} property - The name of the property to look for.
+     * @returns {*} The value from the looked property inside the slot with specified name. May be undefined if slot does not exist.
+     * @private
+     */
+    _getSlotProperty(name, property) {
+        if (!this.enabled || !this.entity.enabled) {
+            return undefined;
+        }
+
+        const slot = this._slots[name];
+        if (!slot) {
+            Debug.warn(`Trying to get ${property} from sound slot with name ${name} which does not exist`);
+            return undefined;
+        }
+
+        return slot[property];
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently playing.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently playing.
+     */
+    isPlaying(name) {
+        return this._getSlotProperty(name, 'isPlaying') || false;
+    }
+
+    /**
+     * Returns true if the asset of the slot with the specified name is loaded..
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and its asset is loaded.
+     */
+    isLoaded(name) {
+        return this._getSlotProperty(name, 'isLoaded') || false;
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently paused.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently paused.
+     */
+    isPaused(name) {
+        return this._getSlotProperty(name, 'isPaused') || false;
+    }
+
+    /**
+     * Returns true if the slot with the specified name is currently stopped.
+     *
+     * @param {string} name - The name of the {@link SoundSlot} to look for.
+     * @returns {boolean} True if the slot with the specified name exists and is currently stopped.
+     */
+    isStopped(name) {
+        return this._getSlotProperty(name, 'isStopped') || false;
+    }
+
+    /**
      * Begins playing the sound slot with the specified name. The slot will restart playing if it
      * is already playing unless the overlap field is true in which case a new sound will be
      * created and played.
@@ -425,7 +490,7 @@ class SoundComponent extends Component {
      * or if the SoundComponent has no slot with the specified name.
      * @example
      * // get asset by id
-     * var asset = app.assets.get(10);
+     * const asset = app.assets.get(10);
      * // create a slot and play it
      * this.entity.sound.addSlot('beep', {
      *     asset: asset

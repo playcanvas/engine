@@ -80,6 +80,81 @@ describe('AssetRegistry', function () {
 
     });
 
+    describe('#find + rename', function () {
+
+        it('works after renaming an asset', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+
+            app.assets.add(asset1);
+
+            asset1.name = 'Asset 1 renamed';
+
+            expect(app.assets.find('Asset 1')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed')).to.equal(asset1);
+
+            app.assets.remove(asset1);
+            asset1.name = 'Asset 1 renamed again';
+
+            expect(app.assets.find('Asset 1')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed')).to.equal(null);
+            expect(app.assets.find('Asset 1 renamed again')).to.equal(null);
+        });
+
+    });
+
+    describe('#find + type', function () {
+
+        it('finds assets by name filtered by type', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            const asset2 = new Asset('Asset 1', 'json', {
+                url: 'fake/two/file.json'
+            });
+
+            app.assets.add(asset1);
+            app.assets.add(asset2);
+
+            expect(app.assets.find('Asset 1', 'text')).to.equal(asset1);
+            expect(app.assets.find('Asset 1', 'json')).to.equal(asset2);
+        });
+
+    });
+
+    describe('#findAll + type', function () {
+
+        it('finds all assets by name filtered by type', function () {
+            const asset1 = new Asset('Asset 1', 'text', {
+                url: 'fake/one/file.txt'
+            });
+            const asset2 = new Asset('Asset 1', 'json', {
+                url: 'fake/two/file.json'
+            });
+            const asset3 = new Asset('Asset 1', 'text', {
+                url: 'fake/two/file.txt'
+            });
+            const asset4 = new Asset('Asset 1', 'text', {
+                url: 'fake/two/file.txt'
+            });
+
+            app.assets.add(asset1);
+            app.assets.add(asset2);
+            app.assets.add(asset3);
+            app.assets.add(asset4);
+
+            // ensure renaming updates indexes
+            asset3.name = 'Asset 1 renamed';
+
+            // ensure removing updates indexes
+            app.assets.remove(asset4);
+
+            expect(app.assets.findAll('Asset 1', 'text').length).to.equal(1);
+        });
+
+    });
+
     describe('#get', function () {
 
         it('retrieves an asset by id', function () {

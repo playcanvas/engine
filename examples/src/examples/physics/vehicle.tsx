@@ -3,8 +3,9 @@ import * as pc from '../../../../';
 class VehicleExample {
     static CATEGORY = 'Physics';
     static NAME = 'Vehicle';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         pc.WasmModule.setConfig('Ammo', {
             glueUrl: '/static/lib/ammo/ammo.wasm.js',
@@ -17,14 +18,20 @@ class VehicleExample {
         function demo() {
 
             const assets = {
-                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP }),
+                helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
                 'script1': new pc.Asset('script1', 'script', { url: '/static/scripts/camera/tracking-camera.js' }),
                 'script2': new pc.Asset('script2', 'script', { url: '/static/scripts/physics/render-physics.js' }),
                 'script3': new pc.Asset('script3', 'script', { url: '/static/scripts/physics/action-physics-reset.js' }),
                 'script4': new pc.Asset('script4', 'script', { url: '/static/scripts/physics/vehicle.js' })
             };
 
-            pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+            const gfxOptions = {
+                deviceTypes: [deviceType],
+                glslangUrl: '/static/lib/glslang/glslang.js',
+                twgslUrl: '/static/lib/twgsl/twgsl.js'
+            };
+
+            pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
                 const createOptions = new pc.AppOptions();
                 createOptions.graphicsDevice = device;

@@ -6,6 +6,8 @@ const tmpVecB = new Vec3();
 
 /**
  * A bounding sphere is a volume for facilitating fast intersection testing.
+ *
+ * @category Math
  */
 class BoundingSphere {
     /**
@@ -30,7 +32,7 @@ class BoundingSphere {
      * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
-     * var sphere = new pc.BoundingSphere();
+     * const sphere = new pc.BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');

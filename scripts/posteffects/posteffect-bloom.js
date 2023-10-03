@@ -295,6 +295,6 @@ Bloom.prototype.initialize = function () {
 
     this.on('destroy', function () {
         queue.removeEffect(this.effect);
-        this._destroy();
+        this.effect._destroy();
     });
 };

@@ -3,6 +3,7 @@ import Handlebars from 'handlebars';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import readDirectoryNames from '../../src/app/helpers/read-dir-names.mjs';
+import getExamplesList from '../../src/app/helpers/read-dir.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,7 +24,7 @@ readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach((category) => {
         fs.mkdirSync(dir);
     }
 
-    let examples = fs.readdirSync(`${MAIN_DIR}/src/examples/${category}`);
+    let examples = getExamplesList(MAIN_DIR, category);
     examples = examples.filter(e => e !== 'index.mjs');
     examples = examples.map(example => example.replace('.tsx', ''));
     categoriesList.push({

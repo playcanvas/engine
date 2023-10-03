@@ -391,7 +391,7 @@ class ScriptComponent extends Component {
             // disable script if it fails to call method
             script.enabled = false;
 
-            if (!script._callbacks || !script._callbacks.error) {
+            if (!script.hasEvent('error')) {
                 console.warn(`unhandled exception while calling "${method}" for "${script.__scriptType.__name}" script: `, ex);
                 console.error(ex);
             }
@@ -589,7 +589,7 @@ class ScriptComponent extends Component {
      * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
      * instance is returned. Otherwise null is returned.
      * @example
-     * var controller = entity.script.get('playerController');
+     * const controller = entity.script.get('playerController');
      */
     get(nameOrType) {
         if (typeof nameOrType === 'string') {

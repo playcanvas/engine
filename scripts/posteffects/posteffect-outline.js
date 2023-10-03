@@ -34,7 +34,7 @@ function OutlineEffect(graphicsDevice, thickness) {
         "        {",
         "            for (int y=-THICKNESS;y<=THICKNESS;y++)",
         "            {    ",
-        "                float tex=texture2D(uOutlineTex, vUv0+vec2(float(x)/uWidth, float(y)/uHeight)).a;",
+        "                float tex=texture2DLodEXT(uOutlineTex, vUv0 + vec2(float(x)/uWidth, float(y)/uHeight), 0.0).a;",
         "                if (tex>0.0)",
         "                {",
         "                    outline=1.0;",

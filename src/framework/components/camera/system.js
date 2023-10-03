@@ -15,6 +15,7 @@ const _schema = ['enabled'];
  * active cameras.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class CameraComponentSystem extends ComponentSystem {
     /**
@@ -143,6 +144,8 @@ class CameraComponentSystem extends ComponentSystem {
 
     onBeforeRemove(entity, component) {
         this.removeCamera(component);
+
+        component.onRemove();
     }
 
     onUpdate(dt) {

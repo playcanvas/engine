@@ -12,12 +12,15 @@ let id = 0;
  * the code is GLSL (or more specifically ESSL, the OpenGL ES Shading Language). The shader
  * definition also describes how the PlayCanvas engine should map vertex buffer elements onto the
  * attributes specified in the vertex shader code.
+ *
+ * @category Graphics
  */
 class Shader {
     /**
      * Format of the uniform buffer for mesh bind group.
      *
      * @type {import('./uniform-buffer-format.js').UniformBufferFormat}
+     * @ignore
      */
     meshUniformBufferFormat;
 
@@ -25,6 +28,7 @@ class Shader {
      * Format of the bind group for the mesh bind group.
      *
      * @type {import('./bind-group-format.js').BindGroupFormat}
+     * @ignore
      */
     meshBindGroupFormat;
 
@@ -38,39 +42,47 @@ class Shader {
      * used to manage this shader.
      * @param {object} definition - The shader definition from which to build the shader.
      * @param {string} [definition.name] - The name of the shader.
-     * @param {Object<string, string>} definition.attributes - Object detailing the mapping of
+     * @param {Object<string, string>} [definition.attributes] - Object detailing the mapping of
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
-     * vertex buffer data as inputs to the shader.
+     * vertex buffer data as inputs to the shader. When not specified, rendering without
+     * vertex buffer is assumed.
      * @param {string} definition.vshader - Vertex shader source (GLSL code).
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
      * useTransformFeedback is specified.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
+     * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
+     * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
      * // Create a shader that renders primitives with a solid red color
-     * var shaderDefinition = {
+     *
+     * // Vertex shader
+     * const vshader = `
+     * attribute vec3 aPosition;
+     *
+     * void main(void) {
+     *     gl_Position = vec4(aPosition, 1.0);
+     * }
+     * `;
+     *
+     * // Fragment shader
+     * const fshader = `
+     * precision ${graphicsDevice.precision} float;
+     *
+     * void main(void) {
+     *     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+     * }
+     * `;
+     *
+     * const shaderDefinition = {
      *     attributes: {
      *         aPosition: pc.SEMANTIC_POSITION
      *     },
-     *     vshader: [
-     *         "attribute vec3 aPosition;",
-     *         "",
-     *         "void main(void)",
-     *         "{",
-     *         "    gl_Position = vec4(aPosition, 1.0);",
-     *         "}"
-     *     ].join("\n"),
-     *     fshader: [
-     *         "precision " + graphicsDevice.precision + " float;",
-     *         "",
-     *         "void main(void)",
-     *         "{",
-     *         "    gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);",
-     *         "}"
-     *     ].join("\n")
+     *     vshader,
+     *     fshader
      * };
      *
-     * var shader = new pc.Shader(graphicsDevice, shaderDefinition);
+     * const shader = new pc.Shader(graphicsDevice, shaderDefinition);
      */
     constructor(graphicsDevice, definition) {
         this.id = id++;
@@ -83,7 +95,7 @@ class Shader {
 
         // pre-process shader sources
         definition.vshader = Preprocessor.run(definition.vshader);
-        definition.fshader = Preprocessor.run(definition.fshader);
+        definition.fshader = Preprocessor.run(definition.fshader, graphicsDevice.isWebGL2);
 
         this.init();
 
@@ -104,6 +116,7 @@ class Shader {
         this.failed = false;
     }
 
+    /** @ignore */
     get label() {
         return `Shader Id ${this.id} ${this.name}`;
     }
@@ -127,6 +140,7 @@ class Shader {
         this.impl.loseContext();
     }
 
+    /** @ignore */
     restoreContext() {
         this.impl.restoreContext(this.device, this);
     }

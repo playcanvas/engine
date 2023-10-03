@@ -37,7 +37,7 @@ let _params = new Set();
  * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
  * material and scene properties), that you can change and then return. Properties of the object passed
  * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
- * which holds some of the options only used by the lit shader backend {@link LitOptions}.
+ * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
  * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
  */
 
@@ -217,8 +217,8 @@ let _params = new Set();
  * https://github.com/KhronosGroup/glTF/tree/main/extensions/2.0/Khronos/KHR_materials_iridescence
  * @property {boolean} useMetalness Use metalness properties instead of specular. When enabled,
  * diffuse colors also affect specular instead of the dedicated specular map. This can be used as
- * alternative to specular color to save space. With metaless == 0, the pixel is assumed to be
- * dielectric, and diffuse color is used as normal. With metaless == 1, the pixel is fully
+ * alternative to specular color to save space. With metalness == 0, the pixel is assumed to be
+ * dielectric, and diffuse color is used as normal. With metalness == 1, the pixel is fully
  * metallic, and diffuse color is used as specular color instead.
  * @property {boolean} useMetalnessSpecularColor When metalness is enabled, use the
  * specular map to apply color tint to specular reflections.
@@ -239,14 +239,10 @@ let _params = new Set();
  * is set, it'll be multiplied by vertex colors.
  * @property {string} metalnessVertexColorChannel Vertex color channel to use for metalness. Can be
  * "r", "g", "b" or "a".
- * @property {number} shininess Defines glossiness of the material from 0 (rough) to 100 (shiny
- * mirror). A higher shininess value results in a more focused specular highlight. Glossiness map/
- * vertex colors are always multiplied by this value (normalized to 0 - 1 range), or it is used
- * directly as constant output.
  * @property {number} gloss Defines the glossiness of the material from 0 (rough) to 1 (shiny).
- * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Glossiness map
- * (default is null). If specified, will be multiplied by normalized 'shininess' value and/or
- * vertex colors.
+ * @property {import('../../platform/graphics/texture.js').Texture|null} glossMap Gloss map
+ * (default is null). If specified, will be multiplied by normalized gloss value and/or vertex
+ * colors.
  * @property {boolean} glossInvert Invert the gloss component (default is false). Enabling this
  * flag results in material treating the gloss members as roughness.
  * @property {number} glossMapUv Gloss map UV channel.
@@ -354,7 +350,7 @@ let _params = new Set();
  * @property {string} sheenGlossMapChannel Color channels of the sheen glossiness map to use.
  * Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} sheenGlossVertexColor Use mesh vertex colors for sheen glossiness.
- * If sheen glossiness map or sheen glosiness tint are set, they'll be multiplied by vertex colors.
+ * If sheen glossiness map or sheen glossiness tint are set, they'll be multiplied by vertex colors.
  * @property {string} sheenGlossVertexColorChannel Vertex color channels to use for sheen glossiness.
  * Can be "r", "g", "b" or "a".
  * @property {number} opacity The opacity of the material. This value can be between 0 and 1, where
@@ -376,10 +372,10 @@ let _params = new Set();
  * it'll be multiplied by vertex colors.
  * @property {string} opacityVertexColorChannel Vertex color channels to use for opacity. Can be
  * "r", "g", "b" or "a".
- * @property {boolean} opacityFadesSpecular used to specify whether specular and reflections are
+ * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
  * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
  * {@link Material#alphaFade} to fade out materials.
- * @property {number} alphaFade used to fade out materials when
+ * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
  * (primary) normal map of the material (default is null). The texture must contains normalized,
@@ -451,18 +447,43 @@ let _params = new Set();
  * @property {string} lightVertexColorChannel Vertex color channels to use for baked lighting. Can
  * be "r", "g", "b", "a", "rgb" or any swizzled combination.
  * @property {boolean} ambientTint Enables scene ambient multiplication by material ambient color.
- * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap Baked ambient
+ * @property {import('../../platform/graphics/texture.js').Texture|null} aoMap The main (primary) baked ambient
  * occlusion (AO) map (default is null). Modulates ambient color.
- * @property {number} aoMapUv AO map UV channel
- * @property {string} aoMapChannel Color channel of the AO map to use. Can be "r", "g", "b" or "a".
- * @property {Vec2} aoMapTiling Controls the 2D tiling of the AO map.
- * @property {Vec2} aoMapOffset Controls the 2D offset of the AO map. Each component is between 0
+ * @property {number} aoMapUv Main (primary) AO map UV channel
+ * @property {string} aoMapChannel Color channel of the main (primary) AO map to use. Can be "r", "g", "b" or "a".
+ * @property {Vec2} aoMapTiling Controls the 2D tiling of the main (primary) AO map.
+ * @property {Vec2} aoMapOffset Controls the 2D offset of the main (primary) AO map. Each component is between 0
  * and 1.
- * @property {number} aoMapRotation Controls the 2D rotation (in degrees) of the AO map.
+ * @property {number} aoMapRotation Controls the 2D rotation (in degrees) of the main (primary) AO map.
  * @property {boolean} aoVertexColor Use mesh vertex colors for AO. If aoMap is set, it'll be
  * multiplied by vertex colors.
  * @property {string} aoVertexColorChannel Vertex color channels to use for AO. Can be "r", "g",
  * "b" or "a".
+ * @property {import('../../platform/graphics/texture.js').Texture|null} aoDetailMap The
+ * detail (secondary) baked ambient occlusion (AO) map of the material (default is null). Will only be used if main
+ * (primary) ao map is non-null.
+ * @property {number} aoDetailMapUv Detail (secondary) AO map UV channel.
+ * @property {Vec2} aoDetailMapTiling Controls the 2D tiling of the detail (secondary) AO
+ * map.
+ * @property {Vec2} aoDetailMapOffset Controls the 2D offset of the detail (secondary) AO
+ * map. Each component is between 0 and 1.
+ * @property {number} aoDetailMapRotation Controls the 2D rotation (in degrees) of the detail
+ * (secondary) AO map.
+ * @property {string} aoDetailMapChannel Color channels of the detail (secondary) AO map
+ * to use. Can be "r", "g", "b" or "a" (default is "g").
+ * @property {string} aoDetailMode Determines how the main (primary) and detail (secondary)
+ * AO maps are blended together. Can be:
+ *
+ * - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+ * - {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+ * - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+ * - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color.
+ * - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker,
+ * component-wise.
+ * - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter,
+ * component-wise.
+ *
+ * Defaults to {@link DETAILMODE_MUL}.
  * @property {number} occludeSpecular Uses ambient occlusion to darken specular/reflection. It's a
  * hack, because real specular occlusion is view-dependent. However, it can be better than nothing.
  *
@@ -509,20 +530,23 @@ let _params = new Set();
  * assigned to the material, a reflection pass with simpler shaders and so on. These properties are
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
- * are {@link LitOptions}.
+ * are {@link LitShaderOptions}.
  * @augments Material
+ * @category Graphics
  */
 class StandardMaterial extends Material {
     static TEXTURE_PARAMETERS = standardMaterialTextureParameters;
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    userAttributes = new Map();
+
     /**
      * Create a new StandardMaterial instance.
      *
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Update the material's diffuse and specular properties
      * material.diffuse.set(1, 0, 0);
@@ -532,7 +556,7 @@ class StandardMaterial extends Material {
      * material.update();
      * @example
      * // Create a new Standard material
-     * var material = new pc.StandardMaterial();
+     * const material = new pc.StandardMaterial();
      *
      * // Assign a texture to the diffuse slot
      * material.diffuseMap = texture;
@@ -621,6 +645,20 @@ class StandardMaterial extends Material {
         return this;
     }
 
+    /**
+     * Sets a vertex shader attribute on a material.
+     *
+     * @param {string} name - The name of the parameter to set.
+     * @param {string} semantic - Semantic to map the vertex data. Must match with the semantic set on vertex stream
+     * of the mesh.
+     * @example
+     * mesh.setVertexStream(pc.SEMANTIC_ATTR15, offset, 3);
+     * material.setAttribute('offset', pc.SEMANTIC_ATTR15);
+     */
+    setAttribute(name, semantic) {
+        this.userAttributes.set(semantic, name);
+    }
+
     _setParameter(name, value) {
         _params.add(name);
         this.setParameter(name, value);
@@ -684,11 +722,7 @@ class StandardMaterial extends Material {
             this._setParameter('material_diffuse', getUniform('diffuse'));
         }
 
-        if (!this.useMetalness) {
-            if (!this.specularMap || this.specularTint) {
-                this._setParameter('material_specular', getUniform('specular'));
-            }
-        } else {
+        if (this.useMetalness) {
             if (!this.metalnessMap || this.metalness < 1) {
                 this._setParameter('material_metalness', this.metalness);
             }
@@ -705,14 +739,11 @@ class StandardMaterial extends Material {
                 this._setParameter('material_sheenGloss', this.sheenGloss);
             }
 
-            if (this.refractionIndex !== 1.0 / 1.5) {
-                const oneOverRefractionIndex = 1.0 / this.refractionIndex;
-                const f0 = (oneOverRefractionIndex - 1) / (oneOverRefractionIndex + 1);
-                this._setParameter('material_f0', f0 * f0);
-            } else {
-                this._setParameter('material_f0', 0.04);
+            this._setParameter('material_refractionIndex', this.refractionIndex);
+        } else {
+            if (!this.specularMap || this.specularTint) {
+                this._setParameter('material_specular', getUniform('specular'));
             }
-
         }
 
         if (this.enableGGXSpecular) {
@@ -736,7 +767,6 @@ class StandardMaterial extends Material {
 
         if (this.refraction > 0) {
             this._setParameter('material_refraction', this.refraction);
-            this._setParameter('material_refractionIndex', this.refractionIndex);
         }
 
         if (this.useDynamicRefraction) {
@@ -828,30 +858,31 @@ class StandardMaterial extends Material {
         this._processParameters('_activeLightingParams');
     }
 
-    getShaderVariant(device, scene, objDefs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
 
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
         // Minimal options for Depth and Shadow passes
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || ShaderPass.isShadow(pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
-            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateMinRef(options, scene, this, objDefs, pass, sortedLights);
         else
-            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, staticLightList, pass, sortedLights);
+            this.shaderOptBuilder.updateRef(options, scene, this, objDefs, pass, sortedLights);
 
         // execute user callback to modify the options
         if (this.onUpdateShader) {
             options = this.onUpdateShader(options);
         }
 
-        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
 
         const library = getProgramLibrary(device);
         library.register('standard', standard);
-        const shader = library.getProgram('standard', options, processingOptions);
+        const shader = library.getProgram('standard', options, processingOptions, this.userId);
 
         this._dirtyShader = false;
         return shader;
@@ -1032,7 +1063,7 @@ function _defineColor(name, defaultValue) {
             // HACK: since we can't detect whether a user is going to set a color property
             // after calling this getter (i.e doing material.ambient.r = 0.5) we must assume
             // the worst and flag the shader as dirty.
-            // This means currently animating a material colour is horribly slow.
+            // This means currently animating a material color is horribly slow.
             this._dirtyShader = true;
             return this[`_${name}`];
         }
@@ -1110,16 +1141,6 @@ function _defineMaterialProps() {
             material.gloss;
     });
 
-    // shininess (range 0..100) - maps to internal gloss value (range 0..1)
-    Object.defineProperty(StandardMaterial.prototype, 'shininess', {
-        get: function () {
-            return this.gloss * 100;
-        },
-        set: function (value) {
-            this.gloss = value * 0.01;
-        }
-    });
-
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
@@ -1194,7 +1215,6 @@ function _defineMaterialProps() {
     _defineFlag('useDynamicRefraction', false);
     _defineFlag('cubeMapProjection', CUBEPROJ_NONE);
     _defineFlag('customFragmentShader', null);
-    _defineFlag('forceFragmentPrecision', null);
     _defineFlag('useFog', true);
     _defineFlag('useLighting', true);
     _defineFlag('useGammaTonemap', true);
@@ -1225,6 +1245,7 @@ function _defineMaterialProps() {
     _defineTex2D('msdf', '');
     _defineTex2D('diffuseDetail', 'rgb', false);
     _defineTex2D('normalDetail', '');
+    _defineTex2D('aoDetail', 'g', false);
     _defineTex2D('clearCoat', 'g');
     _defineTex2D('clearCoatGloss', 'g');
     _defineTex2D('clearCoatNormal', '');
@@ -1234,6 +1255,7 @@ function _defineMaterialProps() {
     _defineTex2D('iridescenceThickness', 'g');
 
     _defineFlag('diffuseDetailMode', DETAILMODE_MUL);
+    _defineFlag('aoDetailMode', DETAILMODE_MUL);
 
     _defineObject('cubeMap');
     _defineObject('sphereMap');

@@ -51,7 +51,7 @@ class ResourceLoader {
      * @param {import('./handler.js').ResourceHandler} handler - An instance of a resource handler
      * supporting at least `load()` and `open()`.
      * @example
-     * var loader = new ResourceLoader();
+     * const loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
      */
     addHandler(type, handler) {
@@ -72,10 +72,15 @@ class ResourceLoader {
      * Get a {@link ResourceHandler} for a resource type.
      *
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {import('./handler.js').ResourceHandler} The registered handler.
+     * @returns {import('./handler.js').ResourceHandler|undefined} The registered handler, or
+     * undefined if the requested handler is not registered.
      */
     getHandler(type) {
         return this._handlers[type];
+    }
+
+    static makeKey(url, type) {
+        return `${url}-${type}`;
     }
 
     /**
@@ -109,7 +114,7 @@ class ResourceLoader {
             return;
         }
 
-        const key = url + type;
+        const key = ResourceLoader.makeKey(url, type);
 
         if (this._cache[key] !== undefined) {
             // in cache
@@ -188,7 +193,11 @@ class ResourceLoader {
     }
 
     _onSuccess(key, result, extra) {
-        this._cache[key] = result;
+        if (result !== null) {
+            this._cache[key] = result;
+        } else {
+            delete this._cache[key];
+        }
         for (let i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);
         }
@@ -250,7 +259,8 @@ class ResourceLoader {
      * @param {string} type - The type of resource.
      */
     clearCache(url, type) {
-        delete this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        delete this._cache[key];
     }
 
     /**
@@ -261,8 +271,9 @@ class ResourceLoader {
      * @returns {*} The resource loaded from the cache.
      */
     getFromCache(url, type) {
-        if (this._cache[url + type]) {
-            return this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        if (this._cache[key]) {
+            return this._cache[key];
         }
         return undefined;
     }

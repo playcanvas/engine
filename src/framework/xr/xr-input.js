@@ -6,6 +6,7 @@ import { XrInputSource } from './xr-input-source.js';
  * Provides access to input sources for WebXR.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrInput extends EventHandler {
     /**
@@ -75,7 +76,7 @@ class XrInput extends EventHandler {
      * @param {XrInputSource} inputSource - Input source that triggered select event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
-     * var ray = new pc.Ray();
+     * const ray = new pc.Ray();
      * app.xr.input.on('select', function (inputSource, evt) {
      *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
      *     if (obj.intersectsRay(ray)) {

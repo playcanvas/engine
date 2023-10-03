@@ -18,6 +18,8 @@ import { XrPlane } from './xr-plane.js';
  *     // new plane been added
  * });
  * ```
+ *
+ * @category XR
  */
 class XrPlaneDetection extends EventHandler {
     /**

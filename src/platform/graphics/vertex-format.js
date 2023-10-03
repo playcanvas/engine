@@ -2,11 +2,14 @@ import { Debug } from '../../core/debug.js';
 import { hashCode } from '../../core/hash.js';
 
 import { math } from '../../core/math/math.js';
+import { StringIds } from '../../core/string-ids.js';
 
 import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
-    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames, DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL
+    SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
+
+const stringIds = new StringIds();
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
@@ -52,6 +55,7 @@ import {
  * @property {number} elements[].stride The number of total bytes that are between the start of one
  * vertex, and the start of the next.
  * @property {number} elements[].size The size of the attribute in bytes.
+ * @category Graphics
  */
 class VertexFormat {
     /**
@@ -103,12 +107,12 @@ class VertexFormat {
      * vertex format will be interleaved. (example: PNCPNCPNCPNC).
      * @example
      * // Specify 3-component positions (x, y, z)
-     * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
+     * const vertexFormat = new pc.VertexFormat(graphicsDevice, [
      *     { semantic: pc.SEMANTIC_POSITION, components: 3, type: pc.TYPE_FLOAT32 }
      * ]);
      * @example
      * // Specify 2-component positions (x, y), a texture coordinate (u, v) and a vertex color (r, g, b, a)
-     * var vertexFormat = new pc.VertexFormat(graphicsDevice, [
+     * const vertexFormat = new pc.VertexFormat(graphicsDevice, [
      *     { semantic: pc.SEMANTIC_POSITION, components: 2, type: pc.TYPE_FLOAT32 },
      *     { semantic: pc.SEMANTIC_TEXCOORD0, components: 2, type: pc.TYPE_FLOAT32 },
      *     { semantic: pc.SEMANTIC_COLOR, components: 4, type: pc.TYPE_UINT8, normalize: true }
@@ -140,7 +144,7 @@ class VertexFormat {
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
 
             // WebGPU has limited element size support (for example uint16x3 is not supported)
-            Debug.assert(graphicsDevice.deviceType !== DEVICETYPE_WEBGPU || [2, 4, 8, 12, 16].includes(elementSize),
+            Debug.assert(!graphicsDevice.isWebGPU || [2, 4, 8, 12, 16].includes(elementSize),
                          `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
@@ -159,7 +163,7 @@ class VertexFormat {
                 stride: (vertexCount ? elementSize : (elementDesc.hasOwnProperty('stride') ? elementDesc.stride : this.size)),
                 dataType: elementDesc.type,
                 numComponents: elementDesc.components,
-                normalize: (elementDesc.normalize === undefined) ? false : elementDesc.normalize,
+                normalize: elementDesc.normalize ?? false,
                 size: elementSize
             };
             this._elements.push(element);
@@ -227,7 +231,7 @@ class VertexFormat {
      */
     update() {
         // Note that this is used only by vertex attribute morphing on the WebGL.
-        Debug.assert(this.device.deviceType === DEVICETYPE_WEBGL, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
+        Debug.assert(!this.device.isWebGPU, `VertexFormat#update is not supported on WebGPU and VertexFormat cannot be modified.`);
         this._evaluateHash();
     }
 
@@ -265,8 +269,8 @@ class VertexFormat {
         this.batchingHash = hashCode(stringElementsBatch.join());
 
         // rendering hash
-        this.renderingingHashString = stringElementsRender.join('_');
-        this.renderingingHash = hashCode(this.renderingingHashString);
+        this.renderingHashString = stringElementsRender.join('_');
+        this.renderingHash = stringIds.get(this.renderingHashString);
     }
 }
 

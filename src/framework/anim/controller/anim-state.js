@@ -1,4 +1,5 @@
 import { Debug } from '../../../core/debug.js';
+import { AnimTrack } from '../evaluator/anim-track.js';
 
 import { AnimBlendTree1D } from './anim-blend-tree-1d.js';
 import { AnimBlendTreeCartesian2D } from './anim-blend-tree-2d-cartesian.js';
@@ -18,26 +19,31 @@ import {
  * @ignore
  */
 class AnimState {
+    /** @private */
+    _animations = {};
+
+    /** @private */
+    _animationList = [];
+
     /**
      * Create a new AnimState instance.
      *
-     * @param {AnimController} controller - The controller this AnimState is associated with.
+     * @param {import('./anim-controller.js').AnimController} controller - The controller this
+     * AnimState is associated with.
      * @param {string} name - The name of the state. Used to find this state when the controller
      * transitions between states and links animations.
-     * @param {number} speed - The speed animations in the state should play at. Individual
+     * @param {number} [speed] - The speed animations in the state should play at. Individual
      * {@link AnimNodes} can override this value.
-     * @param {boolean} loop - Determines whether animations in this state should loop.
-     * @param {object|null} blendTree - If supplied, the AnimState will recursively build a
+     * @param {boolean} [loop] - Determines whether animations in this state should loop.
+     * @param {object|null} [blendTree] - If supplied, the AnimState will recursively build a
      * {@link AnimBlendTree} hierarchy, used to store, blend and play multiple animations.
      */
-    constructor(controller, name, speed, loop, blendTree) {
+    constructor(controller, name, speed = 1, loop = true, blendTree) {
         this._controller = controller;
         this._name = name;
-        this._animations = {};
-        this._animationList = [];
-        this._speed = speed || 1.0;
-        this._loop = loop === undefined ? true : loop;
-        const findParameter = this._controller.findParameter.bind(this._controller);
+        this._speed = speed;
+        this._loop = loop;
+        this._hasAnimations = false;
         if (blendTree) {
             this._blendTree = this._createTree(
                 blendTree.type,
@@ -49,7 +55,7 @@ class AnimState {
                 blendTree.children,
                 blendTree.syncAnimations,
                 this._createTree,
-                findParameter
+                this._controller.findParameter
             );
         } else {
             this._blendTree = new AnimNode(this, null, name, 1.0, speed);
@@ -92,6 +98,11 @@ class AnimState {
             node.animTrack = animTrack;
             this._animationList.push(node);
         }
+        this._updateHasAnimations();
+    }
+
+    _updateHasAnimations() {
+        this._hasAnimations = this._animationList.length > 0 && this._animationList.every(animation => animation.animTrack && animation.animTrack !== AnimTrack.EMPTY);
     }
 
     get name() {
@@ -100,10 +111,15 @@ class AnimState {
 
     set animations(value) {
         this._animationList = value;
+        this._updateHasAnimations();
     }
 
     get animations() {
         return this._animationList;
+    }
+
+    get hasAnimations() {
+        return this._hasAnimations;
     }
 
     set speed(value) {

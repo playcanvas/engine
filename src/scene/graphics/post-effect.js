@@ -1,4 +1,5 @@
 import { Vec4 } from '../../core/math/vec4.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 import { drawQuadWithShader } from './quad-render-utils.js';
 
 const _viewport = new Vec4();
@@ -7,6 +8,8 @@ const _viewport = new Vec4();
  * Base class for all post effects. Post effects take a a render target as input apply effects to
  * it and then render the result to an output render target or the screen if no output is
  * specified.
+ *
+ * @category Graphics
  */
 class PostEffect {
     /**
@@ -33,8 +36,10 @@ class PostEffect {
     }
 
     /**
-     * A simple vertx shader used to render a quad, which requires 'vec2 aPosition' in the vertex
+     * A simple vertex shader used to render a quad, which requires 'vec2 aPosition' in the vertex
      * buffer, and generates uv coordinates vUv0 for use in the fragment shader.
+     *
+     * @type {string}
      */
     static quadVertexShader = `
         attribute vec2 aPosition;
@@ -78,6 +83,7 @@ class PostEffect {
             viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
         }
 
+        this.device.setBlendState(BlendState.NOBLEND);
         drawQuadWithShader(this.device, target, shader, viewport);
     }
 }

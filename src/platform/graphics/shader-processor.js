@@ -4,7 +4,8 @@ import {
     SHADERSTAGE_VERTEX, SHADERSTAGE_FRAGMENT,
     UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
-    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D
+    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
+    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
@@ -74,7 +75,7 @@ class UniformLine {
 
             // simple uniform
             this.name = words.shift();
-            this.arraySize = 1;
+            this.arraySize = 0;
         }
 
         this.isSampler = this.type.indexOf('sampler') !== -1;
@@ -106,7 +107,7 @@ class ShaderProcessor {
         const fragmentExtracted = ShaderProcessor.extract(shaderDefinition.fshader);
 
         // VS - convert a list of attributes to a shader block with fixed locations
-        const attributesBlock = ShaderProcessor.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes);
+        const attributesBlock = ShaderProcessor.processAttributes(vertexExtracted.attributes, shaderDefinition.attributes, shaderDefinition.processingOptions);
 
         // VS - convert a list of varyings to a shader block
         const vertexVaryingsBlock = ShaderProcessor.processVaryings(vertexExtracted.varyings, varyingMap, true);
@@ -353,13 +354,20 @@ class ShaderProcessor {
         return block;
     }
 
-    static processAttributes(attributeLines, shaderDefinitionAttributes) {
+    // extract count from type ('vec3' => 3, 'float' => 1)
+    static getTypeCount(type) {
+        const lastChar = type.substring(type.length - 1);
+        const num = parseInt(lastChar, 10);
+        return isNaN(num) ? 1 : num;
+    }
+
+    static processAttributes(attributeLines, shaderDefinitionAttributes, processingOptions) {
         let block = '';
         const usedLocations = {};
         attributeLines.forEach((line) => {
             const words = ShaderProcessor.splitToWords(line);
-            const type = words[0];
-            const name = words[1];
+            let type = words[0];
+            let name = words[1];
 
             if (shaderDefinitionAttributes.hasOwnProperty(name)) {
                 const semantic = shaderDefinitionAttributes[name];
@@ -369,8 +377,42 @@ class ShaderProcessor {
                              `WARNING: Two vertex attributes are mapped to the same location in a shader: ${usedLocations[location]} and ${semantic}`);
                 usedLocations[location] = semantic;
 
+                // if vertex format for this attribute is not of a float type, we need to adjust the attribute format, for example we convert
+                //      attribute vec4 vertex_position;
+                // to
+                //      attribute ivec4 _private_vertex_position;
+                //      vec4 vertex_position = vec4(_private_vertex_position);
+                // Note that we skip normalized elements, as shader receives them as floats already.
+                let copyCode;
+                const element = processingOptions.getVertexElement(semantic);
+                if (element) {
+                    const dataType = element.dataType;
+                    if (dataType !== TYPE_FLOAT32 && !element.normalize) {
+
+                        const attribNumElements = ShaderProcessor.getTypeCount(type);
+                        const newName = `_private_${name}`;
+
+                        // second line of new code, copy private (u)int type into vec type
+                        copyCode = `vec${attribNumElements} ${name} = vec${attribNumElements}(${newName});\n`;
+
+                        name = newName;
+
+                        // new attribute type, based on the vertex format element type, example: vec3 -> ivec3
+                        const isSignedType = dataType === TYPE_INT8 || dataType === TYPE_INT16 || dataType === TYPE_INT32;
+                        if (attribNumElements === 1) {
+                            type = isSignedType ? 'int' : 'uint';
+                        } else {
+                            type = isSignedType ? `ivec${attribNumElements}` : `uvec${attribNumElements}`;
+                        }
+                    }
+                }
+
                 // generates: 'layout(location = 0) in vec4 position;'
                 block += `layout(location = ${location}) in ${type} ${name};\n`;
+
+                if (copyCode) {
+                    block += copyCode;
+                }
             }
         });
         return block;

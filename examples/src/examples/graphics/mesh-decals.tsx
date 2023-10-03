@@ -3,14 +3,21 @@ import * as pc from '../../../../';
 class MeshDecalsExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Mesh Decals';
+    static WEBGPU_ENABLED = true;
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'spark': new pc.Asset('spark', 'texture', { url: '/static/assets/textures/spark.png' })
         };
 
-        pc.createGraphicsDevice(canvas).then((device: pc.GraphicsDevice) => {
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
             const createOptions = new pc.AppOptions();
             createOptions.graphicsDevice = device;
@@ -43,7 +50,7 @@ class MeshDecalsExample {
 
                 // create material for the plane
                 const planeMaterial = new pc.StandardMaterial();
-                planeMaterial.shininess = 60;
+                planeMaterial.gloss = 0.6;
                 planeMaterial.metalness = 0.3;
                 planeMaterial.useMetalness = true;
                 planeMaterial.update();
@@ -238,7 +245,7 @@ class MeshDecalsExample {
                     }
 
                     // fade out all vertex colors once a second
-                    if (Math.round(time) != Math.round(previousTime)) {
+                    if (Math.round(time) !== Math.round(previousTime)) {
                         for (let i = 0; i < colors.length; i++)
                             colors[i] -= 2;
 

@@ -32,7 +32,8 @@ import {
     EMITTERSHAPE_BOX,
     PARTICLEMODE_GPU,
     PARTICLEORIENTATION_SCREEN, PARTICLEORIENTATION_WORLD,
-    PARTICLESORT_NONE
+    PARTICLESORT_NONE,
+    SHADER_FORWARD
 } from '../constants.js';
 import { Mesh } from '../mesh.js';
 import { MeshInstance } from '../mesh-instance.js';
@@ -286,7 +287,6 @@ class ParticleEmitter {
         this._gpuUpdater = new ParticleGPUUpdater(this, gd);
         this._cpuUpdater = new ParticleCPUUpdater(this);
 
-        this.constantLightCube = gd.scope.resolve('lightCube[0]');
         this.emitterPosUniform = new Float32Array(3);
         this.wrapBoundsUniform = new Float32Array(3);
         this.emitterScaleUniform = new Float32Array([1, 1, 1]);
@@ -312,15 +312,6 @@ class ParticleEmitter {
 
         setProperty('radialSpeedGraph', default0Curve);
         setProperty('radialSpeedGraph2', this.radialSpeedGraph);
-
-        this.lightCube = new Float32Array(6 * 3);
-        this.lightCubeDir = new Array(6);
-        this.lightCubeDir[0] = new Vec3(-1, 0, 0);
-        this.lightCubeDir[1] = new Vec3(1, 0, 0);
-        this.lightCubeDir[2] = new Vec3(0, -1, 0);
-        this.lightCubeDir[3] = new Vec3(0, 1, 0);
-        this.lightCubeDir[4] = new Vec3(0, 0, -1);
-        this.lightCubeDir[5] = new Vec3(0, 0, 1);
 
         this.animTilesParams = new Float32Array(2);
         this.animParams = new Float32Array(4);
@@ -697,7 +688,6 @@ class ParticleEmitter {
         this.material.name = this.node.name;
         this.material.cull = CULLFACE_NONE;
         this.material.alphaWrite = false;
-        this.material.blend = true;
         this.material.blendType = this.blendType;
 
         this.material.depthWrite = this.depthWrite;
@@ -835,7 +825,7 @@ class ParticleEmitter {
             this.normalOption = hasNormal ? 2 : 1;
         }
         // getShaderVariant is also called by pc.Scene when all shaders need to be updated
-        this.material.getShaderVariant = function (dev, sc, defs, staticLightList, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
+        this.material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
             // The app works like this:
             // 1. Emitter init
@@ -858,6 +848,7 @@ class ParticleEmitter {
             const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
             const shader = programLib.getProgram('particle', {
+                pass: SHADER_FORWARD,
                 useCpu: this.emitter.useCpu,
                 normal: this.emitter.normalOption,
                 halflambert: this.emitter.halfLambert,
