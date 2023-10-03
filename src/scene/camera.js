@@ -457,7 +457,7 @@ class Camera {
     _enableRenderPassDepthGrab(device, renderer, enable) {
         if (enable) {
             if (!this.renderPassDepthGrab) {
-                this.renderPassDepthGrab = device.isWebGl1 ?
+                this.renderPassDepthGrab = device.isWebGL1 ?
                     new RenderPassDepth(device, renderer, this) :
                     new RenderPassDepthGrab(device, this);
             }
