@@ -134,7 +134,7 @@ class Vec4 {
      * @param {*} scalar - The number to multiply the added vector with.
      * @returns {Vec4} Self for chaining.
      * @example
-     * var vec = new pc.Vec4(1, 2, 3, 4);
+     * const vec = new pc.Vec4(1, 2, 3, 4);
      *
      * vec.addScaled(pc.Vec4.ONE, 2);
      *
