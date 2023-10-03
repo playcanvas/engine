@@ -121,7 +121,7 @@ class Vec3 {
      * @param {*} scalar - The number to multiply the added vector with.
      * @returns {Vec3} Self for chaining.
      * @example
-     * var vec = new pc.Vec3(1, 2, 3);
+     * const vec = new pc.Vec3(1, 2, 3);
      *
      * vec.addScaled(pc.Vec3.UP, 2);
      *
