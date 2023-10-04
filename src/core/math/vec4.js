@@ -131,7 +131,7 @@ class Vec4 {
      * Adds a 4-dimensional vector scaled by scalar value. Does not modify the vector being added.
      *
      * @param {Vec4} rhs - The vector to add to the specified vector.
-     * @param {*} scalar - The number to multiply the added vector with.
+     * @param {number} scalar - The number to multiply the added vector with.
      * @returns {Vec4} Self for chaining.
      * @example
      * const vec = new pc.Vec4(1, 2, 3, 4);

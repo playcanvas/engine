@@ -118,7 +118,7 @@ class Vec3 {
      * Adds a 3-dimensional vector scaled by scalar value. Does not modify the vector being added.
      *
      * @param {Vec3} rhs - The vector to add to the specified vector.
-     * @param {*} scalar - The number to multiply the added vector with.
+     * @param {number} scalar - The number to multiply the added vector with.
      * @returns {Vec3} Self for chaining.
      * @example
      * const vec = new pc.Vec3(1, 2, 3);
