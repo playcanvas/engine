@@ -1,6 +1,7 @@
 // Realtime performance graph visual
 class Graph {
     constructor(name, app, watermark, textRefreshRate, timer) {
+        this.app = app;
         this.name = name;
         this.device = app.graphicsDevice;
         this.timer = timer;
@@ -19,9 +20,13 @@ class Graph {
         this.sample = new Uint8ClampedArray(4);
         this.sample.set([0, 0, 0, 255]);
 
-        app.on('frameupdate', this.update.bind(this));
-
         this.counter = 0;
+
+        this.app.on('frameupdate', this.update, this);
+    }
+
+    destroy() {
+        this.app.off('frameupdate', this.update, this);
     }
 
     // called when context was lost, function releases all context related resources

@@ -83,6 +83,11 @@ class WordAtlas {
         });
     }
 
+    destroy() {
+        this.texture.destroy();
+        this.texture = null;
+    }
+
     render(render2d, word, x, y) {
         const p = this.placements.get(word);
         if (p) {

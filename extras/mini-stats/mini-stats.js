@@ -15,23 +15,7 @@ import { Render2d } from './render2d.js';
 // MiniStats rendering of CPU and GPU timing information
 class MiniStats {
     constructor(app, options) {
-
-        this.app = app;
-        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
-
         const device = app.graphicsDevice;
-
-        // handle context lost
-        this._contextLostHandler = (event) => {
-            event.preventDefault();
-
-            if (this.graphs) {
-                for (let i = 0; i < this.graphs.length; i++) {
-                    this.graphs[i].loseContext();
-                }
-            }
-        };
-        device.canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
 
         options = options || MiniStats.getDefaultOptions();
 
@@ -72,16 +56,12 @@ class MiniStats {
             }
         });
 
-        device.on('resizecanvas', () => {
-            this.updateDiv();
-        });
+        device.on('resizecanvas', this.updateDiv, this);
+        device.on('losecontext', this.loseContext, this);
+        app.on('postrender', this.postRender, this);
 
-        app.on('postrender', () => {
-            if (this._enabled) {
-                this.render();
-            }
-        });
-
+        this.app = app;
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
         this.device = device;
         this.render2d = new Render2d(device);
         this.div = div;
@@ -95,6 +75,16 @@ class MiniStats {
 
         // initial resize
         this.activeSizeIndex = this._activeSizeIndex;
+    }
+
+    destroy() {
+        this.device.off('resizecanvas', this.updateDiv, this);
+        this.device.off('losecontext', this.loseContext, this);
+        this.app.off('postrender', this.postRender, this);
+
+        this.graphs.forEach(graph => graph.destroy());
+        this.wordAtlas.destroy();
+        this.texture.destroy();
     }
 
     static getDefaultOptions() {
@@ -295,6 +285,16 @@ class MiniStats {
         this.div.style.bottom = (window.innerHeight - rect.bottom) + 'px';
         this.div.style.width = this.width + 'px';
         this.div.style.height = this.overallHeight + 'px';
+    }
+
+    loseContext() {
+        this.graphs.forEach(graph => graph.loseContext());
+    }
+
+    postRender() {
+        if (this._enabled) {
+            this.render();
+        }
     }
 }
 
