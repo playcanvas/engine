@@ -93,7 +93,7 @@ class RenderPass {
     /** @type {string} */
     name;
 
-    /** @type {import('../graphics/render-target.js').RenderTarget|null} */
+    /** @type {import('../graphics/render-target.js').RenderTarget|null|undefined} */
     renderTarget;
 
     /**
