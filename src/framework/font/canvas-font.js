@@ -200,7 +200,7 @@ class CanvasFont extends EventHandler {
 
     /**
      * Return the atlas at the specified index.
-     * 
+     *
      * @param {number} index - The atlas index
      * @private
      */

@@ -23,7 +23,7 @@ import {
     GraphNode
 } from 'playcanvas';
 
-const vertexShader = /*glsl*/ `
+const vertexShader = /* glsl */ `
 attribute vec3 vertex_position;         // unnormalized xy, word flag
 attribute vec4 vertex_texCoord0;        // unnormalized texture space uv, normalized uv
 
@@ -40,7 +40,7 @@ void main(void) {
 // in the texture by white color. The graph data is specified as a single row of pixels
 // where the R channel denotes the height of the 1st graph and the G channel the height
 // of the second graph and B channel the height of the last graph
-const fragmentShader = /*glsl*/ `
+const fragmentShader = /* glsl */ `
 varying vec4 uv0;
 varying float wordFlag;
 
@@ -71,7 +71,7 @@ class Render2d {
     constructor(device, maxQuads = 512) {
         const format = new VertexFormat(device, [
             { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
         ]);
 
         // generate quad indices
@@ -125,7 +125,7 @@ class Render2d {
         };
     }
 
-    quad(x, y, w, h, u, v, uw, uh, texture, wordFlag=0) {
+    quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
         const rw = this.targetSize.width;
         const rh = this.targetSize.height;
         const x0 = x / rw;

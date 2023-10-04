@@ -41,9 +41,9 @@ class MiniStats {
         // extract list of words
         const words = new Set(
             ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
-            .concat(this.graphs.map(graph => graph.name))
-            .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
-            .filter(item => !!item)
+                .concat(this.graphs.map(graph => graph.name))
+                .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
+                .filter(item => !!item)
         );
 
         this.wordAtlas = new WordAtlas(device, words);
