@@ -2672,43 +2672,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._vaoMap.clear();
     }
 
-    resizeCanvas(width, height) {
-
-        // store the client sizes in CSS pixels, without pixel ratio applied
-        this._width = width;
-        this._height = height;
-
-        const ratio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
-        width = Math.floor(width * ratio);
-        height = Math.floor(height * ratio);
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-
-            this.canvas.width = width;
-            this.canvas.height = height;
-
-            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
-        }
-    }
-
-    /**
-     * Width of the back buffer in pixels.
-     *
-     * @type {number}
-     */
-    get width() {
-        return this.gl.drawingBufferWidth || this.canvas.width;
-    }
-
-    /**
-     * Height of the back buffer in pixels.
-     *
-     * @type {number}
-     */
-    get height() {
-        return this.gl.drawingBufferHeight || this.canvas.height;
-    }
-
     /**
      * Fullscreen mode.
      *

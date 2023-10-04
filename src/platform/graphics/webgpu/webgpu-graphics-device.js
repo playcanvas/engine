@@ -227,9 +227,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.initDeviceCaps();
 
-        // initially fill the window. This needs improvement.
-        // this.setResolution(window.innerWidth, window.innerHeight);
-
         this.gpuContext = this.canvas.getContext('webgpu');
 
         // pixel format of the framebuffer is the most efficient one on the system
@@ -287,18 +284,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
-    }
-
-    resizeCanvas(width, height) {
-
-        this._width = width;
-        this._height = height;
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
-        }
     }
 
     frameStart() {
@@ -662,14 +647,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    get width() {
-        return this.canvas.width;
-    }
-
-    get height() {
-        return this.canvas.height;
     }
 
     setDepthBias(on) {
