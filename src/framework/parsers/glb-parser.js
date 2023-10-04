@@ -491,12 +491,20 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
     const vertexDesc = [];
     for (const semantic in sourceDesc) {
         if (sourceDesc.hasOwnProperty(semantic)) {
-            vertexDesc.push({
+            const element = {
                 semantic: semantic,
                 components: sourceDesc[semantic].components,
                 type: sourceDesc[semantic].type,
                 normalize: !!sourceDesc[semantic].normalize
-            });
+            };
+
+            if (!VertexFormat.isElementValid(device, element)) {
+                // WebGP does not support some formats and we need to remap it to one larger, for example int16x3 -> int16x4
+                // TODO: this might need the actual data changes if this element is the last one in the vertex, as it might
+                // try to read outside of the vertex buffer.
+                element.components++;
+            }
+            vertexDesc.push(element);
         }
     }
 
