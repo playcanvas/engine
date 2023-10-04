@@ -107,7 +107,7 @@ class Vec2 {
      * Adds a 2-dimensional vector scaled by scalar value. Does not modify the vector being added.
      *
      * @param {Vec2} rhs - The vector to add to the specified vector.
-     * @param {*} scalar - The number to multiply the added vector with.
+     * @param {number} scalar - The number to multiply the added vector with.
      * @returns {Vec2} Self for chaining.
      * @example
      * const vec = new pc.Vec2(1, 2);
