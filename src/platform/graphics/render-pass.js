@@ -93,7 +93,13 @@ class RenderPass {
     /** @type {string} */
     name;
 
-    /** @type {import('../graphics/render-target.js').RenderTarget|null|undefined} */
+    /**
+     * The render target for this render pass:
+     *  - `undefined`: render pass does not render to any render target
+     *  - `null`: render pass renders to the backbuffer
+     *  - Otherwise, renders to the provided RT.
+     * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
+     */
     renderTarget;
 
     /**
