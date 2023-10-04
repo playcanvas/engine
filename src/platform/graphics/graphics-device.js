@@ -711,9 +711,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     set maxPixelRatio(ratio) {
-        if (this._maxPixelRatio !== ratio) {
-            this._maxPixelRatio = ratio;
-        }
+        this._maxPixelRatio = ratio;
     }
 
     get maxPixelRatio() {
