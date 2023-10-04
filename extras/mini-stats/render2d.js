@@ -10,10 +10,7 @@ import {
     PRIMITIVE_TRIANGLES,
     SEMANTIC_POSITION,
     SEMANTIC_TEXCOORD0,
-    SEMANTIC_TEXCOORD1,
-    SEMANTIC_TEXCOORD2,
     TYPE_FLOAT32,
-    TYPE_UINT8,
     shaderChunks,
     IndexBuffer,
     VertexBuffer,
@@ -27,20 +24,16 @@ import {
 } from 'playcanvas';
 
 const vertexShader = /*glsl*/ `
-attribute vec4 vertex_position;         // unnormalized
+attribute vec3 vertex_position;         // unnormalized xy, word flag
 attribute vec4 vertex_texCoord0;        // unnormalized texture space uv, normalized uv
-attribute vec4 vertex_texCoord1;        // graph color
-attribute vec4 vertex_texCoord2;        // word color
 
 varying vec4 uv0;
-varying vec4 graphClr;
-varying vec4 wordsClr;
+varying float wordFlag;
 
 void main(void) {
     gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);
     uv0 = vertex_texCoord0;
-    graphClr = vertex_texCoord1;
-    wordsClr = vertex_texCoord2;
+    wordFlag = vertex_position.z;
 }`;
 
 // this fragment shader renders the bits required for text and graphs. The text is identified
@@ -49,8 +42,7 @@ void main(void) {
 // of the second graph and B channel the height of the last graph
 const fragmentShader = /*glsl*/ `
 varying vec4 uv0;
-varying vec4 graphClr;
-varying vec4 wordsClr;
+varying float wordFlag;
 
 uniform vec4 clr;
 uniform sampler2D graphTex;
@@ -71,17 +63,15 @@ void main (void) {
 
     vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
 
-    gl_FragColor = (graph * graphClr + words * wordsClr) * clr;
+    gl_FragColor = mix(graph, words, wordFlag) * clr;
 }`;
 
 // render 2d textured quads
 class Render2d {
-    constructor(device, colors, maxQuads = 512) {
+    constructor(device, maxQuads = 512) {
         const format = new VertexFormat(device, [
-            { semantic: SEMANTIC_POSITION, components: 2, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
             { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 },
-            { semantic: SEMANTIC_TEXCOORD1, components: 4, type: TYPE_UINT8, normalize: true },
-            { semantic: SEMANTIC_TEXCOORD2, components: 4, type: TYPE_UINT8, normalize: true }
         ]);
 
         // generate quad indices
@@ -100,8 +90,6 @@ class Render2d {
         this.device = device;
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
-        this.intVal = new Uint32Array(1);
-        this.floatVal = new Float32Array(this.intVal.buffer);
         this.indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, maxQuads * 6, BUFFER_STATIC, indices);
         this.prim = {
             type: PRIMITIVE_TRIANGLES,
@@ -137,7 +125,7 @@ class Render2d {
         };
     }
 
-    quad(x, y, w, h, u, v, uw, uh, texture, graphClr, wordsClr) {
+    quad(x, y, w, h, u, v, uw, uh, texture, wordFlag=0) {
         const rw = this.targetSize.width;
         const rh = this.targetSize.height;
         const x0 = x / rw;
@@ -152,18 +140,12 @@ class Render2d {
         const u1 = (u + (uw ?? w)) / tw;
         const v1 = (v + (uh ?? h)) / th;
 
-        this.intVal[0] = graphClr;
-        const gc = this.floatVal[0];
-
-        this.intVal[0] = wordsClr;
-        const wc = this.floatVal[0];
-
         this.data.set([
-            x0, y0, u0, v0, 0, 0, gc, wc,
-            x1, y0, u1, v0, 1, 0, gc, wc,
-            x1, y1, u1, v1, 1, 1, gc, wc,
-            x0, y1, u0, v1, 0, 1, gc, wc
-        ], 4 * 8 * this.quads);
+            x0, y0, wordFlag, u0, v0, 0, 0,
+            x1, y0, wordFlag, u1, v0, 1, 0,
+            x1, y1, wordFlag, u1, v1, 1, 1,
+            x0, y1, wordFlag, u0, v1, 0, 1
+        ], 4 * 7 * this.quads);
 
         this.quads++;
         this.prim.count += 6;

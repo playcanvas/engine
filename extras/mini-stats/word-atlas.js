@@ -95,8 +95,7 @@ class WordAtlas {
                           this.texture.height - p.y - p.h - padding,
                           undefined, undefined,
                           this.texture,
-                          0x00000000,
-                          0xffffffff);
+                          1);
             return p.w;
         }
         return 0;

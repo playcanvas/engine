@@ -61,7 +61,7 @@ class MiniStats {
         });
 
         div.addEventListener('mouseleave', (event) => {
-            this.opacity = 0.5;
+            this.opacity = 0.7;
         });
 
         div.addEventListener('click', (event) => {
@@ -83,7 +83,7 @@ class MiniStats {
         });
 
         this.device = device;
-        this.render2d = new Render2d(device, options.colors);
+        this.render2d = new Render2d(device);
         this.div = div;
 
         this.width = 0;
