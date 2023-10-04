@@ -63,9 +63,10 @@ class Graph {
             // .a store watermark
             this.sample[3] = this.watermark / range * 255;
 
-            // update texture with latest sample and re-upload it
-            this.texture._levels[0].set(this.sample, (this.cursor + this.yOffset * this.texture.width) * 4);
-            this.texture.upload();
+            // write latest sample
+            const data = this.texture.lock();
+            data.set(this.sample, (this.cursor + this.yOffset * this.texture.width) * 4);
+            this.texture.unlock();
 
             // update cursor position
             this.cursor++;
@@ -76,14 +77,13 @@ class Graph {
     }
 
     render(render2d, x, y, w, h) {
-        render2d.quad(x + w,
-                      y,
-                      -w,
-                      h,
-                      this.cursor,
-                      0.5 + this.yOffset,
+        render2d.quad(x + w, y, -w, h,
+                      this.enabled ? this.cursor : 1,
+                      this.enabled ? 0.5 + this.yOffset : 1,
                       -w, 0,
-                      this.enabled);
+                      this.texture,
+                      0xffffffff,
+                      0x00000000);
     }
 }
 
