@@ -240,8 +240,7 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW],
-                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
+                addressModeW: gpuAddressModes[texture.addressW]
             };
 
             // default for compare sampling of texture
@@ -284,6 +283,12 @@ class WebgpuTexture {
                     });
                 }
             }
+
+            // ensure anisotropy is only used only when filtering is correctly
+            // set up
+            descr.maxAnisotropy = (descr.minFilter === 'linear' && descr.magFilter === 'linear') ?
+                math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy) :
+                1;
 
             sampler = device.wgpu.createSampler(descr);
             DebugHelper.setLabel(sampler, label);
