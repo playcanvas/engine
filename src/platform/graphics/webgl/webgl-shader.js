@@ -346,11 +346,10 @@ class WebglShader {
             if (definition.attributes[info.name] === undefined) {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
                 shader.failed = true;
+            } else {
+                const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
+                this.attributes.push(shaderInput);
             }
-
-            const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
-
-            this.attributes.push(shaderInput);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
