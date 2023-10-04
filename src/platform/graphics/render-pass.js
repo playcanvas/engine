@@ -192,15 +192,15 @@ class RenderPass {
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget|null} renderTarget - The render
+     * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
      * target to render into (output). This function should be called only for render passes which
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
      */
-    init(renderTarget) {
+    init(renderTarget = null) {
 
         // null represents the default framebuffer
-        this.renderTarget = renderTarget || null;
+        this.renderTarget = renderTarget;
 
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
