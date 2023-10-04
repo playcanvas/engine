@@ -163,29 +163,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        const loadScript = (url) => {
-            return new Promise(function (resolve, reject) {
-                const script = document.createElement('script');
-                script.src = url;
-                script.async = false;
-                script.onload = function () {
-                    resolve(url);
-                };
-                script.onerror = function () {
-                    reject(new Error(`Failed to download script ${url}`));
-                };
-                document.body.appendChild(script);
-            });
-        };
+        const results = await Promise.all([
+            import(twgslUrl).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(glslangUrl).then(module => module.default())
+        ]);
 
-        // TODO: add both loadScript calls and requestAdapter to promise list and wait for all.
-        await loadScript(glslangUrl);
-        await loadScript(twgslUrl);
-
-        this.glslang = await glslang();
-
-        const wasmPath = twgslUrl.replace('.js', '.wasm');
-        this.twgsl = await twgsl(wasmPath);
+        this.twgsl = results[0];
+        this.glslang = results[1];
 
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
@@ -242,9 +226,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
 
         this.initDeviceCaps();
-
-        // initially fill the window. This needs improvement.
-        this.setResolution(window.innerWidth, window.innerHeight);
 
         this.gpuContext = this.canvas.getContext('webgpu');
 
@@ -303,18 +284,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
-    }
-
-    resizeCanvas(width, height) {
-
-        this._width = width;
-        this._height = height;
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
-        }
     }
 
     frameStart() {
@@ -678,14 +647,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    get width() {
-        return this._width;
-    }
-
-    get height() {
-        return this._height;
     }
 
     setDepthBias(on) {

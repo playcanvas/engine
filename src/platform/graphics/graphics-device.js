@@ -358,10 +358,6 @@ class GraphicsDevice extends EventHandler {
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
 
-        // local width/height without pixelRatio applied
-        this._width = 0;
-        this._height = 0;
-
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
@@ -651,6 +647,12 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     resizeCanvas(width, height) {
+        const pixelRatio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        const w = Math.floor(width * pixelRatio);
+        const h = Math.floor(height * pixelRatio);
+        if (w !== this.canvas.width || h !== this.canvas.height) {
+            this.setResolution(w, h);
+        }
     }
 
     /**
@@ -662,8 +664,6 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     setResolution(width, height) {
-        this._width = width;
-        this._height = height;
         this.canvas.width = width;
         this.canvas.height = height;
         this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
@@ -679,7 +679,6 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get width() {
-        Debug.error("GraphicsDevice.width is not implemented on current device.");
         return this.canvas.width;
     }
 
@@ -689,7 +688,6 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get height() {
-        Debug.error("GraphicsDevice.height is not implemented on current device.");
         return this.canvas.height;
     }
 
@@ -713,10 +711,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     set maxPixelRatio(ratio) {
-        if (this._maxPixelRatio !== ratio) {
-            this._maxPixelRatio = ratio;
-            this.resizeCanvas(this._width, this._height);
-        }
+        this._maxPixelRatio = ratio;
     }
 
     get maxPixelRatio() {

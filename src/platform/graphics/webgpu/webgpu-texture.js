@@ -67,6 +67,10 @@ gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear'
 gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
 gpuFilterModes[FILTER_LINEAR_MIPMAP_LINEAR] = { level: 'linear', mip: 'linear' };
 
+const dummyUse = (thingOne) => {
+    // so lint thinks we're doing something with thingOne
+};
+
 /**
  * A WebGPU implementation of the Texture.
  *
@@ -410,6 +414,9 @@ class WebgpuTexture {
 
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
+
+        // create 2d context so webgpu can upload the texture
+        dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
