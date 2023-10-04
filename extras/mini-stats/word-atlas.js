@@ -9,6 +9,10 @@ class WordAtlas {
             context.textBaseline = 'alphabetic';
         };
 
+        const isNumber = (word) => {
+            return word === '.' || (word.length === 1 && word.charCodeAt(0) >= 48 && word.charCodeAt(0) <= 57);
+        };
+
         // create a canvas
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d', { alpha: true });
@@ -22,9 +26,6 @@ class WordAtlas {
         let y = padding;
 
         words.forEach((word) => {
-
-            context.font = `10px ${word.length === 1 ? 'bold' : ''} "Lucida Console", Monaco, monospace`;
-
             const measurement = context.measureText(word);
             const l = Math.ceil(-measurement.actualBoundingBoxLeft);
             const r = Math.ceil(measurement.actualBoundingBoxRight);
@@ -53,10 +54,8 @@ class WordAtlas {
 
         // render words
         placements.forEach((m, word) => {
-            context.font = `10px ${word.length === 1 ? 'bold' : ''} "Lucida Console", Monaco, monospace`;
-
             // digits and '.' are white, the rest grey
-            context.fillStyle = word.length === 1 ? 'rgb(255, 255, 255)' : 'rgb(150, 150, 150)';
+            context.fillStyle = isNumber(word) ? 'rgb(255, 255, 255)' : 'rgb(170, 170, 170)';
 
             // render the word
             context.fillText(word, m.x - m.l, m.y + m.a);
