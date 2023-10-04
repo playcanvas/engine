@@ -1922,6 +1922,7 @@ class AppBase extends EventHandler {
 
         const canvasId = this.graphicsDevice.canvas.id;
 
+        this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
 
         if (typeof document !== 'undefined') {
