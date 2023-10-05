@@ -511,6 +511,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.stencilRef = 0;
     }
 
+    _uploadDirtyTextures() {
+
+        this.textures.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmaps) {
+                texture.upload();
+            }
+        });
+    }
+
     /**
      * Start a render pass.
      *
@@ -518,6 +527,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     startPass(renderPass) {
+
+        // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
+        // TODO: this needs a better solution
+        this._uploadDirtyTextures();
 
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
