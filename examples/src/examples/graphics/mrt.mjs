@@ -63,6 +63,13 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 

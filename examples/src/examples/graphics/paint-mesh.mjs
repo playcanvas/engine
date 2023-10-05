@@ -27,6 +27,13 @@ async function example({ canvas, files, assetPath }) {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+        // Ensure canvas is resized when window changes size
+        const resize = () => app.resizeCanvas();
+        window.addEventListener('resize', resize);
+        app.on('destroy', () => {
+            window.removeEventListener('resize', resize);
+        });
+
         app.scene.setSkybox(assets.helipad.resources);
         app.scene.toneMapping = pc.TONEMAP_ACES;
         app.scene.skyboxIntensity = 1;

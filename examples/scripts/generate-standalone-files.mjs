@@ -298,26 +298,6 @@ ${exampleClass.example.toString()}
             });
             window.app = app;
             ready = true;
-            function resize() {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                // console.log("resize", w, h);
-                app.resizeCanvas(w, h);
-            }
-            /**
-             * @param {pc.AppBase} app - The application.
-             */
-            function setupApplication(app) {
-                const canvas = app.graphicsDevice.canvas;
-                // handle resizing
-                var canvasContainerElement = canvas.parentElement;
-                canvas.setAttribute('width', window.innerWidth + 'px');
-                canvas.setAttribute('height', window.innerHeight + 'px');
-                app.setCanvasResolution(pc.RESOLUTION_AUTO);
-                window.onresize = resize;
-                const deviceType = app.graphicsDevice.deviceType;
-                showStats();
-            }
             class ExampleLoadEvent extends CustomEvent {
                 constructor(deviceType) {
                     super("exampleLoad");
@@ -326,7 +306,7 @@ ${exampleClass.example.toString()}
             }
             const finalFunc = () => {
                 if (app.graphicsDevice?.canvas) {
-                    setupApplication(app);
+                    showStats();
                     if (!started) { // only one time, recalls of main() are caused by Monaco live coding
                         window.top.dispatchEvent(new ExampleLoadEvent());
                     }

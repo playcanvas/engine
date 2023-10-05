@@ -28,8 +28,11 @@ async function example({ canvas }) {
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    window.addEventListener("resize", function () {
-        app.resizeCanvas(canvas.width, canvas.height);
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     // use device pixel ratio

@@ -34,6 +34,13 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     // Create an entity with a directional light component
     const light = new pc.Entity();
     light.addComponent("light", {

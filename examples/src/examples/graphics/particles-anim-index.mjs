@@ -9,16 +9,23 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     // Create the application and start the update loop
     const app = new pc.Application(canvas, {});
 
+    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assets = {
         'particlesNumbers': new pc.Asset('particlesNumbers', 'texture', { url: assetPath + 'textures/particles-numbers.png' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
         // Create an Entity with a camera component
         const cameraEntity = new pc.Entity();

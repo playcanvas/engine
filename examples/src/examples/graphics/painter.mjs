@@ -46,6 +46,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     /**
      * helper function to create a primitive with shape type, position, scale, color and layer
      * @param {string} primitiveType - The primitive type.

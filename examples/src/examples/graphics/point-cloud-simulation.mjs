@@ -15,6 +15,13 @@ async function example({ canvas, files }) {
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent("camera", {

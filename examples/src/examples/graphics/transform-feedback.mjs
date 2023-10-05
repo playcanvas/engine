@@ -22,6 +22,13 @@ async function example({ canvas, files, assetPath }) {
         app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
         app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+        // Ensure canvas is resized when window changes size
+        const resize = () => app.resizeCanvas();
+        window.addEventListener('resize', resize);
+        app.on('destroy', () => {
+            window.removeEventListener('resize', resize);
+        });
+
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // create small 2D texture representing movement direction (wind)

@@ -39,6 +39,13 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     // create box entity
     const box = new pc.Entity('cube');
     box.addComponent('render', {

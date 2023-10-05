@@ -10,10 +10,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
 
     const assets = {
-        'color': new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
-        'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.jpg' }),
-        'gloss': new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.jpg' }),
-        'luts': new pc.Asset('luts', 'json', { url: assetPath + 'json/area-light-luts.json' }),
+        color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
+        normal: new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.jpg' }),
+        gloss: new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.jpg' }),
+        luts: new pc.Asset('luts', 'json', { url: assetPath + 'json/area-light-luts.json' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
@@ -53,6 +53,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {

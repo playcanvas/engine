@@ -49,6 +49,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 
@@ -74,10 +81,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         lighting.maxLightsPerCell = 48;
 
         lighting.shadowsEnabled = false;
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
 
         // material with tiled normal map
         let material = new pc.StandardMaterial();

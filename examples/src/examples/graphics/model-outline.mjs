@@ -153,9 +153,9 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
         light.translate(0, 2, 5);
         app.root.addChild(light);
 
-        // handle canvas resize
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
+        // Ensure canvas is resized when window changes size + render target handling
+        const resize = () => {
+            app.resizeCanvas();
 
             // re-create the render target for the outline camera
             renderTarget.colorBuffer.destroy();
@@ -163,6 +163,10 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
             renderTarget = createRenderTarget();
             outlineCamera.camera.renderTarget = renderTarget;
             outline.texture = renderTarget.colorBuffer;
+        }
+        window.addEventListener('resize', resize);
+        app.on('destroy', () => {
+            window.removeEventListener('resize', resize);
         });
 
         // update things each frame

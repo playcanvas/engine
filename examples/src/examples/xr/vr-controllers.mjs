@@ -26,18 +26,22 @@ async function example({ canvas, assetPath }) {
         keyboard: new pc.Keyboard(window)
     });
 
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assets = {
         glb: new pc.Asset('glb', 'container', { url: assetPath + 'models/vr-controller.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        window.addEventListener("resize", function () {
-            app.resizeCanvas(canvas.width, canvas.height);
-        });
 
         // use device pixel ratio
         app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;

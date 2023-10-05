@@ -12,6 +12,17 @@ async function example({ canvas, assetPath }) {
         elementInput: new pc.ElementInput(canvas)
     });
 
+    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assets = {
         'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: assetPath + 'textures/particles-coins.png' }),
         'particlesBonusTexture': new pc.Asset('particlesBonusTexture', 'texture', { url: assetPath + 'textures/particles-bonus.png' })

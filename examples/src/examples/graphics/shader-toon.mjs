@@ -9,7 +9,7 @@ import * as pc from 'playcanvas';
 async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {
 
     const assets = {
-        'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
+        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
     };
 
     const gfxOptions = {
@@ -46,6 +46,13 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {

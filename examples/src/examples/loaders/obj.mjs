@@ -9,6 +9,17 @@ async function example({ canvas, assetPath, scriptsPath }) {
     // Create the app and start the update loop
     const app = new pc.Application(canvas, {});
 
+    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     const objurl = assetPath + 'models/monkey.obj';
