@@ -284,9 +284,12 @@ class WebgpuTexture {
                 }
             }
 
-            // ensure anisotropy is only used only when filtering is correctly
+            // ensure anisotropic filtering is only set when filtering is correctly
             // set up
-            descr.maxAnisotropy = (descr.minFilter === 'linear' && descr.magFilter === 'linear') ?
+            const allLinear = (descr.minFilter === 'linear' &&
+                               descr.magFilter === 'linear' &&
+                               descr.mipmapFilter === 'linear');
+            descr.maxAnisotropy = allLinear ?
                 math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy) :
                 1;
 
