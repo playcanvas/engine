@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU, DEVICETYPE_NULL } from './constants.js';
@@ -93,18 +92,18 @@ function createGraphicsDevice(canvas, options = {}) {
                 reject(new Error('Failed to create a graphics device'));
             } else {
                 Promise.resolve(deviceCreateFuncs[attempt++]())
-                .then((device) => {
-                    if (device) {
-                        resolve(device);
-                    } else {
+                    .then((device) => {
+                        if (device) {
+                            resolve(device);
+                        } else {
+                            next();
+                        }
+                    }).catch((err) => {
+                        console.log(err);
                         next();
-                    }
-                }).catch((err) => {
-                    console.log(err);
-                    next();
-                });
+                    });
             }
-        }
+        };
         next();
     });
 }
