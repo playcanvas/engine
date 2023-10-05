@@ -86,6 +86,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
+        // alpha defaults to true
+        options.alpha = options.alpha ?? true;
+
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
@@ -242,7 +245,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
-            alphaMode: 'opaque',  // could also be 'premultiplied'
+            alphaMode: this.initOptions.alpha ? 'premultiplied' : 'opaque',
 
             // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
