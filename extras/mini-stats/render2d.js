@@ -155,8 +155,8 @@ class Render2d {
         this.quads = 0;
         this.prim.count = 0;
 
-        this.targetSize.width = this.device.width;
-        this.targetSize.height = this.device.height;
+        this.targetSize.width = this.device.canvas.scrollWidth;
+        this.targetSize.height = this.device.canvas.scrollHeight;
     }
 
     render(app, layer, graphTexture, wordsTexture, clr, height) {
