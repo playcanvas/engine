@@ -291,6 +291,7 @@ class MeshInstance {
         // World space AABB
         this.aabb = new BoundingBox();
         this._aabbVer = -1;
+        this._aabbMeshVer = -1;
 
         /**
          * Use this value to affect rendering order of mesh instances. Only used when mesh
@@ -427,7 +428,7 @@ class MeshInstance {
 
                 toWorldSpace = true;
 
-            } else if (this.node._aabbVer !== this._aabbVer) {
+            } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
 
                 // local space bounding box - either from mesh or empty
                 if (this.mesh) {
@@ -446,6 +447,7 @@ class MeshInstance {
 
                 toWorldSpace = true;
                 this._aabbVer = this.node._aabbVer;
+                this._aabbMeshVer = this.mesh._aabbVer;
             }
         }
 
