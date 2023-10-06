@@ -163,6 +163,13 @@ class GeometryVertexStream {
  */
 class Mesh extends RefCountedObject {
     /**
+     * Internal version of aabb, incremented when local aabb changes.
+     *
+     * @ignore
+     */
+    _aabbVer = 0;
+
+    /**
      * Create a new Mesh instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [graphicsDevice] -
@@ -267,6 +274,7 @@ class Mesh extends RefCountedObject {
      */
     set aabb(aabb) {
         this._aabb = aabb;
+        this._aabbVer++;
     }
 
     get aabb() {
@@ -772,6 +780,7 @@ class Mesh extends RefCountedObject {
                 if (stream) {
                     if (stream.componentCount === 3) {
                         this._aabb.compute(stream.data, this._geometryData.vertexCount);
+                        this._aabbVer++;
                     }
                 }
             }
