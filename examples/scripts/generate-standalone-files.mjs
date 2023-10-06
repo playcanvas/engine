@@ -207,7 +207,7 @@ ${exampleClass.example.toString()}
                 return;
             }
             const deviceType = app?.graphicsDevice?.deviceType;
-            if (deviceType === 'webgpu' || deviceType === 'null') {
+            if (deviceType === 'null') {
                 return;
             }
             if (args.miniStats === 'false') {

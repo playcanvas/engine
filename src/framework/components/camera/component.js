@@ -891,7 +891,7 @@ class CameraComponent extends Component {
     /**
      * Calculates aspect ratio value for a given render target.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget} [rt] - Optional
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Optional
      * render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
@@ -905,7 +905,7 @@ class CameraComponent extends Component {
     /**
      * Prepare the camera for frame rendering.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget} rt - Render
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} rt - Render
      * target to which rendering will be performed. Will affect camera's aspect ratio, if
      * aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore

@@ -104,6 +104,27 @@ class Vec2 {
     }
 
     /**
+     * Adds a 2-dimensional vector scaled by scalar value. Does not modify the vector being added.
+     *
+     * @param {Vec2} rhs - The vector to add to the specified vector.
+     * @param {number} scalar - The number to multiply the added vector with.
+     * @returns {Vec2} Self for chaining.
+     * @example
+     * const vec = new pc.Vec2(1, 2);
+     *
+     * vec.addScaled(pc.Vec2.UP, 2);
+     *
+     * // Outputs [1, 4]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScaled(rhs, scalar) {
+        this.x += rhs.x * scalar;
+        this.y += rhs.y * scalar;
+
+        return this;
+    }
+
+    /**
      * Returns an identical copy of the specified 2-dimensional vector.
      *
      * @returns {this} A 2-dimensional vector containing the result of the cloning.
