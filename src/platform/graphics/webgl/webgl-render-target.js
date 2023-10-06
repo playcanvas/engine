@@ -70,7 +70,8 @@ class WebglRenderTarget {
         this._isInitialized = false;
 
         if (this._glFrameBuffer) {
-            gl.deleteFramebuffer(this._glFrameBuffer);
+            if (this._glFrameBuffer !== this.suppliedColorFramebuffer)
+                gl.deleteFramebuffer(this._glFrameBuffer);
             this._glFrameBuffer = null;
         }
 
@@ -80,7 +81,8 @@ class WebglRenderTarget {
         }
 
         if (this._glResolveFrameBuffer) {
-            gl.deleteFramebuffer(this._glResolveFrameBuffer);
+            if (this._glResolveFrameBuffer !== this.suppliedColorFramebuffer)
+                gl.deleteFramebuffer(this._glResolveFrameBuffer);
             this._glResolveFrameBuffer = null;
         }
 
@@ -98,6 +100,7 @@ class WebglRenderTarget {
             gl.deleteRenderbuffer(this._glMsaaDepthBuffer);
             this._glMsaaDepthBuffer = null;
         }
+        this.suppliedColorFramebuffer = undefined;
     }
 
     get initialized() {
