@@ -225,7 +225,7 @@ ${exampleClass.example.toString()}
             miniStats.enabled = false;
         }
         function destroy() {
-            // @todo PR: either make it reusable or implement proper MiniStats#destroy
+            miniStats?.destroy();
             miniStats = null;
             app?.destroy();
             app = null;
