@@ -72,7 +72,7 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const renderTarget = this.camera.renderTarget;
+        const renderTarget = this.destinationRenderTarget;
         const device = this.app.graphicsDevice;
 
         const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
@@ -348,7 +348,7 @@ class PostEffectQueue {
      */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
-        const renderTarget = this.camera.renderTarget;
+        const renderTarget = this.destinationRenderTarget;
 
         width = renderTarget?.width ?? width;
         height = renderTarget?.height ?? height;
@@ -360,7 +360,7 @@ class PostEffectQueue {
 
     resizeRenderTargets() {
         const device = this.app.graphicsDevice;
-        const renderTarget = this.camera.renderTarget;
+        const renderTarget = this.destinationRenderTarget;
         const width = renderTarget?.width ?? device.width;
         const height = renderTarget?.height ?? device.height;
 
