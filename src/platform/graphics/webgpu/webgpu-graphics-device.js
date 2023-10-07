@@ -86,6 +86,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
+        // alpha defaults to true
+        options.alpha = options.alpha ?? true;
+
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
@@ -163,29 +166,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        const loadScript = (url) => {
-            return new Promise(function (resolve, reject) {
-                const script = document.createElement('script');
-                script.src = url;
-                script.async = false;
-                script.onload = function () {
-                    resolve(url);
-                };
-                script.onerror = function () {
-                    reject(new Error(`Failed to download script ${url}`));
-                };
-                document.body.appendChild(script);
-            });
-        };
+        const results = await Promise.all([
+            import(twgslUrl).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(glslangUrl).then(module => module.default())
+        ]);
 
-        // TODO: add both loadScript calls and requestAdapter to promise list and wait for all.
-        await loadScript(glslangUrl);
-        await loadScript(twgslUrl);
-
-        this.glslang = await glslang();
-
-        const wasmPath = twgslUrl.replace('.js', '.wasm');
-        this.twgsl = await twgsl(wasmPath);
+        this.twgsl = results[0];
+        this.glslang = results[1];
 
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
@@ -243,9 +230,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.initDeviceCaps();
 
-        // initially fill the window. This needs improvement.
-        this.setResolution(window.innerWidth, window.innerHeight);
-
         this.gpuContext = this.canvas.getContext('webgpu');
 
         // pixel format of the framebuffer is the most efficient one on the system
@@ -261,7 +245,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
-            alphaMode: 'opaque',  // could also be 'premultiplied'
+            alphaMode: this.initOptions.alpha ? 'premultiplied' : 'opaque',
 
             // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
@@ -303,18 +287,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             stencil: this.supportsStencil,
             samples: this.samples
         });
-    }
-
-    resizeCanvas(width, height) {
-
-        this._width = width;
-        this._height = height;
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
-        }
     }
 
     frameStart() {
@@ -542,6 +514,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.stencilRef = 0;
     }
 
+    _uploadDirtyTextures() {
+
+        this.textures.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmaps) {
+                texture.upload();
+            }
+        });
+    }
+
     /**
      * Start a render pass.
      *
@@ -549,6 +530,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     startPass(renderPass) {
+
+        // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
+        // TODO: this needs a better solution
+        this._uploadDirtyTextures();
 
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
@@ -678,14 +663,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    get width() {
-        return this._width;
-    }
-
-    get height() {
-        return this._height;
     }
 
     setDepthBias(on) {

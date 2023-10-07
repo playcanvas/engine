@@ -128,6 +128,29 @@ class Vec4 {
     }
 
     /**
+     * Adds a 4-dimensional vector scaled by scalar value. Does not modify the vector being added.
+     *
+     * @param {Vec4} rhs - The vector to add to the specified vector.
+     * @param {number} scalar - The number to multiply the added vector with.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * const vec = new pc.Vec4(1, 2, 3, 4);
+     *
+     * vec.addScaled(pc.Vec4.ONE, 2);
+     *
+     * // Outputs [3, 4, 5, 6]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScaled(rhs, scalar) {
+        this.x += rhs.x * scalar;
+        this.y += rhs.y * scalar;
+        this.z += rhs.z * scalar;
+        this.w += rhs.w * scalar;
+
+        return this;
+    }
+
+    /**
      * Returns an identical copy of the specified 4-dimensional vector.
      *
      * @returns {this} A 4-dimensional vector containing the result of the cloning.

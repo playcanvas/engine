@@ -132,7 +132,7 @@
             }
 
             const deviceType = app.graphicsDevice.deviceType;
-            if (deviceType !== 'webgpu' && deviceType !== 'null' && !Example.MINISTATS) {
+            if (deviceType !== 'null' && !Example.MINISTATS) {
                 // set up miniStats
                 var miniStats = new pcx.MiniStats(app);
                 if (urlParams.get('miniStats') === 'false') {

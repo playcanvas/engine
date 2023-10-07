@@ -67,6 +67,10 @@ gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear'
 gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
 gpuFilterModes[FILTER_LINEAR_MIPMAP_LINEAR] = { level: 'linear', mip: 'linear' };
 
+const dummyUse = (thingOne) => {
+    // so lint thinks we're doing something with thingOne
+};
+
 /**
  * A WebGPU implementation of the Texture.
  *
@@ -236,8 +240,7 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW],
-                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
+                addressModeW: gpuAddressModes[texture.addressW]
             };
 
             // default for compare sampling of texture
@@ -280,6 +283,15 @@ class WebgpuTexture {
                     });
                 }
             }
+
+            // ensure anisotropic filtering is only set when filtering is correctly
+            // set up
+            const allLinear = (descr.minFilter === 'linear' &&
+                               descr.magFilter === 'linear' &&
+                               descr.mipmapFilter === 'linear');
+            descr.maxAnisotropy = allLinear ?
+                math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy) :
+                1;
 
             sampler = device.wgpu.createSampler(descr);
             DebugHelper.setLabel(sampler, label);
@@ -410,6 +422,9 @@ class WebgpuTexture {
 
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
+
+        // create 2d context so webgpu can upload the texture
+        dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
 
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
