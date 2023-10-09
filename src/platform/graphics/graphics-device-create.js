@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { platform } from '../../core/platform.js';
 
 import { DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1, DEVICETYPE_WEBGPU, DEVICETYPE_NULL } from './constants.js';
@@ -59,29 +58,54 @@ function createGraphicsDevice(canvas, options = {}) {
         options.xrCompatible ??= true;
     }
 
-    let device;
+    // make a list of device creation functions in priority order
+    const deviceCreateFuncs = [];
     for (let i = 0; i < deviceTypes.length; i++) {
         const deviceType = deviceTypes[i];
 
         if (deviceType === DEVICETYPE_WEBGPU && window?.navigator?.gpu) {
-            device = new WebgpuGraphicsDevice(canvas, options);
-            return device.initWebGpu(options.glslangUrl, options.twgslUrl);
+            deviceCreateFuncs.push(() => {
+                const device = new WebgpuGraphicsDevice(canvas, options);
+                return device.initWebGpu(options.glslangUrl, options.twgslUrl);
+            });
         }
 
         if (deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) {
-            options.preferWebGl2 = deviceType === DEVICETYPE_WEBGL2;
-            device = new WebglGraphicsDevice(canvas, options);
-            return Promise.resolve(device);
+            deviceCreateFuncs.push(() => {
+                options.preferWebGl2 = deviceType === DEVICETYPE_WEBGL2;
+                return new WebglGraphicsDevice(canvas, options);
+            });
         }
 
         if (deviceType === DEVICETYPE_NULL) {
-            device = new NullGraphicsDevice(canvas, options);
-            return Promise.resolve(device);
+            deviceCreateFuncs.push(() => {
+                return new NullGraphicsDevice(canvas, options);
+            });
         }
     }
 
-    Debug.assert(device, 'Failed to allocate graphics device based on requested device types: ', options.deviceTypes);
-    return Promise.reject(new Error("Failed to allocate graphics device"));
+    // execute each device creation function returning the first successful result
+    return new Promise((resolve, reject) => {
+        let attempt = 0;
+        const next = () => {
+            if (attempt >= deviceCreateFuncs.length) {
+                reject(new Error('Failed to create a graphics device'));
+            } else {
+                Promise.resolve(deviceCreateFuncs[attempt++]())
+                    .then((device) => {
+                        if (device) {
+                            resolve(device);
+                        } else {
+                            next();
+                        }
+                    }).catch((err) => {
+                        console.log(err);
+                        next();
+                    });
+            }
+        };
+        next();
+    });
 }
 
 export { createGraphicsDevice };
