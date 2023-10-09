@@ -875,24 +875,6 @@ class ForwardRenderer extends Renderer {
             renderPass.addRenderAction(renderActions[i]);
         }
 
-        const startRenderAction = renderActions[startIndex];
-        const camera = startRenderAction.camera;
-
-        // if camera rendering covers the full viewport
-        renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
-        if (renderPass.fullSizeClearRect) {
-
-            if (startRenderAction.clearColor) {
-                renderPass.setClearColor(camera.camera.clearColor);
-            }
-            if (startRenderAction.clearDepth) {
-                renderPass.setClearDepth(camera.camera.clearDepth);
-            }
-            if (startRenderAction.clearStencil) {
-                renderPass.setClearStencil(camera.camera.clearStencil);
-            }
-        }
-
         frameGraph.addRenderPass(renderPass);
     }
 

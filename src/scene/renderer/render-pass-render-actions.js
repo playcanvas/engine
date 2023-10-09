@@ -45,6 +45,27 @@ class RenderPassRenderActions extends RenderPass {
 
     addRenderAction(renderAction) {
         this.renderActions.push(renderAction);
+
+        // first render action sets up clear params
+        if (this.renderActions.length === 1) {
+
+            const camera = renderAction.camera;
+            this.fullSizeClearRect = camera.camera.fullSizeClearRect;
+
+            // only if camera rendering covers the full viewport
+            if (this.fullSizeClearRect) {
+
+                if (renderAction.clearColor) {
+                    this.setClearColor(camera.camera.clearColor);
+                }
+                if (renderAction.clearDepth) {
+                    this.setClearDepth(camera.camera.clearDepth);
+                }
+                if (renderAction.clearStencil) {
+                    this.setClearStencil(camera.camera.clearStencil);
+                }
+            }
+        }
     }
 
     before() {
