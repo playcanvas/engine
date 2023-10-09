@@ -136,6 +136,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
                 app.scene.skyboxRotation = rot;
             }
         });
+        app.on('destroy', () => mouse.detach());
     });
     return app;
 }

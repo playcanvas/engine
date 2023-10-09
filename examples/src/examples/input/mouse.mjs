@@ -81,6 +81,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
                 entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
             }
         });
+        app.on('destroy', () => mouse.detach());
     });
     return app;
 }
