@@ -100,12 +100,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         text.element.rangeEnd = 0;
 
         // Render a new character every 75ms
-        setInterval(function () {
+        const id = setInterval(function () {
             text.element.rangeEnd += 1;
             if (text.element.rangeEnd >= loremIpsum.length) {
                 text.element.rangeEnd = 0;
             }
         }, 75);
+        app.on('destroy', () => clearInterval(id));
     });
     return app;
 }
