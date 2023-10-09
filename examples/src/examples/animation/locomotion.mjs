@@ -344,6 +344,7 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
             characterDirection = new pc.Vec3(1, 0, 0);
             targetPosition = new pc.Vec3(2, 0, 2);
             document.addEventListener("mousedown", this.onMouseDown);
+            this.on('destroy', this.destroy, this);
         };
 
         // @ts-ignore engine-tsd
@@ -360,6 +361,10 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
                 characterEntity.anim.setInteger('speed', data.get('jogToggle') ? 2 : 1);
             }
         };
+
+        Locomotion.prototype.destroy = function() {
+            document.removeEventListener("mousedown", this.onMouseDown);
+        }
 
         /**
          * defines how many units the character should move per second given its current animation state
