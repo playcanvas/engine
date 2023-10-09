@@ -15,8 +15,6 @@ import {
 
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
-import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
 import { RenderPassRenderActions } from './render-pass-render-actions.js';
 
 const _drawCallList = {
