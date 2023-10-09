@@ -126,6 +126,13 @@ let app = null;
  */
 class AppBase extends EventHandler {
     /**
+     * A request id returned by requestAnimationFrame, allowing us to cancel it.
+     *
+     * @ignore
+     */
+    frameRequestId;
+
+    /**
      * Create a new AppBase instance.
      *
      * @param {HTMLCanvasElement} canvas - The canvas element.
@@ -2050,6 +2057,15 @@ class AppBase extends EventHandler {
         if (getApplication() === this) {
             setApplication(null);
         }
+
+        AppBase.cancelTick(this);
+    }
+
+    static cancelTick(app) {
+        if (app.frameRequestId) {
+            window.cancelAnimationFrame(app.frameRequestId);
+            app.frameRequestId = undefined;
+        }
     }
 
     /**
@@ -2094,7 +2110,6 @@ const _frameEndData = {};
  */
 const makeTick = function (_app) {
     const application = _app;
-    let frameRequest;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
      * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
@@ -2103,12 +2118,10 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        setApplication(application);
+        application.frameRequestId = null;
+        application._inFrameUpdate = true;
 
-        if (frameRequest) {
-            window.cancelAnimationFrame(frameRequest);
-            frameRequest = null;
-        }
+        setApplication(application);
 
         // have current application pointer in pc
         app = application;
@@ -2123,9 +2136,9 @@ const makeTick = function (_app) {
 
         // Submit a request to queue up a new animation frame immediately
         if (application.xr?.session) {
-            frameRequest = application.xr.session.requestAnimationFrame(application.tick);
+            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            application.frameRequestId = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
@@ -2137,7 +2150,6 @@ const makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         let shouldRenderFrame = true;
