@@ -44,7 +44,7 @@ class Mouse extends EventHandler {
         this._target = null;
         this._attached = false;
 
-        this.attach(element);
+        if (element) this.attach(element);
     }
 
     /**
