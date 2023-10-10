@@ -1069,46 +1069,34 @@ class Renderer {
 
         this.processingMeshInstances.clear();
 
-        const renderActions = comp._renderActions;
-        for (let i = 0; i < renderActions.length; i++) {
+        // for all cameras
+        const numCameras = comp.cameras.length;
+        for (let i = 0; i < numCameras; i++) {
+            const camera = comp.cameras[i];
 
-            /** @type {import('../composition/render-action.js').RenderAction} */
-            const renderAction = renderActions[i];
+            // update camera and frustum
+            camera.frameUpdate(camera.renderTarget);
+            this.updateCameraFrustum(camera.camera);
+            this._camerasRendered++;
 
-            // layer
-            const { layer, transparent } = renderAction;
-            const subLayerEnabled = comp.isEnabled(layer, transparent);
-            if (!layer.enabled || !subLayerEnabled)
-                continue;
+            // for all of its enabled layers
+            const layerIds = camera.layers;
+            for (let j = 0; j < layerIds.length; j++) {
+                const layer = comp.getLayerById(layerIds[j]);
+                if (layer && layer.enabled) {
 
-            // camera
-            /** @type {import('../../framework/components/camera/component.js').CameraComponent} */
-            const camera = renderAction.camera;
+                    // cull each layer's non-directional lights once with each camera
+                    // lights aren't collected anywhere, but marked as visible
+                    this.cullLights(camera.camera, layer._lights);
 
-            if (camera) {
+                    // cull mesh instances
+                    layer.onPreCull?.(comp.camerasMap.get(camera));
 
-                camera.frameUpdate(renderAction.renderTarget);
+                    const culledInstances = layer.getCulledInstances(camera.camera);
+                    this.cull(camera.camera, layer.meshInstances, culledInstances);
 
-                // update camera and frustum once
-                if (renderAction.firstCameraUse) {
-                    this.updateCameraFrustum(camera.camera);
-                    this._camerasRendered++;
+                    layer.onPostCull?.(comp.camerasMap.get(camera));
                 }
-
-                // cull each layer's non-directional lights once with each camera
-                // lights aren't collected anywhere, but marked as visible
-                this.cullLights(camera.camera, layer._lights);
-
-                // cull mesh instances
-                if (layer.onPreCull)
-                    layer.onPreCull(comp.camerasMap.get(camera));
-
-                const culledInstances = layer.getCulledInstances(camera.camera);
-                const drawCalls = layer.meshInstances;
-                this.cull(camera.camera, drawCalls, culledInstances);
-
-                if (layer.onPostCull)
-                    layer.onPostCull(comp.camerasMap.get(camera));
             }
         }
 
