@@ -192,7 +192,6 @@ class TextEmojisExample {
     static NAME = 'Text Emojis';
     static WEBGPU_ENABLED = true;
     static example = example;
-    static WEBGPU_ENABLED = false;
 }
 
 export { TextEmojisExample };
