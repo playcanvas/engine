@@ -1076,10 +1076,10 @@ class Renderer {
             const renderAction = renderActions[i];
 
             // layer
-            const layerIndex = renderAction.layerIndex;
-            /** @type {import('../layer.js').Layer} */
-            const layer = comp.layerList[layerIndex];
-            if (!layer.enabled || !comp.subLayerEnabled[layerIndex]) continue;
+            const { layer, transparent } = renderAction;
+            const subLayerEnabled = comp.isEnabled(layer, transparent);
+            if (!layer.enabled || !subLayerEnabled)
+                continue;
 
             // camera
             /** @type {import('../../framework/components/camera/component.js').CameraComponent} */

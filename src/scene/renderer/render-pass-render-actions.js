@@ -84,7 +84,7 @@ class RenderPassRenderActions extends RenderPass {
         const { layerComposition, renderActions } = this;
         for (let i = 0; i < renderActions.length; i++) {
             const ra = renderActions[i];
-            if (ra.isLayerEnabled(layerComposition)) {
+            if (layerComposition.isEnabled(ra.layer, ra.transparent)) {
                 this.renderRenderAction(ra, i === 0);
             }
         }
@@ -114,11 +114,7 @@ class RenderPassRenderActions extends RenderPass {
         const device = renderer.device;
 
         // layer
-        const layerIndex = renderAction.layerIndex;
-        const layer = layerComposition.layerList[layerIndex];
-        const transparent = layerComposition.subLayerList[layerIndex];
-
-        const camera = renderAction.camera;
+        const { layer, transparent, camera } = renderAction;
         const cameraPass = layerComposition.camerasMap.get(camera);
 
         DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
@@ -251,16 +247,14 @@ class RenderPassRenderActions extends RenderPass {
             const { layerComposition } = this;
             this.renderActions.forEach((ra, index) => {
 
-                const layerIndex = ra.layerIndex;
-                const layer = layerComposition.layerList[layerIndex];
-                const enabled = layer.enabled && layerComposition.subLayerEnabled[layerIndex];
-                const transparent = layerComposition.subLayerList[layerIndex];
+                const layer = ra.layer;
+                const enabled = layer.enabled && layerComposition.isEnabled(layer, ra.transparent);
                 const camera = ra.camera;
 
                 Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    ${index}:` +
                     (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
                     (' Lay: ' + layer.name).padEnd(22, ' ') +
-                    (transparent ? ' TRANSP' : ' OPAQUE') +
+                    (ra.transparent ? ' TRANSP' : ' OPAQUE') +
                     (enabled ? ' ENABLED' : ' DISABLED') +
                     (' Meshes: ' + layer.meshInstances.length).padEnd(5, ' ')
                 );
