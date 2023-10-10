@@ -96,10 +96,10 @@ class Mouse extends EventHandler {
         this._attached = true;
 
         const opts = platform.passiveEvents ? { passive: false } : false;
-        window.addEventListener('mouseup', this._upHandler, opts);
-        window.addEventListener('mousedown', this._downHandler, opts);
-        window.addEventListener('mousemove', this._moveHandler, opts);
-        window.addEventListener('wheel', this._wheelHandler, opts);
+        this._target.addEventListener('mouseup', this._upHandler, opts);
+        this._target.addEventListener('mousedown', this._downHandler, opts);
+        this._target.addEventListener('mousemove', this._moveHandler, opts);
+        this._target.addEventListener('wheel', this._wheelHandler, opts);
     }
 
     /**
@@ -107,14 +107,15 @@ class Mouse extends EventHandler {
      */
     detach() {
         if (!this._attached) return;
-        this._attached = false;
-        this._target = null;
 
         const opts = platform.passiveEvents ? { passive: false } : false;
-        window.removeEventListener('mouseup', this._upHandler, opts);
-        window.removeEventListener('mousedown', this._downHandler, opts);
-        window.removeEventListener('mousemove', this._moveHandler, opts);
-        window.removeEventListener('wheel', this._wheelHandler, opts);
+        this._target.removeEventListener('mouseup', this._upHandler, opts);
+        this._target.removeEventListener('mousedown', this._downHandler, opts);
+        this._target.removeEventListener('mousemove', this._moveHandler, opts);
+        this._target.removeEventListener('wheel', this._wheelHandler, opts);
+
+        this._attached = false;
+        this._target = null;
     }
 
     /**
