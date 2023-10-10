@@ -156,4 +156,5 @@ export class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lights Baked';
     static example = example;
+    static WEBGPU_ENABLED = false; // house is black
 }

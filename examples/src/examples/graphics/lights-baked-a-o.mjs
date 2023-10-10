@@ -422,4 +422,5 @@ export class LightsBakedAOExample {
     static NAME = 'Lights Baked AO';
     static controls = controls;
     static example = example;
+    static WEBGPU_ENABLED = false; // house is just gray
 }

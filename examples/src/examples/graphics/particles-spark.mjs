@@ -145,4 +145,5 @@ export class ParticlesSparkExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Particles: Spark';
     static example = example;
+    static WEBGPU_ENABLED = false; // no particles visible
 }
