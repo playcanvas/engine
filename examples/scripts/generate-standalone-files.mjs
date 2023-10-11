@@ -62,24 +62,19 @@ function generateExampleFile(category, example, exampleClass) {
     return `<html>
     <head>
         <link rel="stylesheet" href="./example.css">
-        <!--<link rel="stylesheet" href="../styles.css">-->
         <title>${category}: ${example}</title>
         ${exampleClass.es5libs?.map(_ => `<script src="${_}"></script>`).join('\n') || '<!-- no es5libs -->'}
     </head>
     <body>
-        <div id="app">
-            <div id="appInner">
-                <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
-                <div style="width:100%; position:absolute; top:10px">
-                    <div style="text-align: center;">
-                        <a id="ar-link" rel="ar" download="asset.usdz">
-                            <img src="./arkit.png" id="button" width="200"/>
-                        </a>    
-                    </div>
-                </div>
-                <canvas id='application-canvas'></canvas>
+        <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
+        <div style="width:100%; position:absolute; top:10px">
+            <div style="text-align: center;">
+                <a id="ar-link" rel="ar" download="asset.usdz">
+                    <img src="./arkit.png" id="button" width="200"/>
+                </a>    
             </div>
         </div>
+        <canvas id='application-canvas'></canvas>
         <script src='./playcanvas-observer.js'></script>
         <script src='./pathes.js'></script>
         <!-- imports (if any) -->
@@ -201,11 +196,19 @@ ${exampleClass.example.toString()}
             const responseEvent = new CustomEvent("requestedFiles", { detail: files });
             window.top.dispatchEvent(responseEvent);
         }
+        /**
+         * This function is called from React whenever we click on MiniStats icon,
+         * even PlayCanvas' pc itself could be undefined here.
+         */
         function showStats() {
             // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
             if (${Boolean(exampleClass.MINISTATS)}) {
                 return;
             }
+            if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
+                return;
+            }
+            const { app } = pc;
             const deviceType = app?.graphicsDevice?.deviceType;
             if (deviceType === 'null') {
                 return;
@@ -224,11 +227,14 @@ ${exampleClass.example.toString()}
             }
             miniStats.enabled = false;
         }
+        /**
+         * This function is called from React whenever we change an example in any possible state,
+         * even PlayCanvas' pc itself could be undefined here.
+         */
         function destroy() {
             miniStats?.destroy();
             miniStats = null;
-            app?.destroy();
-            app = null;
+            window.pc?.app?.destroy();
             ready = false;
         }
         function hotReload() {
@@ -296,7 +302,6 @@ ${exampleClass.example.toString()}
                 pcx,
                 files,
             });
-            window.app = app;
             ready = true;
             class ExampleLoadEvent extends CustomEvent {
                 constructor(deviceType) {

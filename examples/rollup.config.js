@@ -160,6 +160,7 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
+                watch(this, 'scripts/generate-standalone-files.mjs');
                 watch(this, 'src/examples');
             }
         },

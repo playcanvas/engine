@@ -174,7 +174,7 @@ class Example extends TypedComponent {
 
     renderControls() {
         const { exampleLoaded, controls } = this.state;
-        const ready = exampleLoaded && controls && iframeEval('ready === true');
+        const ready = exampleLoaded && controls && iframeEval('window.ready === true');
         if (!ready) {
             return;
         }
