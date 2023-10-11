@@ -1,5 +1,3 @@
-import { Debug } from '../../core/debug.js';
-
 /**
  * Class representing an entry in the final order of rendering of cameras and layers in the engine
  * this is populated at runtime based on LayerComposition
