@@ -1220,18 +1220,13 @@ class Renderer {
         this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }
 
-    /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     */
-    updateClusters(comp) {
+    updateClusters(renderPasses) {
 
         // #if _PROFILER
         const startTime = now();
         // #endif
 
-        const renderActions = comp._renderActions;
-        this.worldClustersAllocator.update(renderActions, this.scene.gammaCorrection, this.scene.lighting);
+        this.worldClustersAllocator.update(renderPasses, this.scene.gammaCorrection, this.scene.lighting);
 
         // #if _PROFILER
         this._lightClustersTime += now() - startTime;
@@ -1244,10 +1239,8 @@ class Renderer {
      *
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
-     * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
-     * @ignore
      */
-    updateLayerComposition(comp, clusteredLightingEnabled) {
+    updateLayerComposition(comp) {
 
         // #if _PROFILER
         const layerCompositionUpdateTime = now();

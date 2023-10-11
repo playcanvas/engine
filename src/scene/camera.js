@@ -42,6 +42,14 @@ class Camera {
      */
     renderPassDepthGrab = null;
 
+    /**
+     * Render passes used to render this camera. If empty, the camera will render using the default
+     * render passes.
+     *
+     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     */
+    renderPasses = [];
+
     constructor() {
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
@@ -101,6 +109,11 @@ class Camera {
 
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
+
+        this.renderPasses.forEach((pass) => {
+            pass.destroy();
+        });
+        this.renderPasses.length = 0;
     }
 
     /**
