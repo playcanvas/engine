@@ -774,8 +774,7 @@ class ForwardRenderer extends Renderer {
         for (let i = startIndex; i < renderActions.length; i++) {
 
             const renderAction = renderActions[i];
-            const layer = layerComposition.layerList[renderAction.layerIndex];
-            const camera = renderAction.camera;
+            const { layer, camera } = renderAction;
 
             // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
             const depthPass = camera.camera.renderPassDepthGrab;
@@ -783,11 +782,6 @@ class ForwardRenderer extends Renderer {
 
                 depthPass.update(this.scene);
                 frameGraph.addRenderPass(depthPass);
-            }
-
-            // skip disabled layers
-            if (!renderAction.isLayerEnabled(layerComposition)) {
-                continue;
             }
 
             const isDepthLayer = layer.id === LAYERID_DEPTH;
@@ -810,15 +804,9 @@ class ForwardRenderer extends Renderer {
                 renderTarget = renderAction.renderTarget;
             }
 
-            // find the next enabled render action
-            let nextIndex = i + 1;
-            while (renderActions[nextIndex] && !renderActions[nextIndex].isLayerEnabled(layerComposition)) {
-                nextIndex++;
-            }
-
             // info about the next render action
-            const nextRenderAction = renderActions[nextIndex];
-            const isNextLayerDepth = nextRenderAction ? layerComposition.layerList[nextRenderAction.layerIndex].id === LAYERID_DEPTH : false;
+            const nextRenderAction = renderActions[i + 1];
+            const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
             const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
 
             // end of the block using the same render target

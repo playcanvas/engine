@@ -805,7 +805,7 @@ Object.defineProperty(Layer.prototype, 'renderTarget', {
     set: function (rt) {
         Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
         this._renderTarget = rt;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     },
     get: function () {
         return this._renderTarget;
