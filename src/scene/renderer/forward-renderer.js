@@ -786,14 +786,10 @@ class ForwardRenderer extends Renderer {
 
             if (renderAction.useCameraPasses)  {
 
-
-
-
-
+                // schedule render passes from the camera
                 camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
                 });
-
 
             } else {
 
