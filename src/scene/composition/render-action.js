@@ -8,7 +8,7 @@ class RenderAction {
     constructor() {
 
         // the layer
-        /** @type {import('../layer.js').Layer} */
+        /** @type {import('../layer.js').Layer|null} */
         this.layer = null;
 
         // true if this uses transparent sublayer, opaque otherwise
