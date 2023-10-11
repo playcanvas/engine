@@ -66,15 +66,19 @@ function generateExampleFile(category, example, exampleClass) {
         ${exampleClass.es5libs?.map(_ => `<script src="${_}"></script>`).join('\n') || '<!-- no es5libs -->'}
     </head>
     <body>
-        <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
-        <div style="width:100%; position:absolute; top:10px">
-            <div style="text-align: center;">
-                <a id="ar-link" rel="ar" download="asset.usdz">
-                    <img src="./arkit.png" id="button" width="200"/>
-                </a>    
+        <div id="app">
+            <div id="appInner">
+                <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
+                <div style="width:100%; position:absolute; top:10px">
+                    <div style="text-align: center;">
+                        <a id="ar-link" rel="ar" download="asset.usdz">
+                            <img src="./arkit.png" id="button" width="200"/>
+                        </a>    
+                    </div>
+                </div>
+                <canvas id='application-canvas'></canvas>
             </div>
         </div>
-        <canvas id='application-canvas'></canvas>
         <script src='./playcanvas-observer.js'></script>
         <script src='./pathes.js'></script>
         <!-- imports (if any) -->
