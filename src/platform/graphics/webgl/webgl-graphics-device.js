@@ -324,6 +324,9 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this.updateClientRect();
 
+        // initialize this before registering lost context handlers to avoid undefined access when the device is created lost.
+        this.initTextureUnits();
+
         // Add handlers for when the WebGL context is lost or restored
         this.contextLost = false;
 
@@ -1137,6 +1140,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
     }
 
+    initTextureUnits(count = 16) {
+        this.textureUnits = [];
+        for (let i = 0; i < count; i++) {
+            this.textureUnits.push([null, null, null]);
+        }
+    }
+
     initializeContextCaches() {
         super.initializeContextCaches();
 
@@ -1149,10 +1159,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.transformFeedbackBuffer = null;
 
         this.textureUnit = 0;
-        this.textureUnits = [];
-        for (let i = 0; i < this.maxCombinedTextures; i++) {
-            this.textureUnits.push([null, null, null]);
-        }
+        this.initTextureUnits(this.maxCombinedTextures);
     }
 
     /**
