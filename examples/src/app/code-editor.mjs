@@ -6,6 +6,14 @@ import MonacoEditor from "@monaco-editor/react";
 import { iframeHotReload, iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
 import { removeRedundantSpaces } from './helpers/strings.mjs';
 
+function getShowMinimap() {
+    let showMinimap = true;
+    if (localStorage.getItem("showMinimap")) {
+        showMinimap = localStorage.getItem("showMinimap") === 'true' ? true : false;
+    }
+    return showMinimap;
+}
+
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
     'shader': null,
@@ -26,6 +34,7 @@ let monacoEditor;
  * @typedef {object} State
  * @property {Record<string, string>} files
  * @property {string} selectedFile
+ * @property {boolean} showMinimap
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -36,6 +45,7 @@ class CodeEditor extends TypedComponent {
     state = {
         files: {'example.mjs': '// init'},
         selectedFile: 'example.mjs',
+        showMinimap: getShowMinimap()
     };
 
     /**
@@ -101,6 +111,9 @@ class CodeEditor extends TypedComponent {
         });
     }
 
+    /**
+     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor
+     */
     editorDidMount(editor) {
         window.editor = editor;
         monacoEditor = editor;
@@ -126,6 +139,20 @@ class CodeEditor extends TypedComponent {
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
+        });
+        // register Monaco commands (you can access them by pressing f1)
+        // Toggling minimap is only six key strokes: F1 mini enter (even "F1 mi enter" works)
+        editor.addAction({
+            id: 'view-toggle-minimap',
+            label: 'View: Toggle Minimap',
+            // keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
+            // contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: (editor) => {
+                const showMinimap = !getShowMinimap();
+                localStorage.setItem("showMinimap", `${showMinimap}`);
+                this.mergeState({ showMinimap });
+            }
         });
     }
 
@@ -170,7 +197,7 @@ class CodeEditor extends TypedComponent {
 
     render() {
         setTimeout(iframeResize, 50);
-        const { files, selectedFile } = this.state;
+        const { files, selectedFile, showMinimap } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()];
         let value = files[selectedFile];
         if (value) {
@@ -191,6 +218,9 @@ class CodeEditor extends TypedComponent {
                 },
                 readOnly: false,
                 theme: 'vs-dark',
+                minimap: {
+                    enabled: showMinimap
+                }
             },
             /**
              * @todo Without a key the syntax highlighting mode isn't updated.
