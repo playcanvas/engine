@@ -5,7 +5,7 @@ import { DeviceCache } from '../platform/graphics/device-cache.js';
 import {
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR, FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_DEFAULT
 } from '../platform/graphics/constants.js';
 
@@ -29,6 +29,7 @@ const deviceCache = new DeviceCache();
 class AreaLightLuts {
     static createTexture(device, format, size, postfix = '') {
         const tex = new Texture(device, {
+            name: `AreaLightLUT${postfix}`,
             width: size,
             height: size,
             format: format,
@@ -38,7 +39,7 @@ class AreaLightLuts {
             magFilter: FILTER_LINEAR,
             minFilter: FILTER_NEAREST,
             anisotropy: 1,
-            name: `AreaLightLUT${postfix}`
+            mipmaps: false
         });
         return tex;
     }
@@ -59,7 +60,7 @@ class AreaLightLuts {
 
     // placeholder LUT textures for area light
     static createPlaceholder(device) {
-        const texture = AreaLightLuts.createTexture(device, PIXELFORMAT_R8_G8_B8_A8, 2, 'placeholder');
+        const texture = AreaLightLuts.createTexture(device, device.areaLightLutFormat, 2, 'placeholder');
 
         const pixels = texture.lock();
         pixels.fill(0);
@@ -76,7 +77,6 @@ class AreaLightLuts {
 
             texture.lock().set(data);
             texture.unlock();
-            texture.upload();
 
             return texture;
         }

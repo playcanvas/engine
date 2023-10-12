@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import { Color } from '../../core/math/color.js';
 import { Curve } from '../../core/math/curve.js';
 import { CurveSet } from '../../core/math/curve-set.js';
@@ -10,8 +9,6 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { GraphNode } from '../../scene/graph-node.js';
 
 import { Asset } from '../asset/asset.js';
-
-/** @typedef {import('./script-type.js').ScriptType} ScriptType */
 
 const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
@@ -160,7 +157,7 @@ class ScriptAttributes {
     /**
      * Create a new ScriptAttributes instance.
      *
-     * @param {Class<ScriptType>} scriptType - Script Type that attributes relate to.
+     * @param {Class<import('./script-type.js').ScriptType>} scriptType - Script Type that attributes relate to.
      */
     constructor(scriptType) {
         this.scriptType = scriptType;
@@ -170,7 +167,7 @@ class ScriptAttributes {
     static reservedNames = new Set([
         'app', 'entity', 'enabled', '_enabled', '_enabledOld', '_destroyed',
         '__attributes', '__attributesRaw', '__scriptType', '__executionOrder',
-        '_callbacks', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
+        '_callbacks', '_callbackActive', 'has', 'get', 'on', 'off', 'fire', 'once', 'hasEvent'
     ]);
 
     /**
@@ -286,10 +283,11 @@ class ScriptAttributes {
                 let oldCopy = old;
                 // json types might have a 'clone' field in their
                 // schema so make sure it's not that
-                if (old && args.type !== 'json' && old.clone) {
+                // entities should not be cloned as well
+                if (old && args.type !== 'json' && args.type !== 'entity' && old.clone) {
                     // check if an event handler is there
                     // before cloning for performance
-                    if (this._callbacks[evt] || this._callbacks[evtName]) {
+                    if (this.hasEvent(evt) || this.hasEvent(evtName)) {
                         oldCopy = old.clone();
                     }
                 }

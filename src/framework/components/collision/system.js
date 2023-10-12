@@ -16,10 +16,9 @@ import { CollisionComponent } from './component.js';
 import { CollisionComponentData } from './data.js';
 import { Trigger } from './trigger.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const mat4 = new Mat4();
-const vec3 = new Vec3();
+const p1 = new Vec3();
+const p2 = new Vec3();
 const quat = new Quat();
 const tempGraphNode = new GraphNode();
 
@@ -27,6 +26,8 @@ const _schema = [
     'enabled',
     'type',
     'halfExtents',
+    'linearOffset',
+    'angularOffset',
     'radius',
     'axis',
     'height',
@@ -82,8 +83,7 @@ class CollisionSystemImpl {
                         component._compoundParent.entity.rigidbody.activate();
                 }
 
-                Ammo.destroy(data.shape);
-                data.shape = null;
+                this.destroyShape(data);
             }
 
             data.shape = this.createPhysicalShape(component.entity, data);
@@ -155,6 +155,13 @@ class CollisionSystemImpl {
         }
     }
 
+    destroyShape(data) {
+        if (data.shape) {
+            Ammo.destroy(data.shape);
+            data.shape = null;
+        }
+    }
+
     beforeRemove(entity, component) {
         if (component.data.shape) {
             if (component._compoundParent && !component._compoundParent.entity._destroying) {
@@ -166,8 +173,7 @@ class CollisionSystemImpl {
 
             component._compoundParent = null;
 
-            Ammo.destroy(component.data.shape);
-            component.data.shape = null;
+            this.destroyShape(component.data);
         }
     }
 
@@ -191,6 +197,8 @@ class CollisionSystemImpl {
             enabled: src.data.enabled,
             type: src.data.type,
             halfExtents: [src.data.halfExtents.x, src.data.halfExtents.y, src.data.halfExtents.z],
+            linearOffset: [src.data.linearOffset.x, src.data.linearOffset.y, src.data.linearOffset.z],
+            angularOffset: [src.data.angularOffset.x, src.data.angularOffset.y, src.data.angularOffset.z, src.data.angularOffset.w],
             radius: src.data.radius,
             axis: src.data.axis,
             height: src.data.height,
@@ -231,9 +239,9 @@ class CollisionSphereSystemImpl extends CollisionSystemImpl {
 // Capsule Collision System
 class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = data.radius || 0.5;
-        const height = Math.max((data.height || 2) - 2 * radius, 0);
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = Math.max((data.height ?? 2) - 2 * radius, 0);
 
         let shape = null;
 
@@ -258,9 +266,9 @@ class CollisionCapsuleSystemImpl extends CollisionSystemImpl {
 // Cylinder Collision System
 class CollisionCylinderSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = (data.radius !== undefined) ? data.radius : 0.5;
-        const height = (data.height !== undefined) ? data.height : 1;
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = data.height ?? 1;
 
         let halfExtents = null;
         let shape = null;
@@ -292,9 +300,9 @@ class CollisionCylinderSystemImpl extends CollisionSystemImpl {
 // Cone Collision System
 class CollisionConeSystemImpl extends CollisionSystemImpl {
     createPhysicalShape(entity, data) {
-        const axis = (data.axis !== undefined) ? data.axis : 1;
-        const radius = (data.radius !== undefined) ? data.radius : 0.5;
-        const height = (data.height !== undefined) ? data.height : 1;
+        const axis = data.axis ?? 1;
+        const radius = data.radius ?? 0.5;
+        const height = data.height ?? 1;
 
         let shape = null;
 
@@ -511,11 +519,6 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         Ammo.destroy(data.shape);
         data.shape = null;
     }
-
-    remove(entity, data) {
-        this.destroyShape(data);
-        super.remove(entity, data);
-    }
 }
 
 // Compound Collision System
@@ -564,12 +567,13 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
  * Manages creation of {@link CollisionComponent}s.
  *
  * @augments ComponentSystem
+ * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
     /**
      * Creates a new CollisionComponentSystem instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -602,7 +606,9 @@ class CollisionComponentSystem extends ComponentSystem {
             'asset',
             'render',
             'renderAsset',
-            'enabled'
+            'enabled',
+            'linearOffset',
+            'angularOffset'
         ];
 
         // duplicate the input data because we are modifying it
@@ -637,8 +643,22 @@ class CollisionComponentSystem extends ComponentSystem {
         }
         component.data.type = data.type;
 
-        if (data.halfExtents && Array.isArray(data.halfExtents)) {
-            data.halfExtents = new Vec3(data.halfExtents[0], data.halfExtents[1], data.halfExtents[2]);
+        if (Array.isArray(data.halfExtents)) {
+            data.halfExtents = new Vec3(data.halfExtents);
+        }
+
+        if (Array.isArray(data.linearOffset)) {
+            data.linearOffset = new Vec3(data.linearOffset);
+        }
+
+        if (Array.isArray(data.angularOffset)) {
+            // Allow for euler angles to be passed as a 3 length array
+            const values = data.angularOffset;
+            if (values.length === 3) {
+                data.angularOffset = new Quat().setFromEulerAngles(values[0], values[1], values[2]);
+            } else {
+                data.angularOffset = new Quat(data.angularOffset);
+            }
         }
 
         const impl = this._createImplementation(data.type);
@@ -765,7 +785,7 @@ class CollisionComponentSystem extends ComponentSystem {
         if (relative) {
             this._calculateNodeRelativeTransform(node, relative);
 
-            pos = vec3;
+            pos = p1;
             rot = quat;
 
             mat4.getTranslation(pos);
@@ -774,14 +794,29 @@ class CollisionComponentSystem extends ComponentSystem {
             pos = node.getPosition();
             rot = node.getRotation();
         }
-
+        const ammoQuat = new Ammo.btQuaternion();
         const transform = new Ammo.btTransform();
+
         transform.setIdentity();
         const origin = transform.getOrigin();
-        origin.setValue(pos.x, pos.y, pos.z);
+        const component = node.collision;
 
-        const ammoQuat = new Ammo.btQuaternion();
-        ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        if (component && component._hasOffset) {
+            const lo = component.data.linearOffset;
+            const ao = component.data.angularOffset;
+            const newOrigin = p2;
+
+            quat.copy(rot).transformVector(lo, newOrigin);
+            newOrigin.add(pos);
+            quat.copy(rot).mul(ao);
+
+            origin.setValue(newOrigin.x, newOrigin.y, newOrigin.z);
+            ammoQuat.setValue(quat.x, quat.y, quat.z, quat.w);
+        } else {
+            origin.setValue(pos.x, pos.y, pos.z);
+            ammoQuat.setValue(rot.x, rot.y, rot.z, rot.w);
+        }
+
         transform.setRotation(ammoQuat);
         Ammo.destroy(ammoQuat);
         Ammo.destroy(origin);

@@ -1,7 +1,7 @@
-import { script } from '../../framework/script.js';
+import { script } from '../script.js';
 import { ScriptTypes } from '../script/script-types.js';
+import { ResourceLoader } from './loader.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -22,13 +22,23 @@ class ScriptHandler {
     /**
      * Create a new ScriptHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
         this._app = app;
         this._scripts = { };
         this._cache = { };
+    }
+
+    clearCache() {
+        for (const key in this._cache) {
+            const element = this._cache[key];
+            const parent = element.parentNode;
+            if (parent)
+                parent.removeChild(element);
+        }
+        this._cache = {};
     }
 
     load(url, callback) {
@@ -72,7 +82,7 @@ class ScriptHandler {
                     callback(null, obj, extra);
 
                     // no cache for scripts
-                    delete self._loader._cache[url + 'script'];
+                    delete self._loader._cache[ResourceLoader.makeKey(url, 'script')];
                 }
             } else {
                 callback(err);

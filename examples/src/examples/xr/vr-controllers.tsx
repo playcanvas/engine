@@ -6,7 +6,7 @@ class VrControllersExample {
     static NAME = 'VR Controllers';
 
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {
@@ -60,7 +60,7 @@ class VrControllersExample {
 
             const createCube = function (x: number, y: number, z: number) {
                 const cube = new pc.Entity();
-                cube.addComponent("model", {
+                cube.addComponent("render", {
                     type: "box",
                     material: new pc.StandardMaterial()
                 });

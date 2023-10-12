@@ -7,8 +7,6 @@ import { ComponentSystem } from '../system.js';
 import { LayoutGroupComponent } from './component.js';
 import { LayoutGroupComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 const MAX_ITERATIONS = 100;
@@ -17,12 +15,13 @@ const MAX_ITERATIONS = 100;
  * Manages creation of {@link LayoutGroupComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class LayoutGroupComponentSystem extends ComponentSystem {
     /**
      * Create a new LayoutGroupComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

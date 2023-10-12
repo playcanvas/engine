@@ -1,8 +1,3 @@
-/** @typedef {import('../../framework/asset/asset.js').Asset} Asset */
-/** @typedef {import('../../framework/asset/asset-registry.js').AssetRegistry} AssetRegistry */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-
 import { Debug } from '../../core/debug.js';
 
 /**
@@ -21,7 +16,7 @@ class ResourceLoader {
     /**
      * Create a new ResourceLoader instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../app-base.js').AppBase} app - The application.
      */
     constructor(app) {
         this._handlers = {};
@@ -53,10 +48,10 @@ class ResourceLoader {
      * - {@link ASSET_SCRIPT}
      * - {@link ASSET_CONTAINER}
      *
-     * @param {ResourceHandler} handler - An instance of a resource handler supporting at least
-     * `load()` and `open()`.
+     * @param {import('./handler.js').ResourceHandler} handler - An instance of a resource handler
+     * supporting at least `load()` and `open()`.
      * @example
-     * var loader = new ResourceLoader();
+     * const loader = new ResourceLoader();
      * loader.addHandler("json", new pc.JsonHandler());
      */
     addHandler(type, handler) {
@@ -77,10 +72,15 @@ class ResourceLoader {
      * Get a {@link ResourceHandler} for a resource type.
      *
      * @param {string} type - The name of the resource type that the handler is registered with.
-     * @returns {ResourceHandler} The registered handler.
+     * @returns {import('./handler.js').ResourceHandler|undefined} The registered handler, or
+     * undefined if the requested handler is not registered.
      */
     getHandler(type) {
         return this._handlers[type];
+    }
+
+    static makeKey(url, type) {
+        return `${url}-${type}`;
     }
 
     /**
@@ -92,7 +92,8 @@ class ResourceLoader {
      * @param {string} type - The type of resource expected.
      * @param {ResourceLoaderCallback} callback - The callback used when the resource is loaded or
      * an error occurs. Passed (err, resource) where err is null if there are no errors.
-     * @param {Asset} [asset] - Optional asset that is passed into handler
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed into
+     * handler.
      * @example
      * app.loader.load("../path/to/texture.png", "texture", function (err, texture) {
      *     // use texture here
@@ -102,7 +103,7 @@ class ResourceLoader {
         const handler = this._handlers[type];
         if (!handler) {
             const err = `No resource handler for asset type: '${type}' when loading [${url}]`;
-            Debug.warnOnce(err);
+            Debug.errorOnce(err);
             callback(err);
             return;
         }
@@ -113,7 +114,7 @@ class ResourceLoader {
             return;
         }
 
-        const key = url + type;
+        const key = ResourceLoader.makeKey(url, type);
 
         if (this._cache[key] !== undefined) {
             // in cache
@@ -192,7 +193,11 @@ class ResourceLoader {
     }
 
     _onSuccess(key, result, extra) {
-        this._cache[key] = result;
+        if (result !== null) {
+            this._cache[key] = result;
+        } else {
+            delete this._cache[key];
+        }
         for (let i = 0; i < this._requests[key].length; i++) {
             this._requests[key][i](null, result, extra);
         }
@@ -232,8 +237,8 @@ class ResourceLoader {
      * Perform any operations on a resource, that requires a dependency on its asset data or any
      * other asset data.
      *
-     * @param {Asset} asset - The asset to patch.
-     * @param {AssetRegistry} assets - The asset registry.
+     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
         const handler = this._handlers[asset.type];
@@ -254,7 +259,8 @@ class ResourceLoader {
      * @param {string} type - The type of resource.
      */
     clearCache(url, type) {
-        delete this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        delete this._cache[key];
     }
 
     /**
@@ -265,8 +271,9 @@ class ResourceLoader {
      * @returns {*} The resource loaded from the cache.
      */
     getFromCache(url, type) {
-        if (this._cache[url + type]) {
-            return this._cache[url + type];
+        const key = ResourceLoader.makeKey(url, type);
+        if (this._cache[key]) {
+            return this._cache[key];
         }
         return undefined;
     }

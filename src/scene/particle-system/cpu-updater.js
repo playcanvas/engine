@@ -2,7 +2,7 @@ import { math } from '../../core/math/math.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-import { EMITTERSHAPE_BOX, EMITTERSHAPE_SPHERE, PARTICLESORT_NONE } from '../../scene/constants.js';
+import { EMITTERSHAPE_BOX, EMITTERSHAPE_SPHERE, PARTICLESORT_NONE } from '../constants.js';
 
 let nonUniformScale;
 let uniformScale = 1;

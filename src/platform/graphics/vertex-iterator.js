@@ -1,10 +1,6 @@
 import { Debug } from '../../core/debug.js';
 import { typedArrayTypes } from './constants.js';
 
-/** @typedef {import('./scope-id.js').ScopeId} ScopeId */
-/** @typedef {import('./vertex-buffer.js').VertexBuffer} VertexBuffer */
-/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
-
 function set1(a) {
     this.array[this.index] = a;
 }
@@ -73,6 +69,8 @@ function arrayGet4(offset, outputArray, outputIndex) {
 
 /**
  * Helps with accessing a specific vertex attribute.
+ *
+ * @category Graphics
  */
 class VertexIteratorAccessor {
     /**
@@ -118,11 +116,11 @@ class VertexIteratorAccessor {
      * that are not relevant to this attribute.
      * @param {number} vertexElement.stride - The number of total bytes that are between the start
      * of one vertex, and the start of the next.
-     * @param {ScopeId} vertexElement.scopeId - The shader input variable corresponding to the
-     * attribute.
+     * @param {import('./scope-id.js').ScopeId} vertexElement.scopeId - The shader input variable
+     * corresponding to the attribute.
      * @param {number} vertexElement.size - The size of the attribute in bytes.
-     * @param {VertexFormat} vertexFormat - A vertex format that defines the layout of vertex data
-     * inside the buffer.
+     * @param {import('./vertex-format.js').VertexFormat} vertexFormat - A vertex format that
+     * defines the layout of vertex data inside the buffer.
      */
     constructor(buffer, vertexElement, vertexFormat) {
         this.index = 0;
@@ -215,12 +213,15 @@ class VertexIteratorAccessor {
 
 /**
  * A vertex iterator simplifies the process of writing vertex data to a vertex buffer.
+ *
+ * @category Graphics
  */
 class VertexIterator {
     /**
      * Create a new VertexIterator instance.
      *
-     * @param {VertexBuffer} vertexBuffer - The vertex buffer to be iterated.
+     * @param {import('./vertex-buffer.js').VertexBuffer} vertexBuffer - The vertex buffer to be
+     * iterated.
      */
     constructor(vertexBuffer) {
         // Store the vertex buffer
@@ -255,7 +256,7 @@ class VertexIterator {
      * @param {number} [count] - Optional number of steps to move on when calling next. Defaults to
      * 1.
      * @example
-     * var iterator = new pc.VertexIterator(vertexBuffer);
+     * const iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();
@@ -281,7 +282,7 @@ class VertexIterator {
      * buffer is unlocked and vertex data is uploaded to video memory.
      *
      * @example
-     * var iterator = new pc.VertexIterator(vertexBuffer);
+     * const iterator = new pc.VertexIterator(vertexBuffer);
      * iterator.element[pc.SEMANTIC_POSITION].set(-0.9, -0.9, 0.0);
      * iterator.element[pc.SEMANTIC_COLOR].set(255, 0, 0, 255);
      * iterator.next();

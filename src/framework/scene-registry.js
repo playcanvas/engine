@@ -5,15 +5,12 @@ import { ABSOLUTE_URL } from './asset/constants.js';
 
 import { SceneRegistryItem } from './scene-registry-item.js';
 
-/** @typedef {import('./app-base.js').AppBase} AppBase */
-/** @typedef {import('./entity.js').Entity} Entity */
-
 /**
  * Callback used by {@link SceneRegistry#loadSceneHierarchy}.
  *
  * @callback LoadHierarchyCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -28,7 +25,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  *
  * @callback ChangeSceneCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -36,7 +33,7 @@ import { SceneRegistryItem } from './scene-registry-item.js';
  *
  * @callback LoadSceneCallback
  * @param {string|null} err - The error message in the case where the loading or parsing fails.
- * @param {Entity} [entity] - The loaded root entity if no errors were encountered.
+ * @param {import('./entity.js').Entity} [entity] - The loaded root entity if no errors were encountered.
  */
 
 /**
@@ -50,20 +47,38 @@ import { SceneRegistryItem } from './scene-registry-item.js';
 /**
  * Container for storing and loading of scenes. An instance of the registry is created on the
  * {@link AppBase} object as {@link AppBase#scenes}.
+ *
+ * @category Graphics
  */
 class SceneRegistry {
     /**
+     * @type {import('./app-base.js').AppBase}
+     * @private
+     */
+    _app;
+
+    /**
+     * @type {SceneRegistryItem[]}
+     * @private
+     */
+    _list = [];
+
+    /** @private */
+    _index = {};
+
+    /** @private */
+    _urlIndex = {};
+
+    /**
      * Create a new SceneRegistry instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('./app-base.js').AppBase} app - The application.
      */
     constructor(app) {
         this._app = app;
-        this._list = [];
-        this._index = {};
-        this._urlIndex = {};
     }
 
+    /** @ignore */
     destroy() {
         this._app = null;
     }
@@ -81,7 +96,7 @@ class SceneRegistry {
      * Add a new item to the scene registry.
      *
      * @param {string} name - The name of the scene.
-     * @param {string} url -  The url of the scene file.
+     * @param {string} url - The url of the scene file.
      * @returns {boolean} Returns true if the scene was successfully added to the registry, false otherwise.
      */
     add(name, url) {
@@ -155,19 +170,26 @@ class SceneRegistry {
         }
     }
 
-    // Private function to load scene data with the option to cache
-    // This allows us to retain expected behavior of loadSceneSettings and loadSceneHierarchy where they
-    // don't store loaded data which may be undesired behavior with projects that have many scenes.
+    /**
+     * Private function to load scene data with the option to cache. This allows us to retain
+     * expected behavior of loadSceneSettings and loadSceneHierarchy where they don't store loaded
+     * data which may be undesired behavior with projects that have many scenes.
+     *
+     * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
+     * {@link SceneRegistry#find}, URL of the scene file (e.g."scene_id.json") or name of the scene.
+     * @param {boolean} storeInCache - Whether to store the loaded data in the scene item.
+     * @param {LoadSceneDataCallback} callback - The function to call after loading,
+     * passed (err, sceneItem) where err is null if no errors occurred.
+     * @private
+     */
     _loadSceneData(sceneItem, storeInCache, callback) {
         const app = this._app;
-        // If it's a sceneItem, we want to be able to cache the data
-        // that is loaded so we don't do a subsequent http requests
-        // on the same scene later
+        // If it's a sceneItem, we want to be able to cache the data that is loaded so we don't do
+        // a subsequent http requests on the same scene later
 
-        // If it's just a URL or scene name then attempt to find
-        // the scene item in the registry else create a temp
-        // SceneRegistryItem to use for this function as the scene
-        // may not have been added to the registry
+        // If it's just a URL or scene name then attempt to find the scene item in the registry
+        // else create a temp SceneRegistryItem to use for this function as the scene may not have
+        // been added to the registry
         let url = sceneItem;
         if (typeof sceneItem === 'string') {
             sceneItem = this.findByUrl(url) || this.find(url) || new SceneRegistryItem('Untitled', url);
@@ -194,8 +216,8 @@ class SceneRegistry {
         sceneItem._onLoadedCallbacks.push(callback);
 
         if (!sceneItem._loading) {
-            // Because we need to load scripts before we instance the hierarchy (i.e. before we create script components)
-            // Split loading into load and open
+            // Because we need to load scripts before we instance the hierarchy (i.e. before we
+            // create script components), split loading into load and open
             const handler = app.loader.getHandler("hierarchy");
 
             handler.load(url, (err, data) => {
@@ -229,7 +251,7 @@ class SceneRegistry {
      * @param {LoadSceneDataCallback} callback - The function to call after loading,
      * passed (err, sceneItem) where err is null if no errors occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneData(sceneItem, function (err, sceneItem) {
      *     if (err) {
      *         // error
@@ -246,7 +268,7 @@ class SceneRegistry {
      * @param {SceneRegistryItem | string} sceneItem - The scene item (which can be found with
      * {@link SceneRegistry#find} or URL of the scene file. Usually this will be "scene_id.json".
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.unloadSceneData(sceneItem);
      */
     unloadSceneData(sceneItem) {
@@ -313,10 +335,10 @@ class SceneRegistry {
      * @param {LoadHierarchyCallback} callback - The function to call after loading,
      * passed (err, entity) where err is null if no errors occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneHierarchy(sceneItem, function (err, entity) {
      *     if (!err) {
-     *         var e = app.root.find("My New Entity");
+     *         const e = app.root.find("My New Entity");
      *     } else {
      *         // error
      *     }
@@ -334,7 +356,7 @@ class SceneRegistry {
      * @param {LoadSettingsCallback} callback - The function called after the settings
      * are applied. Passed (err) where err is null if no error occurred.
      * @example
-     * var sceneItem = app.scenes.find("Scene Name");
+     * const sceneItem = app.scenes.find("Scene Name");
      * app.scenes.loadSceneSettings(sceneItem, function (err) {
      *     if (!err) {
      *         // success
@@ -379,14 +401,11 @@ class SceneRegistry {
         const app = this._app;
 
         const onBeforeAddHierarchy = (sceneItem) => {
-            // Destroy/Remove all nodes on the app.root
-            const rootChildren = app.root.children;
-            while (rootChildren.length > 0) {
-                const child = rootChildren[0];
-                child.reparent(null);
-                child.destroy?.();
+            // Destroy all nodes on the app.root
+            const { children } = app.root;
+            while (children.length) {
+                children[0].destroy();
             }
-
             app.applySceneSettings(sceneItem.data.settings);
         };
 

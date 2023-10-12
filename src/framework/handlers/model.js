@@ -1,14 +1,12 @@
 import { path } from '../../core/path.js';
-import { Debug } from '../../core/debug.js';
 
 import { http, Http } from '../../platform/net/http.js';
+
+import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 
 import { GlbModelParser } from '../parsers/glb-model.js';
 import { JsonModelParser } from '../parsers/json-model.js';
 
-import { getDefaultMaterial } from '../../scene/materials/default-material.js';
-
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
@@ -25,6 +23,7 @@ import { getDefaultMaterial } from '../../scene/materials/default-material.js';
  * Resource handler used for loading {@link Model} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class ModelHandler {
     /**
@@ -37,24 +36,25 @@ class ModelHandler {
     /**
      * Create a new ModelHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
-        this._device = app.graphicsDevice;
         this._parsers = [];
-        this._defaultMaterial = getDefaultMaterial(this._device);
+        this.device = app.graphicsDevice;
+        this.assets = app.assets;
+        this.defaultMaterial = getDefaultMaterial(this.device);
         this.maxRetries = 0;
 
-        this.addParser(new JsonModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new JsonModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.json');
         });
-        this.addParser(new GlbModelParser(this._device, this._defaultMaterial), function (url, data) {
+        this.addParser(new GlbModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.glb');
         });
     }
 
-    load(url, callback) {
+    load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
                 load: url,
@@ -76,12 +76,27 @@ class ModelHandler {
             }
         }
 
-        http.get(url.load, options, function (err, response) {
+        http.get(url.load, options, (err, response) => {
             if (!callback)
                 return;
 
             if (!err) {
-                callback(null, response);
+                // parse the model
+                for (let i = 0; i < this._parsers.length; i++) {
+                    const p = this._parsers[i];
+
+                    if (p.decider(url.original, response)) {
+                        p.parser.parse(response, (err, parseResult) => {
+                            if (err) {
+                                callback(err);
+                            } else {
+                                callback(null, parseResult);
+                            }
+                        }, asset);
+                        return;
+                    }
+                }
+                callback("No parsers found");
             } else {
                 callback(`Error loading model: ${url.original} [${err}]`);
             }
@@ -89,15 +104,8 @@ class ModelHandler {
     }
 
     open(url, data) {
-        for (let i = 0; i < this._parsers.length; i++) {
-            const p = this._parsers[i];
-
-            if (p.decider(url, data)) {
-                return p.parser.parse(data);
-            }
-        }
-        Debug.warn('pc.ModelHandler#open: No model parser found for: ' + url);
-        return null;
+        // parse was done in open, return the data as-is
+        return data;
     }
 
     patch(asset, assets) {
@@ -119,13 +127,13 @@ class ModelHandler {
 
                     asset.once('remove', function (asset) {
                         if (meshInstance.material === asset.resource) {
-                            meshInstance.material = self._defaultMaterial;
+                            meshInstance.material = self.defaultMaterial;
                         }
                     });
                 };
 
                 if (!data.mapping[i]) {
-                    meshInstance.material = self._defaultMaterial;
+                    meshInstance.material = self.defaultMaterial;
                     return;
                 }
 
@@ -135,7 +143,7 @@ class ModelHandler {
 
                 if (id !== undefined) { // id mapping
                     if (!id) {
-                        meshInstance.material = self._defaultMaterial;
+                        meshInstance.material = self.defaultMaterial;
                     } else {
                         material = assets.get(id);
                         if (material) {

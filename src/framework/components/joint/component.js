@@ -9,9 +9,6 @@ import { Component } from '../component.js';
 
 import { MOTION_FREE, MOTION_LIMITED, MOTION_LOCKED } from './constants.js';
 
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').JointComponentSystem} JointComponentSystem */
-
 const properties = [
     'angularDampingX', 'angularDampingY', 'angularDampingZ',
     'angularEquilibriumX', 'angularEquilibriumY', 'angularEquilibriumZ',
@@ -38,8 +35,10 @@ class JointComponent extends Component {
     /**
      * Create a new JointComponent instance.
      *
-     * @param {JointComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').JointComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);

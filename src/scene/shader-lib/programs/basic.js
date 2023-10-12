@@ -9,10 +9,10 @@ import {
 } from '../../constants.js';
 import { ShaderPass } from '../../shader-pass.js';
 
-import { begin, end, fogCode, skinCode } from './common.js';
+import { ShaderGenerator } from './shader-generator.js';
 
-const basic = {
-    generateKey: function (options) {
+class ShaderGeneratorBasic extends ShaderGenerator {
+    generateKey(options) {
         let key = 'basic';
         if (options.fog)                    key += '_fog';
         if (options.alphaTest)              key += '_atst';
@@ -28,9 +28,9 @@ const basic = {
 
         key += '_' + options.pass;
         return key;
-    },
+    }
 
-    createShaderDefinition: function (device, options) {
+    createShaderDefinition(device, options) {
         // GENERATE ATTRIBUTES
         const attributes = {
             vertex_position: SEMANTIC_POSITION
@@ -46,16 +46,17 @@ const basic = {
             attributes.vertex_texCoord0 = SEMANTIC_TEXCOORD0;
         }
 
-        const shaderPassDefine = ShaderPass.getPassShaderDefine(options.pass);
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const shaderPassDefines = shaderPassInfo.shaderDefines;
 
         // GENERATE VERTEX SHADER
-        let vshader = shaderPassDefine;
+        let vshader = shaderPassDefines;
 
         // VERTEX SHADER DECLARATIONS
         vshader += shaderChunks.transformDeclVS;
 
         if (options.skin) {
-            vshader += skinCode(device);
+            vshader += ShaderGenerator.skinCode(device);
             vshader += shaderChunks.transformSkinnedVS;
         } else {
             vshader += shaderChunks.transformVS;
@@ -83,7 +84,7 @@ const basic = {
         }
 
         // VERTEX SHADER BODY
-        vshader += begin();
+        vshader += ShaderGenerator.begin();
 
         vshader += "   gl_Position = getPosition();\n";
 
@@ -98,10 +99,10 @@ const basic = {
             vshader += '    vUv0 = vertex_texCoord0;\n';
         }
 
-        vshader += end();
+        vshader += ShaderGenerator.end();
 
         // GENERATE FRAGMENT SHADER
-        let fshader = shaderPassDefine;
+        let fshader = shaderPassDefines;
 
         // FRAGMENT SHADER DECLARATIONS
         if (options.vertexColors) {
@@ -114,7 +115,7 @@ const basic = {
             fshader += 'uniform sampler2D texture_diffuseMap;\n';
         }
         if (options.fog) {
-            fshader += fogCode(options.fog);
+            fshader += ShaderGenerator.fogCode(options.fog);
         }
         if (options.alphaTest) {
             fshader += shaderChunks.alphaTestPS;
@@ -127,7 +128,7 @@ const basic = {
         }
 
         // FRAGMENT SHADER BODY
-        fshader += begin();
+        fshader += ShaderGenerator.begin();
 
         // Read the map texels that the shader needs
         if (options.vertexColors) {
@@ -155,7 +156,7 @@ const basic = {
             }
         }
 
-        fshader += end();
+        fshader += ShaderGenerator.end();
 
         return ShaderUtils.createDefinition(device, {
             name: 'BasicShader',
@@ -164,6 +165,8 @@ const basic = {
             fragmentCode: fshader
         });
     }
-};
+}
+
+const basic = new ShaderGeneratorBasic();
 
 export { basic };

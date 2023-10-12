@@ -5,9 +5,9 @@
  */
 class RefCountedCache {
     /**
-     * The cache. The key is the object being stored in the cache. The value is ref count of
-     * the object. When that reaches zero, destroy function on the object gets called and
-     * object is removed from the cache.
+     * The cache. The key is the object being stored in the cache. The value is ref count of the
+     * object. When that reaches zero, destroy function on the object gets called and object is
+     * removed from the cache.
      *
      * @type {Map<object, number>}
      */

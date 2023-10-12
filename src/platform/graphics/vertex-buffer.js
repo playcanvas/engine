@@ -2,22 +2,22 @@ import { Debug } from '../../core/debug.js';
 import { TRACEID_VRAM_VB } from '../../core/constants.js';
 import { BUFFER_STATIC } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./vertex-format.js').VertexFormat} VertexFormat */
-
 let id = 0;
 
 /**
  * A vertex buffer is the mechanism via which the application specifies vertex data to the graphics
  * hardware.
+ *
+ * @category Graphics
  */
 class VertexBuffer {
     /**
      * Create a new VertexBuffer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this vertex
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this vertex buffer.
+     * @param {import('./vertex-format.js').VertexFormat} format - The vertex format of this vertex
      * buffer.
-     * @param {VertexFormat} format - The vertex format of this vertex buffer.
      * @param {number} numVertices - The number of vertices that this vertex buffer will hold.
      * @param {number} [usage] - The usage type of the vertex buffer (see BUFFER_*). Defaults to BUFFER_STATIC.
      * @param {ArrayBuffer} [initialData] - Initial data.
@@ -32,9 +32,6 @@ class VertexBuffer {
         this.id = id++;
 
         this.impl = graphicsDevice.createVertexBufferImpl(this, format);
-
-        // marks vertex buffer as instancing data
-        this.instancing = false;
 
         // Calculate the size. If format contains verticesByteSize (non-interleaved format), use it
         this.numBytes = format.verticesByteSize ? format.verticesByteSize : format.size * numVertices;
@@ -85,7 +82,8 @@ class VertexBuffer {
     /**
      * Returns the data format of the specified vertex buffer.
      *
-     * @returns {VertexFormat} The data format of the specified vertex buffer.
+     * @returns {import('./vertex-format.js').VertexFormat} The data format of the specified vertex
+     * buffer.
      */
     getFormat() {
         return this.format;

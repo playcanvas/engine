@@ -1,10 +1,4 @@
-import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
-import { Tracing } from '../core/tracing.js';
-
-/** @typedef {import('../platform/graphics/render-pass.js').RenderPass} RenderPass */
-/** @typedef {import('../platform/graphics/render-target.js').RenderTarget} RenderTarget */
-/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
 
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
@@ -12,22 +6,24 @@ import { Tracing } from '../core/tracing.js';
  * @ignore
  */
 class FrameGraph {
-    /** @type {RenderPass[]} */
+    /** @type {import('../platform/graphics/render-pass.js').RenderPass[]} */
     renderPasses = [];
 
     /**
      * Map used during frame graph compilation. It maps a render target to its previous occurrence.
      *
-     *  @type {Map<RenderTarget, RenderPass>}
+     *  @type {Map<import('../platform/graphics/render-target.js').RenderTarget, import('../platform/graphics/render-pass.js').RenderPass>}
      */
     renderTargetMap = new Map();
 
     /**
      * Add a render pass to the frame.
      *
-     * @param {RenderPass} renderPass - The render pass to add.
+     * @param {import('../platform/graphics/render-pass.js').RenderPass} renderPass - The render
+     * pass to add.
      */
     addRenderPass(renderPass) {
+        Debug.assert(renderPass);
         this.renderPasses.push(renderPass);
     }
 
@@ -43,7 +39,7 @@ class FrameGraph {
             const renderPass = renderPasses[i];
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default framebuffer
+            // if using a target, or null which represents the default back-buffer
             if (renderTarget !== undefined) {
 
                 // previous pass using the same render target
@@ -51,8 +47,12 @@ class FrameGraph {
                 if (prevPass) {
 
                     // if we use the RT without clearing, make sure the previous pass stores data
-                    if (!renderPass.colorOps.clear) {
-                        prevPass.colorOps.store = true;
+                    const count = renderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        const colorOps = renderPass.colorArrayOps[j];
+                        if (!colorOps.clear) {
+                            prevPass.colorArrayOps[j].store = true;
+                        }
                     }
                     if (!renderPass.depthStencilOps.clearDepth) {
                         prevPass.depthStencilOps.storeDepth = true;
@@ -71,9 +71,9 @@ class FrameGraph {
         // If those passes are separated only by passes not requiring cubemap (shadows ..),
         // we skip the mipmap generation till the last rendering to the cubemap, to avoid
         // mipmaps being generated after each face.
-        /** @type {Texture} */
+        /** @type {import('../platform/graphics/texture.js').Texture} */
         let lastCubeTexture = null;
-        /** @type {RenderPass} */
+        /** @type {import('../platform/graphics/render-pass.js').RenderPass} */
         let lastCubeRenderPass = null;
         for (let i = 0; i < renderPasses.length; i++) {
             const renderPass = renderPasses[i];
@@ -84,7 +84,10 @@ class FrameGraph {
 
                 // if previous pass used the same cubemap texture, it does not need mipmaps generated
                 if (lastCubeTexture === thisTexture) {
-                    lastCubeRenderPass.colorOps.mipmaps = false;
+                    const count = lastCubeRenderPass.colorArrayOps.length;
+                    for (let j = 0; j < count; j++) {
+                        lastCubeRenderPass.colorArrayOps[j].mipmaps = false;
+                    }
                 }
 
                 lastCubeTexture = renderTarget.colorBuffer;
@@ -98,27 +101,10 @@ class FrameGraph {
             }
         }
 
-        // handle what's left in the map - last passes rendering to each render target
-        renderTargetMap.forEach((renderPass, renderTarget) => {
-
-            // default framebuffer
-            if (renderTarget === null) {
-
-                // store the multisampled buffer
-                renderPass.colorOps.store = true;
-
-                // no resolve, no mipmaps
-                renderPass.colorOps.resolve = false;
-                renderPass.colorOps.mipmaps = false;
-            }
-        });
-
         renderTargetMap.clear();
-
-        this.log();
     }
 
-    render() {
+    render(device) {
 
         this.compile();
 
@@ -126,44 +112,6 @@ class FrameGraph {
         for (let i = 0; i < renderPasses.length; i++) {
             renderPasses[i].render();
         }
-    }
-
-    log() {
-        // #if _DEBUG
-        if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
-
-            this.renderPasses.forEach((renderPass, index) => {
-
-                const rt = renderPass.renderTarget === undefined ? '' : ` RT: ${(renderPass.renderTarget ? renderPass.renderTarget.name : 'NULL')} ` +
-                    `${renderPass.renderTarget?.colorBuffer ? '[Color]' : ''}` +
-                    `${renderPass.renderTarget?.depth ? '[Depth]' : ''}` +
-                    `${renderPass.renderTarget?.stencil ? '[Stencil]' : ''}` +
-                    `${(renderPass.samples > 0 ? ' samples: ' + renderPass.samples : '')}`;
-
-                Debug.trace(TRACEID_RENDER_PASS,
-                            `${index.toString().padEnd(2, ' ')}: ${renderPass.name.padEnd(20, ' ')}` +
-                            rt.padEnd(30));
-
-                if (renderPass.colorOps) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    colorOps: ` +
-                                `${renderPass.colorOps.clear ? 'clear' : 'load'}->` +
-                                `${renderPass.colorOps.store ? 'store' : 'discard'} ` +
-                                `${renderPass.colorOps.resolve ? 'resolve ' : ''}` +
-                                `${renderPass.colorOps.mipmaps ? 'mipmaps ' : ''}`);
-                }
-
-                if (renderPass.depthStencilOps) {
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    depthOps: ` +
-                                `${renderPass.depthStencilOps.clearDepth ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeDepth ? 'store' : 'discard'}`);
-
-                    Debug.trace(TRACEID_RENDER_PASS_DETAIL, `    stencOps: ` +
-                                `${renderPass.depthStencilOps.clearStencil ? 'clear' : 'load'}->` +
-                                `${renderPass.depthStencilOps.storeStencil ? 'store' : 'discard'}`);
-                }
-            });
-        }
-        // #endif
     }
 }
 

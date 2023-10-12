@@ -1,12 +1,10 @@
-/** @typedef {import('./touch-device.js').TouchDevice} TouchDevice */
-
 /**
- * Similar to {@link getTargetCoords} for the MouseEvents. This function takes a browser Touch
- * object and returns the coordinates of the touch relative to the target element.
+ * This function takes a browser Touch object and returns the coordinates of the touch relative to
+ * the target DOM element.
  *
  * @param {globalThis.Touch} touch - The browser Touch object.
- * @returns {object} The coordinates of the touch relative to the touch.target element. In the
- * format {x, y}.
+ * @returns {object} The coordinates of the touch relative to the touch.target DOM element. In the
+ * format \{x, y\}.
  */
 function getTouchTargetCoords(touch) {
     let totalOffsetX = 0;
@@ -31,6 +29,8 @@ function getTouchTargetCoords(touch) {
 
 /**
  * A instance of a single point touch on a {@link TouchDevice}.
+ *
+ * @category Input
  */
 class Touch {
     /**
@@ -62,7 +62,7 @@ class Touch {
         this.y = coords.y;
 
         /**
-         * The target element of the touch event.
+         * The target DOM element of the touch event.
          *
          * @type {Element}
          */
@@ -79,18 +79,21 @@ class Touch {
 
 /**
  * A Event corresponding to touchstart, touchend, touchmove or touchcancel. TouchEvent wraps the
- * standard browser event and provides lists of {@link Touch} objects.
+ * standard browser DOM event and provides lists of {@link Touch} objects.
+ *
+ * @category Input
  */
 class TouchEvent {
     /**
      * Create a new TouchEvent instance. It is created from an existing browser event.
      *
-     * @param {TouchDevice} device - The source device of the touch events.
+     * @param {import('./touch-device.js').TouchDevice} device - The source device of the touch
+     * events.
      * @param {globalThis.TouchEvent} event - The original browser TouchEvent.
      */
     constructor(device, event) {
         /**
-         * The target Element that the event was fired from.
+         * The target DOM element that the event was fired from.
          *
          * @type {Element}
          */
@@ -128,9 +131,8 @@ class TouchEvent {
     }
 
     /**
-     * Get an event from one of the touch lists by the id. It is useful to access
-     * touches by their id so that you can be sure you are referencing the same
-     * touch.
+     * Get an event from one of the touch lists by the id. It is useful to access touches by their
+     * id so that you can be sure you are referencing the same touch.
      *
      * @param {number} id - The identifier of the touch.
      * @param {Touch[]|null} list - An array of touches to search.

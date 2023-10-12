@@ -6,15 +6,48 @@ import { CurveEvaluator } from './curve-evaluator.js';
 /**
  * A curve is a collection of keys (time/value pairs). The shape of the curve is defined by its
  * type that specifies an interpolation scheme for the keys.
+ *
+ * @category Math
  */
 class Curve {
+    keys = [];
+
+    /**
+     * The curve interpolation scheme. Can be:
+     *
+     * - {@link CURVE_LINEAR}
+     * - {@link CURVE_SMOOTHSTEP}
+     * - {@link CURVE_SPLINE}
+     * - {@link CURVE_STEP}
+     *
+     * Defaults to {@link CURVE_SMOOTHSTEP}.
+     *
+     * @type {number}
+     */
+    type = CURVE_SMOOTHSTEP;
+
+    /**
+     * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and 1
+     * where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1 results in
+     * a very smooth curve. Use 0.5 for a Catmull-rom spline.
+     *
+     * @type {number}
+     */
+    tension = 0.5;
+
+    /**
+     * @type {CurveEvaluator}
+     * @private
+     */
+    _eval = new CurveEvaluator(this);
+
     /**
      * Creates a new Curve instance.
      *
      * @param {number[]} [data] - An array of keys (pairs of numbers with the time first and value
      * second).
      * @example
-     * var curve = new pc.Curve([
+     * const curve = new pc.Curve([
      *     0, 0,        // At 0 time, value of 0
      *     0.33, 2,     // At 0.33 time, value of 2
      *     0.66, 2.6,   // At 0.66 time, value of 2.6
@@ -22,37 +55,6 @@ class Curve {
      * ]);
      */
     constructor(data) {
-        this.keys = [];
-
-        /**
-         * The curve interpolation scheme. Can be:
-         *
-         * - {@link CURVE_LINEAR}
-         * - {@link CURVE_SMOOTHSTEP}
-         * - {@link CURVE_SPLINE}
-         * - {@link CURVE_STEP}
-         *
-         * Defaults to {@link CURVE_SMOOTHSTEP}.
-         *
-         * @type {number}
-         */
-        this.type = CURVE_SMOOTHSTEP;
-
-        /**
-         * Controls how {@link CURVE_SPLINE} tangents are calculated. Valid range is between 0 and
-         * 1 where 0 results in a non-smooth curve (equivalent to linear interpolation) and 1
-         * results in a very smooth curve. Use 0.5 for a Catmull-rom spline.
-         *
-         * @type {number}
-         */
-        this.tension = 0.5;
-
-        /**
-         * @type {CurveEvaluator}
-         * @private
-         */
-        this._eval = new CurveEvaluator(this);
-
         if (data) {
             for (let i = 0; i < data.length - 1; i += 2) {
                 this.keys.push([data[i], data[i + 1]]);

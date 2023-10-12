@@ -12,17 +12,12 @@ import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../scene/composition/layer-composition.js').LayerComposition} LayerComposition */
-/** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').ModelComponentSystem} ModelComponentSystem */
-
 /**
  * Enables an Entity to render a model or a primitive shape. This Component attaches additional
  * model geometry in to the scene graph below the Entity.
  *
  * @augments Component
+ * @category Graphics
  */
 class ModelComponent extends Component {
     /**
@@ -68,7 +63,7 @@ class ModelComponent extends Component {
     _materialAsset = null;
 
     /**
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      * @private
      */
     _material;
@@ -92,10 +87,11 @@ class ModelComponent extends Component {
     _lightmapSizeMultiplier = 1;
 
     /**
+     * Mark meshes as non-movable (optimization).
+     *
      * @type {boolean}
-     * @private
      */
-    _isStatic = false;
+    isStatic = false;
 
     /**
      * @type {number[]}
@@ -110,7 +106,7 @@ class ModelComponent extends Component {
     _batchGroupId = -1;
 
     /**
-     * @type {BoundingBox|null}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -132,8 +128,10 @@ class ModelComponent extends Component {
     /**
      * Create a new ModelComponent instance.
      *
-     * @param {ModelComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').ModelComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -173,7 +171,7 @@ class ModelComponent extends Component {
      * specified for skinned characters in order to avoid per frame bounding box computations based
      * on bone positions.
      *
-     * @type {BoundingBox|null}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -304,7 +302,7 @@ class ModelComponent extends Component {
             this._model._immutable = false;
 
             this.removeModelFromLayers();
-            this.entity.removeChild(this._model.getGraph());
+            this._model.getGraph().destroy();
             delete this._model._entity;
 
             if (this._clonedModel) {
@@ -324,7 +322,6 @@ class ModelComponent extends Component {
             for (let i = 0; i < meshInstances.length; i++) {
                 meshInstances[i].castShadow = this._castShadows;
                 meshInstances[i].receiveShadow = this._receiveShadows;
-                meshInstances[i].isStatic = this._isStatic;
                 meshInstances[i].setCustomAabb(this._customAabb);
             }
 
@@ -475,29 +472,6 @@ class ModelComponent extends Component {
     }
 
     /**
-     * Mark model as non-movable (optimization).
-     *
-     * @type {boolean}
-     */
-    set isStatic(value) {
-        if (this._isStatic === value) return;
-
-        this._isStatic = value;
-
-        if (this._model) {
-            const rcv = this._model.meshInstances;
-            for (let i = 0; i < rcv.length; i++) {
-                const m = rcv[i];
-                m.isStatic = value;
-            }
-        }
-    }
-
-    get isStatic() {
-        return this._isStatic;
-    }
-
-    /**
      * An array of layer IDs ({@link Layer#id}) to which this model should belong. Don't push, pop,
      * splice or modify this array, if you want to change it - set a new one instead.
      *
@@ -610,7 +584,7 @@ class ModelComponent extends Component {
      * The material {@link Material} that will be used to render the model (not used on models of
      * type 'asset').
      *
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      */
     set material(value) {
         if (this._material === value)
@@ -722,8 +696,10 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {LayerComposition} oldComp - The old layer composition.
-     * @param {LayerComposition} newComp - The new layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - The
+     * old layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - The
+     * new layer composition.
      * @private
      */
     onLayersChanged(oldComp, newComp) {
@@ -735,7 +711,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was added.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was added.
      * @private
      */
     onLayerAdded(layer) {
@@ -745,7 +721,7 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Layer} layer - The layer that was removed.
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer that was removed.
      * @private
      */
     onLayerRemoved(layer) {
@@ -1131,7 +1107,8 @@ class ModelComponent extends Component {
     }
 
     /**
-     * @param {Material} material - The material to be set.
+     * @param {import('../../../scene/materials/material.js').Material} material - The material to
+     * be set.
      * @private
      */
     _setMaterial(material) {

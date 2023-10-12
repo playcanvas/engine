@@ -4,8 +4,6 @@ import {
     BUFFER_STATIC, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32, typedArrayIndexFormatsByteSize
 } from './constants.js';
 
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
-
 let id = 0;
 
 /**
@@ -13,13 +11,15 @@ let id = 0;
  * can normally utilize less memory that unindexed primitives (if vertices are shared).
  *
  * Typically, index buffers are set on {@link Mesh} objects.
+ *
+ * @category Graphics
  */
 class IndexBuffer {
     /**
      * Create a new IndexBuffer instance.
      *
-     * @param {GraphicsDevice} graphicsDevice - The graphics device used to manage this index
-     * buffer.
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this index buffer.
      * @param {number} format - The type of each index to be stored in the index buffer. Can be:
      *
      * - {@link INDEXFORMAT_UINT8}
@@ -38,12 +38,12 @@ class IndexBuffer {
      * @example
      * // Create an index buffer holding 3 16-bit indices. The buffer is marked as
      * // static, hinting that the buffer will never be modified.
-     * var indices = new UInt16Array([0, 1, 2]);
-     * var indexBuffer = new pc.IndexBuffer(graphicsDevice,
-     *                                      pc.INDEXFORMAT_UINT16,
-     *                                      3,
-     *                                      pc.BUFFER_STATIC,
-     *                                      indices);
+     * const indices = new UInt16Array([0, 1, 2]);
+     * const indexBuffer = new pc.IndexBuffer(graphicsDevice,
+     *                                        pc.INDEXFORMAT_UINT16,
+     *                                        3,
+     *                                        pc.BUFFER_STATIC,
+     *                                        indices);
      */
     constructor(graphicsDevice, format, numIndices, usage = BUFFER_STATIC, initialData) {
         // By default, index buffers are static (better for performance since buffer data can be cached in VRAM)

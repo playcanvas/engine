@@ -1,18 +1,18 @@
 import {
-    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
-
-import { Asset } from '../../framework/asset/asset.js';
 import { Texture } from '../../platform/graphics/texture.js';
 
+import { Asset } from '../asset/asset.js';
+
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class CubemapHandler {
     /**
@@ -25,7 +25,7 @@ class CubemapHandler {
     /**
      * Create a new CubemapHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -116,22 +116,31 @@ class CubemapHandler {
             // prelit asset changed
             if (assets[0]) {
                 tex = assets[0].resource;
-                for (i = 0; i < 6; ++i) {
-                    resources[i + 1] = new Texture(this._device, {
-                        name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
-                        cubemap: true,
-                        // assume prefiltered data has same encoding as the faces asset
-                        type: getType() || tex.type,
-                        width: tex.width >> i,
-                        height: tex.height >> i,
-                        format: tex.format,
-                        levels: [tex._levels[i]],
-                        fixCubemapSeams: true,
-                        addressU: ADDRESS_CLAMP_TO_EDGE,
-                        addressV: ADDRESS_CLAMP_TO_EDGE,
-                        // generate cubemaps on the top level only
-                        mipmaps: i === 0
-                    });
+                if (tex.cubemap) {
+                    for (i = 0; i < 6; ++i) {
+                        resources[i + 1] = new Texture(this._device, {
+                            name: cubemapAsset.name + '_prelitCubemap' + (tex.width >> i),
+                            cubemap: true,
+                            // assume prefiltered data has same encoding as the faces asset
+                            type: getType() || tex.type,
+                            width: tex.width >> i,
+                            height: tex.height >> i,
+                            format: tex.format,
+                            levels: [tex._levels[i]],
+                            fixCubemapSeams: true,
+                            addressU: ADDRESS_CLAMP_TO_EDGE,
+                            addressV: ADDRESS_CLAMP_TO_EDGE,
+                            // generate cubemaps on the top level only
+                            mipmaps: i === 0
+                        });
+                    }
+                } else {
+                    // prefiltered data is an env atlas
+                    tex.type = TEXTURETYPE_RGBP;
+                    tex.addressU = ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = ADDRESS_CLAMP_TO_EDGE;
+                    tex.mipmaps = false;
+                    resources[1] = tex;
                 }
             }
         } else {
@@ -170,7 +179,8 @@ class CubemapHandler {
                     type: getType() || faceTextures[0].type,
                     width: faceTextures[0].width,
                     height: faceTextures[0].height,
-                    format: format === PIXELFORMAT_R8_G8_B8 ? PIXELFORMAT_R8_G8_B8_A8 : format,
+                    format: format === PIXELFORMAT_RGB8 ? PIXELFORMAT_RGBA8 : format,
+                    mipmaps: assetData.mipmaps ?? true,
                     levels: faceLevels,
                     minFilter: assetData.hasOwnProperty('minFilter') ? assetData.minFilter : faceTextures[0].minFilter,
                     magFilter: assetData.hasOwnProperty('magFilter') ? assetData.magFilter : faceTextures[0].magFilter,

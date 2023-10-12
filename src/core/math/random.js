@@ -13,7 +13,7 @@ const random = {
     /**
      * Return a pseudo-random 2D point inside a unit circle with uniform distribution.
      *
-     * @param {Vec2} point - The returned generated point.
+     * @param {import('./vec2.js').Vec2} point - The returned generated point.
      * @ignore
      */
     circlePoint: function (point) {
@@ -27,7 +27,7 @@ const random = {
      * Generates evenly distributed deterministic points inside a unit circle using Fermat's spiral
      * and Vogel's method.
      *
-     * @param {Vec2} point - The returned generated point.
+     * @param {import('./vec2.js').Vec2} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
      * @ignore
@@ -47,7 +47,7 @@ const random = {
      * sphere). For example by specifying 0.4 and 0.6 and start and end, a band around the equator
      * would be generated.
      *
-     * @param {Vec3} point - The returned generated point.
+     * @param {import('./vec3.js').Vec3} point - The returned generated point.
      * @param {number} index - Index of the point to generate, in the range from 0 to numPoints - 1.
      * @param {number} numPoints - The total number of points of the set.
      * @param {number} [start] - Part on the sphere along y axis to start the points, in the range

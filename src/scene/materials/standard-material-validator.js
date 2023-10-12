@@ -90,7 +90,7 @@ class StandardMaterialValidator {
                 if (REMOVED[key]) {
                     delete data[key];
                 } else {
-                    Debug.warn(`Ignoring unsupported input property to standard material: ${key}`);
+                    Debug.warnOnce(`Ignoring unsupported input property to standard material: ${key}`);
                     this.valid = false;
                 }
                 continue;

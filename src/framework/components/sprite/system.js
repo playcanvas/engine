@@ -2,7 +2,7 @@ import { Color } from '../../../core/math/color.js';
 
 import {
     CULLFACE_NONE,
-    PIXELFORMAT_R8_G8_B8_A8
+    PIXELFORMAT_RGBA8
 } from '../../../platform/graphics/constants.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
@@ -15,20 +15,19 @@ import { ComponentSystem } from '../system.js';
 import { SpriteComponent } from './component.js';
 import { SpriteComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
  * Manages creation of {@link SpriteComponent}s.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class SpriteComponentSystem extends ComponentSystem {
     /**
      * Create a new SpriteComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {
@@ -66,7 +65,7 @@ class SpriteComponentSystem extends ComponentSystem {
             const texture = new Texture(this.app.graphicsDevice, {
                 width: 1,
                 height: 1,
-                format: PIXELFORMAT_R8_G8_B8_A8,
+                format: PIXELFORMAT_RGBA8,
                 name: 'sprite'
             });
             const pixels = new Uint8Array(texture.lock());
@@ -156,9 +155,9 @@ class SpriteComponentSystem extends ComponentSystem {
 
         if (data.color !== undefined) {
             if (data.color instanceof Color) {
-                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color.r, data.color.g, data.color.b, data.opacity ?? 1);
             } else {
-                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity !== undefined ? data.opacity : 1);
+                component.color.set(data.color[0], data.color[1], data.color[2], data.opacity ?? 1);
             }
 
             /* eslint-disable no-self-assign */
@@ -226,6 +225,8 @@ class SpriteComponentSystem extends ComponentSystem {
             type: source.type,
             spriteAsset: source.spriteAsset,
             sprite: source.sprite,
+            width: source.width,
+            height: source.height,
             frame: source.frame,
             color: source.color.clone(),
             opacity: source.opacity,

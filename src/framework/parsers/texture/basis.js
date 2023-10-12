@@ -1,7 +1,8 @@
-import { Asset } from '../../../framework/asset/asset.js';
-import { Texture } from '../../../platform/graphics/texture.js';
-import { basisTranscode } from '../../handlers/basis.js';
 import { ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT, TEXHINT_ASSET } from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
+
+import { Asset } from '../../asset/asset.js';
+import { basisTranscode } from '../../handlers/basis.js';
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -44,7 +45,7 @@ class BasisParser {
     }
 
     // our async transcode call provides the neat structure we need to create the texture instance
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const texture = new Texture(device, {
             name: url,
             // #if _PROFILER
@@ -56,9 +57,10 @@ class BasisParser {
             height: data.height,
             format: data.format,
             cubemap: data.cubemap,
-            levels: data.levels
-        });
+            levels: data.levels,
 
+            ...textureOptions
+        });
         texture.upload();
 
         return texture;

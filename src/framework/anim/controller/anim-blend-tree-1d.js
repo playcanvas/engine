@@ -12,13 +12,14 @@ class AnimBlendTree1D extends AnimBlendTree {
     /**
      * Create a new BlendTree1D instance.
      *
-     * @param {AnimState} state - The AnimState that this AnimBlendTree belongs to.
+     * @param {import('./anim-state.js').AnimState} state - The AnimState that this AnimBlendTree
+     * belongs to.
      * @param {AnimBlendTree|null} parent - The parent of the AnimBlendTree. If not null, the
      * AnimNode is stored as part of a {@link AnimBlendTree} hierarchy.
-     * @param {string} name - The name of the BlendTree. Used when assigning a {@link AnimTrack} to
-     * its children.
-     * @param {number|Vec2} point - The coordinate/vector thats used to determine the weight of this
-     * node when it's part of a {@link AnimBlendTree}.
+     * @param {string} name - The name of the BlendTree. Used when assigning an {@link AnimTrack}
+     * to its children.
+     * @param {number|import('../../../core/math/vec2.js').Vec2} point - The coordinate/vector
+     * that's used to determine the weight of this node when it's part of an {@link AnimBlendTree}.
      * @param {string[]} parameters - The anim component parameters which are used to calculate the
      * current weights of the blend trees children.
      * @param {object[]} children - The child nodes that this blend tree should create. Can either

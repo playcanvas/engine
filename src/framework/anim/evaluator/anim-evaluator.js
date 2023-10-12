@@ -1,9 +1,6 @@
 import { AnimTargetValue } from './anim-target-value.js';
 import { AnimBlend } from './anim-blend.js';
 
-/** @typedef {import('../binder/anim-binder.js').AnimBinder} AnimBinder */
-/** @typedef {import('./anim-clip.js').AnimClip} AnimClip */
-
 /**
  * AnimEvaluator blends multiple sets of animation clips together.
  *
@@ -13,7 +10,8 @@ class AnimEvaluator {
     /**
      * Create a new animation evaluator.
      *
-     * @param {AnimBinder} binder - interface resolves curve paths to instances of {@link AnimTarget}.
+     * @param {import('../binder/anim-binder.js').AnimBinder} binder - interface resolves curve
+     * paths to instances of {@link AnimTarget}.
      */
     constructor(binder) {
         this._binder = binder;
@@ -26,7 +24,7 @@ class AnimEvaluator {
     /**
      * The list of animation clips.
      *
-     * @type {AnimClip[]}
+     * @type {import('./anim-clip.js').AnimClip[]}
      */
     get clips() {
         return this._clips;
@@ -35,7 +33,7 @@ class AnimEvaluator {
     /**
      * Add a clip to the evaluator.
      *
-     * @param {AnimClip} clip - The clip to add to the evaluator.
+     * @param {import('./anim-clip.js').AnimClip} clip - The clip to add to the evaluator.
      */
     addClip(clip) {
         const targets = this._targets;
@@ -148,11 +146,20 @@ class AnimEvaluator {
         }
     }
 
+    updateClipTrack(name, animTrack) {
+        this._clips.forEach((clip) => {
+            if (clip.name.includes(name)) {
+                clip.track = animTrack;
+            }
+        });
+        this.rebind();
+    }
+
     /**
      * Returns the first clip which matches the given name, or null if no such clip was found.
      *
      * @param {string} name - Name of the clip to find.
-     * @returns {AnimClip|null} - The clip with the given name or null if no such clip was found.
+     * @returns {import('./anim-clip.js').AnimClip|null} - The clip with the given name or null if no such clip was found.
      */
     findClip(name) {
         const clips = this._clips;
@@ -185,8 +192,10 @@ class AnimEvaluator {
      *
      * @param {number} deltaTime - The amount of time that has passed since the last update, in
      * seconds.
+     * @param {boolean} [outputAnimation] - Whether the evaluator should output the results of the
+     * update to the bound animation targets.
      */
-    update(deltaTime) {
+    update(deltaTime, outputAnimation = true) {
         // copy clips
         const clips = this._clips;
 
@@ -209,6 +218,7 @@ class AnimEvaluator {
             if (blendWeight > 0.0) {
                 clip._update(deltaTime);
             }
+            if (!outputAnimation) break;
 
             let input;
             let output;
@@ -268,11 +278,10 @@ class AnimEvaluator {
                 target.blendCounter = 0;
             }
         }
-
         // give the binder an opportunity to update itself
         // TODO: is this even necessary? binder could know when to update
         // itself without our help.
-        binder.update(deltaTime);
+        this._binder.update(deltaTime);
     }
 }
 

@@ -1,11 +1,11 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 import { Mat4 } from '../../core/math/mat4.js';
-import { Texture } from '../../platform/graphics/texture.js';
-import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_L8_A8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
-import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
+import { ADDRESS_CLAMP_TO_EDGE, PIXELFORMAT_LA8, FILTER_LINEAR } from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+
+import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js';
 
 /**
  * Depth Sensing provides depth information which is reconstructed using the underlying AR system.
@@ -15,10 +15,10 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *
  * ```javascript
  * // CPU path
- * var depthSensing = app.xr.depthSensing;
+ * const depthSensing = app.xr.depthSensing;
  * if (depthSensing.available) {
  *     // get depth in the middle of the screen, value is in meters
- *     var depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
+ *     const depth = depthSensing.getDepth(depthSensing.width / 2, depthSensing.height / 2);
  * }
  * ```
  *
@@ -63,10 +63,11 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  * ```
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrDepthSensing extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
@@ -134,7 +135,7 @@ class XrDepthSensing extends EventHandler {
     /**
      * Create a new XrDepthSensing instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {
@@ -144,7 +145,7 @@ class XrDepthSensing extends EventHandler {
 
         // TODO: data format can be different
         this._texture = new Texture(this._manager.app.graphicsDevice, {
-            format: PIXELFORMAT_L8_A8,
+            format: PIXELFORMAT_LA8,
             mipmaps: false,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -319,7 +320,7 @@ class XrDepthSensing extends EventHandler {
      * @returns {number|null} Depth in meters or null if depth information is currently not
      * available.
      * @example
-     * var depth = app.xr.depthSensing.getDepth(u, v);
+     * const depth = app.xr.depthSensing.getDepth(u, v);
      * if (depth !== null) {
      *     // depth in meters
      * }
@@ -349,7 +350,7 @@ class XrDepthSensing extends EventHandler {
      * @type {boolean}
      * @example
      * if (app.xr.depthSensing.available) {
-     *     var depth = app.xr.depthSensing.getDepth(x, y);
+     *     const depth = app.xr.depthSensing.getDepth(x, y);
      * }
      */
     get available() {
@@ -399,7 +400,7 @@ class XrDepthSensing extends EventHandler {
     /* eslint-disable jsdoc/check-examples */
     /**
      * Texture that contains packed depth information. The format of this texture is
-     * {@link PIXELFORMAT_L8_A8}. It is UV transformed based on the underlying AR system which can
+     * {@link PIXELFORMAT_LA8}. It is UV transformed based on the underlying AR system which can
      * be normalized using {@link XrDepthSensing#uvMatrix}.
      *
      * @type {Texture}

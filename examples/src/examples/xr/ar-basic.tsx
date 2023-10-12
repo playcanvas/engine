@@ -4,7 +4,7 @@ class ArBasicExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Basic';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {
@@ -46,7 +46,7 @@ class ArBasicExample {
 
         const createCube = function (x: number, y: number, z: number) {
             const cube = new pc.Entity();
-            cube.addComponent("model", {
+            cube.addComponent("render", {
                 type: "box"
             });
             cube.setLocalScale(0.5, 0.5, 0.5);

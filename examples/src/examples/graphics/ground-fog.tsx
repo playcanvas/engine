@@ -1,13 +1,13 @@
 import React from 'react';
 import * as pc from '../../../../';
 
-import { BindingTwoWay } from '@playcanvas/pcui';
-import { BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
+import { BindingTwoWay, BooleanInput, LabelGroup, Panel } from '@playcanvas/pcui/react';
 import { Observer } from '@playcanvas/observer';
 
 class GroundFogExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Ground Fog';
+    static WEBGPU_ENABLED = true;
 
     static FILES = {
         'shader.vert': /* glsl */ `
@@ -71,8 +71,10 @@ class GroundFogExample {
                 vec4 diffusTexture2 = texture2D (uTexture, texCoord2);
                 float alpha = 0.5 * (diffusTexture0.r + diffusTexture1.r + diffusTexture2.r);
 
+                // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords
+                vec2 screenCoord = getGrabScreenPos(screenPos);
+
                 // read the depth from the depth buffer
-                vec2 screenCoord = (screenPos.xy / screenPos.w) * 0.5 + 0.5;
                 float sceneDepth = getLinearScreenDepth(screenCoord) * camera_params.x;
 
                 // depth of the current fragment (on the fog plane)
@@ -100,148 +102,179 @@ class GroundFogExample {
         </>;
     }
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
-
-        const app = new pc.Application(canvas, {
-            mouse: new pc.Mouse(document.body),
-            touch: new pc.TouchDevice(document.body)
-        });
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }, data: any): void {
 
         const assets = {
             'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
             'terrain': new pc.Asset('terrain', 'container', { url: '/static/assets/models/terrain.glb' }),
-            'helipad': new pc.Asset('helipad', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
+            'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
             'texture': new pc.Asset('color', 'texture', { url: '/static/assets/textures/clouds.jpg' })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
+
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
+
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
+            createOptions.mouse = new pc.Mouse(document.body);
+            createOptions.touch = new pc.TouchDevice(document.body);
+
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.LightComponentSystem,
+                // @ts-ignore
+                pc.ScriptComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler,
+                // @ts-ignore
+                pc.ScriptHandler
+            ];
+
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
 
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-            window.addEventListener("resize", function () {
-                app.resizeCanvas(canvas.width, canvas.height);
-            });
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
 
-            data.set('data', {
-                softness: true
-            });
+                app.start();
 
-            // setup skydome
-            app.scene.skyboxMip = 3;
-            app.scene.setSkybox(assets.helipad.resources);
-            app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
-            app.scene.toneMapping = pc.TONEMAP_ACES;
+                window.addEventListener("resize", function () {
+                    app.resizeCanvas(canvas.width, canvas.height);
+                });
 
-            // disable skydome rendering
-            const skyLayer = app.scene.layers.getLayerById(pc.LAYERID_SKYBOX);
-            skyLayer.enabled = false;
+                data.set('data', {
+                    softness: true
+                });
 
-            // instantiate the terrain
-            const terrain = assets.terrain.resource.instantiateRenderEntity();
-            terrain.setLocalScale(30, 30, 30);
-            app.root.addChild(terrain);
+                // setup skydome
+                app.scene.skyboxMip = 3;
+                app.scene.envAtlas = assets.helipad.resource;
+                app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, -70, 0);
+                app.scene.toneMapping = pc.TONEMAP_ACES;
 
-            // find a tree in the middle to use as a focus point
-            const tree = terrain.findOne("name", "Arbol 2.002");
+                // disable skydome rendering
+                const skyLayer = app.scene.layers.getLayerById(pc.LAYERID_SKYBOX);
+                skyLayer.enabled = false;
 
-            // create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(150 / 255, 213 / 255, 63 / 255),
-                farClip: 1000
-            });
+                // instantiate the terrain
+                const terrain = assets.terrain.resource.instantiateRenderEntity();
+                terrain.setLocalScale(30, 30, 30);
+                app.root.addChild(terrain);
 
-            // and position it in the world
-            camera.setLocalPosition(-200, 120, 225);
+                // find a tree in the middle to use as a focus point
+                const tree = terrain.findOne("name", "Arbol 2.002");
 
-            // add orbit camera script with a mouse and a touch support
-            camera.addComponent("script");
-            camera.script.create("orbitCamera", {
-                attributes: {
-                    inertiaFactor: 0.2,
-                    focusEntity: tree,
-                    distanceMax: 600
-                }
-            });
-            camera.script.create("orbitCameraInputMouse");
-            camera.script.create("orbitCameraInputTouch");
-            app.root.addChild(camera);
+                // create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(150 / 255, 213 / 255, 63 / 255),
+                    farClip: 1000
+                });
 
-            // enable the camera to render the scene's depth map.
-            camera.camera.requestSceneDepthMap(true);
+                // and position it in the world
+                camera.setLocalPosition(-200, 120, 225);
 
-            // Create a directional light casting cascaded shadows
-            const dirLight = new pc.Entity();
-            dirLight.addComponent("light", {
-                type: "directional",
-                color: pc.Color.WHITE,
-                shadowBias: 0.3,
-                normalOffsetBias: 0.2,
-                intensity: 1.0,
+                // add orbit camera script with a mouse and a touch support
+                camera.addComponent("script");
+                camera.script.create("orbitCamera", {
+                    attributes: {
+                        inertiaFactor: 0.2,
+                        focusEntity: tree,
+                        distanceMax: 600
+                    }
+                });
+                camera.script.create("orbitCameraInputMouse");
+                camera.script.create("orbitCameraInputTouch");
+                app.root.addChild(camera);
 
-                // enable shadow casting
-                castShadows: true,
-                shadowDistance: 1000,
-                shadowResolution: 2048,
-                shadowType: pc.SHADOW_PCF3
-            });
-            app.root.addChild(dirLight);
-            dirLight.setLocalEulerAngles(45, 350, 20);
+                // enable the camera to render the scene's depth map.
+                camera.camera.requestSceneDepthMap(true);
 
-            // create a custom fog shader
-            // @ts-ignore
-            const vertex = `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'];
-            // @ts-ignore
-            const fragment = `precision ${app.graphicsDevice.precision} float;\n` + pc.shaderChunks.screenDepthPS + files['shader.frag'];
-            const shader = pc.createShaderFromCode(app.graphicsDevice, vertex, fragment, 'GroundFogShader');
+                // Create a directional light casting cascaded shadows
+                const dirLight = new pc.Entity();
+                dirLight.addComponent("light", {
+                    type: "directional",
+                    color: pc.Color.WHITE,
+                    shadowBias: 0.3,
+                    normalOffsetBias: 0.2,
+                    intensity: 1.0,
 
-            // and set up a material using this shader
-            const material = new pc.Material();
-            material.shader = shader;
-            material.setParameter('uTexture', assets.texture.resource);
-            material.depthWrite = false;
-            material.depthWrite = false;
-            material.blendType = pc.BLEND_NORMAL;
-            material.update();
+                    // enable shadow casting
+                    castShadows: true,
+                    shadowDistance: 1000,
+                    shadowResolution: 2048,
+                    shadowType: pc.SHADOW_PCF3
+                });
+                app.root.addChild(dirLight);
+                dirLight.setLocalEulerAngles(45, 350, 20);
 
-            // create a subdivided plane mesh, to allow for vertex animation by the shader
-            const mesh = pc.createPlane(app.graphicsDevice, { widthSegments: 20, lengthSegments: 20 });
-            const meshInstance = new pc.MeshInstance(mesh, material);
-            const ground = new pc.Entity();
-            ground.addComponent("render", {
-                meshInstances: [meshInstance],
-                material: material,
-                castShadows: false,
-                receiveShadows: false
-            });
-            ground.setLocalScale(500, 1, 500);
-            ground.setLocalPosition(0, 25, 0);
-            app.root.addChild(ground);
+                // create a custom fog shader
+                // @ts-ignore
+                const vertex = `#define VERTEXSHADER\n` + pc.shaderChunks.screenDepthPS + files['shader.vert'];
+                // @ts-ignore
+                const fragment = pc.shaderChunks.screenDepthPS + files['shader.frag'];
+                const shader = pc.createShaderFromCode(app.graphicsDevice, vertex, fragment, 'GroundFogShader');
 
-            let firstFrame = true;
-            let currentTime = 0;
-            app.on("update", function (dt) {
+                // and set up a material using this shader
+                const material = new pc.Material();
+                material.shader = shader;
+                material.setParameter('uTexture', assets.texture.resource);
+                material.depthWrite = false;
+                material.blendType = pc.BLEND_NORMAL;
+                material.update();
 
-                // on the first frame, when camera is updated, move it further away from the focus tree
-                if (firstFrame) {
-                    firstFrame = false;
-                    // @ts-ignore engine-tsd
-                    camera.script.orbitCamera.distance = 320;
-                }
+                // create a subdivided plane mesh, to allow for vertex animation by the shader
+                const mesh = pc.createPlane(app.graphicsDevice, { widthSegments: 20, lengthSegments: 20 });
+                const meshInstance = new pc.MeshInstance(mesh, material);
+                const ground = new pc.Entity();
+                ground.addComponent("render", {
+                    meshInstances: [meshInstance],
+                    material: material,
+                    castShadows: false,
+                    receiveShadows: false
+                });
+                ground.setLocalScale(500, 1, 500);
+                ground.setLocalPosition(0, 25, 0);
+                app.root.addChild(ground);
 
-                // Update the time and pass it to shader
-                currentTime += dt;
-                material.setParameter('uTime', currentTime);
+                let firstFrame = true;
+                let currentTime = 0;
+                app.on("update", function (dt) {
 
-                // based on sofness toggle, set shader parameter
-                material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
+                    // on the first frame, when camera is updated, move it further away from the focus tree
+                    if (firstFrame) {
+                        firstFrame = false;
+                        // @ts-ignore engine-tsd
+                        camera.script.orbitCamera.distance = 320;
+                    }
 
-                // debug rendering of the deptht texture in the corner
-                app.drawDepthTexture(0.7, -0.7, 0.5, 0.5);
+                    // Update the time and pass it to shader
+                    currentTime += dt;
+                    material.setParameter('uTime', currentTime);
+
+                    // based on sofness toggle, set shader parameter
+                    material.setParameter('uSoftening', data.get('data.softness') ? 50 : 1000);
+
+                    // debug rendering of the deptht texture in the corner
+                    app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
+                });
             });
         });
     }

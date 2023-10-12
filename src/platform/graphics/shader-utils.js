@@ -1,6 +1,5 @@
 import { Debug } from "../../core/debug.js";
 import {
-    DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_TANGENT, SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_TEXCOORD2,
     SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4, SEMANTIC_TEXCOORD5, SEMANTIC_TEXCOORD6, SEMANTIC_TEXCOORD7,
     SEMANTIC_COLOR, SEMANTIC_BLENDINDICES, SEMANTIC_BLENDWEIGHT
@@ -11,8 +10,7 @@ import gles3FS from './shader-chunks/frag/gles3.js';
 import gles3VS from './shader-chunks/vert/gles3.js';
 import webgpuFS from './shader-chunks/frag/webgpu.js';
 import webgpuVS from './shader-chunks/vert/webgpu.js';
-
-/** @typedef {import('./graphics-device.js').GraphicsDevice} GraphicsDevice */
+import sharedFS from './shader-chunks/frag/shared.js';
 
 const _attrib2Semantic = {
     vertex_position: SEMANTIC_POSITION,
@@ -40,7 +38,7 @@ class ShaderUtils {
     /**
      * Creates a shader definition.
      *
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('./graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {object} options - Object for passing optional arguments.
      * @param {string} [options.name] - A name of the shader.
      * @param {object} [options.attributes] - Attributes. Will be extracted from the vertexCode if
@@ -60,8 +58,17 @@ class ShaderUtils {
         Debug.assert(options);
 
         const getDefines = (gpu, gl2, gl1, isVertex) => {
-            return device.deviceType === DEVICETYPE_WEBGPU ? gpu :
-                (device.webgl2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+
+            const deviceIntro = device.isWebGPU ? gpu :
+                (device.isWebGL2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
+
+            // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
+            let attachmentsDefine = '';
+            for (let i = 0; i < device.maxColorAttachments; i++) {
+                attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+            }
+
+            return attachmentsDefine + deviceIntro;
         };
 
         const name = options.name ?? 'Untitled';
@@ -70,15 +77,17 @@ class ShaderUtils {
         const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             options.vertexCode;
 
         // fragment code
         const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
         const fragCode = (options.fragmentPreamble || '') +
-        ShaderUtils.versionCode(device) +
-            ShaderUtils.precisionCode(device) + '\n' +
+            ShaderUtils.versionCode(device) +
             fragDefines +
+            ShaderUtils.precisionCode(device) + '\n' +
+            sharedFS +
             ShaderUtils.getShaderNameCode(name) +
             (options.fragmentCode || ShaderUtils.dummyFragmentCode());
 
@@ -114,6 +123,10 @@ class ShaderUtils {
                 code += "#extension GL_EXT_shader_texture_lod : enable\n";
                 code += "#define SUPPORTS_TEXLOD\n";
             }
+            if (device.extDrawBuffers) {
+                code += "#extension GL_EXT_draw_buffers : require\n";
+                code += "#define SUPPORTS_MRT\n";
+            }
         }
 
         return code;
@@ -124,37 +137,42 @@ class ShaderUtils {
     }
 
     static versionCode(device) {
-        if (device.deviceType === DEVICETYPE_WEBGPU) {
+        if (device.isWebGPU) {
             return '#version 450\n';
         }
-        return device.webgl2 ? "#version 300 es\n" : "";
+        return device.isWebGL2 ? "#version 300 es\n" : "";
     }
 
     static precisionCode(device, forcePrecision) {
 
         let code = '';
 
-        if (device.deviceType === DEVICETYPE_WEBGL) {
+        if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
+            forcePrecision = null;
+        }
 
-            if (forcePrecision && forcePrecision !== 'highp' && forcePrecision !== 'mediump' && forcePrecision !== 'lowp') {
-                forcePrecision = null;
+        if (forcePrecision) {
+            if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
+                forcePrecision = 'mediump';
             }
-
-            if (forcePrecision) {
-                if (forcePrecision === 'highp' && device.maxPrecision !== 'highp') {
-                    forcePrecision = 'mediump';
-                }
-                if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
-                    forcePrecision = 'lowp';
-                }
+            if (forcePrecision === 'mediump' && device.maxPrecision === 'lowp') {
+                forcePrecision = 'lowp';
             }
+        }
 
-            const precision = forcePrecision ? forcePrecision : device.precision;
+        const precision = forcePrecision ? forcePrecision : device.precision;
+
+        if (!device.isWebGPU) {
+
             code = `precision ${precision} float;\n`;
 
-            if (device.webgl2) {
+            if (device.isWebGL2) {
                 code += `precision ${precision} sampler2DShadow;\n`;
             }
+
+        } else { // WebGPU
+
+            code = `precision ${precision} float;\nprecision ${precision} int;\n`;
         }
 
         return code;

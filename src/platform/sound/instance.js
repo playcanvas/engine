@@ -4,9 +4,6 @@ import { math } from '../../core/math/math.js';
 
 import { hasAudioContext } from '../audio/capabilities.js';
 
-/** @typedef {import('./sound.js').Sound} Sound */
-/** @typedef {import('./manager.js').SoundManager} SoundManager */
-
 const STATE_PLAYING = 0;
 const STATE_PAUSED = 1;
 const STATE_STOPPED = 2;
@@ -27,6 +24,7 @@ function capTime(time, duration) {
  * A SoundInstance plays a {@link Sound}.
  *
  * @augments EventHandler
+ * @category Sound
  */
 class SoundInstance extends EventHandler {
     /**
@@ -41,28 +39,28 @@ class SoundInstance extends EventHandler {
     /**
      * Create a new SoundInstance instance.
      *
-     * @param {SoundManager} manager - The sound manager.
-     * @param {Sound} sound - The sound to play.
+     * @param {import('./manager.js').SoundManager} manager - The sound manager.
+     * @param {import('./sound.js').Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
-     * end or not.
-     * @param {number} [options.startTime=0] - The time from which the playback will start in
-     * seconds. Default is 0 to start at the beginning.
-     * @param {number} [options.duration=0] - The total time after the startTime in seconds when
-     * playback will stop or restart if loop is true.
-     * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
-     * @param {Function} [options.onPause=null] - Function called when the instance is paused.
-     * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
-     * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
-     * @param {Function} [options.onEnd=null] - Function called when the instance ends.
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - Whether the sound should loop when it reaches the end or
+     * not. Defaults to false.
+     * @param {number} [options.startTime] - The time from which the playback will start in
+     * seconds. Default is 0 to start at the beginning. Defaults to 0.
+     * @param {number} [options.duration] - The total time after the startTime in seconds when
+     * playback will stop or restart if loop is true. Defaults to 0.
+     * @param {Function} [options.onPlay] - Function called when the instance starts playing.
+     * @param {Function} [options.onPause] - Function called when the instance is paused.
+     * @param {Function} [options.onResume] - Function called when the instance is resumed.
+     * @param {Function} [options.onStop] - Function called when the instance is stopped.
+     * @param {Function} [options.onEnd] - Function called when the instance ends.
      */
     constructor(manager, sound, options) {
         super();
 
         /**
-         * @type {SoundManager}
+         * @type {import('./manager.js').SoundManager}
          * @private
          */
         this._manager = manager;
@@ -86,7 +84,7 @@ class SoundInstance extends EventHandler {
         this._loop = !!(options.loop !== undefined ? options.loop : false);
 
         /**
-         * @type {Sound}
+         * @type {import('./sound.js').Sound}
          * @private
          */
         this._sound = sound;
@@ -431,7 +429,7 @@ class SoundInstance extends EventHandler {
     /**
      * The sound resource that the instance will play.
      *
-     * @type {Sound}
+     * @type {import('./sound.js').Sound}
      */
     set sound(value) {
         this._sound = value;
@@ -715,6 +713,9 @@ class SoundInstance extends EventHandler {
             return false;
         }
 
+        // start at point where sound was paused
+        let offset = this.currentTime;
+
         // set state back to playing
         this._state = STATE_PLAYING;
 
@@ -726,9 +727,6 @@ class SoundInstance extends EventHandler {
         if (!this.source) {
             this._createSource();
         }
-
-        // start at point where sound was paused
-        let offset = this.currentTime;
 
         // if the user set the 'currentTime' property while the sound
         // was paused then use that as the offset instead
@@ -818,10 +816,10 @@ class SoundInstance extends EventHandler {
      * @param {AudioNode} [lastNode] - The last node that will be connected to the destination of the AudioContext.
      * If unspecified then the firstNode will be connected to the destination instead.
      * @example
-     * var context = app.systems.sound.context;
-     * var analyzer = context.createAnalyzer();
-     * var distortion = context.createWaveShaper();
-     * var filter = context.createBiquadFilter();
+     * const context = app.systems.sound.context;
+     * const analyzer = context.createAnalyzer();
+     * const distortion = context.createWaveShaper();
+     * const filter = context.createBiquadFilter();
      * analyzer.connect(distortion);
      * distortion.connect(filter);
      * instance.setExternalNodes(analyzer, filter);

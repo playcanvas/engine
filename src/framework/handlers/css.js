@@ -40,26 +40,4 @@ class CssHandler {
     }
 }
 
-/**
- * Creates a &lt;style&gt; DOM element from a string that contains CSS.
- *
- * @param {string} cssString - A string that contains valid CSS.
- * @returns {Element} The style DOM element.
- * @example
- * var css = 'body {height: 100;}';
- * var style = pc.createStyle(css);
- * document.head.appendChild(style);
- */
-function createStyle(cssString) {
-    const result = document.createElement('style');
-    result.type = 'text/css';
-    if (result.styleSheet) {
-        result.styleSheet.cssText = cssString;
-    } else {
-        result.appendChild(document.createTextNode(cssString));
-    }
-
-    return result;
-}
-
-export { createStyle, CssHandler };
+export { CssHandler };

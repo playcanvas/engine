@@ -2,9 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
-/** @typedef {import('./animation.js').Animation} Animation */
-/** @typedef {import('../../scene/graph-node.js').GraphNode} GraphNode */
-
 class InterpolatedKey {
     constructor() {
         this._written = false;
@@ -31,6 +28,8 @@ class InterpolatedKey {
 
 /**
  * Represents a skeleton used to play animations.
+ *
+ * @category Animation
  */
 class Skeleton {
     /**
@@ -43,11 +42,12 @@ class Skeleton {
     /**
      * Create a new Skeleton instance.
      *
-     * @param {GraphNode} graph - The root {@link GraphNode} of the skeleton.
+     * @param {import('../graph-node.js').GraphNode} graph - The root {@link GraphNode} of the
+     * skeleton.
      */
     constructor(graph) {
         /**
-         * @type {Animation}
+         * @type {import('./animation.js').Animation}
          * @private
          */
         this._animation = null;
@@ -76,7 +76,7 @@ class Skeleton {
     /**
      * Animation currently assigned to skeleton.
      *
-     * @type {Animation}
+     * @type {import('./animation.js').Animation}
      */
     set animation(value) {
         this._animation = value;
@@ -244,7 +244,8 @@ class Skeleton {
      * Links a skeleton to a node hierarchy. The nodes animated skeleton are then subsequently used
      * to drive the local transformation matrices of the node hierarchy.
      *
-     * @param {GraphNode} graph - The root node of the graph that the skeleton is to drive.
+     * @param {import('../graph-node.js').GraphNode} graph - The root node of the graph that the
+     * skeleton is to drive.
      */
     setGraph(graph) {
         this.graph = graph;

@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
@@ -6,9 +7,6 @@ import { ORIENTATION_HORIZONTAL } from '../../../scene/constants.js';
 import { FITTING_NONE } from './constants.js';
 import { Component } from '../component.js';
 import { LayoutCalculator } from './layout-calculator.js';
-
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').LayoutGroupComponentSystem} LayoutGroupComponentSystem */
 
 function getElement(entity) {
     return entity.element;
@@ -23,14 +21,16 @@ function isEnabledAndHasEnabledElement(entity) {
  * according to configurable layout rules.
  *
  * @augments Component
+ * @category User Interface
  */
 class LayoutGroupComponent extends Component {
     /**
      * Create a new LayoutGroupComponent instance.
      *
-     * @param {LayoutGroupComponentSystem} system - The ComponentSystem that created this
-     * Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').LayoutGroupComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -71,8 +71,11 @@ class LayoutGroupComponent extends Component {
         // Listen for ElementComponents and LayoutChildComponents being added
         // to self or to children - covers cases where they are not already
         // present at the point when this component is constructed.
+        Debug.assert(system.app.systems.element, `System 'element' doesn't exist`);
         system.app.systems.element.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.element.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
+
+        Debug.assert(system.app.systems.layoutchild, `System 'layoutchild' doesn't exist`);
         system.app.systems.layoutchild.on('add', this._onElementOrLayoutComponentAdd, this);
         system.app.systems.layoutchild.on('beforeremove', this._onElementOrLayoutComponentRemove, this);
     }

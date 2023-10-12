@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
@@ -8,9 +7,6 @@ import { hasAudioContext } from '../audio/capabilities.js';
 
 import { SoundInstance } from './instance.js';
 
-/** @typedef {import('./sound.js').Sound} Sound */
-/** @typedef {import('./manager.js').SoundManager} SoundManager */
-
 // default maxDistance, same as Web Audio API
 const MAX_DISTANCE = 10000;
 
@@ -18,6 +14,7 @@ const MAX_DISTANCE = 10000;
  * A SoundInstance3d plays a {@link Sound} in 3D.
  *
  * @augments SoundInstance
+ * @category Sound
  */
 class SoundInstance3d extends SoundInstance {
     /**
@@ -35,32 +32,33 @@ class SoundInstance3d extends SoundInstance {
     /**
      * Create a new SoundInstance3d instance.
      *
-     * @param {SoundManager} manager - The sound manager.
-     * @param {Sound} sound - The sound to play.
+     * @param {import('./manager.js').SoundManager} manager - The sound manager.
+     * @param {import('./sound.js').Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
-     * end or not.
-     * @param {number} [options.startTime=0] - The time from which the playback will start. Default
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - Whether the sound should loop when it reaches the end or
+     * not. Defaults to false.
+     * @param {number} [options.startTime] - The time from which the playback will start. Default
      * is 0 to start at the beginning.
-     * @param {number} [options.duration=null] - The total time after the startTime when playback
-     * will stop or restart if loop is true.
-     * @param {Vec3} [options.position=null] - The position of the sound in 3D space.
-     * @param {string} [options.distanceModel=DISTANCE_LINEAR] - Determines which algorithm to use
-     * to reduce the volume of the audio as it moves away from the listener. Can be:
+     * @param {number} [options.duration] - The total time after the startTime when playback will
+     * stop or restart if loop is true.
+     * @param {Vec3} [options.position] - The position of the sound in 3D space.
+     * @param {string} [options.distanceModel] - Determines which algorithm to use to reduce the
+     * volume of the audio as it moves away from the listener. Can be:
      *
      * - {@link DISTANCE_LINEAR}
      * - {@link DISTANCE_INVERSE}
      * - {@link DISTANCE_EXPONENTIAL}
      *
-     * Default is {@link DISTANCE_LINEAR}.
-     * @param {number} [options.refDistance=1] - The reference distance for reducing volume as the
-     * sound source moves further from the listener.
-     * @param {number} [options.maxDistance=10000] - The maximum distance from the listener at which
+     * Defaults to {@link DISTANCE_LINEAR}.
+     * @param {number} [options.refDistance] - The reference distance for reducing volume as the
+     * sound source moves further from the listener. Defaults to 1.
+     * @param {number} [options.maxDistance] - The maximum distance from the listener at which
      * audio falloff stops. Note the volume of the audio is not 0 after this distance, but just
-     * doesn't fall off anymore.
-     * @param {number} [options.rollOffFactor=1] - The factor used in the falloff equation.
+     * doesn't fall off anymore. Defaults to 10000.
+     * @param {number} [options.rollOffFactor] - The factor used in the falloff equation. Defaults
+     * to 1.
      */
     constructor(manager, sound, options = {}) {
         super(manager, sound, options);

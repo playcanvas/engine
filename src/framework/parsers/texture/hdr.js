@@ -1,16 +1,16 @@
-import { ReadStream } from '../../../core/read-stream.js';
 import { Debug } from '../../../core/debug.js';
+import { ReadStream } from '../../../core/read-stream.js';
 
-import { Texture } from '../../../platform/graphics/texture.js';
 import {
     TEXHINT_ASSET,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE,
     FILTER_NEAREST,
-    PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGBA8,
     TEXTURETYPE_RGBE
 } from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
 
-import { Asset } from '../../../framework/asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -29,7 +29,7 @@ class HdrParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const textureData = this.parse(data);
 
         if (!textureData) {
@@ -48,10 +48,12 @@ class HdrParser {
             width: textureData.width,
             height: textureData.height,
             levels: textureData.levels,
-            format: PIXELFORMAT_R8_G8_B8_A8,
+            format: PIXELFORMAT_RGBA8,
             type: TEXTURETYPE_RGBE,
             // RGBE can't be filtered, so mipmaps are out of the question! (unless we generated them ourselves)
-            mipmaps: false
+            mipmaps: false,
+
+            ...textureOptions
         });
 
         texture.upload();

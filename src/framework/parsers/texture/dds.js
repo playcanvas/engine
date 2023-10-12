@@ -1,15 +1,17 @@
 import { Debug } from '../../../core/debug.js';
-import { Asset } from '../../../framework/asset/asset.js';
-import { Texture } from '../../../platform/graphics/texture.js';
+
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT5,
     PIXELFORMAT_ETC1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
     TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
+
+import { Asset } from '../../asset/asset.js';
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -28,7 +30,7 @@ class DdsParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const header = new Uint32Array(data, 0, 128 / 4);
 
         const width = header[4];
@@ -88,16 +90,16 @@ class DdsParser {
             }
         } else {
             if (bpp === 32) {
-                format = PIXELFORMAT_R8_G8_B8_A8;
+                format = PIXELFORMAT_RGBA8;
             }
         }
 
         if (!format) {
-            Debug.error('This DDS pixel format is currently unsupported. Empty texture will be created instead.');
+            Debug.error(`This DDS pixel format is currently unsupported. Empty texture will be created instead of ${url}.`);
             texture = new Texture(device, {
                 width: 4,
                 height: 4,
-                format: PIXELFORMAT_R8_G8_B8,
+                format: PIXELFORMAT_RGB8,
                 name: 'dds-legacy-empty'
             });
             return texture;
@@ -114,7 +116,9 @@ class DdsParser {
             height: height,
             format: format,
             cubemap: isCubemap,
-            mipmaps: mips > 1
+            mipmaps: mips > 1,
+
+            ...textureOptions
         });
 
         let offset = 128;

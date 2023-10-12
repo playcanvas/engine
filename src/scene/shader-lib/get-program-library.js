@@ -1,17 +1,15 @@
 import { Debug } from '../../core/debug.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
 
-/** @typedef {import('../../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('./program-library.js').ProgramLibrary} ProgramLibrary */
-
 // Device cache storing a program library
 const programLibraryDeviceCache = new DeviceCache();
 
 /**
  * Returns program library for a specified instance of a device.
  *
- * @param {GraphicsDevice} device - The graphics device used to own the program library.
- * @returns {ProgramLibrary} The instance of {@link ProgramLibrary}
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * graphics device used to own the program library.
+ * @returns {import('./program-library.js').ProgramLibrary} The instance of {@link ProgramLibrary}
  * @ignore
  */
 function getProgramLibrary(device) {
@@ -23,8 +21,10 @@ function getProgramLibrary(device) {
 /**
  * Assigns the program library to device cache.
  *
- * @param {GraphicsDevice} device - The graphics device used to own the program library.
- * @param {ProgramLibrary} library - The instance of {@link ProgramLibrary}.
+ * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+ * graphics device used to own the program library.
+ * @param {import('./program-library.js').ProgramLibrary} library - The instance of
+ * {@link ProgramLibrary}.
  * @ignore
  */
 function setProgramLibrary(device, library) {

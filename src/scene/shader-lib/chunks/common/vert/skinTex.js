@@ -1,11 +1,14 @@
 export default /* glsl */`
+
 attribute vec4 vertex_boneWeights;
 attribute vec4 vertex_boneIndices;
 
 uniform highp sampler2D texture_poseMap;
 uniform vec4 texture_poseMapSize;
 
-void getBoneMatrix(const in float i, out vec4 v1, out vec4 v2, out vec4 v3) {
+void getBoneMatrix(const in float index, out vec4 v1, out vec4 v2, out vec4 v3) {
+
+    float i = float(index);
     float j = i * 3.0;
     float dx = texture_poseMapSize.z;
     float dy = texture_poseMapSize.w;

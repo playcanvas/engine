@@ -4,9 +4,6 @@ import { EventHandler } from '../../core/event-handler.js';
 import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../../core/shape/ray.js').Ray} Ray */
-
 /**
  * Callback used by {@link XrHitTest#start} and {@link XrHitTest#startForInputSource}.
  *
@@ -21,10 +18,11 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * representation of real world geometry by underlying AR system.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHitTest extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     manager;
@@ -51,7 +49,7 @@ class XrHitTest extends EventHandler {
     /**
      * Create a new XrHitTest instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {
@@ -93,9 +91,10 @@ class XrHitTest extends EventHandler {
      *
      * @event XrHitTest#result
      * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will provide related input source.
+     * @param {import('../../core/math/vec3.js').Vec3} position - Position of hit test.
+     * @param {import('../../core/math/quat.js').Quat} rotation - Rotation of hit test.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
+     * test source, then it will provide related input source.
      * @example
      * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
      *     target.setPosition(position);
@@ -192,7 +191,8 @@ class XrHitTest extends EventHandler {
      * - {@link XRTRACKABLE_MESH}: Mesh - indicates that the hit test results will be computed
      * based on the meshes detected by the underlying Augmented Reality system.
      *
-     * @param {Ray} [options.offsetRay] - Optional ray by which hit test ray can be offset.
+     * @param {import('../../core/shape/ray.js').Ray} [options.offsetRay] - Optional ray by which
+     * hit test ray can be offset.
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
@@ -207,7 +207,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      * @example
-     * var ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
+     * const ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
      *     offsetRay: ray,

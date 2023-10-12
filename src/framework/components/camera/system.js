@@ -8,8 +8,6 @@ import { ComponentSystem } from '../system.js';
 import { CameraComponent } from './component.js';
 import { CameraComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = ['enabled'];
 
 /**
@@ -17,6 +15,7 @@ const _schema = ['enabled'];
  * active cameras.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class CameraComponentSystem extends ComponentSystem {
     /**
@@ -29,7 +28,7 @@ class CameraComponentSystem extends ComponentSystem {
     /**
      * Create a new CameraComponentSystem instance.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {
@@ -58,6 +57,8 @@ class CameraComponentSystem extends ComponentSystem {
             'clearColorBuffer',
             'clearDepthBuffer',
             'clearStencilBuffer',
+            'renderSceneColorMap',
+            'renderSceneDepthMap',
             'cullFaces',
             'farClip',
             'flipFaces',
@@ -118,6 +119,8 @@ class CameraComponentSystem extends ComponentSystem {
             clearColorBuffer: c.clearColorBuffer,
             clearDepthBuffer: c.clearDepthBuffer,
             clearStencilBuffer: c.clearStencilBuffer,
+            renderSceneDepthMap: c.renderSceneDepthMap,
+            renderSceneColorMap: c.renderSceneColorMap,
             cullFaces: c.cullFaces,
             enabled: c.enabled,
             farClip: c.farClip,
@@ -141,6 +144,8 @@ class CameraComponentSystem extends ComponentSystem {
 
     onBeforeRemove(entity, component) {
         this.removeCamera(component);
+
+        component.onRemove();
     }
 
     onUpdate(dt) {

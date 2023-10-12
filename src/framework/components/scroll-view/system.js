@@ -6,8 +6,6 @@ import { ScrollViewComponentData } from './data.js';
 
 import { Vec2 } from '../../../core/math/vec2.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = [
     { name: 'enabled', type: 'boolean' },
     { name: 'horizontal', type: 'boolean' },
@@ -32,12 +30,13 @@ const DEFAULT_DRAG_THRESHOLD = 10;
  * Manages creation of {@link ScrollViewComponent}s.
  *
  * @augments ComponentSystem
+ * @category User Interface
  */
 class ScrollViewComponentSystem extends ComponentSystem {
     /**
      * Create a new ScrollViewComponentSystem instance.
      *
-     * @param {AppBase} app - The application.
+     * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor
      */
     constructor(app) {

@@ -1,7 +1,8 @@
-import { Entity } from '../../framework/entity.js';
+import { Entity } from '../entity.js';
 
 import { CompressUtils } from '../../scene/compress/compress-utils.js';
 import { Decompress } from '../../scene/compress/decompress.js';
+import { Debug } from "../../core/debug.js";
 
 class SceneParser {
     constructor(app, isTemplate) {
@@ -53,7 +54,7 @@ class SceneParser {
 
         entity.setGuid(data.resource_id);
         this._setPosRotScale(entity, data, compressed);
-        entity._enabled = data.enabled !== undefined ? data.enabled : true;
+        entity._enabled = data.enabled ?? true;
 
         if (this._isTemplate) {
             entity._template = true;
@@ -111,7 +112,11 @@ class SceneParser {
         len = entityData.children.length;
         const children = entity._children;
         for (let i = 0; i < len; i++) {
-            children[i] = this._openComponentData(children[i], entities);
+            if (children[i]) {
+                children[i] = this._openComponentData(children[i], entities);
+            } else {
+                Debug.warn(`Scene data is invalid where a child under "${entity.name}" Entity doesn't exist. Please check the scene data.`);
+            }
         }
 
         return entity;

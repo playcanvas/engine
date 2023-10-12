@@ -2,15 +2,14 @@ import { Vec4 } from '../../core/math/vec4.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { reprojectTexture } from './reproject-texture.js';
 import {
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM,
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBP as RGBA8_TYPE,
     TEXTUREPROJECTION_EQUIRECT,
     ADDRESS_CLAMP_TO_EDGE,
-    PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
+    PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from '../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 
 const fixCubemapSeams = true;
-const RGBA8_TYPE = TEXTURETYPE_RGBM;
 
 // calculate the number of mipmap levels given texture dimensions
 const calcLevels = (width, height = 0) => {
@@ -29,12 +28,12 @@ const supportsFloat32 = (device) => {
 const lightingSourcePixelFormat = (device) => {
     return supportsFloat16(device) ? PIXELFORMAT_RGBA16F :
         supportsFloat32(device) ? PIXELFORMAT_RGBA32F :
-            PIXELFORMAT_R8_G8_B8_A8;
+            PIXELFORMAT_RGBA8;
 };
 
 // runtime lighting can be RGBM
 const lightingPixelFormat = (device) => {
-    return PIXELFORMAT_R8_G8_B8_A8;
+    return PIXELFORMAT_RGBA8;
 };
 
 const createCubemap = (device, size, format, mipmaps) => {
@@ -44,7 +43,7 @@ const createCubemap = (device, size, format, mipmaps) => {
         width: size,
         height: size,
         format: format,
-        type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+        type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
         addressU: ADDRESS_CLAMP_TO_EDGE,
         addressV: ADDRESS_CLAMP_TO_EDGE,
         fixCubemapSeams: fixCubemapSeams,
@@ -71,7 +70,7 @@ class EnvLighting {
 
         DebugGraphics.pushGpuMarker(device, "genSkyboxCubemap");
 
-        const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_R8_G8_B8_A8, false);
+        const result = createCubemap(device, size || (source.cubemap ? source.width : source.width / 4), PIXELFORMAT_RGBA8, false);
 
         reprojectTexture(source, result, {
             numSamples: 1024
@@ -106,7 +105,7 @@ class EnvLighting {
             width: options?.size || 128,
             height: options?.size || 128,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+            type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,
             fixCubemapSeams: false,
@@ -150,7 +149,7 @@ class EnvLighting {
             width: options?.size || 512,
             height: options?.size || 512,
             format: format,
-            type: format === PIXELFORMAT_R8_G8_B8_A8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
+            type: format === PIXELFORMAT_RGBA8 ? RGBA8_TYPE : TEXTURETYPE_DEFAULT,
             projection: TEXTUREPROJECTION_EQUIRECT,
             addressU: ADDRESS_CLAMP_TO_EDGE,
             addressV: ADDRESS_CLAMP_TO_EDGE,

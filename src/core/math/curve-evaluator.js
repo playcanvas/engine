@@ -1,29 +1,44 @@
 import { CURVE_CARDINAL, CURVE_CATMULL, CURVE_LINEAR, CURVE_SMOOTHSTEP, CURVE_SPLINE, CURVE_STEP } from './constants.js';
 import { math } from './math.js';
 
-/** @typedef {import('./curve.js').Curve} Curve */
-
 /**
  * A class for evaluating a curve at a specific time.
  *
  * @ignore
  */
 class CurveEvaluator {
+    /** @private */
+    _curve;
+
+    /** @private */
+    _left = -Infinity;
+
+    /** @private */
+    _right = Infinity;
+
+    /** @private */
+    _recip = 0;
+
+    /** @private */
+    _p0 = 0;
+
+    /** @private */
+    _p1 = 0;
+
+    /** @private */
+    _m0 = 0;
+
+    /** @private */
+    _m1 = 0;
+
     /**
      * Create a new CurveEvaluator instance.
      *
-     * @param {Curve} curve - The curve to evaluate.
+     * @param {import('./curve.js').Curve} curve - The curve to evaluate.
      * @param {number} time - The initial time to evaluate the curve at. Defaults to 0.
      */
     constructor(curve, time = 0) {
         this._curve = curve;
-        this._left = -Infinity;
-        this._right = Infinity;
-        this._recip = 0;
-        this._p0 = 0;
-        this._p1 = 0;
-        this._m0 = 0;
-        this._m1 = 0;
         this._reset(time);
     }
 
@@ -32,7 +47,7 @@ class CurveEvaluator {
      * changed since the last evaluation.
      *
      * @param {number} time - Time to evaluate the curve at.
-     * @param {boolean} [forceReset=false] - Force reset of the curve.
+     * @param {boolean} [forceReset] - Force reset of the curve.
      * @returns {number} The evaluated value.
      */
     evaluate(time, forceReset = false) {

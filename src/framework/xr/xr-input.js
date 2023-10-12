@@ -2,16 +2,15 @@ import { EventHandler } from '../../core/event-handler.js';
 
 import { XrInputSource } from './xr-input-source.js';
 
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
-
 /**
  * Provides access to input sources for WebXR.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrInput extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     manager;
@@ -31,7 +30,7 @@ class XrInput extends EventHandler {
     /**
      * Create a new XrInput instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @hideconstructor
      */
     constructor(manager) {
@@ -77,7 +76,7 @@ class XrInput extends EventHandler {
      * @param {XrInputSource} inputSource - Input source that triggered select event.
      * @param {object} evt - XRInputSourceEvent event data from WebXR API.
      * @example
-     * var ray = new pc.Ray();
+     * const ray = new pc.Ray();
      * app.xr.input.on('select', function (inputSource, evt) {
      *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
      *     if (obj.intersectsRay(ray)) {

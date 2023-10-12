@@ -1,11 +1,12 @@
+import { Quat } from '../../../core/math/quat.js';
+import { Vec3 } from '../../../core/math/vec3.js';
+
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../core/math/vec3.js').Vec3} Vec3 */
-/** @typedef {import('../../../scene/model.js').Model} Model */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').CollisionComponentSystem} CollisionComponentSystem */
+const _vec3 = new Vec3();
+const _quat = new Quat();
 
 /**
  * A collision volume. Use this in conjunction with a {@link RigidBodyComponent} to make a
@@ -36,8 +37,12 @@ import { Component } from '../component.js';
  * - "sphere": A sphere-shaped collision volume.
  *
  * Defaults to "box".
- * @property {Vec3} halfExtents The half-extents of the box-shaped collision volume in the x, y and
- * z axes. Defaults to [0.5, 0.5, 0.5].
+ * @property {Vec3} halfExtents The half-extents of the
+ * box-shaped collision volume in the x, y and z axes. Defaults to [0.5, 0.5, 0.5].
+ * @property {Vec3} linearOffset The positional offset of the collision shape from the Entity position along the local axes.
+ * Defaults to [0, 0, 0].
+ * @property {Quat} angularOffset The rotational offset of the collision shape from the Entity rotation in local space.
+ * Defaults to identity.
  * @property {number} radius The radius of the sphere, capsule, cylinder or cone-shaped collision
  * volumes. Defaults to 0.5.
  * @property {number} axis The local space axis with which the capsule, cylinder or cone-shaped
@@ -48,27 +53,33 @@ import { Component } from '../component.js';
  * be an asset id. Defaults to null.
  * @property {Asset|number} renderAsset The render asset of the mesh collision volume - can also be
  * an asset id. Defaults to null. If not set then the asset property will be checked instead.
- * @property {Model} model The model that is added to the scene graph for the mesh collision
- * volume.
+ * @property {import('../../../scene/model.js').Model} model The model that is added to the scene
+ * graph for the mesh collision volume.
  * @augments Component
+ * @category Physics
  */
 class CollisionComponent extends Component {
     /**
      * Create a new CollisionComponent.
      *
-     * @param {CollisionComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').CollisionComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
 
         /** @private */
         this._compoundParent = null;
+        this._hasOffset = false;
 
         this.entity.on('insert', this._onInsert, this);
 
         this.on('set_type', this.onSetType, this);
         this.on('set_halfExtents', this.onSetHalfExtents, this);
+        this.on('set_linearOffset', this.onSetOffset, this);
+        this.on('set_angularOffset', this.onSetOffset, this);
         this.on('set_radius', this.onSetRadius, this);
         this.on('set_height', this.onSetHeight, this);
         this.on('set_axis', this.onSetAxis, this);
@@ -96,21 +107,21 @@ class CollisionComponent extends Component {
      * Fired two rigid-bodies stop touching.
      *
      * @event CollisionComponent#collisionend
-     * @param {Entity} other - The {@link Entity} that stopped touching this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that stopped touching this collision volume.
      */
 
     /**
      * Fired when a rigid body enters a trigger volume.
      *
      * @event CollisionComponent#triggerenter
-     * @param {Entity} other - The {@link Entity} that entered this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that entered this collision volume.
      */
 
     /**
      * Fired when a rigid body exits a trigger volume.
      *
      * @event CollisionComponent#triggerleave
-     * @param {Entity} other - The {@link Entity} that exited this collision volume.
+     * @param {import('../../entity.js').Entity} other - The {@link Entity} that exited this collision volume.
      */
 
     /**
@@ -134,6 +145,20 @@ class CollisionComponent extends Component {
     onSetHalfExtents(name, oldValue, newValue) {
         const t = this.data.type;
         if (this.data.initialized && t === 'box') {
+            this.system.recreatePhysicalShapes(this);
+        }
+    }
+
+    /**
+     * @param {string} name - Property name.
+     * @param {*} oldValue - Previous value of the property.
+     * @param {*} newValue - New value of the property.
+     * @private
+     */
+    onSetOffset(name, oldValue, newValue) {
+        this._hasOffset = !this.data.linearOffset.equals(Vec3.ZERO) || !this.data.angularOffset.equals(Quat.IDENTITY);
+
+        if (this.data.initialized) {
             this.system.recreatePhysicalShapes(this);
         }
     }
@@ -324,7 +349,7 @@ class CollisionComponent extends Component {
     }
 
     /**
-     * @param {GraphNode} parent - The parent node.
+     * @param {import('../../../scene/graph-node.js').GraphNode} parent - The parent node.
      * @private
      */
     _onInsert(parent) {
@@ -378,6 +403,39 @@ class CollisionComponent extends Component {
                     bodyComponent.activate();
             }
         }
+    }
+
+
+    /**
+     * @description Returns the world position for the collision shape taking into account of any offsets.
+     * @returns {Vec3} The world position for the collision shape.
+     */
+    getShapePosition() {
+        const pos = this.entity.getPosition();
+
+        if (this._hasOffset) {
+            const rot = this.entity.getRotation();
+            const lo = this.data.linearOffset;
+
+            _quat.copy(rot).transformVector(lo, _vec3);
+            return _vec3.add(pos);
+        }
+
+        return pos;
+    }
+
+    /**
+     * @description Returns the world rotation for the collision shape taking into account of any offsets.
+     * @returns {Quat} The world rotation for the collision.
+     */
+    getShapeRotation() {
+        const rot = this.entity.getRotation();
+
+        if (this._hasOffset) {
+            return _quat.copy(rot).mul(this.data.angularOffset);
+        }
+
+        return rot;
     }
 
     /** @private */

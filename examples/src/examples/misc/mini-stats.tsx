@@ -1,13 +1,13 @@
 import * as pc from '../../../../';
 
-
 class MiniStatsExample {
     static CATEGORY = 'Misc';
     static NAME = 'Mini Stats';
+    static WEBGPU_ENABLED = true;
     static ENGINE = 'PERFORMANCE';
     static MINISTATS = true;
 
-    example(canvas: HTMLCanvasElement, pcx: any): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, pcx: any): void {
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
         app.start();
@@ -180,14 +180,15 @@ class MiniStatsExample {
                     // add vertex buffer
                     const vertexCount = 500;
                     const data = new Float32Array(vertexCount * 16);
-                    vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.defaultInstancingFormat, vertexCount, pc.BUFFER_STATIC, data);
+                    vertexBuffer = new pc.VertexBuffer(app.graphicsDevice, pc.VertexFormat.getDefaultInstancingFormat(app.graphicsDevice),
+                                                       vertexCount, pc.BUFFER_STATIC, data);
                     vertexBuffers.push(vertexBuffer);
 
                     // allocate texture
                     const texture = new pc.Texture(app.graphicsDevice, {
                         width: 64,
                         height: 64,
-                        format: pc.PIXELFORMAT_R8_G8_B8,
+                        format: pc.PIXELFORMAT_RGB8,
                         mipmaps: false
                     });
                     textures.push(texture);

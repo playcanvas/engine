@@ -1,15 +1,11 @@
-import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
+import { Vec3 } from '../../core/math/vec3.js';
 
 import { XRHAND_LEFT } from './constants.js';
-
 import { XrFinger } from './xr-finger.js';
 import { XrJoint } from './xr-joint.js';
 
-import { Vec3 } from '../../core/math/vec3.js';
-
-/** @typedef {import('./xr-input-source.js').XrInputSource} XrInputSource */
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * @type {string[][]}
@@ -35,16 +31,17 @@ if (platform.browser && window.XRHand) {
  * Represents a hand with fingers and joints.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHand extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     _manager;
 
     /**
-     * @type {XrInputSource}
+     * @type {import('./xr-input-source.js').XrInputSource}
      * @private
      */
     _inputSource;
@@ -88,7 +85,8 @@ class XrHand extends EventHandler {
     /**
      * Represents a hand with fingers and joints.
      *
-     * @param {XrInputSource} inputSource - Input Source that hand is related to.
+     * @param {import('./xr-input-source.js').XrInputSource} inputSource - Input Source that hand
+     * is related to.
      * @hideconstructor
      */
     constructor(inputSource) {

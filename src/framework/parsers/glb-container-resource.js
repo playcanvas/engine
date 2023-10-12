@@ -1,11 +1,13 @@
-import { Asset } from '../../framework/asset/asset.js';
-import { Entity } from '../../framework/entity.js';
+import { Debug } from '../../core/debug.js';
+
 import { MeshInstance } from '../../scene/mesh-instance.js';
+import { Model } from '../../scene/model.js';
 import { MorphInstance } from '../../scene/morph-instance.js';
 import { SkinInstance } from '../../scene/skin-instance.js';
 import { SkinInstanceCache } from '../../scene/skin-instance-cache.js';
-import { Model } from '../../scene/model.js';
-import { Debug } from '../../core/debug.js';
+
+import { Entity } from '../entity.js';
+import { Asset } from '../asset/asset.js';
 
 // Container resource returned by the GlbParser. Implements the ContainerResource interface.
 class GlbContainerResource {
@@ -121,7 +123,7 @@ class GlbContainerResource {
                     if (gltfNode.hasOwnProperty('mesh')) {
                         const meshGroup = glb.renders[gltfNode.mesh].meshes;
                         renderAsset = this.renders[gltfNode.mesh];
-                        for (var mi = 0; mi < meshGroup.length; mi++) {
+                        for (let mi = 0; mi < meshGroup.length; mi++) {
                             const mesh = meshGroup[mi];
                             if (mesh) {
                                 const cloneMi = createMeshInstance(root, entity, mesh, glb.materials, glb.meshDefaultMaterials, glb.skins, gltfNode);
@@ -302,7 +304,7 @@ class GlbContainerResource {
                 const gltfNode = glb.gltf.nodes[i];
                 if (gltfNode.hasOwnProperty('mesh')) {
                     const meshGroup = glb.renders[gltfNode.mesh].meshes;
-                    for (var mi = 0; mi < meshGroup.length; mi++) {
+                    for (let mi = 0; mi < meshGroup.length; mi++) {
                         const mesh = meshGroup[mi];
                         if (mesh) {
                             createMeshInstance(model, mesh, glb.skins, skinInstances, glb.materials, node, gltfNode);

@@ -2,13 +2,14 @@ import { Debug } from '../../core/debug.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import {
-    PIXELFORMAT_R8_G8_B8_A8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
+    PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
 import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { RenderTarget } from '../../platform/graphics/render-target.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 // https://seblagarde.wordpress.com/2012/06/10/amd-cubemapgen-for-physically-based-rendering/
 function areaElement(x, y) {
@@ -45,7 +46,7 @@ function texelCoordSolidAngle(u, v, size) {
 }
 
 function shFromCubemap(device, source, dontFlipX) {
-    if (source.format !== PIXELFORMAT_R8_G8_B8_A8) {
+    if (source.format !== PIXELFORMAT_RGBA8) {
         Debug.error("ERROR: SH: cubemap must be RGBA8");
         return null;
     }
@@ -95,6 +96,7 @@ function shFromCubemap(device, source, dontFlipX) {
                     depth: false
                 });
                 constantTexSource.setValue(tex);
+                device.setBlendState(BlendState.NOBLEND);
                 drawQuadWithShader(device, targ, shader);
 
                 const gl = device.gl;

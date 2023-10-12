@@ -1,22 +1,23 @@
 import { Debug } from '../../core/debug.js';
+import { random } from '../../core/math/random.js';
+import { Vec3 } from '../../core/math/vec3.js';
+
 import {
     FILTER_NEAREST,
     TEXTUREPROJECTION_OCTAHEDRAL, TEXTUREPROJECTION_CUBE
 } from '../../platform/graphics/constants.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { random } from '../../core/math/random.js';
-import { createShaderFromCode } from '../shader-lib/utils.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
-import { ChunkUtils } from '../shader-lib/chunk-utils.js';
-import { shaderChunks } from '../shader-lib/chunks/chunks.js';
-import { RenderTarget } from '../../platform/graphics/render-target.js';
-import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
-import { getProgramLibrary } from '../shader-lib/get-program-library.js';
-import { Texture } from '../../platform/graphics/texture.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
 import { DeviceCache } from '../../platform/graphics/device-cache.js';
+import { GraphicsDevice } from '../../platform/graphics/graphics-device.js';
+import { RenderTarget } from '../../platform/graphics/render-target.js';
+import { drawQuadWithShader } from './quad-render-utils.js';
+import { Texture } from '../../platform/graphics/texture.js';
 
-/** @typedef {import('../../core/math/vec4.js').Vec4} Vec4 */
+import { ChunkUtils } from '../shader-lib/chunk-utils.js';
+import { shaderChunks } from '../shader-lib/chunks/chunks.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { createShaderFromCode } from '../shader-lib/utils.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
 
 const getProjectionName = (projection) => {
     switch (projection) {
@@ -68,11 +69,11 @@ const packSamples = (samples) => {
 
     // normalize float data and pack into rgba8
     let off = 0;
-    for (let i = 0; i < numSamples; ++i) {
-        packFloat32ToRGBA8(samples[i * 4 + 0] * 0.5 + 0.5, data, off + 0);
-        packFloat32ToRGBA8(samples[i * 4 + 1] * 0.5 + 0.5, data, off + 4);
-        packFloat32ToRGBA8(samples[i * 4 + 2] * 0.5 + 0.5, data, off + 8);
-        packFloat32ToRGBA8(samples[i * 4 + 3] / 8, data, off + 12);
+    for (let i = 0; i < numSamples; i += 4) {
+        packFloat32ToRGBA8(samples[i + 0] * 0.5 + 0.5, data, off + 0);
+        packFloat32ToRGBA8(samples[i + 1] * 0.5 + 0.5, data, off + 4);
+        packFloat32ToRGBA8(samples[i + 2] * 0.5 + 0.5, data, off + 8);
+        packFloat32ToRGBA8(samples[i + 3] / 8, data, off + 12);
         off += 16;
     }
 
@@ -373,7 +374,7 @@ varying vec2 vUv0;
 
 void main(void) {
     gl_Position = vec4(vertex_position, 0.5, 1.0);
-    vUv0 = (vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw;
+    vUv0 = getImageEffectUV((vertex_position.xy * 0.5 + 0.5) * uvMod.xy + uvMod.zw);
 }
 `;
 
@@ -393,7 +394,7 @@ void main(void) {
  * @param {number} [options.face] - Optional cubemap face to update (default is update all faces).
  * @param {string} [options.distribution] - Specify convolution distribution - 'none', 'lambert',
  * 'phong', 'ggx'. Default depends on specularPower.
- * @param {Vec4} [options.rect] - Optional viewport rectangle.
+ * @param {import('../../core/math/vec4.js').Vec4} [options.rect] - Optional viewport rectangle.
  * @param {number} [options.seamPixels] - Optional number of seam pixels to render
  */
 function reprojectTexture(source, target, options = {}) {
@@ -427,6 +428,7 @@ function reprojectTexture(source, target, options = {}) {
     const distribution = options.hasOwnProperty('distribution') ? options.distribution : (specularPower === 1) ? 'none' : 'phong';
 
     const processFunc = funcNames[distribution] || 'reproject';
+    const prefilterSamples = processFunc.startsWith('prefilterSamples');
     const decodeFunc = ChunkUtils.decodeFunc(source.encoding);
     const encodeFunc = ChunkUtils.encodeFunc(target.encoding);
     const sourceFunc = `sample${getProjectionName(source.projection)}`;
@@ -442,35 +444,31 @@ function reprojectTexture(source, target, options = {}) {
     if (!shader) {
         const defines =
             `#define PROCESS_FUNC ${processFunc}\n` +
+            (prefilterSamples ? `#define USE_SAMPLES_TEX\n` : '') +
+            (source.cubemap ? `#define CUBEMAP_SOURCE\n` : '') +
             `#define DECODE_FUNC ${decodeFunc}\n` +
             `#define ENCODE_FUNC ${encodeFunc}\n` +
             `#define SOURCE_FUNC ${sourceFunc}\n` +
             `#define TARGET_FUNC ${targetFunc}\n` +
             `#define NUM_SAMPLES ${numSamples}\n` +
-            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n` +
-            (device.extTextureLod ? `#define SUPPORTS_TEXLOD\n` : '');
-
-        let extensions = '';
-        if (!device.webgl2) {
-            extensions = '#extension GL_OES_standard_derivatives: enable\n';
-            if (device.extTextureLod) {
-                extensions += '#extension GL_EXT_shader_texture_lod: enable\n\n';
-            }
-        }
+            `#define NUM_SAMPLES_SQRT ${Math.round(Math.sqrt(numSamples)).toFixed(1)}\n`;
 
         shader = createShaderFromCode(
             device,
             vsCode,
             `${defines}\n${shaderChunks.reprojectPS}`,
-            shaderKey,
-            false,
-            extensions
+            shaderKey
         );
     }
 
     DebugGraphics.pushGpuMarker(device, "ReprojectTexture");
 
+    // render state
+    // TODO: set up other render state here to expected state
+    device.setBlendState(BlendState.NOBLEND);
+
     const constantSource = device.scope.resolve(source.cubemap ? "sourceCube" : "sourceTex");
+    Debug.assert(constantSource);
     constantSource.setValue(source);
 
     const constantParams = device.scope.resolve("params");
@@ -507,7 +505,7 @@ function reprojectTexture(source, target, options = {}) {
         source.width * source.height * (source.cubemap ? 6 : 1)
     ];
 
-    if (processFunc.startsWith('prefilterSamples')) {
+    if (prefilterSamples) {
         // set or generate the pre-calculated samples data
         const sourceTotalPixels = source.width * source.height * (source.cubemap ? 6 : 1);
         const samplesTex =
@@ -523,7 +521,8 @@ function reprojectTexture(source, target, options = {}) {
             const renderTarget = new RenderTarget({
                 colorBuffer: target,
                 face: f,
-                depth: false
+                depth: false,
+                flipY: device.isWebGPU
             });
             params[0] = f;
             constantParams.setValue(params);

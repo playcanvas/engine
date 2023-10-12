@@ -1,17 +1,11 @@
 import { platform } from '../../core/platform.js';
-
 import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
-
 import { Ray } from '../../core/shape/ray.js';
-
-import { getApplication } from '../globals.js';
 
 import { Mouse } from '../../platform/input/mouse.js';
 
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../components/element/component.js').ElementComponent} ElementComponent */
-/** @typedef {import('../xr/xr-input-source.js').XrInputSource} XrInputSource */
+import { getApplication } from '../globals.js';
 
 let targetX, targetY;
 const vecA = new Vec3();
@@ -115,6 +109,8 @@ function intersectLineQuad(p, q, corners) {
 /**
  * Represents an input event fired on a {@link ElementComponent}. When an event is raised on an
  * ElementComponent it bubbles up to its parent ElementComponents unless we call stopPropagation().
+ *
+ * @category User Interface
  */
 class ElementInputEvent {
     /**
@@ -122,10 +118,10 @@ class ElementInputEvent {
      *
      * @param {MouseEvent|TouchEvent} event - The MouseEvent or TouchEvent that was originally
      * raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      */
     constructor(event, element, camera) {
         /**
@@ -138,14 +134,14 @@ class ElementInputEvent {
         /**
          * The ElementComponent that this event was originally raised on.
          *
-         * @type {ElementComponent}
+         * @type {import('../components/element/component.js').ElementComponent}
          */
         this.element = element;
 
         /**
          * The CameraComponent that this event was originally raised via.
          *
-         * @type {CameraComponent}
+         * @type {import('../components/camera/component.js').CameraComponent}
          */
         this.camera = camera;
 
@@ -169,16 +165,17 @@ class ElementInputEvent {
  * Represents a Mouse event fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementMouseEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementMouseEvent.
      *
      * @param {MouseEvent} event - The MouseEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @param {number} lastX - The last x coordinate.
@@ -263,16 +260,17 @@ class ElementMouseEvent extends ElementInputEvent {
  * Represents a TouchEvent fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementTouchEvent extends ElementInputEvent {
     /**
      * Create an instance of an ElementTouchEvent.
      *
      * @param {TouchEvent} event - The TouchEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
      * @param {number} x - The x coordinate of the touch that triggered the event.
      * @param {number} y - The y coordinate of the touch that triggered the event.
      * @param {Touch} touch - The touch object that triggered the event.
@@ -309,18 +307,19 @@ class ElementTouchEvent extends ElementInputEvent {
  * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  *
  * @augments ElementInputEvent
+ * @category User Interface
  */
 class ElementSelectEvent extends ElementInputEvent {
     /**
      * Create an instance of a ElementSelectEvent.
      *
      * @param {object} event - The XRInputSourceEvent that was originally raised.
-     * @param {ElementComponent} element - The ElementComponent that this event was originally
-     * raised on.
-     * @param {CameraComponent} camera - The CameraComponent that this event was originally raised
-     * via.
-     * @param {XrInputSource} inputSource - The XR input source that this event was originally
-     * raised from.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent that this event was originally raised on.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - The
+     * CameraComponent that this event was originally raised via.
+     * @param {import('../xr/xr-input-source.js').XrInputSource} inputSource - The XR input source
+     * that this event was originally raised from.
      */
     constructor(event, element, camera, inputSource) {
         super(event, element, camera);
@@ -328,7 +327,7 @@ class ElementSelectEvent extends ElementInputEvent {
         /**
          * The XR input source that this event was originally raised from.
          *
-         * @type {XrInputSource}
+         * @type {import('../xr/xr-input-source.js').XrInputSource}
          */
         this.inputSource = inputSource;
     }
@@ -337,6 +336,8 @@ class ElementSelectEvent extends ElementInputEvent {
 /**
  * Handles mouse and touch events for {@link ElementComponent}s. When input events occur on an
  * ElementComponent this fires the appropriate events on the ElementComponent.
+ *
+ * @category User Interface
  */
 class ElementInput {
     /**
@@ -487,7 +488,8 @@ class ElementInput {
      * Add a {@link ElementComponent} to the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent.
      */
     addElement(element) {
         if (this._elements.indexOf(element) === -1)
@@ -498,7 +500,8 @@ class ElementInput {
      * Remove a {@link ElementComponent} from the internal list of ElementComponents that are being
      * checked for input.
      *
-     * @param {ElementComponent} element - The ElementComponent.
+     * @param {import('../components/element/component.js').ElementComponent} element - The
+     * ElementComponent.
      */
     removeElement(element) {
         const idx = this._elements.indexOf(element);
@@ -635,8 +638,6 @@ class ElementInput {
             delete this._touchedElements[touch.identifier];
             delete this._touchesForWhichTouchLeaveHasFired[touch.identifier];
 
-            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
-
             // check if touch was released over previously touch
             // element in order to fire click event
             const coords = this._calcTouchCoords(touch);
@@ -647,11 +648,13 @@ class ElementInput {
 
                     if (!this._clickedEntities[element.entity.getGuid()]) {
                         this._fireEvent('click', new ElementTouchEvent(event, element, camera, x, y, touch));
-                        this._clickedEntities[element.entity.getGuid()] = true;
+                        this._clickedEntities[element.entity.getGuid()] = Date.now();
                     }
 
                 }
             }
+
+            this._fireEvent(event.type, new ElementTouchEvent(event, element, camera, x, y, touch));
         }
     }
 
@@ -740,15 +743,24 @@ class ElementInput {
         if (eventType === 'mouseup' && this._pressedElement) {
             // click event
             if (this._pressedElement === this._hoveredElement) {
-                this._pressedElement = null;
+                // fire click event if it hasn't been fired already by the touchend handler
+                const guid = this._hoveredElement.entity.getGuid();
+                // Always fire, if there are no clicked entities
+                let fireClick = !this._clickedEntities;
+                // But if there are, we need to check how long ago touchend added a "click brake"
+                if (this._clickedEntities) {
+                    const lastTouchUp = this._clickedEntities[guid] || 0;
+                    const dt = Date.now() - lastTouchUp;
+                    fireClick = dt > 300;
 
-                // fire click event if it hasn't been fired already by the touchup handler
-                if (!this._clickedEntities || !this._clickedEntities[this._hoveredElement.entity.getGuid()]) {
+                    // We do not check another time, so the worst thing that can happen is one ignored click in 300ms.
+                    delete this._clickedEntities[guid];
+                }
+                if (fireClick) {
                     this._fireEvent('click', new ElementMouseEvent(event, this._hoveredElement, camera, targetX, targetY, this._lastX, this._lastY));
                 }
-            } else {
-                this._pressedElement = null;
             }
+            this._pressedElement = null;
         }
     }
 
@@ -832,21 +844,29 @@ class ElementInput {
             if (hoveredNow) this._fireEvent('selectenter', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
+        const pressed = this._selectedPressedElements[inputSource.id];
+        if (eventType === 'selectmove' && pressed) {
+            this._fireEvent('selectmove', new ElementSelectEvent(event, pressed, camera, inputSource));
+        }
+
         if (eventType === 'selectstart') {
             this._selectedPressedElements[inputSource.id] = hoveredNow;
             if (hoveredNow) this._fireEvent('selectstart', new ElementSelectEvent(event, hoveredNow, camera, inputSource));
         }
 
-        const pressed = this._selectedPressedElements[inputSource.id];
         if (!inputSource.elementInput && pressed) {
             delete this._selectedPressedElements[inputSource.id];
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (hoveredBefore) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
         }
 
         if (eventType === 'selectend' && inputSource.elementInput) {
             delete this._selectedPressedElements[inputSource.id];
 
-            if (hoveredBefore) this._fireEvent('selectend', new ElementSelectEvent(event, hoveredBefore, camera, inputSource));
+            if (pressed) {
+                this._fireEvent('selectend', new ElementSelectEvent(event, pressed, camera, inputSource));
+            }
 
             if (pressed && pressed === hoveredBefore) {
                 this._fireEvent('click', new ElementSelectEvent(event, pressed, camera, inputSource));
@@ -991,96 +1011,6 @@ class ElementInput {
         return result;
     }
 
-    // In most cases the corners used for hit testing will just be the element's
-    // screen corners. However, in cases where the element has additional hit
-    // padding specified, we need to expand the screenCorners to incorporate the
-    // padding.
-    _buildHitCorners(element, screenOrWorldCorners, scaleX, scaleY, scaleZ) {
-        let hitCorners = screenOrWorldCorners;
-        const button = element.entity && element.entity.button;
-
-        if (button) {
-            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
-
-            _paddingTop.copy(element.entity.up);
-            _paddingBottom.copy(_paddingTop).mulScalar(-1);
-            _paddingRight.copy(element.entity.right);
-            _paddingLeft.copy(_paddingRight).mulScalar(-1);
-
-            _paddingTop.mulScalar(hitPadding.w * scaleY);
-            _paddingBottom.mulScalar(hitPadding.y * scaleY);
-            _paddingRight.mulScalar(hitPadding.z * scaleX);
-            _paddingLeft.mulScalar(hitPadding.x * scaleX);
-
-            _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
-            _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
-            _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
-            _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
-
-            hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
-        }
-
-        // make sure the corners are in the right order [bl, br, tr, tl]
-        // for x and y: simply invert what is considered "left/right" and "top/bottom"
-        if (scaleX < 0) {
-            const left = hitCorners[2].x;
-            const right = hitCorners[0].x;
-            hitCorners[0].x = left;
-            hitCorners[1].x = right;
-            hitCorners[2].x = right;
-            hitCorners[3].x = left;
-        }
-        if (scaleY < 0) {
-            const bottom = hitCorners[2].y;
-            const top = hitCorners[0].y;
-            hitCorners[0].y = bottom;
-            hitCorners[1].y = bottom;
-            hitCorners[2].y = top;
-            hitCorners[3].y = top;
-        }
-        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
-        if (scaleZ < 0) {
-            const x = hitCorners[2].x;
-            const y = hitCorners[2].y;
-            const z = hitCorners[2].z;
-
-            hitCorners[2].x = hitCorners[0].x;
-            hitCorners[2].y = hitCorners[0].y;
-            hitCorners[2].z = hitCorners[0].z;
-            hitCorners[0].x = x;
-            hitCorners[0].y = y;
-            hitCorners[0].z = z;
-        }
-
-        return hitCorners;
-    }
-
-    _calculateScaleToScreen(element) {
-        let current = element.entity;
-        const screenScale = element.screen.screen.scale;
-
-        _accumulatedScale.set(screenScale, screenScale, screenScale);
-
-        while (current && !current.screen) {
-            _accumulatedScale.mul(current.getLocalScale());
-            current = current.parent;
-        }
-
-        return _accumulatedScale;
-    }
-
-    _calculateScaleToWorld(element) {
-        let current = element.entity;
-        _accumulatedScale.set(1, 1, 1);
-
-        while (current) {
-            _accumulatedScale.mul(current.getLocalScale());
-            current = current.parent;
-        }
-
-        return _accumulatedScale;
-    }
-
     _calculateRayScreen(x, y, camera, ray) {
         const sw = this.app.graphicsDevice.width;
         const sh = this.app.graphicsDevice.height;
@@ -1161,14 +1091,107 @@ class ElementInput {
 
         let scale;
         if (screen) {
-            scale = this._calculateScaleToScreen(element);
+            scale = ElementInput.calculateScaleToScreen(element);
         } else {
-            scale = this._calculateScaleToWorld(element);
+            scale = ElementInput.calculateScaleToWorld(element);
         }
 
-        const corners = this._buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale.x, scale.y, scale.z);
+        const corners = ElementInput.buildHitCorners(element, screen ? element.screenCorners : element.worldCorners, scale);
 
         return intersectLineQuad(ray.origin, ray.end, corners);
+    }
+
+    // In most cases the corners used for hit testing will just be the element's
+    // screen corners. However, in cases where the element has additional hit
+    // padding specified, we need to expand the screenCorners to incorporate the
+    // padding.
+    // NOTE: Used by Editor for visualization in the viewport
+    static buildHitCorners(element, screenOrWorldCorners, scale) {
+        let hitCorners = screenOrWorldCorners;
+        const button = element.entity && element.entity.button;
+
+        if (button) {
+            const hitPadding = element.entity.button.hitPadding || ZERO_VEC4;
+
+            _paddingTop.copy(element.entity.up);
+            _paddingBottom.copy(_paddingTop).mulScalar(-1);
+            _paddingRight.copy(element.entity.right);
+            _paddingLeft.copy(_paddingRight).mulScalar(-1);
+
+            _paddingTop.mulScalar(hitPadding.w * scale.y);
+            _paddingBottom.mulScalar(hitPadding.y * scale.y);
+            _paddingRight.mulScalar(hitPadding.z * scale.x);
+            _paddingLeft.mulScalar(hitPadding.x * scale.x);
+
+            _cornerBottomLeft.copy(hitCorners[0]).add(_paddingBottom).add(_paddingLeft);
+            _cornerBottomRight.copy(hitCorners[1]).add(_paddingBottom).add(_paddingRight);
+            _cornerTopRight.copy(hitCorners[2]).add(_paddingTop).add(_paddingRight);
+            _cornerTopLeft.copy(hitCorners[3]).add(_paddingTop).add(_paddingLeft);
+
+            hitCorners = [_cornerBottomLeft, _cornerBottomRight, _cornerTopRight, _cornerTopLeft];
+        }
+
+        // make sure the corners are in the right order [bl, br, tr, tl]
+        // for x and y: simply invert what is considered "left/right" and "top/bottom"
+        if (scale.x < 0) {
+            const left = hitCorners[2].x;
+            const right = hitCorners[0].x;
+            hitCorners[0].x = left;
+            hitCorners[1].x = right;
+            hitCorners[2].x = right;
+            hitCorners[3].x = left;
+        }
+        if (scale.y < 0) {
+            const bottom = hitCorners[2].y;
+            const top = hitCorners[0].y;
+            hitCorners[0].y = bottom;
+            hitCorners[1].y = bottom;
+            hitCorners[2].y = top;
+            hitCorners[3].y = top;
+        }
+        // if z is inverted, entire element is inverted, so flip it around by swapping corner points 2 and 0
+        if (scale.z < 0) {
+            const x = hitCorners[2].x;
+            const y = hitCorners[2].y;
+            const z = hitCorners[2].z;
+
+            hitCorners[2].x = hitCorners[0].x;
+            hitCorners[2].y = hitCorners[0].y;
+            hitCorners[2].z = hitCorners[0].z;
+            hitCorners[0].x = x;
+            hitCorners[0].y = y;
+            hitCorners[0].z = z;
+        }
+
+        return hitCorners;
+    }
+
+    // NOTE: Used by Editor for visualization in the viewport
+    static calculateScaleToScreen(element) {
+        let current = element.entity;
+        const screenScale = element.screen.screen.scale;
+
+        _accumulatedScale.set(screenScale, screenScale, screenScale);
+
+        while (current && !current.screen) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
+    }
+
+    // NOTE: Used by Editor for visualization in the viewport
+    static calculateScaleToWorld(element) {
+        let current = element.entity;
+        _accumulatedScale.set(1, 1, 1);
+
+        while (current) {
+            _accumulatedScale.mul(current.getLocalScale());
+            current = current.parent;
+        }
+
+        return _accumulatedScale;
     }
 }
 

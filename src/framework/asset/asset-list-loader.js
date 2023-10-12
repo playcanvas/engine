@@ -5,27 +5,29 @@ import { Asset } from './asset.js';
 /**
  * Used to load a group of assets and fires a callback when all assets are loaded.
  *
+ * ```javascript
+ * const assets = [
+ *     new Asset('model', 'container', { url: `http://example.com/asset.glb` }),
+ *     new Asset('styling', 'css', { url: `http://example.com/asset.css` })
+ * ];
+ * const assetListLoader = new AssetListLoader(assets, app.assets);
+ * assetListLoader.load((err, failed) => {
+ *     if (err) {
+ *         console.error(`${failed.length} assets failed to load`);
+ *     } else {
+ *         console.log(`${assets.length} assets loaded`);
+ *    }
+ * });
+ * ```
+ *
  * @augments EventHandler
- * @example
- *  const assets = [
- *      new Asset('model', 'container', { url: `http://example.com/asset.glb` }),
- *      new Asset('styling', 'css', { url: `http://example.com/asset.css` })
- *  ];
- *  const assetListLoader = new AssetListLoader(assets, app.assets);
- *  assetListLoader.load((err, failed) => {
- *      if (err) {
- *          console.error(`${failed.length} assets failed to load`);
- *      } else {
- *          console.log(`${assets.length} assets loaded`);
- *     }
- *  });
  */
 class AssetListLoader extends EventHandler {
     /**
      * Create a new AssetListLoader using a list of assets to load and the asset registry used to load and manage them.
      *
      * @param {Asset[]|number[]} assetList - An array of {@link Asset} objects to load or an array of Asset IDs to load.
-     * @param {AssetRegistry} assetRegistry - The application's asset registry.
+     * @param {import('./asset-registry.js').AssetRegistry} assetRegistry - The application's asset registry.
      * @example
      * const assetListLoader = new pc.AssetListLoader([
      *     new pc.Asset("texture1", "texture", { url: 'http://example.com/my/assets/here/texture1.png') }),

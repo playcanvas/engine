@@ -1,5 +1,3 @@
-import { Debug } from '../../core/debug.js';
-
 import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
@@ -50,20 +48,21 @@ const JSON_VERTEX_ELEMENT_TYPE = {
 
 // Take PlayCanvas JSON model data and create pc.Model
 class JsonModelParser {
-    constructor(device, defaultMaterial) {
-        this._device = device;
-        this._defaultMaterial = defaultMaterial;
+    constructor(modelHandler) {
+        this._device = modelHandler.device;
+        this._defaultMaterial = modelHandler.defaultMaterial;
     }
 
-    parse(data) {
+    parse(data, callback) {
         const modelData = data.model;
         if (!modelData) {
-            return null;
+            callback(null, null);
+            return;
         }
 
         if (modelData.version <= 1) {
-            Debug.warn('JsonModelParser#parse: Trying to parse unsupported model format.');
-            return null;
+            callback('JsonModelParser#parse: Trying to parse unsupported model format.');
+            return;
         }
 
         // NODE HIERARCHY
@@ -94,7 +93,7 @@ class JsonModelParser {
         model.morphInstances = morphs.instances;
         model.getGraph().syncHierarchy();
 
-        return model;
+        callback(null, model);
     }
 
     _parseNodes(data) {
