@@ -266,7 +266,7 @@ class AppBase extends EventHandler {
 
         if (!device) {
             Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
-            return
+            return;
         }
 
         /**
