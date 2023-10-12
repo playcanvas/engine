@@ -799,6 +799,12 @@ class Renderer {
 
         DebugGraphics.pushGpuMarker(device, meshInstance.node.name);
 
+        const modelMatrix = meshInstance.node.worldTransform;
+        this.modelMatrixId.setValue(modelMatrix.data);
+        if (normal) {
+            this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
+        }
+
         const instancingData = meshInstance.instancingData;
         if (instancingData) {
             if (instancingData.count > 0) {
@@ -807,13 +813,6 @@ class Renderer {
                 device.draw(mesh.primitive[style], instancingData.count);
             }
         } else {
-            const modelMatrix = meshInstance.node.worldTransform;
-            this.modelMatrixId.setValue(modelMatrix.data);
-
-            if (normal) {
-                this.normalMatrixId.setValue(meshInstance.node.normalMatrix.data);
-            }
-
             device.draw(mesh.primitive[style]);
         }
 
