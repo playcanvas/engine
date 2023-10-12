@@ -238,7 +238,12 @@ ${exampleClass.example.toString()}
         function destroy() {
             miniStats?.destroy();
             miniStats = null;
-            window.pc?.app?.destroy();
+            // Can't call app.destroy() twice without an error,
+            // so we check for app.graphicsDevice first
+            const app = window.pc?.app;
+            if (app && app.graphicsDevice) {
+                app.destroy();
+            }
             ready = false;
         }
         function hotReload() {
