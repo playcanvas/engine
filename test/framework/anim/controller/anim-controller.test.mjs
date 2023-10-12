@@ -68,23 +68,26 @@ describe('AnimController', function () {
                 priority: 3
             }
         ];
-        const animBinder = new AnimComponentBinder(this, new Entity(), 'layer', {}, 0);
+        const graph = new Entity();
+        const animBinder = new AnimComponentBinder({ entity: graph }, graph, 'layer', {}, 0);
         animBinder.resolve = () => {};
         const animEvaluator = new AnimEvaluator(animBinder);
+        const parameters = {
+            'param': {
+                'name': 'param',
+                'type': 'FLOAT',
+                'value': 0.5
+            }
+        };
+        const consumedTriggers = new Set();
         controller = new AnimController(
             animEvaluator,
             states,
             transitions,
-            {
-                'param': {
-                    'name': 'param',
-                    'type': 'FLOAT',
-                    'value': 0.5
-                }
-            }, // parameters
             true, // activate
             null, // event handler
-            new Set() // consumed triggers
+            name => parameters[name],
+            name => consumedTriggers.add(name)
         );
         // add tracks
         const curves = [new AnimCurve(['path/to/entity'], 0, 0, INTERPOLATION_LINEAR)];

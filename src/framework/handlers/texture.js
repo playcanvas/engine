@@ -1,9 +1,10 @@
 import { path } from '../../core/path.js';
 
 import {
+    TEXHINT_ASSET,
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
@@ -15,10 +16,7 @@ import { Ktx2Parser } from '../parsers/texture/ktx2.js';
 import { DdsParser } from '../parsers/texture/dds.js';
 import { HdrParser } from '../parsers/texture/hdr.js';
 
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
-/** @typedef {import('../../framework/asset/asset.js').Asset} Asset */
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('./handler.js').ResourceHandlerCallback} ResourceHandlerCallback */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -48,6 +46,8 @@ const JSON_TEXTURE_TYPE = {
  * @name TextureParser
  * @description Interface to a texture parser. Implementations of this interface handle the loading
  * and opening of texture assets.
+ *
+ * @category Graphics
  */
 class TextureParser {
     /* eslint-disable jsdoc/require-returns-check */
@@ -59,8 +59,10 @@ class TextureParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {ResourceHandlerCallback} callback - The callback used when the resource is loaded or an error occurs.
-     * @param {Asset} [asset] - Optional asset that is passed by ResourceLoader.
+     * @param {import('./handler.js').ResourceHandlerCallback} callback - The callback used when
+     * the resource is loaded or an error occurs.
+     * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
+     * ResourceLoader.
      */
     load(url, callback, asset) {
         throw new Error('not implemented');
@@ -69,10 +71,12 @@ class TextureParser {
     /**
      * @function
      * @name TextureParser#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format JSON and return a {@link Model}.
+     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format
+     * JSON and return a {@link Model}.
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
-     * @param {GraphicsDevice} device - The graphics device.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
      * @returns {Texture} The parsed resource data.
      */
     open(url, data, device) {
@@ -97,7 +101,7 @@ const _completePartialMipmapChain = function (texture) {
                (object instanceof HTMLVideoElement);
     };
 
-    if (!(texture._format === PIXELFORMAT_R8_G8_B8_A8 ||
+    if (!(texture._format === PIXELFORMAT_RGBA8 ||
           texture._format === PIXELFORMAT_RGBA32F) ||
           texture._volume ||
           texture._compressed ||
@@ -155,6 +159,7 @@ const _completePartialMipmapChain = function (texture) {
  * Resource handler used for loading 2D and 3D {@link Texture} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class TextureHandler {
     /**
@@ -167,7 +172,7 @@ class TextureHandler {
     /**
      * Create a new TextureHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -176,7 +181,6 @@ class TextureHandler {
 
         this._device = device;
         this._assets = assets;
-        this._loader = app.loader;
 
         // img parser handles all browser-supported image formats, this
         // parser will be used when other more specific parsers are not found.
@@ -221,6 +225,63 @@ class TextureHandler {
         return this.parsers[ext] || this.imgParser;
     }
 
+    _getTextureOptions(asset) {
+
+        const options = {
+            // #if _PROFILER
+            profilerHint: TEXHINT_ASSET
+            // #endif
+        };
+
+        if (asset) {
+            if (asset.name?.length > 0) {
+                options.name = asset.name;
+            }
+
+            const assetData = asset.data;
+
+            if (assetData.hasOwnProperty('minfilter')) {
+                options.minFilter = JSON_FILTER_MODE[assetData.minfilter];
+            }
+
+            if (assetData.hasOwnProperty('magfilter')) {
+                options.magFilter = JSON_FILTER_MODE[assetData.magfilter];
+            }
+
+            if (assetData.hasOwnProperty('addressu')) {
+                options.addressU = JSON_ADDRESS_MODE[assetData.addressu];
+            }
+
+            if (assetData.hasOwnProperty('addressv')) {
+                options.addressV = JSON_ADDRESS_MODE[assetData.addressv];
+            }
+
+            if (assetData.hasOwnProperty('mipmaps')) {
+                options.mipmaps = assetData.mipmaps;
+            }
+
+            if (assetData.hasOwnProperty('anisotropy')) {
+                options.anisotropy = assetData.anisotropy;
+            }
+
+            if (assetData.hasOwnProperty('flipY')) {
+                options.flipY = !!assetData.flipY;
+            }
+
+            // extract asset type (this is bit of a mess)
+            if (assetData.hasOwnProperty('type')) {
+                options.type = JSON_TEXTURE_TYPE[assetData.type];
+            } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
+                options.type = TEXTURETYPE_RGBM;
+            } else if (asset.file && (asset.file.opt & 8) !== 0) {
+                // basis normalmaps flag the variant as swizzled
+                options.type = TEXTURETYPE_SWIZZLEGGGR;
+            }
+        }
+
+        return options;
+    }
+
     load(url, callback, asset) {
         if (typeof url === 'string') {
             url = {
@@ -236,13 +297,14 @@ class TextureHandler {
         if (!url)
             return undefined;
 
-        let texture = this._getParser(url).open(url, data, this._device);
+        const textureOptions = this._getTextureOptions(asset);
+        let texture = this._getParser(url).open(url, data, this._device, textureOptions);
 
         if (texture === null) {
             texture = new Texture(this._device, {
                 width: 4,
                 height: 4,
-                format: PIXELFORMAT_R8_G8_B8
+                format: PIXELFORMAT_RGB8
             });
         } else {
             // check if the texture has only a partial mipmap chain specified and generate the
@@ -264,50 +326,10 @@ class TextureHandler {
             return;
         }
 
-        if (asset.name && asset.name.length > 0) {
-            texture.name = asset.name;
-        }
-
-        const assetData = asset.data;
-
-        if (assetData.hasOwnProperty('minfilter')) {
-            texture.minFilter = JSON_FILTER_MODE[assetData.minfilter];
-        }
-
-        if (assetData.hasOwnProperty('magfilter')) {
-            texture.magFilter = JSON_FILTER_MODE[assetData.magfilter];
-        }
-
-        if (!texture.cubemap) {
-            if (assetData.hasOwnProperty('addressu')) {
-                texture.addressU = JSON_ADDRESS_MODE[assetData.addressu];
-            }
-
-            if (assetData.hasOwnProperty('addressv')) {
-                texture.addressV = JSON_ADDRESS_MODE[assetData.addressv];
-            }
-        }
-
-        if (assetData.hasOwnProperty('mipmaps')) {
-            texture.mipmaps = assetData.mipmaps;
-        }
-
-        if (assetData.hasOwnProperty('anisotropy')) {
-            texture.anisotropy = assetData.anisotropy;
-        }
-
-        if (assetData.hasOwnProperty('flipY')) {
-            texture.flipY = !!assetData.flipY;
-        }
-
-        // extract asset type (this is bit of a mess)
-        if (assetData.hasOwnProperty('type')) {
-            texture.type = JSON_TEXTURE_TYPE[assetData.type];
-        } else if (assetData.hasOwnProperty('rgbm') && assetData.rgbm) {
-            texture.type = TEXTURETYPE_RGBM;
-        } else if (asset.file && (asset.file.opt & 8) !== 0) {
-            // basis normalmaps flag the variant as swizzled
-            texture.type = TEXTURETYPE_SWIZZLEGGGR;
+        // apply asset options, based on asset.data
+        const options = this._getTextureOptions(asset);
+        for (const key of Object.keys(options)) {
+            texture[key] = options[key];
         }
     }
 }

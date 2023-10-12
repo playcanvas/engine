@@ -48,6 +48,197 @@ const up = new Vec3();
  */
 class GraphNode extends EventHandler {
     /**
+     * The non-unique name of a graph node. Defaults to 'Untitled'.
+     *
+     * @type {string}
+     */
+    name;
+
+    /**
+     * Interface for tagging graph nodes. Tag based searches can be performed using the
+     * {@link GraphNode#findByTag} function.
+     *
+     * @type {Tags}
+     */
+    tags = new Tags(this);
+
+    /** @private */
+    _labels = {};
+
+    // Local-space properties of transform (only first 3 are settable by the user)
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    localRotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localScale = new Vec3(1, 1, 1);
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localEulerAngles = new Vec3(); // Only calculated on request
+
+    // World-space properties of transform
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    rotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    eulerAngles = new Vec3();
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _scale = null;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    localTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = false;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _aabbVer = 0;
+
+    /**
+     * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine code
+     * automatically freezes and unfreezes objects whenever required. Segregating dynamic and
+     * stationary nodes into subhierarchies allows to reduce sync time significantly.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _frozen = false;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    worldTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyWorld = false;
+
+    /**
+     * Cached value representing the negatively scaled world transform. If the value is 0, this
+     * marks this value as dirty and it needs to be recalculated. If the value is 1, the world
+     * transform is not negatively scaled. If the value is -1, the world transform is negatively
+     * scaled.
+     *
+     * @type {number}
+     * @private
+     */
+    _worldScaleSign = 0;
+
+    /**
+     * @type {Mat3}
+     * @private
+     */
+    _normalMatrix = new Mat3();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyNormal = true;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _right = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _up = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _forward = null;
+
+    /**
+     * @type {GraphNode|null}
+     * @private
+     */
+    _parent = null;
+
+    /**
+     * @type {GraphNode[]}
+     * @private
+     */
+    _children = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _graphDepth = 0;
+
+    /**
+     * Represents enabled state of the entity. If the entity is disabled, the entity including all
+     * children are excluded from updates.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * Represents enabled state of the entity in the hierarchy. It's true only if this entity and
+     * all parent entities all the way to the scene's root are enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabledInHierarchy = false;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    scaleCompensation = false;
+
+    /**
      * Create a new GraphNode instance.
      *
      * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
@@ -55,182 +246,7 @@ class GraphNode extends EventHandler {
     constructor(name = 'Untitled') {
         super();
 
-        /**
-         * The non-unique name of a graph node. Defaults to 'Untitled'.
-         *
-         * @type {string}
-         */
         this.name = name;
-
-        /**
-         * Interface for tagging graph nodes. Tag based searches can be performed using the
-         * {@link GraphNode#findByTag} function.
-         *
-         * @type {Tags}
-         */
-        this.tags = new Tags(this);
-
-        /** @private */
-        this._labels = {};
-
-        // Local-space properties of transform (only first 3 are settable by the user)
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localPosition = new Vec3();
-
-        /**
-         * @type {Quat}
-         * @private
-         */
-        this.localRotation = new Quat();
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localScale = new Vec3(1, 1, 1);
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.localEulerAngles = new Vec3(); // Only calculated on request
-
-        // World-space properties of transform
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.position = new Vec3();
-
-        /**
-         * @type {Quat}
-         * @private
-         */
-        this.rotation = new Quat();
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.eulerAngles = new Vec3();
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._scale = null;
-
-        /**
-         * @type {Mat4}
-         * @private
-         */
-        this.localTransform = new Mat4();
-
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyLocal = false;
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._aabbVer = 0;
-
-        /**
-         * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine
-         * code automatically freezes and unfreezes objects whenever required. Segregating dynamic
-         * and stationary nodes into subhierarchies allows to reduce sync time significantly.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._frozen = false;
-
-        /**
-         * @type {Mat4}
-         * @private
-         */
-        this.worldTransform = new Mat4();
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyWorld = false;
-
-        /**
-         * @type {Mat3}
-         * @private
-         */
-        this._normalMatrix = new Mat3();
-        /**
-         * @type {boolean}
-         * @private
-         */
-        this._dirtyNormal = true;
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._right = null;
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._up = null;
-
-        /**
-         * @type {Vec3|null}
-         * @private
-         */
-        this._forward = null;
-
-        /**
-         * @type {GraphNode|null}
-         * @private
-         */
-        this._parent = null;
-
-        /**
-         * @type {GraphNode[]}
-         * @private
-         */
-        this._children = [];
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._graphDepth = 0;
-
-        /**
-         * Represents enabled state of the entity. If the entity is disabled, the entity including
-         * all children are excluded from updates.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._enabled = true;
-
-        /**
-         * Represents enabled state of the entity in the hierarchy. It's true only if this entity
-         * and all parent entities all the way to the scene's root are enabled.
-         *
-         * @type {boolean}
-         * @private
-         */
-        this._enabledInHierarchy = false;
-
-        /**
-         * @type {boolean}
-         * @ignore
-         */
-        this.scaleCompensation = false;
     }
 
     /**
@@ -279,8 +295,7 @@ class GraphNode extends EventHandler {
 
         const normalMat = this._normalMatrix;
         if (this._dirtyNormal) {
-            this.getWorldTransform().invertTo3x3(normalMat);
-            normalMat.transpose();
+            normalMat.invertMat4(this.getWorldTransform()).transpose();
             this._dirtyNormal = false;
         }
 
@@ -464,6 +479,37 @@ class GraphNode extends EventHandler {
         return this;
     }
 
+
+    /**
+     * Detach a GraphNode from the hierarchy and recursively destroy all children.
+     *
+     * @example
+     * const firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    destroy() {
+        // Detach from parent
+        this.remove();
+
+        // Recursively destroy all children
+        const children = this._children;
+        while (children.length) {
+            // Remove last child from the array
+            const child = children.pop();
+            // Disconnect it from the parent: this is only an optimization step, to prevent calling
+            // GraphNode#removeChild which would try to refind it via this._children.indexOf (which
+            // will fail, because we just removed it).
+            child._parent = null;
+            child.destroy();
+        }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        this.off();
+    }
+
     /**
      * Search the graph node and all of its descendants for the nodes that satisfy some search
      * criteria.
@@ -479,13 +525,13 @@ class GraphNode extends EventHandler {
      * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
-     * // Finds all nodes that have a model component and have `door` in their lower-cased name
-     * var doors = house.find(function (node) {
+     * // Finds all nodes that have a model component and have 'door' in their lower-cased name
+     * const doors = house.find(function (node) {
      *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
      * @example
      * // Finds all nodes that have the name property set to 'Test'
-     * var entities = parent.find('name', 'Test');
+     * const entities = parent.find('name', 'Test');
      */
     find(attr, value) {
         let result, results = [];
@@ -542,13 +588,13 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
      * node is found.
      * @example
-     * // Find the first node that is called `head` and has a model component
-     * var head = player.findOne(function (node) {
+     * // Find the first node that is called 'head' and has a model component
+     * const head = player.findOne(function (node) {
      *     return node.model && node.name === 'head';
      * });
      * @example
      * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOne('name', 'Test');
+     * const node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
         const len = this._children.length;
@@ -599,16 +645,16 @@ class GraphNode extends EventHandler {
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
-     * var animals = node.findByTag("animal");
+     * const animals = node.findByTag("animal");
      * @example
      * // Return all graph nodes that tagged by `bird` OR `mammal`
-     * var birdsAndMammals = node.findByTag("bird", "mammal");
+     * const birdsAndMammals = node.findByTag("bird", "mammal");
      * @example
      * // Return all assets that tagged by `carnivore` AND `mammal`
-     * var meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
+     * const meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
      * @example
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
-     * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
+     * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag() {
         const query = arguments;
@@ -656,10 +702,10 @@ class GraphNode extends EventHandler {
      * null if no node is found.
      * @example
      * // String form
-     * var grandchild = this.entity.findByPath('child/grandchild');
+     * const grandchild = this.entity.findByPath('child/grandchild');
      * @example
      * // Array form
-     * var grandchild = this.entity.findByPath(['child', 'grandchild']);
+     * const grandchild = this.entity.findByPath(['child', 'grandchild']);
      */
     findByPath(path) {
         // accept either string path with '/' separators or array of parts.
@@ -740,7 +786,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
-     * var angles = this.entity.getEulerAngles();
+     * const angles = this.entity.getEulerAngles();
      * angles.y = 180; // rotate the entity around Y by 180 degrees
      * this.entity.setEulerAngles(angles);
      */
@@ -756,7 +802,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The local space rotation of the graph node as euler angles in XYZ order.
      * @example
-     * var angles = this.entity.getLocalEulerAngles();
+     * const angles = this.entity.getLocalEulerAngles();
      * angles.y = 180;
      * this.entity.setLocalEulerAngles(angles);
      */
@@ -772,7 +818,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The local space position of the graph node.
      * @example
-     * var position = this.entity.getLocalPosition();
+     * const position = this.entity.getLocalPosition();
      * position.x += 1; // move the entity 1 unit along x.
      * this.entity.setLocalPosition(position);
      */
@@ -787,7 +833,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Quat} The local space rotation of the graph node as a quaternion.
      * @example
-     * var rotation = this.entity.getLocalRotation();
+     * const rotation = this.entity.getLocalRotation();
      */
     getLocalRotation() {
         return this.localRotation;
@@ -800,7 +846,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The local space scale of the graph node.
      * @example
-     * var scale = this.entity.getLocalScale();
+     * const scale = this.entity.getLocalScale();
      * scale.x = 100;
      * this.entity.setLocalScale(scale);
      */
@@ -814,7 +860,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Mat4} The node's local transformation matrix.
      * @example
-     * var transform = this.entity.getLocalTransform();
+     * const transform = this.entity.getLocalTransform();
      */
     getLocalTransform() {
         if (this._dirtyLocal) {
@@ -831,7 +877,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The world space position of the graph node.
      * @example
-     * var position = this.entity.getPosition();
+     * const position = this.entity.getPosition();
      * position.x = 10;
      * this.entity.setPosition(position);
      */
@@ -847,7 +893,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Quat} The world space rotation of the graph node as a quaternion.
      * @example
-     * var rotation = this.entity.getRotation();
+     * const rotation = this.entity.getRotation();
      */
     getRotation() {
         this.rotation.setFromMat4(this.getWorldTransform());
@@ -864,7 +910,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Vec3} The world space scale of the graph node.
      * @example
-     * var scale = this.entity.getScale();
+     * const scale = this.entity.getScale();
      * @ignore
      */
     getScale() {
@@ -879,7 +925,7 @@ class GraphNode extends EventHandler {
      *
      * @returns {Mat4} The node's world transformation matrix.
      * @example
-     * var transform = this.entity.getWorldTransform();
+     * const transform = this.entity.getWorldTransform();
      */
     getWorldTransform() {
         if (!this._dirtyLocal && !this._dirtyWorld)
@@ -894,17 +940,35 @@ class GraphNode extends EventHandler {
     }
 
     /**
+     * Returns cached value of negative scale of the world transform.
+     *
+     * @returns {number} -1 if world transform has negative scale, 1 otherwise.
+     * @ignore
+     */
+    get worldScaleSign() {
+
+        if (this._worldScaleSign === 0) {
+            this._worldScaleSign = this.getWorldTransform().scaleSign;
+        }
+
+        return this._worldScaleSign;
+    }
+
+    /**
+     * Remove graph node from current parent.
+     */
+    remove() {
+        this._parent?.removeChild(this);
+    }
+
+    /**
      * Remove graph node from current parent and add as child to new parent.
      *
      * @param {GraphNode} parent - New parent to attach graph node to.
      * @param {number} [index] - The child index where the child node should be placed.
      */
     reparent(parent, index) {
-        const current = this._parent;
-
-        if (current)
-            current.removeChild(this);
-
+        this.remove();
         if (parent) {
             if (index >= 0) {
                 parent.insertChild(this, index);
@@ -929,7 +993,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalEulerAngles(0, 90, 0);
      * @example
      * // Set rotation of 90 degrees around y-axis via a vector
-     * var angles = new pc.Vec3(0, 90, 0);
+     * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setLocalEulerAngles(angles);
      */
     setLocalEulerAngles(x, y, z) {
@@ -953,7 +1017,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalPosition(0, 10, 0);
      * @example
      * // Set via vector
-     * var pos = new pc.Vec3(0, 10, 0);
+     * const pos = new pc.Vec3(0, 10, 0);
      * this.entity.setLocalPosition(pos);
      */
     setLocalPosition(x, y, z) {
@@ -982,7 +1046,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalRotation(0, 0, 0, 1);
      * @example
      * // Set via quaternion
-     * var q = pc.Quat();
+     * const q = pc.Quat();
      * this.entity.setLocalRotation(q);
      */
     setLocalRotation(x, y, z, w) {
@@ -1009,7 +1073,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalScale(10, 10, 10);
      * @example
      * // Set via vector
-     * var scale = new pc.Vec3(10, 10, 10);
+     * const scale = new pc.Vec3(10, 10, 10);
      * this.entity.setLocalScale(scale);
      */
     setLocalScale(x, y, z) {
@@ -1059,6 +1123,7 @@ class GraphNode extends EventHandler {
             }
         }
         this._dirtyNormal = true;
+        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
         this._aabbVer++;
     }
 
@@ -1076,7 +1141,7 @@ class GraphNode extends EventHandler {
      * this.entity.setPosition(0, 10, 0);
      * @example
      * // Set via vector
-     * var position = new pc.Vec3(0, 10, 0);
+     * const position = new pc.Vec3(0, 10, 0);
      * this.entity.setPosition(position);
      */
     setPosition(x, y, z) {
@@ -1112,7 +1177,7 @@ class GraphNode extends EventHandler {
      * this.entity.setRotation(0, 0, 0, 1);
      * @example
      * // Set via quaternion
-     * var q = pc.Quat();
+     * const q = pc.Quat();
      * this.entity.setRotation(q);
      */
     setRotation(x, y, z, w) {
@@ -1149,7 +1214,7 @@ class GraphNode extends EventHandler {
      * this.entity.setEulerAngles(0, 90, 0);
      * @example
      * // Set rotation of 90 degrees around world-space y-axis via a vector
-     * var angles = new pc.Vec3(0, 90, 0);
+     * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setEulerAngles(angles);
      */
     setEulerAngles(x, y, z) {
@@ -1171,7 +1236,7 @@ class GraphNode extends EventHandler {
      *
      * @param {GraphNode} node - The new child to add.
      * @example
-     * var e = new pc.Entity(app);
+     * const e = new pc.Entity(app);
      * this.entity.addChild(e);
      */
     addChild(node) {
@@ -1186,7 +1251,7 @@ class GraphNode extends EventHandler {
      *
      * @param {GraphNode} node - The child to add.
      * @example
-     * var e = new pc.Entity(app);
+     * const e = new pc.Entity(app);
      * this.entity.addChildAndSaveTransform(e);
      * @ignore
      */
@@ -1212,7 +1277,7 @@ class GraphNode extends EventHandler {
      * @param {number} index - The index in the child list of the parent where the new node will be
      * inserted.
      * @example
-     * var e = new pc.Entity(app);
+     * const e = new pc.Entity(app);
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
@@ -1231,9 +1296,7 @@ class GraphNode extends EventHandler {
     _prepareInsertChild(node) {
 
         // remove it from the existing parent
-        if (node._parent) {
-            node._parent.removeChild(node);
-        }
+        node.remove();
 
         Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
         Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);
@@ -1311,7 +1374,7 @@ class GraphNode extends EventHandler {
      *
      * @param {GraphNode} child - The node to remove.
      * @example
-     * var child = this.entity.children[0];
+     * const child = this.entity.children[0];
      * this.entity.removeChild(child);
      */
     removeChild(child) {
@@ -1432,16 +1495,16 @@ class GraphNode extends EventHandler {
      * @param {Vec3|number} [y] - If passing a 3D vector, this is the world-space up vector for look at
      * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
      * @param {number} [z] - Z-component of the world-space coordinate to look at.
-     * @param {number} [ux=0] - X-component of the up vector for the look at transform.
-     * @param {number} [uy=1] - Y-component of the up vector for the look at transform.
-     * @param {number} [uz=0] - Z-component of the up vector for the look at transform.
+     * @param {number} [ux] - X-component of the up vector for the look at transform. Defaults to 0.
+     * @param {number} [uy] - Y-component of the up vector for the look at transform. Defaults to 1.
+     * @param {number} [uz] - Z-component of the up vector for the look at transform. Defaults to 0.
      * @example
      * // Look at another entity, using the (default) positive y-axis for up
-     * var position = otherEntity.getPosition();
+     * const position = otherEntity.getPosition();
      * this.entity.lookAt(position);
      * @example
      * // Look at another entity, using the negative world y-axis for up
-     * var position = otherEntity.getPosition();
+     * const position = otherEntity.getPosition();
      * this.entity.lookAt(position, pc.Vec3.DOWN);
      * @example
      * // Look at the world space origin, using the (default) positive y-axis for up
@@ -1485,7 +1548,7 @@ class GraphNode extends EventHandler {
      * this.entity.translate(10, 0, 0);
      * @example
      * // Translate via vector
-     * var t = new pc.Vec3(10, 0, 0);
+     * const t = new pc.Vec3(10, 0, 0);
      * this.entity.translate(t);
      */
     translate(x, y, z) {
@@ -1513,7 +1576,7 @@ class GraphNode extends EventHandler {
      * this.entity.translateLocal(10, 0, 0);
      * @example
      * // Translate via vector
-     * var t = new pc.Vec3(10, 0, 0);
+     * const t = new pc.Vec3(10, 0, 0);
      * this.entity.translateLocal(t);
      */
     translateLocal(x, y, z) {
@@ -1544,7 +1607,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotate(0, 90, 0);
      * @example
      * // Rotate via vector
-     * var r = new pc.Vec3(0, 90, 0);
+     * const r = new pc.Vec3(0, 90, 0);
      * this.entity.rotate(r);
      */
     rotate(x, y, z) {
@@ -1579,7 +1642,7 @@ class GraphNode extends EventHandler {
      * this.entity.rotateLocal(0, 90, 0);
      * @example
      * // Rotate via vector
-     * var r = new pc.Vec3(0, 90, 0);
+     * const r = new pc.Vec3(0, 90, 0);
      * this.entity.rotateLocal(r);
      */
     rotateLocal(x, y, z) {

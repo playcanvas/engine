@@ -19,6 +19,17 @@ describe('StandardMaterial', function () {
         expect(material.ambientTint).to.equal(false);
         expect(material.anisotropy).to.equal(0);
 
+        expect(material.aoDetailMap).to.be.null;
+        expect(material.aoDetailMapChannel).to.equal('g');
+        expect(material.aoDetailMapOffset).to.be.an.instanceof(Vec2);
+        expect(material.aoDetailMapOffset.x).to.equal(0);
+        expect(material.aoDetailMapOffset.y).to.equal(0);
+        expect(material.aoDetailMapRotation).to.equal(0);
+        expect(material.aoDetailMapTiling).to.be.an.instanceof(Vec2);
+        expect(material.aoDetailMapTiling.x).to.equal(1);
+        expect(material.aoDetailMapTiling.y).to.equal(1);
+        expect(material.aoDetailMapUv).to.equal(0);
+        expect(material.aoDetailMode).to.equal(DETAILMODE_MUL);
         expect(material.aoMap).to.be.null;
         expect(material.aoMapChannel).to.equal('g');
         expect(material.aoMapOffset).to.be.an.instanceof(Vec2);
@@ -49,7 +60,7 @@ describe('StandardMaterial', function () {
         expect(material.clearCoatGlossMapUv).to.equal(0);
         expect(material.clearCoatGlossVertexColor).to.equal(false);
         expect(material.clearCoatGlossVertexColorChannel).to.equal('g');
-        expect(material.clearCoatGlossiness).to.equal(1);
+        expect(material.clearCoatGloss).to.equal(1);
         expect(material.clearCoatMap).to.be.null;
         expect(material.clearCoatMapChannel).to.equal('g');
         expect(material.clearCoatMapOffset).to.be.an.instanceof(Vec2);
@@ -129,6 +140,7 @@ describe('StandardMaterial', function () {
         expect(material.enableGGXSpecular).to.equal(false);
         expect(material.fresnelModel).to.equal(FRESNEL_SCHLICK);
 
+        expect(material.gloss).to.equal(0.25);
         expect(material.glossMap).to.be.null;
         expect(material.glossMapChannel).to.equal('g');
         expect(material.glossMapOffset).to.be.an.instanceof(Vec2);
@@ -228,7 +240,6 @@ describe('StandardMaterial', function () {
         expect(material.refraction).to.equal(0);
         expect(material.refractionIndex).to.equal(1.0 / 1.5);
         expect(material.shadingModel).to.equal(SPECULAR_BLINN);
-        expect(material.shininess).to.equal(25);
 
         expect(material.specular).to.be.instanceof(Color);
         expect(material.specular.r).to.equal(0);

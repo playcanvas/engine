@@ -1,4 +1,4 @@
-import { extend, isDefined, type } from '../../src/core/core.js';
+import { extend, type } from '../../src/core/core.js';
 
 import { expect } from 'chai';
 
@@ -114,22 +114,6 @@ describe('core', function () {
             expect(o3.c[0]).to.equal(1);
             expect(o3.c[1]).to.equal(2);
             expect(o3.A).to.equal('A');
-        });
-
-    });
-
-    describe('#isDefined', function () {
-
-        it('checks variables are defined', function () {
-            let a;
-            const b = 1;
-            const c = null;
-            const d = 1 / 0;
-
-            expect(isDefined(a)).to.equal(false);
-            expect(isDefined(b)).to.equal(true);
-            expect(isDefined(c)).to.equal(true);
-            expect(isDefined(d)).to.equal(true);
         });
 
     });

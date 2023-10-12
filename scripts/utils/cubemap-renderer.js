@@ -46,9 +46,10 @@ CubemapRenderer.prototype.initialize = function () {
 
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
+        name: this.entity.name + ':CubemapRenderer-' + resolution,
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
@@ -74,7 +75,7 @@ CubemapRenderer.prototype.initialize = function () {
             colorBuffer: this.cubeMap,
             depth: this.depth,
             face: i,
-            flipY: true
+            flipY: !this.app.graphicsDevice.isWebGPU
         });
 
         // create a child entity with the camera for this face
@@ -116,7 +117,7 @@ CubemapRenderer.prototype.initialize = function () {
         }
 
         // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
-        // This can be listened to by the user, and the resuling cubemap can be further processed (e.g prefiltered)
+        // This can be listened to by the user, and the resulting cubemap can be further processed (e.g prefiltered)
         if (i === 5) {
             e.camera.onPostRender = () => {
                 this.entity.fire('onCubemapPostRender');

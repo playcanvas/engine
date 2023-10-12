@@ -4,15 +4,25 @@ import { CurveEvaluator } from './curve-evaluator.js';
 
 /**
  * A curve set is a collection of curves.
+ *
+ * @category Math
  */
 class CurveSet {
+    curves = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _type = CURVE_SMOOTHSTEP;
+
     /**
      * Creates a new CurveSet instance.
      *
      * @param {Array<number[]>} curveKeys - An array of arrays of keys (pairs of numbers with the
      * time first and value second).
      * @example
-     * var curveSet = new pc.CurveSet([
+     * const curveSet = new pc.CurveSet([
      *     [
      *         0, 0,        // At 0 time, value of 0
      *         0.33, 2,     // At 0.33 time, value of 2
@@ -28,14 +38,6 @@ class CurveSet {
      * ]);
      */
     constructor() {
-        this.curves = [];
-
-        /**
-         * @type {number}
-         * @private
-         */
-        this._type = CURVE_SMOOTHSTEP;
-
         if (arguments.length > 1) {
             for (let i = 0; i < arguments.length; i++) {
                 this.curves.push(new Curve(arguments[i]));

@@ -1,13 +1,13 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_L8_A8, PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R5_G5_B5_A1, PIXELFORMAT_R4_G4_B4_A4,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
+    PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F, PIXELFORMAT_R32F, PIXELFORMAT_DEPTH,
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
 } from '../constants.js';
 
 /**
@@ -59,6 +59,8 @@ class WebglTexture {
 
     _glPixelType;
 
+    dirtyParameterFlags = 0;
+
     destroy(device) {
         if (this._glTexture) {
 
@@ -82,6 +84,10 @@ class WebglTexture {
         this._glTexture = null;
     }
 
+    propertyChanged(flag) {
+        this.dirtyParameterFlags |= flag;
+    }
+
     initialize(device, texture) {
 
         const gl = device.gl;
@@ -103,34 +109,34 @@ class WebglTexture {
                 this._glInternalFormat = gl.LUMINANCE;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_L8_A8:
+            case PIXELFORMAT_LA8:
                 this._glFormat = gl.LUMINANCE_ALPHA;
                 this._glInternalFormat = gl.LUMINANCE_ALPHA;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_R5_G6_B5:
+            case PIXELFORMAT_RGB565:
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.RGB;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_6_5;
                 break;
-            case PIXELFORMAT_R5_G5_B5_A1:
+            case PIXELFORMAT_RGBA5551:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_SHORT_5_5_5_1;
                 break;
-            case PIXELFORMAT_R4_G4_B4_A4:
+            case PIXELFORMAT_RGBA4:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_SHORT_4_4_4_4;
                 break;
-            case PIXELFORMAT_R8_G8_B8:
+            case PIXELFORMAT_RGB8:
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = device.webgl2 ? gl.RGB8 : gl.RGB;
+                this._glInternalFormat = device.isWebGL2 ? gl.RGB8 : gl.RGB;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
-            case PIXELFORMAT_R8_G8_B8_A8:
+            case PIXELFORMAT_RGBA8:
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = device.webgl2 ? gl.RGBA8 : gl.RGBA;
+                this._glInternalFormat = device.isWebGL2 ? gl.RGBA8 : gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case PIXELFORMAT_DXT1:
@@ -188,7 +194,7 @@ class WebglTexture {
             case PIXELFORMAT_RGB16F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGB;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGB16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
@@ -199,7 +205,7 @@ class WebglTexture {
             case PIXELFORMAT_RGBA16F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGBA;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGBA16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
@@ -210,7 +216,7 @@ class WebglTexture {
             case PIXELFORMAT_RGB32F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGB;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGB32F;
                 } else {
                     this._glInternalFormat = gl.RGB;
@@ -220,7 +226,7 @@ class WebglTexture {
             case PIXELFORMAT_RGBA32F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGBA;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGBA32F;
                 } else {
                     this._glInternalFormat = gl.RGBA;
@@ -233,7 +239,7 @@ class WebglTexture {
                 this._glPixelType = gl.FLOAT;
                 break;
             case PIXELFORMAT_DEPTH:
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     // native WebGL2
                     this._glFormat = gl.DEPTH_COMPONENT;
                     this._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
@@ -247,7 +253,7 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_DEPTHSTENCIL:
                 this._glFormat = gl.DEPTH_STENCIL;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.DEPTH24_STENCIL8;
                     this._glPixelType = gl.UNSIGNED_INT_24_8;
                 } else {
@@ -270,12 +276,15 @@ class WebglTexture {
                 this._glInternalFormat = gl.SRGB8_ALPHA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
+            case PIXELFORMAT_BGRA8:
+                Debug.error("BGRA8 texture format is not supported by WebGL.");
+                break;
         }
     }
 
     upload(device, texture) {
 
-        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.");
+        Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
         const gl = device.gl;
 
         if (!texture._needsUpload && ((texture._needsMipmapsUpload && texture._mipmapsUploaded) || !texture.pot))
@@ -285,7 +294,7 @@ class WebglTexture {
         let mipObject;
         let resMult;
 
-        const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+        const requiredMipLevels = texture.requiredMipLevels;
 
         if (texture._array) {
             // for texture arrays we reserve the space in advance
@@ -297,8 +306,8 @@ class WebglTexture {
                             texture._arrayLength);
         }
 
+        // Upload all existing mip levels. Initialize 0 mip anyway.
         while (texture._levels[mipLevel] || mipLevel === 0) {
-            // Upload all existing mip levels. Initialize 0 mip anyway.
 
             if (!texture._needsUpload && mipLevel === 0) {
                 mipLevel++;
@@ -522,7 +531,7 @@ class WebglTexture {
             }
         }
 
-        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.webgl2) && texture._levels.length === 1) {
+        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.isWebGL2) && texture._levels.length === 1) {
             gl.generateMipmap(this._glTarget);
             texture._mipmapsUploaded = true;
         }

@@ -1,8 +1,8 @@
 import { Vec3 } from '../../core/math/vec3.js';
 import { math } from '../../core/math/math.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { PIXELFORMAT_R8_G8_B8_A8 } from '../../platform/graphics/constants.js';
-import { LIGHTTYPE_DIRECTIONAL, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
+import { PIXELFORMAT_L8 } from '../../platform/graphics/constants.js';
+import { LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_SPOT, MASK_AFFECT_DYNAMIC, MASK_AFFECT_LIGHTMAPPED } from '../constants.js';
 import { LightsBuffer } from './lights-buffer.js';
 import { Debug } from '../../core/debug.js';
 
@@ -29,6 +29,9 @@ class ClusterLight {
 // Main class implementing clustered lighting. Internally it organizes the omni / spot lights placement in world space 3d cell structure,
 // and also uses LightsBuffer class to store light properties in textures
 class WorldClusters {
+    /** @type {import('../../platform/graphics/texture.js').Texture} */
+    clusterTexture;
+
     constructor(device) {
         this.device = device;
         this.name = 'Untitled';
@@ -46,9 +49,7 @@ class WorldClusters {
         this._cellsLimit = new Vec3();  // number of cells minus one
         this.cells = this._cells;
 
-        // number of lights each cell can store, and number of pixels this takes (4 lights per pixel)
-        this._maxCellLightCount = 0;
-        this._pixelsPerCellCount = 0;
+        // number of lights each cell can store
         this.maxCellLightCount = 4;
 
         // limits on some light properties, used for compression to 8bit texture
@@ -70,11 +71,8 @@ class WorldClusters {
 
     set maxCellLightCount(count) {
 
-        // each cell stores 4 lights (xyzw), so round up the count
-        const maxCellLightCount = math.roundUp(count, 4);
-        if (maxCellLightCount !== this._maxCellLightCount) {
-            this._maxCellLightCount = maxCellLightCount;
-            this._pixelsPerCellCount = this._maxCellLightCount / 4;
+        if (count !== this._maxCellLightCount) {
+            this._maxCellLightCount = count;
             this._cellsDirty = true;
         }
     }
@@ -115,8 +113,11 @@ class WorldClusters {
 
     registerUniforms(device) {
 
+        this._clusterSkipId = device.scope.resolve('clusterSkip');
+
+        this._clusterMaxCellsId = device.scope.resolve('clusterMaxCells');
+
         this._clusterWorldTextureId = device.scope.resolve('clusterWorldTexture');
-        this._clusterPixelsPerCellId = device.scope.resolve('clusterPixelsPerCell');
 
         this._clusterTextureSizeId = device.scope.resolve('clusterTextureSize');
         this._clusterTextureSizeData = new Float32Array(3);
@@ -163,13 +164,13 @@ class WorldClusters {
             const cy = this._cells.y;
             const cz = this._cells.z;
 
-            // storing 4 lights per pixels
+            // storing 1 light per pixel
             const numCells = cx * cy * cz;
-            const totalPixels = this._pixelsPerCellCount * numCells;
+            const totalPixels = this.maxCellLightCount * numCells;
 
             // cluster texture size - roughly square that fits all cells. The width is multiply of numPixels to simplify shader math
             let width = Math.ceil(Math.sqrt(totalPixels));
-            width = math.roundUp(width, this._pixelsPerCellCount);
+            width = math.roundUp(width, this.maxCellLightCount);
             const height = Math.ceil(totalPixels / width);
 
             // if the texture is allowed size
@@ -182,12 +183,12 @@ class WorldClusters {
             this._clusterCellsMaxData[2] = cz;
 
             // vector to allow single dot product to convert from world coordinates to cluster index
-            this._clusterCellsDotData[0] = this._pixelsPerCellCount;
-            this._clusterCellsDotData[1] = cx * cz * this._pixelsPerCellCount;
-            this._clusterCellsDotData[2] = cx * this._pixelsPerCellCount;
+            this._clusterCellsDotData[0] = this.maxCellLightCount;
+            this._clusterCellsDotData[1] = cx * cz * this.maxCellLightCount;
+            this._clusterCellsDotData[2] = cx * this.maxCellLightCount;
 
             // cluster data and number of lights per cell
-            this.clusters = new Uint8ClampedArray(4 * totalPixels);
+            this.clusters = new Uint8ClampedArray(totalPixels);
             this.counts = new Int32Array(numCells);
 
             this._clusterTextureSizeData[0] = width;
@@ -195,7 +196,7 @@ class WorldClusters {
             this._clusterTextureSizeData[2] = 1.0 / height;
 
             this.releaseClusterTexture();
-            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_R8_G8_B8_A8, 'ClusterTexture');
+            this.clusterTexture = LightsBuffer.createTexture(this.device, width, height, PIXELFORMAT_L8, 'ClusterTexture');
         }
     }
 
@@ -209,12 +210,17 @@ class WorldClusters {
 
     updateUniforms() {
 
+        // skip clustered lights shader evaluation if only the dummy light exists
+        this._clusterSkipId.setValue(this._usedLights.length > 1 ? 0 : 1);
+
         this.lightsBuffer.updateUniforms();
 
         // texture
         this._clusterWorldTextureId.setValue(this.clusterTexture);
 
         // uniform values
+        this._clusterMaxCellsId.setValue(this.maxCellLightCount);
+
         const boundsDelta = this.boundsDelta;
         this._clusterCellsCountByBoundsSizeData[0] = this._cells.x / boundsDelta.x;
         this._clusterCellsCountByBoundsSizeData[1] = this._cells.y / boundsDelta.y;
@@ -233,7 +239,6 @@ class WorldClusters {
         this._clusterCompressionLimit0Data[1] = this._maxColorValue;
 
         // assign values
-        this._clusterPixelsPerCellId.setValue(this._pixelsPerCellCount);
         this._clusterTextureSizeId.setValue(this._clusterTextureSizeData);
         this._clusterBoundsMinId.setValue(this._clusterBoundsMinData);
         this._clusterBoundsDeltaId.setValue(this._clusterBoundsDeltaData);
@@ -274,7 +279,8 @@ class WorldClusters {
 
         lights.forEach((light) => {
             const runtimeLight = !!(light.mask & (MASK_AFFECT_DYNAMIC | MASK_AFFECT_LIGHTMAPPED));
-            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight) {
+            const zeroAngleSpotlight = light.type === LIGHTTYPE_SPOT && light._outerConeAngle === 0;
+            if (light.enabled && light.type !== LIGHTTYPE_DIRECTIONAL && light.visibleThisFrame && light.intensity > 0 && runtimeLight && !zeroAngleSpotlight) {
 
                 // within light limit
                 if (lightIndex < maxLights) {
@@ -376,7 +382,7 @@ class WorldClusters {
         const counts = this.counts;
         const limit = this._maxCellLightCount;
         const clusters = this.clusters;
-        const pixelsPerCellCount = this._pixelsPerCellCount;
+        const pixelsPerCellCount = this.maxCellLightCount;
         let tooManyLights = false;
 
         // started from index 1, zero is "no-light" index
@@ -406,13 +412,12 @@ class WorldClusters {
                         const clusterIndex = x + divX * (z + y * divZ);
                         const count = counts[clusterIndex];
                         if (count < limit) {
-                            clusters[pixelsPerCellCount * clusterIndex * 4 + count] = i;
+                            clusters[pixelsPerCellCount * clusterIndex + count] = i;
                             counts[clusterIndex] = count + 1;
 
                         } else {
                             tooManyLights = true;
                         }
-
                     }
                 }
             }

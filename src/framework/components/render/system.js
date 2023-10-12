@@ -10,8 +10,6 @@ import { ComponentSystem } from '../system.js';
 import { RenderComponent } from './component.js';
 import { RenderComponentData } from './data.js';
 
-/** @typedef {import('../../app-base.js').AppBase} AppBase */
-
 const _schema = [
     { name: 'rootBone', type: 'entity' },
     'enabled'
@@ -40,12 +38,13 @@ const _properties = [
  * cone etc.
  *
  * @augments ComponentSystem
+ * @category Graphics
  */
 class RenderComponentSystem extends ComponentSystem {
     /**
      * Create a new RenderComponentSystem.
      *
-     * @param {AppBase} app - The Application.
+     * @param {import('../../app-base.js').AppBase} app - The Application.
      * @hideconstructor
      */
     constructor(app) {

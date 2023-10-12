@@ -1,15 +1,29 @@
 import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
-/** @typedef {import('./ray.js').Ray} Ray */
-
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 
 /**
  * A bounding sphere is a volume for facilitating fast intersection testing.
+ *
+ * @category Math
  */
 class BoundingSphere {
+    /**
+     * Center of sphere.
+     *
+     * @type {Vec3}
+     */
+    center;
+
+    /**
+     * The radius of the bounding sphere.
+     *
+     * @type {number}
+     */
+    radius;
+
     /**
      * Creates a new BoundingSphere instance.
      *
@@ -18,22 +32,12 @@ class BoundingSphere {
      * @param {number} [radius] - The radius of the bounding sphere. Defaults to 0.5.
      * @example
      * // Create a new bounding sphere centered on the origin with a radius of 0.5
-     * var sphere = new pc.BoundingSphere();
+     * const sphere = new pc.BoundingSphere();
      */
     constructor(center = new Vec3(), radius = 0.5) {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingSphere\' does not accept a constant (frozen) object as a \'center\' parameter');
 
-        /**
-         * Center of sphere.
-         *
-         * @type {Vec3}
-         */
         this.center = center;
-        /**
-         * The radius of the bounding sphere.
-         *
-         * @type {number}
-         */
         this.radius = radius;
     }
 
@@ -46,7 +50,7 @@ class BoundingSphere {
     /**
      * Test if a ray intersects with the sphere.
      *
-     * @param {Ray} ray - Ray to test against (direction must be normalized).
+     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
      * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
      * into here.
      * @returns {boolean} True if there is an intersection.

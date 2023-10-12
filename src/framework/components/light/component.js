@@ -16,10 +16,6 @@ import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 
-/** @typedef {import('../../../core/math/vec2.js').Vec2} Vec2 */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').LightComponentSystem} LightComponentSystem */
-
 const _lightProps = [];
 const _lightPropsDefault = [];
 
@@ -33,7 +29,7 @@ const _lightPropsDefault = [];
  *
  * ```javascript
  * // Add a pc.LightComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('light', {
  *     type: "omni",
  *     color: new pc.Color(1, 0, 0),
@@ -41,7 +37,7 @@ const _lightPropsDefault = [];
  * });
  *
  * // Get the pc.LightComponent on an entity
- * var lightComponent = entity.light;
+ * const lightComponent = entity.light;
  *
  * // Update a property on a light component
  * entity.light.range = 20;
@@ -61,12 +57,14 @@ const _lightPropsDefault = [];
  * @property {number} luminance The physically based luminance. Only used if scene.physicalUnits is true. Defaults to 0.
  * @property {number} shape The light source shape. Can be:
  *
- * - {@link pc.LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
- * - {@link pc.LIGHTSHAPE_RECT}: Rectangle shape.
- * - {@link pc.LIGHTSHAPE_DISK}: Disk shape.
- * - {@link pc.LIGHTSHAPE_SPHERE}: Sphere shape.
+ * - {@link LIGHTSHAPE_PUNCTUAL}: Infinitesimally small point.
+ * - {@link LIGHTSHAPE_RECT}: Rectangle shape.
+ * - {@link LIGHTSHAPE_DISK}: Disk shape.
+ * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
+ * @property {boolean} affectSpecularity If enabled and the light type is pc.LIGHTTYPE_DIRECTIONAL, material specularity
+ * will not be affected by this light. Defaults to true.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
@@ -91,6 +89,9 @@ const _lightPropsDefault = [];
  * angle is specified in degrees. Affects spot lights only. Defaults to 40.
  * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
  * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
+ * @property {number} penumbraSize Size of penumbra for contact hardening shadows. For area lights
+ * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
+ * it's the area size of the light. Defaults to 1.0.
  * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
  * Can be:
  *
@@ -131,6 +132,7 @@ const _lightPropsDefault = [];
  * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
  * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
  * sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+ * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
  * @property {number} vsmBlurMode Blurring mode for variance shadow maps. Can be:
  *
  * - {@link BLUR_BOX}: Box filter.
@@ -148,20 +150,24 @@ const _lightPropsDefault = [];
  * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r",
  * "g", "b", "a", "rgb".
  * @property {number} cookieAngle Angle for spotlight cookie rotation.
- * @property {Vec2} cookieScale Spotlight cookie scale.
- * @property {Vec2} cookieOffset Spotlight cookie position offset.
+ * @property {import('../../../core/math/vec2.js').Vec2} cookieScale Spotlight cookie scale.
+ * @property {import('../../../core/math/vec2.js').Vec2} cookieOffset Spotlight cookie position
+ * offset.
  * @property {boolean} isStatic Mark light as non-movable (optimization).
  * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should
  * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
  * instead.
  * @augments Component
+ * @category Graphics
  */
 class LightComponent extends Component {
     /**
      * Creates a new LightComponent instance.
      *
-     * @param {LightComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').LightComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -177,6 +183,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     }
@@ -186,6 +193,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.removeLight(this);
+                this.light.removeLayer(layer);
             }
         }
     }
@@ -204,6 +212,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
+            this.light.addLayer(layer);
         }
     }
 
@@ -211,6 +220,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
     }
 
@@ -224,10 +234,6 @@ class LightComponent extends Component {
         }
         if (this.enabled && this.entity.enabled)
             this.onEnable();
-    }
-
-    updateShadow() {
-        this.light.updateShadow();
     }
 
     onCookieAssetSet() {
@@ -322,6 +328,27 @@ class LightComponent extends Component {
         // remove cookie asset events
         this.cookieAsset = null;
     }
+
+    /**
+     * Returns an array of SHADOWUPDATE_ settings per shadow cascade, or undefined if not used.
+     *
+     * @type {number[] | null}
+     */
+    set shadowUpdateOverrides(values) {
+        this.light.shadowUpdateOverrides = values;
+    }
+
+    get shadowUpdateOverrides() {
+        return this.light.shadowUpdateOverrides;
+    }
+
+    set penumbraSize(value) {
+        this.light.penumbraSize = value;
+    }
+
+    get penumbraSize() {
+        return this.light.penumbraSize;
+    }
 }
 
 function _defineProperty(name, defaultValue, setFunc, skipEqualsCheck) {
@@ -366,6 +393,9 @@ function _defineProps() {
     });
     _defineProperty('shape', LIGHTSHAPE_PUNCTUAL, function (newValue, oldValue) {
         this.light.shape = newValue;
+    });
+    _defineProperty('affectSpecularity', true, function (newValue, oldValue) {
+        this.light.affectSpecularity = newValue;
     });
     _defineProperty('castShadows', false, function (newValue, oldValue) {
         this.light.castShadows = newValue;
@@ -532,15 +562,20 @@ function _defineProps() {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
         for (let i = 0; i < newValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             if (this.enabled && this.entity.enabled) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     });
+
+    _lightProps.push("penumbraSize");
+    _lightPropsDefault.push(1);
 }
 
 _defineProps();

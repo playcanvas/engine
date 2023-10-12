@@ -4,47 +4,39 @@ import * as pc from '../../../../';
 class TextureArrayExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Texture Array';
+    static WEBGPU_ENABLED = false;
+
     static FILES = {
-        'shader.vert': /* glsl */
-`#version 300 es
-in vec3 aPosition;
-in vec2 aUv0;
-in float aIndex;
+        'shader.vert': /* glsl */`
+attribute vec3 aPosition;
+attribute vec2 aUv0;
 
 uniform mat4 matrix_model;
 uniform mat4 matrix_viewProjection;
 
-out vec2 vUv0;
-out float vIndex;
+varying vec2 vUv0;
 
 void main(void)
 {
     vUv0 = aUv0;
-    vIndex = aIndex;
     gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
 }`,
-        'shader.frag': /* glsl */
-`#version 300 es
+        'shader.frag': /* glsl */`
 precision mediump float;
 
-in vec2 vUv0;
-in float vIndex;
-out vec4 fragColor;
+varying vec2 vUv0;
+uniform float uIndex;
 
 uniform mediump sampler2DArray uDiffuseMap;
 
 void main(void)
 {
-    fragColor = texture(uDiffuseMap, vec3(vUv0, vIndex));
+    gl_FragColor = texture(uDiffuseMap, vec3(vUv0, uIndex));
 }`
     };
 
 
-    example(canvas: HTMLCanvasElement, files: { 'shader.vert': string, 'shader.frag': string }): void {
-
-
-        // Create the application and start the update loop
-        const app = new pc.Application(canvas, {});
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
 
         const assets = {
             'rockyTrail': new pc.Asset("rockyTrail", "texture", { url: "/static/assets/textures/rocky_trail_diff_1k.jpg" }),
@@ -53,99 +45,127 @@ void main(void)
             'aerialRocks': new pc.Asset("aeralRocks", "texture", { url: "/static/assets/textures/aerial_rocks_02_diff_1k.jpg" })
         };
 
-        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-        assetListLoader.load(() => {
-            app.start();
+        const gfxOptions = {
+            deviceTypes: [deviceType],
+            glslangUrl: '/static/lib/glslang/glslang.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
+        };
 
-            // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-            app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
 
-            app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+            const createOptions = new pc.AppOptions();
+            createOptions.graphicsDevice = device;
 
-            // Create directional light
-            const light = new pc.Entity();
-            light.addComponent('light', {
-                type: 'directional'
-            });
-            light.setLocalEulerAngles(45, 0, 45);
+            createOptions.componentSystems = [
+                // @ts-ignore
+                pc.RenderComponentSystem,
+                // @ts-ignore
+                pc.CameraComponentSystem,
+                // @ts-ignore
+                pc.LightComponentSystem
+            ];
+            createOptions.resourceHandlers = [
+                // @ts-ignore
+                pc.TextureHandler,
+                // @ts-ignore
+                pc.ContainerHandler
+            ];
 
-            // Create the shader definition and shader from the vertex and fragment shaders
-            const shaderDefinition = {
-                attributes: {
+            const app = new pc.AppBase(canvas);
+            app.init(createOptions);
+
+            const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+            assetListLoader.load(() => {
+                app.start();
+
+                // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+                app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+                app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+                app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+
+                // Create directional light
+                const light = new pc.Entity();
+                light.addComponent('light', {
+                    type: 'directional'
+                });
+                light.setLocalEulerAngles(45, 0, 45);
+
+                // Create the shader definition and shader from the vertex and fragment shaders
+                const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
                     aPosition: pc.SEMANTIC_POSITION,
                     aUv0: pc.SEMANTIC_TEXCOORD0,
                     aIndex: pc.SEMANTIC_ATTR15
-                },
-                vshader: files['shader.vert'],
-                fshader: files['shader.frag']
-            };
-            const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+                });
 
-            const textureArrayOptions = {
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
-                width: 1024,
-                height: 1024,
-                array: true,
-                arrayLength: 4, // number of textures
-                magFilter: pc.FILTER_NEAREST,
-                minFilter: pc.FILTER_NEAREST,
-                mipmaps: false,
-                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-                addressV: pc.ADDRESS_CLAMP_TO_EDGE,
-                levels: [[
-                    assets.rockyTrail.resource.getSource(),
-                    assets.rockBoulder.resource.getSource(),
-                    assets.aerialRocks.resource.getSource(),
-                    assets.coastSand.resource.getSource()
-                ]]
-            };
+                const textureArrayOptions = {
+                    format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                    width: 1024,
+                    height: 1024,
+                    array: true,
+                    arrayLength: 4, // number of textures
+                    magFilter: pc.FILTER_NEAREST,
+                    minFilter: pc.FILTER_NEAREST,
+                    mipmaps: false,
+                    addressU: pc.ADDRESS_CLAMP_TO_EDGE,
+                    addressV: pc.ADDRESS_CLAMP_TO_EDGE,
+                    levels: [[
+                        assets.rockyTrail.resource.getSource(),
+                        assets.rockBoulder.resource.getSource(),
+                        assets.aerialRocks.resource.getSource(),
+                        assets.coastSand.resource.getSource()
+                    ]]
+                };
 
-            const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
-            textureArray.upload();
+                const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+                textureArray.upload();
 
-            // Create a new material with the new shader
-            const material = new pc.Material();
-            material.shader = shader;
-            material.setParameter("uDiffuseMap", textureArray);
-            material.update();
+                // Create a new material with the new shader
+                const material = new pc.Material();
+                material.shader = shader;
+                material.setParameter("uDiffuseMap", textureArray);
+                material.update();
 
-            // Create a torus shape
-            const torus = pc.createTorus(app.graphicsDevice, {
-                tubeRadius: 0.2,
-                ringRadius: 0.3,
-                segments: 50,
-                sides: 40
-            });
-            const shape = new pc.Entity();
-            shape.addComponent('render', {
-                material: material,
-                meshInstances: [new pc.MeshInstance(torus, material)]
-            });
-            shape.setPosition(0, 0, 0);
-            shape.setLocalScale(2, 2, 2);
+                // Create a torus shape
+                const torus = pc.createTorus(app.graphicsDevice, {
+                    tubeRadius: 0.2,
+                    ringRadius: 0.3,
+                    segments: 50,
+                    sides: 40
+                });
+                const shape = new pc.Entity();
+                shape.addComponent('render', {
+                    material: material,
+                    meshInstances: [new pc.MeshInstance(torus, material)]
+                });
+                shape.setPosition(0, 0, 0);
+                shape.setLocalScale(2, 2, 2);
 
-            // Create an Entity with a camera component
-            const camera = new pc.Entity();
-            camera.addComponent("camera", {
-                clearColor: new pc.Color(0.4, 0.45, 0.5)
-            });
+                // Create an Entity with a camera component
+                const camera = new pc.Entity();
+                camera.addComponent("camera", {
+                    clearColor: new pc.Color(0.4, 0.45, 0.5)
+                });
 
-            // Adjust the camera position
-            camera.translate(0, 0, 4);
+                // Adjust the camera position
+                camera.translate(0, 0, 4);
 
-            // Add the new Entities to the hierarchy
-            app.root.addChild(light);
-            app.root.addChild(shape);
-            app.root.addChild(camera);
+                // Add the new Entities to the hierarchy
+                app.root.addChild(light);
+                app.root.addChild(shape);
+                app.root.addChild(camera);
 
-            // Set an update function on the app's update event
-            let angle = 0;
-            app.on("update", function (dt) {
-                angle = (angle + dt * 10) % 360;
+                // Set an update function on the app's update event
+                let angle = 0;
+                let time = 0;
+                app.on("update", function (dt) {
+                    time += dt;
+                    angle = (angle + dt * 10) % 360;
 
-                // Rotate the boxes
-                shape.setEulerAngles(angle, angle * 2, angle * 4);
+                    // Rotate the boxes
+                    shape.setEulerAngles(angle, angle * 2, angle * 4);
+                    shape.render.meshInstances[0].setParameter('uIndex', Math.floor(time) % 4);
+                });
             });
         });
     }

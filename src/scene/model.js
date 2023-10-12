@@ -3,17 +3,17 @@ import { MeshInstance } from './mesh-instance.js';
 import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
-/** @typedef {import('./graph-node.js').GraphNode} GraphNode */
-
 /**
  * A model is a graphical object that can be added to or removed from a scene. It contains a
  * hierarchy and any number of mesh instances.
+ *
+ * @category Graphics
  */
 class Model {
     /**
      * The root node of the model's graph node hierarchy.
      *
-     * @type {GraphNode}
+     * @type {import('./graph-node.js').GraphNode|null}
      */
     graph = null;
 
@@ -43,7 +43,7 @@ class Model {
      *
      * @example
      * // Create a new model
-     * var model = new pc.Model();
+     * const model = new pc.Model();
      */
     constructor() {
         this.cameras = [];
@@ -96,7 +96,7 @@ class Model {
      *
      * @returns {Model} A clone of the specified model.
      * @example
-     * var clonedModel = model.clone();
+     * const clonedModel = model.clone();
      */
     clone() {
 
@@ -198,7 +198,7 @@ class Model {
      *
      * @example
      * model.generateWireframe();
-     * for (var i = 0; i < model.meshInstances.length; i++) {
+     * for (let i = 0; i < model.meshInstances.length; i++) {
      *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */

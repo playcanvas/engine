@@ -1,6 +1,7 @@
-import { platform } from '../../core/platform.js';
-import { EventHandler } from '../../core/event-handler.js';
+import { Debug } from "../../core/debug.js";
 
+import { EventHandler } from '../../core/event-handler.js';
+import { platform } from '../../core/platform.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
@@ -8,17 +9,14 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
+import { XrDepthSensing } from './xr-depth-sensing.js';
+import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
+import { XrImageTracking } from './xr-image-tracking.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
-import { XrImageTracking } from './xr-image-tracking.js';
-import { XrDomOverlay } from './xr-dom-overlay.js';
-import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
-
-/** @typedef {import('../components/camera/component.js').CameraComponent} CameraComponent */
-/** @typedef {import('../app-base.js').AppBase} AppBase */
-/** @typedef {import('../entity.js').Entity} Entity */
+import { XrAnchors } from './xr-anchors.js';
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -31,10 +29,11 @@ import { XrPlaneDetection } from './xr-plane-detection.js';
  * Manage and update XR session and its states.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrManager extends EventHandler {
     /**
-     * @type {AppBase}
+     * @type {import('../app-base.js').AppBase}
      * @ignore
      */
     app;
@@ -77,7 +76,7 @@ class XrManager extends EventHandler {
 
     /**
      * @type {XRReferenceSpace|null}
-     * @private
+     * @ignore
      */
     _referenceSpace = null;
 
@@ -137,7 +136,7 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
-     * @type {CameraComponent}
+     * @type {import('../components/camera/component.js').CameraComponent}
      * @private
      */
     _camera = null;
@@ -193,7 +192,7 @@ class XrManager extends EventHandler {
     /**
      * Create a new XrManager instance.
      *
-     * @param {AppBase} app - The main application.
+     * @param {import('../app-base.js').AppBase} app - The main application.
      * @hideconstructor
      */
     constructor(app) {
@@ -213,6 +212,7 @@ class XrManager extends EventHandler {
         this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
+        this.anchors = new XrAnchors(this);
 
         // TODO
         // 1. HMD class with its params
@@ -309,8 +309,8 @@ class XrManager extends EventHandler {
      * callback when session is created or failed to create. Integrated XR APIs need to be enabled
      * by providing relevant options.
      *
-     * @param {CameraComponent} camera - It will be used to render XR session and manipulated based
-     * on pose tracking.
+     * @param {import('../components/camera/component.js').CameraComponent} camera - It will be
+     * used to render XR session and manipulated based on pose tracking.
      * @param {string} type - Session type. Can be one of the following:
      *
      * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited features
@@ -339,6 +339,8 @@ class XrManager extends EventHandler {
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.anchors] - Set to true to attempt to enable
+     * {@link XrAnchors}.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
@@ -363,6 +365,8 @@ class XrManager extends EventHandler {
      * @example
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+     *         anchors: true,
+     *         imageTracking: true,
      *         depthSensing: { }
      *     });
      * });
@@ -418,6 +422,10 @@ class XrManager extends EventHandler {
             if (this.domOverlay.supported && this.domOverlay.root) {
                 opts.optionalFeatures.push('dom-overlay');
                 opts.domOverlay = { root: this.domOverlay.root };
+            }
+
+            if (options && options.anchors && this.anchors.supported) {
+                opts.optionalFeatures.push('anchors');
             }
 
             if (options && options.depthSensing && this.depthSensing.supported) {
@@ -584,7 +592,6 @@ class XrManager extends EventHandler {
             if (this._camera) {
                 this._camera.off('set_nearClip', onClipPlanesChange);
                 this._camera.off('set_farClip', onClipPlanesChange);
-
                 this._camera.camera.xr = null;
                 this._camera = null;
             }
@@ -613,10 +620,20 @@ class XrManager extends EventHandler {
         this._camera.on('set_nearClip', onClipPlanesChange);
         this._camera.on('set_farClip', onClipPlanesChange);
 
+        // A framebufferScaleFactor scale of 1 is the full resolution of the display
+        // so we need to calculate this based on devicePixelRatio of the dislay and what
+        // we've set this in the graphics device
+        Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
+        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
+
         this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
             alpha: true,
             depth: true,
-            stencil: true
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor,
+
+            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
+            antialias: false
         });
 
         session.updateRenderState({
@@ -688,34 +705,31 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
+        const lengthOld = this.views.length;
         const lengthNew = pose.views.length;
 
-        if (lengthNew > this.views.length) {
-            // add new views into list
-            for (let i = 0; i <= (lengthNew - this.views.length); i++) {
-                let view = this.viewsPool.pop();
-                if (!view) {
-                    view = {
-                        viewport: new Vec4(),
-                        projMat: new Mat4(),
-                        viewMat: new Mat4(),
-                        viewOffMat: new Mat4(),
-                        viewInvMat: new Mat4(),
-                        viewInvOffMat: new Mat4(),
-                        projViewOffMat: new Mat4(),
-                        viewMat3: new Mat3(),
-                        position: new Float32Array(3),
-                        rotation: new Quat()
-                    };
-                }
+        while (lengthNew > this.views.length) {
+            let view = this.viewsPool.pop();
+            if (!view) {
+                view = {
+                    viewport: new Vec4(),
+                    projMat: new Mat4(),
+                    viewMat: new Mat4(),
+                    viewOffMat: new Mat4(),
+                    viewInvMat: new Mat4(),
+                    viewInvOffMat: new Mat4(),
+                    projViewOffMat: new Mat4(),
+                    viewMat3: new Mat3(),
+                    position: new Float32Array(3),
+                    rotation: new Quat()
+                };
+            }
 
-                this.views.push(view);
-            }
-        } else if (lengthNew <= this.views.length) {
-            // remove views from list into pool
-            for (let i = 0; i < (this.views.length - lengthNew); i++) {
-                this.viewsPool.push(this.views.pop());
-            }
+            this.views.push(view);
+        }
+        // remove views from list into pool
+        while (lengthNew < this.views.length) {
+            this.viewsPool.push(this.views.pop());
         }
 
         // reset position
@@ -742,6 +756,31 @@ class XrManager extends EventHandler {
             view.viewInvMat.set(viewRaw.transform.matrix);
         }
 
+        // update the camera fov properties only when we had 0 views
+        if (lengthOld === 0 && this.views.length > 0) {
+            const viewProjMat = new Mat4();
+            const view = this.views[0];
+
+            viewProjMat.copy(view.projMat);
+            const data = viewProjMat.data;
+
+            const fov = (2.0 * Math.atan(1.0 / data[5]) * 180.0) / Math.PI;
+            const aspectRatio = data[5] / data[0];
+            const farClip = data[14] / (data[10] + 1);
+            const nearClip = data[14] / (data[10] - 1);
+            const horizontalFov = false;
+
+
+            const camera = this._camera.camera;
+            camera.setXrProperties({
+                aspectRatio,
+                farClip,
+                fov,
+                horizontalFov,
+                nearClip
+            });
+        }
+
         // position and rotate camera based on calculated vectors
         this._camera.camera._node.setLocalPosition(this._localPosition);
         this._camera.camera._node.setLocalRotation(this._localRotation);
@@ -760,6 +799,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.anchors.supported)
+                this.anchors.update(frame);
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);
@@ -820,7 +862,7 @@ class XrManager extends EventHandler {
     /**
      * Active camera for which XR session is running or null.
      *
-     * @type {Entity|null}
+     * @type {import('../entity.js').Entity|null}
      */
     get camera() {
         return this._camera ? this._camera.entity : null;

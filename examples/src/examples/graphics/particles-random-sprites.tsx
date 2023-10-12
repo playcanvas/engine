@@ -6,7 +6,7 @@ class ParticlesRandomSpritesExample {
     static NAME = 'Particles: Random Sprites';
 
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const app = new pc.Application(canvas, {
             mouse: new pc.Mouse(document.body),

@@ -1,4 +1,5 @@
-/** @typedef {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} WebgpuGraphicsDevice */
+import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
+import { Debug, DebugHelper } from '../../../core/debug.js';
 
 /**
  * A WebGPU implementation of the Buffer.
@@ -6,7 +7,10 @@
  * @ignore
  */
 class WebgpuBuffer {
-    /** @type {GPUBuffer} */
+    /**
+     * @type {GPUBuffer}
+     * @private
+     */
     buffer = null;
 
     destroy(device) {
@@ -24,7 +28,7 @@ class WebgpuBuffer {
     }
 
     /**
-     * @param {WebgpuGraphicsDevice} device - Graphics device.
+     * @param {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} device - Graphics device.
      * @param {*} usage -
      * @param {*} target -
      * @param {*} storage -
@@ -44,6 +48,13 @@ class WebgpuBuffer {
                 size: size,
                 usage: target | GPUBufferUsage.COPY_DST
             });
+
+            DebugHelper.setLabel(this.buffer,
+                                 target & GPUBufferUsage.VERTEX ? 'VertexBuffer' :
+                                     target & GPUBufferUsage.INDEX ? 'IndexBuffer' :
+                                         target & GPUBufferUsage.UNIFORM ? "UniformBuffer" :
+                                             ''
+            );
 
 
             // mappedAtCreation path - this could be used when the data is provided
@@ -67,6 +78,7 @@ class WebgpuBuffer {
         data.set(srcData);
 
         // copy data to the gpu buffer
+        Debug.trace(TRACEID_RENDER_QUEUE, `writeBuffer: ${this.buffer.label}`);
         wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
 
         // TODO: handle usage types:

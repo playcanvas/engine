@@ -4,10 +4,13 @@ import { Mat4 } from '../../core/math/mat4.js';
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
-import { drawQuadWithShader } from '../../platform/graphics/simple-post-effect.js';
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
+import { BlendState } from '../../platform/graphics/blend-state.js';
+import { DepthState } from '../../platform/graphics/depth-state.js';
 
-import { EMITTERSHAPE_BOX } from '../../scene/constants.js';
+import { drawQuadWithShader } from '../graphics/quad-render-utils.js';
+
+import { EMITTERSHAPE_BOX } from '../constants.js';
 
 const spawnMatrix3 = new Mat3();
 const emitterMatrix3 = new Mat3();
@@ -89,11 +92,9 @@ class ParticleGPUUpdater {
 
         const emitter = this._emitter;
 
-        device.setBlending(false);
-        device.setColorWrite(true, true, true, true);
+        device.setBlendState(BlendState.NOBLEND);
+        device.setDepthState(DepthState.NODEPTH);
         device.setCullMode(CULLFACE_NONE);
-        device.setDepthTest(false);
-        device.setDepthWrite(false);
 
         this.randomize();
 
@@ -139,7 +140,7 @@ class ParticleGPUUpdater {
         this.constantInitialVelocity.setValue(emitter.initialVelocity);
 
         emitterMatrix3.setFromMat4(emitterMatrix);
-        emitterMatrix.invertTo3x3(emitterMatrix3Inv);
+        emitterMatrix3Inv.invertMat4(emitterMatrix);
         this.emitterPosUniform[0] = emitterPos.x;
         this.emitterPosUniform[1] = emitterPos.y;
         this.emitterPosUniform[2] = emitterPos.z;
@@ -182,9 +183,6 @@ class ParticleGPUUpdater {
         emitter.beenReset = false;
 
         emitter.swapTex = !emitter.swapTex;
-
-        device.setDepthTest(true);
-        device.setDepthWrite(true);
 
         emitter.prevWorldBoundsSize.copy(emitter.worldBoundsSize);
         emitter.prevWorldBoundsCenter.copy(emitter.worldBounds.center);

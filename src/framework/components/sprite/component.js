@@ -19,10 +19,6 @@ import { Component } from '../component.js';
 import { SPRITETYPE_SIMPLE, SPRITETYPE_ANIMATED } from './constants.js';
 import { SpriteAnimationClip } from './sprite-animation-clip.js';
 
-/** @typedef {import('../../asset/asset.js').Asset} Asset */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').SpriteComponentSystem} SpriteComponentSystem */
-
 const PARAM_EMISSIVE_MAP = 'texture_emissiveMap';
 const PARAM_OPACITY_MAP = 'texture_opacityMap';
 const PARAM_EMISSIVE = 'material_emissive';
@@ -35,13 +31,16 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  * Enables an Entity to render a simple static sprite or sprite animations.
  *
  * @augments Component
+ * @category Graphics
  */
 class SpriteComponent extends Component {
     /**
      * Create a new SpriteComponent instance.
      *
-     * @param {SpriteComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').SpriteComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -218,7 +217,7 @@ class SpriteComponent extends Component {
      * The asset id or the {@link Asset} of the sprite to render. Only works for
      * {@link SPRITETYPE_SIMPLE} sprites.
      *
-     * @type {number|Asset}
+     * @type {number|import('../../asset/asset.js').Asset}
      */
     set spriteAsset(value) {
         this._defaultClip.spriteAsset = value;
@@ -231,7 +230,7 @@ class SpriteComponent extends Component {
     /**
      * The current sprite.
      *
-     * @type {Sprite}
+     * @type {import('../../../scene/sprite.js').Sprite}
      */
     set sprite(value) {
         this._currentClip.sprite = value;
@@ -598,11 +597,8 @@ class SpriteComponent extends Component {
         this._hideModel();
         this._model = null;
 
-        if (this._node) {
-            if (this._node.parent)
-                this._node.parent.removeChild(this._node);
-            this._node = null;
-        }
+        this._node?.remove();
+        this._node = null;
 
         if (this._meshInstance) {
             // make sure we decrease the ref counts materials and meshes
@@ -883,8 +879,8 @@ class SpriteComponent extends Component {
      * @param {string} [data.name] - The name of the new animation clip.
      * @param {number} [data.fps] - Frames per second for the animation clip.
      * @param {boolean} [data.loop] - Whether to loop the animation clip.
-     * @param {number|Asset} [data.spriteAsset] - The asset id or the {@link Asset} of the sprite
-     * that this clip will play.
+     * @param {number|import('../../asset/asset.js').Asset} [data.spriteAsset] - The asset id or
+     * the {@link Asset} of the sprite that this clip will play.
      * @returns {SpriteAnimationClip} The new clip that was added.
      */
     addClip(data) {

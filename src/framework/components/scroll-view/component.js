@@ -14,9 +14,6 @@ import { SCROLL_MODE_BOUNCE, SCROLL_MODE_CLAMP, SCROLL_MODE_INFINITE, SCROLLBAR_
 import { Component } from '../component.js';
 import { EVENT_MOUSEWHEEL } from '../../../platform/input/constants.js';
 
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').ScrollViewComponentSystem} ScrollViewComponentSystem */
-
 const _tempScrollValue = new Vec2();
 
 /**
@@ -48,22 +45,26 @@ const _tempScrollValue = new Vec2();
  * viewport.
  * @property {number} verticalScrollbarVisibility Controls whether the vertical scrollbar should be
  * visible all the time, or only visible when the content exceeds the size of the viewport.
- * @property {Entity} viewportEntity The entity to be used as the masked viewport area, within
- * which the content will scroll. This entity must have an ElementGroup component.
- * @property {Entity} contentEntity The entity which contains the scrolling content itself. This
- * entity must have an Element component.
- * @property {Entity} horizontalScrollbarEntity The entity to be used as the vertical scrollbar.
- * This entity must have a Scrollbar component.
- * @property {Entity} verticalScrollbarEntity The entity to be used as the vertical scrollbar. This
- * entity must have a Scrollbar component.
+ * @property {import('../../entity.js').Entity} viewportEntity The entity to be used as the masked
+ * viewport area, within which the content will scroll. This entity must have an ElementGroup
+ * component.
+ * @property {import('../../entity.js').Entity} contentEntity The entity which contains the
+ * scrolling content itself. This entity must have an Element component.
+ * @property {import('../../entity.js').Entity} horizontalScrollbarEntity The entity to be used as
+ * the vertical scrollbar. This entity must have a Scrollbar component.
+ * @property {import('../../entity.js').Entity} verticalScrollbarEntity The entity to be used as
+ * the vertical scrollbar. This entity must have a Scrollbar component.
  * @augments Component
+ * @category User Interface
  */
 class ScrollViewComponent extends Component {
     /**
      * Create a new ScrollViewComponent.
      *
-     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -114,7 +115,8 @@ class ScrollViewComponent extends Component {
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.
-     * @param {ScrollViewComponentSystem} system - The ComponentSystem that created this Component.
+     * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
+     * created this Component.
      * @private
      */
     _toggleLifecycleListeners(onOrOff, system) {

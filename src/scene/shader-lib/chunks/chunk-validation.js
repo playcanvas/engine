@@ -1,4 +1,4 @@
-import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57 } from '../../../platform/graphics/constants.js';
+import { CHUNKAPI_1_51, CHUNKAPI_1_55, CHUNKAPI_1_56, CHUNKAPI_1_57, CHUNKAPI_1_60, CHUNKAPI_1_62, CHUNKAPI_1_65 } from '../../../platform/graphics/constants.js';
 import { Debug } from '../../../core/debug.js';
 import { shaderChunks } from './chunks.js';
 
@@ -6,11 +6,12 @@ const chunkVersions = {
     // frontend
     aoPS: CHUNKAPI_1_57,
     clearCoatPS: CHUNKAPI_1_57,
-    clearCoatGlossPS: CHUNKAPI_1_57,
+    clearCoatGlossPS: CHUNKAPI_1_60,
     clearCoatNormalPS: CHUNKAPI_1_57,
     diffusePS: CHUNKAPI_1_57,
     diffuseDetailMapPS: CHUNKAPI_1_57,
     emissivePS: CHUNKAPI_1_57,
+    glossPS: CHUNKAPI_1_60,
     lightmapDirPS: CHUNKAPI_1_55,
     lightmapSinglePS: CHUNKAPI_1_55,
     metalnessPS: CHUNKAPI_1_57,
@@ -19,24 +20,68 @@ const chunkVersions = {
     opacityPS: CHUNKAPI_1_57,
     parallaxPS: CHUNKAPI_1_57,
     sheenPS: CHUNKAPI_1_57,
-    sheenGlossPS: CHUNKAPI_1_57,
+    sheenGlossPS: CHUNKAPI_1_60,
     specularPS: CHUNKAPI_1_57,
     specularityFactorPS: CHUNKAPI_1_57,
     thicknessPS: CHUNKAPI_1_57,
     transmissionPS: CHUNKAPI_1_57,
 
     // backend
-    clusteredLightPS: CHUNKAPI_1_55,
-    fresnelSchlickPS: CHUNKAPI_1_55,
-    endPS: CHUNKAPI_1_55,
-    lightmapAddPS: CHUNKAPI_1_55,
-    lightmapDirAddPS: CHUNKAPI_1_55,
-    lightSpecularAnisoGGXPS: CHUNKAPI_1_55,
-    lightSpecularBlinnPS: CHUNKAPI_1_55,
-    lightSpecularPhongPS: CHUNKAPI_1_55,
     normalVertexPS: CHUNKAPI_1_55,
     startPS: CHUNKAPI_1_55,
-    reflectionEnvPS: CHUNKAPI_1_56
+
+    ambientConstantPS: CHUNKAPI_1_62,
+    ambientEnvPS: CHUNKAPI_1_62,
+    ambientSHPS: CHUNKAPI_1_62,
+    aoDiffuseOccPS: CHUNKAPI_1_62,
+    aoSpecOccPS: CHUNKAPI_1_62,
+    aoSpecOccConstPS: CHUNKAPI_1_62,
+    aoSpecOccConstSimplePS: CHUNKAPI_1_62,
+    aoSpecOccSimplePS: CHUNKAPI_1_62,
+    clusteredLightPS: CHUNKAPI_1_62,
+    clusteredLightShadowPS: CHUNKAPI_1_62,
+    combinePS: CHUNKAPI_1_62,
+    falloffInvSquaredPS: CHUNKAPI_1_62,
+    falloffLinearPS: CHUNKAPI_1_62,
+    lightDiffuseLambertPS: CHUNKAPI_1_62,
+    lightSheenPS: CHUNKAPI_1_62,
+    lightSpecularAnisoGGXPS: CHUNKAPI_1_62,
+    lightSpecularBlinnPS: CHUNKAPI_1_62,
+    lightSpecularPhongPS: CHUNKAPI_1_62,
+    ltcPS: CHUNKAPI_1_62,
+    reflDirPS: CHUNKAPI_1_62,
+    reflDirAnisoPS: CHUNKAPI_1_62,
+    reflectionCCPS: CHUNKAPI_1_62,
+    reflectionCubePS: CHUNKAPI_1_62,
+    reflectionEnvPS: CHUNKAPI_1_62,
+    reflectionEnvHQPS: CHUNKAPI_1_62,
+    reflectionSheenPS: CHUNKAPI_1_62,
+    reflectionSpherePS: CHUNKAPI_1_62,
+    reflectionSphereLowPS: CHUNKAPI_1_62,
+    shadowCommonPS: CHUNKAPI_1_62,
+    shadowCoordPS: CHUNKAPI_1_62,
+    shadowCoordPerspZBufferPS: CHUNKAPI_1_62,
+    shadowEVSMPS: CHUNKAPI_1_62,
+    shadowEVSMnPS: CHUNKAPI_1_62,
+    shadowStandardPS: CHUNKAPI_1_62,
+    shadowStandardGL2PS: CHUNKAPI_1_62,
+    shadowVSM8PS: CHUNKAPI_1_62,
+    spotPS: CHUNKAPI_1_62,
+    TBNPS: CHUNKAPI_1_62,
+    TBNObjectSpacePS: CHUNKAPI_1_62,
+    TBNderivativePS: CHUNKAPI_1_62,
+    TBNfastPS: CHUNKAPI_1_62,
+
+    endPS: CHUNKAPI_1_65,
+    metalnessModulatePS: CHUNKAPI_1_65,
+    outputAlphaPS: CHUNKAPI_1_65,
+    outputAlphaPremulPS: CHUNKAPI_1_65,
+    fresnelSchlickPS: CHUNKAPI_1_65,
+    iridescenceDiffractionPS: CHUNKAPI_1_65,
+    lightmapAddPS: CHUNKAPI_1_65,
+    lightmapDirAddPS: CHUNKAPI_1_65,
+    refractionCubePS: CHUNKAPI_1_65,
+    refractionDynamicPS: CHUNKAPI_1_65
 };
 
 // removed
@@ -91,7 +136,7 @@ const validateUserChunks = (userChunks) => {
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API.`);
+                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API: https://developer.playcanvas.com/en/user-manual/graphics/shader-chunk-migrations/`);
             }
         }
     }

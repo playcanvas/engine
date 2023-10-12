@@ -6,6 +6,13 @@
 export const TRACEID_RENDER_FRAME = 'RenderFrame';
 
 /**
+ * Logs a frame time.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_FRAME_TIME = 'RenderFrameTime';
+
+/**
  * Logs basic information about generated render passes.
  *
  * @type {string}
@@ -89,3 +96,45 @@ export const TRACEID_BINDGROUP_ALLOC = 'BindGroupAlloc';
  * @type {string}
  */
 export const TRACEID_BINDGROUPFORMAT_ALLOC = 'BindGroupFormatAlloc';
+
+/**
+ * Logs the creation of render pipelines. WebBPU only.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDERPIPELINE_ALLOC = 'RenderPipelineAlloc';
+
+/**
+ * Logs the creation of pipeline layouts. WebBPU only.
+ *
+ * @type {string}
+ */
+export const TRACEID_PIPELINELAYOUT_ALLOC = 'PipelineLayoutAlloc';
+
+/**
+ * Logs the internal debug information for Elements.
+ *
+ * @type {string}
+ */
+export const TRACE_ID_ELEMENT = "Element";
+
+/**
+ * Logs the vram use by all textures in memory.
+ *
+ * @type {string}
+ */
+export const TRACEID_TEXTURES = 'Textures';
+
+/**
+ * Logs the render queue commands.
+ *
+ * @type {string}
+ */
+export const TRACEID_RENDER_QUEUE = 'RenderQueue';
+
+/**
+ * Logs the GPU timings.
+ *
+ * @type {string}
+ */
+export const TRACEID_GPU_TIMINGS = 'GpuTimings';

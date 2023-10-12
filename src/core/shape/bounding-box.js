@@ -1,10 +1,6 @@
 import { Debug } from '../debug.js';
 import { Vec3 } from '../math/vec3.js';
 
-/** @typedef {import('../math/mat4.js').Mat4} Mat4 */
-/** @typedef {import('./bounding-sphere.js').BoundingSphere} BoundingSphere */
-/** @typedef {import('./ray.js').Ray} Ray */
-
 const tmpVecA = new Vec3();
 const tmpVecB = new Vec3();
 const tmpVecC = new Vec3();
@@ -13,8 +9,36 @@ const tmpVecE = new Vec3();
 
 /**
  * Axis-Aligned Bounding Box.
+ *
+ * @category Math
  */
 class BoundingBox {
+    /**
+     * Center of box.
+     *
+     * @type {Vec3}
+     */
+    center;
+
+    /**
+     * Half the distance across the box in each axis.
+     *
+     * @type {Vec3}
+     */
+    halfExtents;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _min = new Vec3();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _max = new Vec3();
+
     /**
      * Create a new BoundingBox instance. The bounding box is axis-aligned.
      *
@@ -26,29 +50,8 @@ class BoundingBox {
         Debug.assert(!Object.isFrozen(center), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'center\' parameter');
         Debug.assert(!Object.isFrozen(halfExtents), 'The constructor of \'BoundingBox\' does not accept a constant (frozen) object as a \'halfExtents\' parameter');
 
-        /**
-         * Center of box.
-         *
-         * @type {Vec3}
-         */
         this.center = center;
-        /**
-         * Half the distance across the box in each axis.
-         *
-         * @type {Vec3}
-         */
         this.halfExtents = halfExtents;
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this._min = new Vec3();
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this._max = new Vec3();
     }
 
     /**
@@ -221,8 +224,9 @@ class BoundingBox {
     /**
      * Test if a ray intersects with the AABB.
      *
-     * @param {Ray} ray - Ray to test against (direction must be normalized).
-     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied into here.
+     * @param {import('./ray.js').Ray} ray - Ray to test against (direction must be normalized).
+     * @param {Vec3} [point] - If there is an intersection, the intersection point will be copied
+     * into here.
      * @returns {boolean} True if there is an intersection.
      */
     intersectsRay(ray, point) {
@@ -287,7 +291,7 @@ class BoundingBox {
      * matrix.
      *
      * @param {BoundingBox} aabb - Box to transform and enclose.
-     * @param {Mat4} m - Transformation matrix to apply to source AABB.
+     * @param {import('../math/mat4.js').Mat4} m - Transformation matrix to apply to source AABB.
      * @param {boolean} ignoreScale - If true is specified, a scale from the matrix is ignored. Defaults to false.
      */
     setFromTransformedAabb(aabb, m, ignoreScale = false) {
@@ -357,21 +361,26 @@ class BoundingBox {
      */
     static computeMinMax(vertices, min, max, numVerts = vertices.length / 3) {
         if (numVerts > 0) {
-
-            min.set(vertices[0], vertices[1], vertices[2]);
-            max.set(vertices[0], vertices[1], vertices[2]);
-
-            for (let i = 1; i < numVerts; i++) {
-                const x = vertices[i * 3 + 0];
-                const y = vertices[i * 3 + 1];
-                const z = vertices[i * 3 + 2];
-                if (x < min.x) min.x = x;
-                if (y < min.y) min.y = y;
-                if (z < min.z) min.z = z;
-                if (x > max.x) max.x = x;
-                if (y > max.y) max.y = y;
-                if (z > max.z) max.z = z;
+            let minx = vertices[0];
+            let miny = vertices[1];
+            let minz = vertices[2];
+            let maxx = minx;
+            let maxy = miny;
+            let maxz = minz;
+            const n = numVerts * 3;
+            for (let i = 3; i < n; i += 3) {
+                const x = vertices[i];
+                const y = vertices[i + 1];
+                const z = vertices[i + 2];
+                if (x < minx) minx = x;
+                if (y < miny) miny = y;
+                if (z < minz) minz = z;
+                if (x > maxx) maxx = x;
+                if (y > maxy) maxy = y;
+                if (z > maxz) maxz = z;
             }
+            min.set(minx, miny, minz);
+            max.set(maxx, maxy, maxz);
         }
     }
 
@@ -391,7 +400,7 @@ class BoundingBox {
     /**
      * Test if a Bounding Sphere is overlapping, enveloping, or inside this AABB.
      *
-     * @param {BoundingSphere} sphere - Bounding Sphere to test.
+     * @param {import('./bounding-sphere.js').BoundingSphere} sphere - Bounding Sphere to test.
      * @returns {boolean} True if the Bounding Sphere is overlapping, enveloping, or inside the
      * AABB and false otherwise.
      */

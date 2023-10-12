@@ -1,7 +1,4 @@
 import { path } from '../../core/path.js';
-
-import { http } from '../../platform/net/http.js';
-
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
@@ -10,11 +7,11 @@ import {
     FILTER_LINEAR, FILTER_NEAREST, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM
 } from '../../platform/graphics/constants.js';
+import { http } from '../../platform/net/http.js';
 
 import { TextureAtlas } from '../../scene/texture-atlas.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
-/** @typedef {import('../../framework/app-base.js').AppBase} AppBase */
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -37,6 +34,7 @@ const regexFrame = /^data\.frames\.(\d+)$/;
  * Resource handler used for loading {@link TextureAtlas} resources.
  *
  * @implements {ResourceHandler}
+ * @category Graphics
  */
 class TextureAtlasHandler {
     /**
@@ -49,7 +47,7 @@ class TextureAtlasHandler {
     /**
      * Create a new TextureAtlasHandler instance.
      *
-     * @param {AppBase} app - The running {@link AppBase}.
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      * @hideconstructor
      */
     constructor(app) {
@@ -94,7 +92,7 @@ class TextureAtlasHandler {
                 }
             });
         } else {
-            return handler.load(url, callback);
+            handler.load(url, callback);
         }
     }
 

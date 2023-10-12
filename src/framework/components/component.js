@@ -1,8 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
 
-/** @typedef {import('./system.js').ComponentSystem} ComponentSystem */
-/** @typedef {import('../entity.js').Entity} Entity */
-
 /**
  * Components are used to attach functionality on a {@link Entity}. Components can receive update
  * events each frame, and expose properties to the PlayCanvas Editor.
@@ -14,24 +11,24 @@ class Component extends EventHandler {
     /**
      * The ComponentSystem used to create this Component.
      *
-     * @type {ComponentSystem}
-     * @ignore
+     * @type {import('./system.js').ComponentSystem}
      */
     system;
 
     /**
      * The Entity that this Component is attached to.
      *
-     * @type {Entity}
-     * @ignore
+     * @type {import('../entity.js').Entity}
      */
     entity;
 
     /**
      * Base constructor for a Component.
      *
-     * @param {ComponentSystem} system - The ComponentSystem used to create this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').ComponentSystem} system - The ComponentSystem used to create
+     * this Component.
+     * @param {import('../entity.js').Entity} entity - The Entity that this Component is attached
+     * to.
      */
     constructor(system, entity) {
         super();
@@ -50,6 +47,7 @@ class Component extends EventHandler {
         this.on('set_enabled', this.onSetEnabled, this);
     }
 
+    /** @ignore */
     static _buildAccessors(obj, schema) {
         // Create getter/setter pairs for each property defined in the schema
         schema.forEach(function (descriptor) {
@@ -74,10 +72,12 @@ class Component extends EventHandler {
         obj._accessorsBuilt = true;
     }
 
+    /** @ignore */
     buildAccessors(schema) {
         Component._buildAccessors(this, schema);
     }
 
+    /** @ignore */
     onSetEnabled(name, oldValue, newValue) {
         if (oldValue !== newValue) {
             if (this.entity.enabled) {
@@ -90,12 +90,15 @@ class Component extends EventHandler {
         }
     }
 
+    /** @ignore */
     onEnable() {
     }
 
+    /** @ignore */
     onDisable() {
     }
 
+    /** @ignore */
     onPostStateChange() {
     }
 

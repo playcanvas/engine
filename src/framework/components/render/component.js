@@ -1,3 +1,4 @@
+import { Debug } from '../../../core/debug.js';
 import { LAYERID_WORLD, RENDERSTYLE_SOLID } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
 import { MeshInstance } from '../../../scene/mesh-instance.js';
@@ -13,18 +14,14 @@ import { Component } from '../component.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
-/** @typedef {import('../../../scene/materials/material.js').Material} Material */
-/** @typedef {import('../../../core/shape/bounding-box.js').BoundingBox} BoundingBox */
-/** @typedef {import('../../entity.js').Entity} Entity */
-/** @typedef {import('./system.js').RenderComponentSystem} RenderComponentSystem */
-
 /**
  * Enables an Entity to render a {@link Mesh} or a primitive shape. This component attaches
  * {@link MeshInstance} geometry to the Entity.
  *
- * @property {Entity} rootBone A reference to the entity to be used as the root bone for any
- * skinned meshes that are rendered by this component.
+ * @property {import('../../entity.js').Entity} rootBone A reference to the entity to be used as
+ * the root bone for any skinned meshes that are rendered by this component.
  * @augments Component
+ * @category Graphics
  */
 class RenderComponent extends Component {
     /** @private */
@@ -45,8 +42,12 @@ class RenderComponent extends Component {
     /** @private */
     _lightmapSizeMultiplier = 1;
 
-    /** @private */
-    _isStatic = false;
+    /**
+     * Mark meshes as non-movable (optimization).
+     *
+     * @type {boolean}
+     */
+    isStatic = false;
 
     /** @private */
     _batchGroupId = -1;
@@ -64,7 +65,7 @@ class RenderComponent extends Component {
     _meshInstances = [];
 
     /**
-     * @type {BoundingBox|null}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox|null}
      * @private
      */
     _customAabb = null;
@@ -93,7 +94,7 @@ class RenderComponent extends Component {
      * Material used to render meshes other than asset type. It gets priority when set to
      * something else than defaultMaterial, otherwise materialASsets[0] is used.
      *
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      * @private
      */
     _material;
@@ -107,8 +108,10 @@ class RenderComponent extends Component {
     /**
      * Create a new RenderComponent.
      *
-     * @param {RenderComponentSystem} system - The ComponentSystem that created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./system.js').RenderComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
     constructor(system, entity) {
         super(system, entity);
@@ -168,7 +171,7 @@ class RenderComponent extends Component {
      * specified for skinned characters in order to avoid per frame bounding box computations based
      * on bone positions.
      *
-     * @type {BoundingBox}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
      */
     set customAabb(value) {
         this._customAabb = value;
@@ -235,6 +238,7 @@ class RenderComponent extends Component {
      */
     set meshInstances(value) {
 
+        Debug.assert(Array.isArray(value), `MeshInstances set to a Render component must be an array.`);
         this.destroyMeshInstances();
 
         this._meshInstances = value;
@@ -251,7 +255,6 @@ class RenderComponent extends Component {
 
                 mi[i].castShadow = this._castShadows;
                 mi[i].receiveShadow = this._receiveShadows;
-                mi[i].isStatic = this._isStatic;
                 mi[i].renderStyle = this._renderStyle;
                 mi[i].setLightmapped(this._lightmapped);
                 mi[i].setCustomAabb(this._customAabb);
@@ -383,28 +386,6 @@ class RenderComponent extends Component {
     }
 
     /**
-     * Mark meshes as non-movable (optimization).
-     *
-     * @type {boolean}
-     */
-    set isStatic(value) {
-        if (this._isStatic !== value) {
-            this._isStatic = value;
-
-            const mi = this._meshInstances;
-            if (mi) {
-                for (let i = 0; i < mi.length; i++) {
-                    mi[i].isStatic = value;
-                }
-            }
-        }
-    }
-
-    get isStatic() {
-        return this._isStatic;
-    }
-
-    /**
      * An array of layer IDs ({@link Layer#id}) to which the meshes should belong. Don't push, pop,
      * splice or modify this array, if you want to change it - set a new one instead.
      *
@@ -478,7 +459,7 @@ class RenderComponent extends Component {
      * The material {@link Material} that will be used to render the meshes (not used on renders of
      * type 'asset').
      *
-     * @type {Material}
+     * @type {import('../../../scene/materials/material.js').Material}
      */
     set material(value) {
         if (this._material !== value) {
@@ -590,7 +571,7 @@ class RenderComponent extends Component {
     }
 
     /**
-     * @param {Entity} entity - The entity set as the root bone.
+     * @param {import('../../entity.js').Entity} entity - The entity set as the root bone.
      * @private
      */
     _onSetRootBone(entity) {

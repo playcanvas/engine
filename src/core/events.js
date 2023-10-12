@@ -7,7 +7,7 @@ const events = {
      * @param {object} target - The object to add events to.
      * @returns {object} The target object.
      * @example
-     * var obj = { };
+     * const obj = { };
      * pc.events.attach(obj);
      * @ignore
      */
@@ -19,8 +19,7 @@ const events = {
         target.fire = ev.fire;
         target.once = ev.once;
         target.hasEvent = ev.hasEvent;
-        target._callbacks = { };
-        target._callbackActive = { };
+        EventHandler.prototype.initEventHandler.call(target);
         return target;
     },
 

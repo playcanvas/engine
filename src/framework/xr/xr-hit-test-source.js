@@ -1,9 +1,6 @@
 import { EventHandler } from '../../core/event-handler.js';
-
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-
-/** @typedef {import('./xr-manager.js').XrManager} XrManager */
 
 /**
  * @type {Vec3[]}
@@ -22,10 +19,11 @@ const poolQuat = [];
  * AR session.
  *
  * @augments EventHandler
+ * @category XR
  */
 class XrHitTestSource extends EventHandler {
     /**
-     * @type {XrManager}
+     * @type {import('./xr-manager.js').XrManager}
      * @private
      */
     manager;
@@ -45,7 +43,7 @@ class XrHitTestSource extends EventHandler {
     /**
      * Create a new XrHitTestSource instance.
      *
-     * @param {XrManager} manager - WebXR Manager.
+     * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
      * @hideconstructor
@@ -75,8 +73,8 @@ class XrHitTestSource extends EventHandler {
      * @event XrHitTestSource#result
      * @param {Vec3} position - Position of hit test.
      * @param {Quat} rotation - Rotation of hit test.
-     * @param {XrInputSource|null} inputSource - If is transient hit test source, then it will
-     * provide related input source.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
+     * test source, then it will provide related input source.
      * @example
      * hitTestSource.on('result', function (position, rotation, inputSource) {
      *     target.setPosition(position);

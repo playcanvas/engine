@@ -1,11 +1,10 @@
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { BLEND_ADDITIVE, BLEND_MULTIPLICATIVE, BLEND_NORMAL } from '../../constants.js';
 import { shaderChunks } from '../chunks/chunks.js';
+import { ShaderGenerator } from './shader-generator.js';
 
-import { gammaCode, tonemapCode } from './common.js';
-
-const particle = {
-    generateKey: function (options) {
+class ShaderGeneratorParticle extends ShaderGenerator {
+    generateKey(options) {
         let key = "particle";
         for (const prop in options) {
             if (options.hasOwnProperty(prop)) {
@@ -13,18 +12,21 @@ const particle = {
             }
         }
         return key;
-    },
+    }
 
-    _animTex: function (options) {
+    _animTex(options) {
         let vshader = "";
         vshader += options.animTexLoop ? shaderChunks.particleAnimFrameLoopVS : shaderChunks.particleAnimFrameClampVS;
         vshader += shaderChunks.particleAnimTexVS;
         return vshader;
-    },
+    }
 
-    createShaderDefinition: function (device, options) {
-        let fshader = '#define PARTICLE\n';
-        let vshader = "#define VERTEXSHADER\n";
+    createShaderDefinition(device, options) {
+
+        const executionDefine = `#define PARTICLE_${options.useCpu ? 'CPU' : 'GPU'}\n`;
+
+        let fshader = '#define PARTICLE\n' + executionDefine;
+        let vshader = "#define VERTEXSHADER\n" + executionDefine;
 
         if (options.mesh) vshader += "#define USE_MESH\n";
         if (options.localSpace) vshader += "#define LOCAL_SPACE\n";
@@ -82,8 +84,8 @@ const particle = {
 
         if ((options.normal === 0) && (options.fog === "none")) options.srgb = false; // don't have to perform all gamma conversions when no lighting and fogging is used
         fshader += shaderChunks.decodePS;
-        fshader += gammaCode(options.gamma);
-        fshader += tonemapCode(options.toneMap);
+        fshader += ShaderGenerator.gammaCode(options.gamma);
+        fshader += ShaderGenerator.tonemapCode(options.toneMap);
 
         if (options.fog === 'linear') {
             fshader += shaderChunks.fogLinearPS;
@@ -113,10 +115,13 @@ const particle = {
         fshader += shaderChunks.particle_endPS;
 
         return ShaderUtils.createDefinition(device, {
+            name: 'ParticleShader',
             vertexCode: vshader,
             fragmentCode: fshader
         });
     }
-};
+}
+
+const particle = new ShaderGeneratorParticle();
 
 export { particle };

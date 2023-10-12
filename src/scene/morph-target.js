@@ -9,6 +9,8 @@ import { VertexFormat } from '../platform/graphics/vertex-format.js';
  * A Morph Target (also known as Blend Shape) contains deformation data to apply to existing mesh.
  * Multiple morph targets can be blended together on a mesh. This is useful for effects that are
  * hard to achieve with conventional animation and skinning.
+ *
+ * @category Graphics
  */
 class MorphTarget {
     /**
@@ -49,12 +51,7 @@ class MorphTarget {
         this._defaultWeight = options.defaultWeight || 0;
 
         // bounds
-        this.aabb = options.aabb;
-        if (!this.aabb) {
-            this.aabb = new BoundingBox();
-            if (options.deltaPositions)
-                this.aabb.compute(options.deltaPositions);
-        }
+        this._aabb = options.aabb;
 
         // store delta positions, used by aabb evaluation
         this.deltaPositions = options.deltaPositions;
@@ -91,6 +88,18 @@ class MorphTarget {
      */
     get defaultWeight() {
         return this._defaultWeight;
+    }
+
+    get aabb() {
+
+        // lazy evaluation, which allows us to skip this completely if customAABB is used
+        if (!this._aabb) {
+            this._aabb = new BoundingBox();
+            if (this.deltaPositions)
+                this._aabb.compute(this.deltaPositions);
+        }
+
+        return this._aabb;
     }
 
     get morphPositions() {

@@ -1,15 +1,16 @@
 import { FONT_MSDF } from './constants.js';
 
-/** @typedef {import('../../platform/graphics/texture.js').Texture} Texture */
-
 /**
  * Represents the resource of a font asset.
+ *
+ * @category User Interface
  */
 class Font {
     /**
      * Create a new Font instance.
      *
-     * @param {Texture[]} textures - The font textures.
+     * @param {import('../../platform/graphics/texture.js').Texture[]} textures - The font
+     * textures.
      * @param {object} data - The font data.
      */
     constructor(textures, data) {
@@ -20,7 +21,7 @@ class Font {
         /**
          * The font textures.
          *
-         * @type {Texture[]}
+         * @type {import('../../platform/graphics/texture.js').Texture[]}
          */
         this.textures = textures;
 

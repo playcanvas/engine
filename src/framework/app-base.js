@@ -1,33 +1,31 @@
 // #if _DEBUG
 import { version, revision } from '../core/core.js';
 // #endif
-
 import { platform } from '../core/platform.js';
 import { now } from '../core/time.js';
 import { path } from '../core/path.js';
-import { EventHandler } from '../core/event-handler.js';
+import { TRACEID_RENDER_FRAME, TRACEID_RENDER_FRAME_TIME } from '../core/constants.js';
 import { Debug } from '../core/debug.js';
-import { TRACEID_RENDER_FRAME } from '../core/constants.js';
-
-import { math } from '../core/math/math.js';
+import { EventHandler } from '../core/event-handler.js';
 import { Color } from '../core/math/color.js';
-import { Vec3 } from '../core/math/vec3.js';
 import { Mat4 } from '../core/math/mat4.js';
+import { math } from '../core/math/math.js';
 import { Quat } from '../core/math/quat.js';
-
-import { http } from '../platform/net/http.js';
+import { Vec3 } from '../core/math/vec3.js';
 
 import {
-    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP
+    PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
 } from '../platform/graphics/constants.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
-import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
-import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
+import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
+import { http } from '../platform/net/http.js';
 
 import {
     LAYERID_DEPTH, LAYERID_IMMEDIATE, LAYERID_SKYBOX, LAYERID_UI, LAYERID_WORLD,
     SORTMODE_NONE, SORTMODE_MANUAL, SPECULAR_BLINN
 } from '../scene/constants.js';
+import { setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
+import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { FrameGraph } from '../scene/frame-graph.js';
 import { AreaLightLuts } from '../scene/area-light-luts.js';
@@ -39,24 +37,18 @@ import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
-import { BundleHandler } from '../framework/handlers/bundle.js';
-import { ResourceLoader } from '../framework/handlers/loader.js';
-
 import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
-
 import { BundleRegistry } from './bundle/bundle-registry.js';
-
-import { ScriptRegistry } from './script/script-registry.js';
-
-import { I18n } from '../framework/i18n/i18n.js';
-
 import { ComponentSystemRegistry } from './components/registry.js';
-import { script } from './script.js';
-import { ApplicationStats } from './stats.js';
+import { BundleHandler } from './handlers/bundle.js';
+import { ResourceLoader } from './handlers/loader.js';
+import { I18n } from './i18n/i18n.js';
+import { ScriptRegistry } from './script/script-registry.js';
 import { Entity } from './entity.js';
 import { SceneRegistry } from './scene-registry.js';
-import { SceneGrab } from './graphics/scene-grab.js';
+import { script } from './script.js';
+import { ApplicationStats } from './stats.js';
 
 import {
     FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT,
@@ -67,22 +59,6 @@ import {
     getApplication,
     setApplication
 } from './globals.js';
-
-/** @typedef {import('../platform/graphics/graphics-device.js').GraphicsDevice} GraphicsDevice */
-/** @typedef {import('../platform/graphics/texture.js').Texture} Texture */
-/** @typedef {import('./input/element-input.js').ElementInput} ElementInput */
-/** @typedef {import('../platform/input/game-pads.js').GamePads} GamePads */
-/** @typedef {import('../platform/input/keyboard.js').Keyboard} Keyboard */
-/** @typedef {import('../platform/input/mouse.js').Mouse} Mouse */
-/** @typedef {import('../platform/input/touch-device.js').TouchDevice} TouchDevice */
-/** @typedef {import('../scene/graph-node.js').GraphNode} GraphNode */
-/** @typedef {import('../scene/mesh.js').Mesh} Mesh */
-/** @typedef {import('../scene/mesh-instance.js').MeshInstance} MeshInstance */
-/** @typedef {import('./lightmapper/lightmapper.js').Lightmapper} Lightmapper */
-/** @typedef {import('../scene/batching/batch-manager.js').BatchManager} BatchManager */
-/** @typedef {import('./app-options.js').AppOptions} AppOptions */
-/** @typedef {import('./xr/xr-manager.js').XrManager} XrManager */
-/** @typedef {import('../platform/sound/manager.js').SoundManager} SoundManager */
 
 // Mini-object used to measure progress of loading sets
 class Progress {
@@ -114,6 +90,12 @@ class Progress {
  * @callback PreloadAppCallback
  */
 
+/**
+ * Gets the current application, if any.
+ *
+ * @type {AppBase|null}
+ * @ignore
+ */
 let app = null;
 
 /**
@@ -128,12 +110,12 @@ let app = null;
  *
  * MyScript.prototype.initialize = function() {
  *     // Every script instance has a property 'this.app' accessible in the initialize...
- *     var app = this.app;
+ *     const app = this.app;
  * };
  *
  * MyScript.prototype.update = function(dt) {
  *     // ...and update functions.
- *     var app = this.app;
+ *     const app = this.app;
  * };
  * ```
  *
@@ -144,13 +126,20 @@ let app = null;
  */
 class AppBase extends EventHandler {
     /**
+     * A request id returned by requestAnimationFrame, allowing us to cancel it.
+     *
+     * @ignore
+     */
+    frameRequestId;
+
+    /**
      * Create a new AppBase instance.
      *
-     * @param {Element} canvas - The canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
      * @example
      * // Engine-only example: create the application manually
-     * var options = new AppOptions();
-     * var app = new pc.AppBase(canvas);
+     * const options = new AppOptions();
+     * const app = new pc.AppBase(canvas);
      * app.init(options);
      *
      * // Start the application's main loop
@@ -269,7 +258,8 @@ class AppBase extends EventHandler {
     /**
      * Initialize the app.
      *
-     * @param {AppOptions} appOptions - Options specifying the init parameters for the app.
+     * @param {import('./app-options.js').AppOptions} appOptions - Options specifying the init
+     * parameters for the app.
      */
     init(appOptions) {
         const device = appOptions.graphicsDevice;
@@ -279,7 +269,7 @@ class AppBase extends EventHandler {
         /**
          * The graphics device used by the application.
          *
-         * @type {GraphicsDevice}
+         * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
          */
         this.graphicsDevice = device;
         GraphicsDeviceAccess.set(device);
@@ -289,7 +279,7 @@ class AppBase extends EventHandler {
         this.stats = new ApplicationStats(device);
 
         /**
-         * @type {SoundManager}
+         * @type {import('../platform/sound/manager.js').SoundManager}
          * @private
          */
         this._soundManager = appOptions.soundManager;
@@ -328,7 +318,7 @@ class AppBase extends EventHandler {
          * @type {Entity}
          * @example
          * // Return the first entity called 'Camera' in a depth-first search of the scene hierarchy
-         * var camera = this.app.root.findByName('Camera');
+         * const camera = this.app.root.findByName('Camera');
          */
         this.root = new Entity();
         this.root._enabledInHierarchy = true;
@@ -339,7 +329,7 @@ class AppBase extends EventHandler {
          * @type {AssetRegistry}
          * @example
          * // Search the asset registry for all assets with the tag 'vehicle'
-         * var vehicleAssets = this.app.assets.findByTag('vehicle');
+         * const vehicleAssets = this.app.assets.findByTag('vehicle');
          */
         this.assets = new AssetRegistry(this.loader);
         if (appOptions.assetPrefix) this.assets.prefix = appOptions.assetPrefix;
@@ -381,42 +371,18 @@ class AppBase extends EventHandler {
          * @type {SceneRegistry}
          * @example
          * // Search the scene registry for a item with the name 'racetrack1'
-         * var sceneItem = this.app.scenes.find('racetrack1');
+         * const sceneItem = this.app.scenes.find('racetrack1');
          *
          * // Load the scene using the item's url
          * this.app.scenes.loadScene(sceneItem.url);
          */
         this.scenes = new SceneRegistry(this);
 
-        const self = this;
-        this.defaultLayerWorld = new Layer({
-            name: "World",
-            id: LAYERID_WORLD
-        });
-
-        this.sceneGrab = new SceneGrab(this);
-        this.defaultLayerDepth = this.sceneGrab.layer;
-
-        this.defaultLayerSkybox = new Layer({
-            enabled: true,
-            name: "Skybox",
-            id: LAYERID_SKYBOX,
-            opaqueSortMode: SORTMODE_NONE
-        });
-        this.defaultLayerUi = new Layer({
-            enabled: true,
-            name: "UI",
-            id: LAYERID_UI,
-            transparentSortMode: SORTMODE_MANUAL,
-            passThrough: false
-        });
-        this.defaultLayerImmediate = new Layer({
-            enabled: true,
-            name: "Immediate",
-            id: LAYERID_IMMEDIATE,
-            opaqueSortMode: SORTMODE_NONE,
-            passThrough: true
-        });
+        this.defaultLayerWorld = new Layer({ name: "World", id: LAYERID_WORLD });
+        this.defaultLayerDepth = new Layer({ name: "Depth", id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerSkybox = new Layer({ name: "Skybox", id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerUi = new Layer({ name: "UI", id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
+        this.defaultLayerImmediate = new Layer({ name: "Immediate", id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
 
         const defaultLayerComposition = new LayerComposition("default");
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
@@ -427,26 +393,6 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
-
-        // Default layers patch
-        this.scene.on('set:layers', function (oldComp, newComp) {
-            const list = newComp.layerList;
-            let layer;
-            for (let i = 0; i < list.length; i++) {
-                layer = list[i];
-                switch (layer.id) {
-                    case LAYERID_DEPTH:
-                        self.sceneGrab.patch(layer);
-                        break;
-                    case LAYERID_UI:
-                        layer.passThrough = self.defaultLayerUi.passThrough;
-                        break;
-                    case LAYERID_IMMEDIATE:
-                        layer.passThrough = self.defaultLayerImmediate.passThrough;
-                        break;
-                }
-            }
-        });
 
         // placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(device);
@@ -471,7 +417,7 @@ class AppBase extends EventHandler {
         /**
          * The run-time lightmapper.
          *
-         * @type {Lightmapper}
+         * @type {import('./lightmapper/lightmapper.js').Lightmapper}
          */
         this.lightmapper = null;
         if (appOptions.lightmapper) {
@@ -482,7 +428,8 @@ class AppBase extends EventHandler {
         /**
          * The application's batch manager.
          *
-         * @type {BatchManager}
+         * @type {import('../scene/batching/batch-manager.js').BatchManager}
+         * @private
          */
         this._batcher = null;
         if (appOptions.batchManager) {
@@ -493,35 +440,35 @@ class AppBase extends EventHandler {
         /**
          * The keyboard device.
          *
-         * @type {Keyboard}
+         * @type {import('../platform/input/keyboard.js').Keyboard}
          */
         this.keyboard = appOptions.keyboard || null;
 
         /**
          * The mouse device.
          *
-         * @type {Mouse}
+         * @type {import('../platform/input/mouse.js').Mouse}
          */
         this.mouse = appOptions.mouse || null;
 
         /**
          * Used to get touch events input.
          *
-         * @type {TouchDevice}
+         * @type {import('../platform/input/touch-device.js').TouchDevice}
          */
         this.touch = appOptions.touch || null;
 
         /**
          * Used to access GamePad input.
          *
-         * @type {GamePads}
+         * @type {import('../platform/input/game-pads.js').GamePads}
          */
         this.gamepads = appOptions.gamepads || null;
 
         /**
          * Used to handle input for {@link ElementComponent}s.
          *
-         * @type {ElementInput}
+         * @type {import('./input/element-input.js').ElementInput}
          */
         this.elementInput = appOptions.elementInput || null;
         if (this.elementInput)
@@ -530,7 +477,7 @@ class AppBase extends EventHandler {
         /**
          * The XR Manager that provides ability to start VR/AR sessions.
          *
-         * @type {XrManager}
+         * @type {import('./xr/xr-manager.js').XrManager}
          * @example
          * // check if VR is available
          * if (app.xr.isAvailable(pc.XRTYPE_VR)) {
@@ -636,14 +583,6 @@ class AppBase extends EventHandler {
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
 
-    /**
-     * @private
-     * @static
-     * @name app
-     * @type {AppBase|undefined}
-     * @description Gets the current application, if any.
-     */
-
     static _applications = {};
 
     /**
@@ -656,7 +595,7 @@ class AppBase extends EventHandler {
      * this id. Otherwise current application will be returned.
      * @returns {AppBase|undefined} The running application, if any.
      * @example
-     * var app = pc.AppBase.getApplication();
+     * const app = pc.AppBase.getApplication();
      */
     static getApplication(id) {
         return id ? AppBase._applications[id] : getApplication();
@@ -677,7 +616,7 @@ class AppBase extends EventHandler {
     }
 
     /**
-     * @type {SoundManager}
+     * @type {import('../platform/sound/manager.js').SoundManager}
      * @ignore
      */
     get soundManager() {
@@ -688,7 +627,7 @@ class AppBase extends EventHandler {
      * The application's batch manager. The batch manager is used to merge mesh instances in
      * the scene, which reduces the overall number of draw calls, thereby boosting performance.
      *
-     * @type {BatchManager}
+     * @type {import('../scene/batching/batch-manager.js').BatchManager}
      */
     get batcher() {
         Debug.assert(this._batcher, "BatchManager has not been created and is required for correct functionality.");
@@ -1125,6 +1064,12 @@ class AppBase extends EventHandler {
      * app.start();
      */
     start() {
+
+        Debug.call(() => {
+            Debug.assert(!this._alreadyStarted, "The application can be started only one time.");
+            this._alreadyStarted = true;
+        });
+
         this.frame = 0;
 
         this.fire("start", {
@@ -1203,10 +1148,20 @@ class AppBase extends EventHandler {
         // #endif
     }
 
+    frameStart() {
+        this.graphicsDevice.frameStart();
+    }
+
+    frameEnd() {
+        this.graphicsDevice.frameEnd();
+    }
+
     /**
      * Render the application's scene. More specifically, the scene's {@link LayerComposition} is
      * rendered. This function is called internally in the application's main loop and does not
      * need to be called explicitly.
+     *
+     * @ignore
      */
     render() {
         // #if _PROFILER
@@ -1236,8 +1191,9 @@ class AppBase extends EventHandler {
 
     // render a layer composition
     renderComposition(layerComposition) {
+        DebugGraphics.clearGpuMarkers();
         this.renderer.buildFrameGraph(this.frameGraph, layerComposition);
-        this.frameGraph.render();
+        this.frameGraph.render(this.graphicsDevice);
     }
 
     /**
@@ -1553,7 +1509,7 @@ class AppBase extends EventHandler {
      * @param {boolean} settings.render.ambientBake - Enable baking ambient light into lightmaps.
      * @param {number} settings.render.ambientBakeNumSamples - Number of samples to use when baking ambient light.
      * @param {number} settings.render.ambientBakeSpherePart - How much of the sphere to include when baking ambient light.
-     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brighness of the baked ambient occlusion.
+     * @param {number} settings.render.ambientBakeOcclusionBrightness - Brightness of the baked ambient occlusion.
      * @param {number} settings.render.ambientBakeOcclusionContrast - Contrast of the baked ambient occlusion.
      * @param {number} settings.render.ambientLuminance - Lux (lm/m^2) value for ambient light intensity.
      *
@@ -1576,7 +1532,7 @@ class AppBase extends EventHandler {
      * Only lights with bakeDir=true will be used for generating the dominant light direction.
      * @example
      *
-     * var settings = {
+     * const settings = {
      *     physics: {
      *         gravity: [0, -9.8, 0]
      *     },
@@ -1714,23 +1670,74 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a 1-unit long white line
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end);
      * @example
      * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLine(start, end, pc.Color.RED, false);
      * @example
      * // Render a 1-unit long white line into the world layer
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
-     * var worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
      * app.drawLine(start, end, pc.Color.WHITE, true, worldLayer);
      */
-    drawLine(start, end, color, depthTest, layer) {
+    drawLine(start, end, color, depthTest, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLine(start, end, color, depthTest, layer);
+    }
+
+    /**
+     * Draws a single line using the given material. Line start and end coordinates are specified in world-space.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the line.
+     * @param {Vec3} start - The start world-space coordinate of the line.
+     * @param {Vec3} end - The end world-space coordinate of the line.
+     * @param {Color} [color] - The color of the line. It defaults to white if not specified.
+     * @param {Layer} [layer] - The layer to render the line into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a 1-unit long white line
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = true;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLineWithMaterial(material, start, end);
+     * @example
+     * // Render a 1-unit long red line which is not depth tested and renders on top of other geometry
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLineWithMaterial(material, start, end, pc.Color.RED);
+     * @example
+     * // Render a 1-unit long white line into the world layer
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = true;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * const worldLayer = app.scene.layers.getLayerById(pc.LAYERID_WORLD);
+     * app.drawLineWithMaterial(material, start, end, pc.Color.WHITE, worldLayer);
+     */
+    drawLineWithMaterial(material, start, end, color, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineWithMaterial(material, start, end, color, layer);
     }
 
     /**
@@ -1749,12 +1756,12 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a single line, with unique colors for each point
-     * var start = new pc.Vec3(0, 0, 0);
-     * var end = new pc.Vec3(1, 0, 0);
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
      * app.drawLines([start, end], [pc.Color.RED, pc.Color.WHITE]);
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     new pc.Vec3(0, 0, 0),
      *     new pc.Vec3(1, 0, 0),
@@ -1762,7 +1769,7 @@ class AppBase extends EventHandler {
      *     new pc.Vec3(1, 1, 0),
      *     new pc.Vec3(1, 1, 1)
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     pc.Color.RED,
      *     pc.Color.YELLOW,
@@ -1774,6 +1781,64 @@ class AppBase extends EventHandler {
      */
     drawLines(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLines(positions, colors, depthTest, layer);
+    }
+
+    /**
+     * Renders an arbitrary number of discrete line segments with a given material.
+     * The lines are not connected by each subsequent point in the array. Instead, they are individual segments
+     * specified by two points. Therefore, the lengths of the supplied position and color arrays must be the same
+     * and also must be a multiple of 2. The colors of the ends of each line segment will be interpolated along
+     * the length of each line.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the lines.
+     * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
+     * array must be a multiple of 2.
+     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render a single line, with unique colors for each point
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const start = new pc.Vec3(0, 0, 0);
+     * const end = new pc.Vec3(1, 0, 0);
+     * app.drawLinesWithMaterial(material, [start, end], [pc.Color.RED, pc.Color.WHITE]);
+     * @example
+     * // Render 2 discrete line segments
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const points = [
+     *     // Line 1
+     *     new pc.Vec3(0, 0, 0),
+     *     new pc.Vec3(1, 0, 0),
+     *     // Line 2
+     *     new pc.Vec3(1, 1, 0),
+     *     new pc.Vec3(1, 1, 1)
+     * ];
+     * const colors = [
+     *     // Line 1
+     *     pc.Color.RED,
+     *     pc.Color.YELLOW,
+     *     // Line 2
+     *     pc.Color.CYAN,
+     *     pc.Color.BLUE
+     * ];
+     * app.drawLinesWithMaterial(material, points, colors);
+     */
+    drawLinesWithMaterial(material, positions, colors, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLinesWithMaterial(material, positions, colors, layer);
     }
 
     /**
@@ -1790,7 +1855,7 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render 2 discrete line segments
-     * var points = [
+     * const points = [
      *     // Line 1
      *     0, 0, 0,
      *     1, 0, 0,
@@ -1798,7 +1863,7 @@ class AppBase extends EventHandler {
      *     1, 1, 0,
      *     1, 1, 1
      * ];
-     * var colors = [
+     * const colors = [
      *     // Line 1
      *     1, 0, 0, 1,  // red
      *     0, 1, 0, 1,  // green
@@ -1810,6 +1875,51 @@ class AppBase extends EventHandler {
      */
     drawLineArrays(positions, colors, depthTest = true, layer = this.scene.defaultDrawLayer) {
         this.scene.drawLineArrays(positions, colors, depthTest, layer);
+    }
+
+    /**
+     * Renders an arbitrary number of discrete line segments with a given material.
+     * The lines are not connected by each subsequent point in the array. Instead, they are
+     * individual segments specified by two points.
+     * We expose the following vertex attributes for the material:
+     *  - aPosition: pc.Vec3 (vertex position)
+     *  - aTAndLength: pc.Vec2 (x - 1D texture coordinate [0..1], y - line length)
+     *  - aColor: pc.Vec4 (vertex color)
+     *
+     * @param {Material} material - The material used for rendering the lines.
+     * @param {number[]} positions - An array of points to draw lines between. Each point is
+     * represented by 3 numbers - x, y and z coordinate.
+     * @param {number[]} colors - An array of colors to color the lines. This must be the same
+     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @example
+     * // Render 2 discrete line segments
+     * const material = new pc.BasicMaterial();
+     * material.vertexColors = true;
+     * material.blend = true;
+     * material.blendType = BLEND_NORMAL;
+     * material.depthTest = false;
+     * material.update();
+     * const points = [
+     *     // Line 1
+     *     0, 0, 0,
+     *     1, 0, 0,
+     *     // Line 2
+     *     1, 1, 0,
+     *     1, 1, 1
+     * ];
+     * const colors = [
+     *     // Line 1
+     *     1, 0, 0, 1,  // red
+     *     0, 1, 0, 1,  // green
+     *     // Line 2
+     *     0, 0, 1, 1,  // blue
+     *     1, 1, 1, 1   // white
+     * ];
+     * app.drawLineArraysWithMaterial(material, points, colors);
+     */
+    drawLineArraysWithMaterial(material, positions, colors, layer = this.scene.defaultDrawLayer) {
+        this.scene.drawLineArraysWithMaterial(material, positions, colors, layer);
     }
 
     /**
@@ -1825,7 +1935,7 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire sphere with radius of 1
-     * var center = new pc.Vec3(0, 0, 0);
+     * const center = new pc.Vec3(0, 0, 0);
      * app.drawWireSphere(center, 1.0, pc.Color.RED);
      * @ignore
      */
@@ -1844,8 +1954,8 @@ class AppBase extends EventHandler {
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
      * @example
      * // Render a red wire aligned box
-     * var min = new pc.Vec3(-1, -1, -1);
-     * var max = new pc.Vec3(1, 1, 1);
+     * const min = new pc.Vec3(-1, -1, -1);
+     * const max = new pc.Vec3(1, 1, 1);
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      * @ignore
      */
@@ -1856,7 +1966,8 @@ class AppBase extends EventHandler {
     /**
      * Draw meshInstance at this frame
      *
-     * @param {MeshInstance} meshInstance - The mesh instance to draw.
+     * @param {import('../scene/mesh-instance.js').MeshInstance} meshInstance - The mesh instance
+     * to draw.
      * @param {Layer} [layer] - The layer to render the mesh instance into. Defaults to
      * {@link LAYERID_IMMEDIATE}.
      * @ignore
@@ -1868,7 +1979,7 @@ class AppBase extends EventHandler {
     /**
      * Draw mesh at this frame.
      *
-     * @param {Mesh} mesh - The mesh to draw.
+     * @param {import('../scene/mesh.js').Mesh} mesh - The mesh to draw.
      * @param {Material} material - The material to use to render the mesh.
      * @param {Mat4} matrix - The matrix to use to render the mesh.
      * @param {Layer} [layer] - The layer to render the mesh into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1902,21 +2013,30 @@ class AppBase extends EventHandler {
      * range [0, 2].
      * @param {number} height - The height of the rectangle of the rendered texture. Should be in
      * the range [0, 2].
-     * @param {Texture} texture - The texture to render.
+     * @param {import('../platform/graphics/texture.js').Texture} texture - The texture to render.
      * @param {Material} material - The material used when rendering the texture.
      * @param {Layer} [layer] - The layer to render the texture into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {boolean} [filterable] - Indicate if the texture can be sampled using filtering.
+     * Passing false uses unfiltered sampling, allowing a depth texture to be sampled on WebGPU.
+     * Defaults to true.
      * @ignore
      */
-    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer) {
+    drawTexture(x, y, width, height, texture, material, layer = this.scene.defaultDrawLayer, filterable = true) {
+
+        // only WebGPU supports filterable parameter to be false, allowing a depth texture / shadow
+        // map to be fetched (without filtering) and rendered
+        if (filterable === false && !this.graphicsDevice.isWebGPU)
+            return;
 
         // TODO: if this is used for anything other than debug texture display, we should optimize this to avoid allocations
         const matrix = new Mat4();
-        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, height, 0.0));
+        matrix.setTRS(new Vec3(x, y, 0.0), Quat.IDENTITY, new Vec3(width, -height, 0.0));
 
         if (!material) {
             material = new Material();
+            material.cull = CULLFACE_NONE;
             material.setParameter("colorMap", texture);
-            material.shader = this.scene.immediate.getTextureShader();
+            material.shader = filterable ? this.scene.immediate.getTextureShader() : this.scene.immediate.getUnfilterableTextureShader();
             material.update();
         }
 
@@ -1940,6 +2060,7 @@ class AppBase extends EventHandler {
      */
     drawDepthTexture(x, y, width, height, layer = this.scene.defaultDrawLayer) {
         const material = new Material();
+        material.cull = CULLFACE_NONE;
         material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();
 
@@ -1962,6 +2083,7 @@ class AppBase extends EventHandler {
 
         const canvasId = this.graphicsDevice.canvas.id;
 
+        this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
 
         if (typeof document !== 'undefined') {
@@ -1998,6 +2120,11 @@ class AppBase extends EventHandler {
             this.elementInput = null;
         }
 
+        if (this.gamepads) {
+            this.gamepads.destroy();
+            this.gamepads = null;
+        }
+
         if (this.controller) {
             this.controller = null;
         }
@@ -2025,12 +2152,8 @@ class AppBase extends EventHandler {
         this.i18n.destroy();
         this.i18n = null;
 
-        for (const key in this.loader.getHandler('script')._cache) {
-            const element = this.loader.getHandler('script')._cache[key];
-            const parent = element.parentNode;
-            if (parent) parent.removeChild(element);
-        }
-        this.loader.getHandler('script')._cache = {};
+        const scriptHandler = this.loader.getHandler('script');
+        scriptHandler?.clearCache();
 
         this.loader.destroy();
         this.loader = null;
@@ -2065,8 +2188,8 @@ class AppBase extends EventHandler {
         this.defaultLayerDepth = null;
         this.defaultLayerWorld = null;
 
-        this?.xr.end();
-        this?.xr.destroy();
+        this.xr?.end();
+        this.xr?.destroy();
 
         this.renderer.destroy();
         this.renderer = null;
@@ -2078,10 +2201,8 @@ class AppBase extends EventHandler {
 
         this.off(); // remove all events
 
-        if (this._soundManager) {
-            this._soundManager.destroy();
-            this._soundManager = null;
-        }
+        this._soundManager?.destroy();
+        this._soundManager = null;
 
         script.app = null;
 
@@ -2089,6 +2210,15 @@ class AppBase extends EventHandler {
 
         if (getApplication() === this) {
             setApplication(null);
+        }
+
+        AppBase.cancelTick(this);
+    }
+
+    static cancelTick(app) {
+        if (app.frameRequestId) {
+            window.cancelAnimationFrame(app.frameRequestId);
+            app.frameRequestId = undefined;
         }
     }
 
@@ -2134,7 +2264,6 @@ const _frameEndData = {};
  */
 const makeTick = function (_app) {
     const application = _app;
-    let frameRequest;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
      * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
@@ -2143,12 +2272,10 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        setApplication(application);
+        application.frameRequestId = null;
+        application._inFrameUpdate = true;
 
-        if (frameRequest) {
-            window.cancelAnimationFrame(frameRequest);
-            frameRequest = null;
-        }
+        setApplication(application);
 
         // have current application pointer in pc
         app = application;
@@ -2163,9 +2290,9 @@ const makeTick = function (_app) {
 
         // Submit a request to queue up a new animation frame immediately
         if (application.xr?.session) {
-            frameRequest = application.xr.session.requestAnimationFrame(application.tick);
+            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            application.frameRequestId = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
@@ -2177,7 +2304,6 @@ const makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         let shouldRenderFrame = true;
@@ -2190,16 +2316,26 @@ const makeTick = function (_app) {
         }
 
         if (shouldRenderFrame) {
+
+            Debug.trace(TRACEID_RENDER_FRAME, `---- Frame ${application.frame}`);
+            Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- UpdateStart ${now().toFixed(2)}ms`);
+
             application.update(dt);
 
             application.fire("framerender");
 
-            Debug.trace(TRACEID_RENDER_FRAME, `--- Frame ${application.frame}`);
 
             if (application.autoRender || application.renderNextFrame) {
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderStart ${now().toFixed(2)}ms`);
+
                 application.updateCanvasSize();
+                application.frameStart();
                 application.render();
+                application.frameEnd();
                 application.renderNextFrame = false;
+
+                Debug.trace(TRACEID_RENDER_FRAME_TIME, `-- RenderEnd ${now().toFixed(2)}ms`);
             }
 
             // set event data

@@ -4,7 +4,7 @@ class ArHitTestExample {
     static CATEGORY = 'XR';
     static NAME = 'AR Hit Test';
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
         const message = function (msg: string) {
             let el: HTMLDivElement = document.querySelector('.message');
             if (!el) {
@@ -50,7 +50,7 @@ class ArHitTestExample {
         app.root.addChild(l);
 
         const target = new pc.Entity();
-        target.addComponent("model", {
+        target.addComponent("render", {
             type: "cylinder"
         });
         target.setLocalScale(0.5, 0.01, 0.5);

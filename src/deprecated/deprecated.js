@@ -1,6 +1,6 @@
 import { revision, version } from '../core/core.js';
 import { string } from '../core/string.js';
-import { Timer, now } from '../core/time.js';
+import { now } from '../core/time.js';
 import { Debug } from '../core/debug.js';
 
 import { math } from '../core/math/math.js';
@@ -20,12 +20,13 @@ import {
     BLENDMODE_ZERO, BLENDMODE_ONE, BLENDMODE_SRC_COLOR, BLENDMODE_ONE_MINUS_SRC_COLOR,
     BLENDMODE_DST_COLOR, BLENDMODE_ONE_MINUS_DST_COLOR, BLENDMODE_SRC_ALPHA, BLENDMODE_SRC_ALPHA_SATURATE,
     BLENDMODE_ONE_MINUS_SRC_ALPHA, BLENDMODE_DST_ALPHA, BLENDMODE_ONE_MINUS_DST_ALPHA,
+    BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
     BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM,
     CULLFACE_NONE, CULLFACE_BACK, CULLFACE_FRONT, CULLFACE_FRONTANDBACK,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
     FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR,
     INDEXFORMAT_UINT8, INDEXFORMAT_UINT16, INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5, PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4, PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8,
     PRIMITIVE_POINTS, PRIMITIVE_LINES, PRIMITIVE_LINELOOP, PRIMITIVE_LINESTRIP,
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRISTRIP, PRIMITIVE_TRIFAN,
     SEMANTIC_POSITION, SEMANTIC_NORMAL, SEMANTIC_COLOR, SEMANTIC_TEXCOORD, SEMANTIC_TEXCOORD0,
@@ -34,23 +35,28 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../platform/graphics/constants.js';
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
-import { drawQuadWithShader } from '../platform/graphics/simple-post-effect.js';
+import { ShaderGenerator } from '../scene/shader-lib/programs/shader-generator.js';
+import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
-import { createFullscreenQuad, drawFullscreenQuad, PostEffect } from '../scene/graphics/post-effect.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
+import { PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
 import { getProgramLibrary, setProgramLibrary } from '../scene/shader-lib/get-program-library.js';
 import { RenderTarget } from '../platform/graphics/render-target.js';
 import { ScopeId } from '../platform/graphics/scope-id.js';
 import { Shader } from '../platform/graphics/shader.js';
-import { ShaderInput } from '../platform/graphics/shader-input.js';
+import { WebglShaderInput } from '../platform/graphics/webgl/webgl-shader-input.js';
 import { Texture } from '../platform/graphics/texture.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
+import { ShaderUtils } from '../platform/graphics/shader-utils.js';
+import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
+import { BlendState } from '../platform/graphics/blend-state.js';
+import { DepthState } from '../platform/graphics/depth-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
@@ -61,7 +67,7 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
-import { MeshInstance, Command } from '../scene/mesh-instance.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Picker } from '../framework/graphics/picker.js';
@@ -71,6 +77,9 @@ import { SkinInstance } from '../scene/skin-instance.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { Batch } from '../scene/batching/batch.js';
 import { getDefaultMaterial } from '../scene/materials/default-material.js';
+import { StandardMaterialOptions } from '../scene/materials/standard-material-options.js';
+import { LitShaderOptions } from '../scene/shader-lib/programs/lit-shader-options.js';
+import { Layer } from '../scene/layer.js';
 
 import { Animation, Key, Node } from '../scene/animation/animation.js';
 import { Skeleton } from '../scene/animation/skeleton.js';
@@ -95,13 +104,9 @@ import { MouseEvent } from '../platform/input/mouse-event.js';
 import { TouchDevice } from '../platform/input/touch-device.js';
 import { getTouchTargetCoords, Touch, TouchEvent } from '../platform/input/touch-event.js';
 
-import { FILLMODE_FILL_WINDOW, FILLMODE_KEEP_ASPECT, FILLMODE_NONE, RESOLUTION_AUTO, RESOLUTION_FIXED } from '../framework/constants.js';
-import { Application } from '../framework/application.js';
+import { AppBase } from '../framework/app-base.js';
 import { getApplication } from '../framework/globals.js';
 import { CameraComponent } from '../framework/components/camera/component.js';
-import { Component } from '../framework/components/component.js';
-import { ComponentSystem } from '../framework/components/system.js';
-import { Entity } from '../framework/entity.js';
 import { LightComponent } from '../framework/components/light/component.js';
 import { ModelComponent } from '../framework/components/model/component.js';
 import { RenderComponent } from '../framework/components/render/component.js';
@@ -113,7 +118,7 @@ import {
 import { RigidBodyComponent } from '../framework/components/rigid-body/component.js';
 import { RigidBodyComponentSystem } from '../framework/components/rigid-body/system.js';
 import { basisInitialize } from '../framework/handlers/basis.js';
-import { ShaderUtils } from '../platform/graphics/shader-utils.js';
+import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
 
@@ -172,6 +177,28 @@ string.startsWith = function (s, subs) {
     return s.startsWith(subs);
 };
 
+class Timer {
+    constructor() {
+        this._isRunning = false;
+        this._a = 0;
+        this._b = 0;
+    }
+
+    start() {
+        this._isRunning = true;
+        this._a = now();
+    }
+
+    stop() {
+        this._isRunning = false;
+        this._b = now();
+    }
+
+    getMilliseconds() {
+        return this._b - this._a;
+    }
+}
+
 export const time = {
     now: now,
     Timer: Timer
@@ -221,6 +248,18 @@ export function inherits(Self, Super) {
 export function makeArray(arr) {
     Debug.deprecated('pc.makeArray is not public API and should not be used. Use Array.prototype.slice.call instead.');
     return Array.prototype.slice.call(arr);
+}
+
+export function createStyle(cssString) {
+    const result = document.createElement('style');
+    result.type = 'text/css';
+    if (result.styleSheet) {
+        result.styleSheet.cssText = cssString;
+    } else {
+        result.appendChild(document.createTextNode(cssString));
+    }
+
+    return result;
 }
 
 // MATH
@@ -305,6 +344,18 @@ export const ELEMENTTYPE_INT32 = TYPE_INT32;
 export const ELEMENTTYPE_UINT32 = TYPE_UINT32;
 export const ELEMENTTYPE_FLOAT32 = TYPE_FLOAT32;
 
+export const PIXELFORMAT_L8_A8 = PIXELFORMAT_LA8;
+export const PIXELFORMAT_R5_G6_B5 = PIXELFORMAT_RGB565;
+export const PIXELFORMAT_R5_G5_B5_A1 = PIXELFORMAT_RGBA5551;
+export const PIXELFORMAT_R4_G4_B4_A4 = PIXELFORMAT_RGBA4;
+export const PIXELFORMAT_R8_G8_B8 = PIXELFORMAT_RGB8;
+export const PIXELFORMAT_R8_G8_B8_A8 = PIXELFORMAT_RGBA8;
+
+export const BLENDMODE_CONSTANT_COLOR = BLENDMODE_CONSTANT;
+export const BLENDMODE_ONE_MINUS_CONSTANT_COLOR = BLENDMODE_ONE_MINUS_CONSTANT;
+export const BLENDMODE_CONSTANT_ALPHA = BLENDMODE_CONSTANT;
+export const BLENDMODE_ONE_MINUS_CONSTANT_ALPHA = BLENDMODE_ONE_MINUS_CONSTANT;
+
 export function UnsupportedBrowserError(message) {
     this.name = 'UnsupportedBrowserError';
     this.message = (message || '');
@@ -318,14 +369,14 @@ export function ContextCreationError(message) {
 ContextCreationError.prototype = Error.prototype;
 
 export const programlib = {
-    begin: begin,
+    begin: ShaderGenerator.begin,
     dummyFragmentCode: ShaderUtils.dummyFragmentCode,
-    end: end,
-    fogCode: fogCode,
-    gammaCode: gammaCode,
+    end: ShaderGenerator.end,
+    fogCode: ShaderGenerator.fogCode,
+    gammaCode: ShaderGenerator.gammaCode,
     precisionCode: ShaderUtils.precisionCode,
-    skinCode: skinCode,
-    tonemapCode: tonemapCode,
+    skinCode: ShaderGenerator.skinCode,
+    tonemapCode: ShaderGenerator.tonemapCode,
     versionCode: ShaderUtils.versionCode
 };
 
@@ -367,9 +418,9 @@ export const gfx = {
     INDEXFORMAT_UINT8: INDEXFORMAT_UINT8,
     INDEXFORMAT_UINT16: INDEXFORMAT_UINT16,
     INDEXFORMAT_UINT32: INDEXFORMAT_UINT32,
-    PIXELFORMAT_R5_G6_B5: PIXELFORMAT_R5_G6_B5,
-    PIXELFORMAT_R8_G8_B8: PIXELFORMAT_R8_G8_B8,
-    PIXELFORMAT_R8_G8_B8_A8: PIXELFORMAT_R8_G8_B8_A8,
+    PIXELFORMAT_RGB565: PIXELFORMAT_RGB565,
+    PIXELFORMAT_RGB8: PIXELFORMAT_RGB8,
+    PIXELFORMAT_RGBA8: PIXELFORMAT_RGBA8,
     PRIMITIVE_POINTS: PRIMITIVE_POINTS,
     PRIMITIVE_LINES: PRIMITIVE_LINES,
     PRIMITIVE_LINELOOP: PRIMITIVE_LINELOOP,
@@ -399,7 +450,7 @@ export const gfx = {
     RenderTarget: RenderTarget,
     ScopeId: ScopeId,
     Shader: Shader,
-    ShaderInput: ShaderInput,
+    ShaderInput: WebglShaderInput,
     Texture: Texture,
     UnsupportedBrowserError: UnsupportedBrowserError,
     VertexBuffer: VertexBuffer,
@@ -407,8 +458,27 @@ export const gfx = {
     VertexIterator: VertexIterator
 };
 
+const _viewport = new Vec4();
+
+export function drawFullscreenQuad(device, target, vertexBuffer, shader, rect) {
+
+    Debug.deprecated(`pc.drawFullscreenQuad is deprecated. When used as part of PostEffect, use PostEffect#drawQuad instead.`);
+
+    // convert rect in normalized space to viewport in pixel space
+    let viewport;
+    if (rect) {
+        const w = target ? target.width : device.width;
+        const h = target ? target.height : device.height;
+        viewport = _viewport.set(rect.x * w, rect.y * h, rect.z * w, rect.w * h);
+    }
+
+    drawQuadWithShader(device, target, shader, viewport);
+}
+
 export const posteffect = {
-    createFullscreenQuad: createFullscreenQuad,
+    createFullscreenQuad: (device) => {
+        return device.quadVertexBuffer;
+    },
     drawFullscreenQuad: drawFullscreenQuad,
     PostEffect: PostEffect,
     PostEffectQueue: PostEffectQueue
@@ -446,6 +516,40 @@ Object.keys(deprecatedChunks).forEach((chunkName) => {
     });
 });
 
+// We only provide backwards compatibility in debug builds, production builds have to be
+// as fast and small as possible.
+
+// #if _DEBUG
+
+/**
+ * Helper function to ensure a bit of backwards compatibility.
+ *
+ * @example
+ * toLitArgs('litShaderArgs.sheen.specularity'); // Result: 'litArgs_sheen_specularity'
+ * @param {string} src - The shader source which may generate shader errors.
+ * @returns {string} The backwards compatible shader source.
+ * @ignore
+ */
+function compatibilityForLitArgs(src) {
+    if (src.includes('litShaderArgs')) {
+        src = src.replace(/litShaderArgs([\.a-zA-Z]+)+/g, (a, b) => {
+            const newSource = 'litArgs' + b.replace(/\./g, '_');
+            Debug.deprecated(`Nested struct property access is deprecated, because it's crashing some devices. Please update your custom chunks manually. In particular ${a} should be ${newSource} now.`);
+            return newSource;
+        });
+    }
+    return src;
+}
+
+/**
+ * Add more backwards compatibility functions as needed.
+ */
+LitShader.prototype.handleCompatibility = function () {
+    this.fshader = compatibilityForLitArgs(this.fshader);
+};
+
+// #endif
+
 // Note: This was never public interface, but has been used in external scripts
 Object.defineProperties(RenderTarget.prototype, {
     _glFrameBuffer: {
@@ -459,9 +563,12 @@ Object.defineProperties(RenderTarget.prototype, {
     }
 });
 
-VertexFormat.prototype.update = function () {
-    Debug.deprecated('pc.VertexFormat.update is deprecated, and VertexFormat cannot be changed after it has been created.');
-};
+Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
+    get: function () {
+        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
+    }
+});
 
 Object.defineProperties(Texture.prototype, {
     rgbm: {
@@ -491,6 +598,24 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#_glTexture is no longer available, use Use pc.Texture.impl._glTexture instead.');
             return this.impl._glTexture;
         }
+    },
+
+    autoMipmap: {
+        get: function () {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
+            return this._mipmaps;
+        },
+        set: function (value) {
+            Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
+            this._mipmaps = value;
+        }
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
     }
 });
 
@@ -509,9 +634,95 @@ GraphicsDevice.prototype.removeShaderFromCache = function (shader) {
     getProgramLibrary(this).removeFromCache(shader);
 };
 
+BlendState.DEFAULT = Object.freeze(new BlendState());
+
+const _tempBlendState = new BlendState();
+const _tempDepthState = new DepthState();
+
+GraphicsDevice.prototype.setBlendFunction = function (blendSrc, blendDst) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendFunction is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+    _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrc, blendDst);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendFunctionSeparate = function (blendSrc, blendDst, blendSrcAlpha, blendDstAlpha) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendFunctionSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(currentBlendState.colorOp, blendSrc, blendDst);
+    _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, blendSrcAlpha, blendDstAlpha);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendEquation = function (blendEquation) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendEquation is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+    _tempBlendState.setAlphaBlend(blendEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setBlendEquationSeparate = function (blendEquation, blendAlphaEquation) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlendEquationSeparate is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorBlend(blendEquation, currentBlendState.colorSrcFactor, currentBlendState.colorDstFactor);
+    _tempBlendState.setAlphaBlend(blendAlphaEquation, currentBlendState.alphaSrcFactor, currentBlendState.alphaDstFactor);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setColorWrite = function (redWrite, greenWrite, blueWrite, alphaWrite) {
+    Debug.deprecated(`pc.GraphicsDevice#setColorWrite is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    const currentBlendState = this.blendState;
+    _tempBlendState.copy(currentBlendState);
+    _tempBlendState.setColorWrite(redWrite, greenWrite, blueWrite, alphaWrite);
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.getBlending = function () {
+    return this.blendState.blend;
+};
+
+GraphicsDevice.prototype.setBlending = function (blending) {
+    Debug.deprecated(`pc.GraphicsDevice#setBlending is deprecated, use pc.GraphicsDevice.setBlendState instead.`);
+    _tempBlendState.copy(this.blendState);
+    _tempBlendState.blend = blending;
+    this.setBlendState(_tempBlendState);
+};
+
+GraphicsDevice.prototype.setDepthWrite = function (write) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthWrite is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.write = write;
+    this.setDepthState(_tempDepthState);
+};
+
+GraphicsDevice.prototype.setDepthFunc = function (func) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthFunc is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.func = func;
+    this.setDepthState(_tempDepthState);
+};
+
+GraphicsDevice.prototype.setDepthTest = function (test) {
+    Debug.deprecated(`pc.GraphicsDevice#setDepthTest is deprecated, use pc.GraphicsDevice.setDepthState instead.`);
+    _tempDepthState.copy(this.depthState);
+    _tempDepthState.test = test;
+    this.setDepthState(_tempDepthState);
+};
+
+GraphicsDevice.prototype.getCullMode = function () {
+    return this.cullMode;
+};
+
 // SCENE
 
 export const PhongMaterial = StandardMaterial;
+export const LitOptions = LitShaderOptions;
 
 export const scene = {
     partitionSkin: partitionSkin,
@@ -527,7 +738,6 @@ export const scene = {
         createBox: createBox
     },
     BasicMaterial: BasicMaterial,
-    Command: Command,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -553,6 +763,20 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     }
 });
 
+Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
+    get: function () {
+        Debug.deprecated('pc.LayerComposition#_meshInstances is deprecated.');
+        return null;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'drawCalls', {
+    get: function () {
+        Debug.deprecated('pc.Scene#drawCalls is deprecated and no longer provides mesh instances.');
+        return null;
+    }
+});
+
 // scene.skyboxPrefiltered**** are deprecated
 ['128', '64', '32', '16', '8', '4'].forEach((size, index) => {
     Object.defineProperty(Scene.prototype, `skyboxPrefiltered${size}`, {
@@ -574,6 +798,17 @@ Object.defineProperty(Scene.prototype, 'models', {
             this._models = [];
         }
         return this._models;
+    }
+});
+
+Object.defineProperty(Layer.prototype, 'renderTarget', {
+    set: function (rt) {
+        Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
+        this._renderTarget = rt;
+        this._dirtyComposition = true;
+    },
+    get: function () {
+        return this._renderTarget;
     }
 });
 
@@ -637,12 +872,6 @@ Object.defineProperty(Batch.prototype, 'model', {
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
     getApplication().renderComposition(comp);
-};
-
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, staticLightList, pass, sortedLights) {
-    Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
-    const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, staticLightList, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {
@@ -757,6 +986,57 @@ Material.prototype.setShader = function (shader) {
     this.shader = shader;
 };
 
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blend', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blend is deprecated, use pc.Material.blendState.`);
+        this.blendState.blend = value;
+    },
+    get: function () {
+        return this.blendState.blend;
+    }
+});
+
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blendSrc', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blendSrc is deprecated, use pc.Material.blendState.`);
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, value, currentBlendState.colorDstFactor);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, value, currentBlendState.alphaDstFactor);
+        this.blendState = _tempBlendState;
+    },
+    get: function () {
+        return this.blendState.colorSrcFactor;
+    }
+});
+
+// Note: this is used by the Editor
+Object.defineProperty(Material.prototype, 'blendDst', {
+    set: function (value) {
+        Debug.deprecated(`pc.Material#blendDst is deprecated, use pc.Material.blendState.`);
+        const currentBlendState = this.blendState;
+        _tempBlendState.copy(currentBlendState);
+        _tempBlendState.setColorBlend(currentBlendState.colorOp, currentBlendState.colorSrcFactor, value);
+        _tempBlendState.setAlphaBlend(currentBlendState.alphaOp, currentBlendState.alphaSrcFactor, value);
+        this.blendState = _tempBlendState;
+    },
+    get: function () {
+        return this.blendState.colorDstFactor;
+    }
+});
+
+// shininess (range 0..100) - maps to internal gloss value (range 0..1)
+Object.defineProperty(StandardMaterial.prototype, 'shininess', {
+    get: function () {
+        return this.gloss * 100;
+    },
+    set: function (value) {
+        this.gloss = value * 0.01;
+    }
+});
+
 function _defineAlias(newName, oldName) {
     Object.defineProperty(StandardMaterial.prototype, oldName, {
         get: function () {
@@ -781,6 +1061,31 @@ _defineAlias('metalnessVertexColor', 'metalnessMapVertexColor');
 _defineAlias('glossVertexColor', 'glossMapVertexColor');
 _defineAlias('opacityVertexColor', 'opacityMapVertexColor');
 _defineAlias('lightVertexColor', 'lightMapVertexColor');
+
+_defineAlias('sheenGloss', 'sheenGlossiess');
+_defineAlias('clearCoatGloss', 'clearCostGlossiness');
+
+function _defineOption(name, newName) {
+    if (name !== 'pass') {
+        Object.defineProperty(StandardMaterialOptions.prototype, name, {
+            get: function () {
+                Debug.deprecated(`Getting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
+                return this.litOptions[newName || name];
+            },
+            set: function (value) {
+                Debug.deprecated(`Setting pc.Options#${name} has been deprecated as the property has been moved to pc.Options.LitShaderOptions#${newName || name}.`);
+                this.litOptions[newName || name] = value;
+            }
+        });
+    }
+}
+_defineOption('refraction', 'useRefraction');
+
+const tempOptions = new LitShaderOptions();
+const litOptionProperties = Object.getOwnPropertyNames(tempOptions);
+for (const litOption in litOptionProperties) {
+    _defineOption(litOptionProperties[litOption]);
+}
 
 // ANIMATION
 
@@ -960,30 +1265,14 @@ export const RIGIDBODY_WANTS_DEACTIVATION = BODYSTATE_WANTS_DEACTIVATION;
 export const RIGIDBODY_DISABLE_DEACTIVATION = BODYSTATE_DISABLE_DEACTIVATION;
 export const RIGIDBODY_DISABLE_SIMULATION = BODYSTATE_DISABLE_SIMULATION;
 
-export const fw = {
-    Application: Application,
-    Component: Component,
-    ComponentSystem: ComponentSystem,
-    Entity: Entity,
-    FillMode: {
-        NONE: FILLMODE_NONE,
-        FILL_WINDOW: FILLMODE_FILL_WINDOW,
-        KEEP_ASPECT: FILLMODE_KEEP_ASPECT
-    },
-    ResolutionMode: {
-        AUTO: RESOLUTION_AUTO,
-        FIXED: RESOLUTION_FIXED
-    }
-};
-
-Application.prototype.isFullscreen = function () {
-    Debug.deprecated('pc.Application#isFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.isFullscreen = function () {
+    Debug.deprecated('pc.AppBase#isFullscreen is deprecated. Use the Fullscreen API directly.');
 
     return !!document.fullscreenElement;
 };
 
-Application.prototype.enableFullscreen = function (element, success, error) {
-    Debug.deprecated('pc.Application#enableFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.enableFullscreen = function (element, success, error) {
+    Debug.deprecated('pc.AppBase#enableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     element = element || this.graphicsDevice.canvas;
 
@@ -1014,8 +1303,8 @@ Application.prototype.enableFullscreen = function (element, success, error) {
     }
 };
 
-Application.prototype.disableFullscreen = function (success) {
-    Debug.deprecated('pc.Application#disableFullscreen is deprecated. Use the Fullscreen API directly.');
+AppBase.prototype.disableFullscreen = function (success) {
+    Debug.deprecated('pc.AppBase#disableFullscreen is deprecated. Use the Fullscreen API directly.');
 
     // success callback
     const s = function () {
@@ -1030,8 +1319,8 @@ Application.prototype.disableFullscreen = function (success) {
     document.exitFullscreen();
 };
 
-Application.prototype.getSceneUrl = function (name) {
-    Debug.deprecated('pc.Application#getSceneUrl is deprecated. Use pc.Application#scenes and pc.SceneRegistry#find instead.');
+AppBase.prototype.getSceneUrl = function (name) {
+    Debug.deprecated('pc.AppBase#getSceneUrl is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#find instead.');
     const entry = this.scenes.find(name);
     if (entry) {
         return entry.url;
@@ -1039,34 +1328,34 @@ Application.prototype.getSceneUrl = function (name) {
     return null;
 };
 
-Application.prototype.loadScene = function (url, callback) {
-    Debug.deprecated('pc.Application#loadScene is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadScene instead.');
+AppBase.prototype.loadScene = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadScene is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadScene instead.');
     this.scenes.loadScene(url, callback);
 };
 
-Application.prototype.loadSceneHierarchy = function (url, callback) {
-    Debug.deprecated('pc.Application#loadSceneHierarchy is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneHierarchy instead.');
+AppBase.prototype.loadSceneHierarchy = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadSceneHierarchy is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadSceneHierarchy instead.');
     this.scenes.loadSceneHierarchy(url, callback);
 };
 
-Application.prototype.loadSceneSettings = function (url, callback) {
-    Debug.deprecated('pc.Application#loadSceneSettings is deprecated. Use pc.Application#scenes and pc.SceneRegistry#loadSceneSettings instead.');
+AppBase.prototype.loadSceneSettings = function (url, callback) {
+    Debug.deprecated('pc.AppBase#loadSceneSettings is deprecated. Use pc.AppBase#scenes and pc.SceneRegistry#loadSceneSettings instead.');
     this.scenes.loadSceneSettings(url, callback);
 };
 
-Application.prototype.renderMeshInstance = function (meshInstance, options) {
-    Debug.deprecated('pc.Application.renderMeshInstance is deprecated. Use pc.Application.drawMeshInstance.');
+AppBase.prototype.renderMeshInstance = function (meshInstance, options) {
+    Debug.deprecated('pc.AppBase.renderMeshInstance is deprecated. Use pc.AppBase.drawMeshInstance.');
     const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(null, null, null, meshInstance, layer);
 };
 
-Application.prototype.renderMesh = function (mesh, material, matrix, options) {
-    Debug.deprecated('pc.Application.renderMesh is deprecated. Use pc.Application.drawMesh.');
+AppBase.prototype.renderMesh = function (mesh, material, matrix, options) {
+    Debug.deprecated('pc.AppBase.renderMesh is deprecated. Use pc.AppBase.drawMesh.');
     const layer = options?.layer ? options.layer : this.scene.defaultDrawLayer;
     this.scene.immediate.drawMesh(material, matrix, mesh, null, layer);
 };
 
-Application.prototype._addLines = function (positions, colors, options) {
+AppBase.prototype._addLines = function (positions, colors, options) {
     const layer = (options && options.layer) ? options.layer : this.scene.layers.getLayerById(LAYERID_IMMEDIATE);
     const depthTest = (options && options.depthTest !== undefined) ? options.depthTest : true;
 
@@ -1074,9 +1363,9 @@ Application.prototype._addLines = function (positions, colors, options) {
     batch.addLines(positions, colors);
 };
 
-Application.prototype.renderLine = function (start, end, color) {
+AppBase.prototype.renderLine = function (start, end, color) {
 
-    Debug.deprecated('pc.Application.renderLine is deprecated. Use pc.Application.drawLine.');
+    Debug.deprecated('pc.AppBase.renderLine is deprecated. Use pc.AppBase.drawLine.');
 
     let endColor = color;
     let options;
@@ -1128,9 +1417,9 @@ Application.prototype.renderLine = function (start, end, color) {
     this._addLines([start, end], [color, endColor], options);
 };
 
-Application.prototype.renderLines = function (position, color, options) {
+AppBase.prototype.renderLines = function (position, color, options) {
 
-    Debug.deprecated('pc.Application.renderLines is deprecated. Use pc.Application.drawLines.');
+    Debug.deprecated('pc.AppBase.renderLines is deprecated. Use pc.AppBase.drawLines.');
 
     if (!options) {
         // default option
@@ -1167,8 +1456,8 @@ Application.prototype.renderLines = function (position, color, options) {
     this._addLines(position, color, options);
 };
 
-Application.prototype.enableVr = function () {
-    Debug.deprecated('pc.Application#enableVR is deprecated, and WebVR API is no longer supported.');
+AppBase.prototype.enableVr = function () {
+    Debug.deprecated('pc.AppBase#enableVR is deprecated, and WebVR API is no longer supported.');
 };
 
 Object.defineProperty(CameraComponent.prototype, 'node', {

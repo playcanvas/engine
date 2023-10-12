@@ -6,7 +6,7 @@ class VideoTextureExample {
     static NAME = 'Video Texture';
 
 
-    example(canvas: HTMLCanvasElement): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         // Create the application and start the update loop
         const app = new pc.Application(canvas, {});
@@ -46,7 +46,7 @@ class VideoTextureExample {
 
             // Create a texture to hold the video frame data
             const videoTexture = new pc.Texture(app.graphicsDevice, {
-                format: pc.PIXELFORMAT_R5_G6_B5,
+                format: pc.PIXELFORMAT_RGB565,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
                 magFilter: pc.FILTER_LINEAR,

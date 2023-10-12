@@ -1,15 +1,17 @@
 import { Debug } from '../../../core/debug.js';
-import { Asset } from '../../../framework/asset/asset.js';
-import { Texture } from '../../../platform/graphics/texture.js';
+
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_REPEAT,
     PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
     PIXELFORMAT_ETC1, PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
-    PIXELFORMAT_R8_G8_B8, PIXELFORMAT_R8_G8_B8_A8, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA,
+    PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA,
     PIXELFORMAT_111110F, PIXELFORMAT_RGB16F, PIXELFORMAT_RGBA16F,
     TEXHINT_ASSET
 } from '../../../platform/graphics/constants.js';
+import { Texture } from '../../../platform/graphics/texture.js';
+
+import { Asset } from '../../asset/asset.js';
 
 /** @typedef {import('../../handlers/texture.js').TextureParser} TextureParser */
 
@@ -30,8 +32,8 @@ const KNOWN_FORMATS = {
     0x8C03: PIXELFORMAT_PVRTC_2BPP_RGBA_1,
 
     // uncompressed formats
-    0x8051: PIXELFORMAT_R8_G8_B8,       // GL_RGB8
-    0x8058: PIXELFORMAT_R8_G8_B8_A8,    // GL_RGBA8
+    0x8051: PIXELFORMAT_RGB8,       // GL_RGB8
+    0x8058: PIXELFORMAT_RGBA8,    // GL_RGBA8
     0x8C41: PIXELFORMAT_SRGB,           // GL_SRGB8
     0x8C43: PIXELFORMAT_SRGBA,          // GL_SRGB8_ALPHA8
     0x8C3A: PIXELFORMAT_111110F,        // GL_R11F_G11F_B10F
@@ -60,7 +62,7 @@ class KtxParser {
         Asset.fetchArrayBuffer(url.load, callback, asset, this.maxRetries);
     }
 
-    open(url, data, device) {
+    open(url, data, device, textureOptions = {}) {
         const textureData = this.parse(data);
 
         if (!textureData) {
@@ -78,7 +80,9 @@ class KtxParser {
             height: textureData.height,
             format: textureData.format,
             cubemap: textureData.cubemap,
-            levels: textureData.levels
+            levels: textureData.levels,
+
+            ...textureOptions
         });
 
         texture.upload();

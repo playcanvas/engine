@@ -90,7 +90,7 @@ void main(void)
     };
 
 
-    example(canvas: HTMLCanvasElement, files: { 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }): void {
         // Create the app and start the update loop
         const app = new pc.Application(canvas, {});
 
@@ -127,7 +127,7 @@ void main(void)
             const texture = new pc.Texture(app.graphicsDevice, {
                 width: textureResolution,
                 height: textureResolution,
-                format: pc.PIXELFORMAT_R8_G8_B8_A8,
+                format: pc.PIXELFORMAT_RGBA8,
                 cubemap: false,
                 mipmaps: false,
                 minFilter: pc.FILTER_LINEAR,
@@ -159,7 +159,7 @@ void main(void)
             const directionSampler = app.graphicsDevice.scope.resolve("directionSampler");
 
             // @ts-ignore engine-tsd
-            if (app.graphicsDevice.webgl2) {
+            if (app.graphicsDevice.isWebGL2) {
 
                 // simulated particles
                 const maxNumPoints = 200000;
