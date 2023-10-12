@@ -1927,7 +1927,7 @@ class AppBase extends EventHandler {
             return;
         }
 
-        const canvasId = this.graphicsDevice.canvas.id;
+        const canvasId = this.graphicsDevice?.canvas?.id;
 
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
@@ -2052,7 +2052,9 @@ class AppBase extends EventHandler {
 
         script.app = null;
 
-        AppBase._applications[canvasId] = null;
+        if (canvasId !== undefined) {
+            AppBase._applications[canvasId] = null;
+        }
 
         if (getApplication() === this) {
             setApplication(null);
