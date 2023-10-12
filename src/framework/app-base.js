@@ -264,7 +264,10 @@ class AppBase extends EventHandler {
     init(appOptions) {
         const device = appOptions.graphicsDevice;
 
-        Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+        if (!device) {
+            Debug.assert(device, "The application cannot be created without a valid GraphicsDevice");
+            return
+        }
 
         /**
          * The graphics device used by the application.
@@ -1927,7 +1930,7 @@ class AppBase extends EventHandler {
             return;
         }
 
-        const canvasId = this.graphicsDevice.canvas.id;
+        const canvasId = this.graphicsDevice?.canvas?.id;
 
         this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
@@ -1940,7 +1943,7 @@ class AppBase extends EventHandler {
         }
         this._visibilityChangeHandler = null;
 
-        this.root.destroy();
+        this.root?.destroy();
         this.root = null;
 
         if (this.mouse) {
@@ -1975,72 +1978,76 @@ class AppBase extends EventHandler {
             this.controller = null;
         }
 
-        this.systems.destroy();
+        this.systems?.destroy();
 
         // layer composition
-        if (this.scene.layers) {
+        if (this.scene) {
             this.scene.layers.destroy();
+            this.scene.layers = null;
         }
 
         // destroy all texture resources
-        const assets = this.assets.list();
-        for (let i = 0; i < assets.length; i++) {
-            assets[i].unload();
-            assets[i].off();
+        if (this.assets) {
+            const assets = this.assets.list();
+            for (let i = 0; i < assets.length; i++) {
+                assets[i].unload();
+                assets[i].off();
+            }
+            this.assets.off();
         }
-        this.assets.off();
-
 
         // destroy bundle registry
-        this.bundles.destroy();
+        this.bundles?.destroy();
         this.bundles = null;
 
-        this.i18n.destroy();
+        this.i18n?.destroy();
         this.i18n = null;
 
-        const scriptHandler = this.loader.getHandler('script');
-        scriptHandler?.clearCache();
+        if (this.loader) {
+            const scriptHandler = this.loader.getHandler('script');
+            scriptHandler?.clearCache();
 
-        this.loader.destroy();
-        this.loader = null;
+            this.loader.destroy();
+            this.loader = null;
+        }
 
-        this.scene.destroy();
+        this.scene?.destroy();
         this.scene = null;
 
         this.systems = null;
         this.context = null;
 
         // script registry
-        this.scripts.destroy();
+        this.scripts?.destroy();
         this.scripts = null;
 
-        this.scenes.destroy();
+        this.scenes?.destroy();
         this.scenes = null;
 
         this.lightmapper?.destroy();
         this.lightmapper = null;
 
-        if (this._batcher) {
-            this._batcher.destroy();
-            this._batcher = null;
-        }
+        this._batcher?.destroy();
+        this._batcher = null;
 
         this._entityIndex = {};
 
-        this.defaultLayerDepth.onPreRenderOpaque = null;
-        this.defaultLayerDepth.onPostRenderOpaque = null;
-        this.defaultLayerDepth.onDisable = null;
-        this.defaultLayerDepth.onEnable = null;
-        this.defaultLayerDepth = null;
+        if (this.defaultLayerDepth) {
+            this.defaultLayerDepth.onPreRenderOpaque = null;
+            this.defaultLayerDepth.onPostRenderOpaque = null;
+            this.defaultLayerDepth.onDisable = null;
+            this.defaultLayerDepth.onEnable = null;
+            this.defaultLayerDepth = null;
+        }
         this.defaultLayerWorld = null;
 
         this.xr?.end();
         this.xr?.destroy();
 
-        this.renderer.destroy();
+        this.renderer?.destroy();
         this.renderer = null;
 
-        this.graphicsDevice.destroy();
+        this.graphicsDevice?.destroy();
         this.graphicsDevice = null;
 
         this.tick = null;
@@ -2052,7 +2059,9 @@ class AppBase extends EventHandler {
 
         script.app = null;
 
-        AppBase._applications[canvasId] = null;
+        if (canvasId !== undefined) {
+            AppBase._applications[canvasId] = null;
+        }
 
         if (getApplication() === this) {
             setApplication(null);
