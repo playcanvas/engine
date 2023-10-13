@@ -204,11 +204,12 @@ const run = () => {
         } else if (curBranch.startsWith(releaseBranchName)) {
             finalizeRelease(curBranch);
             return 0;
-        } else {
-            console.error(`error: unrecognized branch '${curBranch}.`);
-            printUsage();
-            return 1;
         }
+
+        console.error(`error: unrecognized branch '${curBranch}.`);
+        printUsage();
+        return 1;
+
     } else if (process.argv.length === 3) {
         // operation specified as arg
         const operation = process.argv[2];
