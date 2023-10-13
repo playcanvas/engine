@@ -95,7 +95,7 @@ class WebglTexture {
         this._glTexture = gl.createTexture();
 
         this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-            (texture._volume ? gl.TEXTURE_3D : 
+            (texture._volume ? gl.TEXTURE_3D :
                 (texture._array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
