@@ -1,10 +1,9 @@
 import { now } from '../../core/time.js';
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
     FOG_NONE, FOG_LINEAR,

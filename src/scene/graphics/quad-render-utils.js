@@ -1,10 +1,6 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
 import { RenderPassQuad } from './render-pass-quad.js';
 

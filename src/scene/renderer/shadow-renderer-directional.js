@@ -1,13 +1,12 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
+    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE
 } from '../constants.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import { ShadowMap } from './shadow-map.js';
 import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js';

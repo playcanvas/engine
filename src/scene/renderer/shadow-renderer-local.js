@@ -1,4 +1,3 @@
-import { DebugHelper } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 import { ShadowMap } from './shadow-map.js';
@@ -6,7 +5,6 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
 
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
 
 /**
