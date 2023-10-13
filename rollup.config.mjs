@@ -198,9 +198,9 @@ function buildTarget(buildType, moduleFormat) {
         es6: '.mjs'
     };
 
-    /** @type {Record<string, 'umd'|'es'>} */
+    /** @type {Record<string, 'iife'|'es'>} */
     const outputFormat = {
-        es5: 'umd',
+        es5: 'iife',
         es6: 'es'
     };
 
@@ -288,7 +288,7 @@ function scriptTarget(name, input, output) {
             name: name,
             banner: getBanner(''),
             file: output || input.replace('.mjs', '.js'),
-            format: 'umd',
+            format: 'iife',
             indent: '\t',
             globals: { playcanvas: 'pc' }
         },
