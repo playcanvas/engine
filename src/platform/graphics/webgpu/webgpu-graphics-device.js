@@ -167,8 +167,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
         const results = await Promise.all([
-            import(twgslUrl).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-            import(glslangUrl).then(module => module.default())
+            import(`${twgslUrl}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(`${glslangUrl}`).then(module => module.default())
         ]);
 
         this.twgsl = results[0];

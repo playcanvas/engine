@@ -167,7 +167,12 @@ class Layer {
      */
     camerasSet = new Set();
 
-    _dirtyCameras = false;
+    /**
+     * True if the composition is invalidated.
+     *
+     * @ignore
+     */
+    _dirtyComposition = false;
 
     /**
      * Create a new Layer instance.
@@ -445,6 +450,7 @@ class Layer {
      */
     set enabled(val) {
         if (val !== this._enabled) {
+            this._dirtyComposition = true;
             this._enabled = val;
             if (val) {
                 this.incrementCounter();
@@ -467,7 +473,7 @@ class Layer {
      */
     set clearColorBuffer(val) {
         this._clearColorBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearColorBuffer() {
@@ -481,7 +487,7 @@ class Layer {
      */
     set clearDepthBuffer(val) {
         this._clearDepthBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearDepthBuffer() {
@@ -495,7 +501,7 @@ class Layer {
      */
     set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearStencilBuffer() {
@@ -850,7 +856,7 @@ class Layer {
         if (!this.camerasSet.has(camera.camera)) {
             this.camerasSet.add(camera.camera);
             this.cameras.push(camera);
-            this._dirtyCameras = true;
+            this._dirtyComposition = true;
         }
     }
 
@@ -865,7 +871,7 @@ class Layer {
             this.camerasSet.delete(camera.camera);
             const index = this.cameras.indexOf(camera);
             this.cameras.splice(index, 1);
-            this._dirtyCameras = true;
+            this._dirtyComposition = true;
         }
     }
 
@@ -875,7 +881,7 @@ class Layer {
     clearCameras() {
         this.cameras.length = 0;
         this.camerasSet.clear();
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     /**

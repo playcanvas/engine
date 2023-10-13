@@ -15,8 +15,7 @@ import {
 
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
-import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
-import { BlendState } from '../../platform/graphics/blend-state.js';
+import { RenderPassRenderActions } from './render-pass-render-actions.js';
 
 const _drawCallList = {
     drawCalls: [],
@@ -775,8 +774,7 @@ class ForwardRenderer extends Renderer {
         for (let i = startIndex; i < renderActions.length; i++) {
 
             const renderAction = renderActions[i];
-            const layer = layerComposition.layerList[renderAction.layerIndex];
-            const camera = renderAction.camera;
+            const { layer, camera } = renderAction;
 
             // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
             const depthPass = camera.camera.renderPassDepthGrab;
@@ -784,11 +782,6 @@ class ForwardRenderer extends Renderer {
 
                 depthPass.update(this.scene);
                 frameGraph.addRenderPass(depthPass);
-            }
-
-            // skip disabled layers
-            if (!renderAction.isLayerEnabled(layerComposition)) {
-                continue;
             }
 
             const isDepthLayer = layer.id === LAYERID_DEPTH;
@@ -811,15 +804,9 @@ class ForwardRenderer extends Renderer {
                 renderTarget = renderAction.renderTarget;
             }
 
-            // find the next enabled render action
-            let nextIndex = i + 1;
-            while (renderActions[nextIndex] && !renderActions[nextIndex].isLayerEnabled(layerComposition)) {
-                nextIndex++;
-            }
-
             // info about the next render action
-            const nextRenderAction = renderActions[nextIndex];
-            const isNextLayerDepth = nextRenderAction ? layerComposition.layerList[nextRenderAction.layerIndex].id === LAYERID_DEPTH : false;
+            const nextRenderAction = renderActions[i + 1];
+            const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
             const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
 
             // end of the block using the same render target
@@ -866,53 +853,14 @@ class ForwardRenderer extends Renderer {
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
-        // render the render actions in the range
-        const range = { start: startIndex, end: endIndex };
-        const renderPass = new RenderPass(this.device, () => {
-            this.renderPassRenderActions(layerComposition, range);
-        });
+        const renderPass = new RenderPassRenderActions(this.device, layerComposition, this.scene, this);
+        renderPass.init(renderTarget);
 
         const renderActions = layerComposition._renderActions;
-        const startRenderAction = renderActions[startIndex];
-        const endRenderAction = renderActions[endIndex];
-        const camera = startRenderAction.camera;
-
-        if (camera) {
-
-            // callback on the camera component before rendering with this camera for the first time
-            if (startRenderAction.firstCameraUse && camera.onPreRender) {
-                renderPass._before = () => {
-                    camera.onPreRender();
-                };
-            }
-
-            // callback on the camera component when we're done rendering with this camera
-            if (endRenderAction.lastCameraUse && camera.onPostRender) {
-                renderPass._after = () => {
-                    camera.onPostRender();
-                };
-            }
+        for (let i = startIndex; i <= endIndex; i++) {
+            renderPass.addRenderAction(renderActions[i]);
         }
 
-        renderPass.init(renderTarget);
-        renderPass.fullSizeClearRect = camera.camera.fullSizeClearRect;
-
-        // if camera rendering covers the full viewport
-        if (renderPass.fullSizeClearRect) {
-
-            if (startRenderAction.clearColor) {
-                renderPass.setClearColor(camera.camera.clearColor);
-            }
-            if (startRenderAction.clearDepth) {
-                renderPass.setClearDepth(camera.camera.clearDepth);
-            }
-            if (startRenderAction.clearStencil) {
-                renderPass.setClearStencil(camera.camera.clearStencil);
-            }
-        }
-
-        DebugHelper.setName(renderPass, `RenderAction ${startIndex}-${endIndex} ` +
-                            `Cam: ${camera ? camera.entity.name : '-'}`);
         frameGraph.addRenderPass(renderPass);
     }
 
@@ -954,167 +902,6 @@ class ForwardRenderer extends Renderer {
 
         // trigger postprocessing for camera
         camera.onPostprocessing();
-    }
-
-    /**
-     * Render pass representing the layer composition's render actions in the specified range.
-     *
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition to render.
-     * @ignore
-     */
-    renderPassRenderActions(comp, range) {
-
-        const renderActions = comp._renderActions;
-        for (let i = range.start; i <= range.end; i++) {
-            this.renderRenderAction(comp, renderActions[i], i === range.start);
-        }
-    }
-
-    /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
-     * @param {boolean} firstRenderAction - True if this is the first render action in the render pass.
-     */
-    renderRenderAction(comp, renderAction, firstRenderAction) {
-
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-        const device = this.device;
-
-        // layer
-        const layerIndex = renderAction.layerIndex;
-        const layer = comp.layerList[layerIndex];
-        const transparent = comp.subLayerList[layerIndex];
-
-        const camera = renderAction.camera;
-        const cameraPass = comp.camerasMap.get(camera);
-
-        if (!renderAction.isLayerEnabled(comp)) {
-            return;
-        }
-
-        DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
-        DebugGraphics.pushGpuMarker(this.device, layer.name);
-
-        // #if _PROFILER
-        const drawTime = now();
-        // #endif
-
-        // Call prerender callback if there's one
-        if (!transparent && layer.onPreRenderOpaque) {
-            layer.onPreRenderOpaque(cameraPass);
-        } else if (transparent && layer.onPreRenderTransparent) {
-            layer.onPreRenderTransparent(cameraPass);
-        }
-
-        // Called for the first sublayer and for every camera
-        if (!(layer._preRenderCalledForCameras & (1 << cameraPass))) {
-            if (layer.onPreRender) {
-                layer.onPreRender(cameraPass);
-            }
-            layer._preRenderCalledForCameras |= 1 << cameraPass;
-        }
-
-        if (camera) {
-
-            this.setupViewport(camera.camera, renderAction.renderTarget);
-
-            // if this is not a first render action to the render target, or if the render target was not
-            // fully cleared on pass start, we need to execute clears here
-            if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
-                this.clear(camera.camera, renderAction.clearColor, renderAction.clearDepth, renderAction.clearStencil);
-            }
-
-            // #if _PROFILER
-            const sortTime = now();
-            // #endif
-
-            layer.sortVisible(camera.camera, transparent);
-
-            // #if _PROFILER
-            this._sortTime += now() - sortTime;
-            // #endif
-
-            const culledInstances = layer.getCulledInstances(camera.camera);
-            const visible = transparent ? culledInstances.transparent : culledInstances.opaque;
-
-            // add debug mesh instances to visible list
-            this.scene.immediate.onPreRenderLayer(layer, visible, transparent);
-
-            // set up layer uniforms
-            if (layer.requiresLightCube) {
-                this.lightCube.update(this.scene.ambientLight, layer._lights);
-                this.constantLightCube.setValue(this.lightCube.colors);
-            }
-
-            // upload clustered lights uniforms
-            if (clusteredLightingEnabled && renderAction.lightClusters) {
-                renderAction.lightClusters.activate();
-
-                // debug rendering of clusters
-                if (!this.clustersDebugRendered && this.scene.lighting.debugLayer === layer.id) {
-                    this.clustersDebugRendered = true;
-                    WorldClustersDebug.render(renderAction.lightClusters, this.scene);
-                }
-            }
-
-            // Set the not very clever global variable which is only useful when there's just one camera
-            this.scene._activeCamera = camera.camera;
-
-            const viewCount = this.setCameraUniforms(camera.camera, renderAction.renderTarget);
-            if (device.supportsUniformBuffers) {
-                this.setupViewUniformBuffers(renderAction.viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
-            }
-
-            // enable flip faces if either the camera has _flipFaces enabled or the render target
-            // has flipY enabled
-            const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
-
-            // shader pass - use setting from camera if available, otherwise use layer setting
-            const shaderPass = camera.camera.shaderPassInfo?.index ?? layer.shaderPass;
-
-            const draws = this._forwardDrawCalls;
-            this.renderForward(camera.camera,
-                               visible,
-                               layer.splitLights,
-                               shaderPass,
-                               layer.onDrawCall,
-                               layer,
-                               flipFaces);
-            layer._forwardDrawCalls += this._forwardDrawCalls - draws;
-
-            // Revert temp frame stuff
-            // TODO: this should not be here, as each rendering / clearing should explicitly set up what
-            // it requires (the properties are part of render pipeline on WebGPU anyways)
-            device.setBlendState(BlendState.NOBLEND);
-            device.setStencilState(null, null);
-            device.setAlphaToCoverage(false); // don't leak a2c state
-            device.setDepthBias(false);
-        }
-
-        // Call layer's postrender callback if there's one
-        if (!transparent && layer.onPostRenderOpaque) {
-            layer.onPostRenderOpaque(cameraPass);
-        } else if (transparent && layer.onPostRenderTransparent) {
-            layer.onPostRenderTransparent(cameraPass);
-        }
-        if (layer.onPostRender && !(layer._postRenderCalledForCameras & (1 << cameraPass))) {
-            layer._postRenderCounter &= ~(transparent ? 2 : 1);
-            if (layer._postRenderCounter === 0) {
-                layer.onPostRender(cameraPass);
-                layer._postRenderCalledForCameras |= 1 << cameraPass;
-                layer._postRenderCounter = layer._postRenderCounterMax;
-            }
-        }
-
-        DebugGraphics.popGpuMarker(this.device);
-        DebugGraphics.popGpuMarker(this.device);
-
-        // #if _PROFILER
-        layer._renderTime += now() - drawTime;
-        // #endif
     }
 }
 
