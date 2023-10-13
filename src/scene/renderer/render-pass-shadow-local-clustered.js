@@ -7,7 +7,7 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
  * @ignore
  */
 class RenderPassShadowLocalClustered extends RenderPass {
-    constructor(device, shadowRenderer, shadowRendererLocal, localLights) {
+    constructor(device, shadowRenderer, shadowRendererLocal) {
         super(device);
 
         this.requiresCubemaps = false;

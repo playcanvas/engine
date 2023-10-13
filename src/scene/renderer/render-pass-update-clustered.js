@@ -39,12 +39,8 @@ class RenderPassUpdateClustered extends RenderPass {
     }
 
     destroy() {
-
         this.cookiesRenderPass.destroy();
         this.cookiesRenderPass = null;
-
-        this.shadowRenderPass.destroy();
-        this.shadowRenderPass = null;
     }
 
     execute() {
