@@ -2,13 +2,13 @@ import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
 
 // 1st party Rollup plugins
-import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
 
 // 3rd party Rollup plugins
 import dts from 'rollup-plugin-dts';
+import esbuild from 'rollup-plugin-esbuild';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
@@ -19,7 +19,7 @@ import { spacesToTabs } from './utils/rollup-spaces-to-tabs.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
-/** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
+/** @typedef {import('rollup-plugin-esbuild').Options } BuildOptions */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
 /**
@@ -65,54 +65,54 @@ function getBanner(config) {
 }
 
 /**
- * The ES5 options for babel(...) plugin.
+ * The ES5 options for esbuild(...) plugin.
  *
  * @param {string} buildType - Only 'debug' requires special handling so far.
- * @returns {RollupBabelInputPluginOptions} The babel options.
+ * @returns {BuildOptions} The build options.
  */
 const es5Options = buildType => ({
-    babelHelpers: 'bundled',
-    babelrc: false,
-    comments: buildType === 'debug',
-    compact: false,
-    minified: false,
-    presets: [
-        [
-            '@babel/preset-env', {
-                loose: true,
-                modules: false,
-                targets: {
-                    ie: '11'
-                }
-            }
-        ]
-    ]
+    // babelHelpers: 'bundled',
+    // babelrc: false,
+    // comments: buildType === 'debug',
+    // compact: false,
+    // minified: false,
+    // presets: [
+    //     [
+    //         '@babel/preset-env', {
+    //             loose: true,
+    //             modules: false,
+    //             targets: {
+    //                 ie: '11'
+    //             }
+    //         }
+    //     ]
+    // ]
 });
 
 /**
- * The ES6 options for babel(...) plugin.
+ * The ES6 options for esbuild(...) plugin.
  *
  * @param {string} buildType - Only 'debug' requires special handling so far.
- * @returns {RollupBabelInputPluginOptions} The babel options.
+ * @returns {BuildOptions} The build options.
  */
 const moduleOptions = buildType => ({
-    babelHelpers: 'bundled',
-    babelrc: false,
-    comments: buildType === 'debug',
-    compact: false,
-    minified: false,
-    presets: [
-        [
-            '@babel/preset-env', {
-                bugfixes: true,
-                loose: true,
-                modules: false,
-                targets: {
-                    esmodules: true
-                }
-            }
-        ]
-    ]
+    // babelHelpers: 'bundled',
+    // babelrc: false,
+    // comments: buildType === 'debug',
+    // compact: false,
+    // minified: false,
+    // presets: [
+    //     [
+    //         '@babel/preset-env', {
+    //             bugfixes: true,
+    //             loose: true,
+    //             modules: false,
+    //             targets: {
+    //                 esmodules: true
+    //             }
+    //         }
+    //     ]
+    // ]
 });
 
 const stripFunctions = [
@@ -198,9 +198,9 @@ function buildTarget(buildType, moduleFormat) {
         es6: '.mjs'
     };
 
-    /** @type {Record<string, 'umd'|'es'>} */
+    /** @type {Record<string, 'iife'|'es'>} */
     const outputFormat = {
-        es5: 'umd',
+        es5: 'iife',
         es6: 'es'
     };
 
@@ -208,6 +208,7 @@ function buildTarget(buildType, moduleFormat) {
         debug: 'inline',
         release: null
     };
+
     /** @type {OutputOptions} */
     const outputOptions = {
         banner: moduleFormat === 'es5' && getBanner(banner[buildType]),
@@ -253,7 +254,7 @@ function buildTarget(buildType, moduleFormat) {
         functions: stripFunctions
     };
 
-    const babelOptions = {
+    const esbuildOptions = {
         es5: es5Options(buildType),
         es6: moduleOptions(buildType)
     };
@@ -267,7 +268,7 @@ function buildTarget(buildType, moduleFormat) {
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
-            babel(babelOptions[moduleFormat]),
+            esbuild(esbuildOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]
     };
@@ -288,13 +289,13 @@ function scriptTarget(name, input, output) {
             name: name,
             banner: getBanner(''),
             file: output || input.replace('.mjs', '.js'),
-            format: 'umd',
+            format: 'iife',
             indent: '\t',
             globals: { playcanvas: 'pc' }
         },
         plugins: [
             resolve(),
-            babel(es5Options('release')),
+            esbuild(es5Options('release')),
             spacesToTabs(true)
         ],
         external: ['playcanvas'],
@@ -323,7 +324,7 @@ function scriptTargetEs6(name, input, output) {
         },
         plugins: [
             resolve(),
-            babel(moduleOptions('release')),
+            esbuild(moduleOptions('release')),
             spacesToTabs(true)
         ],
         external: ['playcanvas', 'fflate']
