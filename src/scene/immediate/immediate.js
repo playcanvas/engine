@@ -65,13 +65,7 @@ class Immediate {
 
     // returns a batch for rendering lines to a layer with required depth testing state
     getBatch(layer, depthTest) {
-        // get batch for the material
-        const material = depthTest ? this.materialDepth : this.materialNoDepth;
-        return this.getBatchByMaterial(material, layer);
-    }
 
-    // returns a batch for rendering lines to a layer with given material
-    getBatchByMaterial(material, layer) {
         // get batches for the layer
         let batches = this.batchesMap.get(layer);
         if (!batches) {
@@ -81,6 +75,9 @@ class Immediate {
 
         // add it for rendering
         this.allBatches.add(batches);
+
+        // get batch for the material
+        const material = depthTest ? this.materialDepth : this.materialNoDepth;
         return batches.getBatch(material, layer);
     }
 

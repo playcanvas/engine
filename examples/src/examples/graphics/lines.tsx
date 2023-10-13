@@ -4,44 +4,8 @@ class LinesExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Lines';
     static WEBGPU_ENABLED = true;
-    static FILES = {
-        'shader.vert': /* glsl */`
-attribute vec3 aPosition;
-attribute vec2 aTAndLength;
-attribute vec4 aColor;
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_viewProjection;
-
-varying vec2 vTAndLength;
-varying vec4 vColor;
-
-void main(void)
-{
-    vTAndLength = aTAndLength;
-    vColor = aColor;
-    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
-}`,
-        'shader.frag': /* glsl */`
-precision mediump float;
-
-varying vec2 vTAndLength;
-varying vec4 vColor;
-
-uniform float uDashSize;
-uniform float uDashGap;
-
-void main(void)
-{
-    if (mod(vTAndLength.x * vTAndLength.y, uDashSize + uDashGap) > uDashSize) {
-        discard;
-    }
-    gl_FragColor = vColor;
-}`
-    };
-
-
-    example(canvas: HTMLCanvasElement, deviceType: string, files: { 'shader.vert': string, 'shader.frag': string }): void {
+    example(canvas: HTMLCanvasElement, deviceType: string): void {
 
         const assets = {
             'helipad': new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
@@ -74,7 +38,6 @@ void main(void)
             const app = new pc.AppBase(canvas);
             app.init(createOptions);
 
-
             // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
             app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
             app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -83,23 +46,6 @@ void main(void)
             assetListLoader.load(() => {
 
                 app.start();
-
-                // Create a shader definition and shader from the vertex and fragment shaders
-                // for the dashed lines material
-                const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'dashed-line-shader', {
-                    aPosition: pc.SEMANTIC_POSITION,
-                    aTAndLength: pc.SEMANTIC_TEXCOORD0,
-                    aColor: pc.SEMANTIC_COLOR
-                });
-
-                // Create a new material with the new shader
-                const material = new pc.Material();
-                material.shader = shader;
-                material.blendType = pc.BLEND_NORMAL;
-                material.depthTest = true;
-                material.setParameter('uDashSize', 2);
-                material.setParameter('uDashGap', 1);
-                material.update();
 
                 // setup skydome
                 app.scene.skyboxMip = 2;
@@ -239,8 +185,9 @@ void main(void)
                         grayLinePositions.push(entity.getPosition(), new pc.Vec3(0, 10, 0));
                         grayLineColors.push(pc.Color.GRAY, pc.Color.GRAY);
                     }
+
                     // render all gray lines
-                    app.drawLinesWithMaterial(material, grayLinePositions, grayLineColors);
+                    app.drawLines(grayLinePositions, grayLineColors);
                 });
             });
         });
