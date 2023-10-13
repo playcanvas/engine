@@ -1219,20 +1219,6 @@ class Renderer {
         this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }
 
-    updateClusters(renderPasses) {
-
-        // #if _PROFILER
-        const startTime = now();
-        // #endif
-
-        this.worldClustersAllocator.update(renderPasses, this.scene.gammaCorrection, this.scene.lighting);
-
-        // #if _PROFILER
-        this._lightClustersTime += now() - startTime;
-        this._lightClusters = this.worldClustersAllocator.count;
-        // #endif
-    }
-
     /**
      * Updates the layer composition for rendering.
      *

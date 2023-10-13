@@ -16,6 +16,9 @@ import {
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassRenderActions } from './render-pass-render-actions.js';
+import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
+import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clustered.js';
+import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
 
 const _drawCallList = {
     drawCalls: [],
@@ -743,28 +746,16 @@ class ForwardRenderer extends Renderer {
             }
 
             // local shadows - these are shared by all cameras (not entirely correctly)
-            {
-                const renderPass = new RenderPass(this.device);
-                DebugHelper.setName(renderPass, 'ClusteredLocalShadows');
-                renderPass.requiresCubemaps = false;
+            if (this.scene.lighting.shadowsEnabled) {
+                const renderPass = new RenderPassShadowLocalClustered(this.device, this.shadowRenderer, this._shadowRendererLocal, this.localLights);
                 frameGraph.addRenderPass(renderPass);
-
-                // render shadows only when needed
-                if (this.scene.lighting.shadowsEnabled) {
-                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, this.localLights);
-                }
             }
 
             // update clusters all the time - this needs to happen after cookies and shadows
             // as it uses data from both (shadow camera and similar)
             {
-                const renderPass = new RenderPass(this.device);
-                DebugHelper.setName(renderPass, 'UpdateClusters');
+                const renderPass = new RenderPassUpdateClustered(this.device, frameGraph, this);
                 frameGraph.addRenderPass(renderPass);
-
-                renderPass._after = () => {
-                    this.updateClusters(frameGraph.renderPasses);
-                };
             }
 
         } else {
@@ -850,11 +841,7 @@ class ForwardRenderer extends Renderer {
 
                     // postprocessing
                     if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                        const renderPass = new RenderPass(this.device, () => {
-                            this.renderPassPostprocessing(renderAction);
-                        });
-                        renderPass.requiresCubemaps = false;
-                        DebugHelper.setName(renderPass, `Postprocess`);
+                        const renderPass = new RenderPassPostprocessing(this.device, this, renderAction);
                         frameGraph.addRenderPass(renderPass);
                     }
 
@@ -909,15 +896,6 @@ class ForwardRenderer extends Renderer {
 
         // GPU update for visible objects requiring one
         this.gpuUpdate(this.processingMeshInstances);
-    }
-
-    renderPassPostprocessing(renderAction) {
-
-        const camera = renderAction.camera;
-        Debug.assert(renderAction.triggerPostprocess && camera.onPostprocessing);
-
-        // trigger postprocessing for camera
-        camera.onPostprocessing();
     }
 }
 

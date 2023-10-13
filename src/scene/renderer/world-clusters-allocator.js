@@ -137,10 +137,10 @@ class WorldClustersAllocator {
         tempClusterArray.length = 0;
     }
 
-    update(renderActions, gammaCorrection, lighting) {
+    update(renderPasses, gammaCorrection, lighting) {
 
         // assign clusters to render actions
-        this.assign(renderActions);
+        this.assign(renderPasses);
 
         // update all unique clusters
         this._clusters.forEach((renderAction) => {
