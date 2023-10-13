@@ -160,6 +160,20 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
+     * Render passes which need to be executed before this pass.
+     *
+     * @type {RenderPass[]}
+     */
+    beforePasses = [];
+
+    /**
+     * Render passes which need to be executed after this pass.
+     *
+     * @type {RenderPass[]}
+     */
+    afterPasses = [];
+
+    /**
      * Creates an instance of the RenderPass.
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
@@ -169,9 +183,6 @@ class RenderPass {
         DebugHelper.setName(this, this.constructor.name);
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
-    }
-
-    destroy() {
     }
 
     /**

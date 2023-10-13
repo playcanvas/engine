@@ -1,5 +1,7 @@
 import { now } from "../../core/time.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { RenderPassCookieRenderer } from "./render-pass-cookie-renderer.js";
+import { RenderPassShadowLocalClustered } from "./render-pass-shadow-local-clustered.js";
 
 /**
  * A render pass used to update clustered lighting data - shadows, cookies, world clusters.
@@ -7,10 +9,42 @@ import { RenderPass } from "../../platform/graphics/render-pass.js";
  * @ignore
  */
 class RenderPassUpdateClustered extends RenderPass {
-    constructor(device, frameGraph, renderer) {
+    constructor(device, renderer, shadowRenderer, shadowRendererLocal, lightTextureAtlas) {
         super(device);
-        this.frameGraph = frameGraph;
         this.renderer = renderer;
+        this.frameGraph = null;
+
+        // render cookies for all local visible lights
+        this.cookiesRenderPass = RenderPassCookieRenderer.create(lightTextureAtlas.cookieRenderTarget, lightTextureAtlas.cubeSlotsOffsets);
+        this.beforePasses.push(this.cookiesRenderPass);
+
+        // local shadows - these are shared by all cameras (not entirely correctly)
+        this.shadowRenderPass = new RenderPassShadowLocalClustered(device, shadowRenderer, shadowRendererLocal);
+        this.beforePasses.push(this.shadowRenderPass);
+    }
+
+    update(frameGraph, shadowsEnabled, cookiesEnabled, lights, localLights) {
+
+        this.frameGraph = frameGraph;
+
+        this.cookiesRenderPass.enabled = cookiesEnabled;
+        if (cookiesEnabled) {
+            this.cookiesRenderPass.update(lights);
+        }
+
+        this.shadowRenderPass.enabled = shadowsEnabled;
+        if (shadowsEnabled) {
+            this.shadowRenderPass.update(localLights);
+        }
+    }
+
+    destroy() {
+
+        this.cookiesRenderPass.destroy();
+        this.cookiesRenderPass = null;
+
+        this.shadowRenderPass.destroy();
+        this.shadowRenderPass = null;
     }
 
     execute() {

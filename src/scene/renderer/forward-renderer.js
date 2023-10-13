@@ -16,8 +16,6 @@ import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassRenderActions } from './render-pass-render-actions.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
-import { RenderPassShadowLocalClustered } from './render-pass-shadow-local-clustered.js';
-import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
 
 const _drawCallList = {
     drawCalls: [],
@@ -727,35 +725,19 @@ class ForwardRenderer extends Renderer {
      */
     buildFrameGraph(frameGraph, layerComposition) {
 
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        const scene = this.scene;
         const webgl1 = this.device.isWebGL1;
         frameGraph.reset();
 
         // update composition, cull everything, assign atlas slots for clustered lighting
         this.update(layerComposition);
 
-        // clustered lighting render passes
-        if (clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled) {
 
-            // render cookies for all local visible lights
-            if (this.scene.lighting.cookiesEnabled) {
-                const cookiesRenderPass = this.cookiesRenderPass;
-                cookiesRenderPass.update(this.lights);
-                frameGraph.addRenderPass(cookiesRenderPass);
-            }
-
-            // local shadows - these are shared by all cameras (not entirely correctly)
-            if (this.scene.lighting.shadowsEnabled) {
-                const renderPass = new RenderPassShadowLocalClustered(this.device, this.shadowRenderer, this._shadowRendererLocal, this.localLights);
-                frameGraph.addRenderPass(renderPass);
-            }
-
-            // update clusters all the time - this needs to happen after cookies and shadows
-            // as it uses data from both (shadow camera and similar)
-            {
-                const renderPass = new RenderPassUpdateClustered(this.device, frameGraph, this);
-                frameGraph.addRenderPass(renderPass);
-            }
+            // clustered lighting passes
+            const { shadowsEnabled, cookiesEnabled } = scene.lighting;
+            this._renderPassUpdateClustered.update(frameGraph, shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
+            frameGraph.addRenderPass(this._renderPassUpdateClustered);
 
         } else {
 
