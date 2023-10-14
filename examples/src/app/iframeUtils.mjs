@@ -48,13 +48,11 @@ function iframeHotReload() {
 function iframeDestroy() {
     getIframeWindow()?.dispatchEvent(new CustomEvent('destroy'));
 }
-/**
- * Please use this only for small checks which don't justify event juggling:
- * const appReady = iframeEval('!!app');
- * @param {string} code - The code.
- */
-function iframeEval(code) {
-    return getIframeWindow()?.eval(code);
+function iframeReady() {
+    try {
+        return getIframeWindow()?.eval('ready === true');
+    } catch (e) {}
+    return false;
 }
 export {
     getIframeWindow,
@@ -65,5 +63,5 @@ export {
     iframeReload,
     iframeHotReload,
     iframeDestroy,
-    iframeEval,
+    iframeReady,
 };
