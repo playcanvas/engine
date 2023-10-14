@@ -7,11 +7,12 @@
 class RenderAction {
     constructor() {
 
-        // index into a layer stored in LayerComposition.layerList
-        this.layerIndex = 0;
-
         // the layer
+        /** @type {import('../layer.js').Layer|null} */
         this.layer = null;
+
+        // true if this uses transparent sublayer, opaque otherwise
+        this.transparent = false;
 
         // camera of type CameraComponent
         this.camera = null;
@@ -60,16 +61,6 @@ class RenderAction {
 
     get hasDirectionalShadowLights() {
         return this.directionalLights.length > 0;
-    }
-
-    /**
-     * @param {import('./layer-composition.js').LayerComposition} layerComposition - The layer
-     * composition.
-     * @returns {boolean} - True if the layer / sublayer referenced by the render action is enabled
-     */
-    isLayerEnabled(layerComposition) {
-        const layer = layerComposition.layerList[this.layerIndex];
-        return layer.enabled && layerComposition.subLayerEnabled[this.layerIndex];
     }
 }
 
