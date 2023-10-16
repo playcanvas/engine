@@ -100,8 +100,9 @@ class ModelOutlineExample {
                 const outlineLayer = new pc.Layer({ name: "OutlineLayer" });
                 app.scene.layers.insert(outlineLayer, 0);
 
-                // get world layer
+                // get existing layers
                 const worldLayer = app.scene.layers.getLayerByName("World");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
 
                 // create ground plane and 3 primitives, visible in both layers
                 createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [worldLayer.id]);
@@ -113,7 +114,7 @@ class ModelOutlineExample {
                 const camera = new pc.Entity();
                 camera.addComponent("camera", {
                     clearColor: new pc.Color(0.2, 0.2, 0.4),
-                    layers: [worldLayer.id]
+                    layers: [worldLayer.id, uiLayer.id]
                 });
                 camera.translate(0, 20, 25);
                 camera.lookAt(pc.Vec3.ZERO);

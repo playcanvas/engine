@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { math } from '../../../core/math/math.js';
 
 import {
-    pixelFormatInfo,
+    pixelFormatInfo, isCompressedPixelFormat,
     ADDRESS_REPEAT, ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT,
     PIXELFORMAT_A8, PIXELFORMAT_L8, PIXELFORMAT_LA8, PIXELFORMAT_RGB565, PIXELFORMAT_RGBA5551, PIXELFORMAT_RGBA4,
     PIXELFORMAT_RGB8, PIXELFORMAT_RGBA8, PIXELFORMAT_DXT1, PIXELFORMAT_DXT3, PIXELFORMAT_DXT5,
@@ -66,6 +66,10 @@ gpuFilterModes[FILTER_NEAREST_MIPMAP_NEAREST] = { level: 'nearest', mip: 'neares
 gpuFilterModes[FILTER_NEAREST_MIPMAP_LINEAR] = { level: 'nearest', mip: 'linear' };
 gpuFilterModes[FILTER_LINEAR_MIPMAP_NEAREST] = { level: 'linear', mip: 'nearest' };
 gpuFilterModes[FILTER_LINEAR_MIPMAP_LINEAR] = { level: 'linear', mip: 'linear' };
+
+const dummyUse = (thingOne) => {
+    // so lint thinks we're doing something with thingOne
+};
 
 /**
  * A WebGPU implementation of the Texture.
@@ -138,7 +142,7 @@ class WebgpuTexture {
             // TODO: use only required usage flags
             // COPY_SRC - probably only needed on render target textures, to support copyRenderTarget (grab pass needs it)
             // RENDER_ATTACHMENT - needed for mipmap generation
-            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+            usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | (isCompressedPixelFormat(texture.format) ? 0 : GPUTextureUsage.RENDER_ATTACHMENT) | GPUTextureUsage.COPY_SRC
         };
 
         WebgpuDebug.validate(device);
@@ -236,8 +240,7 @@ class WebgpuTexture {
             const descr = {
                 addressModeU: gpuAddressModes[texture.addressU],
                 addressModeV: gpuAddressModes[texture.addressV],
-                addressModeW: gpuAddressModes[texture.addressW],
-                maxAnisotropy: math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy)
+                addressModeW: gpuAddressModes[texture.addressW]
             };
 
             // default for compare sampling of texture
@@ -280,6 +283,15 @@ class WebgpuTexture {
                     });
                 }
             }
+
+            // ensure anisotropic filtering is only set when filtering is correctly
+            // set up
+            const allLinear = (descr.minFilter === 'linear' &&
+                               descr.magFilter === 'linear' &&
+                               descr.mipmapFilter === 'linear');
+            descr.maxAnisotropy = allLinear ?
+                math.clamp(Math.round(texture._anisotropy), 1, device.maxTextureAnisotropy) :
+                1;
 
             sampler = device.wgpu.createSampler(descr);
             DebugHelper.setLabel(sampler, label);
@@ -371,7 +383,7 @@ class WebgpuTexture {
                 }
             }
 
-            if (anyUploads && texture.mipmaps) {
+            if (anyUploads && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
         }
@@ -411,6 +423,9 @@ class WebgpuTexture {
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
 
+        // create 2d context so webgpu can upload the texture
+        dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
+
         Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
@@ -436,26 +451,41 @@ class WebgpuTexture {
         Debug.assert(byteSize === data.byteLength,
                      `Error uploading data to texture, the data byte size of ${data.byteLength} does not match required ${byteSize}`, texture);
 
-        // this does not handle compressed formats
         const formatInfo = pixelFormatInfo.get(texture.format);
         Debug.assert(formatInfo);
 
-        const pixelSize = formatInfo.size ?? 0;
-        Debug.assert(pixelSize, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
-        const bytesPerRow = pixelSize * width;
-
         /** @type {GPUImageDataLayout} */
-        const dataLayout = {
-            offset: 0,
-            bytesPerRow: bytesPerRow,
-            rowsPerImage: height
-        };
+        let dataLayout;
+        let size;
 
-        const size = {
-            width: width,
-            height: height,
-            depthOrArrayLayers: 1
-        };
+        if (formatInfo.size) {
+            // uncompressed format
+            dataLayout = {
+                offset: 0,
+                bytesPerRow: formatInfo.size * width,
+                rowsPerImage: height
+            };
+            size = {
+                width: width,
+                height: height
+            };
+        } else if (formatInfo.blockSize) {
+            // compressed format
+            const blockDim = (size) => {
+                return Math.floor((size + 3) / 4);
+            };
+            dataLayout = {
+                offset: 0,
+                bytesPerRow: formatInfo.blockSize * blockDim(width),
+                rowsPerImage: blockDim(height)
+            };
+            size = {
+                width: Math.max(4, width),
+                height: Math.max(4, height)
+            };
+        } else {
+            Debug.assert(false, `WebGPU does not yet support texture format ${formatInfo.name} for texture ${texture.name}`, texture);
+        }
 
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();

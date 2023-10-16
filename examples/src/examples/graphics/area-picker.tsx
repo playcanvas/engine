@@ -148,6 +148,10 @@ class AreaPickerExample {
                 // array of highlighted materials
                 const highlights: pc.StandardMaterial[] = [];
 
+                // the layers picker renders
+                const worldLayer = app.scene.layers.getLayerByName("World");
+                const pickerLayers = [worldLayer];
+
                 // update each frame
                 let time = 0;
                 app.on("update", function (dt: number) {
@@ -171,7 +175,7 @@ class AreaPickerExample {
                     // Make sure the picker is the right size, and prepare it, which renders meshes into its render target
                     if (picker) {
                         picker.resize(canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
-                        picker.prepare(camera.camera, app.scene);
+                        picker.prepare(camera.camera, app.scene, pickerLayers);
                     }
 
                     // areas we want to sample - two larger rectangles, one small square, and one pixel at a mouse position

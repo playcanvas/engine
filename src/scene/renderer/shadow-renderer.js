@@ -52,21 +52,7 @@ const shadowCamView = new Mat4();
 const shadowCamViewProj = new Mat4();
 const pixelOffset = new Float32Array(2);
 const blurScissorRect = new Vec4(1, 1, 0, 0);
-const opChanId = { r: 1, g: 2, b: 3, a: 4 };
 const viewportMatrix = new Mat4();
-
-function getDepthKey(meshInstance) {
-    const material = meshInstance.material;
-    const x = meshInstance.skinInstance ? 10 : 0;
-    let y = 0;
-    if (material.opacityMap) {
-        const opChan = material.opacityMapChannel;
-        if (opChan) {
-            y = opChanId[opChan];
-        }
-    }
-    return x + y;
-}
 
 /**
  * @ignore
@@ -214,7 +200,7 @@ class ShadowRenderer {
             tempSet.clear();
         }
 
-        // TODO: we should probably sort shadow meshes by shader and not depth
+        // this sorts the shadow casters by the shader id
         visible.sort(this.renderer.sortCompareDepth);
     }
 
@@ -223,7 +209,7 @@ class ShadowRenderer {
         const isClustered = this.renderer.scene.clusteredLightingEnabled;
 
         // depth bias
-        if (device.webgl2 || device.isWebGPU) {
+        if (device.isWebGL2 || device.isWebGPU) {
             if (light._type === LIGHTTYPE_OMNI && !isClustered) {
                 device.setDepthBias(false);
             } else {
@@ -243,7 +229,7 @@ class ShadowRenderer {
         }
 
         // Set standard shadowmap states
-        const gpuOrGl2 = device.webgl2 || device.isWebGPU;
+        const gpuOrGl2 = device.isWebGL2 || device.isWebGPU;
         const useShadowSampler = isClustered ?
             light._isPcf && gpuOrGl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
             light._isPcf && gpuOrGl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
@@ -255,7 +241,7 @@ class ShadowRenderer {
 
     restoreRenderState(device) {
 
-        if (device.webgl2 || device.isWebGPU) {
+        if (device.isWebGL2 || device.isWebGPU) {
             device.setDepthBias(false);
         } else if (device.extStandardDerivatives) {
             this.polygonOffset[0] = 0;
@@ -362,13 +348,13 @@ class ShadowRenderer {
                 meshInstance.setParameters(device, passFlags);
             }
 
-            // set shader
-            let shadowShader = meshInstance._shader[shadowPass];
-            if (!shadowShader) {
-                meshInstance.updatePassShader(scene, shadowPass, null, this.viewUniformFormat, this.viewBindGroupFormat);
-                shadowShader = meshInstance._shader[shadowPass];
-                meshInstance._key[SORTKEY_DEPTH] = getDepthKey(meshInstance);
-            }
+            const shaderInstance = meshInstance.getShaderInstance(shadowPass, 0, scene, this.viewUniformFormat, this.viewBindGroupFormat);
+            const shadowShader = shaderInstance.shader;
+            Debug.assert(shadowShader, `no shader for pass ${shadowPass}`, material);
+
+            // sort shadow casters by shader
+            meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
+
             if (!shadowShader.failed && !device.setShader(shadowShader)) {
                 Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
             }
@@ -377,7 +363,7 @@ class ShadowRenderer {
             renderer.setVertexBuffers(device, mesh);
             renderer.setMorphing(device, meshInstance.morphInstance);
 
-            this.renderer.setupMeshUniformBuffers(meshInstance, shadowPass);
+            this.renderer.setupMeshUniformBuffers(shaderInstance, meshInstance);
 
             const style = meshInstance.renderStyle;
             device.setIndexBuffer(mesh.indexBuffer[style]);

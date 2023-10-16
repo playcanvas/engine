@@ -3,6 +3,7 @@ import { ShaderUtils } from '../../platform/graphics/shader-utils.js';
 import { shaderChunks } from './chunks/chunks.js';
 import { getProgramLibrary } from './get-program-library.js';
 import { Debug } from '../../core/debug.js';
+import { ShaderGenerator } from './programs/shader-generator.js';
 
 /**
  * Create a shader from named shader chunks.
@@ -61,6 +62,22 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
     return shader;
 }
 
+class ShaderGeneratorPassThrough extends ShaderGenerator {
+    constructor(key, shaderDefinition) {
+        super();
+        this.key = key;
+        this.shaderDefinition = shaderDefinition;
+    }
+
+    generateKey(options) {
+        return this.key;
+    }
+
+    createShaderDefinition(device, options) {
+        return this.shaderDefinition;
+    }
+}
+
 /**
  * Process shader using shader processing options, utilizing cache of the ProgramLibrary
  *
@@ -78,17 +95,11 @@ function processShader(shader, processingOptions) {
     // 'shader' generator for a material - simply return existing shader definition. Use generator and getProgram
     // to allow for shader processing to be cached
     const name = shaderDefinition.name ?? 'shader';
-    const key = `${name}-id-${shader.id}`;
-    const materialGenerator = {
-        generateKey: function (options) {
-            // unique name based of the shader id
-            return key;
-        },
 
-        createShaderDefinition: function (device, options) {
-            return shaderDefinition;
-        }
-    };
+    // unique name based of the shader id
+    const key = `${name}-id-${shader.id}`;
+
+    const materialGenerator = new ShaderGeneratorPassThrough(key, shaderDefinition);
 
     // temporarily register the program generator
     const libraryModuleName = 'shader';
