@@ -13,16 +13,23 @@ class WebgpuShader {
     /**
      * Transpiled vertex shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _vertexCode;
+    _vertexCode = null;
 
     /**
      * Transpiled fragment shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _fragmentCode;
+    _fragmentCode = null;
+
+    /**
+     * Compute shader code.
+     *
+     * @type {string|null}
+     */
+    _computeCode = null;
 
     /**
      * Name of the vertex entry point function.
@@ -33,6 +40,11 @@ class WebgpuShader {
      * Name of the fragment entry point function.
      */
     fragmentEntryPoint = 'main';
+
+    /**
+     * Name of the compute entry point function.
+     */
+    computeEntryPoint = 'main';
 
     /**
      * @param {import('../shader.js').Shader} shader - The shader.
@@ -46,8 +58,9 @@ class WebgpuShader {
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-            this._vertexCode = definition.vshader;
-            this._fragmentCode = definition.fshader;
+            this._vertexCode = definition.vshader ?? null;
+            this._fragmentCode = definition.fshader ?? null;
+            this._computeCode = definition.cshader ?? null;
             this.vertexEntryPoint = 'vertexMain';
             this.fragmentEntryPoint = 'fragmentMain';
             shader.ready = true;
@@ -96,6 +109,10 @@ class WebgpuShader {
 
     getFragmentShaderModule() {
         return this.createShaderModule(this._fragmentCode, 'Fragment');
+    }
+
+    getComputeShaderModule() {
+        return this.createShaderModule(this._computeCode, 'Compute');
     }
 
     process() {

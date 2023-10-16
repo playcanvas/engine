@@ -188,6 +188,14 @@ class GraphicsDevice extends EventHandler {
     supportsVolumeTextures = false;
 
     /**
+     * True if the device supports compute shaders.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsCompute = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget|null}
@@ -751,6 +759,18 @@ class GraphicsDevice extends EventHandler {
      */
     setBoneLimit(maxBones) {
         this.boneLimit = maxBones;
+    }
+
+    startRenderPass(renderPass) {
+    }
+
+    endRenderPass(renderPass) {
+    }
+
+    startComputePass() {
+    }
+
+    endComputePass() {
     }
 
     /**

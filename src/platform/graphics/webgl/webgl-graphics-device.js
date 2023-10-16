@@ -1408,7 +1408,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
-    startPass(renderPass) {
+    startRenderPass(renderPass) {
 
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
@@ -1470,7 +1470,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
-    endPass(renderPass) {
+    endRenderPass(renderPass) {
 
         DebugGraphics.pushGpuMarker(this, `END-PASS`);
 

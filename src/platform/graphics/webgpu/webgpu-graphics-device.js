@@ -13,6 +13,7 @@ import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
 import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
+import { WebgpuComputePipeline } from './webgpu-compute-pipeline.js';
 import { WebgpuRenderTarget } from './webgpu-render-target.js';
 import { WebgpuShader } from './webgpu-shader.js';
 import { WebgpuTexture } from './webgpu-texture.js';
@@ -24,12 +25,18 @@ import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
+import { WebgpuCompute } from './webgpu-compute.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
+
+    /**
+     * Object responsible for caching and creation of compute pipelines.
+     */
+    computePipeline = new WebgpuComputePipeline(this);
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -63,10 +70,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Current command buffer encoder.
      *
-     * @type {GPUCommandEncoder}
+     * @type {GPUCommandEncoder|null}
      * @private
      */
-    commandEncoder;
+    commandEncoder = null;
 
     /**
      * Command buffers scheduled for execution on the GPU.
@@ -140,6 +147,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
         this.supportsMrt = true;
+        this.supportsCompute = true;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
@@ -372,6 +380,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuBindGroup();
     }
 
+    createComputeImpl(compute) {
+        return new WebgpuCompute(compute);
+    }
+
     /**
      * @param {number} index - Index of the bind group slot
      * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
@@ -529,7 +541,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
-    startPass(renderPass) {
+    startRenderPass(renderPass) {
 
         // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
         // TODO: this needs a better solution
@@ -598,7 +610,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
-    endPass(renderPass) {
+    endRenderPass(renderPass) {
 
         // end the render pass
         this.passEncoder.end();
@@ -625,6 +637,51 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         WebgpuDebug.end(this, { renderPass });
         WebgpuDebug.end(this, { renderPass });
+    }
+
+    startComputePass() {
+
+        WebgpuDebug.internal(this);
+        WebgpuDebug.validate(this);
+
+        // create a new encoder for each pass
+        this.commandEncoder = this.wgpu.createCommandEncoder();
+        // DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
+        DebugHelper.setLabel(this.commandEncoder, 'ComputePass-Encoder');
+
+        // clear cached encoder state
+        this.pipeline = null;
+
+        // TODO: add performance queries to compute passes
+
+        // start the pass
+        this.passEncoder = this.commandEncoder.beginComputePass();
+        DebugHelper.setLabel(this.passEncoder, 'ComputePass');
+
+        Debug.assert(!this.insideRenderPass, 'ComputePass cannot be started while inside another pass.');
+        this.insideRenderPass = true;
+    }
+
+    endComputePass() {
+
+        // end the compute pass
+        this.passEncoder.end();
+        this.passEncoder = null;
+        this.insideRenderPass = false;
+
+        // each render pass can use different number of bind groups
+        this.bindGroupFormats.length = 0;
+
+        // schedule command buffer submission
+        const cb = this.commandEncoder.finish();
+        // DebugHelper.setLabel(cb, `${renderPass.name}-CommandBuffer`);
+        DebugHelper.setLabel(cb, 'ComputePass-CommandBuffer');
+
+        this.addCommandBuffer(cb);
+        this.commandEncoder = null;
+
+        WebgpuDebug.end(this);
+        WebgpuDebug.end(this);
     }
 
     addCommandBuffer(commandBuffer, front = false) {
