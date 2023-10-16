@@ -1,4 +1,3 @@
-import { DebugHelper } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 
 import { ShadowMap } from './shadow-map.js';
@@ -6,7 +5,7 @@ import {
     LIGHTTYPE_OMNI, LIGHTTYPE_SPOT
 } from '../constants.js';
 
-import { RenderPass } from '../../platform/graphics/render-pass.js';
+import { RenderPassShadowLocalNonClustered } from './render-pass-shadow-local-non-clustered.js';
 
 /**
  * @ignore
@@ -109,61 +108,6 @@ class ShadowRendererLocal {
     }
 
     /**
-     * Prepare render pass for rendering of shadows for local clustered lights. This is done inside
-     * a single render pass, as all shadows are part of a single render target atlas.
-     */
-    prepareClusteredRenderPass(renderPass, localLights) {
-
-        // prepare render targets / shadow cameras for rendering
-        const shadowLights = this.shadowLights;
-        const shadowCamera = this.prepareLights(shadowLights, localLights);
-
-        // if any shadows need to be rendered
-        const count = shadowLights.length;
-        if (count) {
-
-            // setup render pass using any of the cameras, they all have the same pass related properties
-            // Note that the render pass is set up to not clear the render target, as individual shadow maps clear it
-            this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, false);
-
-            // render shadows inside the pass
-            renderPass._execute = () => {
-
-                for (let i = 0; i < count; i++) {
-                    const light = shadowLights[i];
-                    for (let face = 0; face < light.numShadowFaces; face++) {
-                        this.shadowRenderer.renderFace(light, null, face, true);
-                    }
-                }
-
-                shadowLights.length = 0;
-            };
-        }
-    }
-
-    setupNonClusteredFaceRenderPass(frameGraph, light, face, applyVsm) {
-
-        const shadowCamera = this.shadowRenderer.prepareFace(light, null, face);
-        const renderPass = new RenderPass(this.device, () => {
-            this.shadowRenderer.renderFace(light, null, face, false);
-        });
-
-        // clear the render target as well, as it contains a single shadow map
-        this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, true);
-        DebugHelper.setName(renderPass, `SpotShadow-${light._node.name}`);
-
-        // apply vsm
-        if (applyVsm) {
-            renderPass._after = () => {
-                // after the pass is done, apply VSM blur if needed
-                this.shadowRenderer.renderVsm(light, shadowCamera);
-            };
-        }
-
-        frameGraph.addRenderPass(renderPass);
-    }
-
-    /**
      * Prepare render passes for rendering of shadows for local non-clustered lights. Each shadow face
      * is a separate render pass as it renders to a separate render target.
      */
@@ -180,7 +124,8 @@ class ShadowRendererLocal {
                 // create render pass per face
                 const faceCount = light.numShadowFaces;
                 for (let face = 0; face < faceCount; face++) {
-                    this.setupNonClusteredFaceRenderPass(frameGraph, light, face, applyVsm);
+                    const renderPass = new RenderPassShadowLocalNonClustered(this.device, this.shadowRenderer, light, face, applyVsm);
+                    frameGraph.addRenderPass(renderPass);
                 }
             }
         }

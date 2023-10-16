@@ -48,6 +48,9 @@ class RenderAction {
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
         /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
         this.viewBindGroups = [];
+
+        // true if the camera should render using render passes it specifies
+        this.useCameraPasses = false;
     }
 
     // releases GPU resources
@@ -57,6 +60,12 @@ class RenderAction {
             bg.destroy();
         });
         this.viewBindGroups.length = 0;
+    }
+
+    setupClears(camera, layer) {
+        this.clearColor = camera?.clearColorBuffer || layer.clearColorBuffer;
+        this.clearDepth = camera?.clearDepthBuffer || layer.clearDepthBuffer;
+        this.clearStencil = camera?.clearStencilBuffer || layer.clearStencilBuffer;
     }
 
     get hasDirectionalShadowLights() {

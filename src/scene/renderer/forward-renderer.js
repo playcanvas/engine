@@ -1,10 +1,9 @@
 import { now } from '../../core/time.js';
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 
 import { Vec3 } from '../../core/math/vec3.js';
 
 import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import {
     FOG_NONE, FOG_LINEAR,
@@ -16,6 +15,7 @@ import {
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
 import { RenderPassRenderActions } from './render-pass-render-actions.js';
+import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
 
 const _drawCallList = {
     drawCalls: [],
@@ -725,39 +725,19 @@ class ForwardRenderer extends Renderer {
      */
     buildFrameGraph(frameGraph, layerComposition) {
 
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
+        const scene = this.scene;
         const webgl1 = this.device.isWebGL1;
         frameGraph.reset();
 
+        // update composition, cull everything, assign atlas slots for clustered lighting
         this.update(layerComposition);
 
-        // clustered lighting render passes
-        if (clusteredLightingEnabled) {
+        if (scene.clusteredLightingEnabled) {
 
-            // render cookies for all local visible lights
-            if (this.scene.lighting.cookiesEnabled) {
-                const cookiesRenderPass = this.cookiesRenderPass;
-                cookiesRenderPass.update(this.lights);
-                frameGraph.addRenderPass(cookiesRenderPass);
-            }
-
-            // local shadows - these are shared by all cameras (not entirely correctly)
-            {
-                const renderPass = new RenderPass(this.device);
-                DebugHelper.setName(renderPass, 'ClusteredLocalShadows');
-                renderPass.requiresCubemaps = false;
-                frameGraph.addRenderPass(renderPass);
-
-                // render shadows only when needed
-                if (this.scene.lighting.shadowsEnabled) {
-                    this._shadowRendererLocal.prepareClusteredRenderPass(renderPass, this.localLights);
-                }
-
-                // update clusters all the time
-                renderPass._after = () => {
-                    this.updateClusters(layerComposition);
-                };
-            }
+            // clustered lighting passes
+            const { shadowsEnabled, cookiesEnabled } = scene.lighting;
+            this._renderPassUpdateClustered.update(frameGraph, shadowsEnabled, cookiesEnabled, this.lights, this.localLights);
+            frameGraph.addRenderPass(this._renderPassUpdateClustered);
 
         } else {
 
@@ -776,72 +756,78 @@ class ForwardRenderer extends Renderer {
             const renderAction = renderActions[i];
             const { layer, camera } = renderAction;
 
-            // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
-            const depthPass = camera.camera.renderPassDepthGrab;
-            if (depthPass && webgl1 && renderAction.firstCameraUse) {
+            if (renderAction.useCameraPasses)  {
 
-                depthPass.update(this.scene);
-                frameGraph.addRenderPass(depthPass);
-            }
-
-            const isDepthLayer = layer.id === LAYERID_DEPTH;
-
-            // skip depth layer on webgl1 if color grab pass is not enabled, as depth pass renders ahead of the main camera
-            if (webgl1 && isDepthLayer && !camera.renderSceneColorMap)
-                continue;
-
-            const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
-
-            // directional shadows get re-rendered for each camera
-            if (renderAction.hasDirectionalShadowLights && camera) {
-                this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction.directionalLights, camera);
-            }
-
-            // start of block of render actions rendering to the same render target
-            if (newStart) {
-                newStart = false;
-                startIndex = i;
-                renderTarget = renderAction.renderTarget;
-            }
-
-            // info about the next render action
-            const nextRenderAction = renderActions[i + 1];
-            const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
-            const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
-
-            // end of the block using the same render target
-            if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
-                nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
-
-                // render the render actions in the range
-                const isDepthOnly = isDepthLayer && startIndex === i;
-                if (!isDepthOnly) {
-                    this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i);
-                }
-
-                // depth layer triggers grab passes if enabled
-                if (isDepthLayer) {
-
-                    if (camera.renderSceneColorMap) {
-                        frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
-                    }
-
-                    if (camera.renderSceneDepthMap && !webgl1) {
-                        frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
-                    }
-                }
-
-                // postprocessing
-                if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
-                    const renderPass = new RenderPass(this.device, () => {
-                        this.renderPassPostprocessing(renderAction);
-                    });
-                    renderPass.requiresCubemaps = false;
-                    DebugHelper.setName(renderPass, `Postprocess`);
+                // schedule render passes from the camera
+                camera.camera.renderPasses.forEach((renderPass) => {
                     frameGraph.addRenderPass(renderPass);
+                });
+
+            } else {
+
+                // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
+                const depthPass = camera.camera.renderPassDepthGrab;
+                if (depthPass && webgl1 && renderAction.firstCameraUse) {
+
+                    depthPass.update(this.scene);
+                    frameGraph.addRenderPass(depthPass);
                 }
 
-                newStart = true;
+                const isDepthLayer = layer.id === LAYERID_DEPTH;
+
+                // skip depth layer on webgl1 if color grab pass is not enabled, as depth pass renders ahead of the main camera
+                if (webgl1 && isDepthLayer && !camera.renderSceneColorMap)
+                    continue;
+
+                const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
+
+                // directional shadows get re-rendered for each camera
+                if (renderAction.hasDirectionalShadowLights && camera) {
+                    this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction.directionalLights, camera);
+                }
+
+                // start of block of render actions rendering to the same render target
+                if (newStart) {
+                    newStart = false;
+                    startIndex = i;
+                    renderTarget = renderAction.renderTarget;
+                }
+
+                // info about the next render action
+                const nextRenderAction = renderActions[i + 1];
+                const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
+                const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
+
+                // end of the block using the same render target
+                if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
+                    nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
+
+                    // render the render actions in the range
+                    const isDepthOnly = isDepthLayer && startIndex === i;
+                    if (!isDepthOnly) {
+                        this.addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, i);
+                    }
+
+                    // depth layer triggers grab passes if enabled
+                    if (isDepthLayer) {
+
+                        if (camera.renderSceneColorMap) {
+                            frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
+                        }
+
+                        if (camera.renderSceneDepthMap && !webgl1) {
+                            frameGraph.addRenderPass(camera.camera.renderPassDepthGrab);
+                        }
+                    }
+
+                    // postprocessing
+                    if (renderAction.triggerPostprocess && camera?.onPostprocessing) {
+                        const renderPass = new RenderPassPostprocessing(this.device, this, renderAction);
+                        frameGraph.addRenderPass(renderPass);
+                    }
+
+                    newStart = true;
+                }
             }
         }
     }
@@ -873,13 +859,11 @@ class ForwardRenderer extends Renderer {
         this.frameUpdate();
         this.shadowRenderer.frameUpdate();
 
-        const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
-
         // update the skybox, since this might change _meshInstances
         this.scene._updateSky(this.device);
 
         // update layer composition
-        this.updateLayerComposition(comp, clusteredLightingEnabled);
+        this.updateLayerComposition(comp);
 
         this.collectLights(comp);
 
@@ -891,17 +875,8 @@ class ForwardRenderer extends Renderer {
         // after this the scene culling is done and script callbacks can be called to report which objects are visible
         this.cullComposition(comp);
 
-        // GPU update for all visible objects
+        // GPU update for visible objects requiring one
         this.gpuUpdate(this.processingMeshInstances);
-    }
-
-    renderPassPostprocessing(renderAction) {
-
-        const camera = renderAction.camera;
-        Debug.assert(renderAction.triggerPostprocess && camera.onPostprocessing);
-
-        // trigger postprocessing for camera
-        camera.onPostprocessing();
     }
 }
 

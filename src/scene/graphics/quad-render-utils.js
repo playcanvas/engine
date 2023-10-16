@@ -1,11 +1,8 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
+import { RenderPassQuad } from './render-pass-quad.js';
 
 const _tempRect = new Vec4();
 
@@ -35,10 +32,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
         }
     });
 
-    device.setCullMode(CULLFACE_NONE);
-    device.setDepthState(DepthState.NODEPTH);
-    device.setStencilState(null, null);
-
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
 
@@ -52,12 +45,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     }
 
     // prepare a render pass to render the quad to the render target
-    const renderPass = new RenderPass(device, () => {
-        DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
-        quad.render(rect, scissorRect);
-        DebugGraphics.popGpuMarker(device);
-    });
-    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : 'Framebuffer'}`);
+    const renderPass = new RenderPassQuad(device, quad, rect, scissorRect);
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;
