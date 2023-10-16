@@ -122,7 +122,7 @@ export { LightingParams } from './scene/lighting/lighting-params.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
-export { MeshInstance, Command } from './scene/mesh-instance.js';
+export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';

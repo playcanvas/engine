@@ -137,6 +137,9 @@ class CubemapHandler {
                 } else {
                     // prefiltered data is an env atlas
                     tex.type = TEXTURETYPE_RGBP;
+                    tex.addressU = ADDRESS_CLAMP_TO_EDGE;
+                    tex.addressV = ADDRESS_CLAMP_TO_EDGE;
+                    tex.mipmaps = false;
                     resources[1] = tex;
                 }
             }

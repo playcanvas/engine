@@ -1,6 +1,5 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
-import { Vec2 } from '../../../core/math/vec2.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
@@ -27,13 +26,6 @@ import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
-    /**
-     * The render target representing the main framebuffer.
-     *
-     * @type {RenderTarget}
-     */
-    frameBuffer;
-
     /**
      * Object responsible for caching and creation of render pipelines.
      */
@@ -94,11 +86,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         super(canvas, options);
         options = this.initOptions;
 
+        // alpha defaults to true
+        options.alpha = options.alpha ?? true;
+
+        this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        // WebGPU currently only supports 1 and 4 samples
-        this.samples = options.antialias ? 4 : 1;
 
         this.setupPassEncoderDefaults();
     }
@@ -157,8 +150,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsImageBitmap = true;
         this.extStandardDerivatives = true;
         this.extBlendMinmax = true;
-        this.areaLightLutFormat = this.floatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
+        this.areaLightLutFormat = this.textureFloatFilterable ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA8;
         this.supportsTextureFetch = true;
+
+        // WebGPU currently only supports 1 and 4 samples
+        this.samples = this.backBufferAntialias ? 4 : 1;
     }
 
     async initWebGpu(glslangUrl, twgslUrl) {
@@ -170,29 +166,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
-        const loadScript = (url) => {
-            return new Promise(function (resolve, reject) {
-                const script = document.createElement('script');
-                script.src = url;
-                script.async = false;
-                script.onload = function () {
-                    resolve(url);
-                };
-                script.onerror = function () {
-                    reject(new Error(`Failed to download script ${url}`));
-                };
-                document.body.appendChild(script);
-            });
-        };
+        const results = await Promise.all([
+            import(`${twgslUrl}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(`${glslangUrl}`).then(module => module.default())
+        ]);
 
-        // TODO: add both loadScript calls and requestAdapter to promise list and wait for all.
-        await loadScript(glslangUrl);
-        await loadScript(twgslUrl);
-
-        this.glslang = await glslang();
-
-        const wasmPath = twgslUrl.replace('.js', '.wasm');
-        this.twgsl = await twgsl(wasmPath);
+        this.twgsl = results[0];
+        this.glslang = results[1];
 
         /** @type {GPURequestAdapterOptions} */
         const adapterOptions = {
@@ -222,7 +202,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
             return supported;
         };
-        this.floatFilterable = requireFeature('float32-filterable');
+        this.textureFloatFilterable = requireFeature('float32-filterable');
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
@@ -250,14 +230,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         this.initDeviceCaps();
 
-        // initially fill the window. This needs improvement.
-        this.setResolution(window.innerWidth, window.innerHeight);
-
         this.gpuContext = this.canvas.getContext('webgpu');
 
         // pixel format of the framebuffer is the most efficient one on the system
         const preferredCanvasFormat = navigator.gpu.getPreferredCanvasFormat();
-        this.framebufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
+        this.backBufferFormat = preferredCanvasFormat === 'rgba8unorm' ? PIXELFORMAT_RGBA8 : PIXELFORMAT_BGRA8;
 
         /**
          * Configuration of the main colorframebuffer we obtain using getCurrentTexture
@@ -268,7 +245,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.canvasConfig = {
             device: this.wgpu,
             colorSpace: 'srgb',
-            alphaMode: 'opaque',  // could also be 'premultiplied'
+            alphaMode: this.initOptions.alpha ? 'premultiplied' : 'opaque',
 
             // use preferred format for optimal performance on mobile
             format: preferredCanvasFormat,
@@ -281,7 +258,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         };
         this.gpuContext.configure(this.canvasConfig);
 
-        this.createFramebuffer();
+        this.createBackbuffer();
 
         this.clearRenderer = new WebgpuClearRenderer(this);
         this.mipmapRenderer = new WebgpuMipmapRenderer(this);
@@ -301,28 +278,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.dynamicBuffers = new WebgpuDynamicBuffers(this, 1024 * 1024, this.limits.minUniformBufferOffsetAlignment);
     }
 
-    createFramebuffer() {
+    createBackbuffer() {
         this.supportsStencil = this.initOptions.stencil;
-        this.frameBufferDimensions = new Vec2();
-        this.frameBuffer = new RenderTarget({
+        this.backBuffer = new RenderTarget({
             name: 'WebgpuFramebuffer',
             graphicsDevice: this,
             depth: this.initOptions.depth,
             stencil: this.supportsStencil,
             samples: this.samples
         });
-    }
-
-    resizeCanvas(width, height) {
-
-        this._width = width;
-        this._height = height;
-
-        if (this.canvas.width !== width || this.canvas.height !== height) {
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
-        }
     }
 
     frameStart() {
@@ -338,20 +302,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // current frame color output buffer
         const outColorBuffer = this.gpuContext.getCurrentTexture();
-        DebugHelper.setLabel(outColorBuffer, `${this.frameBuffer.name}`);
+        DebugHelper.setLabel(outColorBuffer, `${this.backBuffer.name}`);
 
         // reallocate framebuffer if dimensions change, to match the output texture
-        if (this.frameBufferDimensions.x !== outColorBuffer.width || this.frameBufferDimensions.y !== outColorBuffer.height) {
+        if (this.backBufferSize.x !== outColorBuffer.width || this.backBufferSize.y !== outColorBuffer.height) {
 
-            this.frameBufferDimensions.set(outColorBuffer.width, outColorBuffer.height);
+            this.backBufferSize.set(outColorBuffer.width, outColorBuffer.height);
 
-            this.frameBuffer.destroy();
-            this.frameBuffer = null;
+            this.backBuffer.destroy();
+            this.backBuffer = null;
 
-            this.createFramebuffer();
+            this.createBackbuffer();
         }
 
-        const rt = this.frameBuffer;
+        const rt = this.backBuffer;
         const wrt = rt.impl;
 
         // assign the format, allowing following init call to use it to allocate matching multisampled buffer
@@ -550,6 +514,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.stencilRef = 0;
     }
 
+    _uploadDirtyTextures() {
+
+        this.textures.forEach((texture) => {
+            if (texture._needsUpload || texture._needsMipmaps) {
+                texture.upload();
+            }
+        });
+    }
+
     /**
      * Start a render pass.
      *
@@ -558,13 +531,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     startPass(renderPass) {
 
+        // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
+        // TODO: this needs a better solution
+        this._uploadDirtyTextures();
+
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
-        const rt = renderPass.renderTarget || this.frameBuffer;
-        Debug.assert(rt);
-
+        const rt = renderPass.renderTarget || this.backBuffer;
         this.renderTarget = rt;
+        Debug.assert(rt);
 
         /** @type {WebgpuRenderTarget} */
         const wrt = rt.impl;
@@ -574,7 +550,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
 
         // framebuffer is initialized at the start of the frame
-        if (rt !== this.frameBuffer) {
+        if (rt !== this.backBuffer) {
             this.initRenderTarget(rt);
         }
 
@@ -687,14 +663,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    get width() {
-        return this._width;
-    }
-
-    get height() {
-        return this._height;
     }
 
     setDepthBias(on) {

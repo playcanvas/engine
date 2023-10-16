@@ -13,8 +13,11 @@ class ClusteredSpotShadowsExample {
     controls(data: Observer) {
         return <>
             <Panel headerText='Atlas'>
-                <LabelGroup text='Resolution'>
+                <LabelGroup text='Shadow Res'>
                     <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.shadowAtlasResolution' }} min={256} max={4096} precision={0}/>
+                </LabelGroup>
+                <LabelGroup text='Cookie Res'>
+                    <SliderInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.cookieAtlasResolution' }} min={128} max={4096} precision={0}/>
                 </LabelGroup>
                 {<LabelGroup text='Split'>
                     <SelectInput binding={new BindingTwoWay()} link={{ observer: data, path: 'settings.atlasSplit' }} type="number" options={[
@@ -116,6 +119,7 @@ class ClusteredSpotShadowsExample {
 
                 data.set('settings', {
                     shadowAtlasResolution: 1024,     // shadow map resolution storing all shadows
+                    cookieAtlasResolution: 1024,     // cookie map resolution storing all cookies
                     shadowType: pc.SHADOW_PCF3,      // shadow filter type
                     shadowsEnabled: true,
                     cookiesEnabled: true,
@@ -153,7 +157,7 @@ class ClusteredSpotShadowsExample {
 
                 // resolution of the shadow and cookie atlas
                 lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
-                lighting.cookieAtlasResolution = 1500;
+                lighting.cookieAtlasResolution = data.get('settings.cookieAtlasResolution');;
 
                 const splitOptions = [
                     null,               // automatic - split atlas each frame to give all required lights an equal size

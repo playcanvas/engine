@@ -3,6 +3,7 @@ import * as pc from '../../../../';
 class TextureBasisExample {
     static CATEGORY = 'Graphics';
     static NAME = 'Texture Basis';
+    static WEBGPU_ENABLED = true;
 
     // Color textures have been converted with the following arguments:
     //   basisu seaside-rocks01-gloss.jpg -q 255 -mipmap

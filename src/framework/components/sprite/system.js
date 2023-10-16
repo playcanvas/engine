@@ -225,6 +225,8 @@ class SpriteComponentSystem extends ComponentSystem {
             type: source.type,
             spriteAsset: source.spriteAsset,
             sprite: source.sprite,
+            width: source.width,
+            height: source.height,
             frame: source.frame,
             color: source.color.clone(),
             opacity: source.opacity,

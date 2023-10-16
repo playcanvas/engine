@@ -140,6 +140,8 @@ class PortalExample {
                 // find skybox layer - to enable it for the camera
                 const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
 
+                const uiLayer = app.scene.layers.getLayerByName("UI");
+
                 // portal layer - this is where the portal geometry is written to the stencil
                 // buffer, and this needs to render first, so insert it before the world layer
                 const portalLayer = new pc.Layer({ name: "Portal" });
@@ -149,7 +151,7 @@ class PortalExample {
                 // this camera renders both world and portal layers
                 const camera = new pc.Entity();
                 camera.addComponent('camera', {
-                    layers: [worldLayer.id, portalLayer.id, skyboxLayer.id]
+                    layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id]
                 });
                 camera.setLocalPosition(7, 5.5, 7.1);
                 camera.setLocalEulerAngles(-27, 45, 0);
