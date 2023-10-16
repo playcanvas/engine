@@ -78,7 +78,7 @@ class WorldClustersAllocator {
     }
 
     // assign light clusters to render actions that need it
-    assign(renderActions) {
+    assign(renderPasses) {
 
         const empty = this.empty;
 
@@ -87,38 +87,48 @@ class WorldClustersAllocator {
         this._allocated.length = 0;
         this._clusters.clear();
 
-        // process all render actions
-        const count = renderActions.length;
-        for (let i = 0; i < count; i++) {
-            const ra = renderActions[i];
-            ra.lightClusters = null;
+        // update render actions in passes that use them
+        const passCount = renderPasses.length;
+        for (let p = 0; p < passCount; p++) {
 
-            // if the layer has lights used by clusters, and meshes
-            const layer = ra.layer;
-            if (layer.hasClusteredLights && layer.meshInstances.length) {
+            const renderPass = renderPasses[p];
+            const renderActions = renderPass.renderActions;
+            if (renderActions) {
 
-                // use existing clusters if the lights on the layer are the same
-                const hash = layer.getLightIdHash();
-                const existingRenderAction = this._clusters.get(hash);
-                let clusters = existingRenderAction?.lightClusters;
+                // process all render actions
+                const count = renderActions.length;
+                for (let i = 0; i < count; i++) {
+                    const ra = renderActions[i];
+                    ra.lightClusters = null;
 
-                // no match, needs new clusters
-                if (!clusters) {
+                    // if the layer has lights used by clusters, and meshes
+                    const layer = ra.layer;
+                    if (layer.hasClusteredLights && layer.meshInstances.length) {
 
-                    // use already allocated cluster from last frame, or create a new one
-                    clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
-                    DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+                        // use existing clusters if the lights on the layer are the same
+                        const hash = layer.getLightIdHash();
+                        const existingRenderAction = this._clusters.get(hash);
+                        let clusters = existingRenderAction?.lightClusters;
 
-                    this._allocated.push(clusters);
-                    this._clusters.set(hash, ra);
+                        // no match, needs new clusters
+                        if (!clusters) {
+
+                            // use already allocated cluster from last frame, or create a new one
+                            clusters = tempClusterArray.pop() ?? new WorldClusters(this.device);
+                            DebugHelper.setName(clusters, `Cluster-${this._allocated.length}`);
+
+                            this._allocated.push(clusters);
+                            this._clusters.set(hash, ra);
+                        }
+
+                        ra.lightClusters = clusters;
+                    }
+
+                    // no clustered lights, use the cluster with no lights
+                    if (!ra.lightClusters) {
+                        ra.lightClusters = empty;
+                    }
                 }
-
-                ra.lightClusters = clusters;
-            }
-
-            // no clustered lights, use the cluster with no lights
-            if (!ra.lightClusters) {
-                ra.lightClusters = empty;
             }
         }
 
@@ -127,10 +137,10 @@ class WorldClustersAllocator {
         tempClusterArray.length = 0;
     }
 
-    update(renderActions, gammaCorrection, lighting) {
+    update(renderPasses, gammaCorrection, lighting) {
 
         // assign clusters to render actions
-        this.assign(renderActions);
+        this.assign(renderPasses);
 
         // update all unique clusters
         this._clusters.forEach((renderAction) => {

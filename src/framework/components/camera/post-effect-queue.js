@@ -72,10 +72,13 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * (this.camera.renderTarget?.width ?? this.app.graphicsDevice.width));
-        const height = Math.floor(rect.w * (this.camera.renderTarget?.height ?? this.app.graphicsDevice.height));
+        const renderTarget = this.destinationRenderTarget;
+        const device = this.app.graphicsDevice;
 
-        const colorBuffer = new Texture(this.app.graphicsDevice, {
+        const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
+        const height = Math.floor(rect.w * (renderTarget?.height ?? device.height));
+
+        const colorBuffer = new Texture(device, {
             name: name,
             format: format,
             width: width,
@@ -345,17 +348,25 @@ class PostEffectQueue {
      */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
-        const device = this.app.graphicsDevice;
-        this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
+        const renderTarget = this.destinationRenderTarget;
+
+        width = renderTarget?.width ?? width;
+        height = renderTarget?.height ?? height;
+
+        this.camera.camera.aspectRatio = (width * rect.z) / (height * rect.w);
 
         this.resizeRenderTargets();
     }
 
     resizeRenderTargets() {
+        const device = this.app.graphicsDevice;
+        const renderTarget = this.destinationRenderTarget;
+        const width = renderTarget?.width ?? device.width;
+        const height = renderTarget?.height ?? device.height;
 
         const rect = this.camera.rect;
-        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width);
-        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height);
+        const desiredWidth = Math.floor(rect.z * width);
+        const desiredHeight = Math.floor(rect.w * height);
 
         const effects = this.effects;
 

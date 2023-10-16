@@ -35,7 +35,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
 } from '../platform/graphics/constants.js';
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
+import { ShaderGenerator } from '../scene/shader-lib/programs/shader-generator.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
@@ -67,7 +67,7 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
-import { MeshInstance, Command } from '../scene/mesh-instance.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Picker } from '../framework/graphics/picker.js';
@@ -369,14 +369,14 @@ export function ContextCreationError(message) {
 ContextCreationError.prototype = Error.prototype;
 
 export const programlib = {
-    begin: begin,
+    begin: ShaderGenerator.begin,
     dummyFragmentCode: ShaderUtils.dummyFragmentCode,
-    end: end,
-    fogCode: fogCode,
-    gammaCode: gammaCode,
+    end: ShaderGenerator.end,
+    fogCode: ShaderGenerator.fogCode,
+    gammaCode: ShaderGenerator.gammaCode,
     precisionCode: ShaderUtils.precisionCode,
-    skinCode: skinCode,
-    tonemapCode: tonemapCode,
+    skinCode: ShaderGenerator.skinCode,
+    tonemapCode: ShaderGenerator.tonemapCode,
     versionCode: ShaderUtils.versionCode
 };
 
@@ -612,6 +612,13 @@ Object.defineProperties(Texture.prototype, {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
+    }
+});
+
 GraphicsDevice.prototype.getProgramLibrary = function () {
     Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
     return getProgramLibrary(this);
@@ -731,7 +738,6 @@ export const scene = {
         createBox: createBox
     },
     BasicMaterial: BasicMaterial,
-    Command: Command,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -799,7 +805,7 @@ Object.defineProperty(Layer.prototype, 'renderTarget', {
     set: function (rt) {
         Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
         this._renderTarget = rt;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     },
     get: function () {
         return this._renderTarget;
@@ -866,12 +872,6 @@ Object.defineProperty(Batch.prototype, 'model', {
 ForwardRenderer.prototype.renderComposition = function (comp) {
     Debug.deprecated('pc.ForwardRenderer#renderComposition is deprecated. Use pc.AppBase.renderComposition instead.');
     getApplication().renderComposition(comp);
-};
-
-ForwardRenderer.prototype.updateShader = function (meshInstance, objDefs, unused, pass, sortedLights) {
-    Debug.deprecated('pc.ForwardRenderer#updateShader is deprecated, use pc.MeshInstance#updatePassShader.');
-    const scene = meshInstance.material._scene || getApplication().scene;
-    return meshInstance.updatePassShader(scene, pass, sortedLights);
 };
 
 MeshInstance.prototype.syncAabb = function () {

@@ -1,7 +1,8 @@
 import {
+    ADDRESS_REPEAT,
     FILTER_NEAREST,
+    LAYERID_UI,
     math,
-    Color,
     Texture
 } from 'playcanvas';
 import { CpuTimer } from './cpu-timer.js';
@@ -14,65 +15,28 @@ import { Render2d } from './render2d.js';
 // MiniStats rendering of CPU and GPU timing information
 class MiniStats {
     constructor(app, options) {
-
         const device = app.graphicsDevice;
-
-        // handle context lost
-        this._contextLostHandler = (event) => {
-            event.preventDefault();
-
-            if (this.graphs) {
-                for (let i = 0; i < this.graphs.length; i++) {
-                    this.graphs[i].loseContext();
-                }
-            }
-        };
-        device.canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
 
         options = options || MiniStats.getDefaultOptions();
 
-        // create graphs based on options
-        const graphs = this.initGraphs(app, device, options);
+        // create graphs
+        this.initGraphs(app, device, options);
 
-        // extract words needed
-        let words = ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
+        // extract list of words
+        const words = new Set(
+            ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
+                .concat(this.graphs.map(graph => graph.name))
+                .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
+                .filter(item => !!item)
+        );
 
-        // graph names
-        graphs.forEach((graph) => {
-            words.push(graph.name);
-        });
-
-        // stats units
-        if (options.stats) {
-            options.stats.forEach((stat) => {
-                if (stat.unitsName)
-                    words.push(stat.unitsName);
-            });
-        }
-
-        // remove duplicates
-        words = words.filter((item, index) => {
-            return words.indexOf(item) >= index;
-        });
-
-        // create word atlas
-        const maxWidth = options.sizes.reduce((max, v) => {
-            return v.width > max ? v.width : max;
-        }, 0);
-        const wordAtlasData = this.initWordAtlas(device, words, maxWidth, graphs.length);
-        const texture = wordAtlasData.texture;
-
-        // assign texture to graphs
-        graphs.forEach((graph, i) => {
-            graph.texture = texture;
-            graph.yOffset = i;
-        });
-
+        this.wordAtlas = new WordAtlas(device, words);
         this.sizes = options.sizes;
         this._activeSizeIndex = options.startSizeIndex;
 
         // create click region so we can resize
         const div = document.createElement('div');
+        div.setAttribute('id', 'mini-stats');
         div.style.cssText = 'position:fixed;bottom:0;left:0;background:transparent;';
         document.body.appendChild(div);
 
@@ -81,7 +45,7 @@ class MiniStats {
         });
 
         div.addEventListener('mouseleave', (event) => {
-            this.opacity = 0.5;
+            this.opacity = 0.7;
         });
 
         div.addEventListener('click', (event) => {
@@ -92,21 +56,14 @@ class MiniStats {
             }
         });
 
-        device.on('resizecanvas', () => {
-            this.updateDiv();
-        });
+        device.on('resizecanvas', this.updateDiv, this);
+        device.on('losecontext', this.loseContext, this);
+        app.on('postrender', this.postRender, this);
 
-        app.on('postrender', () => {
-            if (this._enabled) {
-                this.render();
-            }
-        });
-
+        this.app = app;
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
         this.device = device;
-        this.texture = texture;
-        this.wordAtlas = wordAtlasData.atlas;
-        this.render2d = new Render2d(device, options.colors);
-        this.graphs = graphs;
+        this.render2d = new Render2d(device);
         this.div = div;
 
         this.width = 0;
@@ -118,6 +75,16 @@ class MiniStats {
 
         // initial resize
         this.activeSizeIndex = this._activeSizeIndex;
+    }
+
+    destroy() {
+        this.device.off('resizecanvas', this.updateDiv, this);
+        this.device.off('losecontext', this.loseContext, this);
+        this.app.off('postrender', this.postRender, this);
+
+        this.graphs.forEach(graph => graph.destroy());
+        this.wordAtlas.destroy();
+        this.texture.destroy();
     }
 
     static getDefaultOptions() {
@@ -135,15 +102,6 @@ class MiniStats {
 
             // refresh rate of text stats in ms
             textRefreshRate: 500,
-
-            // colors used to render graphs
-            colors: {
-                graph0: new Color(0.7, 0.2, 0.2, 1),
-                graph1: new Color(0.2, 0.7, 0.2, 1),
-                graph2: new Color(0.2, 0.2, 0.7, 1),
-                watermark: new Color(0.4, 0.4, 0.2, 1),
-                background: new Color(0, 0, 0, 1.0)
-            },
 
             // cpu graph options
             cpu: {
@@ -224,56 +182,48 @@ class MiniStats {
         return this._enabled;
     }
 
-    initWordAtlas(device, words, maxWidth, numGraphs) {
-
-        // create the texture for storing word atlas and graph data
-        const texture = new Texture(device, {
-            name: 'mini-stats',
-            width: math.nextPowerOfTwo(maxWidth),
-            height: 64,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
-        });
-
-        const wordAtlas = new WordAtlas(texture, words);
-
-        const dest = texture.lock();
-        for (let i = 0; i < texture.width * numGraphs; ++i) {
-            dest.set([0, 0, 0, 255], i * 4);
-        }
-        texture.unlock();
-
-        // ensure texture is uploaded
-        device.setTexture(texture, 0);
-
-        return { atlas: wordAtlas, texture: texture };
-    }
-
     initGraphs(app, device, options) {
-        const graphs = [];
+        this.graphs = [];
 
         if (options.cpu.enabled) {
             const timer = new CpuTimer(app);
             const graph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, timer);
-            graphs.push(graph);
+            this.graphs.push(graph);
         }
 
         if (options.gpu.enabled) {
             const timer = new GpuTimer(device);
             const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
-            graphs.push(graph);
+            this.graphs.push(graph);
         }
 
         if (options.stats) {
             options.stats.forEach((entry) => {
                 const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
                 const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
-                graphs.push(graph);
+                this.graphs.push(graph);
             });
         }
 
-        return graphs;
+        const maxWidth = options.sizes.reduce((max, v) => {
+            return v.width > max ? v.width : max;
+        }, 0);
+
+        this.texture = new Texture(device, {
+            name: 'mini-stats-graph-texture',
+            width: math.nextPowerOfTwo(maxWidth),
+            height: math.nextPowerOfTwo(this.graphs.length),
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_REPEAT,
+            addressV: ADDRESS_REPEAT
+        });
+
+        this.graphs.forEach((graph, i) => {
+            graph.texture = this.texture;
+            graph.yOffset = i;
+        });
     }
 
     render() {
@@ -283,6 +233,8 @@ class MiniStats {
         const width = this.width;
         const height = this.height;
         const gspacing = this.gspacing;
+
+        render2d.startFrame();
 
         for (let i = 0; i < graphs.length; ++i) {
             const graph = graphs[i];
@@ -312,7 +264,7 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.clr, height);
+        render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr, height);
     }
 
     resize(width, height, showGraphs) {
@@ -333,6 +285,16 @@ class MiniStats {
         this.div.style.bottom = (window.innerHeight - rect.bottom) + 'px';
         this.div.style.width = this.width + 'px';
         this.div.style.height = this.overallHeight + 'px';
+    }
+
+    loseContext() {
+        this.graphs.forEach(graph => graph.loseContext());
+    }
+
+    postRender() {
+        if (this._enabled) {
+            this.render();
+        }
     }
 }
 

@@ -1,15 +1,15 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { math } from '../../core/math/math.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 import {
-    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE, SHADOWUPDATE_THISFRAME
+    LIGHTTYPE_DIRECTIONAL, SHADOWUPDATE_NONE
 } from '../constants.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 
 import { ShadowMap } from './shadow-map.js';
+import { RenderPassShadowDirectional } from './render-pass-shadow-directional.js';
 
 const visibleSceneAabb = new BoundingBox();
 const center = new Vec3();
@@ -216,29 +216,10 @@ class ShadowRendererDirectional {
             shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
         }
 
-        const renderPass = new RenderPass(this.device, () => {
-
-            // inside the render pass, render all faces
-            for (let face = 0; face < faceCount; face++) {
-
-                if (shadowUpdateOverrides?.[face] !== SHADOWUPDATE_NONE) {
-                    this.shadowRenderer.renderFace(light, camera, face, !allCascadesRendering);
-                }
-
-                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_THISFRAME) {
-                    shadowUpdateOverrides[face] = SHADOWUPDATE_NONE;
-                }
-            }
-        });
-
-        renderPass.after = () => {
-            // after the pass is done, apply VSM blur if needed
-            this.shadowRenderer.renderVsm(light, camera);
-        };
+        const renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, allCascadesRendering);
 
         // setup render pass using any of the cameras, they all have the same pass related properties
         this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
-        DebugHelper.setName(renderPass, `DirShadow-${light._node.name}`);
 
         frameGraph.addRenderPass(renderPass);
     }
@@ -247,16 +228,15 @@ class ShadowRendererDirectional {
      * Builds a frame graph for rendering of directional shadows for the render action.
      *
      * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../composition/render-action.js').RenderAction} renderAction - The render
-     * action.
+     * @param {import('../light.js').Light[]} directionalLights - The
+     * directional lights.
      * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera.
      */
-    buildFrameGraph(frameGraph, renderAction, camera) {
+    buildFrameGraph(frameGraph, directionalLights, camera) {
 
         // create required render passes per light
-        const lights = renderAction.directionalLights;
-        for (let i = 0; i < lights.length; i++) {
-            const light = lights[i];
+        for (let i = 0; i < directionalLights.length; i++) {
+            const light = directionalLights[i];
             Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
             if (this.shadowRenderer.needsShadowRendering(light)) {

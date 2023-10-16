@@ -67,10 +67,10 @@ class PostEffect {
     /**
      * Draw a screen-space rectangle in a render target, using a specified shader.
      *
-     * @param {import('../../platform/graphics/render-target.js').RenderTarget} target - The output
-     * render target.
-     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used for
-     * drawing the rectangle.
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} target - The
+     * output render target.
+     * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader to be used
+     * for drawing the rectangle.
      * @param {import('../../core/math/vec4.js').Vec4} [rect] - The normalized screen-space position
      * (rect.x, rect.y) and size (rect.z, rect.w) of the rectangle. Default is [0, 0, 1, 1].
      */
