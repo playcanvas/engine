@@ -128,6 +128,29 @@ class Vec4 {
     }
 
     /**
+     * Adds a 4-dimensional vector scaled by scalar value. Does not modify the vector being added.
+     *
+     * @param {Vec4} rhs - The vector to add to the specified vector.
+     * @param {number} scalar - The number to multiply the added vector with.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * const vec = new pc.Vec4(1, 2, 3, 4);
+     *
+     * vec.addScaled(pc.Vec4.ONE, 2);
+     *
+     * // Outputs [3, 4, 5, 6]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScaled(rhs, scalar) {
+        this.x += rhs.x * scalar;
+        this.y += rhs.y * scalar;
+        this.z += rhs.z * scalar;
+        this.w += rhs.w * scalar;
+
+        return this;
+    }
+
+    /**
      * Returns an identical copy of the specified 4-dimensional vector.
      *
      * @returns {this} A 4-dimensional vector containing the result of the cloning.
@@ -262,6 +285,25 @@ class Vec4 {
      */
     equals(rhs) {
         return this.x === rhs.x && this.y === rhs.y && this.z === rhs.z && this.w === rhs.w;
+    }
+
+    /**
+     * Reports whether two vectors are equal using an absolute error tolerance.
+     *
+     * @param {Vec4} rhs - The vector to be compared against.
+     * @param {number} [epsilon] - The maximum difference between each component of the two
+     * vectors. Defaults to 1e-6.
+     * @returns {boolean} True if the vectors are equal and false otherwise.
+     * @example
+     * const a = new pc.Vec4();
+     * const b = new pc.Vec4();
+     * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
+     */
+    equalsApprox(rhs, epsilon = 1e-6) {
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon) &&
+            (Math.abs(this.w - rhs.w) < epsilon);
     }
 
     /**

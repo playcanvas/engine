@@ -302,6 +302,13 @@ class LitShaderOptions {
     noShadow = false;
 
     lightMaskDynamic = 0x0;
+
+    /**
+     * Object containing a map of user defined vertex attributes to attached shader semantics.
+     *
+     * @type {Object<string, string>}
+     */
+    userAttributes = {};
 }
 
 export { LitShaderOptions };

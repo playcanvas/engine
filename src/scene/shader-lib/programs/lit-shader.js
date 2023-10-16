@@ -67,6 +67,12 @@ class LitShader {
             vertex_position: SEMANTIC_POSITION
         };
 
+        if (options.userAttributes) {
+            for (const [semantic, name] of Object.entries(options.userAttributes)) {
+                this.attributes[name] = semantic;
+            }
+        }
+
         if (options.chunks) {
             const userChunks = options.chunks;
 
@@ -461,7 +467,7 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && !device.webgl2 && !device.isWebGPU) {
+        if (device.extStandardDerivatives && device.isWebGL1) {
             code += 'uniform vec2 polygonOffset;\n';
         }
 
@@ -508,7 +514,7 @@ class LitShader {
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
+        const applySlopeScaleBias = device.isWebGL1 && device.extStandardDerivatives;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -844,7 +850,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.isWebGPU)) {
+            if (shadowTypeUsed[SHADOW_PCF5] && !device.isWebGL1) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {
@@ -864,7 +870,7 @@ class LitShader {
                 func.append(chunks.shadowPCSSPS);
             }
 
-            if (!(device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
+            if (!(device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives)) {
                 func.append(chunks.biasConstPS);
             }
         }
@@ -1256,8 +1262,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) &&
-                            device.webgl2 || device.extStandardDerivatives || device.isWebGPU) {
+                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {

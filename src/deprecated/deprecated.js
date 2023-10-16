@@ -67,7 +67,7 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
-import { MeshInstance, Command } from '../scene/mesh-instance.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Picker } from '../framework/graphics/picker.js';
@@ -612,6 +612,13 @@ Object.defineProperties(Texture.prototype, {
     }
 });
 
+Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
+    }
+});
+
 GraphicsDevice.prototype.getProgramLibrary = function () {
     Debug.deprecated(`pc.GraphicsDevice#getProgramLibrary is deprecated.`);
     return getProgramLibrary(this);
@@ -731,7 +738,6 @@ export const scene = {
         createBox: createBox
     },
     BasicMaterial: BasicMaterial,
-    Command: Command,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -799,7 +805,7 @@ Object.defineProperty(Layer.prototype, 'renderTarget', {
     set: function (rt) {
         Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
         this._renderTarget = rt;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     },
     get: function () {
         return this._renderTarget;

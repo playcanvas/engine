@@ -150,7 +150,11 @@ class LightsBakedAOExample {
                 const lightDirectional = new pc.Entity("Directional");
                 lightDirectional.addComponent("light", {
                     type: "directional",
-                    affectDynamic: true,
+
+                    // disable to not have shadow map updated every frame,
+                    // as the scene does not have dynamically lit objects
+                    affectDynamic: false,
+
                     affectLightmapped: true,
                     castShadows: true,
                     normalOffsetBias: 0.05,

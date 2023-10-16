@@ -1,6 +1,7 @@
 // Realtime performance graph visual
 class Graph {
     constructor(name, app, watermark, textRefreshRate, timer) {
+        this.app = app;
         this.name = name;
         this.device = app.graphicsDevice;
         this.timer = timer;
@@ -19,9 +20,13 @@ class Graph {
         this.sample = new Uint8ClampedArray(4);
         this.sample.set([0, 0, 0, 255]);
 
-        app.on('frameupdate', this.update.bind(this));
-
         this.counter = 0;
+
+        this.app.on('frameupdate', this.update, this);
+    }
+
+    destroy() {
+        this.app.off('frameupdate', this.update, this);
     }
 
     // called when context was lost, function releases all context related resources
@@ -55,7 +60,6 @@ class Graph {
             let value = 0;
             const range = 1.5 * this.watermark;
             for (let i = 0; i < timings.length; ++i) {
-
                 // scale the value into the range
                 value += Math.floor(timings[i] / range * 255);
                 this.sample[i] = value;
@@ -64,18 +68,10 @@ class Graph {
             // .a store watermark
             this.sample[3] = this.watermark / range * 255;
 
-            // write latest sample to the texture
-            const gl = this.device.gl;
-            this.device.bindTexture(this.texture);
-            gl.texSubImage2D(gl.TEXTURE_2D,
-                             0,
-                             this.cursor,
-                             this.yOffset,
-                             1,
-                             1,
-                             gl.RGBA,
-                             gl.UNSIGNED_BYTE,
-                             this.sample);
+            // write latest sample
+            const data = this.texture.lock();
+            data.set(this.sample, (this.cursor + this.yOffset * this.texture.width) * 4);
+            this.texture.unlock();
 
             // update cursor position
             this.cursor++;
@@ -86,15 +82,12 @@ class Graph {
     }
 
     render(render2d, x, y, w, h) {
-        render2d.quad(this.texture,
-                      x + w,
-                      y,
-                      -w,
-                      h,
-                      this.cursor,
-                      0.5 + this.yOffset,
+        render2d.quad(x + w, y, -w, h,
+                      this.enabled ? this.cursor : 0,
+                      this.enabled ? 0.5 + this.yOffset : this.texture.height - 1,
                       -w, 0,
-                      this.enabled);
+                      this.texture,
+                      0);
     }
 }
 

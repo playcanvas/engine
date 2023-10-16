@@ -242,7 +242,7 @@ class Scene extends EventHandler {
         // clustered lighting
         this._clusteredLightingEnabled = true;
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
-            this._layers._dirtyLights = true;
+            this.updateShaders = true;
         });
 
         this._stats = {
@@ -263,7 +263,6 @@ class Scene extends EventHandler {
         this.updateShaders = true;
 
         this._shaderVersion = 0;
-        this._statsUpdated = false;
 
         // immediate rendering
         this.immediate = new Immediate(this.device);
@@ -639,6 +638,7 @@ class Scene extends EventHandler {
      * - {@link TONEMAP_FILMIC}
      * - {@link TONEMAP_HEJL}
      * - {@link TONEMAP_ACES}
+     * - {@link TONEMAP_ACES2}
      *
      * Defaults to {@link TONEMAP_LINEAR}.
      *
@@ -703,7 +703,7 @@ class Scene extends EventHandler {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
 
-        this.clusteredLightingEnabled = render.clusteredLightingEnabled;
+        this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
         // bake settings

@@ -84,7 +84,7 @@ class Immediate {
     getShader(id, fragment) {
         if (!this[id]) {
             // shared vertex shader for textured quad rendering
-            const vertex = `
+            const vertex = /* glsl */ `
                 attribute vec2 vertex_position;
                 uniform mat4 matrix_model;
                 varying vec2 uv0;
@@ -101,7 +101,7 @@ class Immediate {
 
     // shader used to display texture
     getTextureShader() {
-        return this.getShader('textureShader', `
+        return this.getShader('textureShader', /* glsl */ `
             varying vec2 uv0;
             uniform sampler2D colorMap;
             void main (void) {
@@ -112,7 +112,7 @@ class Immediate {
 
     // shader used to display infilterable texture sampled using texelFetch
     getUnfilterableTextureShader() {
-        return this.getShader('textureShaderUnfilterable', `
+        return this.getShader('textureShaderUnfilterable', /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
@@ -124,7 +124,7 @@ class Immediate {
 
     // shader used to display depth texture
     getDepthTextureShader() {
-        return this.getShader('depthTextureShader', `
+        return this.getShader('depthTextureShader', /* glsl */ `
             ${shaderChunks.screenDepthPS}
             varying vec2 uv0;
             void main() {

@@ -1,9 +1,7 @@
-import { execSync } from 'child_process';
-import fs from 'fs';
-import path from 'path';
+import { execSync } from 'node:child_process';
+import * as fs from 'node:fs';
 
 // 1st party Rollup plugins
-import { createFilter } from '@rollup/pluginutils';
 import { babel } from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
@@ -14,8 +12,12 @@ import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
+// custom Rollup plugins
+import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
+import { engineLayerImportValidation } from './utils/rollup-import-validation.mjs';
+import { spacesToTabs } from './utils/rollup-spaces-to-tabs.mjs';
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
-/** @typedef {import('rollup').Plugin} Plugin */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
@@ -60,144 +62,6 @@ function getBanner(config) {
         ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
         ' */'
     ].join('\n');
-}
-
-/**
- * This plugin converts every two spaces into one tab. Two spaces is the default the babel plugin
- * outputs, which is independent of the four spaces of the code base.
- *
- * @param {boolean} enable - Enable or disable the plugin.
- * @returns {Plugin} The plugin.
- */
-function spacesToTabs(enable) {
-    const filter = createFilter([
-        '**/*.js'
-    ], []);
-
-    return {
-        name: "spacesToTabs",
-        transform(code, id) {
-            if (!enable || !filter(id)) return undefined;
-            // ^    = start of line
-            // " +" = one or more spaces
-            // gm   = find all + multiline
-            const regex = /^ +/gm;
-            code = code.replace(
-                regex,
-                startSpaces => startSpaces.replace(/ {2}/g, '\t')
-            );
-            return {
-                code,
-                map: null
-            };
-        }
-    };
-}
-
-/**
- * Validate and print warning if an engine module on a lower level imports module on a higher level
- *
- * @param {string} rootFile - The root file, typically `src/index.js`.
- * @param {boolean} enable - Enable or disable the plugin.
- * @returns {Plugin} The plugin.
- */
-function engineLayerImportValidation(rootFile, enable) {
-
-    const folderLevels = {
-        'core': 0,
-        'platform': 1,
-        'scene': 2,
-        'framework': 3
-    };
-
-    let rootPath;
-
-    return {
-        name: 'engineLayerImportValidation',
-
-        buildStart() {
-            rootPath = path.parse(path.resolve(rootFile)).dir;
-        },
-
-        resolveId(imported, importer) {
-            if (enable) {
-
-                // skip non-relative paths, those are not our imports, for example 'rollupPluginBabelHelpers.js'
-                if (importer && imported && imported.includes('./')) {
-
-                    // convert importer path
-                    const importerDir = path.parse(importer).dir;
-                    const relImporter = path.dirname(path.relative(rootPath, importer));
-                    const folderImporter = relImporter.split(path.sep)[0];
-                    const levelImporter = folderLevels[folderImporter];
-
-                    // convert imported path
-                    const absImported = path.resolve(path.join(importerDir, imported));
-                    const relImported = path.dirname(path.relative(rootPath, absImported));
-                    const folderImported = relImported.split(path.sep)[0];
-                    const levelImported = folderLevels[folderImported];
-
-                    if (levelImporter < levelImported) {
-                        console.log(`(!) Incorrect import: [${path.relative(rootPath, importer)}] -> [${imported}]`);
-                    }
-                }
-            }
-
-            // we don't process imports, return null to allow chaining
-            return null;
-        }
-    };
-}
-
-/**
- * @param {boolean} enable - Enable or disable the plugin.
- * @returns {Plugin} The plugin.
- */
-function shaderChunks(enable) {
-    const filter = createFilter([
-        '**/*.vert.js',
-        '**/*.frag.js'
-    ], []);
-
-    return {
-        name: 'shaderChunks',
-        transform(code, id) {
-            if (!enable || !filter(id)) return undefined;
-
-            code = code.replace(/\/\* glsl \*\/\`((.|\r|\n)*)\`/, (match, glsl) => {
-
-                // Remove carriage returns
-                glsl = glsl.replace(/\r/g, '');
-
-                // 4 spaces to tabs
-                glsl = glsl.replace(/ {4}/g, '\t');
-
-                // Remove comments
-                glsl = glsl.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
-
-                // Trim all whitespace from line endings
-                glsl = glsl.split('\n').map(line => line.trimEnd()).join('\n');
-
-                // Restore final new line
-                glsl += '\n';
-
-                // Comment removal can leave an empty line so condense 2 or more to 1
-                glsl = glsl.replace(/\n{2,}/g, '\n');
-
-                // Remove new line character at the start of the string
-                if (glsl.length > 1 && glsl[0] === '\n') {
-                    glsl = glsl.substr(1);
-                }
-
-                return JSON.stringify(glsl);
-            });
-
-            return {
-                code: code,
-                map: null
-            };
-        }
-    };
 }
 
 /**
@@ -400,7 +264,7 @@ function buildTarget(buildType, moduleFormat) {
         output: outputOptions,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
-            shaderChunks(buildType !== 'debug'),
+            shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
@@ -490,6 +354,12 @@ export default (args) => {
     let targets = [];
 
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
+
+    if ((envTarget === null) && fs.existsSync('build')) {
+        // no targets specified, clean build directory
+        fs.rmSync('build', { recursive: true });
+    }
+
     if (envTarget === 'types') {
         targets.push(target_types);
     } else if (envTarget === 'extras') {

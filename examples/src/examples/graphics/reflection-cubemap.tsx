@@ -106,6 +106,12 @@ class ReflectionCubemapExample {
                     return primitive;
                 }
 
+                // get existing layers
+                const worldLayer = app.scene.layers.getLayerByName("World");
+                const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+                const immediateLayer = app.scene.layers.getLayerByName("Immediate");
+                const uiLayer = app.scene.layers.getLayerByName("UI");
+
                 // create a layer for object that do not render into texture
                 const excludedLayer = new pc.Layer({ name: "Excluded" });
                 app.scene.layers.push(excludedLayer);
@@ -117,11 +123,6 @@ class ReflectionCubemapExample {
                 const shinyBall = createHighQualitySphere(shinyMat, [excludedLayer.id]);
                 shinyBall.setLocalPosition(0, 0, 0);
                 shinyBall.setLocalScale(10, 10, 10);
-
-                // get world and skybox layers
-                const worldLayer = app.scene.layers.getLayerByName("World");
-                const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-                const immediateLayer = app.scene.layers.getLayerByName("Immediate");
 
                 // add camera component to shiny ball - this defines camera properties for cubemap rendering
                 shinyBall.addComponent('camera', {
@@ -179,7 +180,7 @@ class ReflectionCubemapExample {
                 const camera = new pc.Entity("MainCamera");
                 camera.addComponent("camera", {
                     fov: 60,
-                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id]
+                    layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id]
                 });
                 app.root.addChild(camera);
 
