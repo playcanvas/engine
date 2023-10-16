@@ -172,9 +172,8 @@ class Mesh extends RefCountedObject {
     /**
      * Create a new Mesh instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [graphicsDevice] -
-     * The graphics device used to manage this mesh. If it is not provided, a device is obtained
-     * from the {@link Application}.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this mesh.
      */
     constructor(graphicsDevice) {
         super();

@@ -91,7 +91,20 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name;
+    name = '';
+
+    /**
+     * True if the render pass is enabled.
+     *
+     * @type {boolean}
+     */
+    enabled = true;
+
+    /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
 
     /**
      * The render target for this render pass:
@@ -147,48 +160,29 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
-     * Custom function that is called to render the pass.
+     * Render passes which need to be executed before this pass.
      *
-     * @type {Function|undefined}
+     * @type {RenderPass[]}
      */
-    _execute;
+    beforePasses = [];
 
     /**
-     * True if the render pass is enabled and execute function will be called. Note that before and
-     * after functions are called regardless of this flag.
-     */
-    executeEnabled = true;
-
-    /**
-     * Custom function that is called before the pass has started.
+     * Render passes which need to be executed after this pass.
      *
-     * @type {Function|undefined}
+     * @type {RenderPass[]}
      */
-    _before;
-
-    /**
-     * Custom function that is called after the pass has fnished.
-     *
-     * @type {Function|undefined}
-     */
-    _after;
+    afterPasses = [];
 
     /**
      * Creates an instance of the RenderPass.
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
-     * @param {Function} [execute] - Custom function that is called to render the pass.
      */
-    constructor(graphicsDevice, execute) {
+    constructor(graphicsDevice) {
         DebugHelper.setName(this, this.constructor.name);
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
-
-        this._execute = execute;
-    }
-
-    destroy() {
     }
 
     /**
@@ -227,15 +221,12 @@ class RenderPass {
     }
 
     before() {
-        this._before?.();
     }
 
     execute() {
-        this._execute?.();
     }
 
     after() {
-        this._after?.();
     }
 
     /**
@@ -280,34 +271,37 @@ class RenderPass {
      */
     render() {
 
-        const device = this.device;
-        const realPass = this.renderTarget !== undefined;
-        DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
+        if (this.enabled) {
 
-        Debug.call(() => {
-            this.log(device, device.renderPassIndex);
-        });
+            const device = this.device;
+            const realPass = this.renderTarget !== undefined;
+            DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
-        this.before();
+            Debug.call(() => {
+                this.log(device, device.renderPassIndex);
+            });
 
-        if (this.executeEnabled) {
-            if (realPass) {
-                device.startPass(this);
+            this.before();
+
+            if (this.executeEnabled) {
+
+                if (realPass) {
+                    device.startPass(this);
+                }
+
+                this.execute();
+
+                if (realPass) {
+                    device.endPass(this);
+                }
             }
 
-            this.execute();
+            this.after();
 
-            if (realPass) {
-                device.endPass(this);
-            }
+            device.renderPassIndex++;
+
+            DebugGraphics.popGpuMarker(device);
         }
-
-        this.after();
-
-        device.renderPassIndex++;
-
-        DebugGraphics.popGpuMarker(device);
-
     }
 
     // #if _DEBUG
