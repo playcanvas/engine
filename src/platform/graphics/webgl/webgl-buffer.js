@@ -26,10 +26,6 @@ class WebglBuffer {
     unlock(device, usage, target, storage) {
         const gl = device.gl;
 
-        if (!this.bufferId) {
-            this.bufferId = gl.createBuffer();
-        }
-
         let glUsage;
         switch (usage) {
             case BUFFER_STATIC:
@@ -46,8 +42,19 @@ class WebglBuffer {
                 break;
         }
 
+        const newBuffer = !this.bufferId;
+
+        if (newBuffer) {
+            this.bufferId = gl.createBuffer();
+        }
+
         gl.bindBuffer(target, this.bufferId);
-        gl.bufferData(target, storage, glUsage);
+
+        if (newBuffer) {
+            gl.bufferData(target, storage, glUsage);
+        } else {
+            gl.bufferSubData(target, 0, storage);
+        }
     }
 }
 
