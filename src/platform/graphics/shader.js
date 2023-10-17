@@ -46,9 +46,12 @@ class Shader {
      * vertex shader attribute names to semantics SEMANTIC_*. This enables the engine to match
      * vertex buffer data as inputs to the shader. When not specified, rendering without
      * vertex buffer is assumed.
-     * @param {string} definition.vshader - Vertex shader source (GLSL code).
+     * @param {string} [definition.vshader] - Vertex shader source (GLSL code). Optional when
+     * compute shader is specified.
      * @param {string} [definition.fshader] - Fragment shader source (GLSL code). Optional when
-     * useTransformFeedback is specified.
+     * useTransformFeedback or compute shader is specified.
+     * @param {string} [definition.cshader] - Compute shader source (WGSL code). Only supported on
+     * WebGPU platform.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
      * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
@@ -89,15 +92,19 @@ class Shader {
         this.device = graphicsDevice;
         this.definition = definition;
         this.name = definition.name || 'Untitled';
-
-        Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
-        Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
-
-        // pre-process shader sources
-        definition.vshader = Preprocessor.run(definition.vshader);
-        definition.fshader = Preprocessor.run(definition.fshader, graphicsDevice.isWebGL2);
-
         this.init();
+
+        if (definition.cshader) {
+            Debug.assert(graphicsDevice.supportsCompute, 'Compute shaders are not supported on this device.');
+            Debug.assert(!definition.vshader && !definition.fshader, 'Vertex and fragment shaders are not supported when creating a compute shader.');
+        } else {
+            Debug.assert(definition.vshader, 'No vertex shader has been specified when creating a shader.');
+            Debug.assert(definition.fshader, 'No fragment shader has been specified when creating a shader.');
+
+            // pre-process shader sources
+            definition.vshader = Preprocessor.run(definition.vshader);
+            definition.fshader = Preprocessor.run(definition.fshader, graphicsDevice.isWebGL2);
+        }
 
         this.impl = graphicsDevice.createShaderImpl(this);
 
