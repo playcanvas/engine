@@ -56,10 +56,21 @@ mat4 getModelMatrix() {
     return matrix_model;
     #endif
 }
-
+#ifdef DISPLACEMENT
+uniform sampler2D texture_heightMap;
+uniform float material_displacementFactor;
+uniform float material_displacementOffset;
+#endif
 vec4 getPosition() {
     dModelMatrix = getModelMatrix();
+
     vec3 localPos = vertex_position;
+
+    #ifdef DISPLACEMENT
+    vec4 dMapSample = texture2D(texture_heightMap, vertex_texCoord0.xy);
+    float displacer = dMapSample.r * material_displacementFactor + material_displacementOffset;
+    localPos += vertex_normal * displacer;
+    #endif
 
     #ifdef NINESLICED
     // outer and inner vertices are at the same position, scale both

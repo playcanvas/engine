@@ -415,6 +415,13 @@ let _params = new Set();
  * @property {number} heightMapRotation Controls the 2D rotation (in degrees) of the height map.
  * @property {number} heightMapFactor Height map multiplier. Affects the strength of the parallax
  * effect.
+ * @property {boolean} useDisplacement Use heightMap as vertex displacement. When enabled, vertex'
+ * displaced according to heightMap's red channel. This effect takes UV0 channel for displacement
+ * and does not support offsetting or translating maps.
+ * @property {number} displacementFactor Displacement multiplier. Affects the strength of the
+ * displacement effect.
+ * @property {number} displacementOffset Displacement height offset. Shifts displacement effect in
+ * initial vertex normal direction.
  * @property {import('../../platform/graphics/texture.js').Texture|null} envAtlas The prefiltered
  * environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and
  * will replace the scene lighting environment.
@@ -816,6 +823,11 @@ class StandardMaterial extends Material {
             this._setParameter('material_heightMapFactor', getUniform('heightMapFactor'));
         }
 
+        if (this.useDisplacement) {
+            this._setParameter('material_displacementFactor', this.displacementFactor);
+            this._setParameter('material_displacementOffset', this.displacementOffset);
+        }
+
         const isPhong = this.shadingModel === SPECULAR_PHONG;
 
         // set overridden environment textures
@@ -865,7 +877,8 @@ class StandardMaterial extends Material {
 
         // Minimal options for Depth and Shadow passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+        const minimalOptions = this.useDisplacement ? false : pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)
@@ -1144,6 +1157,9 @@ function _defineMaterialProps() {
     _defineFloat('heightMapFactor', 1, (material, device, scene) => {
         return material.heightMapFactor * 0.025;
     });
+    _defineFloat('displacementFactor', 0, (material, device, scene) => {
+        return material.displacementFactor;
+    });
     _defineFloat('opacity', 1);
     _defineFloat('alphaFade', 1);
     _defineFloat('alphaTest', 0);       // NOTE: overwrites Material.alphaTest
@@ -1228,6 +1244,8 @@ function _defineMaterialProps() {
     _defineFlag('glossInvert', false);
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
+
+    _defineFlag('useDisplacement', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

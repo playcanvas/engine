@@ -26,6 +26,7 @@ import MaterialPhysicalExample from "./material-physical";
 import MaterialTranslucentSpecularExample from "./material-translucent-specular";
 import MeshDecalsExample from "./mesh-decals";
 import MeshDeformationExample from "./mesh-deformation";
+import MeshDisplacementExample from "./mesh-displacement";
 import MeshGenerationExample from "./mesh-generation";
 import MeshMorphManyExample from "./mesh-morph-many";
 import MeshMorphExample from "./mesh-morph";
@@ -87,6 +88,7 @@ export {
     MaterialTranslucentSpecularExample,
     MeshDecalsExample,
     MeshDeformationExample,
+    MeshDisplacementExample,
     MeshGenerationExample,
     MeshMorphManyExample,
     MeshMorphExample,

@@ -161,6 +161,7 @@ class StandardMaterialOptionsBuilder {
                     options.litOptions.vertexColors = true;
                 }
             }
+
             if (stdMat[mname]) {
                 let allow = true;
                 if (stdMat[uname] === 0 && !hasUv0) allow = false;
@@ -287,6 +288,8 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
         options.litOptions.useMetalness = stdMat.useMetalness;
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
+
+        options.litOptions.useDisplacement = stdMat.useDisplacement;
     }
 
     _updateEnvOptions(options, stdMat, scene) {
