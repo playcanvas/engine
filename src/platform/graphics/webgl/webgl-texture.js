@@ -475,7 +475,7 @@ class WebglTexture {
                             0, 0,
                             this._glFormat,
                             this._glPixelType,
-                            mipObject                            
+                            mipObject
                         );
                     } else {
                         gl.texImage2D(
