@@ -79,8 +79,6 @@ class WebgpuBindGroupFormat {
      */
     createDescriptor(bindGroupFormat) {
 
-        const { compute } = bindGroupFormat;
-
         // all WebGPU bindings:
         // - buffer: GPUBufferBindingLayout, resource type is GPUBufferBinding
         // - sampler: GPUSamplerBindingLayout, resource type is GPUSampler
