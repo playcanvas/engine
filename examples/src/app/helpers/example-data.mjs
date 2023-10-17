@@ -1,38 +1,31 @@
-import exampleData from '../../../dist/example-data.js';
-
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
+import { exampleData } from '../../example-data.mjs';
+import { kebabCaseToPascalCase } from './strings.mjs';
+/** @type {Record<string, Record<string, object>>} */
 const categories = {};
+/** @type {Record<string, object>} */
 const paths = {};
-
 Object.keys(exampleData).forEach((categorySlug) => {
-    const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
+    const category = kebabCaseToPascalCase(categorySlug);
     categories[categorySlug] = {
         examples: {}
     };
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
-        const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
+        const name = kebabCaseToPascalCase(exampleSlug);
         categories[categorySlug].examples[exampleSlug] = name;
+        const data = exampleData[categorySlug][exampleSlug];
         const files = [
             {
                 name: 'example.js',
-                text: exampleData[categorySlug][exampleSlug].javaScriptFunction,
+                text: data.example,
                 type: 'javascript'
             },
-            {
-                name: 'example.ts',
-                text: exampleData[categorySlug][exampleSlug].typeScriptFunction,
-                type: 'typescript'
-            }
         ];
-        const extraFiles = exampleData[categorySlug][exampleSlug].files;
+        const extraFiles = data.files;
         if (extraFiles) {
-            Object.keys(extraFiles).forEach((fileName) => {
+            Object.keys(extraFiles).forEach((name) => {
                 files.push({
-                    name: fileName,
-                    text: extraFiles[fileName],
+                    name,
+                    text: extraFiles[name],
                     type: 'text'
                 });
             });
@@ -46,7 +39,4 @@ Object.keys(exampleData).forEach((categorySlug) => {
     });
 });
 
-export default {
-    categories,
-    paths
-};
+export default { categories, paths };
