@@ -59,6 +59,8 @@ class WebglTexture {
 
     _glPixelType;
 
+    _glCreated;
+
     dirtyParameterFlags = 0;
 
     destroy(device) {
@@ -279,6 +281,8 @@ class WebglTexture {
                 Debug.error("BGRA8 texture format is not supported by WebGL.");
                 break;
         }
+
+        this._glCreated = false;
     }
 
     upload(device, texture) {
@@ -339,14 +343,26 @@ class WebglTexture {
 
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                        gl.texImage2D(
-                            gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                            mipLevel,
-                            this._glInternalFormat,
-                            this._glFormat,
-                            this._glPixelType,
-                            src
-                        );
+
+                        if (texture._glCreated) {
+                            gl.texSubImage2D(
+                                gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                mipLevel,
+                                0, 0,
+                                this._glFormat,
+                                this._glPixelType,
+                                src
+                            );
+                        } else {
+                            gl.texImage2D(
+                                gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                mipLevel,
+                                this._glInternalFormat,
+                                this._glFormat,
+                                this._glPixelType,
+                                src
+                            );
+                        }
                     }
                 } else {
                     // Upload the byte array
@@ -357,29 +373,53 @@ class WebglTexture {
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
-                            gl.compressedTexImage2D(
-                                gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                mipLevel,
-                                this._glInternalFormat,
-                                Math.max(texture._width * resMult, 1),
-                                Math.max(texture._height * resMult, 1),
-                                0,
-                                texData
-                            );
+                            if (texture._glCreated) {
+                                gl.compressedTexSubImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    0, 0,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    this._glInternalFormat,
+                                    texData);
+                            } else {
+                                gl.compressedTexImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    this._glInternalFormat,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    0,
+                                    texData
+                                );
+                            }
                         } else {
                             device.setUnpackFlipY(false);
                             device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                            gl.texImage2D(
-                                gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
-                                mipLevel,
-                                this._glInternalFormat,
-                                Math.max(texture._width * resMult, 1),
-                                Math.max(texture._height * resMult, 1),
-                                0,
-                                this._glFormat,
-                                this._glPixelType,
-                                texData
-                            );
+                            if (texture._glCreated) {
+                                gl.texSubImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    0, 0,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    this._glFormat,
+                                    this._glPixelType,
+                                    texData
+                                );
+                            } else {
+                                gl.texImage2D(
+                                    gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                                    mipLevel,
+                                    this._glInternalFormat,
+                                    Math.max(texture._width * resMult, 1),
+                                    Math.max(texture._height * resMult, 1),
+                                    0,
+                                    this._glFormat,
+                                    this._glPixelType,
+                                    texData
+                                );
+                            }
                         }
                     }
                 }
@@ -428,41 +468,77 @@ class WebglTexture {
                     // Upload the image, canvas or video
                     device.setUnpackFlipY(texture._flipY);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                    gl.texImage2D(
-                        gl.TEXTURE_2D,
-                        mipLevel,
-                        this._glInternalFormat,
-                        this._glFormat,
-                        this._glPixelType,
-                        mipObject
-                    );
-                } else {
-                    // Upload the byte array
-                    resMult = 1 / Math.pow(2, mipLevel);
-                    if (texture._compressed) {
-                        gl.compressedTexImage2D(
+                    if (texture._glCreated && mipObject.width === texture._width && mipObject.height === texture._height) {
+                        gl.texSubImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
-                            this._glInternalFormat,
-                            Math.max(Math.floor(texture._width * resMult), 1),
-                            Math.max(Math.floor(texture._height * resMult), 1),
-                            0,
-                            mipObject
+                            0, 0,
+                            this._glFormat,
+                            this._glPixelType,
+                            mipObject                            
                         );
                     } else {
-                        device.setUnpackFlipY(false);
-                        device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
                         gl.texImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
                             this._glInternalFormat,
-                            Math.max(texture._width * resMult, 1),
-                            Math.max(texture._height * resMult, 1),
-                            0,
                             this._glFormat,
                             this._glPixelType,
                             mipObject
                         );
+                    }
+                } else {
+                    // Upload the byte array
+                    resMult = 1 / Math.pow(2, mipLevel);
+                    if (texture._compressed) {
+                        if (texture._glCreated) {
+                            gl.compressedTexSubImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                0, 0,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                this._glInternalFormat,
+                                mipObject
+                            );
+                        } else {
+                            gl.compressedTexImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                this._glInternalFormat,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                0,
+                                mipObject
+                            );
+                        }
+                    } else {
+                        device.setUnpackFlipY(false);
+                        device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
+                        if (texture._glCreated) {
+                            gl.texSubImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                0, 0,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject
+                            );
+                        } else {
+                            gl.texImage2D(
+                                gl.TEXTURE_2D,
+                                mipLevel,
+                                this._glInternalFormat,
+                                Math.max(texture._width * resMult, 1),
+                                Math.max(texture._height * resMult, 1),
+                                0,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject
+                            );
+                        }
                     }
                 }
 
@@ -496,6 +572,8 @@ class WebglTexture {
 
         texture._gpuSize = texture.gpuSize;
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
+
+        texture._glCreated = true;
     }
 }
 
