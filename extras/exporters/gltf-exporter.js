@@ -298,7 +298,7 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    attachTexture(resources, material, destination, name, textureSemantic) {
+    attachTexture(resources, material, destination, name, textureSemantic, json) {
         const texture = material[textureSemantic];
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
@@ -316,6 +316,16 @@ class GltfExporter extends CoreExporter {
                     KHR_texture_transform: {}
                 };
 
+                json.extensionsUsed = json.extensionsUsed ?? [];
+                if (json.extensionsUsed.indexOf('KHR_texture_transform') < 0) {
+                    json.extensionsUsed.push('KHR_texture_transform');
+                }
+
+                json.extensionsRequired = json.extensionsRequired ?? [];
+                if (json.extensionsRequired.indexOf('KHR_texture_transform') < 0) {
+                    json.extensionsRequired.push('KHR_texture_transform');
+                }
+
                 if (!scale.equals(Vec2.ONE)) {
                     destination[name].extensions.KHR_texture_transform.scale = [scale.x, scale.y];
                 }
@@ -331,7 +341,7 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    writeStandardMaterial(resources, mat, output) {
+    writeStandardMaterial(resources, mat, output, json) {
 
         const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
@@ -349,15 +359,15 @@ class GltfExporter extends CoreExporter {
             pbr.roughnessFactor = roughness;
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap');
-        this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap');
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
+        this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
         if (!emissive.equals(Color.BLACK)) {
             output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
         }
     }
 
-    writeBasicMaterial(resources, mat, output) {
+    writeBasicMaterial(resources, mat, output, json) {
 
         const { color } = mat;
         const pbr = output.pbrMetallicRoughness;
@@ -366,7 +376,7 @@ class GltfExporter extends CoreExporter {
             pbr.baseColorFactor = [color.r, color.g, color.b, color];
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap');
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap', json);
     }
 
     writeMaterials(resources, json) {
@@ -383,11 +393,11 @@ class GltfExporter extends CoreExporter {
                 }
 
                 if (mat instanceof StandardMaterial) {
-                    this.writeStandardMaterial(resources, mat, material);
+                    this.writeStandardMaterial(resources, mat, material, json);
                 }
 
                 if (mat instanceof BasicMaterial) {
-                    this.writeBasicMaterial(resources, mat, material);
+                    this.writeBasicMaterial(resources, mat, material, json);
                 }
 
                 if (blendType === BLEND_NORMAL) {
@@ -396,9 +406,6 @@ class GltfExporter extends CoreExporter {
                     if (alphaTest !== 0) {
                         material.alphaMode = 'MASK';
                         material.alphaCutoff = alphaTest;
-                    } else {
-                        // It is a default value, so we don't need to write it
-                        // material.alphaMode = 'OPAQUE';
                     }
                 }
 
@@ -406,9 +413,9 @@ class GltfExporter extends CoreExporter {
                     material.doubleSided = true;
                 }
 
-                this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap');
-                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap');
-                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap');
+                this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap', json);
+                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap', json);
+                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap', json);
 
                 return material;
             });
