@@ -218,6 +218,10 @@ export { ScreenComponent } from './framework/components/screen/component.js';
 export { ScreenComponentSystem } from './framework/components/screen/system.js';
 export { ScriptComponent } from './framework/components/script/component.js';
 export { ScriptComponentSystem } from './framework/components/script/system.js';
+
+export { ESModuleComponent } from './framework/components/es-module/component.js';
+export { ESModuleComponentSystem } from './framework/components/es-module/system.js';
+
 export { ScriptLegacyComponent } from './framework/components/script-legacy/component.js';
 export { ScriptLegacyComponentSystem } from './framework/components/script-legacy/system.js';
 export { ScrollbarComponent } from './framework/components/scrollbar/component.js';

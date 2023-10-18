@@ -34,6 +34,7 @@ import { ZoneComponentSystem } from './components/zone/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
+import { ESModuleComponentSystem } from './components/es-module/system.js';
 
 import { RenderHandler } from './handlers/render.js';
 import { AnimationHandler } from './handlers/animation.js';
@@ -168,6 +169,7 @@ class Application extends AppBase {
             CameraComponentSystem,
             LightComponentSystem,
             script.legacy ? ScriptLegacyComponentSystem : ScriptComponentSystem,
+            ESModuleComponentSystem,
             AudioSourceComponentSystem,
             SoundComponentSystem,
             AudioListenerComponentSystem,
