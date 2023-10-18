@@ -1,14 +1,11 @@
 import { Debug } from '../../../core/debug.js';
 import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
-
-import { ScriptAttributes } from '../../script/script-attributes.js';
-
 import { Component } from '../component.js';
 import { Entity } from '../../entity.js';
 
 /**
- * The ScriptComponent allows you to extend the functionality of an Entity by attaching your own
- * Script Types defined in JavaScript files to be executed with access to the Entity. For more
+ * The ESModuleComponent allows you to extend the functionality of an Entity by attaching your own
+ * module defined in JavaScript files to be executed with access to the Entity. For more
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @augments Component
@@ -17,7 +14,7 @@ class ESModuleComponent extends Component {
     /**
      * Create a new ScriptComponent instance.
      *
-     * @param {import('./system.js').ScriptComponentSystem} system - The ComponentSystem that
+     * @param {import('./system.js').ESModuleComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
@@ -315,7 +312,7 @@ class ESModuleComponent extends Component {
 
 
     _onInitialize() {
-        console.log('onInit')
+        console.log('onInit');
         // const scripts = this._scripts;
 
         // const wasLooping = this._beginLooping();
@@ -409,8 +406,7 @@ class ESModuleComponent extends Component {
     /**
      * Create a script instance and attach to an entity script component.
      *
-     * @param {string} moduleSpecifier - The
-     * name or type of {@link ScriptType}.
+     * @param {string} moduleSpecifier - The module specifier used to import the ES module.
      * @param {object} [args] - Object with arguments for a script.
      * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
      * true.
@@ -420,10 +416,8 @@ class ESModuleComponent extends Component {
      * script and attributes must be initialized manually. Defaults to false.
      * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
      * -1, which means append it at the end.
-     * @returns {import('../../script/script-type.js').ScriptType|null} Returns an instance of a
-     * {@link ScriptType} if successfully attached to an entity, or null if it failed because a
-     * script with a same name has already been added or if the {@link ScriptType} cannot be found
-     * by name in the {@link ScriptRegistry}.
+     * @returns {*} Returns an instance of a
+     * ES Module if successfully attached to an entity, or null if the import fails
      * @example
      * entity.script.create('moduleSpecifier', {
      *     attributes: {
@@ -441,12 +435,12 @@ class ESModuleComponent extends Component {
         }
 
         // TODO: Remove window ref
-        import(window.location.origin + moduleSpecifier).then((Module) => {
+        import(moduleSpecifier).then((Module) => {
 
-            const { default: EsModuleClass, attributes} = Module;
+            const { default: EsModuleClass, attributes } = Module;
 
-            if (!EsModuleClass) throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not export a default object`)
-            if (typeof EsModuleClass !== 'function') throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`)
+            if (!EsModuleClass) throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not export a default object`);
+            if (typeof EsModuleClass !== 'function') throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
 
             if (!attributes) Debug.warn(`The module '${moduleSpecifier}' does not export any attributes`);
             const module = new EsModuleClass(this.entity, args.attributes);
@@ -469,7 +463,7 @@ class ESModuleComponent extends Component {
     /**
      * Destroy the script instance that is attached to an entity.
      *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
+     * @param {string} moduleSpecifier - The
      * name or type of {@link ScriptType}.
      * @returns {boolean} If it was successfully destroyed.
      * @example
@@ -482,8 +476,10 @@ class ESModuleComponent extends Component {
         if (module) {
             module.destroy();
             this.modules.delete(moduleSpecifier);
+            return true;
         }
 
+        return false;
     }
 
     /**
