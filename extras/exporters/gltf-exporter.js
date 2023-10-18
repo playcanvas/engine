@@ -1,7 +1,7 @@
-import { CoreExporter } from "./core-exporter.js";
+import { CoreExporter } from './core-exporter.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    BLEND_NORMAL,
+    BLEND_NONE, BLEND_NORMAL,
     CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST,
     FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -17,6 +17,7 @@ import {
     BoundingBox,
     Color,
     Quat,
+    Vec2,
     Vec3,
     VertexBuffer,
     StandardMaterial,
@@ -99,7 +100,10 @@ const getWrap = function (wrap) {
 // supported texture semantics on a material
 const textureSemantics = [
     'diffuseMap',
-    'colorMap'
+    'colorMap',
+    'normalMap',
+    'metalnessMap',
+    'emissiveMap'
 ];
 
 class GltfExporter extends CoreExporter {
@@ -210,7 +214,7 @@ class GltfExporter extends CoreExporter {
 
             const addBufferView = (target, byteLength, byteOffset, byteStride) => {
 
-                const bufferView =  {
+                const bufferView = {
                     target: target,
                     buffer: 0,
                     byteLength: byteLength,
@@ -237,7 +241,12 @@ class GltfExporter extends CoreExporter {
                     const bufferViewIndices = [];
                     format.elements.forEach((element) => {
 
-                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
+                        const bufferViewIndex = addBufferView(
+                            ARRAY_BUFFER,
+                            element.size * format.vertexCount,
+                            offset + element.offset,
+                            element.size
+                        );
                         bufferViewIndices.push(bufferViewIndex);
 
                     });
@@ -266,7 +275,7 @@ class GltfExporter extends CoreExporter {
                 const camera = {};
 
                 if (projection === PROJECTION_ORTHOGRAPHIC) {
-                    camera.type = "orthographic";
+                    camera.type = 'orthographic';
                     camera.orthographic = {
                         xmag: 1,
                         ymag: 1,
@@ -276,7 +285,7 @@ class GltfExporter extends CoreExporter {
                 } else {
                     const fov = cam.fov;
 
-                    camera.type = "perspective";
+                    camera.type = 'perspective';
                     camera.perspective = {
                         yfov: fov * Math.PI / 180,
                         znear: nearClip,
@@ -295,21 +304,53 @@ class GltfExporter extends CoreExporter {
             const textureIndex = resources.textures.indexOf(texture);
             if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
-                "index": textureIndex
+                index: textureIndex,
             };
+
+            const scale = material[`${textureSemantic}Tiling`];
+            const offset = material[`${textureSemantic}Offset`];
+            const rotation = material[`${textureSemantic}Rotation`];
+
+            if (!scale.equals(Vec2.ONE) || !offset.equals(Vec2.ZERO) || rotation !== 0) {
+                destination[name].extensions = {
+                    KHR_texture_transform: {}
+                };
+
+                if (!scale.equals(Vec2.ONE)) {
+                    destination[name].extensions.KHR_texture_transform.scale = [scale.x, scale.y];
+                }
+
+                if (!offset.equals(Vec2.ZERO)) {
+                    destination[name].extensions.KHR_texture_transform.offset = [offset.x, offset.y - 1 + scale.y];
+                }
+
+                if (rotation !== 0) {
+                    destination[name].extensions.KHR_texture_transform.rotation = rotation * math.DEG_TO_RAD;
+                }
+            }
         }
     }
 
     writeStandardMaterial(resources, mat, output) {
 
-        const { diffuse, emissive, opacity } = mat;
+        const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
         if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
             pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
         }
 
+        if (metalness !== 1) {
+            pbr.metallicFactor = metalness;
+        }
+
+        const roughness = glossInvert ? gloss : 1 - gloss;
+        if (roughness !== 1) {
+            pbr.roughnessFactor = roughness;
+        }
+
         this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap');
+        this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap');
 
         if (!emissive.equals(Color.BLACK)) {
             output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
@@ -332,7 +373,7 @@ class GltfExporter extends CoreExporter {
 
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
-                const { name, blendType, cull } = mat;
+                const { name, blendType, cull, alphaTest } = mat;
                 const material = {
                     pbrMetallicRoughness: {}
                 };
@@ -350,12 +391,24 @@ class GltfExporter extends CoreExporter {
                 }
 
                 if (blendType === BLEND_NORMAL) {
-                    material.alphaMode = "BLEND";
+                    material.alphaMode = 'BLEND';
+                } else if (blendType === BLEND_NONE) {
+                    if (alphaTest !== 0) {
+                        material.alphaMode = 'MASK';
+                        material.alphaCutoff = alphaTest;
+                    } else {
+                        // It is a default value, so we don't need to write it
+                        // material.alphaMode = 'OPAQUE';
+                    }
                 }
 
                 if (cull === CULLFACE_NONE) {
                     material.doubleSided = true;
                 }
+
+                this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap');
+                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap');
+                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap');
 
                 return material;
             });
@@ -476,7 +529,7 @@ class GltfExporter extends CoreExporter {
                             bufferView: viewIndex,
                             componentType: getIndexComponentType(indexBuffer.getFormat()),
                             count: indexBuffer.getNumIndices(),
-                            type: "SCALAR"
+                            type: 'SCALAR'
                         };
 
                         const idx = json.accessors.push(accessor) - 1;
@@ -554,8 +607,8 @@ class GltfExporter extends CoreExporter {
 
             const json = {
                 asset: {
-                    version: "2.0",
-                    generator: "PlayCanvas GltfExporter"
+                    version: '2.0',
+                    generator: 'PlayCanvas GltfExporter'
                 },
                 scenes: [
                     {
