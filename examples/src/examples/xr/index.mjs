@@ -1,17 +1,7 @@
-import ArBasicExample from "./ar-basic";
-import ArHitTestExample from "./ar-hit-test";
-import VrBasicExample from "./vr-basic";
-import VrControllersExample from './vr-controllers';
-import VrHandsExample from "./vr-hands";
-import VrMovementExample from "./vr-movement";
-import XrPickingExample from "./xr-picking";
-
-export {
-    ArBasicExample,
-    ArHitTestExample,
-    VrBasicExample,
-    VrControllersExample,
-    VrHandsExample,
-    VrMovementExample,
-    XrPickingExample
-};
+export * from "./ar-basic.mjs";
+export * from "./ar-hit-test.mjs";
+export * from "./vr-basic.mjs";
+export * from './vr-controllers.mjs';
+export * from "./vr-hands.mjs";
+export * from "./vr-movement.mjs";
+export * from "./xr-picking.mjs";
