@@ -304,7 +304,7 @@ class GltfExporter extends CoreExporter {
             const textureIndex = resources.textures.indexOf(texture);
             if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
-                index: textureIndex,
+                index: textureIndex
             };
 
             const scale = material[`${textureSemantic}Tiling`];
