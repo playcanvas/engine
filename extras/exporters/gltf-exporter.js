@@ -594,7 +594,7 @@ class GltfExporter extends CoreExporter {
                 if (json.buffers[0]) {
                     json.buffers[0].byteLength = math.roundUp(json.buffers[0].byteLength, 4);
 
-                    GltfExporter.writeBufferView(resources, json, indexBuffer);
+                    GltfExporter.writeBufferView(resources, json, indexBuffer, json.buffers[0].byteLength);
                     bufferView = resources.bufferViewMap.get(indexBuffer);
 
                     json.buffers[0].byteLength += indexBuffer.lock().byteLength;
@@ -840,9 +840,12 @@ class GltfExporter extends CoreExporter {
 
                 resources.buffers.forEach((buffer) => {
                     let src;
+
+                    const bufferViewId = resources.bufferViewMap.get(buffer)[0];
+
+                    const bufferOffset = json.bufferViews[bufferViewId].byteOffset;
+
                     if (buffer instanceof ArrayBuffer) {
-                        // FIXME: pad buffer to 4 bytes
-                        offset = math.roundUp(offset, 4);
                         src = new Uint8Array(buffer);
                     } else {
                         const srcBuffer = buffer.lock();
@@ -852,10 +855,8 @@ class GltfExporter extends CoreExporter {
                             src = new Uint8Array(srcBuffer.buffer, srcBuffer.byteOffset, srcBuffer.byteLength);
                         }
                     }
-                    const dst = new Uint8Array(glbBuffer, offset, src.byteLength);
+                    const dst = new Uint8Array(glbBuffer, offset + bufferOffset, src.byteLength);
                     dst.set(src);
-
-                    offset += src.byteLength;
                 });
             }
 
