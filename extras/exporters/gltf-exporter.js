@@ -208,25 +208,6 @@ class GltfExporter extends CoreExporter {
         return resources;
     }
 
-    writeBuffers(resources, json) {
-        if (resources.buffers.length > 0) {
-            json.buffers = [];
-
-            let byteLength = 0;
-
-            resources.buffers.forEach((buffer) => {
-                const arrayBuffer = buffer.lock();
-                byteLength += arrayBuffer.byteLength;
-            });
-
-            const buffer = {
-                byteLength: byteLength
-            };
-
-            json.buffers.push(buffer);
-        }
-    }
-
     writeBufferViews(resources, json) {
         json.bufferViews = [];
 
@@ -235,9 +216,17 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    static writeBufferView(resources, json, buffer, byteOffset) {
-        const previousBufferView = json.bufferViews[json.bufferViews.length - 1];
-        const offset = byteOffset ?? (previousBufferView?.byteLength + previousBufferView?.byteOffset || 0);
+    static writeBufferView(resources, json, buffer) {
+        // NOTE: right now we only use one buffer per gltf file
+        json.buffers = json.buffers ?? [];
+
+        json.buffers[0] = json.buffers[0] ?? { byteLength: 0 };
+        const bufferInfo = json.buffers[0];
+
+        // To be sure that the buffer is aligned to 4 bytes
+        // so that it can be read as a Uint32Array or Float32Array
+        bufferInfo.byteLength = math.roundUp(bufferInfo.byteLength, 4);
+        const offset = bufferInfo.byteLength;
 
         // FIXME: don't create the function every time
         const addBufferView = (target, byteLength, byteOffset, byteStride) => {
@@ -253,8 +242,9 @@ class GltfExporter extends CoreExporter {
             return json.bufferViews.push(bufferView) - 1;
         };
 
+        let arrayBuffer;
         if (buffer instanceof VertexBuffer) {
-            const arrayBuffer = buffer.lock();
+            arrayBuffer = buffer.lock();
 
             const format = buffer.getFormat();
             if (format.interleaved) {
@@ -282,19 +272,22 @@ class GltfExporter extends CoreExporter {
             }
 
         } else if (buffer instanceof IndexBuffer) {    // index buffer
-            const arrayBuffer = buffer.lock();
+            arrayBuffer = buffer.lock();
 
             const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset);
             resources.bufferViewMap.set(buffer, [bufferViewIndex]);
 
         } else {
             // buffer is an array buffer
-            const arrayBuffer = buffer;
+            arrayBuffer = buffer;
 
             const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
             resources.bufferViewMap.set(buffer, [bufferViewIndex]);
 
         }
+
+        // increment buffer by the size of the array buffer to allocate buffer with enough space
+        bufferInfo.byteLength += arrayBuffer.byteLength;
     }
 
     writeCameras(resources, json) {
@@ -543,18 +536,10 @@ class GltfExporter extends CoreExporter {
 
             let bufferView = resources.bufferViewMap.get(vertexBuffer);
             if (!bufferView) {
-                // extend buffer
-                if (json.buffers[0]) {
-                    json.buffers[0].byteLength = math.roundUp(json.buffers[0].byteLength, 4);
+                GltfExporter.writeBufferView(resources, json, vertexBuffer);
+                resources.buffers.push(vertexBuffer);
 
-                    GltfExporter.writeBufferView(resources, json, vertexBuffer, json.buffers[0].byteLength);
-                    bufferView = resources.bufferViewMap.get(vertexBuffer);
-
-                    json.buffers[0].byteLength += vertexBuffer.lock().byteLength;
-                    resources.buffers.push(vertexBuffer);
-                } else {
-                    throw new Error("No buffer found");
-                }
+                bufferView = resources.bufferViewMap.get(vertexBuffer);
             }
             const viewIndex = bufferView[interleaved ? 0 : elementIndex];
 
@@ -590,18 +575,10 @@ class GltfExporter extends CoreExporter {
         if (indexBuffer) {
             let bufferView = resources.bufferViewMap.get(indexBuffer);
             if (!bufferView) {
-                // extend buffer
-                if (json.buffers[0]) {
-                    json.buffers[0].byteLength = math.roundUp(json.buffers[0].byteLength, 4);
+                GltfExporter.writeBufferView(resources, json, indexBuffer);
+                resources.buffers.push(indexBuffer);
 
-                    GltfExporter.writeBufferView(resources, json, indexBuffer, json.buffers[0].byteLength);
-                    bufferView = resources.bufferViewMap.get(indexBuffer);
-
-                    json.buffers[0].byteLength += indexBuffer.lock().byteLength;
-                    resources.buffers.push(indexBuffer);
-                } else {
-                    throw new Error("No buffer found");
-                }
+                bufferView = resources.bufferViewMap.get(indexBuffer);
             }
             const viewIndex = bufferView[0];
 
@@ -665,13 +642,11 @@ class GltfExporter extends CoreExporter {
                     })
                     .then((reader) => {
                         const buffer = this.getPaddedArrayBuffer(reader.result);
-                        json.buffers[0].byteLength = math.roundUp(json.buffers[0].byteLength, 4);
 
-                        GltfExporter.writeBufferView(resources, json, buffer, json.buffers[0].byteLength);
-                        const bufferView = resources.bufferViewMap.get(buffer);
-
-                        json.buffers[0].byteLength += buffer.byteLength;
+                        GltfExporter.writeBufferView(resources, json, buffer);
                         resources.buffers.push(buffer);
+
+                        const bufferView = resources.bufferViewMap.get(buffer);
 
                         json.images[i] = {
                             mimeType: mimeType,
@@ -755,7 +730,6 @@ class GltfExporter extends CoreExporter {
                 scene: 0
             };
 
-            this.writeBuffers(resources, json);
             this.writeBufferViews(resources, json);
             this.writeCameras(resources, json);
             this.writeMeshes(resources, json);
