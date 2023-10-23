@@ -21,43 +21,16 @@ class ESModuleComponent extends Component {
     constructor(system, entity) {
         super(system, entity);
 
-        this.modules = new Map();
-        this.moduleAttributes = new Map();
-
         /**
-         * Holds all script instances for this component.
-         *
-         * @type {import('../../script/script-type.js').ScriptType[]}
+         * Holds all module instances for this component.
          * @private
          */
-        this._scripts = [];
-        // holds all script instances with an update method
-        this._updateList = new SortedLoopArray({ sortBy: '__executionOrder' });
-        // holds all script instances with a postUpdate method
-        this._postUpdateList = new SortedLoopArray({ sortBy: '__executionOrder' });
 
-        this._scriptsIndex = {};
-        this._destroyedScripts = [];
-        this._destroyed = false;
-        this._scriptsData = null;
-        this._oldState = true;
+        this.modules = new Map();
 
-        // override default 'enabled' property of base pc.Component
-        // because this is faster
-        this._enabled = true;
 
-        // whether this component is currently being enabled
-        this._beingEnabled = false;
-        // if true then we are currently looping through
-        // script instances. This is used to prevent a scripts array
-        // from being modified while a loop is being executed
-        this._isLoopingThroughScripts = false;
+        this.moduleAttributes = new Map();
 
-        // the order that this component will be updated
-        // by the script system. This is set by the system itself.
-        this._executionOrder = -1;
-
-        this.on('set_enabled', this._onSetEnabled, this);
     }
 
     /**
@@ -197,191 +170,49 @@ class ESModuleComponent extends Component {
      * });
      */
 
-    set enabled(value) {
-        const oldValue = this._enabled;
-        this._enabled = value;
-        this.fire('set', 'enabled', oldValue, value);
-    }
-
-    get enabled() {
-        return this._enabled;
-    }
-
-    onEnable() {
-        this._beingEnabled = true;
-        this._checkState();
-
-        if (!this.entity._beingEnabled) {
-            this.onPostStateChange();
-        }
-
-        this._beingEnabled = false;
-    }
-
-    onDisable() {
-        this._checkState();
-    }
-
-    onPostStateChange() {
-        // const wasLooping = this._beginLooping();
-
-        // for (let i = 0, len = this.scripts.length; i < len; i++) {
-        //     const script = this.scripts[i];
-
-        //     if (script._initialized && !script._postInitialized && script.enabled) {
-        //         script._postInitialized = true;
-
-        //         if (script.postInitialize)
-        //             this._scriptMethod(script, SCRIPT_POST_INITIALIZE);
-        //     }
-        // }
-
-        // this._endLooping(wasLooping);
-    }
-
-    // We also need this handler because it is fired
-    // when value === old instead of onEnable and onDisable
-    // which are only fired when value !== old
-    _onSetEnabled(prop, old, value) {
-        // this._beingEnabled = true;
-        // this._checkState();
-        // this._beingEnabled = false;
-    }
-
-    _checkState() {
-        // const state = this.enabled && this.entity.enabled;
-        // if (state === this._oldState)
-        //     return;
-
-        // this._oldState = state;
-
-        // this.fire(state ? 'enable' : 'disable');
-        // this.fire('state', state);
-
-        // if (state) {
-        //     this.system._addComponentToEnabled(this);
-        // } else {
-        //     this.system._removeComponentFromEnabled(this);
-        // }
-
-        // const wasLooping = this._beginLooping();
-
-        // for (let i = 0, len = this.scripts.length; i < len; i++) {
-        //     const script = this.scripts[i];
-        //     script.enabled = script._enabled;
-        // }
-
-        // this._endLooping(wasLooping);
-    }
-
     _onBeforeRemove() {
-        this.fire('remove');
-
-        // const wasLooping = this._beginLooping();
-
-        // // destroy all scripts
-        // for (let i = 0; i < this.scripts.length; i++) {
-        //     const script = this.scripts[i];
-        //     if (!script) continue;
-
-        //     this.destroy(script.__scriptType.__name);
-        // }
-
-        // this._endLooping(wasLooping);
-    }
-
-    _removeDestroyedScripts() {
-        // const len = this._destroyedScripts.length;
-        // if (!len) return;
-
-        // for (let i = 0; i < len; i++) {
-        //     const script = this._destroyedScripts[i];
-        //     this._removeScriptInstance(script);
-        // }
-
-        // this._destroyedScripts.length = 0;
-
-        // // update execution order for scripts
-        // this._resetExecutionOrder(0, this._scripts.length);
-    }
-
-    _onInitializeAttributes() {
-        // for (let i = 0, len = this.scripts.length; i < len; i++)
-        //     this.scripts[i].__initializeAttributes();
-    }
-
-
-    _onInitialize() {
-        console.log('onInit');
-        // const scripts = this._scripts;
-
-        // const wasLooping = this._beginLooping();
-
-        // for (let i = 0, len = scripts.length; i < len; i++) {
-        //     const script = scripts[i];
-        //     if (!script._initialized && script.enabled) {
-        //         script._initialized = true;
-        //         if (script.initialize)
-        //             this._scriptMethod(script, SCRIPT_INITIALIZE);
-        //     }
-        // }
-
-        // this._endLooping(wasLooping);
-    }
-
-    _onPostInitialize() {
-        // this.onPostStateChange();
-    }
-
-    _onUpdate(dt) {
-        this.modules.forEach((module) => {
-            module.update(dt);
+        this.modules.forEach(({ moduleInstance }) => {
+            this.destroy(moduleInstance);
         });
     }
 
-    _onPostUpdate(dt) {
-        // Is this needed?
+    _onInitialize() {
+        this.modules.forEach(({ moduleInstance }) => {
+            moduleInstance.initialize?.();
+        });
     }
 
-    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newAttributes, duplicatedIdsMap) {
-        if (attribute.array) {
-            // handle entity array attribute
-            const len = oldValue.length;
-            if (!len) {
-                return;
-            }
+    _onUpdate(dt) {
+        this.modules.forEach(({ moduleInstance }) => {
+            moduleInstance.update?.(dt);
+        });
+    }
 
-            const newGuidArray = oldValue.slice();
-            for (let i = 0; i < len; i++) {
-                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
-                if (duplicatedIdsMap[guid]) {
-                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
-                }
-            }
+     /**
+     * When an entity is cloned and it has entity script attributes that point to other entities in
+     * the same subtree that is cloned, then we want the new script attributes to point at the
+     * cloned entities. This method remaps the script attributes for this entity and it assumes
+     * that this entity is the result of the clone operation.
+     *
+     * @param {ScriptESMComponent} oldScriptComponent - The source script component that belongs to
+     * the entity that was being cloned.
+     * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the
+     * entities that were cloned.
+     * @private
+     */
+    resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
-            newAttributes[attributeName] = newGuidArray;
-        } else {
-            // handle regular entity attribute
-            if (oldValue instanceof Entity) {
-                oldValue = oldValue.getGuid();
-            } else if (typeof oldValue !== 'string') {
-                return;
-            }
-
-            if (duplicatedIdsMap[oldValue]) {
-                newAttributes[attributeName] = duplicatedIdsMap[oldValue];
-            }
-        }
+        // TODO - run over old script component, any entities found, re-point them
+        // 
     }
 
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string} moduleSpecifier - The
-     * name or type of {@link ScriptType}.
+     * @param {string} moduleSpecifier - The module specifier to search for
      * @returns {boolean} If script is attached to an entity.
      * @example
-     * if (entity.module.has('module')) {
+     * if (entity.module.has('path/to/module.mjs')) {
      *     // entity has script
      * }
      */
@@ -419,39 +250,51 @@ class ESModuleComponent extends Component {
      * @returns {*} Returns an instance of a
      * ES Module if successfully attached to an entity, or null if the import fails
      * @example
-     * entity.script.create('moduleSpecifier', {
+     * entity.module.create('moduleSpecifier', {
      *     attributes: {
      *         speed: 4
      *     }
      * });
      */
-    create(moduleSpecifier, args = {}) {
+    create(moduleSpecifier, args) {
 
-        if (this.modules.has(moduleSpecifier)) {
-            Debug.warn(`Module '${moduleSpecifier}' is already added to entity '${this.entity.name}'`);
+        const { attributes: definedAttributes } = args;
 
-            const module = this.modules.get(moduleSpecifier);
-            module.destroy();
-        }
+        import(moduleSpecifier).then(({ default: ModuleClass, attributes }) => {
 
-        // TODO: Remove window ref
-        import(moduleSpecifier).then((Module) => {
+            if (!ModuleClass)
+                throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not contain a default export`);
 
-            const { default: EsModuleClass, attributes } = Module;
-
-            if (!EsModuleClass) throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not export a default object`);
-            if (typeof EsModuleClass !== 'function') throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
+            if (typeof ModuleClass !== 'function')
+                throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
 
             if (!attributes) Debug.warn(`The module '${moduleSpecifier}' does not export any attributes`);
-            const module = new EsModuleClass(this.entity, args.attributes);
+            const moduleInstance = new ModuleClass(this.entity, attributes);
 
-            this.modules.set(moduleSpecifier, module);
-            this.moduleAttributes.set(moduleSpecifier, args.attributes);
+            const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
 
-            this.fire('create', moduleSpecifier, module);
-            this.fire('create:' + moduleSpecifier, module);
+            this.fire('create', moduleSpecifier, moduleInstance);
+            this.fire('create:' + moduleSpecifier, moduleInstance);
 
-            return module;
+            // Check if an existing module exists, ie. if this is a candidate to swap
+            if (previousModuleInstance) {
+
+                // Copy intrinsic state
+                moduleInstance.enabled = previousModuleInstance.enabled;
+
+                // Copy explicit state
+                moduleInstance.swap?.(previousModuleInstance);
+
+                previousModuleInstance.destroy();
+
+                // Debug.warn(`Module '${moduleSpecifier}' is already added to entity '${this.entity.name}'`);
+            } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
+                moduleInstance.initialize(definedAttributes);
+            }
+
+            this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
+
+            return moduleInstance;
 
         }).catch(() => {
             Debug.error(`module '${moduleSpecifier}' does not exist`);
@@ -480,57 +323,6 @@ class ESModuleComponent extends Component {
         }
 
         return false;
-    }
-
-    /**
-     * Move script instance to different position to alter update order of scripts within entity.
-     *
-     * @param {string|Class<import('../../script/script-type.js').ScriptType>} nameOrType - The
-     * name or type of {@link ScriptType}.
-     * @param {number} ind - New position index.
-     * @returns {boolean} If it was successfully moved.
-     * @example
-     * entity.script.move('playerController', 0);
-     */
-    move(nameOrType, ind) {
-        const len = this._scripts.length;
-        if (ind >= len || ind < 0)
-            return false;
-
-        let scriptType = nameOrType;
-        let scriptName = nameOrType;
-
-        if (typeof scriptName !== 'string') {
-            scriptName = nameOrType.__name;
-        } else {
-            scriptType = null;
-        }
-
-        const scriptData = this._scriptsIndex[scriptName];
-        if (!scriptData || !scriptData.instance)
-            return false;
-
-        // if script type specified, make sure instance of said type
-        const scriptInstance = scriptData.instance;
-        if (scriptType && !(scriptInstance instanceof scriptType))
-            return false;
-
-        const indOld = this._scripts.indexOf(scriptInstance);
-        if (indOld === -1 || indOld === ind)
-            return false;
-
-        // move script to another position
-        this._scripts.splice(ind, 0, this._scripts.splice(indOld, 1)[0]);
-
-        // reset execution order for scripts and re-sort update and postUpdate lists
-        this._resetExecutionOrder(0, len);
-        this._updateList.sort();
-        this._postUpdateList.sort();
-
-        this.fire('move', scriptName, scriptInstance, ind, indOld);
-        this.fire('move:' + scriptName, scriptInstance, ind, indOld);
-
-        return true;
     }
 }
 
