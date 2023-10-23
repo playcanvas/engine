@@ -58,6 +58,9 @@ class Texture {
      */
     renderVersionDirty = 0;
 
+    /** @protected */
+    _storage = false;
+
     /**
      * Create a new Texture instance.
      *
@@ -162,6 +165,8 @@ class Texture {
      * Defaults to {@link FUNC_LESS}.
      * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels] - Array of Uint8Array or other supported browser interface; or a two-dimensional array
      * of Uint8Array if options.array is true.
+     * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
+     * a compute shader. Defaults to false.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new pc.Texture(graphicsDevice, {
@@ -209,6 +214,7 @@ class Texture {
             this._arrayLength = 1;
         }
 
+        this._storage = options.storage ?? false;
         this._cubemap = options.cubemap ?? false;
         this.fixCubemapSeams = options.fixCubemapSeams ?? false;
         this._flipY = options.flipY ?? false;
@@ -553,6 +559,15 @@ class Texture {
 
     get mipmaps() {
         return this._mipmaps;
+    }
+
+    /**
+     * Defines if texture can be used as a storage texture by a compute shader.
+     *
+     * @type {boolean}
+     */
+    get storage() {
+        return this._storage;
     }
 
     /**
