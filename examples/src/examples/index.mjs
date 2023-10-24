@@ -1,23 +1,10 @@
-import * as Animation from './animation/index.mjs';
-import * as Camera from './camera/index.mjs';
-import * as Graphics from './graphics/index.mjs';
-import * as Input from './input/index.mjs';
-import * as Loaders from './loaders/index.mjs';
-import * as Misc from './misc/index.mjs';
-import * as Physics from './physics/index.mjs';
-import * as Sound from './sound/index.mjs';
-import * as UserInterface from './user-interface/index.mjs';
-import * as Xr from './xr/index.mjs';
-
-export {
-    Animation,
-    Camera,
-    Graphics,
-    Input,
-    Loaders,
-    Physics,
-    Misc,
-    Sound,
-    UserInterface,
-    Xr
-};
+export * as Animation from './animation/index.mjs';
+export * as Camera from './camera/index.mjs';
+export * as Graphics from './graphics/index.mjs';
+export * as Input from './input/index.mjs';
+export * as Loaders from './loaders/index.mjs';
+export * as Misc from './misc/index.mjs';
+export * as Physics from './physics/index.mjs';
+export * as Sound from './sound/index.mjs';
+export * as UserInterface from './user-interface/index.mjs';
+export * as Xr from './xr/index.mjs';

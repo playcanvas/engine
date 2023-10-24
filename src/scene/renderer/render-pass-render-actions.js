@@ -6,6 +6,7 @@ import { Tracing } from "../../core/tracing.js";
 import { BlendState } from "../../platform/graphics/blend-state.js";
 import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
+import { RenderAction } from "../composition/render-action.js";
 
 import { WorldClustersDebug } from "../lighting/world-clusters-debug.js";
 
@@ -68,13 +69,32 @@ class RenderPassRenderActions extends RenderPass {
         }
     }
 
+    addLayer(camera, layer, transparent) {
+
+        Debug.assert(camera);
+        Debug.assert(this.renderTarget !== undefined, `Render pass needs to be initialized before adding layers`);
+        Debug.assert(camera.camera.layersSet.has(layer.id), `Camera ${camera.entity.name} does not render layer ${layer.name}.`);
+
+        const ra = new RenderAction();
+        ra.renderTarget = this.renderTarget;
+        ra.camera = camera;
+        ra.layer = layer;
+        ra.transparent = transparent;
+
+        // camera / layer clear flags
+        const firstRa = this.renderActions.length === 0;
+        ra.setupClears(firstRa ? camera : undefined, layer);
+
+        this.addRenderAction(ra);
+    }
+
     before() {
         const { renderActions } = this;
         if (renderActions.length) {
 
             // callback on the camera component before rendering with this camera for the first time
             const ra = renderActions[0];
-            if (ra.firstCameraUse && ra.camera.onPreRender) {
+            if (ra.camera.onPreRender && ra.firstCameraUse) {
                 ra.camera.onPreRender();
             }
         }
@@ -93,10 +113,9 @@ class RenderPassRenderActions extends RenderPass {
     after() {
         const { renderActions } = this;
         if (renderActions.length) {
-
             // callback on the camera component when we're done rendering with this camera
-            const ra = renderActions[0];
-            if (ra.lastCameraUse && ra.camera.onPostRender) {
+            const ra = renderActions[renderActions.length - 1];
+            if (ra.camera.onPostRender && ra.lastCameraUse) {
                 ra.camera.onPostRender();
             }
         }

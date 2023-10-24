@@ -35,7 +35,7 @@ import { ShadowRendererLocal } from './shadow-renderer-local.js';
 import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
-import { RenderPassCookieRenderer } from './render-pass-cookie-renderer.js';
+import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -127,8 +127,9 @@ class Renderer {
         this._shadowRendererLocal = new ShadowRendererLocal(this, this.shadowRenderer);
         this._shadowRendererDirectional = new ShadowRendererDirectional(this, this.shadowRenderer);
 
-        // cookies
-        this.cookiesRenderPass = RenderPassCookieRenderer.create(this.lightTextureAtlas.cookieRenderTarget, this.lightTextureAtlas.cubeSlotsOffsets);
+        // clustered passes
+        this._renderPassUpdateClustered = new RenderPassUpdateClustered(this.device, this, this.shadowRenderer,
+                                                                        this._shadowRendererLocal, this.lightTextureAtlas);
 
         // view bind group format with its uniform buffer format
         this.viewUniformFormat = null;
@@ -200,8 +201,8 @@ class Renderer {
         this.shadowMapCache.destroy();
         this.shadowMapCache = null;
 
-        this.cookiesRenderPass.destroy();
-        this.cookiesRenderPass = null;
+        this._renderPassUpdateClustered.destroy();
+        this._renderPassUpdateClustered = null;
 
         this.lightTextureAtlas.destroy();
         this.lightTextureAtlas = null;
@@ -1220,33 +1221,12 @@ class Renderer {
     }
 
     /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     */
-    updateClusters(comp) {
-
-        // #if _PROFILER
-        const startTime = now();
-        // #endif
-
-        const renderActions = comp._renderActions;
-        this.worldClustersAllocator.update(renderActions, this.scene.gammaCorrection, this.scene.lighting);
-
-        // #if _PROFILER
-        this._lightClustersTime += now() - startTime;
-        this._lightClusters = this.worldClustersAllocator.count;
-        // #endif
-    }
-
-    /**
      * Updates the layer composition for rendering.
      *
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
-     * @param {boolean} clusteredLightingEnabled - True if clustered lighting is enabled.
-     * @ignore
      */
-    updateLayerComposition(comp, clusteredLightingEnabled) {
+    updateLayerComposition(comp) {
 
         // #if _PROFILER
         const layerCompositionUpdateTime = now();
