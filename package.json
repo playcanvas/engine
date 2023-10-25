@@ -92,6 +92,10 @@
     "README-kr.md",
     "README-zh.md"
   ],
+  "dependencies": {
+    "@types/webxr": "^0.5.5",
+    "@webgpu/types": "^0.1.35"
+  },
   "devDependencies": {
     "@babel/core": "^7.23.0",
     "@babel/eslint-parser": "^7.22.15",
@@ -104,8 +108,6 @@
     "@rollup/plugin-strip": "^3.0.2",
     "@rollup/plugin-terser": "^0.4.3",
     "@rollup/pluginutils": "^5.0.4",
-    "@types/webxr": "^0.5.5",
-    "@webgpu/types": "^0.1.35",
     "c8": "^8.0.0",
     "chai": "^4.3.10",
     "eslint": "^8.50.0",
