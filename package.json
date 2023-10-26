@@ -155,7 +155,7 @@
     "docs": "jsdoc -c conf-api.json",
     "typedocs": "typedoc",
     "lint": "eslint --ext .js,.mjs extras scripts src test utils rollup.config.mjs",
-    "serve": "serve build -l 51000",
+    "serve": "serve build -l 51000 -C",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",
     "test:karma": "karma start tests/karma.conf.cjs -- --single-run --release",
