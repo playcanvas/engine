@@ -1691,8 +1691,9 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
      * array must be a multiple of 2.
-     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Color[] | Color} colors - An array of colors or a single color. If an array is
+     * specified, this must be the same length as the position array. The length of the array
+     * must also be a multiple of 2.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
