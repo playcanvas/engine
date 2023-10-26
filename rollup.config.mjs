@@ -353,7 +353,7 @@ const target_types = {
 function buildTypes() {
     const start = Date.now();
     const child = exec('npm run build:types');
-    child.on('exit', function() {
+    child.on('exit', function () {
         const end = Date.now();
         const delta = (end - start) / 1000;
         console.log(`created build/playcanvas.d.ts in ${delta}s`);
