@@ -273,7 +273,7 @@ function buildTarget(buildType, moduleFormat) {
             replace({
                 preventAssignment: true,
                 values: {
-                    ASSET_BASE_URL: JSON.stringify(process.env.ASSET_BASE_URL)
+                    ASSET_BASE_URL: JSON.stringify(process.env.ASSET_BASE_URL || '')
                 }
             })
         ]
