@@ -11,6 +11,7 @@ import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
+import replace from '@rollup/plugin-replace';
 
 // custom Rollup plugins
 import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
@@ -268,7 +269,13 @@ function buildTarget(buildType, moduleFormat) {
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
-            spacesToTabs(buildType !== 'debug')
+            spacesToTabs(buildType !== 'debug'),
+            replace({
+                preventAssignment: true,
+                values: {
+                    ASSET_BASE_URL: JSON.stringify(process.env.ASSET_BASE_URL)
+                }
+            })
         ]
     };
 }
