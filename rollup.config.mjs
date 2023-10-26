@@ -1,6 +1,5 @@
-import { execSync } from 'node:child_process';
+import { exec, execSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import { exec } from 'node:child_process';
 
 // 1st party Rollup plugins
 import { babel } from '@rollup/plugin-babel';
