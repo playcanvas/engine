@@ -3,13 +3,10 @@ import { ResourceLoader } from './loader.js';
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
 /**
- * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
- * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
- * files, such as third-party libraries.
- *
+ * Resource handler for dynamically importing script es modules.
  * @implements {ResourceHandler}
  */
-class EsModuleHandler {
+class ScriptESMHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -73,4 +70,4 @@ class EsModuleHandler {
     patch(asset, assets) { }
 }
 
-export { EsModuleHandler };
+export { ScriptESMHandler };

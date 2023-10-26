@@ -1,18 +1,19 @@
+import { Entity } from '../../../framework/entity';
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 
 /**
- * The ESModuleComponent allows you to extend the functionality of an Entity by attaching your own
- * module defined in JavaScript files to be executed with access to the Entity. For more
+ * The ScriptESMComponent allows you to extend the functionality of an Entity by attaching your own
+ * ESM module to the Entity. For more
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @augments Component
  */
-class ESModuleComponent extends Component {
+class ScriptESMComponent extends Component {
     /**
-     * Create a new ScriptComponent instance.
+     * Create a new ScriptESMComponent instance.
      *
-     * @param {import('./system.js').ESModuleComponentSystem} system - The ComponentSystem that
+     * @param {import('./system.js').ScriptESMComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
@@ -35,7 +36,7 @@ class ESModuleComponent extends Component {
      * Fired when Component becomes enabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event ScriptComponent#enable
+     * @event ScriptESMComponent#enable
      * @example
      * entity.script.on('enable', function () {
      *     // component is enabled
@@ -46,7 +47,7 @@ class ESModuleComponent extends Component {
      * Fired when Component becomes disabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event ScriptComponent#disable
+     * @event ScriptESMComponent#disable
      * @example
      * entity.script.on('disable', function () {
      *     // component is disabled
@@ -57,7 +58,7 @@ class ESModuleComponent extends Component {
      * Fired when Component changes state to enabled or disabled. Note: this event does not take in
      * account entity or any of its parent enabled state.
      *
-     * @event ScriptComponent#state
+     * @event ScriptESMComponent#state
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
      * entity.script.on('state', function (enabled) {
@@ -68,7 +69,7 @@ class ESModuleComponent extends Component {
     /**
      * Fired when Component is removed from entity.
      *
-     * @event ScriptComponent#remove
+     * @event ScriptESMComponent#remove
      * @example
      * entity.script.on('remove', function () {
      *     // entity has no more script component
@@ -76,9 +77,9 @@ class ESModuleComponent extends Component {
      */
 
     /**
-     * Fired when a script instance is created and attached to component.
+     * Fired when an esm script instance is created and attached to component.
      *
-     * @event ScriptComponent#create
+     * @event ScriptESMComponent#create
      * @param {string} name - The name of the Script Type.
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been created.
@@ -89,7 +90,7 @@ class ESModuleComponent extends Component {
      */
 
     /**
-     * Fired when a script instance is created and attached to component.
+     * Fired when an esm script instance is created and attached to component.
      *
      * @event ScriptComponent#create:[name]
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
@@ -103,7 +104,7 @@ class ESModuleComponent extends Component {
     /**
      * Fired when a script instance is destroyed and removed from component.
      *
-     * @event ScriptComponent#destroy
+     * @event ScriptESMComponent#destroy
      * @param {string} name - The name of the Script Type.
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been destroyed.
@@ -116,7 +117,7 @@ class ESModuleComponent extends Component {
     /**
      * Fired when a script instance is destroyed and removed from component.
      *
-     * @event ScriptComponent#destroy:[name]
+     * @event ScriptESMComponent#destroy:[name]
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been destroyed.
      * @example
@@ -126,38 +127,9 @@ class ESModuleComponent extends Component {
      */
 
     /**
-     * Fired when a script instance is moved in component.
-     *
-     * @event ScriptComponent#move
-     * @param {string} name - The name of the Script Type.
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that has been moved.
-     * @param {number} ind - New position index.
-     * @param {number} indOld - Old position index.
-     * @example
-     * entity.script.on('move', function (name, scriptInstance, ind, indOld) {
-     *     // script instance has been moved in component
-     * });
-     */
-
-    /**
-     * Fired when a script instance is moved in component.
-     *
-     * @event ScriptComponent#move:[name]
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that has been moved.
-     * @param {number} ind - New position index.
-     * @param {number} indOld - Old position index.
-     * @example
-     * entity.script.on('move:playerController', function (scriptInstance, ind, indOld) {
-     *     // script instance 'playerController' has been moved in component
-     * });
-     */
-
-    /**
      * Fired when a script instance had an exception.
      *
-     * @event ScriptComponent#error
+     * @event ScriptESMComponent#error
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that raised the exception.
      * @param {Error} err - Native JS Error object with details of an error.
@@ -359,4 +331,4 @@ class ESModuleComponent extends Component {
     }
 }
 
-export { ESModuleComponent };
+export { ScriptESMComponent };

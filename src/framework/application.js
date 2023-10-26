@@ -34,8 +34,7 @@ import { ZoneComponentSystem } from './components/zone/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
-import { ESModuleComponentSystem } from './components/es-module/system.js';
-
+import { ScriptESMComponentSystem } from './components/script-esm/system.js';
 import { RenderHandler } from './handlers/render.js';
 import { AnimationHandler } from './handlers/animation.js';
 import { AnimClipHandler } from './handlers/anim-clip.js';
@@ -45,7 +44,7 @@ import { BinaryHandler } from './handlers/binary.js';
 import { ContainerHandler } from './handlers/container.js';
 import { CssHandler } from './handlers/css.js';
 import { CubemapHandler } from './handlers/cubemap.js';
-import { EsModuleHandler } from './handlers/esmodule.js';
+import { ScriptESMHandler } from './handlers/script-esm.js';
 import { FolderHandler } from './handlers/folder.js';
 import { FontHandler } from './handlers/font.js';
 import { HierarchyHandler } from './handlers/hierarchy.js';
@@ -170,7 +169,7 @@ class Application extends AppBase {
             CameraComponentSystem,
             LightComponentSystem,
             script.legacy ? ScriptLegacyComponentSystem : ScriptComponentSystem,
-            ESModuleComponentSystem,
+            ScriptESMComponentSystem,
             AudioSourceComponentSystem,
             SoundComponentSystem,
             AudioListenerComponentSystem,
@@ -199,7 +198,7 @@ class Application extends AppBase {
             TextHandler,
             JsonHandler,
             AudioHandler,
-            EsModuleHandler,
+            ScriptESMHandler,
             ScriptHandler,
             SceneHandler,
             CubemapHandler,

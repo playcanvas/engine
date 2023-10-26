@@ -1,13 +1,13 @@
 import { ComponentSystem } from '../system.js';
-import { ESModuleComponent } from './component.js';
-import { ESModuleComponentData } from './data.js';
+import { ScriptESMComponent } from './component.js';
+import { ScriptESMComponentData } from './data.js';
 
 /**
  * Allows scripts to be attached to an Entity and executed.
  *
  * @augments ComponentSystem
  */
-class ESModuleComponentSystem extends ComponentSystem {
+class ScriptESMComponentSystem extends ComponentSystem {
     /**
      * Create a new ScriptComponentSystem.
      *
@@ -22,8 +22,8 @@ class ESModuleComponentSystem extends ComponentSystem {
 
         this.id = 'esmodule';
 
-        this.ComponentType = ESModuleComponent;
-        this.DataType = ESModuleComponentData;
+        this.ComponentType = ScriptESMComponent;
+        this.DataType = ScriptESMComponentData;
 
         this.on('beforeremove', this._onBeforeRemove, this);
         this.app.systems.on('initialize', this._onInitialize, this);
@@ -105,8 +105,7 @@ class ESModuleComponentSystem extends ComponentSystem {
 
         this.app.systems.off('initialize', this._onInitialize, this);
         this.app.systems.off('update', this._onUpdate, this);
-        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 
-export { ESModuleComponentSystem };
+export { ScriptESMComponentSystem };
