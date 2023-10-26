@@ -1,8 +1,6 @@
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 
-const ASSET_BASE_URL = '';
-
 /**
  * The ESModuleComponent allows you to extend the functionality of an Entity by attaching your own
  * module defined in JavaScript files to be executed with access to the Entity. For more
@@ -259,7 +257,16 @@ class ESModuleComponent extends Component {
 
         const { attributes: definedAttributes } = args;
 
-        import(ASSET_BASE_URL + moduleSpecifier).then(({ default: ModuleClass, attributes }) => {
+        /* eslint-disable spaced-comment */
+        // The following code is necessary to import ES modules with 'use_local_engine'
+        /*#if _ASSET_BASE_URL
+        const finalUrl = $_ASSET_BASE_URL +  finalUrl;
+        //#else */
+        const finalUrl = moduleSpecifier;
+        //#endif
+        /* eslint-enable */
+
+        import(finalUrl).then(({ default: ModuleClass, attributes }) => {
 
             this.addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes);
 
@@ -282,6 +289,12 @@ class ESModuleComponent extends Component {
 
         const moduleInstance = new ModuleClass(this.entity, attributes);
 
+        // Assign attributes to module instance
+        Object.entries(attributes).forEach(([attributeName, { value }]) => {
+            moduleInstance[attributeName] = definedAttributes[attributeName];
+        });
+
+        // Retrieve and previous instance associated with the module specifier
         const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
 
         this.fire('create', moduleSpecifier, moduleInstance);

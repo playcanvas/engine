@@ -48,17 +48,16 @@ class EsModuleHandler {
             };
         }
 
-        /* eslint-disable */
+        /* eslint-disable spaced-comment */
+        // The following code is necessary to import ES modules with 'use_local_engine'
         /*#if _ASSET_BASE_URL
-        // The following code is neccesary to import ES modules
-
-        const finallUrl = $_ASSET_BASE_URL +  url.load;
+        const finalUrl = $_ASSET_BASE_URL +  url.load;
         //#else */
-        const finallUrl = url.load;
+        const finalUrl = url.load;
         //#endif
         /* eslint-enable */
 
-        import(finallUrl).then(({ default: module }) => {
+        import(finalUrl).then(({ default: module }) => {
             callback(null, module, url);
             delete this._loader._cache[ResourceLoader.makeKey(url, 'esmodule')];
         }).catch((err) => {
