@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import { exec } from 'node:child_process';
 
 // 1st party Rollup plugins
 import { babel } from '@rollup/plugin-babel';
@@ -19,6 +20,7 @@ import { spacesToTabs } from './utils/rollup-spaces-to-tabs.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
+/** @typedef {import('rollup').ModuleFormat} ModuleFormat */
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
@@ -198,7 +200,7 @@ function buildTarget(buildType, moduleFormat) {
         es6: '.mjs'
     };
 
-    /** @type {Record<string, 'umd'|'es'>} */
+    /** @type {Record<string, ModuleFormat>} */
     const outputFormat = {
         es5: 'umd',
         es6: 'es'
@@ -349,9 +351,19 @@ const target_types = {
     ]
 };
 
+function buildTypes() {
+    const start = Date.now();
+    const child = exec('npm run build:types');
+    child.on('exit', function() {
+        const end = Date.now();
+        const delta = (end - start) / 1000;
+        console.log(`created build/playcanvas.d.ts in ${delta}s`);
+    });
+}
+
 export default (args) => {
     /** @type {RollupOptions[]} */
-    let targets = [];
+    const targets = [];
 
     const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
 
@@ -363,7 +375,7 @@ export default (args) => {
     if (envTarget === 'types') {
         targets.push(target_types);
     } else if (envTarget === 'extras') {
-        targets = targets.concat(target_extras);
+        targets.push(...target_extras);
     } else {
         ['release', 'debug', 'profiler', 'min'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
@@ -375,7 +387,8 @@ export default (args) => {
 
         if (envTarget === null) {
             // no targets specified, build them all
-            targets = targets.concat(target_extras);
+            buildTypes();
+            targets.push(...target_extras);
         }
     }
 
