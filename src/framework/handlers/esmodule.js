@@ -2,8 +2,6 @@ import { ResourceLoader } from './loader.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
-const ASSET_BASE_URL = '';
-
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
  * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
@@ -50,8 +48,17 @@ class EsModuleHandler {
             };
         }
 
-        console.log(ASSET_BASE_URL + url.load);
-        import(ASSET_BASE_URL + url.load).then(({ default: module }) => {
+        /* eslint-disable */
+        /*#if _ASSET_BASE_URL
+        // The following code is neccesary to import ES modules
+
+        const finallUrl = $_ASSET_BASE_URL +  url.load;
+        //#else */
+        const finallUrl = url.load;
+        //#endif
+        /* eslint-enable */
+
+        import(finallUrl).then(({ default: module }) => {
             callback(null, module, url);
             delete this._loader._cache[ResourceLoader.makeKey(url, 'esmodule')];
         }).catch((err) => {

@@ -231,7 +231,8 @@ function buildTarget(buildType, moduleFormat) {
             values: {
                 ...sdkVersion,
                 _DEBUG: 1,
-                _PROFILER: 1
+                _PROFILER: 1,
+                _ASSET_BASE_URL: JSON.stringify(process.env.ASSET_BASE_URL) || false
             },
             keepLines: true
         },
