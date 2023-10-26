@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
-import { SortedLoopArray } from '../../../core/sorted-loop-array.js';
 import { Component } from '../component.js';
-import { Entity } from '../../entity.js';
+
+const ASSET_BASE_URL = '';
 
 /**
  * The ESModuleComponent allows you to extend the functionality of an Entity by attaching your own
@@ -203,7 +203,6 @@ class ESModuleComponent extends Component {
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
         // TODO - run over old script component, any entities found, re-point them
-        // 
     }
 
     /**
@@ -260,48 +259,69 @@ class ESModuleComponent extends Component {
 
         const { attributes: definedAttributes } = args;
 
-        import(moduleSpecifier).then(({ default: ModuleClass, attributes }) => {
+        import(ASSET_BASE_URL + moduleSpecifier).then(({ default: ModuleClass, attributes }) => {
 
-            if (!ModuleClass)
-                throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not contain a default export`);
+            this.addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes);
 
-            if (typeof ModuleClass !== 'function')
-                throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
-
-            if (!attributes) Debug.warn(`The module '${moduleSpecifier}' does not export any attributes`);
-            const moduleInstance = new ModuleClass(this.entity, attributes);
-
-            const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
-
-            this.fire('create', moduleSpecifier, moduleInstance);
-            this.fire('create:' + moduleSpecifier, moduleInstance);
-
-            // Check if an existing module exists, ie. if this is a candidate to swap
-            if (previousModuleInstance) {
-
-                // Copy intrinsic state
-                moduleInstance.enabled = previousModuleInstance.enabled;
-
-                // Copy explicit state
-                moduleInstance.swap?.(previousModuleInstance);
-
-                previousModuleInstance.destroy();
-
-                // Debug.warn(`Module '${moduleSpecifier}' is already added to entity '${this.entity.name}'`);
-            } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
-                moduleInstance.initialize(definedAttributes);
-            }
-
-            this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
-
-            return moduleInstance;
-
-        }).catch(() => {
+        }).catch((err) => {
             Debug.error(`module '${moduleSpecifier}' does not exist`);
             return null;
         });
 
     }
+
+    addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes) {
+
+        if (!ModuleClass)
+            throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not contain a default export`);
+
+        if (typeof ModuleClass !== 'function')
+            throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
+
+        if (!attributes) Debug.warn(`The module '${moduleSpecifier}' does not export any attributes`);
+
+        const moduleInstance = new ModuleClass(this.entity, attributes);
+
+        const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
+
+        this.fire('create', moduleSpecifier, moduleInstance);
+        this.fire('create:' + moduleSpecifier, moduleInstance);
+
+        // Check if an existing module exists, ie. if this is a candidate to swap
+        if (previousModuleInstance) {
+
+            // Copy intrinsic state
+            moduleInstance.enabled = previousModuleInstance.enabled;
+
+            // Copy explicit state
+            moduleInstance.swap?.(previousModuleInstance);
+
+            // destroy previous module
+            previousModuleInstance.destroy();
+
+        } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
+            moduleInstance.initialize(definedAttributes);
+        }
+
+        let moduleEventPath = moduleSpecifier;
+        const assets = this.system.app.assets;
+        if (assets.prefix && moduleSpecifier.startsWith(assets.prefix)) {
+            moduleEventPath = moduleEventPath.slice(assets.prefix.length);
+        }
+
+        const path = new URL(moduleEventPath, 'https://www.example.com');
+        path.searchParams.delete('t');
+
+        assets.once(`load:url:${path.pathname.slice(1) + path.search}`, (asset) => {
+            const NewModuleClass = asset.resource;
+            this.addModule(moduleSpecifier, NewModuleClass, attributes);
+        });
+
+        this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
+
+        return moduleInstance;
+    }
+
 
     /**
      * Destroy the script instance that is attached to an entity.

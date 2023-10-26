@@ -45,6 +45,7 @@ import { BinaryHandler } from './handlers/binary.js';
 import { ContainerHandler } from './handlers/container.js';
 import { CssHandler } from './handlers/css.js';
 import { CubemapHandler } from './handlers/cubemap.js';
+import { EsModuleHandler } from './handlers/esmodule.js';
 import { FolderHandler } from './handlers/folder.js';
 import { FontHandler } from './handlers/font.js';
 import { HierarchyHandler } from './handlers/hierarchy.js';
@@ -198,6 +199,7 @@ class Application extends AppBase {
             TextHandler,
             JsonHandler,
             AudioHandler,
+            EsModuleHandler,
             ScriptHandler,
             SceneHandler,
             CubemapHandler,
