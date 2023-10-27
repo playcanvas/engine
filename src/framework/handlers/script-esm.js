@@ -23,17 +23,9 @@ class ScriptESMHandler {
     constructor(app) {
         this._app = app;
         this._scripts = { };
-        // this._cache = { };
     }
 
     clearCache() {
-        // for (const key in this._cache) {
-            // const element = this._cache[key];
-            // const parent = element.parentNode;
-            // if (parent)
-            //     parent.removeChild(element);
-        // }
-        // this._cache = {};
     }
 
     load(url, callback) {

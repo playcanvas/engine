@@ -297,7 +297,7 @@ export { ModelHandler } from './framework/handlers/model.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
-export { EsModuleHandler } from './framework/handlers/script-esm.js';
+export { ScriptESMHandler } from './framework/handlers/script-esm.js';
 export { ScriptHandler } from './framework/handlers/script.js';
 export { SceneHandler } from './framework/handlers/scene.js';
 export { SceneSettingsHandler } from './framework/handlers/scene-settings.js';
