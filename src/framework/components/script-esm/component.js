@@ -229,14 +229,16 @@ class ScriptESMComponent extends Component {
 
         const { attributes: definedAttributes } = args;
 
-        /* eslint-disable spaced-comment */
-        // The following code is necessary to import ES modules with 'use_local_engine'
-        /*#if _ASSET_BASE_URL
-        const finalUrl = $_ASSET_BASE_URL +  finalUrl;
-        //#else */
+        /* #if _ASSET_BASE_URL
+        /**
+         * The following code allows the base url asset for assets to be injected at compile time
+         * This is necessary for when importing ES modules with 'use_local_engine' which will 
+         * load assets relative to localhost
+         */ 
+        const finalUrl = $_ASSET_BASE_URL +  moduleSpecifier;
+        // #else */
         const finalUrl = moduleSpecifier;
-        //#endif
-        /* eslint-enable */
+        // #endif
 
         import(finalUrl).then(({ default: ModuleClass, attributes }) => {
 
