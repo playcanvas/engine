@@ -48,7 +48,6 @@ class ScriptESMHandler {
 
         import(finalUrl).then(({ default: module }) => {
             callback(null, module, url);
-            delete this._loader._cache[ResourceLoader.makeKey(url, 'esmodule')];
         }).catch((err) => {
             callback(err);
         });
