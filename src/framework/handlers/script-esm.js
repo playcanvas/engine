@@ -8,7 +8,7 @@
  */
 export const pcImport = (app, moduleSpecifier) => {
     // TODO: handle bundled contexts correctly
-    return import(moduleSpecifier);
+    return import(`${moduleSpecifier}`);
 };
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
