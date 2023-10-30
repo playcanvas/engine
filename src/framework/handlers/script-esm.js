@@ -48,11 +48,11 @@ class ScriptESMHandler {
             };
         }
 
-        let finalUrl = url.load;
-
-        // #if _ASSET_BASE_URL
-        // eslint-disable-next-line no-undef
+        // eslint-disable-next-line multiline-comment-style
+        /* #if _ASSET_BASE_URL
         finalUrl = $_ASSET_BASE_URL + url.load;
+        // #else */
+        const finalUrl = url.load;
         // #endif
 
         pcImport(this._app, finalUrl).then(({ default: module }) => {

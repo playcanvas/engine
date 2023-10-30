@@ -4,8 +4,7 @@ import { Component } from '../component.js';
 
 /**
  * The ScriptESMComponent allows you to extend the functionality of an Entity by attaching your own
- * ESM module to the Entity. For more
- * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
+ * ESM modules to the Entity.
  *
  * @augments Component
  */
@@ -26,8 +25,6 @@ class ScriptESMComponent extends Component {
          */
 
         this.modules = new Map();
-
-
         this.moduleAttributes = new Map();
 
     }
@@ -152,9 +149,21 @@ class ScriptESMComponent extends Component {
         });
     }
 
+    _onPostInitialize() {
+        this.modules.forEach(({ moduleInstance }) => {
+            moduleInstance.postInitialize?.();
+        });
+    }
+
     _onUpdate(dt) {
         this.modules.forEach(({ moduleInstance }) => {
             moduleInstance.update?.(dt);
+        });
+    }
+
+    _onPostUpdate(dt) {
+        this.modules.forEach(({ moduleInstance }) => {
+            moduleInstance.postUpdate?.(dt);
         });
     }
 
@@ -229,25 +238,22 @@ class ScriptESMComponent extends Component {
 
         const { attributes: definedAttributes } = args;
 
-        let finalUrl = moduleSpecifier;
-
-        // #if _ASSET_BASE_URL
-        // eslint-disable-next-line no-undef
-        finalUrl = $_ASSET_BASE_URL + this.system.app.assets.prefix +  moduleSpecifier;
+        // eslint-disable-next-line multiline-comment-style
+        /* #if _ASSET_BASE_URL
+        const finalUrl = $_ASSET_BASE_URL + this.system.app.assets.prefix +  moduleSpecifier;
+        // #else */
+        const finalUrl = moduleSpecifier;
         // #endif
 
         pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes }) => {
 
             this.addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes);
 
-        }).catch((err) => {
-            Debug.error(`module '${moduleSpecifier}' does not exist`);
-            return null;
-        });
+        }).catch(Debug.error);
 
     }
 
-    addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes) {
+    addModule(moduleSpecifier, ModuleClass, attributes = {}, definedAttributes) {
 
         if (!ModuleClass)
             throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not contain a default export`);
@@ -281,19 +287,14 @@ class ScriptESMComponent extends Component {
             if (isHMREnabled)
                 moduleInstance.swap(previousModuleInstance);
 
-            // destroy previous module
-            previousModuleInstance.destroy();
-
         } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
             moduleInstance.initialize(definedAttributes);
         }
 
-        if (isHMREnabled) {
-            this.system.app.assets.once(`load:url:${this.system.app.assets.prefix + moduleSpecifier}`, (asset) => {
-                const NewModuleClass = asset.resource;
-                this.addModule(moduleSpecifier, NewModuleClass, attributes);
-            });
-        }
+        this.system.app.assets.once(`load:url:${this.system.app.assets.prefix + moduleSpecifier}`, (asset) => {
+            const NewModuleClass = asset.resource;
+            this.addModule(moduleSpecifier, NewModuleClass, attributes);
+        });
 
         this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
 
