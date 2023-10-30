@@ -292,7 +292,23 @@ class ZoneComponent extends Component {
                 continue;
             }
 
-            if (this._isPointInZone(entity.getPosition(), position, rotation, _matrix)) {
+            // Magnopus Patched, add support for zones over mesh instances
+            if (entity.render) {
+                const inZone = entity.render.meshInstances.some((mi) => {
+                    return this._isPointInZone(mi.aabb.center, position, rotation, _matrix);
+                });
+                if (inZone) {
+                    if (index === -1) {
+                        this.entities.push(entity);
+                        entity.fire('zoneEnter', this);
+                        this.fire('entityEnter', entity);
+                    }
+                } else if (index !== -1) {
+                    this.entities.splice(index, 1);
+                    entity.fire('zoneLeave', this);
+                    this.fire('entityleave', entity);
+                }
+            } else if (this._isPointInZone(entity.getPosition(), position, rotation, _matrix)) {
                 if (index === -1) {
                     this.entities.push(entity);
                     entity.fire('zoneEnter', this);
