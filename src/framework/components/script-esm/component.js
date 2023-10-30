@@ -1,4 +1,4 @@
-import { Entity } from '../../../framework/entity';
+import { pcImport } from '../../handlers/script-esm.js';
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 
@@ -158,7 +158,7 @@ class ScriptESMComponent extends Component {
         });
     }
 
-     /**
+    /**
      * When an entity is cloned and it has entity script attributes that point to other entities in
      * the same subtree that is cloned, then we want the new script attributes to point at the
      * cloned entities. This method remaps the script attributes for this entity and it assumes
@@ -229,18 +229,14 @@ class ScriptESMComponent extends Component {
 
         const { attributes: definedAttributes } = args;
 
-        /* #if _ASSET_BASE_URL
-        /**
-         * The following code allows the base url asset for assets to be injected at compile time
-         * This is necessary for when importing ES modules with 'use_local_engine' which will 
-         * load assets relative to localhost
-         */ 
-        const finalUrl = $_ASSET_BASE_URL +  moduleSpecifier;
-        // #else */
-        const finalUrl = moduleSpecifier;
+        let finalUrl = moduleSpecifier;
+
+        // #if _ASSET_BASE_URL
+        // eslint-disable-next-line no-undef
+        finalUrl = $_ASSET_BASE_URL + this.system.app.assets.prefix +  moduleSpecifier;
         // #endif
 
-        import(finalUrl).then(({ default: ModuleClass, attributes }) => {
+        pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes }) => {
 
             this.addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes);
 
@@ -268,8 +264,9 @@ class ScriptESMComponent extends Component {
             moduleInstance[attributeName] = definedAttributes[attributeName];
         });
 
-        // Retrieve and previous instance associated with the module specifier
+        // Retrieve any previous instance associated with the module specifier
         const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
+        const isHMREnabled = moduleInstance.swap && typeof moduleInstance.swap === 'function';
 
         this.fire('create', moduleSpecifier, moduleInstance);
         this.fire('create:' + moduleSpecifier, moduleInstance);
@@ -281,7 +278,8 @@ class ScriptESMComponent extends Component {
             moduleInstance.enabled = previousModuleInstance.enabled;
 
             // Copy explicit state
-            moduleInstance.swap?.(previousModuleInstance);
+            if (isHMREnabled)
+                moduleInstance.swap(previousModuleInstance);
 
             // destroy previous module
             previousModuleInstance.destroy();
@@ -290,19 +288,12 @@ class ScriptESMComponent extends Component {
             moduleInstance.initialize(definedAttributes);
         }
 
-        let moduleEventPath = moduleSpecifier;
-        const assets = this.system.app.assets;
-        if (assets.prefix && moduleSpecifier.startsWith(assets.prefix)) {
-            moduleEventPath = moduleEventPath.slice(assets.prefix.length);
+        if (isHMREnabled) {
+            this.system.app.assets.once(`load:url:${this.system.app.assets.prefix + moduleSpecifier}`, (asset) => {
+                const NewModuleClass = asset.resource;
+                this.addModule(moduleSpecifier, NewModuleClass, attributes);
+            });
         }
-
-        const path = new URL(moduleEventPath, 'https://www.example.com');
-        path.searchParams.delete('t');
-
-        assets.once(`load:url:${path.pathname.slice(1) + path.search}`, (asset) => {
-            const NewModuleClass = asset.resource;
-            this.addModule(moduleSpecifier, NewModuleClass, attributes);
-        });
 
         this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
 

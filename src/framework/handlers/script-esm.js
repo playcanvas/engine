@@ -1,4 +1,15 @@
-import { ResourceLoader } from './loader.js';
+/**
+ * This custom import statement for ES Modules conditionally
+ * checks and resolves modules in bundled or non bundled modules
+ *
+ * @param {import('../../framework/app-base').AppBase} app - The application scope to load from.
+ * @param {string} moduleSpecifier - The raw model data.
+ * @returns {Promise} Returns a promise which fulfills to a module namespace object: an object containing all exports from moduleName.
+ */
+export const pcImport = (app, moduleSpecifier) => {
+    // TODO: handle bundled contexts correctly
+    return import(moduleSpecifier);
+};
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
 
@@ -37,18 +48,14 @@ class ScriptESMHandler {
             };
         }
 
-        /* #if _ASSET_BASE_URL
-        /**
-         * The following code allows the base url asset for assets to be injected at compile time
-         * This is necessary for when importing ES modules with 'use_local_engine' which will 
-         * load assets relative to localhost
-         */ 
-        const finalUrl = $_ASSET_BASE_URL +  url.load;
-        // #else */
-        const finalUrl = url.load;
+        let finalUrl = url.load;
+
+        // #if _ASSET_BASE_URL
+        // eslint-disable-next-line no-undef
+        finalUrl = $_ASSET_BASE_URL + url.load;
         // #endif
 
-        import(finalUrl).then(({ default: module }) => {
+        pcImport(this._app, finalUrl).then(({ default: module }) => {
             callback(null, module, url);
         }).catch((err) => {
             callback(err);
