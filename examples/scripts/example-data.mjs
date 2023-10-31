@@ -1,43 +1,30 @@
 import fs from 'fs';
-import BabelParser from '@babel/parser';
-import Prettier from 'prettier/standalone.js';
-import Babel from '@babel/standalone';
-import formatters from '../src/app/helpers/formatters.mjs';
-import readDirectoryNames from '../src/app/helpers/read-dir-names.mjs';
-import getExamplesList from '../src/app/helpers/read-dir.mjs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-
+import * as realExamples from "../src/examples/index.mjs";
+import { toKebabCase } from '../src/app/helpers/strings.mjs';
+/**
+ * It would be possible to *not* pregenerate example-data.js, but then we would include all
+ * examples only to generate the list in the UI... which would be a waste.
+ */
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const MAIN_DIR = `${__dirname}/../`;
-
-
+const MAIN_DIR = `${dirname(__filename)}/../`;
 const exampleData = {};
-
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
 }
-
-readDirectoryNames(`${MAIN_DIR}/src/examples/`).forEach(function (category) {
+for (const category_ in realExamples) {
+    const category = toKebabCase(category_);
     exampleData[category] = {};
-    const examples = getExamplesList(MAIN_DIR, category);
-    examples.forEach((exampleName) => {
-        if (exampleName.includes('index.mjs')) return;
-        const example = exampleName.replace('.tsx', '');
+    const examples = realExamples[category_];
+    for (const exampleName_ in examples) {
+        const example = toKebabCase(exampleName_).replace('-example', '');
+        // turn: turn into simple array...
         exampleData[category][example] = {};
-        const exampleFileText = fs.readFileSync(
-            `${MAIN_DIR}/src/examples/${category}/${exampleName}`,
-            "utf8"
-        );
-        exampleData[category][example].typeScriptFunction = formatters.getTypeScriptFunctionFromText(exampleFileText);
-        exampleData[category][example].javaScriptFunction = Prettier.format(Babel.transform(exampleData[category][example].typeScriptFunction, { retainLines: true, filename: `transformedScript.tsx`, presets: ["typescript"] }).code, { parser: BabelParser.parse, tabWidth: 4 });
         exampleData[category][example].nameSlug = example;
         exampleData[category][example].categorySlug = category;
-        const files = formatters.retrieveStaticObject(exampleFileText, 'FILES');
-        // eslint-disable-next-line no-eval
-        if (files) exampleData[category][example].files = eval('(' + files + ')');
-    });
-});
-
-fs.writeFileSync(`${MAIN_DIR}/dist/example-data.js`, `const exampleData = ${JSON.stringify(exampleData)}; module.exports = exampleData;`);
+    }
+}
+// This will be minified by rollup terser plugin, just keep it readable/debuggable here
+const out = `export const exampleData = ${JSON.stringify(exampleData, null, 2)};`;
+fs.writeFileSync(`${MAIN_DIR}/src/example-data.mjs`, out);
