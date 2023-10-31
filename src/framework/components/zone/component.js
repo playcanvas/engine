@@ -43,13 +43,30 @@ class ZoneComponent extends Component {
     _halfExtentsLast = new Vec3();
 
     /**
+     * Holds all entities added this frame to the zone.
+     *
+     * @type {Entity[]}
+     * @private
+     */
+    _frameAdded = [];
+
+    /**
+     * Holds all entities removed this frame from the zone.
+     *
+     * @type {Entity[]}
+     * @private
+     */
+    _frameRemoved = [];
+
+    /**
      * Create a new RigidBodyComponent instance.
      *
      * @param {import('./system.js').ZoneComponentSystem} system - The ComponentSystem that
      * created this component.
      * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
      */
-    constructor(system, entity) { // eslint-disable-line no-useless-constructor
+    constructor(system, entity) {
+        // eslint-disable-line no-useless-constructor
         super(system, entity);
     }
 
@@ -273,6 +290,9 @@ class ZoneComponent extends Component {
         let pendingCollider;
         const entities = Object.values(this.system.app._entityIndex);
 
+        this._frameAdded.length = 0;
+        this._frameRemoved.length = 0;
+
         // Check entities as per position
         for (let i = 0, l = entities.length; i < l; i++) {
             const entity = entities[i];
@@ -295,8 +315,7 @@ class ZoneComponent extends Component {
             if (this._isPointInZone(entity.getPosition(), position, rotation, _matrix)) {
                 if (index === -1) {
                     this.entities.push(entity);
-                    entity.fire('zoneEnter', this);
-                    this.fire('entityEnter', entity);
+                    this._frameAdded.push(entity);
                 }
             } else if (this.useColliders && entity.collision && entity.collision.enabled && entity.collision.zoneCheck) {
                 if (!pendingCollider) {
@@ -306,8 +325,7 @@ class ZoneComponent extends Component {
                 pendingCollider.push(entity);
             } else if (index !== -1) {
                 this.entities.splice(index, 1);
-                entity.fire('zoneLeave', this);
-                this.fire('entityleave', entity);
+                this._frameRemoved.push(entity);
             }
         }
 
@@ -336,18 +354,25 @@ class ZoneComponent extends Component {
                     } else if (collidingIndex !== -1) {
                         // Entity entered zone.
                         this.entities.push(entity);
-                        entity.fire('zoneEnter', this);
-                        this.fire('entityEnter', entity);
+                        this._frameAdded.push(entity);
                     } else if (inZoneIndex !== -1) {
                         // Entity left zone.
                         this.entities.splice(inZoneIndex, 1);
-                        entity.fire('zoneLeave', this);
-                        this.fire('entityLeave', entity);
+                        this._frameRemoved.push(entity);
                     }
                 }
             }
         } else if (this._collisionShape) {
             this._destroyCollisionShape();
+        }
+
+        for (const entity of this._frameAdded) {
+            entity.fire('zoneEnter', this);
+            this.fire('entityEnter', entity);
+        }
+        for (const entity of this._frameRemoved) {
+            entity.fire('zoneLeave', this);
+            this.fire('entityleave', entity);
         }
     }
 
