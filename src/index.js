@@ -36,6 +36,7 @@ export { math } from './core/math/math.js';
 export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
+export { FloatPacking } from './core/math/float-packing.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
