@@ -1,29 +1,13 @@
-import ButtonBasicExample from "./button-basic";
-import ButtonSpriteExample from "./button-sprite";
-import CustomShaderExample from './custom-shader';
-import LayoutGroupExample from "./layout-group";
-import ParticleSystemExample from './particle-system';
-import ScrollViewExample from "./scroll-view";
-import TextAutoFontSizeExample from "./text-auto-font-size";
-import TextEmojisExample from "./text-emojis";
-import TextLocalizationExample from "./text-localization";
-import TextTypewriterExample from "./text-typewriter";
-import TextExample from "./text";
-import WorldToScreenExample from './world-to-screen';
-import WorldUiExample from './world-ui';
-
-export {
-    ButtonBasicExample,
-    ButtonSpriteExample,
-    CustomShaderExample,
-    LayoutGroupExample,
-    ParticleSystemExample,
-    ScrollViewExample,
-    TextAutoFontSizeExample,
-    TextEmojisExample,
-    TextLocalizationExample,
-    TextTypewriterExample,
-    TextExample,
-    WorldToScreenExample,
-    WorldUiExample
-};
+export * from "./button-basic.mjs";
+export * from "./button-sprite.mjs";
+export * from './custom-shader.mjs';
+export * from "./layout-group.mjs";
+export * from './particle-system.mjs';
+export * from "./scroll-view.mjs";
+export * from "./text-auto-font-size.mjs";
+export * from "./text-emojis.mjs";
+export * from "./text-localization.mjs";
+export * from "./text-typewriter.mjs";
+export * from "./text.mjs";
+export * from './world-to-screen.mjs';
+export * from './world-ui.mjs';

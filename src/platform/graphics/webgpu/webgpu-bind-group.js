@@ -109,6 +109,25 @@ class WebgpuBindGroup {
             });
         });
 
+        // storage textures
+        bindGroup.storageTextures.forEach((tex, textureIndex) => {
+
+            /** @type {import('./webgpu-texture.js').WebgpuTexture} */
+            const wgpuTexture = tex.impl;
+
+            // texture
+            const view = wgpuTexture.getView(device);
+            Debug.assert(view, 'NULL texture view cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${index}: ${bindGroup.format.storageTextureFormats[textureIndex].name}\n`;
+            });
+
+            entries.push({
+                binding: index++,
+                resource: view
+            });
+        });
+
         const descr = {
             layout: bindGroup.format.impl.bindGroupLayout,
             entries: entries
