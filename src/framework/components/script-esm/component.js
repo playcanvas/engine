@@ -236,7 +236,7 @@ class ScriptESMComponent extends Component {
      */
     create(moduleSpecifier, args) {
 
-        const { attributes: definedAttributes } = args;
+        const { attributes } = args;
 
         // eslint-disable-next-line multiline-comment-style
         /* #if _ASSET_BASE_URL
@@ -245,29 +245,29 @@ class ScriptESMComponent extends Component {
         const finalUrl = moduleSpecifier;
         // #endif
 
-        pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes }) => {
+        pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
 
-            this.addModule(moduleSpecifier, ModuleClass, attributes, definedAttributes);
+            this.addModule(moduleSpecifier, ModuleClass, attributeDefinition, attributes);
 
         }).catch(Debug.error);
 
     }
 
-    addModule(moduleSpecifier, ModuleClass, attributes = {}, definedAttributes) {
+    addModule(moduleSpecifier, ModuleClass, attributeDefinition = {}, attributes = {}) {
 
         if (!ModuleClass)
-            throw new Error(`Please check your exports. The module '${moduleSpecifier}' does not contain a default export`);
+            throw new Error(`The module '${moduleSpecifier}' does not export a default`);
 
         if (typeof ModuleClass !== 'function')
             throw new Error(`The module '${moduleSpecifier}' does not export a class or a function`);
 
-        if (!attributes) Debug.warn(`The module '${moduleSpecifier}' does not export any attributes`);
-
-        const moduleInstance = new ModuleClass(this.entity, attributes);
+        const moduleInstance = new ModuleClass(this.system.app, this.entity);
 
         // Assign attributes to module instance
-        Object.entries(attributes).forEach(([attributeName, { value }]) => {
-            moduleInstance[attributeName] = definedAttributes[attributeName];
+        Object.keys(attributeDefinition).forEach((attributeName) => {
+            if (Object.hasOwn(attributes, attributeName)) {
+                moduleInstance[attributeName] = attributes[attributeName];
+            }
         });
 
         // Retrieve any previous instance associated with the module specifier
