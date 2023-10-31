@@ -24,9 +24,9 @@ class ScriptESMComponent extends Component {
          * @private
          */
 
-        this.modules = new Map();
-        this.moduleAttributes = new Map();
-
+        this.allModules = new Map();
+        this.modulesWithUpdate = new Map();
+        this.modulesWithPostUpdate = new Map();
     }
 
     /**
@@ -58,7 +58,7 @@ class ScriptESMComponent extends Component {
      * @event ScriptESMComponent#state
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
-     * entity.script.on('state', function (enabled) {
+     * entity.esmodule.on('state', function (enabled) {
      *     // component changed state
      * });
      */
@@ -68,7 +68,7 @@ class ScriptESMComponent extends Component {
      *
      * @event ScriptESMComponent#remove
      * @example
-     * entity.script.on('remove', function () {
+     * entity.esmodule.on('remove', function () {
      *     // entity has no more script component
      * });
      */
@@ -81,7 +81,7 @@ class ScriptESMComponent extends Component {
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been created.
      * @example
-     * entity.script.on('create', function (name, scriptInstance) {
+     * entity.esmodule.on('create', function (name, scriptInstance) {
      *     // new script instance added to component
      * });
      */
@@ -93,7 +93,7 @@ class ScriptESMComponent extends Component {
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been created.
      * @example
-     * entity.script.on('create:playerController', function (scriptInstance) {
+     * entity.esmodule.on('create:playerController', function (scriptInstance) {
      *     // new script instance 'playerController' is added to component
      * });
      */
@@ -106,7 +106,7 @@ class ScriptESMComponent extends Component {
      * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
      * the {@link ScriptType} that has been destroyed.
      * @example
-     * entity.script.on('destroy', function (name, scriptInstance) {
+     * entity.esmodule.on('destroy', function (name, scriptInstance) {
      *     // script instance has been destroyed and removed from component
      * });
      */
@@ -115,7 +115,7 @@ class ScriptESMComponent extends Component {
      * Fired when a script instance is destroyed and removed from component.
      *
      * @event ScriptESMComponent#destroy:[name]
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
+     * @param {import('../../script/script-type.js').ScriptType} Script ESM Module instance - The instance of
      * the {@link ScriptType} that has been destroyed.
      * @example
      * entity.script.on('destroy:playerController', function (scriptInstance) {
@@ -123,47 +123,33 @@ class ScriptESMComponent extends Component {
      * });
      */
 
-    /**
-     * Fired when a script instance had an exception.
-     *
-     * @event ScriptESMComponent#error
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that raised the exception.
-     * @param {Error} err - Native JS Error object with details of an error.
-     * @param {string} method - The method of the script instance that the exception originated from.
-     * @example
-     * entity.script.on('error', function (scriptInstance, err, method) {
-     *     // script instance caught an exception
-     * });
-     */
-
     _onBeforeRemove() {
-        this.modules.forEach(({ moduleInstance }) => {
+        this.allModules.forEach(({ moduleInstance }) => {
             this.destroy(moduleInstance);
         });
     }
 
     _onInitialize() {
-        this.modules.forEach(({ moduleInstance }) => {
+        this.allModules.forEach(({ moduleInstance }) => {
             moduleInstance.initialize?.();
         });
     }
 
     _onPostInitialize() {
-        this.modules.forEach(({ moduleInstance }) => {
+        this.allModules.forEach(({ moduleInstance }) => {
             moduleInstance.postInitialize?.();
         });
     }
 
     _onUpdate(dt) {
-        this.modules.forEach(({ moduleInstance }) => {
-            moduleInstance.update?.(dt);
+        this.modulesWithUpdate.forEach(({ moduleInstance }) => {
+            moduleInstance.update(dt);
         });
     }
 
     _onPostUpdate(dt) {
-        this.modules.forEach(({ moduleInstance }) => {
-            moduleInstance.postUpdate?.(dt);
+        this.modulesWithPostUpdate.forEach(({ moduleInstance }) => {
+            moduleInstance.postUpdate(dt);
         });
     }
 
@@ -195,7 +181,7 @@ class ScriptESMComponent extends Component {
      * }
      */
     has(moduleSpecifier) {
-        return this.modules.has(moduleSpecifier);
+        return this.allModules.has(moduleSpecifier);
     }
 
     /**
@@ -209,7 +195,7 @@ class ScriptESMComponent extends Component {
      * const controller = entity.module.get('module');
      */
     get(moduleSpecifier) {
-        return this.modules.get(moduleSpecifier);
+        return this.allModules.get(moduleSpecifier);
     }
 
     /**
@@ -236,8 +222,6 @@ class ScriptESMComponent extends Component {
      */
     create(moduleSpecifier, args) {
 
-        const { attributes } = args;
-
         // eslint-disable-next-line multiline-comment-style
         /* #if _ASSET_BASE_URL
         const finalUrl = $_ASSET_BASE_URL + this.system.app.assets.prefix +  moduleSpecifier;
@@ -247,7 +231,7 @@ class ScriptESMComponent extends Component {
 
         pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
 
-            this.addModule(moduleSpecifier, ModuleClass, attributeDefinition, attributes);
+            this.addModule(moduleSpecifier, ModuleClass, attributeDefinition, args.attributes);
 
         }).catch(Debug.error);
 
@@ -263,7 +247,7 @@ class ScriptESMComponent extends Component {
 
         const moduleInstance = new ModuleClass(this.system.app, this.entity);
 
-        // Assign attributes to module instance
+        // Iterate over the attribute definitions and assign them if they exist on the attributes
         Object.keys(attributeDefinition).forEach((attributeName) => {
             if (Object.hasOwn(attributes, attributeName)) {
                 moduleInstance[attributeName] = attributes[attributeName];
@@ -271,8 +255,12 @@ class ScriptESMComponent extends Component {
         });
 
         // Retrieve any previous instance associated with the module specifier
-        const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
+        const previousModuleInstance = this.allModules.get(moduleSpecifier)?.moduleInstance;
         const isHMREnabled = moduleInstance.swap && typeof moduleInstance.swap === 'function';
+
+        // Add Modules to relevant update/post-update lists
+        if ('update' in ModuleClass) this.modulesWithUpdate.add(moduleSpecifier);
+        if ('postUpdate' in ModuleClass) this.modulesWithPostUpdate.add(moduleSpecifier);
 
         this.fire('create', moduleSpecifier, moduleInstance);
         this.fire('create:' + moduleSpecifier, moduleInstance);
@@ -288,15 +276,25 @@ class ScriptESMComponent extends Component {
                 moduleInstance.swap(previousModuleInstance);
 
         } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
-            moduleInstance.initialize(definedAttributes);
+            moduleInstance.initialize();
         }
 
+        // Listen for any subsequent load events
         this.system.app.assets.once(`load:url:${this.system.app.assets.prefix + moduleSpecifier}`, (asset) => {
+
             const NewModuleClass = asset.resource;
-            this.addModule(moduleSpecifier, NewModuleClass, attributes);
+
+            // Only upgrade the module if the class or super class contains a swap
+            if ('swap' in NewModuleClass) {
+                this.addModule(moduleSpecifier, NewModuleClass, attributes);
+            } else {
+                Debug.warn(
+                    `The Script Module '${NewModuleClass}' does not have a 'swap' method, and is ineligible for swapping. Please reload.`
+                );
+            }
         });
 
-        this.modules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
+        this.allModules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
 
         return moduleInstance;
     }
@@ -313,11 +311,22 @@ class ScriptESMComponent extends Component {
      */
     destroy(moduleSpecifier) {
 
-        const module = this.modules.get(moduleSpecifier);
+        const module = this.allModules.get(moduleSpecifier);
 
         if (module) {
-            module.destroy();
-            this.modules.delete(moduleSpecifier);
+
+            // Remove from local data
+            this.allModules.delete(moduleSpecifier);
+            this.modulesWithPostUpdate.delete(moduleSpecifier);
+            this.modulesWithPostUpdate.delete(moduleSpecifier);
+
+            // Fire component level events
+            this.fire('destroy', moduleSpecifier, module);
+            this.fire('destroy:' + moduleSpecifier, module);
+
+            // Call modules destroy if present
+            module.destroy?.();
+
             return true;
         }
 
