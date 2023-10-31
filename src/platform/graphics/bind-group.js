@@ -49,6 +49,7 @@ class BindGroup {
         this.impl = graphicsDevice.createBindGroupImpl(this);
 
         this.textures = [];
+        this.storageTextures = [];
         this.uniformBuffers = [];
 
         /** @type {import('./uniform-buffer.js').UniformBuffer} */
@@ -105,18 +106,43 @@ class BindGroup {
     }
 
     /**
+     * Assign a storage texture to a named slot.
+     *
+     * @param {string} name - The name of the texture slot.
+     * @param {import('./texture.js').Texture} texture - Texture to assign to the slot.
+     */
+    setStorageTexture(name, texture) {
+        const index = this.format.storageTextureFormatsMap.get(name);
+        Debug.assert(index !== undefined, `Setting a storage texture [${name}] on a bind group with id: ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`, this);
+        if (this.storageTextures[index] !== texture) {
+            this.storageTextures[index] = texture;
+            this.dirty = true;
+        } else if (this.renderVersionUpdated < texture.renderVersionDirty) {
+            // if the texture properties have changed
+            this.dirty = true;
+        }
+    }
+
+    /**
      * Applies any changes made to the bind group's properties.
      */
     update() {
 
         // TODO: implement faster version of this, which does not call SetTexture, which does a map lookup
+        const { textureFormats, storageTextureFormats } = this.format;
 
-        const textureFormats = this.format.textureFormats;
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
             const value = textureFormat.scopeId.value;
             Debug.assert(value, `Value was not set when assigning texture slot [${textureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
             this.setTexture(textureFormat.name, value);
+        }
+
+        for (let i = 0; i < storageTextureFormats.length; i++) {
+            const storageTextureFormat = storageTextureFormats[i];
+            const value = storageTextureFormat.scopeId.value;
+            Debug.assert(value, `Value was not set when assigning storage texture slot [${storageTextureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            this.setStorageTexture(storageTextureFormat.name, value);
         }
 
         // update uniform buffer offsets

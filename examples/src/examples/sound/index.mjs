@@ -1,5 +1,1 @@
-import PositionalExample from "./positional";
-
-export {
-    PositionalExample
-};
+export * from "./positional.mjs";

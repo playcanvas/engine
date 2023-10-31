@@ -1,19 +1,8 @@
-import BlendTrees1DExample from "./blend-trees-1d";
-import BlendTrees2DCartesianExample from "./blend-trees-2d-cartesian";
-import BlendTrees2DDirectionalExample from "./blend-trees-2d-directional";
-import ComponentPropertiesExample from "./component-properties";
-import EventsExample from "./events";
-import LayerMasksExample from "./layer-masks";
-import LocomotionExample from "./locomotion";
-import TweenExample from "./tween";
-
-export {
-    BlendTrees1DExample,
-    BlendTrees2DCartesianExample,
-    BlendTrees2DDirectionalExample,
-    ComponentPropertiesExample,
-    EventsExample,
-    LayerMasksExample,
-    LocomotionExample,
-    TweenExample
-};
+export * from "./blend-trees-1d.mjs";
+export * from "./blend-trees-2d-cartesian.mjs";
+export * from "./blend-trees-2d-directional.mjs";
+export * from "./component-properties.mjs";
+export * from "./events.mjs";
+export * from "./layer-masks.mjs";
+export * from "./locomotion.mjs";
+export * from "./tween.mjs";

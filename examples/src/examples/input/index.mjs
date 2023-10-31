@@ -1,9 +1,3 @@
-import GamepadExample from "./gamepad";
-import KeyboardExample from "./keyboard";
-import MouseExample from "./mouse";
-
-export {
-    GamepadExample,
-    KeyboardExample,
-    MouseExample
-};
+export * from "./gamepad.mjs";
+export * from "./keyboard.mjs";
+export * from "./mouse.mjs";
