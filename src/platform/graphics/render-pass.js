@@ -286,13 +286,13 @@ class RenderPass {
             if (this.executeEnabled) {
 
                 if (realPass) {
-                    device.startPass(this);
+                    device.startRenderPass(this);
                 }
 
                 this.execute();
 
                 if (realPass) {
-                    device.endPass(this);
+                    device.endRenderPass(this);
                 }
             }
 

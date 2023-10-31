@@ -1,13 +1,5 @@
-import CompoundCollisionExample from "./compound-collision";
-import OffsetCollisionExample from "./offset-collision";
-import FallingShapesExample from "./falling-shapes";
-import RaycastExample from "./raycast";
-import VehicleExample from "./vehicle";
-
-export {
-    CompoundCollisionExample,
-    OffsetCollisionExample,
-    FallingShapesExample,
-    RaycastExample,
-    VehicleExample
-};
+export * from "./compound-collision.mjs";
+export * from "./offset-collision.mjs";
+export * from "./falling-shapes.mjs";
+export * from "./raycast.mjs";
+export * from "./vehicle.mjs";

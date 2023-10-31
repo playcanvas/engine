@@ -123,12 +123,6 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.initializeContextCaches();
     }
 
-    startPass(renderPass) {
-    }
-
-    endPass(renderPass) {
-    }
-
     clear(options) {
     }
 
