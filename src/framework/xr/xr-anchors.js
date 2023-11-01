@@ -165,6 +165,7 @@ class XrAnchors extends EventHandler {
      * });
      */
     create(position, rotation, callback) {
+        // eslint-disable-next-line no-undef
         if (window.XRHitTestResult && position instanceof XRHitTestResult) {
             const hitResult = position;
             callback = rotation;
@@ -233,7 +234,7 @@ class XrAnchors extends EventHandler {
             if (callback) callback(new Error('WebXR session is not active'));
             return;
         }
-        
+
         this.manager.session.restorePersistentAnchor(uuid)
             .then((xrAnchor) => {
                 const anchor = new XrAnchor(this, xrAnchor, uuid);

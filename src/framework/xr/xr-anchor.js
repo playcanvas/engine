@@ -179,11 +179,15 @@ class XrAnchor extends EventHandler {
      * persistent UUID has been generated or error if failed.
      */
     persist(callback) {
-        if (!this._anchors.persistence)
-            return callback(new Error('Persistent Anchors are not supported'), null);
+        if (!this._anchors.persistence) {
+            callback(new Error('Persistent Anchors are not supported'), null);
+            return;
+        }
 
-        if (this._uuid)
-            return callback(null, this._uuid);
+        if (this._uuid) {
+            callback(null, this._uuid);
+            return;
+        }
 
         if (this._uuidRequests) {
             this._uuidRequests.push(callback);
@@ -197,7 +201,7 @@ class XrAnchor extends EventHandler {
                 this._uuid = uuid;
                 this._anchors._indexByUuid.set(this._uuid, this);
                 callback(null, uuid);
-                for(let i = 0; i < this._uuidRequests.length; i++) {
+                for (let i = 0; i < this._uuidRequests.length; i++) {
                     this._uuidRequests[i](null, uuid);
                 }
                 this._uuidRequests = null;
@@ -205,7 +209,7 @@ class XrAnchor extends EventHandler {
             })
             .catch((ex) => {
                 callback(ex);
-                for(let i = 0; i < this._uuidRequests.length; i++) {
+                for (let i = 0; i < this._uuidRequests.length; i++) {
                     this._uuidRequests[i](ex);
                 }
                 this._uuidRequests = null;
