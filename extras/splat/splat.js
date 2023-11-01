@@ -1,7 +1,5 @@
 import {
-    Material,
     MeshInstance,
-    GraphicsDevice,
     Texture,
     FILTER_NEAREST,
     ADDRESS_CLAMP_TO_EDGE,
@@ -24,9 +22,6 @@ import {
     FloatPacking
 } from "playcanvas";
 import { createSplatMaterial } from "./splat-material.js";
-
-const floatView = new Float32Array(1);
-const int32View = new Int32Array(floatView.buffer);
 
 const evalTextureSize = (count) => {
     const width = Math.ceil(Math.sqrt(count));
