@@ -26,15 +26,29 @@ class XrAnchor extends EventHandler {
     _rotation = new Quat();
 
     /**
+     * @type {string|null}
+     * @private
+     */
+    _uuid = null;
+
+    /**
+     * @type {string[]|null}
+     * @private
+     */
+    _uuidRequests = null;
+
+    /**
      * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
      * @param {object} xrAnchor - native XRAnchor object that is provided by WebXR API
+     * @param {string|null} uuid - ID string associated with a persistent anchor
      * @hideconstructor
      */
-    constructor(anchors, xrAnchor) {
+    constructor(anchors, xrAnchor, uuid = null) {
         super();
 
         this._anchors = anchors;
         this._xrAnchor = xrAnchor;
+        this._uuid = uuid;
     }
 
     /**
@@ -67,6 +81,9 @@ class XrAnchor extends EventHandler {
     destroy() {
         if (!this._xrAnchor) return;
         this._anchors._index.delete(this._xrAnchor);
+
+        if (this._uuid)
+            this._anchors._indexByUuid.delete(this._uuid);
 
         const ind = this._anchors._list.indexOf(this);
         if (ind !== -1) this._anchors._list.splice(ind, 1);
@@ -113,6 +130,59 @@ class XrAnchor extends EventHandler {
      */
     getRotation() {
         return this._rotation;
+    }
+
+    persist(callback) {
+        if (!this._anchors.persistence)
+            return callback(new Error('Persistent Anchors are not supported'), null);
+
+        if (this._uuid)
+            return callback(null, this._uuid);
+
+        if (this._uuidRequests) {
+            this._uuidRequests.push(callback);
+            return;
+        }
+
+        this._uuidRequests = [];
+
+        this._xrAnchor.requestPersistentHandle()
+            .then((uuid) => {
+                this._uuid = uuid;
+                this._anchors._indexByUuid.set(this._uuid, this);
+                callback(null, uuid);
+                for(let i = 0; i < this._uuidRequests.length; i++) {
+                    this._uuidRequests[i](null, uuid);
+                }
+                this._uuidRequests = null;
+            })
+            .catch((ex) => {
+                callback(ex);
+                for(let i = 0; i < this._uuidRequests.length; i++) {
+                    this._uuidRequests[i](ex);
+                }
+                this._uuidRequests = null;
+            });
+    }
+
+    delete(callback) {
+        if (!this._uuid) {
+            if (callback) callback(new Error('Anchor is not persistent'));
+            return;
+        }
+
+        this._anchors.delete(this._uuid, (ex) => {
+            this._uuid = null;
+            if (callback) callback(ex);
+        });
+    }
+
+    get uuid() {
+        return this._uuid;
+    }
+
+    get persistent() {
+        return !!this._uuid;
     }
 }
 

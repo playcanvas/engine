@@ -33,6 +33,12 @@ class XrAnchors extends EventHandler {
     _supported = platform.browser && !!window.XRAnchor;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _persistence = !!window?.XRSession?.prototype.restorePersistentAnchor;
+
+    /**
      * List of anchor creation requests.
      *
      * @type {Array<object>}
@@ -47,6 +53,14 @@ class XrAnchors extends EventHandler {
      * @ignore
      */
     _index = new Map();
+
+    /**
+     * Index of XrAnchors, with UUID (persistent string) used as a key.
+     *
+     * @type {Map<string,XrAnchor>}
+     * @ignore
+     */
+    _indexByUuid = new Map();
 
     /**
      * @type {Array<XrAnchor>}
@@ -130,21 +144,110 @@ class XrAnchors extends EventHandler {
     /**
      * Create anchor with position, rotation and a callback.
      *
-     * @param {import('../../core/math/vec3.js').Vec3} position - Position for an anchor.
-     * @param {import('../../core/math/quat.js').Quat} [rotation] - Rotation for an anchor.
+     * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor.
+     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreate} [rotation] - Rotation for an anchor.
      * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
+     * // create an anchor using a position and rotation
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
      *     if (!err) {
      *         // new anchor has been created
      *     }
      * });
+     * @example
+     * // create an anchor from a hit test result
+     * hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
+     *     app.xr.anchors.create(hitTestResult, function (err, anchor) {
+     *         if (!err) {
+     *             // new anchor has been created
+     *         }
+     *     });
+     * });
      */
     create(position, rotation, callback) {
-        this._creationQueue.push({
-            transform: new XRRigidTransform(position, rotation), // eslint-disable-line no-undef
-            callback: callback
-        });
+        if (window.XRHitTestResult && position instanceof XRHitTestResult) {
+            const hitResult = position;
+            callback = rotation;
+
+            if (!this._supported) {
+                if (callback) callback(new Error('Anchors API is not supported'), null);
+                return;
+            }
+
+            if (!hitResult.createAnchor) {
+                if (callback) callback(new Error('Creating Anchor from Hit Test is not supported'), null);
+                return;
+            }
+
+            hitResult.createAnchor()
+                .then((xrAnchor) => {
+                    const anchor = new XrAnchor(this, xrAnchor);
+                    this._index.set(xrAnchor, anchor);
+                    this._list.push(anchor);
+
+                    if (callback)
+                        callback(null, anchor);
+
+                    this.fire('add', anchor);
+                })
+                .catch((ex) => {
+                    if (callback)
+                        callback(ex, null);
+
+                    this.fire('error', ex);
+                });
+        } else {
+            this._creationQueue.push({
+                transform: new XRRigidTransform(position, rotation), // eslint-disable-line no-undef
+                callback: callback
+            });
+        }
+    }
+
+    restore(uuid, callback) {
+        if (!this._persistence) {
+            if (callback) callback(new Error('Anchor Persistence is not supported'));
+            return;
+        }
+
+        if (!this.manager.active) {
+            if (callback) callback(new Error('WebXR session is not active'));
+            return;
+        }
+        
+        this.manager.session.restorePersistentAnchor(uuid)
+            .then((xrAnchor) => {
+                const anchor = new XrAnchor(this, xrAnchor, uuid);
+                this._index.set(xrAnchor, anchor);
+                this._indexByUuid.set(uuid, anchor);
+                this._list.push(anchor);
+                this.fire('add', anchor);
+            })
+            .catch((ex) => {
+                if (callback) callback(ex, null);
+                this.fire('error', ex);
+            });
+    }
+
+    delete(uuid, callback) {
+        if (!this._persistence) {
+            if (callback) callback(new Error('Anchor Persistence is not supported'));
+            return;
+        }
+
+        if (!this.manager.active) {
+            if (callback) callback(new Error('WebXR session is not active'));
+            return;
+        }
+
+        this.manager.session.deletePersistentAnchor(uuid)
+            .then(() => {
+                if (callback) callback(null);
+            })
+            .catch((ex) => {
+                if (callback) callback(ex);
+                this.fire('error', ex);
+            });
     }
 
     /**
@@ -221,6 +324,30 @@ class XrAnchors extends EventHandler {
      */
     get supported() {
         return this._supported;
+    }
+
+    /**
+     * True if Anchors support persistence.
+     *
+     * @type {boolean}
+     */
+    get persistence() {
+        return this._persistence;
+    }
+
+    /**
+     * Array of UUID strings of persistent anchors, or null if not available.
+     *
+     * @type {null|string[]}
+     */
+    get uuids() {
+        if (!this._persistence)
+            return null;
+
+        if (!this.manager.active)
+            return null;
+
+        return this.manager.session.persistentAnchors;
     }
 
     /**

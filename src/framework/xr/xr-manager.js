@@ -136,6 +136,13 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
+     * Provides access to Anchors.
+     *
+     * @type {XrAnchors}
+     */
+    anchors;
+
+    /**
      * @type {import('../components/camera/component.js').CameraComponent}
      * @private
      */
