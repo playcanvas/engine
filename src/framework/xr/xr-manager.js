@@ -28,7 +28,7 @@ import { XrAnchors } from './xr-anchors.js';
 /**
  * Callback used by manual room capturing.
  *
- * @callback XrRoomCapture
+ * @callback XrRoomCaptureCallback
  * @param {Error|null} err - The Error object or null if manual room capture was successful.
  */
 
@@ -563,7 +563,7 @@ class XrManager extends EventHandler {
      * room, it will start the capturing process, which can affect plane and mesh detection,
      * and improve hit-test quality against real-world geometry.
      *
-     * @param {XrRoomCapture} callback - Callback that will be fired once capture is complete
+     * @param {XrRoomCaptureCallback} callback - Callback that will be fired once capture is complete
      * or failed.
      *
      * @example
