@@ -65,6 +65,12 @@ class GraphNode extends EventHandler {
     /** @private */
     _labels = {};
 
+    /**
+     * @private
+     * Mark Entity as _dirtyZone meaning it should be checked for any ZoneComponents
+     */
+    _dirtyZone = true;
+
     // Local-space properties of transform (only first 3 are settable by the user)
     /**
      * @type {Vec3}
@@ -1117,6 +1123,7 @@ class GraphNode extends EventHandler {
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
+            this._dirtyZone = true;
             this._dirtyWorld = true;
             for (let i = 0; i < this._children.length; i++) {
                 if (!this._children[i]._dirtyWorld)

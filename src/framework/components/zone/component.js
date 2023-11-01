@@ -258,7 +258,7 @@ class ZoneComponent extends Component {
      *
      * @ignore
      */
-    checkEntities() {
+    checkEntities(dirtyEntities) {
         if (!this.entity.enabled || !this.enabled) {
             return;
         }
@@ -270,14 +270,20 @@ class ZoneComponent extends Component {
         _matrix.invert();
 
         let pendingCollider;
-        const entities = Object.values(this.system.app._entityIndex);
+        let entities;
+        // only check entities that have moved unless this zone has also moved
+        if (dirtyEntities && !this.entity._dirtyZone) {
+          entities = dirtyEntities;
+        } else {
+          entities = Object.values(this.system.app._entityIndex);
+        }
         const results = new Set();
         const resultsToRemove = new Set();
         // Check entities as per position
         for (let i = 0, l = entities.length; i < l; i++) {
             const entity = entities[i];
 
-            // Don't check for self.
+            // Don't check for self
             if (entity === this.entity) {
                 continue;
             }
