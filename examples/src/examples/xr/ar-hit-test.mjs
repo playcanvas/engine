@@ -61,7 +61,7 @@ async function example({ canvas }) {
     target.addComponent("render", {
         type: "cylinder"
     });
-    target.setLocalScale(0.5, 0.01, 0.5);
+    target.setLocalScale(0.1, 0.01, 0.1);
     app.root.addChild(target);
 
     if (app.xr.supported) {
@@ -151,10 +151,10 @@ async function example({ canvas }) {
                         target.addComponent("render", {
                             type: "cylinder"
                         });
-                        target.setLocalScale(0.5, 0.01, 0.5);
+                        target.setLocalScale(0.1, 0.01, 0.1);
                         app.root.addChild(target);
 
-                        hitTestSource.on('result', (position, rotation, item) => {
+                        hitTestSource.on('result', (position, rotation) => {
                             target.setPosition(position);
                             target.setRotation(rotation);
                         });
