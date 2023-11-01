@@ -132,6 +132,9 @@ class XrHitTestSource extends EventHandler {
      * @private
      */
     updateHitResults(results, inputSource) {
+        if (inputSource && inputSource.hitTestSourcesSet.has(this))
+            return;
+
         for (let i = 0; i < results.length; i++) {
             const pose = results[i].getPose(this.manager._referenceSpace);
 
