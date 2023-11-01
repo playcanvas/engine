@@ -1162,6 +1162,13 @@ export const TYPE_UINT32 = 5;
  */
 export const TYPE_FLOAT32 = 6;
 
+/**
+ * 16-bit floating point vertex element type (not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const TYPE_FLOAT16 = 7;
+
 export const UNIFORMTYPE_BOOL = 0;
 export const UNIFORMTYPE_INT = 1;
 export const UNIFORMTYPE_FLOAT = 2;
@@ -1261,9 +1268,9 @@ export const bindGroupNames = ['mesh', 'view'];
 export const UNIFORM_BUFFER_DEFAULT_SLOT_NAME = 'default';
 
 // map of engine TYPE_*** enums to their corresponding typed array constructors and byte sizes
-export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array];
-export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4];
-export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32'];
+export const typedArrayTypes = [Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Uint16Array];
+export const typedArrayTypesByteSize = [1, 1, 2, 2, 4, 4, 4, 2];
+export const vertexTypesNames = ['INT8', 'UINT8', 'INT16', 'UINT16', 'INT32', 'UINT32', 'FLOAT32', 'FLOAT16'];
 
 // map of typed array to engine TYPE_***
 export const typedArrayToType = {

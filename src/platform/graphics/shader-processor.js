@@ -5,7 +5,7 @@ import {
     UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32
+    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
@@ -387,7 +387,7 @@ class ShaderProcessor {
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
-                    if (dataType !== TYPE_FLOAT32 && !element.normalize) {
+                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize) {
 
                         const attribNumElements = ShaderProcessor.getTypeCount(type);
                         const newName = `_private_${name}`;
