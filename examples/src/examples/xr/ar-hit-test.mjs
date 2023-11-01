@@ -157,7 +157,6 @@ async function example({ canvas }) {
                         hitTestSource.on('result', (position, rotation, item) => {
                             target.setPosition(position);
                             target.setRotation(rotation);
-                            console.log(inputSource.id, item.id);
                         });
 
                         hitTestSource.once('remove', () => {
