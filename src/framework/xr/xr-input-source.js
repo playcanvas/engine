@@ -140,6 +140,12 @@ class XrInputSource extends EventHandler {
     _hitTestSources = [];
 
     /**
+     * @type {Set<import('./xr-hit-test-source.js').XrHitTestSource>}
+     * @ignore
+     */
+    hitTestSourcesSet = new Set();
+
+    /**
      * Create a new XrInputSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -610,6 +616,7 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceAdd(hitTestSource) {
+        this.hitTestSourcesSet.add(hitTestSource);
         this._hitTestSources.push(hitTestSource);
 
         this.fire('hittest:add', hitTestSource);
@@ -632,6 +639,7 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceRemove(hitTestSource) {
+        this.hitTestSourcesSet.delete(hitTestSource);
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }

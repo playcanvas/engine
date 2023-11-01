@@ -133,23 +133,46 @@ class XrHitTestSource extends EventHandler {
      * @private
      */
     updateHitResults(results, inputSource) {
+        if (inputSource && !inputSource.hitTestSourcesSet.has(this))
+            return;
+
+        let origin = poolVec3.pop();
+        if (!origin) origin = new Vec3();
+
+        if (inputSource) {
+            origin.copy(inputSource.getOrigin());
+        } else {
+            origin.copy(this.manager.camera.getPosition());
+        }
+
+        let candidateDistance = Infinity;
+        let candidateHitTestResult = null;
+
+        let position = poolVec3.pop();
+        if (!position) position = new Vec3();
+
+        let rotation = poolQuat.pop();
+        if (!rotation) rotation = new Quat();
+
         for (let i = 0; i < results.length; i++) {
             const pose = results[i].getPose(this.manager._referenceSpace);
 
-            let position = poolVec3.pop();
-            if (!position) position = new Vec3();
+            const distance = origin.distance(pose.transform.position);
+            if (distance >= candidateDistance)
+                continue;
+
+            candidateDistance = distance;
+            candidateHitTestResult = results[i];
             position.copy(pose.transform.position);
-
-            let rotation = poolQuat.pop();
-            if (!rotation) rotation = new Quat();
             rotation.copy(pose.transform.orientation);
-
-            this.fire('result', position, rotation, inputSource, results[i]);
-            this.manager.hitTest.fire('result', this, position, rotation, inputSource, results[i]);
-
-            poolVec3.push(position);
-            poolQuat.push(rotation);
         }
+
+        this.fire('result', position, rotation, inputSource, candidateHitTestResult);
+        this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
+
+        poolVec3.push(origin);
+        poolVec3.push(position);
+        poolQuat.push(rotation);
     }
 }
 
