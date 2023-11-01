@@ -20,6 +20,10 @@ async function example({ canvas }) {
         el.textContent = msg;
     };
 
+    const assets = {
+        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
+    };
+
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(canvas),
         touch: new pc.TouchDevice(canvas),
@@ -39,194 +43,214 @@ async function example({ canvas }) {
     // use device pixel ratio
     app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
-    app.start();
+    const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+    assetListLoader.load(() => {
 
-    // create camera
-    const c = new pc.Entity();
-    c.addComponent('camera', {
-        clearColor: new pc.Color(0, 0, 0, 0),
-        farClip: 10000
-    });
-    app.root.addChild(c);
+        app.start();
 
-    const l = new pc.Entity();
-    l.addComponent("light", {
-        type: "spot",
-        range: 30
-    });
-    l.translate(0, 10, 0);
-    app.root.addChild(l);
-
-    const cone = new pc.Entity();
-    cone.addComponent('render', {
-        type: 'cone'
-    });
-    cone.setLocalScale(0.1, 0.1, 0.1);
-
-    const createAnchor = (hitTestResult) => {
-        app.xr.anchors.create(hitTestResult, (err, anchor) => {
-            if (err) return message("Failed creating Anchor");
-            if (!anchor) return message("Anchor has not been created");
-
-            anchor.persist((err, uuid) => {
-                if (err) message('Anchor failed to persist');
-            });
+        // create camera
+        const c = new pc.Entity();
+        c.addComponent('camera', {
+            clearColor: new pc.Color(0, 0, 0, 0),
+            farClip: 10000
         });
-    };
+        app.root.addChild(c);
 
-    if (app.xr.supported) {
-        const activate = function () {
-            if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
-                    anchors: true,
-                    callback: function (err) {
-                        if (err) message("WebXR Immersive AR failed to start: " + err.message);
+        const l = new pc.Entity();
+        l.addComponent("light", {
+            type: "spot",
+            range: 30
+        });
+        l.translate(0, 10, 0);
+        app.root.addChild(l);
+
+        const cone = new pc.Entity();
+        cone.addComponent('render', {
+            type: 'cone'
+        });
+        cone.setLocalScale(0.1, 0.1, 0.1);
+
+        const label = new pc.Entity('label');
+        label.setLocalPosition(0, 0.1, 0);
+        label.addComponent("element", {
+            pivot: new pc.Vec2(0.5, 1),
+            anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
+            fontAsset: assets.font.id,
+            fontSize: 42,
+            text: "-",
+            type: pc.ELEMENTTYPE_TEXT
+        });
+        cone.addChild(label);
+
+        const createAnchor = (hitTestResult) => {
+            app.xr.anchors.create(hitTestResult, (err, anchor) => {
+                if (err) return message("Failed creating Anchor");
+                if (!anchor) return message("Anchor has not been created");
+
+                anchor.persist((err, uuid) => {
+                    if (err) {
+                        message('Anchor failed to persist');
+                        console.log(err);
                     }
                 });
-            } else {
-                message("Immersive AR is not available");
-            }
+            });
         };
 
-        app.mouse.on("mousedown", function () {
-            if (!app.xr.active)
-                activate();
-        });
+        if (app.xr.supported) {
+            const activate = function () {
+                if (app.xr.isAvailable(pc.XRTYPE_AR)) {
+                    c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+                        anchors: true,
+                        callback: function (err) {
+                            if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                        }
+                    });
+                } else {
+                    message("Immersive AR is not available");
+                }
+            };
 
-        if (app.touch) {
-            app.touch.on("touchend", function (evt) {
-                if (!app.xr.active) {
-                    // if not in VR, activate
+            app.mouse.on("mousedown", function () {
+                if (!app.xr.active)
                     activate();
-                } else {
-                    // otherwise reset camera
-                    c.camera.endXr();
-                }
-
-                evt.event.preventDefault();
-                evt.event.stopPropagation();
             });
-        }
 
-        // end session by keyboard ESC
-        app.keyboard.on('keydown', function (evt) {
-            if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
-                app.xr.end();
+            if (app.touch) {
+                app.touch.on("touchend", function (evt) {
+                    if (!app.xr.active) {
+                        // if not in VR, activate
+                        activate();
+                    } else {
+                        // otherwise reset camera
+                        c.camera.endXr();
+                    }
+
+                    evt.event.preventDefault();
+                    evt.event.stopPropagation();
+                });
             }
-        });
 
-        app.xr.on('start', function () {
-            message("Immersive AR session has started");
-
-            // restore all persistent anchors
-            const uuids = app.xr.anchors.uuids;
-            for(let i = 0; i < uuids.length; i++) {
-                app.xr.anchors.restore(uuids[i]);
-            }
-        });
-        app.xr.on('end', function () {
-            message("Immersive AR session has ended");
-        });
-        app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-            if (available) {
-                if (!app.xr.hitTest.supported) {
-                    message("AR Hit Test is not supported");
-                } else if (!app.xr.anchors.supported) {
-                    message("AR Anchors are not supported");
-                } else if (!app.xr.anchors.persistence) {
-                    message("AR Anchors Persistence is not supported");
-                } else {
-                    message("Touch screen to start AR session and look at the floor or walls");
+            // end session by keyboard ESC
+            app.keyboard.on('keydown', function (evt) {
+                if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
+                    app.xr.end();
                 }
-            } else {
-                message("Immersive AR is unavailable");
-            }
-        });
+            });
 
-        // create hit test sources for all input sources
-        if (app.xr.hitTest.supported && app.xr.anchors.supported) {
-            app.xr.input.on('add', (inputSource) => {
-                inputSource.hitTestStart({
-                    entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
-                    callback: (err, hitTestSource) => {
-                        if (err) return;
+            app.xr.on('start', function () {
+                message("Immersive AR session has started");
 
-                        let target = new pc.Entity();
-                        target.addComponent("render", {
-                            type: "cylinder"
-                        });
-                        target.setLocalScale(0.1, 0.01, 0.1);
-                        app.root.addChild(target);
+                // restore all persistent anchors
+                const uuids = app.xr.anchors.uuids;
+                for(let i = 0; i < uuids.length; i++) {
+                    app.xr.anchors.restore(uuids[i]);
+                }
+            });
+            app.xr.on('end', function () {
+                message("Immersive AR session has ended");
+            });
+            app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
+                if (available) {
+                    if (!app.xr.hitTest.supported) {
+                        message("AR Hit Test is not supported");
+                    } else if (!app.xr.anchors.supported) {
+                        message("AR Anchors are not supported");
+                    } else if (!app.xr.anchors.persistence) {
+                        message("AR Anchors Persistence is not supported");
+                    } else {
+                        message("Touch screen to start AR session and look at the floor or walls");
+                    }
+                } else {
+                    message("Immersive AR is unavailable");
+                }
+            });
 
-                        let lastHitTestResult = null;
+            // create hit test sources for all input sources
+            if (app.xr.hitTest.supported && app.xr.anchors.supported) {
+                app.xr.input.on('add', (inputSource) => {
+                    inputSource.hitTestStart({
+                        entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
+                        callback: (err, hitTestSource) => {
+                            if (err) return;
 
-                        // persistent input sources
-                        if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
-                            inputSource.on('select', () => {
-                                if (lastHitTestResult)
+                            let target = new pc.Entity();
+                            target.addComponent("render", {
+                                type: "cylinder"
+                            });
+                            target.setLocalScale(0.1, 0.01, 0.1);
+                            app.root.addChild(target);
+
+                            let lastHitTestResult = null;
+
+                            // persistent input sources
+                            if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
+                                inputSource.on('select', () => {
+                                    if (lastHitTestResult)
+                                        createAnchor(lastHitTestResult);
+                                });
+                            }
+
+                            hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
+                                target.setPosition(position);
+                                target.setRotation(rotation);
+                                lastHitTestResult = hitTestResult;
+                            });
+
+                            hitTestSource.once('remove', () => {
+                                target.destroy();
+                                target = null;
+
+                                // mobile screen input source
+                                if (inputSource.targetRayMode === pc.XRTARGETRAY_SCREEN && lastHitTestResult)
                                     createAnchor(lastHitTestResult);
+
+                                lastHitTestResult = null;
                             });
                         }
+                    });
 
-                        hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
-                            target.setPosition(position);
-                            target.setRotation(rotation);
-                            lastHitTestResult = hitTestResult;
-                        });
-
-                        hitTestSource.once('remove', () => {
-                            target.destroy();
-                            target = null;
-
-                            // mobile screen input source
-                            if (inputSource.targetRayMode === pc.XRTARGETRAY_SCREEN && lastHitTestResult)
-                                createAnchor(lastHitTestResult);
-
-                            lastHitTestResult = null;
-                        });
+                    if (inputSource.gamepad) {
+                        inputSource.gamepad.buttons
                     }
                 });
+            }
 
-                if (inputSource.gamepad) {
-                    inputSource.gamepad.buttons
-                }
-            });
-        }
-
-        // create entity for anchors
-        app.xr.anchors.on('add', (anchor) => {
-            let entity = cone.clone();
-            app.root.addChild(entity);
-            entity.setPosition(anchor.getPosition());
-            entity.setRotation(anchor.getRotation());
-            entity.translateLocal(0, 0.05, 0);
-
-            anchor.on('change', () => {
+            // create entity for anchors
+            app.xr.anchors.on('add', (anchor) => {
+                let entity = cone.clone();
+                app.root.addChild(entity);
                 entity.setPosition(anchor.getPosition());
                 entity.setRotation(anchor.getRotation());
                 entity.translateLocal(0, 0.05, 0);
+
+                anchor.on('change', () => {
+                    entity.setPosition(anchor.getPosition());
+                    entity.setRotation(anchor.getRotation());
+                    entity.translateLocal(0, 0.05, 0);
+                });
+
+                anchor.once('destroy', () => {
+                    entity.destroy();
+                    entity = null;
+                });
             });
 
-            anchor.once('destroy', () => {
-                entity.destroy();
-                entity = null;
-            });
-        });
-
-        if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
-            message("Immersive AR is not available");
-        } else if (!app.xr.hitTest.supported) {
-            message("AR Hit Test is not supported");
-        } else if (!app.xr.anchors.supported) {
-            message("AR Anchors are not supported");
-        } else if (!app.xr.anchors.persistence) {
-            message("AR Anchors Persistence is not supported");
+            if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+                message("Immersive AR is not available");
+            } else if (!app.xr.hitTest.supported) {
+                message("AR Hit Test is not supported");
+            } else if (!app.xr.anchors.supported) {
+                message("AR Anchors are not supported");
+            } else if (!app.xr.anchors.persistence) {
+                message("AR Anchors Persistence is not supported");
+            } else {
+                message("Touch screen to start AR session and look at the floor or walls");
+            }
         } else {
-            message("Touch screen to start AR session and look at the floor or walls");
+            message("WebXR is not supported");
         }
-    } else {
-        message("WebXR is not supported");
-    }
+    });
+
     return app;
 }
 

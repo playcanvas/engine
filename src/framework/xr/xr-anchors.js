@@ -204,6 +204,25 @@ class XrAnchors extends EventHandler {
         }
     }
 
+    /**
+     * Restore anchor using persistent UUID.
+     *
+     * @param {string} uuid - UUID string associated with persistent anchor.
+     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @example
+     * // restore an anchor using uuid string
+     * app.xr.anchors.restore(uuid, function (err, anchor) {
+     *     if (!err) {
+     *         // new anchor has been created
+     *     }
+     * });
+     * @example
+     * // restore all available persistent anchors
+     * const uuids = app.xr.anchors.uuids;
+     * for(let i = 0; i < uuids.length; i++) {
+     *     app.xr.anchors.restore(uuids[i]);
+     * }
+     */
     restore(uuid, callback) {
         if (!this._persistence) {
             if (callback) callback(new Error('Anchor Persistence is not supported'));
@@ -229,7 +248,20 @@ class XrAnchors extends EventHandler {
             });
     }
 
-    delete(uuid, callback) {
+    /**
+     * Forget an anchor by removing its UUID from underlying systems.
+     *
+     * @param {string} uuid - UUID string associated with persistent anchor.
+     * @param {import('./xr-anchor.js').XrAnchorForgetCallback} [callback] - Callback to
+     * fire when anchor persistent data was removed or error if failed.
+     * @example
+     * // forget all available anchors
+     * const uuids = app.xr.anchors.uuids;
+     * for(let i = 0; i < uuids.length; i++) {
+     *     app.xr.anchors.forget(uuids[i]);
+     * }
+     */
+    forget(uuid, callback) {
         if (!this._persistence) {
             if (callback) callback(new Error('Anchor Persistence is not supported'));
             return;
