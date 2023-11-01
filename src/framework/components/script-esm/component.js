@@ -171,6 +171,43 @@ class ScriptESMComponent extends Component {
     }
 
     /**
+     * Move module instance to different position which changes the execution order of scripts.
+     * 
+     * @param {string} moduleSpecifier - The specifier of the module to move.
+     * @param {number} ind - New position index.
+     * @returns {boolean} If it was successfully moved.
+     * @example
+     * entity.script.move('playerController', 0);
+     */
+    move(moduleSpecifier, ind) {
+
+        const moduleToMove = this.allModules.get(moduleSpecifier);
+
+        // Ensure params are valid
+        if (!moduleToMove || ind < 0 || ind > this.allModules.size) return false;
+
+        const keys = [...this.allModules.keys()];
+        const entries = [...this.allModules.entries()];
+
+        // Linear search - faster than findIndex
+        const i = keys.indexOf(moduleSpecifier);
+
+        // Remove the module from its current position
+        entries.splice(i, 1);
+
+        // Insert the module at the new position
+        entries.splice(ind, 0, [moduleSpecifier, moduleToMove]);
+
+        // reset the data
+        this.allModules.clear();
+        for (const [key, value] of entries) {
+            this.allModules.set(key, value);
+        }
+
+        return true;
+    }
+
+    /**
      * Detect if script is attached to an entity.
      *
      * @param {string} moduleSpecifier - The module specifier to search for
