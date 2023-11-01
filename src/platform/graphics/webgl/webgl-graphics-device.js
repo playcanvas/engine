@@ -526,7 +526,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.UNSIGNED_SHORT,
             gl.INT,
             gl.UNSIGNED_INT,
-            gl.FLOAT
+            gl.FLOAT,
+            gl.HALF_FLOAT
         ];
 
         this.pcUniformType = {};
