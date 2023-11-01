@@ -48,6 +48,7 @@ const webgpuValidElementSizes = [2, 4, 8, 12, 16];
  * - {@link TYPE_INT32}
  * - {@link TYPE_UINT32}
  * - {@link TYPE_FLOAT32}
+ * - {@link TYPE_FLOAT16}
  * @property {boolean} elements[].normalize If true, vertex attribute data will be mapped from a 0
  * to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data is left
  * unchanged. If this property is unspecified, false is assumed.
