@@ -1,17 +1,84 @@
 import * as pc from 'playcanvas';
 
 /**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx }) {
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput } = ReactPCUI;
+    class JsxControls extends React.Component {
+        render() {
+            const binding = new BindingTwoWay();
+            const link = {
+                observer,
+                path: 'mipmaps'
+            };
+            return jsx(Panel, { headerText: 'Texture Arrays' },
+                jsx(LabelGroup, { text: 'Show mipmaps' },
+                    jsx(BooleanInput, {
+                        type: "toggle",
+                        binding,
+                        link
+                    })
+                )
+            );
+        }
+    }
+    return jsx(JsxControls);
+}
+
+/**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
  * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, data, files, assetPath, scriptsPath, glslangPath, twgslPath }) {
+    function generateMipmaps(width, height) {
+        const colors = [
+            [0, 128, 0], // Green
+            [255, 255, 0], // Yellow
+            [255, 165, 0], // Orange
+            [255, 0, 0], // Red
+            [0, 0, 255], // Blue
+            [75, 0, 130], // Indigo
+            [238, 130, 238], // Violet
+            [255, 192, 203], // Pink
+            [165, 42, 42], // Brown
+            [128, 128, 128], // Gray
+            [128, 0, 128], // Purple
+            [0, 128, 128], // Teal
+            [0, 0, 0], // Black
+            [255, 255, 255] // White
+        ];
+    
+        const mipmapLevels = Math.log2(Math.max(width, height)) + 1;
+        const levels = [];
+        for (let i = 0; i < mipmapLevels; i++) {
+            const levelWidth = width >> i;
+            const levelHeight = height >> i;
+    
+            const data = new Uint8Array(levelWidth * levelHeight * 4);
+            levels.push(data);
+    
+            const color = colors[i % colors.length];
+    
+            for (let j = 0; j < levelWidth * levelHeight; j++) {
+                data[j * 4 + 0] = color[0];
+                data[j * 4 + 1] = color[1];
+                data[j * 4 + 2] = color[2];
+                data[j * 4 + 3] = 255;
+            }
+        }
+        return levels;
+    }
+    
     const assets = {
-        'rockyTrail': new pc.Asset("rockyTrail", "texture", { url: assetPath + "textures/rocky_trail_diff_1k.jpg" }),
-        'rockBoulder': new pc.Asset("rockBoulder", "texture", { url: assetPath + "textures/rock_boulder_cracked_diff_1k.jpg" }),
-        'coastSand': new pc.Asset("coastSand", "texture", { url: assetPath + "textures/coast_sand_rocks_02_diff_1k.jpg" }),
-        'aerialRocks': new pc.Asset("aeralRocks", "texture", { url: assetPath + "textures/aerial_rocks_02_diff_1k.jpg" })
+        rockyTrail: new pc.Asset("rockyTrail", "texture", { url: assetPath + "textures/rocky_trail_diff_1k.jpg" }),
+        rockBoulder: new pc.Asset("rockBoulder", "texture", { url: assetPath + "textures/rock_boulder_cracked_diff_1k.jpg" }),
+        coastSand: new pc.Asset("coastSand", "texture", { url: assetPath + "textures/coast_sand_rocks_02_diff_1k.jpg" }),
+        aerialRocks: new pc.Asset("aeralRocks", "texture", { url: assetPath + "textures/aerial_rocks_02_diff_1k.jpg" }),
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
     const gfxOptions = {
@@ -42,8 +109,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         pc.ContainerHandler
     ];
 
-    const app = new pc.AppBase(canvas);
-    app.init(createOptions);
+    const app = new pc.Application(canvas, createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -73,8 +139,12 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         // Create the shader definition and shader from the vertex and fragment shaders
         const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
             aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0,
-            aIndex: pc.SEMANTIC_ATTR15
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        });
+
+        const shaderGround = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['ground.frag'], 'groundsShader', {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
         });
 
         const textureArrayOptions = {
@@ -84,8 +154,8 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
             array: true,
             arrayLength: 4, // number of textures
             magFilter: pc.FILTER_NEAREST,
-            minFilter: pc.FILTER_NEAREST,
-            mipmaps: false,
+            minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
+            mipmaps: true,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE,
             levels: [[
@@ -99,11 +169,40 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         const textureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
         textureArray.upload();
 
+        // generate mipmaps for visualization
+        const mipmaps = generateMipmaps(textureArrayOptions.width, textureArrayOptions.height);
+        const levels = mipmaps.map((data) => {
+            const textures = [];
+            for (let i = 0; i < textureArrayOptions.arrayLength; i++) {
+                textures.push(data);
+            }
+            return textures;
+        });
+        textureArrayOptions.levels = levels;
+        const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
+
         // Create a new material with the new shader
         const material = new pc.Material();
         material.shader = shader;
         material.setParameter("uDiffuseMap", textureArray);
         material.update();
+
+        // Create a another material with the new shader
+        const groundMaterial = new pc.Material();
+        groundMaterial.shader = shaderGround;
+        groundMaterial.cull = pc.CULLFACE_NONE;
+        groundMaterial.setParameter("uDiffuseMap", textureArray);
+        groundMaterial.update();
+
+        // Create an Entity for the ground
+        const ground = new pc.Entity();
+        ground.addComponent("render", {
+            type: "plane",
+            material: groundMaterial
+        });
+        ground.setLocalScale(5, 1, 5);
+        ground.setLocalPosition(0, -2, 0);
+        app.root.addChild(ground);
 
         // Create a torus shape
         const torus = pc.createTorus(app.graphicsDevice, {
@@ -127,7 +226,18 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         });
 
         // Adjust the camera position
-        camera.translate(0, 0, 4);
+        camera.translate(0, 1, 2);
+        camera.lookAt(0, 0, 0);
+
+        camera.addComponent("script");
+        const orbit = camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2, // Override default of 0 (no inertia),
+                distanceMax: 10.0
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
 
         // Add the new Entities to the hierarchy
         app.root.addChild(light);
@@ -145,9 +255,13 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
             shape.setEulerAngles(angle, angle * 2, angle * 4);
             shape.render.meshInstances[0].setParameter('uIndex', Math.floor(time) % 4);
         });
+        data.on('mipmaps:set', (/** @type {number} */ value) => {
+            groundMaterial.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
+        });
     });
     return app;
 }
+
 
 export class TextureArrayExample {
     static CATEGORY = 'Graphics';
@@ -180,7 +294,19 @@ uniform mediump sampler2DArray uDiffuseMap;
 void main(void)
 {
     gl_FragColor = texture(uDiffuseMap, vec3(vUv0, uIndex));
+}`,
+        'ground.frag': /* glsl */`
+precision mediump float;
+
+varying vec2 vUv0;
+
+uniform mediump sampler2DArray uDiffuseMap;
+
+void main(void)
+{
+    gl_FragColor = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
 }`
     };
+    static controls = controls;
     static example = example;
 }

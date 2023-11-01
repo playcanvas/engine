@@ -303,7 +303,7 @@ class WebglTexture {
         if (texture._array) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
-                            1,
+                            requiredMipLevels,
                             this._glInternalFormat,
                             texture._width,
                             texture._height,
@@ -321,6 +321,7 @@ class WebglTexture {
             }
 
             mipObject = texture._levels[mipLevel];
+            resMult = 1 / Math.pow(2, mipLevel);
 
             if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
@@ -438,7 +439,6 @@ class WebglTexture {
                 // ----- 3D -----
                 // Image/canvas/video not supported (yet?)
                 // Upload the byte array
-                resMult = 1 / Math.pow(2, mipLevel);
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
                                             mipLevel,
@@ -463,7 +463,6 @@ class WebglTexture {
                                   mipObject);
                 }
             } else if (texture._array && typeof mipObject === "object") {
-                resMult = 1 / Math.pow(2, mipLevel);
                 if (texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
