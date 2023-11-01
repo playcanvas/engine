@@ -36,7 +36,7 @@ class XrAnchors extends EventHandler {
      * @type {boolean}
      * @private
      */
-    _persistence = !!window?.XRSession?.prototype.restorePersistentAnchor;
+    _persistence = platform.browser && !!window?.XRSession?.prototype.restorePersistentAnchor;
 
     /**
      * List of anchor creation requests.
