@@ -55,8 +55,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 
-        console.log("loadded", assets);
-
         app.start();
 
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
