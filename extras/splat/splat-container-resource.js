@@ -29,7 +29,7 @@ class SplatContainerResource extends ContainerResource {
         this.splatData = splatData;
 
         // calculate splat focal point
-        this.splatData.calcFocalPoint(this.focalPoint);
+        this.updateFocalPoint();
 
         // calculate custom aabb
         this.splatData.calcAabb(this.customAabb);
@@ -104,9 +104,9 @@ class SplatContainerResource extends ContainerResource {
         return entity;
     }
 
-    // updateFocalPoint() {
-    //     this.splatData.calcFocalPoint(this.focalPoint);
-    // }
+    updateFocalPoint() {
+        this.splatData.calcFocalPoint(this.focalPoint);
+    }
 
     // updateAabb() {
     //     this.splatData.calcAabb(this.customAabb);
