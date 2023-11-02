@@ -101,16 +101,6 @@ class SplatContainerResource extends ContainerResource {
         // set custom aabb
         entity.render.customAabb = this.customAabb;
 
-
-
-
-
-        /////////////
-        splatInstance.setupSorter(options.app, options.camera, entity);
-
-
-
-
         return entity;
     }
 

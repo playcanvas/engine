@@ -100,9 +100,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         app.root.addChild(entity);
 
         app.on("update", function (dt) {
-            // if (entity) {
-            //     entity.rotate(0, -20 * dt, 0);
-            // }
+            if (entity) {
+                entity.render.meshInstances[0].splatInstance.sort(entity, camera);
+            }
         });
     });
     return app;

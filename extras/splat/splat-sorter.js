@@ -1,6 +1,5 @@
 // sort blind set of data
 function SortWorker() {
-    const epsilon = 0.0001;
 
     // number of bits used to store the distance in integer array. Smaller number gives it a smaller
     // precision but faster sorting. Could be dynamic for less precise sorting.
@@ -19,9 +18,6 @@ function SortWorker() {
     const boundMin = { x: 0, y: 0, z: 0 };
     const boundMax = { x: 0, y: 0, z: 0 };
 
-    const lastCameraPosition = { x: 0, y: 0, z: 0 };
-    const lastCameraDirection = { x: 0, y: 0, z: 0 };
-
     let distances;
     let indices;
     let target;
@@ -37,26 +33,8 @@ function SortWorker() {
         const dy = cameraDirection.y;
         const dz = cameraDirection.z;
 
-        // early out if camera hasn't moved
-        if (Math.abs(px - lastCameraPosition.x) < epsilon &&
-            Math.abs(py - lastCameraPosition.y) < epsilon &&
-            Math.abs(pz - lastCameraPosition.z) < epsilon &&
-            Math.abs(dx - lastCameraDirection.x) < epsilon &&
-            Math.abs(dy - lastCameraDirection.y) < epsilon &&
-            Math.abs(dz - lastCameraDirection.z) < epsilon) {
-            return;
-        }
-
-        lastCameraPosition.x = px;
-        lastCameraPosition.y = py;
-        lastCameraPosition.z = pz;
-        lastCameraDirection.x = dx;
-        lastCameraDirection.y = dy;
-        lastCameraDirection.z = dz;
-
-        const numVertices = centers.length / 3;
-
         // create distance buffer
+        const numVertices = centers.length / 3;
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
             indices = new Uint32Array(numVertices);
@@ -171,8 +149,6 @@ class SplatSorter {
 
     vertexBuffer;
 
-//    updatedCallback;
-
     constructor() {
         this.worker = new Worker(URL.createObjectURL(new Blob([`(${SortWorker.toString()})()`], {
             type: 'application/javascript'
@@ -188,7 +164,6 @@ class SplatSorter {
             }, [oldData]);
 
             this.vertexBuffer.setData(newData);
-            //this.updatedCallback?.();
         };
     }
 
@@ -197,9 +172,8 @@ class SplatSorter {
         this.worker = null;
     }
 
-    init(vertexBuffer, centers, intIndices/*, updatedCallback*/) {
+    init(vertexBuffer, centers, intIndices) {
         this.vertexBuffer = vertexBuffer;
-        //this.updatedCallback = updatedCallback;
 
         // send the initial buffer to worker
         const buf = vertexBuffer.storage.slice(0);

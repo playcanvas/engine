@@ -11,8 +11,9 @@ import {
 import { SplatSorter } from './splat-sorter.js';
 
 const mat = new Mat4();
-const pos = new Vec3();
-const dir = new Vec3();
+const cameraPosition = new Vec3();
+const cameraDirection = new Vec3();
+const viewport = [0, 0];
 
 class SplatInstance {
     splat;
@@ -22,6 +23,12 @@ class SplatInstance {
     material;
 
     vb;
+
+    sorter;
+
+    lastCameraPosition = new Vec3();
+
+    lastCameraDirection = new Vec3();
 
     constructor(splat, debugRender = false) {
         this.splat = splat;
@@ -71,14 +78,8 @@ class SplatInstance {
         this.meshInstance.setInstancing(vb);
         this.meshInstance.splatInstance = this;
 
-        //this.setupSorter();
-
-
-
-
-
-        /////////////////////////////
-        // this.update();
+        this.sorter = new SplatSorter();
+        this.sorter.init(this.vb, this.splat.centers, this.splat.device.isWebGPU);
     }
 
     destroy() {
@@ -89,49 +90,39 @@ class SplatInstance {
         // this.material.destroy();
         // this.mesh.destroy();
 
-        this.sortCallbackHandle.off();
+     //   this.sortCallbackHandle.off();
     }
 
-    setupSorter(app, camera, entity) {
+    sort(entity, camera) {
 
-        const sorter = new SplatSorter();
-        sorter.init(
-            this.vb,
-            this.splat.centers,
-            this.splat.device.isWebGPU,
+        let sorted = false;
 
+        const cameraMat = camera.getWorldTransform();
+        cameraMat.getTranslation(cameraPosition);
+        cameraMat.getZ(cameraDirection);
 
+        // sort if the camera has changed
+        if (!cameraPosition.equalsApprox(this.lastCameraPosition) || !cameraDirection.equalsApprox(this.lastCameraDirection)) {
 
-
-            //options?.onChanged
-        );
-
-        const viewport = [0, 0];
-
-        this.sortCallbackHandle = app.on('prerender', () => {
-
-            const device = this.splat.device;
-            const cameraMat = camera.getWorldTransform();
-            cameraMat.getTranslation(pos);
-            cameraMat.getZ(dir);
+            this.lastCameraPosition.copy(cameraPosition);
+            this.lastCameraDirection.copy(cameraDirection);
+            sorted = true;
 
             const modelMat = entity.getWorldTransform();
             const invModelMat = mat.invert(modelMat);
-            invModelMat.transformPoint(pos, pos);
-            invModelMat.transformVector(dir, dir);
+            invModelMat.transformPoint(cameraPosition, cameraPosition);
+            invModelMat.transformVector(cameraDirection, cameraDirection);
 
-            sorter.setCamera(pos, dir);
+            this.sorter.setCamera(cameraPosition, cameraDirection);
+        }
 
-            viewport[0] = device.width;
-            viewport[1] = device.height;
-            this.meshInstance.material.setParameter('viewport', viewport);
+        // update viewport
+        const device = this.splat.device;
+        viewport[0] = device.width;
+        viewport[1] = device.height;
+        this.meshInstance.material.setParameter('viewport', viewport);
 
-            // // debug render splat bounds
-            // if (debugRenderBounds) {
-            //     this.splatData.renderWireframeBounds(options.app, modelMat);
-            // }
-        });
-
+        return sorted;
     }
 }
 
