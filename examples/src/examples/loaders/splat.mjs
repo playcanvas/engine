@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, pcx }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, pcx }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -16,6 +16,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
+    createOptions.mouse = new pc.Mouse(document.body);
+    createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
         // @ts-ignore
@@ -23,13 +25,17 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         // @ts-ignore
         pc.CameraComponentSystem,
         // @ts-ignore
-        pc.LightComponentSystem
+        pc.LightComponentSystem,
+        // @ts-ignore
+        pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
         pc.TextureHandler,
         // @ts-ignore
-        pc.ContainerHandler
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.ScriptHandler
     ];
 
     const app = new pc.AppBase(canvas);
@@ -49,7 +55,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     });
 
     const assets = {
-        splat: new pc.Asset('splat', 'container', { url: assetPath + 'splats/guitar.ply' })
+        splat: new pc.Asset('splat', 'container', { url: assetPath + 'splats/guitar.ply' }),
+        orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -66,6 +73,22 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         });
         camera.setLocalPosition(4, 1, 4);
         camera.lookAt(pc.Vec3.ZERO);
+
+        // add orbit camera script with a mouse and a touch support
+        camera.addComponent("script");
+        camera.script.create("orbitCamera", {
+            attributes: {
+                inertiaFactor: 0.2,
+//                focusEntity: ground,
+                distanceMax: 60,
+                frameOnStart: false
+            }
+        });
+        camera.script.create("orbitCameraInputMouse");
+        camera.script.create("orbitCameraInputTouch");
+
+
+
         app.root.addChild(camera);
 
         const entity = assets.splat.resource.instantiateRenderEntity({
@@ -77,9 +100,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         app.root.addChild(entity);
 
         app.on("update", function (dt) {
-            if (entity) {
-                entity.rotate(0, -20 * dt, 0);
-            }
+            // if (entity) {
+            //     entity.rotate(0, -20 * dt, 0);
+            // }
         });
     });
     return app;

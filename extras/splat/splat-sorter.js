@@ -166,12 +166,12 @@ function SortWorker() {
     };
 }
 
-class SortManager {
+class SplatSorter {
     worker;
 
     vertexBuffer;
 
-    updatedCallback;
+//    updatedCallback;
 
     constructor() {
         this.worker = new Worker(URL.createObjectURL(new Blob([`(${SortWorker.toString()})()`], {
@@ -188,7 +188,7 @@ class SortManager {
             }, [oldData]);
 
             this.vertexBuffer.setData(newData);
-            this.updatedCallback?.();
+            //this.updatedCallback?.();
         };
     }
 
@@ -197,9 +197,9 @@ class SortManager {
         this.worker = null;
     }
 
-    sort(vertexBuffer, centers, intIndices, updatedCallback) {
+    init(vertexBuffer, centers, intIndices/*, updatedCallback*/) {
         this.vertexBuffer = vertexBuffer;
-        this.updatedCallback = updatedCallback;
+        //this.updatedCallback = updatedCallback;
 
         // send the initial buffer to worker
         const buf = vertexBuffer.storage.slice(0);
@@ -218,4 +218,4 @@ class SortManager {
     }
 }
 
-export { SortManager };
+export { SplatSorter };
