@@ -72,30 +72,22 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
         camera.setLocalPosition(4, 1, 4);
-        camera.lookAt(pc.Vec3.ZERO);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
-//                focusEntity: ground,
                 distanceMax: 60,
                 frameOnStart: false
             }
         });
         camera.script.create("orbitCameraInputMouse");
         camera.script.create("orbitCameraInputTouch");
-
-
-
         app.root.addChild(camera);
 
         const entity = assets.splat.resource.instantiateRenderEntity({
-            // temp hack for GS
-            app: app,
-            camera: camera,
-            //onChanged: () => this.renderNextFrame()
+            debugRender: false
         });
         app.root.addChild(entity);
 
