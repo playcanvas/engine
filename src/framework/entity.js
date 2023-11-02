@@ -266,7 +266,7 @@ class Entity extends GraphNode {
      * entity.rotateLocal(0, 90, 0);
      */
     constructor(name, app = getApplication()) {
-        super(name);
+        super(name, app);
 
         Debug.assert(app, 'Could not find current application');
         this._app = app;

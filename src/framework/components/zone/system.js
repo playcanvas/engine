@@ -130,15 +130,11 @@ class ZoneComponentSystem extends ComponentSystem {
      */
     onUpdate(dt) {
         const zones = this.zones;
-        const entities = Object.values(this.app._entityIndex);
-        const dirtyEntities = entities.filter((e) => {
-            const isDirty = e._dirtyZone;
-            e._dirtyZone = false;
-            return isDirty;
-        });
         for (let i = 0, l = zones.length; i < l; i++) {
-            zones[i].checkEntities(dirtyEntities);
+            zones[i].checkEntities(this.app._dirtyZoneEntities);
         }
+        this.app._dirtyZoneEntities.forEach(e => {e._dirtyZone = false;});
+        this.app._dirtyZoneEntities.length = 0;
     }
 
     /**

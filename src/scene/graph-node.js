@@ -66,7 +66,7 @@ class GraphNode extends EventHandler {
     _labels = {};
 
     /**
-     * @private
+     *
      * Mark Entity as _dirtyZone meaning it should be checked for any ZoneComponents
      */
     _dirtyZone = true;
@@ -244,14 +244,17 @@ class GraphNode extends EventHandler {
      */
     scaleCompensation = false;
 
+    _app = undefined;
+
     /**
      * Create a new GraphNode instance.
      *
      * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
+     * @param {object} [app] - The application.
      */
-    constructor(name = 'Untitled') {
+    constructor(name = 'Untitled', app) {
         super();
-
+        this._app = app;
         this.name = name;
     }
 
@@ -1123,6 +1126,9 @@ class GraphNode extends EventHandler {
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
+            if (this._app) {
+                this._app._dirtyZoneEntities.push(this);
+            }
             this._dirtyZone = true;
             this._dirtyWorld = true;
             for (let i = 0; i < this._children.length; i++) {
