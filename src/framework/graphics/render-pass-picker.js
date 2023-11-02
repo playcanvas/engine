@@ -58,13 +58,16 @@ class RenderPassPicker extends RenderPass {
                         renderer.clear(camera.camera, false, true, false);
                     }
 
-                    const culledInstances = srcLayer.getCulledInstances(camera.camera);
-                    const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;
+                    // Use mesh instances from the layer. Ideally we'd just pick culled instances for the camera,
+                    // but we have no way of knowing if culling has been performed since changes to the layer.
+                    // Disadvantage here is that we render all mesh instances, even those not visible by the camera.
+                    const transparent = isTransparent[i];
+                    const meshInstances = srcLayer.meshInstances;
 
                     // only need mesh instances with a pick flag
                     for (let j = 0; j < meshInstances.length; j++) {
                         const meshInstance = meshInstances[j];
-                        if (meshInstance.pick) {
+                        if (meshInstance.pick && meshInstance.transparent === transparent) {
                             tempMeshInstances.push(meshInstance);
 
                             // keep the index -> meshInstance index mapping
