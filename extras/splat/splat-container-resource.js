@@ -36,15 +36,10 @@ class SplatContainerResource extends ContainerResource {
     }
 
     destroy() {
-        // this.instances.forEach((instance) => {
-        //     instance.splat.destroy();
-        //     instance.sortManager.destroy();
-        //     instance.entity.destroy();
-        //     instance.callbackHandle.off();
-        // });
-
         this.device = null;
         this.splatData = null;
+        this.splat?.destroy();
+        this.splat = null;
     }
 
     // TODO: debug renderer should be set on a splat instance, not on a splat
@@ -52,7 +47,7 @@ class SplatContainerResource extends ContainerResource {
         if (!this.splat) {
 
             const splatData = this.splatData;
-            const splat = new Splat(this.device, splatData.numSplats, globalDebugRender);
+            const splat = new Splat(this.device, splatData.numSplats);
             this.splat = splat;
 
             // texture data
@@ -100,6 +95,12 @@ class SplatContainerResource extends ContainerResource {
 
         // set custom aabb
         entity.render.customAabb = this.customAabb;
+
+        // when the render component gets deleted, destroy the splat instance
+        entity.render.system.on('beforeremove', (entity, component) => {
+            splatInstance.destroy();
+        }, this);
+
 
         return entity;
     }

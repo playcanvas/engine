@@ -3,7 +3,6 @@ import {
     createShaderFromCode,
     CULLFACE_BACK,
     CULLFACE_NONE,
-    GraphicsDevice,
     Material,
     SEMANTIC_POSITION,
     SEMANTIC_ATTR13

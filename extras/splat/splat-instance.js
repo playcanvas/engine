@@ -83,14 +83,10 @@ class SplatInstance {
     }
 
     destroy() {
-        // this.colorTexture.destroy();
-        // this.scaleTexture.destroy();
-        // this.rotationTexture.destroy();
-        // this.centerTexture.destroy();
-        // this.material.destroy();
-        // this.mesh.destroy();
-
-     //   this.sortCallbackHandle.off();
+        this.material.destroy();
+        this.vb.destroy();
+        this.meshInstance.destroy();
+        this.sorter.destroy();
     }
 
     sort(entity, camera) {

@@ -52,13 +52,6 @@ const calcSplatMat = (result, data) => {
     ]);
 };
 
-const calcSplatAabb = (result, data) => {
-    calcSplatMat(mat4, data);
-    aabb.center.set(0, 0, 0);
-    aabb.halfExtents.set(data.sx * 2, data.sy * 2, data.sz * 2);
-    result.setFromTransformedAabb(aabb, mat4);
-};
-
 class SplatData {
     elements;
 
@@ -75,6 +68,13 @@ class SplatData {
 
     get numSplats() {
         return this.vertexElement.count;
+    }
+
+    static calcSplatAabb(result, data) {
+        calcSplatMat(mat4, data);
+        aabb.center.set(0, 0, 0);
+        aabb.halfExtents.set(data.sx * 2, data.sy * 2, data.sz * 2);
+        result.setFromTransformedAabb(aabb, mat4);
     }
 
     // transform splat data by the given matrix
@@ -163,9 +163,9 @@ class SplatData {
 
             if (first) {
                 first = false;
-                calcSplatAabb(result, splat);
+                SplatData.calcSplatAabb(result, splat);
             } else {
-                calcSplatAabb(aabb2, splat);
+                SplatData.calcSplatAabb(aabb2, splat);
                 result.add(aabb2);
             }
         }

@@ -36,7 +36,7 @@ class Splat {
 
     centers;
 
-    constructor(device, numSplats, debugRender = false) {
+    constructor(device, numSplats) {
         this.device = device;
         this.numSplats = numSplats;
 
@@ -58,8 +58,6 @@ class Splat {
         this.scaleTexture.destroy();
         this.rotationTexture.destroy();
         this.centerTexture.destroy();
-        // this.material.destroy();
-        // this.mesh.destroy();
     }
 
     createMaterial(debugRender = false) {
