@@ -228,6 +228,7 @@ class esmscriptComponent extends Component {
     }
 
     /**
+     * @todo
      * When an entity is cloned and it has entity script attributes that point to other entities in
      * the same subtree that is cloned, then we want the new script attributes to point at the
      * cloned entities. This method remaps the script attributes for this entity and it assumes
