@@ -75,7 +75,7 @@ class ComponentSystemRegistry extends EventHandler {
      * @type {import('./script-esm/system.js').ScriptESMComponentSystem|undefined}
      * @readonly
      */
-    esmodule;
+    esmscript;
 
     /**
      * Gets the {@link JointComponentSystem} from the registry.

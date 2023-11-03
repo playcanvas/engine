@@ -1,6 +1,8 @@
+import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { ScriptESMComponent } from './component.js';
 import { ScriptESMComponentData } from './data.js';
+import { DynamicImport } from '../../../framework/handlers/script-esm.js';
 
 /**
  * Allows scripts to be attached to an Entity and executed.
@@ -20,14 +22,16 @@ class ScriptESMComponentSystem extends ComponentSystem {
     constructor(app) {
         super(app);
 
-        this.id = 'esmodule';
+        this.id = 'esmscript';
 
         this.ComponentType = ScriptESMComponent;
         this.DataType = ScriptESMComponentData;
 
         this.on('beforeremove', this._onBeforeRemove, this);
         this.app.systems.on('initialize', this._onInitialize, this);
+        this.app.systems.on('postInitialize', this._onPostInitialize, this);
         this.app.systems.on('update', this._onUpdate, this);
+        this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
     initializeComponentData(component, data) {
@@ -39,10 +43,12 @@ class ScriptESMComponentSystem extends ComponentSystem {
         if (data.hasOwnProperty('modules')) {
             for (let i = 0; i < data.modules.length; i++) {
                 const { moduleSpecifier, enabled, attributes } = data.modules[i];
-                component.create(moduleSpecifier, {
-                    enabled,
-                    attributes
-                });
+
+                DynamicImport(this.app, moduleSpecifier).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
+
+                    component.create(moduleSpecifier, ModuleClass, attributeDefinition, attributes);
+
+                }).catch(Debug.error);
             }
         }
     }
@@ -82,12 +88,26 @@ class ScriptESMComponentSystem extends ComponentSystem {
     }
 
     _onInitialize() {
-        this._components.forEach(component => component._onInitialize());
+        this._components.forEach((component) => {
+            if (component.enabled) component._onInitialize();
+        });
+    }
+
+    _onPostInitialize() {
+        this._components.forEach((component) => {
+            if (component.enabled) component._onPostInitialize();
+        });
     }
 
     _onUpdate(dt) {
         this._components.forEach((component) => {
-            if (component.enabled) component._onUpdate();
+            if (component.enabled) component._onUpdate(dt);
+        });
+    }
+
+    _onPostUpdate(dt) {
+        this._components.forEach((component) => {
+            if (component.enabled) component._onPostUpdate();
         });
     }
 
@@ -104,7 +124,9 @@ class ScriptESMComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('initialize', this._onInitialize, this);
+        this.app.systems.off('postInitialize', this._onPostInitialize, this);
         this.app.systems.off('update', this._onUpdate, this);
+        this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }
 }
 

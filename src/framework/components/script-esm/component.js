@@ -1,18 +1,85 @@
-import { pcImport } from '../../handlers/script-esm.js';
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
+import { Entity } from '../../entity.js';
 
 /**
- * The ScriptESMComponent allows you to extend the functionality of an Entity by attaching your own
- * ESM modules to the Entity.
+ * @typedef {Object|Map} AttributeDefinition
+ * @property {'asset'|'boolean'|'curve'|'entity'|'json'|'number'|'rgb'|'rgba'|'string'|'vec2'|'vec3'|'vec4'} type - The attribute type
+ */
+
+/**
+ * @callback UpdateFunction
+ * @param {number} dt - The time since the last update.
+ */
+
+/**
+ * @callback SwapFunction
+ * @param {Object} newState - The new state to swap to.
+ */
+
+/**
+ * @typedef {Object} ModuleInstance
+ * @property {Function} [initialize] - A function called when the component is mounted
+ * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
+ * @property {Function} [destroy] - A function called when the module should be destroyed
+ * @property {SwapFunction} [swap] - A function called to swap state
+ */
+
+/**
+ * Checks if a class contains a method either itself or in it's inheritance chain
+ *
+ * @param {Function} Class - The class to check
+ * @param {string} method - The name of the method to check
+ * @returns {boolean} if a valid class and contains the method in it's inheritance chain
+ */
+const doesClassHaveMethod = (Class, method) => {
+    return typeof Class === 'function' &&
+        typeof Class.prototype === 'object' &&
+        method in Class.prototype;
+};
+
+/**
+ * The esmscriptComponent extends the functionality of an Entity by
+ * allowing you to attach your own ESM modules to it.
  *
  * @augments Component
  */
-class ScriptESMComponent extends Component {
+class esmscriptComponent extends Component {
     /**
-     * Create a new ScriptESMComponent instance.
+     * A list of valid attribute types
+     */
+    static VALID_ATTR_TYPES = new Set([
+        "asset",
+        "boolean",
+        "curve",
+        "entity",
+        "json",
+        "number",
+        "rgb",
+        "rgba",
+        "string",
+        "vec2",
+        "vec3",
+        "vec4"
+    ]);
+
+    /**
+     * For any given attribute definition returns whether it's shape
+     * is similar to a valid attribute definition.
      *
-     * @param {import('./system.js').ScriptESMComponentSystem} system - The ComponentSystem that
+     * @param {AttributeDefinition} attributeDefinition - The attribute to check
+     * @returns {boolean} True if the object can be treated as a attribute definition
+     * @example
+     * entity.esmscript.isValidAttributeDefinition({ type: 'entity' });
+     */
+    static isValidAttributeDefinition(attributeDefinition) {
+        return attributeDefinition && esmscriptComponent.VALID_ATTR_TYPES.has(attributeDefinition.type);
+    }
+
+    /**
+     * Create a new esmscriptComponent instance.
+     *
+     * @param {import('./system.js').esmscriptComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
@@ -20,22 +87,42 @@ class ScriptESMComponent extends Component {
         super(system, entity);
 
         /**
-         * Holds all module instances for this component.
-         * @private
+         * Holds all module instances of this component.
+         * The execution order of modules should be considered indeterminate.
+         *
+         * Key: {string} moduleSpecifier - The identifier for the module.
+         * Value: {ModuleInstance} moduleInstance - The instance of Script ES Module
+         *
+         * Example:
+         * this.attributeDefinitions.set('moduleA', {'type': 'number', defaultValue 10});
          */
+        this.modules = new Map();
 
-        this.allModules = new Map();
-        this.modulesWithUpdate = new Map();
-        this.modulesWithPostUpdate = new Map();
+        /**
+         * Holds the attribute definitions for modules.
+         *
+         * Key: {string} moduleSpecifier - The identifier for the module.
+         * Value: {AttributeDefinition} attributeDefinition - The definitions of attributes provided by the module.
+         *
+         * Example:
+         * this.attributeDefinitions.set('moduleA', {'type': 'number', defaultValue 10});
+         */
+        this.attributeDefinitions = new Map();
+
+        // Holds all the module specifiers for modules with an `update` method
+        this.modulesWithUpdate = new Set();
+
+        // Holds all the module specifiers for modules with a `postUpdate` method
+        this.modulesWithPostUpdate = new Set();
     }
 
     /**
      * Fired when Component becomes enabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event ScriptESMComponent#enable
+     * @event esmscriptComponent#enable
      * @example
-     * entity.script.on('enable', function () {
+     * entity.esmscript.on('enable', function () {
      *     // component is enabled
      * });
      */
@@ -44,9 +131,9 @@ class ScriptESMComponent extends Component {
      * Fired when Component becomes disabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event ScriptESMComponent#disable
+     * @event esmscriptComponent#disable
      * @example
-     * entity.script.on('disable', function () {
+     * entity.esmscript.on('disable', function () {
      *     // component is disabled
      * });
      */
@@ -55,10 +142,10 @@ class ScriptESMComponent extends Component {
      * Fired when Component changes state to enabled or disabled. Note: this event does not take in
      * account entity or any of its parent enabled state.
      *
-     * @event ScriptESMComponent#state
+     * @event esmscriptComponent#state
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
-     * entity.esmodule.on('state', function (enabled) {
+     * entity.esmscript.on('state', function (enabled) {
      *     // component changed state
      * });
      */
@@ -66,9 +153,9 @@ class ScriptESMComponent extends Component {
     /**
      * Fired when Component is removed from entity.
      *
-     * @event ScriptESMComponent#remove
+     * @event esmscriptComponent#remove
      * @example
-     * entity.esmodule.on('remove', function () {
+     * entity.esmscript.on('remove', function () {
      *     // entity has no more script component
      * });
      */
@@ -76,12 +163,12 @@ class ScriptESMComponent extends Component {
     /**
      * Fired when an esm script instance is created and attached to component.
      *
-     * @event ScriptESMComponent#create
+     * @event esmscriptComponent#create
      * @param {string} name - The name of the Script Type.
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that has been created.
+     * @param {ModuleInstance} moduleInstance - The instance of
+     * the {@link ModuleInstance} that has been created.
      * @example
-     * entity.esmodule.on('create', function (name, scriptInstance) {
+     * entity.esmscript.on('create', function (name, moduleInstance) {
      *     // new script instance added to component
      * });
      */
@@ -89,11 +176,11 @@ class ScriptESMComponent extends Component {
     /**
      * Fired when an esm script instance is created and attached to component.
      *
-     * @event ScriptComponent#create:[name]
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that has been created.
+     * @event esmscriptComponent#create:[name]
+     * @param {ModuleInstance} moduleInstance - The instance of
+     * the {@link ModuleInstance} that has been created.
      * @example
-     * entity.esmodule.on('create:playerController', function (scriptInstance) {
+     * entity.esmscript.on('create:playerController', function (moduleInstance) {
      *     // new script instance 'playerController' is added to component
      * });
      */
@@ -101,55 +188,42 @@ class ScriptESMComponent extends Component {
     /**
      * Fired when a script instance is destroyed and removed from component.
      *
-     * @event ScriptESMComponent#destroy
-     * @param {string} name - The name of the Script Type.
-     * @param {import('../../script/script-type.js').ScriptType} scriptInstance - The instance of
-     * the {@link ScriptType} that has been destroyed.
+     * @event esmscriptComponent#destroyed:[name]
+     * @param {ModuleInstance} moduleInstance - The module instance
+     * that has been destroyed.
      * @example
-     * entity.esmodule.on('destroy', function (name, scriptInstance) {
-     *     // script instance has been destroyed and removed from component
-     * });
-     */
-
-    /**
-     * Fired when a script instance is destroyed and removed from component.
-     *
-     * @event ScriptESMComponent#destroy:[name]
-     * @param {import('../../script/script-type.js').ScriptType} Script ESM Module instance - The instance of
-     * the {@link ScriptType} that has been destroyed.
-     * @example
-     * entity.script.on('destroy:playerController', function (scriptInstance) {
-     *     // script instance 'playerController' has been destroyed and removed from component
+     * entity.esmscript.on('destroyed:playerController', function (moduleInstance) {
+     *     // modules instance 'playerController' has been destroyed and removed from component
      * });
      */
 
     _onBeforeRemove() {
-        this.allModules.forEach(({ moduleInstance }) => {
+        this.modules.forEach(({ moduleInstance }) => {
             this.destroy(moduleInstance);
         });
     }
 
     _onInitialize() {
-        this.allModules.forEach(({ moduleInstance }) => {
+        this.modules.forEach(({ moduleInstance }) => {
             moduleInstance.initialize?.();
         });
     }
 
     _onPostInitialize() {
-        this.allModules.forEach(({ moduleInstance }) => {
+        this.modules.forEach(({ moduleInstance }) => {
             moduleInstance.postInitialize?.();
         });
     }
 
     _onUpdate(dt) {
-        this.modulesWithUpdate.forEach(({ moduleInstance }) => {
-            moduleInstance.update(dt);
+        this.modulesWithUpdate.forEach((module) => {
+            this.modules.get(module).update(dt);
         });
     }
 
     _onPostUpdate(dt) {
-        this.modulesWithPostUpdate.forEach(({ moduleInstance }) => {
-            moduleInstance.postUpdate(dt);
+        this.modulesWithPostUpdate.forEach((module) => {
+            this.modules.get(module).postUpdate(dt);
         });
     }
 
@@ -159,52 +233,108 @@ class ScriptESMComponent extends Component {
      * cloned entities. This method remaps the script attributes for this entity and it assumes
      * that this entity is the result of the clone operation.
      *
-     * @param {ScriptESMComponent} oldScriptComponent - The source script component that belongs to
+     * @param {esmscriptComponent} oldScriptComponent - The source script component that belongs to
      * the entity that was being cloned.
      * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the
      * entities that were cloned.
-     * @private
+     * @internal
      */
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
-        // TODO - run over old script component, any entities found, re-point them
+        // for each module in the old component
+        oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
+
+            // Get the attribute definition for the specified module
+            const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
+            this.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
+
+                // If the attribute is an 'entity', then this needs to be resolved
+                if (attributeDefinition.type === 'entity') {
+                    const value = module[attributeName];
+                    const newModule = this.modules.get(moduleSpecifier);
+
+                    this._resolveEntityScriptAttribute(
+                        attributeDefinition,
+                        attributeName,
+                        value,
+                        false,
+                        newModule,
+                        duplicatedIdsMap
+                    );
+                }
+            });
+        });
     }
 
     /**
-     * Move module instance to different position which changes the execution order of scripts.
-     * 
-     * @param {string} moduleSpecifier - The specifier of the module to move.
-     * @param {number} ind - New position index.
-     * @returns {boolean} If it was successfully moved.
+     * This method iterates recursively over an attribute definition and executes the
+     * provided function once for each valid definition and it's children attributes.
+     *
+     * @param {AttributeDefinition} attributeDefinitions - An iterable object or Map where each key-value pair consists of an attributeName and an attributeDefinition.
+     * @param {Function} callbackFn - A function to execute for each valid entry. The function is called with (attributeName, attributeDefinition).
+     *
      * @example
-     * entity.script.move('playerController', 0);
+     * forEachAttribute({
+     *   thisAttr: { type: 'entity' }
+     *   nested: {
+     *     thatAttr: { type: 'asset' }
+     *   }
+     * }, (name, definition) => console.log(`Name: ${name}, Type: ${definition.type}`) )
+     * Output: 'Name: thisAttr, Type: entity'
+     *         'Name: thatAttr, Type: asset'
      */
-    move(moduleSpecifier, ind) {
+    forEachAttributeDefinition(attributeDefinitions = {}, callbackFn) {
 
-        const moduleToMove = this.allModules.get(moduleSpecifier);
+        if (!callbackFn) return;
 
-        // Ensure params are valid
-        if (!moduleToMove || ind < 0 || ind > this.allModules.size) return false;
+        for (const attributeName in attributeDefinitions) {
 
-        const keys = [...this.allModules.keys()];
-        const entries = [...this.allModules.entries()];
+            const attributeDefinition = attributeDefinitions[attributeName];
+            if (!esmscriptComponent.isValidAttributeDefinition(attributeDefinition)) {
 
-        // Linear search - faster than findIndex
-        const i = keys.indexOf(moduleSpecifier);
+                // If this is a nested attribute definition, then recurse
+                if (typeof attributeDefinition === 'object') {
+                    this.forEachAttributeDefinition(attributeDefinition, callbackFn);
+                }
 
-        // Remove the module from its current position
-        entries.splice(i, 1);
-
-        // Insert the module at the new position
-        entries.splice(ind, 0, [moduleSpecifier, moduleToMove]);
-
-        // reset the data
-        this.allModules.clear();
-        for (const [key, value] of entries) {
-            this.allModules.set(key, value);
+            } else {
+                callbackFn(attributeName, attributeDefinition);
+            }
         }
+    }
 
-        return true;
+    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
+        if (attribute.array) {
+            // handle entity array attribute
+            const len = oldValue.length;
+            if (!len) {
+                return;
+            }
+
+            const newGuidArray = oldValue.slice();
+            for (let i = 0; i < len; i++) {
+                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                if (duplicatedIdsMap[guid]) {
+                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                }
+            }
+
+            newModule[attributeName] = newGuidArray;
+        } else {
+
+            // handle regular entity attribute
+            if (oldValue instanceof Entity) {
+                oldValue = oldValue.getGuid();
+            } else if (typeof oldValue !== 'string') {
+                return;
+            }
+
+            if (duplicatedIdsMap[oldValue]) {
+
+                newModule[attributeName] = duplicatedIdsMap[oldValue];
+
+            }
+        }
     }
 
     /**
@@ -218,7 +348,7 @@ class ScriptESMComponent extends Component {
      * }
      */
     has(moduleSpecifier) {
-        return this.allModules.has(moduleSpecifier);
+        return this.modules.has(moduleSpecifier);
     }
 
     /**
@@ -232,7 +362,7 @@ class ScriptESMComponent extends Component {
      * const controller = entity.module.get('module');
      */
     get(moduleSpecifier) {
-        return this.allModules.get(moduleSpecifier);
+        return this.modules.get(moduleSpecifier);
     }
 
     /**
@@ -257,24 +387,29 @@ class ScriptESMComponent extends Component {
      *     }
      * });
      */
-    create(moduleSpecifier, args) {
+    // create(moduleSpecifier, args = {}) {
 
-        // eslint-disable-next-line multiline-comment-style
-        /* #if _ASSET_BASE_URL
-        const finalUrl = $_ASSET_BASE_URL + this.system.app.assets.prefix +  moduleSpecifier;
-        // #else */
-        const finalUrl = moduleSpecifier;
-        // #endif
+    //     DynamicImport(this.system.app, moduleSpecifier).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
 
-        pcImport(this.system.app, finalUrl).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
+    //         this.instantiateModule(moduleSpecifier, ModuleClass, attributeDefinition, args.attributes);
 
-            this.addModule(moduleSpecifier, ModuleClass, attributeDefinition, args.attributes);
+    //     }).catch(Debug.error);
 
-        }).catch(Debug.error);
+    // }
 
-    }
-
-    addModule(moduleSpecifier, ModuleClass, attributeDefinition = {}, attributes = {}) {
+    /**
+     * Registers an in-memory Script ES module with the the component system, allowing it to interact with the engine update mechanic.
+     * If the module already exists, ie. a module with the same specifier exists in this component, then it will
+     * replace this *if* the module has a swap method.
+     *
+     * @param {string} moduleSpecifier - A unique module specifier, used to identify the module.
+     * @param {Function} ModuleClass - The ES Script Module class to add to the component
+     * @param {AttributeDefinition} attributeDefinition - A definition of the attributes used in the Script ESM class
+     * @param {object} [attributes] - A set of attributes which are assigned to the Script Module instance
+     * @returns {ModuleInstance} An instance of the module
+     * @private
+     */
+    create(moduleSpecifier, ModuleClass, attributeDefinition = {}, attributes = {}) {
 
         if (!ModuleClass)
             throw new Error(`The module '${moduleSpecifier}' does not export a default`);
@@ -284,20 +419,18 @@ class ScriptESMComponent extends Component {
 
         const moduleInstance = new ModuleClass(this.system.app, this.entity);
 
-        // Iterate over the attribute definitions and assign them if they exist on the attributes
-        Object.keys(attributeDefinition).forEach((attributeName) => {
-            if (Object.hasOwn(attributes, attributeName)) {
-                moduleInstance[attributeName] = attributes[attributeName];
-            }
+        // Assign any attribute definition that has been provided, or assign the default
+        this.forEachAttributeDefinition(attributeDefinition, (attributeName) => {
+            moduleInstance[attributeName] = attributes[attributeName] || attributeDefinition[attributeName]?.default;
         });
 
         // Retrieve any previous instance associated with the module specifier
-        const previousModuleInstance = this.allModules.get(moduleSpecifier)?.moduleInstance;
+        const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
         const isHMREnabled = moduleInstance.swap && typeof moduleInstance.swap === 'function';
 
         // Add Modules to relevant update/post-update lists
-        if ('update' in ModuleClass) this.modulesWithUpdate.add(moduleSpecifier);
-        if ('postUpdate' in ModuleClass) this.modulesWithPostUpdate.add(moduleSpecifier);
+        if (doesClassHaveMethod(ModuleClass, 'update')) this.modulesWithUpdate.add(moduleSpecifier);
+        if (doesClassHaveMethod(ModuleClass, 'postUpdate')) this.modulesWithPostUpdate.add(moduleSpecifier);
 
         this.fire('create', moduleSpecifier, moduleInstance);
         this.fire('create:' + moduleSpecifier, moduleInstance);
@@ -308,30 +441,32 @@ class ScriptESMComponent extends Component {
             // Copy intrinsic state
             moduleInstance.enabled = previousModuleInstance.enabled;
 
-            // Copy explicit state
+            // Copy user defined state using `swap`
             if (isHMREnabled)
                 moduleInstance.swap(previousModuleInstance);
 
         } else if (moduleInstance.enabled || !Object.hasOwn(moduleInstance, 'enabled')) {
-            moduleInstance.initialize();
+            moduleInstance.initialize?.();
         }
 
         // Listen for any subsequent load events
         this.system.app.assets.once(`load:url:${this.system.app.assets.prefix + moduleSpecifier}`, (asset) => {
 
             const NewModuleClass = asset.resource;
+            console.log('PRE SWAP', NewModuleClass);
 
-            // Only upgrade the module if the class or super class contains a swap
+            // Only upgrade the module if the class contains a `swap` method
             if ('swap' in NewModuleClass) {
-                this.addModule(moduleSpecifier, NewModuleClass, attributes);
+                this.create(moduleSpecifier, NewModuleClass, attributeDefinition, attributes);
             } else {
                 Debug.warn(
-                    `The Script Module '${NewModuleClass}' does not have a 'swap' method, and is ineligible for swapping. Please reload.`
+                    `The Script Module '${NewModuleClass}' does not have a 'swap' method, and is therefore ineligible for hot reloading. Please reload.`
                 );
             }
         });
 
-        this.allModules.set(moduleSpecifier, { ModuleClass, attributes, moduleInstance });
+        this.modules.set(moduleSpecifier, moduleInstance);
+        this.attributeDefinitions.set(moduleSpecifier, attributeDefinition);
 
         return moduleInstance;
     }
@@ -348,12 +483,13 @@ class ScriptESMComponent extends Component {
      */
     destroy(moduleSpecifier) {
 
-        const module = this.allModules.get(moduleSpecifier);
+        const module = this.modules.get(moduleSpecifier);
 
         if (module) {
 
             // Remove from local data
-            this.allModules.delete(moduleSpecifier);
+            this.modules.delete(moduleSpecifier);
+            this.attributeDefinitions.delete(moduleSpecifier);
             this.modulesWithPostUpdate.delete(moduleSpecifier);
             this.modulesWithPostUpdate.delete(moduleSpecifier);
 
@@ -371,4 +507,4 @@ class ScriptESMComponent extends Component {
     }
 }
 
-export { ScriptESMComponent };
+export { esmscriptComponent };

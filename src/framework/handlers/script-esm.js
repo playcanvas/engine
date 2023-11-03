@@ -3,12 +3,21 @@
  * checks and resolves modules in bundled or non bundled modules
  *
  * @param {import('../../framework/app-base').AppBase} app - The application scope to load from.
- * @param {string} moduleSpecifier - The raw model data.
+ * @param {string} moduleSpecifier - A unique path or specifier used to import the module
  * @returns {Promise} Returns a promise which fulfills to a module namespace object: an object containing all exports from moduleName.
  */
-export const pcImport = (app, moduleSpecifier) => {
+export const DynamicImport = (app, moduleSpecifier) => {
+
+    // eslint-disable-next-line multiline-comment-style
+    /* #if _ASSET_BASE_URL
+    const path = $_ASSET_BASE_URL + app.assets.prefix +  moduleSpecifier;
+    // #else */
+    const path = moduleSpecifier;
+    // #endif
+
     // TODO: handle bundled contexts correctly
-    return import(`${moduleSpecifier}`);
+
+    return import(`${path}`);
 };
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -23,7 +32,7 @@ class ScriptESMHandler {
      *
      * @type {string}
      */
-    handlerType = "esmodule";
+    handlerType = "esmscript";
 
     /**
      * Create a new ScriptHandler instance.
@@ -48,14 +57,7 @@ class ScriptESMHandler {
             };
         }
 
-        // eslint-disable-next-line multiline-comment-style
-        /* #if _ASSET_BASE_URL
-        finalUrl = $_ASSET_BASE_URL + url.load;
-        // #else */
-        const finalUrl = url.load;
-        // #endif
-
-        pcImport(this._app, finalUrl).then(({ default: module }) => {
+        DynamicImport(this._app, url.load).then(({ default: module }) => {
             callback(null, module, url);
         }).catch((err) => {
             callback(err);
