@@ -105,7 +105,7 @@ class SplatInstance {
         const device = this.splat.device;
         viewport[0] = device.width;
         viewport[1] = device.height;
-        this.meshInstance.material.setParameter('viewport', viewport);
+        this.material.setParameter('viewport', viewport);
     }
 
     sort(camera) {
