@@ -20,6 +20,8 @@ class SplatInstance {
 
     mesh;
 
+    meshInstance;
+
     material;
 
     vb;
@@ -89,7 +91,7 @@ class SplatInstance {
         this.sorter.destroy();
     }
 
-    sort(entity, camera) {
+    sort(camera) {
 
         let sorted = false;
 
@@ -104,7 +106,7 @@ class SplatInstance {
             this.lastCameraDirection.copy(cameraDirection);
             sorted = true;
 
-            const modelMat = entity.getWorldTransform();
+            const modelMat = this.meshInstance.node.getWorldTransform();
             const invModelMat = mat.invert(modelMat);
             invModelMat.transformPoint(cameraPosition, cameraPosition);
             invModelMat.transformVector(cameraDirection, cameraDirection);

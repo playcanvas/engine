@@ -93,7 +93,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.on("update", function (dt) {
             if (entity) {
-                entity.render.meshInstances[0].splatInstance.sort(entity, camera);
+                entity.render.meshInstances[0].splatInstance.sort(camera);
             }
         });
     });
