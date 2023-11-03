@@ -42,7 +42,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         if (data.hasOwnProperty('modules')) {
             for (let i = 0; i < data.modules.length; i++) {
-                const { moduleSpecifier, enabled, attributes } = data.modules[i];
+                const { moduleSpecifier, attributes } = data.modules[i];
 
                 DynamicImport(this.app, moduleSpecifier).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
 
