@@ -383,8 +383,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._deviceType = this.isWebGL2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
-        const alphaBits = gl.getParameter(gl.ALPHA_BITS);
-        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+        this.updateBackbufferFormat(null);
 
         const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
@@ -787,10 +786,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.backBuffer.impl.suppliedColorFramebuffer = frameBuffer;
     }
 
+    // Update framebuffer format based on the current framebuffer, as this is use to create matching multi-sampled framebuffer
+    updateBackbufferFormat(framebuffer) {
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+        const alphaBits = this.gl.getParameter(this.gl.ALPHA_BITS);
+        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+    }
+
     updateBackbuffer() {
 
         const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
         if (this._defaultFramebufferChanged || resolutionChanged) {
+
+            // if the default framebuffer changes (entering or exiting XR for example)
+            if (this._defaultFramebufferChanged) {
+                this.updateBackbufferFormat(this._defaultFramebuffer);
+            }
+
             this._defaultFramebufferChanged = false;
             this.backBufferSize.set(this.canvas.width, this.canvas.height);
 
