@@ -21,7 +21,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
 
     createOptions.componentSystems = [
         // @ts-ignore
-        pc.ScriptESMComponentSystem,
+        pc.EsmScriptComponentSystem,
         // @ts-ignore
         pc.RenderComponentSystem,
         // @ts-ignore
@@ -58,7 +58,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
         type: 'box'
     });
 
-    box.addComponent('scriptesm', {
+    box.addComponent('esmscript', {
         enabled: true,
         modules: [
             { moduleSpecifier: '/scripts/make-confetti.js' },

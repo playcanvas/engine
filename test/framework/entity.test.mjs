@@ -32,7 +32,6 @@ import { DummyComponentSystem } from './test-component/system.mjs';
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 
 import { expect } from 'chai';
-import { ScriptESMComponent } from '../../src/framework/components/script-esm/component.js';
 
 describe('Entity', function () {
 
@@ -70,7 +69,6 @@ describe('Entity', function () {
         scrollview: ScrollViewComponent,
         scrollbar: ScrollbarComponent,
         script: ScriptComponent,
-        esmscript: ScriptESMComponent,
         sound: SoundComponent,
         sprite: SpriteComponent,
         zone: ZoneComponent

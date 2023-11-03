@@ -4,8 +4,4 @@ export default class MakeConfettiScript {
     initialize() {
         confetti();
     }
-
-    destroy() {
-        console.log('destorying');
-    }
 }

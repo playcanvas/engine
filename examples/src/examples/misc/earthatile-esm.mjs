@@ -29,7 +29,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
 
     createOptions.componentSystems = [
         // @ts-ignore
-        pc.ScriptESMComponentSystem,
+        pc.EsmScriptComponentSystem,
         // @ts-ignore
         pc.RenderComponentSystem,
         // @ts-ignore
@@ -66,7 +66,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
         clearColor: new pc.Color(0.5, 0.6, 0.9),
         farClip: 10000
     });
-    camera.addComponent('scriptesm', {
+    camera.addComponent('esmscript', {
         enabled: true,
         modules: [{
             moduleSpecifier: '/scripts/fly-camera.js',
@@ -86,7 +86,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
         type: 'box'
     });
 
-    box.addComponent('scriptesm', {
+    box.addComponent('esmscript', {
         enabled: true,
         modules: [
             {

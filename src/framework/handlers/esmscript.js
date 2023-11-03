@@ -2,7 +2,7 @@
  * This custom import statement for ES Modules conditionally
  * checks and resolves modules in bundled or non bundled modules
  *
- * @param {import('../../framework/app-base').AppBase} app - The application scope to load from.
+ * @param {import('../app-base').AppBase} app - The application scope to load from.
  * @param {string} moduleSpecifier - A unique path or specifier used to import the module
  * @returns {Promise} Returns a promise which fulfills to a module namespace object: an object containing all exports from moduleName.
  */
@@ -26,7 +26,7 @@ export const DynamicImport = (app, moduleSpecifier) => {
  * Resource handler for dynamically importing script es modules.
  * @implements {ResourceHandler}
  */
-class ScriptESMHandler {
+class EsmScriptHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -72,4 +72,4 @@ class ScriptESMHandler {
     patch(asset, assets) { }
 }
 
-export { ScriptESMHandler };
+export { EsmScriptHandler };

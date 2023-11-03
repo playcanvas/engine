@@ -39,12 +39,12 @@ const doesClassHaveMethod = (Class, method) => {
 };
 
 /**
- * The esmscriptComponent extends the functionality of an Entity by
+ * The EsmScriptComponent extends the functionality of an Entity by
  * allowing you to attach your own ESM modules to it.
  *
  * @augments Component
  */
-class esmscriptComponent extends Component {
+class EsmScriptComponent extends Component {
     /**
      * A list of valid attribute types
      */
@@ -73,13 +73,13 @@ class esmscriptComponent extends Component {
      * entity.esmscript.isValidAttributeDefinition({ type: 'entity' });
      */
     static isValidAttributeDefinition(attributeDefinition) {
-        return attributeDefinition && esmscriptComponent.VALID_ATTR_TYPES.has(attributeDefinition.type);
+        return attributeDefinition && EsmScriptComponent.VALID_ATTR_TYPES.has(attributeDefinition.type);
     }
 
     /**
-     * Create a new esmscriptComponent instance.
+     * Create a new EsmScriptComponent instance.
      *
-     * @param {import('./system.js').esmscriptComponentSystem} system - The ComponentSystem that
+     * @param {import('./system.js').EsmScriptComponentSystem} system - The ComponentSystem that
      * created this Component.
      * @param {Entity} entity - The Entity that this Component is attached to.
      */
@@ -120,7 +120,7 @@ class esmscriptComponent extends Component {
      * Fired when Component becomes enabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event esmscriptComponent#enable
+     * @event EsmScriptComponent#enable
      * @example
      * entity.esmscript.on('enable', function () {
      *     // component is enabled
@@ -131,7 +131,7 @@ class esmscriptComponent extends Component {
      * Fired when Component becomes disabled. Note: this event does not take in account entity or
      * any of its parent enabled state.
      *
-     * @event esmscriptComponent#disable
+     * @event EsmScriptComponent#disable
      * @example
      * entity.esmscript.on('disable', function () {
      *     // component is disabled
@@ -142,7 +142,7 @@ class esmscriptComponent extends Component {
      * Fired when Component changes state to enabled or disabled. Note: this event does not take in
      * account entity or any of its parent enabled state.
      *
-     * @event esmscriptComponent#state
+     * @event EsmScriptComponent#state
      * @param {boolean} enabled - True if now enabled, False if disabled.
      * @example
      * entity.esmscript.on('state', function (enabled) {
@@ -153,7 +153,7 @@ class esmscriptComponent extends Component {
     /**
      * Fired when Component is removed from entity.
      *
-     * @event esmscriptComponent#remove
+     * @event EsmScriptComponent#remove
      * @example
      * entity.esmscript.on('remove', function () {
      *     // entity has no more script component
@@ -163,7 +163,7 @@ class esmscriptComponent extends Component {
     /**
      * Fired when an esm script instance is created and attached to component.
      *
-     * @event esmscriptComponent#create
+     * @event EsmScriptComponent#create
      * @param {string} name - The name of the Script Type.
      * @param {ModuleInstance} moduleInstance - The instance of
      * the {@link ModuleInstance} that has been created.
@@ -176,7 +176,7 @@ class esmscriptComponent extends Component {
     /**
      * Fired when an esm script instance is created and attached to component.
      *
-     * @event esmscriptComponent#create:[name]
+     * @event EsmScriptComponent#create:[name]
      * @param {ModuleInstance} moduleInstance - The instance of
      * the {@link ModuleInstance} that has been created.
      * @example
@@ -188,7 +188,7 @@ class esmscriptComponent extends Component {
     /**
      * Fired when a script instance is destroyed and removed from component.
      *
-     * @event esmscriptComponent#destroyed:[name]
+     * @event EsmScriptComponent#destroyed:[name]
      * @param {ModuleInstance} moduleInstance - The module instance
      * that has been destroyed.
      * @example
@@ -234,7 +234,7 @@ class esmscriptComponent extends Component {
      * cloned entities. This method remaps the script attributes for this entity and it assumes
      * that this entity is the result of the clone operation.
      *
-     * @param {esmscriptComponent} oldScriptComponent - The source script component that belongs to
+     * @param {EsmScriptComponent} oldScriptComponent - The source script component that belongs to
      * the entity that was being cloned.
      * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the
      * entities that were cloned.
@@ -291,7 +291,7 @@ class esmscriptComponent extends Component {
         for (const attributeName in attributeDefinitions) {
 
             const attributeDefinition = attributeDefinitions[attributeName];
-            if (!esmscriptComponent.isValidAttributeDefinition(attributeDefinition)) {
+            if (!EsmScriptComponent.isValidAttributeDefinition(attributeDefinition)) {
 
                 // If this is a nested attribute definition, then recurse
                 if (typeof attributeDefinition === 'object') {
@@ -508,4 +508,4 @@ class esmscriptComponent extends Component {
     }
 }
 
-export { esmscriptComponent };
+export { EsmScriptComponent };
