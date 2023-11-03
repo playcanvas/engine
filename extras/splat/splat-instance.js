@@ -89,6 +89,8 @@ class SplatInstance {
                 this.sort(cameraEntity);
             });
         }
+
+        this.updateViewport();
     }
 
     destroy() {
@@ -97,6 +99,13 @@ class SplatInstance {
         this.meshInstance.destroy();
         this.sorter.destroy();
         this.callbackHandle?.off();
+    }
+
+    updateViewport() {
+        const device = this.splat.device;
+        viewport[0] = device.width;
+        viewport[1] = device.height;
+        this.meshInstance.material.setParameter('viewport', viewport);
     }
 
     sort(camera) {
@@ -122,11 +131,7 @@ class SplatInstance {
             this.sorter.setCamera(cameraPosition, cameraDirection);
         }
 
-        // update viewport
-        const device = this.splat.device;
-        viewport[0] = device.width;
-        viewport[1] = device.height;
-        this.meshInstance.material.setParameter('viewport', viewport);
+        this.updateViewport();
 
         return sorted;
     }
