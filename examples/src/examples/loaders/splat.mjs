@@ -87,15 +87,10 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         app.root.addChild(camera);
 
         const entity = assets.splat.resource.instantiateRenderEntity({
+            cameraEntity: camera,
             debugRender: false
         });
         app.root.addChild(entity);
-
-        app.on("update", function (dt) {
-            if (entity) {
-                entity.render.meshInstances[0].splatInstance.sort(camera);
-            }
-        });
     });
     return app;
 }

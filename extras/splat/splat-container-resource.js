@@ -82,7 +82,8 @@ class SplatContainerResource extends ContainerResource {
         const splat = this.createSplat();
 
         const debugRender = options?.debugRender ?? globalDebugRender;
-        const splatInstance = new SplatInstance(splat, debugRender);
+        const cameraEntity = options?.cameraEntity;
+        const splatInstance = new SplatInstance(splat, cameraEntity, debugRender);
 
         const entity = new Entity('Splat');
         entity.addComponent('render', {

@@ -32,7 +32,7 @@ class SplatInstance {
 
     lastCameraDirection = new Vec3();
 
-    constructor(splat, debugRender = false) {
+    constructor(splat, cameraEntity, debugRender = false) {
         this.splat = splat;
 
         // material
@@ -82,6 +82,13 @@ class SplatInstance {
 
         this.sorter = new SplatSorter();
         this.sorter.init(this.vb, this.splat.centers, this.splat.device.isWebGPU);
+
+        // if camera entity is provided, automatically use it to sort splats
+        if (cameraEntity) {
+            this.callbackHandle = cameraEntity._app.on('prerender', () => {
+                this.sort(cameraEntity);
+            });
+        }
     }
 
     destroy() {
@@ -89,6 +96,7 @@ class SplatInstance {
         this.vb.destroy();
         this.meshInstance.destroy();
         this.sorter.destroy();
+        this.callbackHandle?.off();
     }
 
     sort(camera) {
