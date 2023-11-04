@@ -100,6 +100,10 @@ export const XRTARGETRAY_SCREEN = 'screen';
  */
 export const XRTARGETRAY_POINTER = 'tracked-pointer';
 
+export const XREYE_NONE = 'none';
+export const XREYE_LEFT = 'left';
+export const XREYE_RIGHT = 'right';
+
 /**
  * None - input source is not meant to be held in hands.
  *

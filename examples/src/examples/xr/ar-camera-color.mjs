@@ -65,6 +65,8 @@ async function example({ canvas }) {
     l.translate(0, 10, 0);
     app.root.addChild(l);
 
+    const material = new pc.StandardMaterial();
+
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
@@ -75,6 +77,7 @@ async function example({ canvas }) {
         cube.addComponent("render", {
             type: "box"
         });
+        cube.render.material = material;
         cube.setLocalScale(0.5, 0.5, 0.5);
         cube.translate(x * 0.5, y, z * 0.5);
         app.root.addChild(cube);
@@ -92,6 +95,7 @@ async function example({ canvas }) {
         const activate = function () {
             if (app.xr.isAvailable(pc.XRTYPE_AR)) {
                 c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+                    cameraColor: true,
                     callback: function (err) {
                         if (err) message("WebXR Immersive AR failed to start: " + err.message);
                     }
@@ -135,11 +139,48 @@ async function example({ canvas }) {
             message("Immersive AR session has ended");
         });
         app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
-            message("Immersive AR is " + (available ? 'available' : 'unavailable'));
+            if (available) {
+                if (!app.xr.views.supportedColor) {
+                    message("AR Camera Color is not supported");
+                } else {
+                    message("Touch screen to start AR session");
+                }
+            } else {
+                message("Immersive AR is not available");
+            }
         });
+
+        app.on('update', () => {
+            if (app.xr.views.availableColor) {
+                for(let i = 0; i < app.xr.views.size; i++) {
+                    const view = app.xr.views.list[i];
+                    if (!view.textureColor)
+                        continue;
+
+                    if (!material.diffuseMap) {
+                        material.diffuseMap = view.textureColor;
+                        material.update();
+                    }
+
+                    app.drawTexture(0.5, -0.5, 1, -1, view.textureColor);
+                }
+            }
+        });
+
+        app.xr.on('end', () => {
+            if (!material.diffuseMap)
+                return;
+
+            material.diffuseMap = null;
+            material.update();
+        })
 
         if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
             message("Immersive AR is not available");
+        } else if (!app.xr.views.supportedColor) {
+            message("AR Camera Color is not supported");
+        } else {
+            message("Touch screen to start AR session");
         }
     } else {
         message("WebXR is not supported");
@@ -147,10 +188,10 @@ async function example({ canvas }) {
     return app;
 }
 
-class ArBasicExample {
+class ArCameraColorExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Basic';
+    static NAME = 'AR Camera Color';
     static example = example;
 }
 
-export { ArBasicExample };
+export { ArCameraColorExample };

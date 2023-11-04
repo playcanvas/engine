@@ -9,6 +9,7 @@ import { Vec3 } from '../../core/math/vec3.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2 } from '../../platform/graphics/constants.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
@@ -17,6 +18,7 @@ import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 import { XrAnchors } from './xr-anchors.js';
+import { XrViews } from './xr-views.js';
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -73,6 +75,12 @@ class XrManager extends EventHandler {
      * @private
      */
     _baseLayer = null;
+
+    /**
+     * @type {XRWebGLBinding|null}
+     * @ignore
+     */
+    webglBinding = null;
 
     /**
      * @type {XRReferenceSpace|null}
@@ -136,22 +144,30 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
-     * @type {import('../components/camera/component.js').CameraComponent}
+     * Provides access to views.
+     *
+     * @type {XrViews}
+     * @ignore
+     */
+    views;
+
+    /**
+     * @type {import('../components/camera/component.js').CameraComponent|null}
      * @private
      */
     _camera = null;
 
-    /**
-     * @type {Array<*>}
-     * @ignore
-     */
-    views = [];
+    // /**
+    //  * @type {Array<*>}
+    //  * @ignore
+    //  */
+    // views = [];
 
-    /**
-     * @type {Array<*>}
-     * @ignore
-     */
-    viewsPool = [];
+    // /**
+    //  * @type {Array<*>}
+    //  * @ignore
+    //  */
+    // viewsPool = [];
 
     /**
      * @type {Vec3}
@@ -213,6 +229,7 @@ class XrManager extends EventHandler {
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
         this.anchors = new XrAnchors(this);
+        this.views = new XrViews(this);
 
         // TODO
         // 1. HMD class with its params
@@ -451,6 +468,10 @@ class XrManager extends EventHandler {
                     dataFormatPreference: dataFormatPreference
                 };
             }
+
+            if (options && options.cameraColor && this.views.supportedColor) {
+                opts.optionalFeatures.push('camera-access');
+            }
         } else if (type === XRTYPE_VR) {
             opts.optionalFeatures.push('hand-tracking');
         }
@@ -603,7 +624,7 @@ class XrManager extends EventHandler {
 
             this._session = null;
             this._referenceSpace = null;
-            this.views = [];
+            // this.views = [];
             this._width = 0;
             this._height = 0;
             this._type = null;
@@ -611,7 +632,8 @@ class XrManager extends EventHandler {
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
-            this.app.tick();
+            if (this.app.systems)
+                this.app.tick();
         };
 
         session.addEventListener('end', onEnd);
@@ -635,6 +657,17 @@ class XrManager extends EventHandler {
             // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
             antialias: false
         });
+
+        if (platform.browser) {
+            const deviceType = this.app.graphicsDevice.deviceType;
+            if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
+                try {
+                    this.webglBinding = new XRWebGLBinding(session, this.app.graphicsDevice.gl);
+                } catch(ex) {
+                    this.fire('error', ex);
+                }
+            }
+        }
 
         session.updateRenderState({
             baseLayer: this._baseLayer,
@@ -705,32 +738,11 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthOld = this.views.length;
-        const lengthNew = pose.views.length;
+        const lengthOld = this.views.size;
+        // const lengthNew = pose.views.length;
 
-        while (lengthNew > this.views.length) {
-            let view = this.viewsPool.pop();
-            if (!view) {
-                view = {
-                    viewport: new Vec4(),
-                    projMat: new Mat4(),
-                    viewMat: new Mat4(),
-                    viewOffMat: new Mat4(),
-                    viewInvMat: new Mat4(),
-                    viewInvOffMat: new Mat4(),
-                    projViewOffMat: new Mat4(),
-                    viewMat3: new Mat3(),
-                    position: new Float32Array(3),
-                    rotation: new Quat()
-                };
-            }
-
-            this.views.push(view);
-        }
-        // remove views from list into pool
-        while (lengthNew < this.views.length) {
-            this.viewsPool.push(this.views.pop());
-        }
+        // add views
+        this.views.update(frame, pose.views);
 
         // reset position
         const posePosition = pose.transform.position;
@@ -738,28 +750,10 @@ class XrManager extends EventHandler {
         this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
         this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
-        const layer = frame.session.renderState.baseLayer;
-
-        for (let i = 0; i < pose.views.length; i++) {
-            // for each view, calculate matrices
-            const viewRaw = pose.views[i];
-            const view = this.views[i];
-            const viewport = layer.getViewport(viewRaw);
-
-            view.viewport.x = viewport.x;
-            view.viewport.y = viewport.y;
-            view.viewport.z = viewport.width;
-            view.viewport.w = viewport.height;
-
-            view.projMat.set(viewRaw.projectionMatrix);
-            view.viewMat.set(viewRaw.transform.inverse.matrix);
-            view.viewInvMat.set(viewRaw.transform.matrix);
-        }
-
         // update the camera fov properties only when we had 0 views
-        if (lengthOld === 0 && this.views.length > 0) {
+        if (lengthOld === 0 && this.views.size > 0) {
             const viewProjMat = new Mat4();
-            const view = this.views[0];
+            const view = this.views.list[0];
 
             viewProjMat.copy(view.projMat);
             const data = viewProjMat.data;
@@ -769,7 +763,6 @@ class XrManager extends EventHandler {
             const farClip = data[14] / (data[10] + 1);
             const nearClip = data[14] / (data[10] - 1);
             const horizontalFov = false;
-
 
             const camera = this._camera.camera;
             camera.setXrProperties({
@@ -795,7 +788,7 @@ class XrManager extends EventHandler {
                 this.lightEstimation.update(frame);
 
             if (this.depthSensing.supported)
-                this.depthSensing.update(frame, pose && pose.views[0]);
+                this.depthSensing.update(frame, pose);
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);

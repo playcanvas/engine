@@ -621,11 +621,11 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            if (camera.xr && camera.xr.session && camera.xr.views.length) {
+            if (camera.xr && camera.xr.session && camera.xr.views.size) {
                 const views = camera.xr.views;
 
-                for (let v = 0; v < views.length; v++) {
-                    const view = views[v];
+                for (let v = 0; v < views.size; v++) {
+                    const view = views.list[v];
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
 
@@ -635,7 +635,7 @@ class ForwardRenderer extends Renderer {
                     this.viewInvId.setValue(view.viewInvOffMat.data);
                     this.viewId3.setValue(view.viewMat3.data);
                     this.viewProjId.setValue(view.projViewOffMat.data);
-                    this.viewPosId.setValue(view.position);
+                    this.viewPosId.setValue(view.positionData);
 
                     if (v === 0) {
                         this.drawInstance(device, drawCall, mesh, style, true);
