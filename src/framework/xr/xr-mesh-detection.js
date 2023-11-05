@@ -104,7 +104,7 @@ class XrMeshDetection extends EventHandler {
      */
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @ignore
      */
     update(frame) {
@@ -134,7 +134,10 @@ class XrMeshDetection extends EventHandler {
         }
     }
 
-    /** @private */
+    /**
+     * @param {XrMesh} mesh - XrMesh to remove.
+     * @private
+     */
     _removeMesh(mesh) {
         this._index.delete(mesh.xrMesh);
         this._list.splice(this._list.indexOf(mesh), 1);
