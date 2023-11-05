@@ -90,7 +90,6 @@ class XrMesh extends EventHandler {
      * Unique identifier of a mesh.
      *
      * @type {number}
-     * @readonly
      */
     get id() {
         return this._id;
@@ -98,7 +97,6 @@ class XrMesh extends EventHandler {
 
     /**
      * @type {XRMesh}
-     * @readonly
      * @ignore
      */
     get xrMesh() {
@@ -110,7 +108,6 @@ class XrMesh extends EventHandler {
      * Current list includes (but not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
      *
      * @type {string}
-     * @readonly
      */
     get label() {
         return this._xrMesh.semanticLabel || '';
@@ -120,7 +117,6 @@ class XrMesh extends EventHandler {
      * Float 32 array of mesh vertices.
      *
      * @type {Float32Array}
-     * @readonly
      */
     get vertices() {
         return this._xrMesh.vertices;
@@ -130,7 +126,6 @@ class XrMesh extends EventHandler {
      * Uint 32 array of mesh indices.
      *
      * @type {Uint32Array}
-     * @readonly
      */
     get indices() {
         return this._xrMesh.indices;

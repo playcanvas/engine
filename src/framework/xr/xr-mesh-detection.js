@@ -130,11 +130,16 @@ class XrMeshDetection extends EventHandler {
             if (frame.detectedMeshes.has(mesh.xrMesh))
                 continue;
 
-            this._index.delete(mesh.xrMesh);
-            this._list.splice(this._list.indexOf(mesh), 1);
-            mesh.destroy();
-            this.fire('remove', mesh);
+            this._removeMesh(mesh);
         }
+    }
+
+    /** @private */
+    _removeMesh(mesh) {
+        this._index.delete(mesh.xrMesh);
+        this._list.splice(this._list.indexOf(mesh), 1);
+        mesh.destroy();
+        this.fire('remove', mesh);
     }
 
     /** @private */
@@ -149,6 +154,10 @@ class XrMeshDetection extends EventHandler {
     _onSessionEnd() {
         if (!this._available) return;
         this._available = false;
+
+        for (const mesh of this._index.values())
+            this._removeMesh(mesh);
+
         this.fire('unavailable');
     }
 
