@@ -58,8 +58,28 @@ class XrViews extends EventHandler {
         this._manager.on('end', this._onSessionEnd, this);
     }
 
-    // TODO
-    // events
+    /**
+     * Fired when view has been added. Views are not available straight away on session start
+     * and are added mid-session. They can be added/removed mid session by underlyng system.
+     *
+     * @event XrViews#add
+     * @param {XrView} view - XrView that has been added.
+     * @example
+     * xr.views.on('add', function (view) {
+     *     // view that has been added
+     * });
+     */
+
+    /**
+     * Fired when view has been removed. They can be added/removed mid session by underlyng system.
+     *
+     * @event XrViews#remove
+     * @param {XrView} view - XrView that has been removed.
+     * @example
+     * xr.views.on('remove', function (view) {
+     *     // view that has been added
+     * });
+     */
 
     /**
      * An array of {@link XrView}'s of this session. Views are not available straight
