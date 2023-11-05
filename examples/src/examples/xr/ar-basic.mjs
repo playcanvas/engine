@@ -15,13 +15,6 @@ async function example({ canvas }) {
         if (!el) {
             el = document.createElement('div');
             el.classList.add('message');
-            el.style.position = 'absolute';
-            el.style.bottom = '96px';
-            el.style.right = '0';
-            el.style.padding = '8px 16px';
-            el.style.fontFamily = 'Helvetica, Arial, sans-serif';
-            el.style.color = '#fff';
-            el.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
             document.body.append(el);
         }
         el.textContent = msg;

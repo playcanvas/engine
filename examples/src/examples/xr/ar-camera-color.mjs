@@ -95,7 +95,7 @@ async function example({ canvas }) {
         const activate = function () {
             if (app.xr.isAvailable(pc.XRTYPE_AR)) {
                 c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
-                    cameraColor: true,
+                    cameraColor: true, // request access to camera color
                     callback: function (err) {
                         if (err) message("WebXR Immersive AR failed to start: " + err.message);
                     }
@@ -151,17 +151,20 @@ async function example({ canvas }) {
         });
 
         app.on('update', () => {
+            // if camera color is available
             if (app.xr.views.availableColor) {
                 for(let i = 0; i < app.xr.views.size; i++) {
                     const view = app.xr.views.list[i];
-                    if (!view.textureColor)
+                    if (!view.textureColor) // check if color texture is available
                         continue;
 
+                    // apply camera color texture to material diffuse channel
                     if (!material.diffuseMap) {
                         material.diffuseMap = view.textureColor;
                         material.update();
                     }
 
+                    // debug draw camera color texture on the screen
                     app.drawTexture(0.5, -0.5, 1, -1, view.textureColor);
                 }
             }
@@ -171,6 +174,7 @@ async function example({ canvas }) {
             if (!material.diffuseMap)
                 return;
 
+            // clear camera color texture when XR session ends
             material.diffuseMap = null;
             material.update();
         })

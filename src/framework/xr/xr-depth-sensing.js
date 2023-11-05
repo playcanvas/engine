@@ -268,11 +268,9 @@ class XrDepthSensing extends EventHandler {
      * @param {*} view - First XRView of viewer XRPose.
      * @ignore
      */
-    update(frame, pose) {
+    update(frame, view) {
         if (!this._usage)
             return;
-
-        const view = pose.views[0];
 
         let depthInfoCpu = null;
         let depthInfoGpu = null;

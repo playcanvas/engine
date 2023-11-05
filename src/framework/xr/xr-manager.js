@@ -2,11 +2,9 @@ import { Debug } from "../../core/debug.js";
 
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Vec4 } from '../../core/math/vec4.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
 import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2 } from '../../platform/graphics/constants.js';
@@ -144,7 +142,7 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
-     * Provides access to views.
+     * Provides access to views and their capabilities.
      *
      * @type {XrViews}
      * @ignore
@@ -156,18 +154,6 @@ class XrManager extends EventHandler {
      * @private
      */
     _camera = null;
-
-    // /**
-    //  * @type {Array<*>}
-    //  * @ignore
-    //  */
-    // views = [];
-
-    // /**
-    //  * @type {Array<*>}
-    //  * @ignore
-    //  */
-    // viewsPool = [];
 
     /**
      * @type {Vec3}
@@ -624,7 +610,6 @@ class XrManager extends EventHandler {
 
             this._session = null;
             this._referenceSpace = null;
-            // this.views = [];
             this._width = 0;
             this._height = 0;
             this._type = null;
@@ -662,8 +647,8 @@ class XrManager extends EventHandler {
             const deviceType = this.app.graphicsDevice.deviceType;
             if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
                 try {
-                    this.webglBinding = new XRWebGLBinding(session, this.app.graphicsDevice.gl);
-                } catch(ex) {
+                    this.webglBinding = new XRWebGLBinding(session, this.app.graphicsDevice.gl); // eslint-disable-line no-undef
+                } catch (ex) {
                     this.fire('error', ex);
                 }
             }
@@ -739,7 +724,6 @@ class XrManager extends EventHandler {
         if (!pose) return false;
 
         const lengthOld = this.views.size;
-        // const lengthNew = pose.views.length;
 
         // add views
         this.views.update(frame, pose.views);
@@ -788,7 +772,7 @@ class XrManager extends EventHandler {
                 this.lightEstimation.update(frame);
 
             if (this.depthSensing.supported)
-                this.depthSensing.update(frame, pose);
+                this.depthSensing.update(frame, pose && pose.views[0]);
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
