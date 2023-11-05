@@ -1,0 +1,184 @@
+import { EventHandler } from "../../core/event-handler.js";
+import { Vec3 } from "../../core/math/vec3.js";
+import { Quat } from "../../core/math/quat.js";
+
+let ids = 0;
+
+/**
+ * Detected Mesh instance that provides its transform (position, rotation),
+ * triangles (vertices, indices) and its semantic label. Any of its properties can
+ * change during its lifetime.
+ *
+ * @category XR
+ */
+class XrMesh extends EventHandler {
+    /**
+     * @type {number}
+     * @private
+     */
+    _id;
+
+    /**
+     * @type {import('./xr-mesh-detection.js').XrMeshDetection}
+     * @private
+     */
+    _meshes;
+
+    /**
+     * @type {XRMesh}
+     * @private
+     */
+    _xrMesh;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _lastChanged = 0;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    _rotation = new Quat();
+
+    /**
+     * Create a new XrMesh instance.
+     *
+     * @param {import('./xr-mesh-detection.js').XrMeshDetection} meshes - Mesh Detection
+     * interface.
+     * @param {XRMesh} xrMesh - XRMesh that is instantiated by WebXR system.
+     * @hideconstructor
+     */
+    constructor(meshes, xrMesh) {
+        super();
+
+        this._id = ++ids;
+        this._meshes = meshes;
+        this._xrMesh = xrMesh;
+        this._lastChanged = this._xrMesh.lastChangedTime;
+    }
+
+    /**
+     * Fired when {@link XrMesh} is removed.
+     *
+     * @event XrMesh#remove
+     * @example
+     * mesh.once('remove', function () {
+     *     // mesh is no longer available
+     * });
+     */
+
+    /**
+     * Fired when {@link XrMesh} attributes such as vertices, indices and/or label have been changed.
+     * Position and rotation can change at any time without triggering a `change` event.
+     *
+     * @event XrMesh#change
+     * @example
+     * mesh.on('change', function () {
+     *     // mesh attributes have been changed
+     * });
+     */
+
+    /**
+     * Unique identifier of a mesh.
+     *
+     * @type {number}
+     * @readonly
+     */
+    get id() {
+        return this._id;
+    }
+
+    /**
+     * @type {XRMesh}
+     * @readonly
+     * @ignore
+     */
+    get xrMesh() {
+        return this._xrMesh;
+    }
+
+    /**
+     * Semantic Label of a mesh that is provided by underlying system.
+     * Current list includes (but not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
+     *
+     * @type {string}
+     * @readonly
+     */
+    get label() {
+        return this._xrMesh.semanticLabel || '';
+    }
+
+    /**
+     * Float 32 array of mesh vertices.
+     *
+     * @type {Float32Array}
+     * @readonly
+     */
+    get vertices() {
+        return this._xrMesh.vertices;
+    }
+
+    /**
+     * Uint 32 array of mesh indices.
+     *
+     * @type {Uint32Array}
+     * @readonly
+     */
+    get indices() {
+        return this._xrMesh.indices;
+    }
+
+    /** @ignore */
+    destroy() {
+        if (!this._xrMesh) return;
+        this._xrMesh = null;
+        this.fire('remove');
+    }
+
+    /**
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
+     * @ignore
+     */
+    update(frame) {
+        const manager = this._meshes._manager;
+        const pose = frame.getPose(this._xrMesh.meshSpace, manager._referenceSpace);
+        if (pose) {
+            this._position.copy(pose.transform.position);
+            this._rotation.copy(pose.transform.orientation);
+        }
+
+        // attributes have been changed
+        if (this._lastChanged !== this._xrMesh.lastChangedTime) {
+            this._lastChanged = this._xrMesh.lastChangedTime;
+            this.fire('change');
+        }
+    }
+
+    /**
+     * Get the world space position of a mesh.
+     *
+     * @returns {Vec3} The world space position of a mesh.
+     */
+    getPosition() {
+        return this._position;
+    }
+
+    /**
+     * Get the world space rotation of a mesh.
+     *
+     * @returns {Quat} The world space rotation of a mesh.
+     */
+    getRotation() {
+        return this._rotation;
+    }
+}
+
+export { XrMesh };
