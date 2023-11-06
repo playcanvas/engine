@@ -843,7 +843,7 @@ class Lightmapper {
 
         const light = bakeLight.light;
         const isClustered = this.scene.clusteredLightingEnabled;
-        const castShadow = light.castShadows && (isClustered ? this.scene.lighting.shadowsEnabled : true);
+        const castShadow = light.castShadows && (!isClustered || this.scene.lighting.shadowsEnabled);
 
         if (!shadowMapRendered && castShadow) {
 
