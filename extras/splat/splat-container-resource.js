@@ -17,8 +17,6 @@ class SplatContainerResource extends ContainerResource {
 
     splat;
 
-    focalPoint = new Vec3();
-
     // TODO: this can be set on render component -> mesh instance, remove this one?
     customAabb = new BoundingBox();
 
@@ -27,9 +25,6 @@ class SplatContainerResource extends ContainerResource {
 
         this.device = device;
         this.splatData = splatData;
-
-        // calculate splat focal point
-        this.updateFocalPoint();
 
         // calculate custom aabb
         this.splatData.calcAabb(this.customAabb);
@@ -105,23 +100,6 @@ class SplatContainerResource extends ContainerResource {
 
         return entity;
     }
-
-    updateFocalPoint() {
-        this.splatData.calcFocalPoint(this.focalPoint);
-    }
-
-    // updateAabb() {
-    //     this.splatData.calcAabb(this.customAabb);
-
-    //     this.instances.forEach((instance) => {
-    //         instance.entity.render.customAabb = this.customAabb;
-    //     });
-    // }
-
-    // getFocalPoint() {
-    //     const instance = this.instances[0];
-    //     return instance?.entity.getWorldTransform().transformPoint(this.focalPoint);
-    // }
 }
 
 export { SplatContainerResource };
