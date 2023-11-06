@@ -1,8 +1,7 @@
 import {
     BoundingBox,
     ContainerResource,
-    Entity,
-    Vec3
+    Entity
 } from 'playcanvas';
 
 import { Splat } from './splat.js';
