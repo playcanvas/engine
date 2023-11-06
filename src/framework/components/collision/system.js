@@ -442,21 +442,36 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         const data = component.data;
         const assets = this.system.app.assets;
 
+        const onAssetFullyReady = (asset) => {
+            data[property] = asset.resource;
+            this.doRecreatePhysicalShape(component);
+        };
+
+        const loadAndHandleAsset = (asset) => {
+            asset.ready((asset) => {
+                if (asset.data.containerAsset) {
+                    const containerAsset = assets.get(asset.data.containerAsset);
+                    if (containerAsset.loaded) {
+                        onAssetFullyReady(asset);
+                    } else {
+                        containerAsset.ready(() => {
+                            onAssetFullyReady(asset);
+                        });
+                        assets.load(containerAsset);
+                    }
+                } else {
+                    onAssetFullyReady(asset);
+                }
+            });
+
+            assets.load(asset);
+        };
+
         const asset = assets.get(id);
         if (asset) {
-            asset.ready((asset) => {
-                data[property] = asset.resource;
-                this.doRecreatePhysicalShape(component);
-            });
-            assets.load(asset);
+            loadAndHandleAsset(asset);
         } else {
-            assets.once('add:' + id, (asset) => {
-                asset.ready((asset) => {
-                    data[property] = asset.resource;
-                    this.doRecreatePhysicalShape(component);
-                });
-                assets.load(asset);
-            });
+            assets.once('add:' + id, loadAndHandleAsset);
         }
     }
 
