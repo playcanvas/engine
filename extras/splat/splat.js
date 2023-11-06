@@ -36,9 +36,12 @@ class Splat {
 
     centers;
 
-    constructor(device, numSplats) {
+    aabb;
+
+    constructor(device, numSplats, aabb) {
         this.device = device;
         this.numSplats = numSplats;
+        this.aabb = aabb;
 
         this.vertexFormat = new VertexFormat(device, [
             { semantic: SEMANTIC_ATTR13, components: 1, type: device.isWebGPU ? TYPE_UINT32 : TYPE_FLOAT32 }

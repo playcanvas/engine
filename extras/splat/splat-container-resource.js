@@ -16,17 +16,11 @@ class SplatContainerResource extends ContainerResource {
 
     splat;
 
-    // TODO: this can be set on render component -> mesh instance, remove this one?
-    customAabb = new BoundingBox();
-
     constructor(device, splatData) {
         super();
 
         this.device = device;
         this.splatData = splatData;
-
-        // calculate custom aabb
-        this.splatData.calcAabb(this.customAabb);
     }
 
     destroy() {
@@ -36,12 +30,15 @@ class SplatContainerResource extends ContainerResource {
         this.splat = null;
     }
 
-    // TODO: debug renderer should be set on a splat instance, not on a splat
     createSplat() {
         if (!this.splat) {
 
             const splatData = this.splatData;
-            const splat = new Splat(this.device, splatData.numSplats);
+
+            const aabb = new BoundingBox();
+            this.splatData.calcAabb(aabb);
+
+            const splat = new Splat(this.device, splatData.numSplats, aabb);
             this.splat = splat;
 
             // texture data
@@ -73,6 +70,7 @@ class SplatContainerResource extends ContainerResource {
 
     instantiateRenderEntity(options) {
 
+        // shared splat between instances
         const splat = this.createSplat();
 
         const debugRender = options?.debugRender ?? globalDebugRender;

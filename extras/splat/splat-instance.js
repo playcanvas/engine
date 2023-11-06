@@ -53,6 +53,8 @@ class SplatInstance {
             this.mesh.update();
         }
 
+        this.mesh.aabb.copy(splat.aabb);
+
         // initialize index data
         const numSplats = splat.numSplats;
         let indexData;
