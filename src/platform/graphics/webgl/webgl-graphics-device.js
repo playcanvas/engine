@@ -2016,10 +2016,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // #if _DEBUG
                 const samplerName = sampler.scopeId.name;
                 if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.`);
                 }
                 if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.`);
                 }
                 // #endif
 
