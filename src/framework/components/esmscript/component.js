@@ -269,10 +269,11 @@ class EsmScriptComponent extends Component {
 
     /**
      * This method iterates recursively over an attribute definition and executes the
-     * provided function once for each valid definition and it's children attributes.
+     * provided function once for each valid definition and it's children attributes in a flat structure
      *
      * @param {AttributeDefinition} attributeDefinitions - An iterable object or Map where each key-value pair consists of an attributeName and an attributeDefinition.
      * @param {Function} callbackFn - A function to execute for each valid entry. The function is called with (attributeName, attributeDefinition).
+     * @param {array} [path] - A path
      *
      * @example
      * forEachAttribute({
@@ -280,11 +281,11 @@ class EsmScriptComponent extends Component {
      *   nested: {
      *     thatAttr: { type: 'asset' }
      *   }
-     * }, (name, definition) => console.log(`Name: ${name}, Type: ${definition.type}`) )
-     * Output: 'Name: thisAttr, Type: entity'
-     *         'Name: thatAttr, Type: asset'
+     * }, (name, definition) => console.log(`Name: ${name}, Type: ${definition.type}, Path: ${path}`) )
+     * Output: 'Name: thisAttr, Type: entity, Path: ''
+     *         'Name: thatAttr, Type: asset', Path: 'nested'
      */
-    forEachAttributeDefinition(attributeDefinitions = {}, callbackFn) {
+    static forEachAttributeDefinition(attributeDefinitions = {}, callbackFn, path = []) {
 
         if (!callbackFn) return;
 
@@ -295,11 +296,12 @@ class EsmScriptComponent extends Component {
 
                 // If this is a nested attribute definition, then recurse
                 if (typeof attributeDefinition === 'object') {
-                    this.forEachAttributeDefinition(attributeDefinition, callbackFn);
+                    callbackFn(attributeName, attributeDefinition, path);
+                    EsmScriptComponent.forEachAttributeDefinition(attributeDefinition, callbackFn, [...path, attributeName]);
                 }
 
             } else {
-                callbackFn(attributeName, attributeDefinition);
+                callbackFn(attributeName, attributeDefinition, path);
             }
         }
     }
@@ -420,10 +422,8 @@ class EsmScriptComponent extends Component {
 
         const moduleInstance = new ModuleClass(this.system.app, this.entity);
 
-        // Assign any attribute definition that has been provided, or assign the default
-        this.forEachAttributeDefinition(attributeDefinition, (attributeName) => {
-            moduleInstance[attributeName] = attributes[attributeName] || attributeDefinition[attributeName]?.default;
-        });
+        // Assign any attribute definition that have been provided, or if not, assign the default
+        EsmScriptComponent.populateWithAttributes(moduleInstance, attributeDefinition, attributes);
 
         // Retrieve any previous instance associated with the module specifier
         const previousModuleInstance = this.modules.get(moduleSpecifier)?.moduleInstance;
@@ -472,6 +472,52 @@ class EsmScriptComponent extends Component {
         return moduleInstance;
     }
 
+    /**
+     * A Dictionary object where each key is a string and each value is an AttributeDefinition.
+     * @typedef {Object.<string, AttributeDefinition>} AttributeDefinitionDict
+     */
+
+    /**
+     * This function recursively populates an object with attributes based on an attribute definition.
+     * Only attributes defined in the definition. Note that this does not perform any type-checking.
+     * If no attribute is specified it uses the default value from the attribute definition if available.
+     *
+     * @param {Object} object - The object to populate with attributes
+     * @param {AttributeDefinitionDict} attributeDefDict - The definition
+     * @param {Object} attributes - The attributes to apply
+     *
+     * @example
+     * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
+     * const definitions = {
+     *  someNum: { type: 'number' },
+     *  nested: {
+     *      notStr: { type: 'string' },
+     *      otherValue: { type: 'number', default: 3 }
+     *  }
+     * }
+     *
+     * populateWithAttributes(object, attributeDefDict, attributes)
+     * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
+     */
+    static populateWithAttributes(object, attributeDefDict, attributes) {
+
+        for (const attributeName in attributeDefDict) {
+            const attributeDefinition = attributeDefDict[attributeName];
+
+            if (EsmScriptComponent.isValidAttributeDefinition(attributeDefinition)) {
+                if (!Object.hasOwn(object, attributeName)) {
+                    object[attributeName] = attributes?.[attributeName] || attributeDefinition.default;
+                }
+            } else if (typeof attributeDefinition === 'object') {
+
+                this.populateWithAttributes(
+                    object[attributeName] = {},
+                    attributeDefinition,
+                    attributes?.[attributeName]
+                );
+            }
+        }
+    }
 
     /**
      * Destroy the script instance that is attached to an entity.

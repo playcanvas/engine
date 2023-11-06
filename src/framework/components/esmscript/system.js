@@ -11,7 +11,7 @@ import { DynamicImport } from '../../handlers/esmscript.js';
  */
 class EsmScriptComponentSystem extends ComponentSystem {
     /**
-     * Create a new ScriptComponentSystem.
+     * Create a new EsmScriptComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
      * @hideconstructor

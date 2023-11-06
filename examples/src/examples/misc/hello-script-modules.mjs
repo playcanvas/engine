@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }) {
+async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -15,8 +15,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
     const createOptions = new pc.AppOptions();
     createOptions.mouse = new pc.Mouse(document.body);
-    createOptions.touch = new pc.TouchDevice(document.body);
-    createOptions.keyboard = new pc.Keyboard(document.body);
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
@@ -61,7 +59,10 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
     box.addComponent('esmscript', {
         enabled: true,
         modules: [
-            { moduleSpecifier: '/scripts/make-confetti.js' },
+            {
+                moduleSpecifier: '/scripts/make-confetti.js',
+                attributes: { particleCount: 1000 }
+            },
             { moduleSpecifier: '/scripts/rotate.js' }
         ]
     });
