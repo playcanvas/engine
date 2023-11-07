@@ -114,6 +114,9 @@ async function example({ canvas }) {
 
             app.xr.on('start', function () {
                 message("Immersive AR session has started");
+
+                // trigger manual scanning on session start
+                // app.xr.initiateRoomCapture((err) => { });
             });
             app.xr.on('end', function () {
                 message("Immersive AR session has ended");

@@ -94,8 +94,7 @@ class XrPlane extends EventHandler {
 
     /** @ignore */
     destroy() {
-        if (!this._xrPlane)
-            return;
+        if (!this._xrPlane) return;
         this._xrPlane = null;
         this.fire('remove');
     }
