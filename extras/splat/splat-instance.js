@@ -37,7 +37,6 @@ class SplatInstance {
 
         // material
         this.material = splat.createMaterial(debugRender);
-        this.updateViewport();
 
         // mesh
         const device = splat.device;
@@ -70,15 +69,21 @@ class SplatInstance {
             }
         }
 
-        const vb = new VertexBuffer(device, splat.vertexFormat, numSplats, BUFFER_DYNAMIC, indexData.buffer);
+        const vb = new VertexBuffer(
+            device,
+            splat.vertexFormat,
+            numSplats,
+            BUFFER_DYNAMIC,
+            indexData.buffer
+        );
         this.vb = vb;
 
         this.meshInstance = new MeshInstance(this.mesh, this.material);
         this.meshInstance.setInstancing(vb);
         this.meshInstance.splatInstance = this;
 
-        this.sorter = new SplatSorter(this.onSortedData.bind(this));
-        this.sorter.init(this.splat.centers, this.splat.device.isWebGPU);
+        this.sorter = new SplatSorter();
+        this.sorter.init(this.vb, this.splat.centers, this.splat.device.isWebGPU);
 
         // if camera entity is provided, automatically use it to sort splats
         if (cameraEntity) {
@@ -86,6 +91,8 @@ class SplatInstance {
                 this.sort(cameraEntity);
             });
         }
+
+        this.updateViewport();
     }
 
     destroy() {
@@ -94,10 +101,6 @@ class SplatInstance {
         this.meshInstance.destroy();
         this.sorter.destroy();
         this.callbackHandle?.off();
-    }
-
-    onSortedData(data) {
-        this.vb.setData(data);
     }
 
     updateViewport() {
@@ -127,9 +130,7 @@ class SplatInstance {
             invModelMat.transformPoint(cameraPosition, cameraPosition);
             invModelMat.transformVector(cameraDirection, cameraDirection);
 
-            const data = this.vb.storage;
-
-            this.sorter.sort(data, cameraPosition, cameraDirection);
+            this.sorter.setCamera(cameraPosition, cameraDirection);
         }
 
         this.updateViewport();

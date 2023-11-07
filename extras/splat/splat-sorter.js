@@ -9,6 +9,7 @@ function SortWorker() {
     // number of buckets for count sorting to represent each unique distance using compareBits bits
     const bucketCount = (2 ** compareBits) + 1;
 
+    let data;
     let centers;
     let cameraPosition;
     let cameraDirection;
@@ -23,6 +24,7 @@ function SortWorker() {
     let countBuffer;
 
     const update = () => {
+        if (!centers || !data || !cameraPosition || !cameraDirection) return;
 
         const px = cameraPosition.x;
         const py = cameraPosition.y;
@@ -36,6 +38,7 @@ function SortWorker() {
         if (distances?.length !== numVertices) {
             distances = new Uint32Array(numVertices);
             indices = new Uint32Array(numVertices);
+            target = new Float32Array(numVertices);
         }
 
         // calc min/max distance using bound
@@ -90,11 +93,24 @@ function SortWorker() {
             outputArray[countBuffer[distance] - 1] = index + offset;
             countBuffer[distance]--;
         }
+
+        // swap
+        const tmp = data;
+        data = target;
+        target = tmp;
+
+        // send results
+        self.postMessage({
+            data: data.buffer
+        }, [data.buffer]);
+
+        data = null;
     };
 
     self.onmessage = (message) => {
-
-        // TODO: we should pass bounds from the main thread
+        if (message.data.data) {
+            data = new Float32Array(message.data.data);
+        }
         if (message.data.centers) {
             centers = new Float32Array(message.data.centers);
 
@@ -124,72 +140,55 @@ function SortWorker() {
         if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
         if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
 
-        if (message.data.data) {
-
-            target = new Float32Array(message.data.data);
-
-            if (centers && target && cameraPosition && cameraDirection) {
-                update();
-            }
-
-            // send back the results
-            self.postMessage({
-                data: target.buffer
-            }, [target.buffer]);
-
-            target = null;
-        }
+        update();
     };
 }
 
 class SplatSorter {
     worker;
 
-    onSortedDataCallback;
+    vertexBuffer;
 
-    busy = false;
-
-    constructor(onSortedDataCallback) {
-        this.onSortedDataCallback = onSortedDataCallback;
-
+    constructor() {
         this.worker = new Worker(URL.createObjectURL(new Blob([`(${SortWorker.toString()})()`], {
             type: 'application/javascript'
         })));
 
-        // receive results from the worker
         this.worker.onmessage = (message) => {
-
             const newData = message.data.data;
-            this.onSortedDataCallback(newData);
+            const oldData = this.vertexBuffer.storage;
 
-            this.busy = false;
+            // send vertex storage to worker to start the next frame
+            this.worker.postMessage({
+                data: oldData
+            }, [oldData]);
+
+            this.vertexBuffer.setData(newData);
         };
     }
 
     destroy() {
         this.worker.terminate();
-        this.onSortedDataCallback = null;
+        this.worker = null;
     }
 
-    init(centers, intIndices) {
+    init(vertexBuffer, centers, intIndices) {
+        this.vertexBuffer = vertexBuffer;
 
-        // send centers to the worker
+        // send the initial buffer to worker
+        const buf = vertexBuffer.storage.slice(0);
         this.worker.postMessage({
+            data: buf,
             centers: centers.buffer,
             intIndices: intIndices
-        }, [centers.buffer]);
+        }, [buf, centers.buffer]);
     }
 
-    sort(data, pos, dir) {
-
-        if (!this.busy) {
-            this.busy = true;
-            this.worker.postMessage({
-                data: data,
-                cameraPosition: { x: pos.x, y: pos.y, z: pos.z },
-                cameraDirection: { x: dir.x, y: dir.y, z: dir.z }
-            }, [data]);
-        }
+    setCamera(pos, dir) {
+        this.worker.postMessage({
+            cameraPosition: { x: pos.x, y: pos.y, z: pos.z },
+            cameraDirection: { x: dir.x, y: dir.y, z: dir.z }
+        });
     }
 }
 
