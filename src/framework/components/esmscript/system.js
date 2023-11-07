@@ -54,35 +54,30 @@ class EsmScriptComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        const order = [];
-        const scripts = { };
 
-        for (let i = 0; i < entity.script._scripts.length; i++) {
-            const scriptInstance = entity.script._scripts[i];
-            const scriptName = scriptInstance.__scriptType.__name;
-            order.push(scriptName);
+        const component = entity.esmscript;
 
-            const attributes = { };
-            for (const key in scriptInstance.__attributes)
-                attributes[key] = scriptInstance.__attributes[key];
+        Debug.assert(component, `The entity '${entity.name}' does not have a 'ESMScriptComponent' to clone`);
 
-            scripts[scriptName] = {
-                enabled: scriptInstance._enabled,
-                attributes: attributes
+        const moduleEntries = Object.entries(component.modules);
+
+        // For each module in the esm script component
+        const data = moduleEntries.map(([moduleSpecifier, moduleInstance]) => {
+
+            // Get the associated attribute definition and enabled state
+            const attributeDefinitions = component.attributeDefinitions.get(moduleSpecifier);
+            const attributes = {};
+            const enabled = !!moduleInstance.enabled;
+
+            // Copy each attribute in the definition from the module to the new attributes object
+            EsmScriptComponent.populateWithAttributes(attributes, attributeDefinitions, moduleInstance);
+
+            return {
+                enabled,
+                moduleSpecifier,
+                attributes
             };
-        }
-
-        for (const key in entity.script._scriptsIndex) {
-            if (key.awaiting) {
-                order.splice(key.ind, 0, key);
-            }
-        }
-
-        const data = {
-            enabled: entity.script.enabled,
-            order: order,
-            scripts: scripts
-        };
+        });
 
         return this.addComponent(clone, data);
     }
