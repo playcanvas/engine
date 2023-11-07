@@ -369,38 +369,6 @@ class EsmScriptComponent extends Component {
     }
 
     /**
-     * Create a script instance and attach to an entity script component.
-     *
-     * @param {string} moduleSpecifier - The module specifier used to import the ES module.
-     * @param {object} [args] - Object with arguments for a script.
-     * @param {boolean} [args.enabled] - If script instance is enabled after creation. Defaults to
-     * true.
-     * @param {object} [args.attributes] - Object with values for attributes (if any), where key is
-     * name of an attribute.
-     * @param {boolean} [args.preloading] - If script instance is created during preload. If true,
-     * script and attributes must be initialized manually. Defaults to false.
-     * @param {number} [args.ind] - The index where to insert the script instance at. Defaults to
-     * -1, which means append it at the end.
-     * @returns {*} Returns an instance of a
-     * ES Module if successfully attached to an entity, or null if the import fails
-     * @example
-     * entity.module.create('moduleSpecifier', {
-     *     attributes: {
-     *         speed: 4
-     *     }
-     * });
-     */
-    // create(moduleSpecifier, args = {}) {
-
-    //     DynamicImport(this.system.app, moduleSpecifier).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
-
-    //         this.instantiateModule(moduleSpecifier, ModuleClass, attributeDefinition, args.attributes);
-
-    //     }).catch(Debug.error);
-
-    // }
-
-    /**
      * Registers an in-memory Script ES module with the the component system, allowing it to interact with the engine update mechanic.
      * If the module already exists, ie. a module with the same specifier exists in this component, then it will
      * replace this *if* the module has a swap method.
