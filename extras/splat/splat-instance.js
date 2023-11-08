@@ -79,7 +79,7 @@ class SplatInstance {
         this.vb = vb;
 
         this.meshInstance = new MeshInstance(this.mesh, this.material);
-        this.meshInstance.setInstancing(vb);
+        this.meshInstance.setInstancing(vb, true);
         this.meshInstance.splatInstance = this;
 
         this.sorter = new SplatSorter();
