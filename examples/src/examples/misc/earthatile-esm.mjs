@@ -82,9 +82,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
 
     // create box entity
     const box = new pc.Entity('World');
-    box.addComponent('render', {
-        type: 'box'
-    });
 
     box.addComponent('esmscript', {
         enabled: true,
