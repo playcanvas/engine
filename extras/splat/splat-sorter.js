@@ -46,15 +46,15 @@ function SortWorker() {
             Math.abs(dx - lastCameraDirection.x) < epsilon &&
             Math.abs(dy - lastCameraDirection.y) < epsilon &&
             Math.abs(dz - lastCameraDirection.z) < epsilon) {
-                return;
-        } else {
-            lastCameraPosition.x = px;
-            lastCameraPosition.y = py;
-            lastCameraPosition.z = pz;
-            lastCameraDirection.x = dx;
-            lastCameraDirection.y = dy;
-            lastCameraDirection.z = dz;
+            return;
         }
+
+        lastCameraPosition.x = px;
+        lastCameraPosition.y = py;
+        lastCameraPosition.z = pz;
+        lastCameraDirection.x = dx;
+        lastCameraDirection.y = dy;
+        lastCameraDirection.z = dz;
 
         // create distance buffer
         const numVertices = centers.length / 3;
