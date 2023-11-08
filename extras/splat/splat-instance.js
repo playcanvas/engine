@@ -118,17 +118,16 @@ class SplatInstance {
         cameraMat.getTranslation(cameraPosition);
         cameraMat.getZ(cameraDirection);
 
+        const modelMat = this.meshInstance.node.getWorldTransform();
+        const invModelMat = mat.invert(modelMat);
+        invModelMat.transformPoint(cameraPosition, cameraPosition);
+        invModelMat.transformVector(cameraDirection, cameraDirection);
+
         // sort if the camera has changed
         if (!cameraPosition.equalsApprox(this.lastCameraPosition) || !cameraDirection.equalsApprox(this.lastCameraDirection)) {
-
             this.lastCameraPosition.copy(cameraPosition);
             this.lastCameraDirection.copy(cameraDirection);
             sorted = true;
-
-            const modelMat = this.meshInstance.node.getWorldTransform();
-            const invModelMat = mat.invert(modelMat);
-            invModelMat.transformPoint(cameraPosition, cameraPosition);
-            invModelMat.transformVector(cameraDirection, cameraDirection);
 
             this.sorter.setCamera(cameraPosition, cameraDirection);
         }
