@@ -160,9 +160,7 @@ function SortWorker() {
         if (message.data.intIndices) {
             intIndices = message.data.intIndices;
         }
-        if (message.data.cameraPosition) {
-            cameraPosition = message.data.cameraPosition;
-        }
+        if (message.data.cameraPosition) cameraPosition = message.data.cameraPosition;
         if (message.data.cameraDirection) cameraDirection = message.data.cameraDirection;
 
         update();
