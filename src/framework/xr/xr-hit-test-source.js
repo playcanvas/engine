@@ -136,8 +136,7 @@ class XrHitTestSource extends EventHandler {
         if (inputSource && !inputSource.hitTestSourcesSet.has(this))
             return;
 
-        let origin = poolVec3.pop();
-        if (!origin) origin = new Vec3();
+        const origin = poolVec3.pop() ?? new Vec3();
 
         if (inputSource) {
             origin.copy(inputSource.getOrigin());
@@ -148,11 +147,8 @@ class XrHitTestSource extends EventHandler {
         let candidateDistance = Infinity;
         let candidateHitTestResult = null;
 
-        let position = poolVec3.pop();
-        if (!position) position = new Vec3();
-
-        let rotation = poolQuat.pop();
-        if (!rotation) rotation = new Quat();
+        const position = poolVec3.pop() ?? new Vec3();
+        const rotation = poolQuat.pop() ?? new Quat();
 
         for (let i = 0; i < results.length; i++) {
             const pose = results[i].getPose(this.manager._referenceSpace);
