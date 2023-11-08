@@ -433,8 +433,10 @@ class RigidBodyComponentSystem extends ComponentSystem {
             component.enabled = false;
         }
 
-        this.destroyBody(component.body);
-        component.body = null;
+        if (component.body) {
+            this.destroyBody(component.body);
+            component.body = null;
+        }
     }
 
     addBody(body, group, mask) {
