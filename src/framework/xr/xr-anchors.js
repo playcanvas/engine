@@ -41,7 +41,7 @@ class XrAnchors extends EventHandler {
     /**
      * List of anchor creation requests.
      *
-     * @type {Array<object>}
+     * @type {object[]}
      * @private
      */
     _creationQueue = [];
@@ -50,7 +50,7 @@ class XrAnchors extends EventHandler {
      * Index of XrAnchors, with XRAnchor (native handle) used as a key.
      *
      * @type {Map<XRAnchor,XrAnchor>}
-     * @ignore
+     * @private
      */
     _index = new Map();
 
@@ -58,13 +58,13 @@ class XrAnchors extends EventHandler {
      * Index of XrAnchors, with UUID (persistent string) used as a key.
      *
      * @type {Map<string,XrAnchor>}
-     * @ignore
+     * @private
      */
     _indexByUuid = new Map();
 
     /**
-     * @type {Array<XrAnchor>}
-     * @ignore
+     * @type {XrAnchor[]}
+     * @private
      */
     _list = [];
 
@@ -131,14 +131,43 @@ class XrAnchors extends EventHandler {
         }
         this._creationQueue.length = 0;
 
+        this._index.clear();
+        this._indexByUuid.clear();
+
         // destroy all anchors
-        if (this._list) {
-            let i = this._list.length;
-            while (i--) {
-                this._list[i].destroy();
-            }
-            this._list.length = 0;
+        let i = this._list.length;
+        while (i--) {
+            this._list[i].destroy();
         }
+        this._list.length = 0;
+    }
+
+    /**
+     * @param {XRAnchor} xrAnchor - XRAnchor that has been added.
+     * @param {string|null} [uuid] - UUID string associated with persistent anchor.
+     * @returns {XrAnchor} new instance of XrAnchor.
+     * @private
+     */
+    _createAnchor(xrAnchor, uuid = null) {
+        const anchor = new XrAnchor(this, xrAnchor, uuid);
+        this._index.set(xrAnchor, anchor);
+        if (uuid) this._indexByUuid.set(uuid, anchor);
+        this._list.push(anchor);
+        anchor.once('destroy', this._onAnchorDestroy, this);
+        return anchor;
+    }
+
+    /**
+     * @param {XRAnchor} xrAnchor - XRAnchor that has been destroyed.
+     * @param {XrAnchor} anchor - Anchor that has been destroyed.
+     * @private
+     */
+    _onAnchorDestroy(xrAnchor, anchor) {
+        this._index.delete(xrAnchor);
+        if (anchor.uuid) this._indexByUuid.delete(anchor.uuid);
+        const ind = this._list.indexOf(anchor);
+        if (ind !== -1) this._list.splice(ind, 1);
+        this.fire('destroy', anchor);
     }
 
     /**
@@ -171,30 +200,23 @@ class XrAnchors extends EventHandler {
             callback = rotation;
 
             if (!this._supported) {
-                if (callback) callback(new Error('Anchors API is not supported'), null);
+                callback?.(new Error('Anchors API is not supported'), null);
                 return;
             }
 
             if (!hitResult.createAnchor) {
-                if (callback) callback(new Error('Creating Anchor from Hit Test is not supported'), null);
+                callback?.(new Error('Creating Anchor from Hit Test is not supported'), null);
                 return;
             }
 
             hitResult.createAnchor()
                 .then((xrAnchor) => {
-                    const anchor = new XrAnchor(this, xrAnchor);
-                    this._index.set(xrAnchor, anchor);
-                    this._list.push(anchor);
-
-                    if (callback)
-                        callback(null, anchor);
-
+                    const anchor = this._createAnchor(xrAnchor);
+                    callback?.(null, anchor);
                     this.fire('add', anchor);
                 })
                 .catch((ex) => {
-                    if (callback)
-                        callback(ex, null);
-
+                    callback?.(ex, null);
                     this.fire('error', ex);
                 });
         } else {
@@ -226,25 +248,23 @@ class XrAnchors extends EventHandler {
      */
     restore(uuid, callback) {
         if (!this._persistence) {
-            if (callback) callback(new Error('Anchor Persistence is not supported'));
+            callback?.(new Error('Anchor Persistence is not supported'), null);
             return;
         }
 
         if (!this.manager.active) {
-            if (callback) callback(new Error('WebXR session is not active'));
+            callback?.(new Error('WebXR session is not active'), null);
             return;
         }
 
         this.manager.session.restorePersistentAnchor(uuid)
             .then((xrAnchor) => {
-                const anchor = new XrAnchor(this, xrAnchor, uuid);
-                this._index.set(xrAnchor, anchor);
-                this._indexByUuid.set(uuid, anchor);
-                this._list.push(anchor);
+                const anchor = this._createAnchor(xrAnchor, uuid);
+                callback?.(null, anchor);
                 this.fire('add', anchor);
             })
             .catch((ex) => {
-                if (callback) callback(ex, null);
+                callback?.(ex, null);
                 this.fire('error', ex);
             });
     }
@@ -264,21 +284,21 @@ class XrAnchors extends EventHandler {
      */
     forget(uuid, callback) {
         if (!this._persistence) {
-            if (callback) callback(new Error('Anchor Persistence is not supported'));
+            callback?.(new Error('Anchor Persistence is not supported'));
             return;
         }
 
         if (!this.manager.active) {
-            if (callback) callback(new Error('WebXR session is not active'));
+            callback?.(new Error('WebXR session is not active'));
             return;
         }
 
         this.manager.session.deletePersistentAnchor(uuid)
             .then(() => {
-                if (callback) callback(null);
+                callback?.(null);
             })
             .catch((ex) => {
-                if (callback) callback(ex);
+                callback?.(ex);
                 this.fire('error', ex);
             });
     }
@@ -314,6 +334,7 @@ class XrAnchors extends EventHandler {
             if (frame.trackedAnchors.has(xrAnchor))
                 continue;
 
+            this._index.delete(xrAnchor);
             anchor.destroy();
         }
 
@@ -335,9 +356,7 @@ class XrAnchors extends EventHandler {
                 continue;
             }
 
-            const anchor = new XrAnchor(this, xrAnchor);
-            this._index.set(xrAnchor, anchor);
-            this._list.push(anchor);
+            const anchor = this._createAnchor(xrAnchor);
             anchor.update(frame);
 
             const callback = this._callbacksAnchors.get(xrAnchor);
@@ -386,7 +405,7 @@ class XrAnchors extends EventHandler {
     /**
      * List of available {@link XrAnchor}s.
      *
-     * @type {Array<XrAnchor>}
+     * @type {XrAnchor[]}
      */
     get list() {
         return this._list;

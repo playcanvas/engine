@@ -13,7 +13,7 @@ import { Quat } from '../../core/math/quat.js';
  */
 
 /**
- * Callback used by {@link XrAnchor#persist}.
+ * Callback used by {@link XrAnchor#forget}.
  *
  * @callback XrAnchorForgetCallback
  * @param {Error|null} err - The Error object if failed to forget an anchor or null if succeeded.
@@ -117,19 +117,10 @@ class XrAnchor extends EventHandler {
      */
     destroy() {
         if (!this._xrAnchor) return;
-        this._anchors._index.delete(this._xrAnchor);
-
-        if (this._uuid)
-            this._anchors._indexByUuid.delete(this._uuid);
-
-        const ind = this._anchors._list.indexOf(this);
-        if (ind !== -1) this._anchors._list.splice(ind, 1);
-
+        const xrAnchor = this._xrAnchor;
         this._xrAnchor.delete();
         this._xrAnchor = null;
-
-        this.fire('destroy');
-        this._anchors.fire('destroy', this);
+        this.fire('destroy', xrAnchor, this);
     }
 
     /**
