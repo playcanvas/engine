@@ -2,7 +2,6 @@ import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
 import { EsmScriptComponentData } from './data.js';
-import { DynamicImport } from '../../handlers/esmscript.js';
 
 /**
  * Allows scripts to be attached to an Entity and executed.
@@ -43,12 +42,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
         if (data.hasOwnProperty('modules')) {
             for (let i = 0; i < data.modules.length; i++) {
                 const { moduleSpecifier, attributes } = data.modules[i];
-
-                DynamicImport(this.app, moduleSpecifier).then(({ default: ModuleClass, attributes: attributeDefinition }) => {
-
-                    component.create(moduleSpecifier, ModuleClass, attributeDefinition, attributes);
-
-                }).catch(Debug.error);
+                component.import(moduleSpecifier, attributes);
             }
         }
     }

@@ -5,17 +5,17 @@
  * @param {import('../app-base').AppBase} app - The application scope to load from.
  * @param {string} moduleSpecifier - A unique path or specifier used to import the module
  * @returns {Promise} Returns a promise which fulfills to a module namespace object: an object containing all exports from moduleName.
+ *
+ * @todo add support for bundle contexts
  */
 export const DynamicImport = (app, moduleSpecifier) => {
 
     // eslint-disable-next-line multiline-comment-style
     /* #if _ASSET_BASE_URL
-    const path = $_ASSET_BASE_URL + app.assets.prefix +  moduleSpecifier;
+    const path = new URL(`${app.assets.prefix}.${moduleSpecifier}`, $_ASSET_BASE_URL).toString();
     // #else */
     const path = moduleSpecifier;
     // #endif
-
-    // TODO: handle bundled contexts correctly
 
     return import(`${path}`);
 };
