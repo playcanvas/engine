@@ -77,27 +77,27 @@ class EsmScriptComponentSystem extends ComponentSystem {
     }
 
     _onInitialize() {
-        this._components.forEach((component) => {
+        for (const component of this._components) {
             if (component.enabled) component._onInitialize();
-        });
+        }
     }
 
     _onPostInitialize() {
-        this._components.forEach((component) => {
+        for (const component of this._components) {
             if (component.enabled) component._onPostInitialize();
-        });
+        }
     }
 
     _onUpdate(dt) {
-        this._components.forEach((component) => {
+        for (const component of this._components) {
             if (component.enabled) component._onUpdate(dt);
-        });
+        }
     }
 
     _onPostUpdate(dt) {
-        this._components.forEach((component) => {
+        for (const component of this._components) {
             if (component.enabled) component._onPostUpdate();
-        });
+        }
     }
 
     _onBeforeRemove(entity, component) {
