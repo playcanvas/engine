@@ -332,7 +332,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('remove', this.onRemove, this);
     }
 
     /**
@@ -433,16 +432,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (component.enabled) {
             component.enabled = false;
         }
-    }
 
-    onRemove(entity, component) {
-        const body = component.body;
-        if (body) {
-            this.removeBody(body);
-            this.destroyBody(body);
-
-            component.body = null;
-        }
+        this.destroyBody(component.body);
+        component.body = null;
     }
 
     addBody(body, group, mask) {
