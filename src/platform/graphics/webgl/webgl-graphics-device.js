@@ -797,7 +797,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
     updateBackbuffer() {
 
         const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
-        if (this._defaultFramebufferChanged || resolutionChanged) {
+        const isCanvasNonZero = this.canvas.width > 0 && this.canvas.height > 0;
+        if (isCanvasNonZero && (this._defaultFramebufferChanged || resolutionChanged)) {
 
             // if the default framebuffer changes (entering or exiting XR for example)
             if (this._defaultFramebufferChanged) {
