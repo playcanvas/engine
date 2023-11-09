@@ -87,13 +87,12 @@ class SplatContainerResource extends ContainerResource {
         });
 
         // set custom aabb
-        entity.render.customAabb = this.customAabb;
+        entity.render.customAabb = splat.aabb.clone();
 
         // when the render component gets deleted, destroy the splat instance
         entity.render.system.on('beforeremove', (entity, component) => {
             splatInstance.destroy();
         }, this);
-
 
         return entity;
     }

@@ -503,8 +503,12 @@ class RigidBodyComponent extends Component {
         }
 
         if (shape) {
-            if (this._body)
-                this.system.onRemove(entity, this);
+            if (this._body) {
+                this.system.removeBody(this._body);
+                this.system.destroyBody(this._body);
+
+                this._body = null;
+            }
 
             const mass = this._type === BODYTYPE_DYNAMIC ? this._mass : 0;
 
