@@ -7,8 +7,6 @@ import {
 import { Splat } from './splat.js';
 import { SplatInstance } from './splat-instance.js';
 
-const globalDebugRender = false;
-
 class SplatContainerResource extends ContainerResource {
     device;
 
@@ -68,14 +66,12 @@ class SplatContainerResource extends ContainerResource {
         return null;
     }
 
-    instantiateRenderEntity(options) {
+    instantiateRenderEntity(options = {}) {
 
         // shared splat between instances
         const splat = this.createSplat();
 
-        const debugRender = options?.debugRender ?? globalDebugRender;
-        const cameraEntity = options?.cameraEntity;
-        const splatInstance = new SplatInstance(splat, cameraEntity, debugRender);
+        const splatInstance = new SplatInstance(splat, options);
 
         const entity = new Entity('Splat');
         entity.addComponent('render', {

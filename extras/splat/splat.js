@@ -63,8 +63,8 @@ class Splat {
         this.centerTexture.destroy();
     }
 
-    createMaterial(debugRender = false) {
-        const material = createSplatMaterial(this.device, debugRender);
+    createMaterial(options) {
+        const material = createSplatMaterial(this.device, options);
         const { width, height } = this.colorTexture;
 
         material.setParameter('splatColor', this.colorTexture);

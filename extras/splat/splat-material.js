@@ -8,7 +8,7 @@ import {
     SEMANTIC_ATTR13
 } from "playcanvas";
 
-const splatVS = `
+const splatCoreVS = `
     attribute vec3 vertex_position;
 
     uniform mat4 matrix_model;
@@ -144,18 +144,19 @@ const splatVS = `
         );
     }
 
-    void main(void)
-    {
+    vec3 evalCenter() {
         evalDataUV();
+        return getCenter();
+    }
 
-        vec3 center = getCenter();
-        vec4 splat_cam = matrix_view * matrix_model * vec4(center, 1.0);
+    vec4 evalSplat(vec4 centerWorld)
+    {
+        vec4 splat_cam = matrix_view * centerWorld;
         vec4 splat_proj = matrix_projection * splat_cam;
 
         // cull behind camera
         if (splat_proj.z < -splat_proj.w) {
-            gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-            return;
+            return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
         vec3 scale = getScale();
@@ -165,7 +166,7 @@ const splatVS = `
 
         #ifdef DEBUG_RENDER
             vec3 local = quatToMat3(rotation) * (vertex_position * scale * 2.0) + center;
-            gl_Position = matrix_viewProjection * matrix_model * vec4(local, 1.0);
+            return matrix_viewProjection * matrix_model * vec4(local, 1.0);
         #else
             vec3 splat_cova;
             vec3 splat_covb;
@@ -205,42 +206,61 @@ const splatVS = `
             // TODO: figure out length units and expose as uniform parameter
             // TODO: perhaps make this a shader compile-time option
             if (dot(v1, v1) < 1.0 || dot(v2, v2) < 1.0) {
-                gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-                return;
+                return vec4(0.0, 0.0, 2.0, 1.0);
             }
 
-            gl_Position = splat_proj +
+            texCoord = vertex_position.xy * 2.0;
+
+            return splat_proj +
                 vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
                     0.0, 0.0) * splat_proj.w;
-
-            texCoord = vertex_position.xy * 2.0;
         #endif
     }
 `;
 
-const splatFS = /* glsl_ */ `
+const splatMainVS = `
+    void main(void)
+    {
+        vec3 centerLocal = evalCenter();
+        vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
+
+        gl_Position = evalSplat(centerWorld);
+    }
+`;
+
+const splatCoreFS = /* glsl_ */ `
     varying vec2 texCoord;
     varying vec4 color;
 
-    void main(void)
-    {
+    vec4 evalSplat() {
+
         #ifdef DEBUG_RENDER
 
             if (color.a < 0.2) discard;
-            gl_FragColor = color;
+            return color;
 
         #else
 
             float A = -dot(texCoord, texCoord);
             if (A < -4.0) discard;
             float B = exp(A) * color.a;
-            gl_FragColor = vec4(color.rgb, B);
+            return vec4(color.rgb, B);
 
         #endif
     }
 `;
 
-const createSplatMaterial = (device, debugRender = false) => {
+const splatMainFS = `
+    void main(void)
+    {
+        gl_FragColor = evalSplat();
+    }
+`;
+
+const createSplatMaterial = (device, options = {}) => {
+
+    const debugRender = options.debugRender;
+
     const result = new Material();
     result.name = 'splatMaterial';
     result.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
@@ -248,8 +268,8 @@ const createSplatMaterial = (device, debugRender = false) => {
     result.depthWrite = false;
 
     const defines = debugRender ? '#define DEBUG_RENDER\n' : '';
-    const vs = defines + splatVS;
-    const fs = defines + splatFS;
+    const vs = defines + splatCoreVS + (options.vertex ?? splatMainVS);
+    const fs = defines + splatCoreFS + (options.fragment ?? splatMainFS);
 
     result.shader = createShaderFromCode(device, vs, fs, `splatShader-${debugRender}`, {
         vertex_position: SEMANTIC_POSITION,
