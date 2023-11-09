@@ -201,6 +201,14 @@ const splatVS = `
             vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
             vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
+            // early out tiny splats
+            // TODO: figure out length units and expose as uniform parameter
+            // TODO: perhaps make this a shader compile-time option
+            if (dot(v1, v1) < 1.0 || dot(v2, v2) < 1.0) {
+                gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
+                return;
+            }
+
             gl_Position = splat_proj +
                 vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
                     0.0, 0.0) * splat_proj.w;

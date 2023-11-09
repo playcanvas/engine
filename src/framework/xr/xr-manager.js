@@ -157,7 +157,14 @@ class XrManager extends EventHandler {
     views;
 
     /**
-     * @type {import('../components/camera/component.js').CameraComponent|null}
+     * Provides access to Anchors.
+     *
+     * @type {XrAnchors}
+     */
+    anchors;
+
+    /**
+     * @type {import('../components/camera/component.js').CameraComponent}
      * @private
      */
     _camera = null;
