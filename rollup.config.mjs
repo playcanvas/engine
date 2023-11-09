@@ -11,6 +11,7 @@ import terser from '@rollup/plugin-terser';
 import dts from 'rollup-plugin-dts';
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { runtimeTypeInspector } from '@runtime-type-inspector/plugin-rollup';
 
 // custom Rollup plugins
 import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
@@ -268,6 +269,7 @@ function buildTarget(buildType, moduleFormat) {
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
+            runtimeTypeInspector(),
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]
