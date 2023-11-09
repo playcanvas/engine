@@ -35,13 +35,15 @@ class EsmScriptComponent extends Component {
      */
 
     /**
-     * For any given attribute definition returns whether it's shape
-     * is similar to a valid attribute definition.
+     * For any given attribute definition returns whether it conforms to the required
+     * shape of an attribute definition.
      *
-     * @param {AttributeDefinition} attributeDefinition - The attribute to check
+     * @param {AttributeDefinition|object} attributeDefinition - The attribute to check
      * @returns {boolean} True if the object can be treated as a attribute definition
      * @example
-     * entity.esmscript.isValidAttributeDefinition({ type: 'entity' });
+     * isValidAttributeDefinition({ type: 'entity' }); // true
+     * isValidAttributeDefinition({ type: 'invalidType' }); // false
+     * isValidAttributeDefinition({ x: 'y' }); // false
      */
     static isValidAttributeDefinition(attributeDefinition) {
         return attributeDefinition && EsmScriptComponent.VALID_ATTR_TYPES.has(attributeDefinition.type);
