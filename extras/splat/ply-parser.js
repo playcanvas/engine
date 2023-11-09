@@ -3,13 +3,11 @@ import { SplatData } from './splat-data.js';
 import { readPly } from './ply-reader.js';
 
 // filter out element data we're not going to use
-const elements = [
+const defaultElements = [
     'x', 'y', 'z',
-    'red', 'green', 'blue',
-    'opacity',
-    'f_dc_0', 'f_dc_1', 'f_dc_2',
-    'scale_0', 'scale_1', 'scale_2',
-    'rot_0', 'rot_1', 'rot_2', 'rot_3'
+    'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
+    'rot_0', 'rot_1', 'rot_2', 'rot_3',
+    'scale_0', 'scale_1', 'scale_2'
 ];
 
 class PlyParser {
@@ -25,9 +23,9 @@ class PlyParser {
         this.maxRetries = maxRetries;
     }
 
-    async load(url, callback) {
+    async load(url, callback, asset) {
         const response = await fetch(url.load);
-        readPly(response.body.getReader(), new Set(elements))
+        readPly(response.body.getReader(), new Set(asset.data.elements ?? defaultElements))
             .then((response) => {
                 callback(null, new SplatContainerResource(this.device, new SplatData(response)));
             })
@@ -46,4 +44,8 @@ const registerPlyParser = (app) => {
     containerHandler.parsers.ply = new PlyParser(app.graphicsDevice, app.assets, app.loader.maxRetries);
 };
 
-export { registerPlyParser };
+const getDefaultPlyElements = () => {
+    return defaultElements.slice();
+};
+
+export { registerPlyParser, getDefaultPlyElements };
