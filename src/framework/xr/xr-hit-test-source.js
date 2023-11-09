@@ -75,8 +75,9 @@ class XrHitTestSource extends EventHandler {
      * @param {Quat} rotation - Rotation of hit test.
      * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
      * test source, then it will provide related input source.
+     * @param {XRHitTestResult} XRHitTestResult - object that is created by WebXR API.
      * @example
-     * hitTestSource.on('result', function (position, rotation, inputSource) {
+     * hitTestSource.on('result', function (position, rotation) {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });
@@ -144,6 +145,7 @@ class XrHitTestSource extends EventHandler {
         }
 
         let candidateDistance = Infinity;
+        let candidateHitTestResult = null;
 
         const position = poolVec3.pop() ?? new Vec3();
         const rotation = poolQuat.pop() ?? new Quat();
@@ -156,12 +158,13 @@ class XrHitTestSource extends EventHandler {
                 continue;
 
             candidateDistance = distance;
+            candidateHitTestResult = results[i];
             position.copy(pose.transform.position);
             rotation.copy(pose.transform.orientation);
         }
 
-        this.fire('result', position, rotation, inputSource);
-        this.manager.hitTest.fire('result', this, position, rotation, inputSource);
+        this.fire('result', position, rotation, inputSource, candidateHitTestResult);
+        this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
 
         poolVec3.push(origin);
         poolVec3.push(position);
