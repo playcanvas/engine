@@ -171,12 +171,12 @@ class XrAnchor extends EventHandler {
      */
     persist(callback) {
         if (!this._anchors.persistence) {
-            if (callback) callback(new Error('Persistent Anchors are not supported'), null);
+            callback?.(new Error('Persistent Anchors are not supported'), null);
             return;
         }
 
         if (this._uuid) {
-            if (callback) callback(null, this._uuid);
+            callback?.(null, this._uuid);
             return;
         }
 
@@ -191,7 +191,7 @@ class XrAnchor extends EventHandler {
             .then((uuid) => {
                 this._uuid = uuid;
                 this._anchors._indexByUuid.set(this._uuid, this);
-                if (callback) callback(null, uuid);
+                callback?.(null, uuid);
                 for (let i = 0; i < this._uuidRequests.length; i++) {
                     this._uuidRequests[i](null, uuid);
                 }
@@ -199,7 +199,7 @@ class XrAnchor extends EventHandler {
                 this.fire('persist', uuid);
             })
             .catch((ex) => {
-                if (callback) callback(ex);
+                callback?.(ex, null);
                 for (let i = 0; i < this._uuidRequests.length; i++) {
                     this._uuidRequests[i](ex);
                 }
@@ -215,13 +215,13 @@ class XrAnchor extends EventHandler {
      */
     forget(callback) {
         if (!this._uuid) {
-            if (callback) callback(new Error('Anchor is not persistent'));
+            callback?.(new Error('Anchor is not persistent'));
             return;
         }
 
         this._anchors.forget(this._uuid, (ex) => {
             this._uuid = null;
-            if (callback) callback(ex);
+            callback?.(ex);
             this.fire('forget');
         });
     }
