@@ -170,6 +170,13 @@ class Mesh extends RefCountedObject {
     _aabbVer = 0;
 
     /**
+     * aabb representing object space bounds of the mesh.
+     *
+     * @type {BoundingBox}
+     */
+    _aabb = new BoundingBox();
+
+    /**
      * Create a new Mesh instance.
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
@@ -234,9 +241,6 @@ class Mesh extends RefCountedObject {
 
         this._morph = null;
         this._geometryData = null;
-
-        // AABB for object space mesh vertices
-        this._aabb = new BoundingBox();
 
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
