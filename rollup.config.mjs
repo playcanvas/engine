@@ -147,7 +147,7 @@ const stripFunctions = [
 /**
  * Build a target that rollup is supposed to build.
  *
- * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {'debug'|'release'|'profiler'|'min'|'rti'} buildType - The build type.
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @returns {RollupOptions} One rollup target.
  */
@@ -156,7 +156,8 @@ function buildTarget(buildType, moduleFormat) {
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
         profiler: ' (PROFILE)',
-        min: ' (RELEASE)'
+        min: ' (RELEASE)',
+        rti: ' (RUNTIME-TYPE-INSPECTOR)'
     };
 
     const outputPlugins = {
@@ -192,7 +193,8 @@ function buildTarget(buildType, moduleFormat) {
         debug: 'build/playcanvas.dbg',
         release: 'build/playcanvas',
         profiler: 'build/playcanvas.prf',
-        min: 'build/playcanvas.min'
+        min: 'build/playcanvas.min',
+        rti: 'build/playcanvas-rti'
     };
 
     const outputExtension = {
@@ -269,7 +271,7 @@ function buildTarget(buildType, moduleFormat) {
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
-            runtimeTypeInspector(),
+            buildType === 'rti' ? runtimeTypeInspector() : undefined,
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]
@@ -378,7 +380,7 @@ export default (args) => {
     } else if (envTarget === 'extras') {
         targets.push(...target_extras);
     } else {
-        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
+        ['release', 'debug', 'profiler', 'min', 'rti'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
                 if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
                     targets.push(buildTarget(t, m));
