@@ -417,6 +417,8 @@ class XrManager extends EventHandler {
             optionalFeatures: []
         };
 
+        const webgl = this.app.graphicsDevice?.isWebGL1 || this.app.graphicsDevice?.isWebGL2;
+
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
@@ -462,7 +464,7 @@ class XrManager extends EventHandler {
                 };
             }
 
-            if (options && options.cameraColor && this.views.supportedColor) {
+            if (webgl && options && options.cameraColor && this.views.supportedColor) {
                 opts.optionalFeatures.push('camera-access');
             }
         } else if (type === XRTYPE_VR) {

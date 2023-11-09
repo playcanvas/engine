@@ -87,7 +87,6 @@ class XrViews extends EventHandler {
      * events is required for accessing views.
      *
      * @type {XrView[]}
-     * @readonly
      */
     get list() {
         return this._list;
@@ -98,7 +97,6 @@ class XrViews extends EventHandler {
      * WebXR system.
      *
      * @type {number}
-     * @readonly
      */
     get size() {
         return this._list.length;
@@ -109,7 +107,6 @@ class XrViews extends EventHandler {
      * based on hardware capabilities and granted permissions.
      *
      * @type {boolean}
-     * @readonly
      */
     get supportedColor() {
         return this._supportedColor;
@@ -120,7 +117,6 @@ class XrViews extends EventHandler {
      * session has started.
      *
      * @type {boolean}
-     * @readonly
      */
     get availableColor() {
         return this._availableColor;

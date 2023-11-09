@@ -112,7 +112,6 @@ class XrView {
      * not available or not supported.
      *
      * @type {Texture|null}
-     * @readonly
      */
     get textureColor() {
         return this._textureColor;
@@ -126,7 +125,6 @@ class XrView {
      * - {@link XREYE_RIGHT}: Right - indicates a right eye view.
      *
      * @type {string}
-     * @readonly
      */
     get eye() {
         return this._xrView.eye;
@@ -138,7 +136,6 @@ class XrView {
      * a part of a whole screen that view is occupying.
      *
      * @type {Vec4}
-     * @readonly
      */
     get viewport() {
         return this._viewport;
@@ -199,7 +196,7 @@ class XrView {
      */
     update(frame, xrView) {
         this._xrView = xrView;
-        if (this._manager.views.supportedColor)
+        if (this._manager.views.availableColor)
             this._xrCamera = this._xrView.camera;
 
         const layer = frame.session.renderState.baseLayer;
@@ -234,31 +231,68 @@ class XrView {
         if (!texture)
             return;
 
+        const device = this._manager.app.graphicsDevice;
+        const gl = device.gl;
+        const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+
+        const width = this._xrCamera.width;
+        const height = this._xrCamera.height;
+
         if (!this._textureColor) {
+            // color texture
             this._textureColor = new Texture(this._manager.app.graphicsDevice, {
                 format: PIXELFORMAT_RGB8,
                 mipmaps: false,
-                flipY: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
                 minFilter: FILTER_LINEAR,
                 magFilter: FILTER_LINEAR,
-                width: this._xrCamera.width,
-                height: this._xrCamera.height,
+                width: width,
+                height: height,
                 name: `XrView-${this._xrView.eye}-Color`
             });
+
+            // force initialize texture
             this._textureColor.upload();
+
+            // create frame buffer to read from
+            this._frameBufferSource = gl.createFramebuffer();
+
+            // create frame buffer to write to
+            this._frameBuffer = gl.createFramebuffer();
         }
 
-        // force texture initialization
-        if (!this._textureColor.impl._glTexture) {
-            this._textureColor.impl.initialize(this._manager.app.graphicsDevice, this._textureColor);
-            this._textureColor.impl.upload = () => { };
-            this._textureColor._needsUpload = false;
-        }
+        // set frame buffer to read from
+        device.setFramebuffer(this._frameBufferSource);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,
+            attachmentBaseConstant,
+            gl.TEXTURE_2D,
+            texture,
+            0
+        );
 
-        this._textureColor.impl._glCreated = true;
-        this._textureColor.impl._glTexture = texture;
+        // set frame buffer to write to
+        device.setFramebuffer(this._frameBuffer);
+        gl.framebufferTexture2D(
+            gl.FRAMEBUFFER,
+            attachmentBaseConstant,
+            gl.TEXTURE_2D,
+            this._textureColor.impl._glTexture,
+            0
+        );
+
+        // bind buffers
+        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
+        let ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+
+        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
+        if (ready) ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+
+        if (ready) {
+            // copy buffers with flip Y
+            gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+        }
     }
 
     /**
@@ -287,11 +321,16 @@ class XrView {
      */
     destroy() {
         if (this._textureColor) {
-            // TODO
-            // ensure there is no use of this texture after session ended
-            this._textureColor.impl._glTexture = null;
             this._textureColor.destroy();
             this._textureColor = null;
+
+            const gl = this._manager.app.graphicsDevice.gl;
+
+            gl.deleteFramebuffer(this._frameBufferSource);
+            this._frameBufferSource = null;
+
+            gl.deleteFramebuffer(this._frameBuffer);
+            this._frameBuffer = null;
         }
     }
 }

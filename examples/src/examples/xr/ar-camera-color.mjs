@@ -165,7 +165,7 @@ async function example({ canvas }) {
                     }
 
                     // debug draw camera color texture on the screen
-                    app.drawTexture(0.5, -0.5, 1, -1, view.textureColor);
+                    app.drawTexture(0.5, -0.5, 1, 1, view.textureColor);
                 }
             }
         });
