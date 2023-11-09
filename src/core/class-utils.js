@@ -4,6 +4,7 @@
  * @param {Function} Class - The class to check
  * @param {string} method - The name of the method to check
  * @returns {boolean} if a valid class and contains the method in it's inheritance chain
+ * @ignore
  */
 export const classHasMethod = (Class, method) => {
     return typeof Class === 'function' &&

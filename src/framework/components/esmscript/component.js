@@ -5,30 +5,6 @@ import { classHasMethod } from '../../../core/class-utils.js';
 import { DynamicImport } from '../../handlers/esmscript.js';
 
 /**
- * @typedef {Object|Map} AttributeDefinition
- * @property {'asset'|'boolean'|'curve'|'entity'|'json'|'number'|'rgb'|'rgba'|'string'|'vec2'|'vec3'|'vec4'} type - The attribute type
- */
-
-/**
- * @callback UpdateFunction
- * @param {number} dt - The time since the last update.
- */
-
-/**
- * @callback SwapFunction
- * @param {Object} newState - The new state to swap to.
- */
-
-/**
- * @typedef {Object} ModuleInstance
- * @property {Boolean} [enabled] - A flag that determines whether the ESM Script can receive life cycle updates (init/update)
- * @property {Function} [initialize] - A function called when the component is mounted
- * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
- * @property {Function} [destroy] - A function called when the module should be destroyed
- * @property {SwapFunction} [swap] - A function called to swap state
- */
-
-/**
  * The EsmScriptComponent extends the functionality of an Entity by
  * allowing you to attach your own ESM modules to it.
  *
@@ -54,6 +30,11 @@ class EsmScriptComponent extends Component {
     ]);
 
     /**
+     * @typedef {Object|Map} AttributeDefinition
+     * @property {'asset'|'boolean'|'curve'|'entity'|'json'|'number'|'rgb'|'rgba'|'string'|'vec2'|'vec3'|'vec4'} type - The attribute type
+     */
+
+    /**
      * For any given attribute definition returns whether it's shape
      * is similar to a valid attribute definition.
      *
@@ -75,6 +56,27 @@ class EsmScriptComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
+
+        /**
+         * @callback UpdateFunction
+         * @param {number} dt - The time since the last update.
+         * @ignore
+         */
+
+        /**
+         * @callback SwapFunction
+         * @param {Object} newState - The new state to swap to.
+         * @ignore
+         */
+
+        /**
+         * @typedef {Object} ModuleInstance
+         * @property {Boolean} [enabled] - A flag that determines whether the ESM Script can receive life cycle updates (init/update)
+         * @property {Function} [initialize] - A function called when the component is mounted
+         * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
+         * @property {Function} [destroy] - A function called when the module should be destroyed
+         * @property {SwapFunction} [swap] - A function called to swap state
+         */
 
         /**
          * Holds all module instances of this component.
