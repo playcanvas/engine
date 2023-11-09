@@ -303,13 +303,13 @@ class Example extends TypedComponent {
 
     render() {
         const { iframePath } = this;
-        const { orientation } = this.state;
+        const { orientation, exampleLoaded } = this.state;
         // console.log("Example#render", JSON.stringify(this.state, null, 2));
         return jsx(Container,
             {
                 id: "canvas-container"
             },
-            jsx(Spinner, { size: 50 }),
+            !exampleLoaded && jsx(Spinner, { size: 50 }),
             jsx("iframe", {
                 id: "exampleIframe",
                 key: iframePath,

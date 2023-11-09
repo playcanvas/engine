@@ -158,11 +158,6 @@ class LitMaterialOptionsBuilder {
             const light = lights[i];
             if (light.enabled) {
                 if (light.mask & mask) {
-                    if (lType !== LIGHTTYPE_DIRECTIONAL) {
-                        if (light.isStatic) {
-                            continue;
-                        }
-                    }
                     lightsFiltered.push(light);
                 }
             }
