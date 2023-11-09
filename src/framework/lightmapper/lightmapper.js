@@ -843,8 +843,9 @@ class Lightmapper {
 
         const light = bakeLight.light;
         const isClustered = this.scene.clusteredLightingEnabled;
+        const castShadow = light.castShadows && (!isClustered || this.scene.lighting.shadowsEnabled);
 
-        if (!shadowMapRendered && light.castShadows) {
+        if (!shadowMapRendered && castShadow) {
 
             // allocate shadow map from the cache to avoid per light allocation
             if (!light.shadowMap && !isClustered) {

@@ -47,10 +47,10 @@ class XrPlaneDetection extends EventHandler {
     _planesIndex = new Map();
 
     /**
-     * @type {XrPlane[]|null}
+     * @type {XrPlane[]}
      * @private
      */
-    _planes = null;
+    _planes = [];
 
     /**
      * Create a new XrPlaneDetection instance.
@@ -64,6 +64,7 @@ class XrPlaneDetection extends EventHandler {
         this._manager = manager;
 
         if (this._supported) {
+            this._manager.on('start', this._onSessionStart, this);
             this._manager.on('end', this._onSessionEnd, this);
         }
     }
@@ -103,15 +104,23 @@ class XrPlaneDetection extends EventHandler {
      */
 
     /** @private */
+    _onSessionStart() {
+        const available = this._supported && this._manager.session.enabledFeatures.indexOf('plane-detection') !== -1;
+        if (available) {
+            this._available = true;
+            this.fire('available');
+        }
+    }
+
+    /** @private */
     _onSessionEnd() {
-        if (this._planes) {
-            for (let i = 0; i < this._planes.length; i++) {
-                this._planes[i].destroy();
-            }
+        for (let i = 0; i < this._planes.length; i++) {
+            this._planes[i].destroy();
+            this.fire('remove', this._planes[i]);
         }
 
         this._planesIndex.clear();
-        this._planes = null;
+        this._planes.length = 0;
 
         if (this._available) {
             this._available = false;
@@ -124,20 +133,10 @@ class XrPlaneDetection extends EventHandler {
      * @ignore
      */
     update(frame) {
-        let detectedPlanes;
+        if (!this._supported || !this._available)
+            return;
 
-        if (!this._available) {
-            try {
-                detectedPlanes = frame.detectedPlanes;
-                this._planes = [];
-                this._available = true;
-                this.fire('available');
-            } catch (ex) {
-                return;
-            }
-        } else {
-            detectedPlanes = frame.detectedPlanes;
-        }
+        const detectedPlanes = frame.detectedPlanes;
 
         // iterate through indexed planes
         for (const [xrPlane, plane] of this._planesIndex) {
@@ -194,7 +193,7 @@ class XrPlaneDetection extends EventHandler {
      * Array of {@link XrPlane} instances that contain individual plane information, or null if
      * plane detection is not available.
      *
-     * @type {XrPlane[]|null}
+     * @type {XrPlane[]}
      */
     get planes() {
         return this._planes;

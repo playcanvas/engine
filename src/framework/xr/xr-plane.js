@@ -94,6 +94,8 @@ class XrPlane extends EventHandler {
 
     /** @ignore */
     destroy() {
+        if (!this._xrPlane) return;
+        this._xrPlane = null;
         this.fire('remove');
     }
 
@@ -183,6 +185,16 @@ class XrPlane extends EventHandler {
      */
     get points() {
         return this._xrPlane.polygon;
+    }
+
+    /**
+     * Semantic Label of a plane that is provided by underlying system.
+     * Current list includes (but not limited to): https://github.com/immersive-web/semantic-labels/blob/master/labels.json
+     *
+     * @type {string}
+     */
+    get label() {
+        return this._xrPlane.semanticLabel || '';
     }
 }
 
