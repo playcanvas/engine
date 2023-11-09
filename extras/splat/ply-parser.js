@@ -11,7 +11,7 @@ const defaultElements = [
 ];
 
 const defaultElementsSet = new Set(defaultElements);
-const defaultElementFilter = (val) => defaultElementsSet.has(val);
+const defaultElementFilter = val => defaultElementsSet.has(val);
 
 class PlyParser {
     device;
