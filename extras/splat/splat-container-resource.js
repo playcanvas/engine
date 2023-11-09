@@ -68,14 +68,12 @@ class SplatContainerResource extends ContainerResource {
         return null;
     }
 
-    instantiateRenderEntity(options) {
+    instantiateRenderEntity(options = {}) {
 
         // shared splat between instances
         const splat = this.createSplat();
 
-        const debugRender = options?.debugRender ?? globalDebugRender;
-        const cameraEntity = options?.cameraEntity;
-        const splatInstance = new SplatInstance(splat, cameraEntity, debugRender);
+        const splatInstance = new SplatInstance(splat, options);
 
         const entity = new Entity('Splat');
         entity.addComponent('render', {
