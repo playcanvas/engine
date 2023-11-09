@@ -188,6 +188,8 @@ class SplatSorter extends EventHandler {
                 data: oldData
             }, [oldData]);
 
+            // update vertex buffer data in the next event cycle so the above postMesssage
+            // call is queued before the relatively slow setData call below is invoked
             setTimeout(() => {
                 this.vertexBuffer.setData(newData);
                 this.fire('updated');
