@@ -26,6 +26,13 @@ import { XrAnchors } from './xr-anchors.js';
  */
 
 /**
+ * Callback used by manual room capturing.
+ *
+ * @callback XrRoomCaptureCallback
+ * @param {Error|null} err - The Error object or null if manual room capture was successful.
+ */
+
+/**
  * Manage and update XR session and its states.
  *
  * @augments EventHandler
@@ -134,6 +141,13 @@ class XrManager extends EventHandler {
      * @ignore
      */
     lightEstimation;
+
+    /**
+     * Provides access to Anchors.
+     *
+     * @type {XrAnchors}
+     */
+    anchors;
 
     /**
      * @type {import('../components/camera/component.js').CameraComponent}
@@ -549,6 +563,40 @@ class XrManager extends EventHandler {
         for (const key in this._available) {
             this._sessionSupportCheck(key);
         }
+    }
+
+    /**
+     * Initiate manual room capture. If the underlying XR system supports manual capture of the
+     * room, it will start the capturing process, which can affect plane and mesh detection,
+     * and improve hit-test quality against real-world geometry.
+     *
+     * @param {XrRoomCaptureCallback} callback - Callback that will be fired once capture is complete
+     * or failed.
+     *
+     * @example
+     * this.app.xr.initiateRoomCapture((err) => {
+     *     if (err) {
+     *         // capture failed
+     *         return;
+     *     }
+     *     // capture was successful
+     * });
+     */
+    initiateRoomCapture(callback) {
+        if (!this._session) {
+            callback(new Error('Session is not active'));
+            return;
+        }
+        if (!this._session.initiateRoomCapture) {
+            callback(new Error('Session does not support manual room capture'));
+            return;
+        }
+
+        this._session.initiateRoomCapture().then(() => {
+            if (callback) callback(null);
+        }).catch((err) => {
+            if (callback) callback(err);
+        });
     }
 
     /**

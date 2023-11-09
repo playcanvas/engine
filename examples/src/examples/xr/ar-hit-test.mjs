@@ -61,7 +61,7 @@ async function example({ canvas }) {
     target.addComponent("render", {
         type: "cylinder"
     });
-    target.setLocalScale(0.5, 0.01, 0.5);
+    target.setLocalScale(0.1, 0.01, 0.1);
     app.root.addChild(target);
 
     if (app.xr.supported) {
@@ -139,6 +139,34 @@ async function example({ canvas }) {
                 message("Immersive AR is unavailable");
             }
         });
+
+        if (app.xr.hitTest.supported) {
+            app.xr.input.on('add', (inputSource) => {
+                inputSource.hitTestStart({
+                    entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
+                    callback: (err, hitTestSource) => {
+                        if (err) return;
+
+                        let target = new pc.Entity();
+                        target.addComponent("render", {
+                            type: "cylinder"
+                        });
+                        target.setLocalScale(0.1, 0.01, 0.1);
+                        app.root.addChild(target);
+
+                        hitTestSource.on('result', (position, rotation) => {
+                            target.setPosition(position);
+                            target.setRotation(rotation);
+                        });
+
+                        hitTestSource.once('remove', () => {
+                            target.destroy();
+                            target = null;
+                        });
+                    }
+                });
+            });
+        }
 
         if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
             message("Immersive AR is not available");
