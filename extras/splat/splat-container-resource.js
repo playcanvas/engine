@@ -7,8 +7,6 @@ import {
 import { Splat } from './splat.js';
 import { SplatInstance } from './splat-instance.js';
 
-const globalDebugRender = false;
-
 class SplatContainerResource extends ContainerResource {
     device;
 

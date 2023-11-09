@@ -36,8 +36,8 @@ class SplatInstance {
         this.splat = splat;
 
         // material
-        const debugRender = options.debugRender ?? globalDebugRender;
-        this.material = splat.createMaterial(debugRender, options);
+        const debugRender = options.debugRender;
+        this.material = splat.createMaterial(options);
 
         // mesh
         const device = splat.device;

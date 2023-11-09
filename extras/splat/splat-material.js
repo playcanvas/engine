@@ -257,7 +257,10 @@ const splatMainFS = `
     }
 `;
 
-const createSplatMaterial = (device, debugRender = false, options = {}) => {
+const createSplatMaterial = (device, options = {}) => {
+
+    const debugRender = options.debugRender;
+
     const result = new Material();
     result.name = 'splatMaterial';
     result.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
