@@ -267,6 +267,7 @@ function buildTarget(buildType, moduleFormat) {
         input: rootFile,
         output: outputOptions,
         plugins: [
+            resolve(),
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
