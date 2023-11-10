@@ -58,7 +58,7 @@ class SplatInstance {
         // initialize index data
         const numSplats = splat.numSplats;
         let indexData;
-        if (device.isWebGPU) {
+        if (!device.isWebGL1) {
             indexData = new Uint32Array(numSplats);
             for (let i = 0; i < numSplats; ++i) {
                 indexData[i] = i;
@@ -84,7 +84,7 @@ class SplatInstance {
         this.meshInstance.splatInstance = this;
 
         this.sorter = new SplatSorter();
-        this.sorter.init(this.vb, this.splat.centers, this.splat.device.isWebGPU);
+        this.sorter.init(this.vb, this.splat.centers, !this.splat.device.isWebGL1);
 
         // if camera entity is provided, automatically use it to sort splats
         const cameraEntity = options.cameraEntity;
