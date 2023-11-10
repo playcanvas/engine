@@ -61,7 +61,11 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
         modules: [
             {
                 moduleSpecifier: '/scripts/make-confetti.js',
-                attributes: { particleCount: 1000 }
+                attributes: {
+                    confettiSettings: {
+                        particleCount: 200
+                    }
+                }
             },
             { moduleSpecifier: '/scripts/rotate.js' }
         ]
