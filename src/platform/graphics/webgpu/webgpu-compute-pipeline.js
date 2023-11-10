@@ -1,26 +1,27 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { TRACEID_COMPUTEPIPELINE_ALLOC } from "../../../core/constants.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
+import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
 let _pipelineId = 0;
 
 /**
  * @ignore
  */
-class WebgpuComputePipeline {
-    constructor(device) {
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
-        this.device = device;
-    }
-
+class WebgpuComputePipeline extends WebgpuPipeline {
     /** @private */
-    get(shader) {
+    get(shader, bindGroupFormat) {
 
-        const pipeline = this.create(shader);
+        // pipeline layout
+        const pipelineLayout = this.getPipelineLayout([bindGroupFormat.impl]);
+
+        // TODO: this could be cached
+
+        const pipeline = this.create(shader, pipelineLayout);
         return pipeline;
     }
 
-    create(shader) {
+    create(shader, pipelineLayout) {
 
         const wgpu = this.device.wgpu;
 
@@ -35,7 +36,7 @@ class WebgpuComputePipeline {
             },
 
             // uniform / texture binding layout
-            layout: 'auto'
+            layout: pipelineLayout
         };
 
         WebgpuDebug.validate(this.device);

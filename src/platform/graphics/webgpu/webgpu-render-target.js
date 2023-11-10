@@ -331,7 +331,7 @@ class WebgpuRenderTarget {
             // allocate multi-sampled color buffer
             const multisampledColorBuffer = wgpu.createTexture(multisampledTextureDesc);
             DebugHelper.setLabel(multisampledColorBuffer, `${renderTarget.name}.multisampledColor`);
-            this.setColorAttachment(index, multisampledColorBuffer);
+            this.setColorAttachment(index, multisampledColorBuffer, multisampledTextureDesc.format);
 
             colorAttachment.view = multisampledColorBuffer.createView();
             DebugHelper.setLabel(colorAttachment.view, `${renderTarget.name}.multisampledColorView`);

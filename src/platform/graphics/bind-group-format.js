@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_FLOAT
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8
 } from './constants.js';
 
 let id = 0;
@@ -52,7 +52,28 @@ class BindTextureFormat {
 /**
  * @ignore
  */
+class BindStorageTextureFormat {
+    /** @type {import('./scope-id.js').ScopeId} */
+    scopeId;
+
+    constructor(name, format = PIXELFORMAT_RGBA8, textureDimension = TEXTUREDIMENSION_2D) {
+        /** @type {string} */
+        this.name = name;
+
+        // PIXELFORMAT_***
+        this.format = format;
+
+        // TEXTUREDIMENSION_***
+        this.textureDimension = textureDimension;
+    }
+}
+
+/**
+ * @ignore
+ */
 class BindGroupFormat {
+    compute = false;
+
     /**
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
@@ -60,13 +81,22 @@ class BindGroupFormat {
      * buffers). Defaults to an empty array.
      * @param {BindTextureFormat[]} [textureFormats] - An array of bind texture formats (textures).
      * Defaults to an empty array.
+     * @param {BindStorageTextureFormat[]} [storageTextureFormats] - An array of bind storage texture
+     * formats (storage textures), used by the compute shader. Defaults to an empty array.
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.compute] - If true, this bind group format is used by the compute
+     * shader.
      */
-    constructor(graphicsDevice, bufferFormats = [], textureFormats = []) {
+    constructor(graphicsDevice, bufferFormats = [], textureFormats = [], storageTextureFormats = [], options = {}) {
         this.id = id++;
         DebugHelper.setName(this, `BindGroupFormat_${this.id}`);
 
+        this.compute = options.compute ?? false;
+        Debug.assert(this.compute || storageTextureFormats.length === 0, "Storage textures can be specified only for compute");
+
         /** @type {import('./graphics-device.js').GraphicsDevice} */
         this.device = graphicsDevice;
+        const scope = graphicsDevice.scope;
 
         /** @type {BindBufferFormat[]} */
         this.bufferFormats = bufferFormats;
@@ -79,13 +109,24 @@ class BindGroupFormat {
         /** @type {BindTextureFormat[]} */
         this.textureFormats = textureFormats;
 
-        const scope = graphicsDevice.scope;
-
         // maps a texture format name to a slot index
         /** @type {Map<string, number>} */
         this.textureFormatsMap = new Map();
         textureFormats.forEach((tf, i) => {
             this.textureFormatsMap.set(tf.name, i);
+
+            // resolve scope id
+            tf.scopeId = scope.resolve(tf.name);
+        });
+
+        /** @type {BindStorageTextureFormat[]} */
+        this.storageTextureFormats = storageTextureFormats;
+
+        // maps a storage texture format name to a slot index
+        /** @type {Map<string, number>} */
+        this.storageTextureFormatsMap = new Map();
+        storageTextureFormats.forEach((tf, i) => {
+            this.storageTextureFormatsMap.set(tf.name, i);
 
             // resolve scope id
             tf.scopeId = scope.resolve(tf.name);
@@ -107,12 +148,27 @@ class BindGroupFormat {
      * Returns format of texture with specified name.
      *
      * @param {string} name - The name of the texture slot.
-     * @returns {BindTextureFormat} - The format.
+     * @returns {BindTextureFormat|null} - The format.
      */
     getTexture(name) {
         const index = this.textureFormatsMap.get(name);
         if (index !== undefined) {
             return this.textureFormats[index];
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns format of storage texture with specified name.
+     *
+     * @param {string} name - The name of the texture slot.
+     * @returns {BindStorageTextureFormat|null} - The format.
+     */
+    getStorageTexture(name) {
+        const index = this.storageTextureFormatsMap.get(name);
+        if (index !== undefined) {
+            return this.storageTextureFormats[index];
         }
 
         return null;
@@ -138,4 +194,4 @@ class BindGroupFormat {
     }
 }
 
-export { BindBufferFormat, BindTextureFormat, BindGroupFormat };
+export { BindBufferFormat, BindTextureFormat, BindGroupFormat, BindStorageTextureFormat };

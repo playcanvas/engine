@@ -94,7 +94,7 @@ class RenderPassRenderActions extends RenderPass {
 
             // callback on the camera component before rendering with this camera for the first time
             const ra = renderActions[0];
-            if (ra.firstCameraUse && ra.camera.onPreRender) {
+            if (ra.camera.onPreRender && ra.firstCameraUse) {
                 ra.camera.onPreRender();
             }
         }
@@ -113,10 +113,9 @@ class RenderPassRenderActions extends RenderPass {
     after() {
         const { renderActions } = this;
         if (renderActions.length) {
-
             // callback on the camera component when we're done rendering with this camera
-            const ra = renderActions[0];
-            if (ra.lastCameraUse && ra.camera.onPostRender) {
+            const ra = renderActions[renderActions.length - 1];
+            if (ra.camera.onPostRender && ra.lastCameraUse) {
                 ra.camera.onPostRender();
             }
         }
@@ -138,7 +137,7 @@ class RenderPassRenderActions extends RenderPass {
         const cameraPass = layerComposition.camerasMap.get(camera);
 
         DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
-        DebugGraphics.pushGpuMarker(this.device, layer.name);
+        DebugGraphics.pushGpuMarker(this.device, `${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
 
         // #if _PROFILER
         const drawTime = now();
