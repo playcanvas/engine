@@ -174,9 +174,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
+        // build a full URL from a relative path
+        const buildUrl = (relativePath) => {
+            const url = new URL(window.location.href);
+            url.pathname = relativePath;
+            url.search = '';
+            return url.toString();
+        };
+
         const results = await Promise.all([
-            import(`${twgslUrl}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-            import(`${glslangUrl}`).then(module => module.default())
+            import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(`${buildUrl(glslangUrl)}`).then(module => module.default())
         ]);
 
         this.twgsl = results[0];
