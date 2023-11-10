@@ -6,6 +6,9 @@ import { EsmScriptComponentData } from './data.js';
 /**
  * Allows scripts to be attached to an Entity and executed.
  *
+ * **The api is likely to change, use at your own discretion**
+ *
+ * @ignore
  * @augments ComponentSystem
  */
 class EsmScriptComponentSystem extends ComponentSystem {

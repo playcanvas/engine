@@ -30,6 +30,9 @@ import { DynamicImport } from '../../handlers/esmscript.js';
  * The EsmScriptComponent extends the functionality of an Entity by
  * allowing you to attach your own ESM modules to it.
  *
+ * **The api is likely to change, use at your own discretion**
+ *
+ * @ignore
  * @augments Component
  */
 class EsmScriptComponent extends Component {
@@ -160,8 +163,7 @@ class EsmScriptComponent extends Component {
      * Fired when an esm script instance is created and attached to component.
      *
      * @event EsmScriptComponent#create
-     * @param {ModuleInstance} moduleInstance - The instance of
-     * the {@link ModuleInstance} that has been created.
+     * @param {ModuleInstance} moduleInstance - The module instance that was created.
      * @example
      * entity.esmscript.on('create', function (name, moduleInstance) {
      *     // new script instance added to component
@@ -382,8 +384,8 @@ class EsmScriptComponent extends Component {
     }
 
     /**
-     * Adds a ESM Script class with the the component system
-     * and assigns attributes in line with the {@link AttributeDefinition}.
+     * Adds an ESM Script class to the component system
+     * and assigns attributes based on it's `attributeDefinition`
      * If the module is enabled, it will receive lifecycle updates.
      *
      * @param {Function} ModuleClass - The ES Script Module class to add to the component
