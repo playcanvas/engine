@@ -31,13 +31,13 @@ import { DynamicImport } from '../../handlers/esmscript.js';
  * allowing you to attach your own ESM modules to it.
  *
  * **The api is likely to change, use at your own discretion**
- *
  * @ignore
  * @augments Component
  */
 class EsmScriptComponent extends Component {
     /**
      * A list of valid attribute types
+     * @ignore
      */
     static VALID_ATTR_TYPES = new Set([
         "asset",
