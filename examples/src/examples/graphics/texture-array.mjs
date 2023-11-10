@@ -151,8 +151,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: 1024,
             height: 1024,
-            array: true,
-            arrayLength: 4, // number of textures
+            arrayLength: 4, // array texture with 4 textures
             magFilter: pc.FILTER_NEAREST,
             minFilter: pc.FILTER_NEAREST_MIPMAP_NEAREST,
             mipmaps: true,

@@ -71,8 +71,6 @@ class Texture {
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (not supported by WebGl1).
-     * @param {number} [options.arrayLength] - The number of textures in a 2D texture array (not supported by WebGl1).
-     * Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
      * - {@link PIXELFORMAT_A8}
@@ -127,8 +125,9 @@ class Texture {
      * texture. Default is true.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
-     * @param {boolean} [options.array] - Specifies whether the texture is to be a 2D texture array
-     * (WebGL2 only). Defaults to false.
+     * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
+     * When passed in as undefined or < 1, this is not an array texture. If >= 1, this is an array texture.
+     * (not supported by WebGL1). Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
      * (not supported by WebGL1). Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
@@ -164,7 +163,7 @@ class Texture {
      *
      * Defaults to {@link FUNC_LESS}.
      * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels] - Array of Uint8Array or other supported browser interface; or a two-dimensional array
-     * of Uint8Array if options.array is true.
+     * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
      * @example
@@ -204,14 +203,12 @@ class Texture {
 
         if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
-            this._array = options.array ?? false;
             this._depth = Math.floor(options.depth ?? 1);
-            this._arrayLength = Math.floor(options.arrayLength ?? 1);
+            this._arrayLength = Math.floor(options.arrayLength ?? 0);
         } else {
             this._volume = false;
-            this._array = false;
             this._depth = 1;
-            this._arrayLength = 1;
+            this._arrayLength = 0;
         }
 
         this._storage = options.storage ?? false;
@@ -651,7 +648,16 @@ class Texture {
      * @type {boolean}
      */
     get array() {
-        return this._array;
+        return this._arrayLength > 0;
+    }
+
+    /**
+     * Returns the number of textures inside this texture if this is a 2D array texture or 0 otherwise.
+     *
+     * @type {number}
+     */
+    get arrayLength() {
+        return this._arrayLength;
     }
 
     /**

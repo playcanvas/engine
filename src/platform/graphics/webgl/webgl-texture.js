@@ -98,7 +98,7 @@ class WebglTexture {
 
         this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
             (texture._volume ? gl.TEXTURE_3D :
-                (texture._array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
+                (texture.array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
             case PIXELFORMAT_A8:
@@ -300,7 +300,7 @@ class WebglTexture {
 
         const requiredMipLevels = texture.requiredMipLevels;
 
-        if (texture._array) {
+        if (texture.array) {
             // for texture arrays we reserve the space in advance
             gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
                             requiredMipLevels,
@@ -462,7 +462,7 @@ class WebglTexture {
                                   this._glPixelType,
                                   mipObject);
                 }
-            } else if (texture._array && typeof mipObject === "object") {
+            } else if (texture.array && typeof mipObject === "object") {
                 if (texture._arrayLength === mipObject.length) {
                     if (texture._compressed) {
                         for (let index = 0; index < texture._arrayLength; index++) {
@@ -472,8 +472,8 @@ class WebglTexture {
                                 0,
                                 0,
                                 index,
-                                Math.max(texture._width * resMult, 1),
-                                Math.max(texture._height * resMult, 1),
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
                                 1,
                                 this._glFormat,
                                 mipObject[index]
@@ -487,8 +487,8 @@ class WebglTexture {
                                 0,
                                 0,
                                 index,
-                                Math.max(texture._width * resMult, 1),
-                                Math.max(texture._height * resMult, 1),
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
                                 1,
                                 this._glFormat,
                                 this._glPixelType,
