@@ -128,7 +128,7 @@ const readPly = async (reader, propertyFilter = null) => {
                 }
                 const element = elements[elements.length - 1];
                 const storageType = dataTypeMap.get(words[1]);
-                const storage = (!propertyFilter || propertyFilter.has(words[2])) ? new storageType(element.count) : null;
+                const storage = (!propertyFilter || propertyFilter(words[2])) ? new storageType(element.count) : null;
                 element.properties.push({
                     type: words[1],
                     name: words[2],
