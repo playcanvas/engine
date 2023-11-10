@@ -263,16 +263,16 @@ function buildTarget(buildType, moduleFormat) {
     };
 
     const rootFile = 'src/index.js';
+    const pluginsRTI = buildType === 'rti' ? [resolve(), runtimeTypeInspector()] : [];
     return {
         input: rootFile,
         output: outputOptions,
         plugins: [
-            resolve(),
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(rootFile, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
-            buildType === 'rti' ? runtimeTypeInspector() : undefined,
+            ...pluginsRTI,
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]
