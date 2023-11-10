@@ -194,7 +194,7 @@ function buildTarget(buildType, moduleFormat) {
         release: 'build/playcanvas',
         profiler: 'build/playcanvas.prf',
         min: 'build/playcanvas.min',
-        rti: 'build/playcanvas-rti'
+        rti: 'build/playcanvas.rti'
     };
 
     const outputExtension = {

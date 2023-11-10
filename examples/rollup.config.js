@@ -99,7 +99,7 @@ function timestamp() {
 }
 
 /**
- * @param {import('rollup').Plugin} - The Rollup plugin.
+ * @param {import('rollup').Plugin} plugin - The Rollup plugin.
  * @param {string} src - File or path to watch.
  */
 function watch(plugin, src) {
