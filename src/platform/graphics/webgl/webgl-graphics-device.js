@@ -1882,7 +1882,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         locZero = true;
                     }
 
-                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                    if (e.asInt) {
+                        gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
+                    } else {
+                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                    }
+
                     gl.enableVertexAttribArray(loc);
 
                     if (vertexBuffer.format.instancing) {
