@@ -1,6 +1,6 @@
 import {
     createShaderFromCode, Texture, BlendState, drawQuadWithShader, RenderTarget,
-    PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
 } from 'playcanvas';
 
 const textureBlitVertexShader = `
@@ -74,7 +74,7 @@ class CoreExporter {
             name: 'ExtractedTexture',
             width,
             height,
-            format: PIXELFORMAT_RGBA8,
+            format: texture.format,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_LINEAR,

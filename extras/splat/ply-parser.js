@@ -10,6 +10,9 @@ const defaultElements = [
     'scale_0', 'scale_1', 'scale_2'
 ];
 
+const defaultElementsSet = new Set(defaultElements);
+const defaultElementFilter = val => defaultElementsSet.has(val);
+
 class PlyParser {
     device;
 
@@ -25,7 +28,7 @@ class PlyParser {
 
     async load(url, callback, asset) {
         const response = await fetch(url.load);
-        readPly(response.body.getReader(), new Set(asset.data.elements ?? defaultElements))
+        readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
             .then((response) => {
                 callback(null, new SplatContainerResource(this.device, new SplatData(response)));
             })

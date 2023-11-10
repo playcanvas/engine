@@ -137,7 +137,7 @@ class RenderPassRenderActions extends RenderPass {
         const cameraPass = layerComposition.camerasMap.get(camera);
 
         DebugGraphics.pushGpuMarker(this.device, camera ? camera.entity.name : 'noname');
-        DebugGraphics.pushGpuMarker(this.device, layer.name);
+        DebugGraphics.pushGpuMarker(this.device, `${layer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
 
         // #if _PROFILER
         const drawTime = now();
