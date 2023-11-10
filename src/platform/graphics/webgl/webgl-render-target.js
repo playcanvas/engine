@@ -346,6 +346,9 @@ class WebglRenderTarget {
 
         Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
 
+        // blit is affected by scissor test, so make it full size
+        device.setScissor(0, 0, target.width, target.height);
+
         const gl = device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst);
