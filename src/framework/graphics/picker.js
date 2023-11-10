@@ -113,7 +113,7 @@ class Picker {
             const index = a << 24 | r << 16 | g << 8 | b;
 
             // White is 'no selection'
-            if (index !== 0xffffffff) {
+            if (index !== -1) {
                 tempSet.add(mapping.get(index));
             }
         }
