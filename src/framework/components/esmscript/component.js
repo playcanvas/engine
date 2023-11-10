@@ -19,7 +19,8 @@ import { DynamicImport } from '../../handlers/esmscript.js';
 /**
  * @typedef {Object} ModuleInstance
  * @property {Boolean} [enabled] - A flag that determines whether the ESM Script can receive life cycle updates (init/update)
- * @property {Function} [initialize] - A function called when the component is mounted
+ * @property {Function} [initialize] - A function called when the component is ;
+ * @property {Function} [postInitialize] - A function called after all component have initialized
  * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
  * @property {Function} [destroy] - A function called when the module should be destroyed
  * @property {SwapFunction} [swap] - A function called to swap state
@@ -81,16 +82,17 @@ class EsmScriptComponent extends Component {
         super(system, entity);
 
         /**
-         * Holds all module instances of this component.
-         * The execution order of modules should be considered indeterminate.
+         * Holds all ESM instances of this component.
          *
-         * Key: {string} moduleSpecifier - The identifier for the module.
-         * Value: {ModuleInstance} moduleInstance - The instance of Script ES Module
-         *
-         * Example:
-         * this.attributeDefinitions.set('moduleA', {'type': 'number', defaultValue 10});
+         * @type {Map<Function, ModuleInstance>}
          */
         this.modules = new Map();
+
+        /**
+         * Holds all module specifiers for each ESM Script
+         * @type {Map<string, import('src/core/event-handler.js').HandleEventCallback>}
+         */
+        this.modulesSpecifiersEventMap = new Map();
 
         /**
          * Holds the attribute definitions for modules.
@@ -179,33 +181,51 @@ class EsmScriptComponent extends Component {
      */
 
     _onBeforeRemove() {
-        this.modules.forEach(({ moduleInstance }) => {
-            this.destroy(moduleInstance);
+        this.modules.forEach((moduleInstance) => {
+
+            const ModuleClass = moduleInstance.constructor;
+
+            // Remove from local data
+            this.modules.delete(ModuleClass);
+            this.attributeDefinitions.delete(ModuleClass);
+            this.modulesWithPostUpdate.delete(ModuleClass);
+            this.modulesWithPostUpdate.delete(ModuleClass);
+
+            // Call modules destroy if present
+            moduleInstance.destroy?.();
+
+            // Fire component level events
+            this.fire('destroyed', module);
         });
+
+        // Remove events
+        for (const [moduleSpecifier, callback] of this.modulesSpecifiersEventMap) {
+            this.system.app.assets.off(`load:url:${moduleSpecifier}`, callback);
+        }
     }
 
     _onInitialize() {
-        this.modules.forEach(({ moduleInstance }) => {
-            moduleInstance.initialize?.();
-        });
+        for (const [, module] of this.modules) {
+            module.initialize?.();
+        }
     }
 
     _onPostInitialize() {
-        this.modules.forEach(({ moduleInstance }) => {
-            moduleInstance.postInitialize?.();
-        });
+        for (const [, module] of this.modules) {
+            module.postInitialize?.();
+        }
     }
 
     _onUpdate(dt) {
-        this.modulesWithUpdate.forEach((module) => {
+        for (const module of this.modulesWithUpdate) {
             module.update(dt);
-        });
+        }
     }
 
     _onPostUpdate(dt) {
-        this.modulesWithPostUpdate.forEach((module) => {
+        for (const module of this.modulesWithPostUpdate) {
             module.postUpdate(dt);
-        });
+        }
     }
 
     /**
@@ -324,44 +344,45 @@ class EsmScriptComponent extends Component {
     /**
      * Detect if script is attached to an entity.
      *
-     * @param {string} moduleSpecifier - The module specifier to search for
+     * @param {Function} moduleClass - The ESM Script Class.
      * @returns {boolean} If script is attached to an entity.
      * @example
-     * if (entity.module.has('path/to/module.mjs')) {
+     * if (entity.module.has(ModuleClass)) {
      *     // entity has script
      * }
      */
-    has(moduleSpecifier) {
-        return this.modules.has(moduleSpecifier);
+    has(moduleClass) {
+        return this.modules.has(moduleClass);
     }
 
     /**
      * Get a script instance (if attached).
      *
-     * @param {string} moduleSpecifier - The
-     * name or type of {@link ScriptType}.
-     * @returns {import('../../script/script-type.js').ScriptType|null} If script is attached, the
+     * @param {Function} moduleClass - The ESM Script Class.
+     * @returns {ModuleInstance|undefined} If an ESM Script is attached, the
      * instance is returned. Otherwise null is returned.
      * @example
-     * const controller = entity.module.get('module');
+     * const controller = entity.module.get(ModuleClass);
      */
-    get(moduleSpecifier) {
-        return this.modules.get(moduleSpecifier);
+    get(moduleClass) {
+        return this.modules.get(moduleClass);
     }
 
-    unregister(ModuleClass) {
+    remove(ModuleClass) {
 
-        const moduleInstance = this.modules.get(ModuleClass);
+        const moduleInstance = this.modules.delete(ModuleClass);
 
         if (moduleInstance) {
             this.modulesWithPostUpdate.delete(moduleInstance);
             this.modulesWithUpdate.delete(moduleInstance);
             this.modules.delete(ModuleClass);
+        } else if (ModuleClass) {
+            Debug.warn(`The ESM Script '${ModuleClass.name}' has not been added to this component`);
         }
     }
 
     /**
-     * Registers a ESM Script class with the the component system
+     * Adds a ESM Script class with the the component system
      * and assigns attributes in line with the {@link AttributeDefinition}.
      * If the module is enabled, it will receive lifecycle updates.
      *
@@ -372,7 +393,7 @@ class EsmScriptComponent extends Component {
      * @returns {ModuleInstance} An instance of the module
      */
 
-    register(ModuleClass, attributeDefinition = {}, attributes = {}) {
+    add(ModuleClass, attributeDefinition = {}, attributes = {}) {
 
         if (!ModuleClass || typeof ModuleClass !== 'function')
             throw new Error(`The ESM Script Module class is undefined`);
@@ -400,7 +421,7 @@ class EsmScriptComponent extends Component {
     }
 
     /**
-     * The 'import' method provides a convenient function for importing an ESM Script and
+     * The 'import' method provides a convenience function for importing an ESM Script and
      * registering it with the component system. It will import the module, add or replace
      * it within the component, and swap any state if if possible.
      *
@@ -412,10 +433,10 @@ class EsmScriptComponent extends Component {
      *
      * @example
      * // Uncomment bellow to ensure the module is statically imported
-     * // import 'https://domain.com/path/to/module.js'
+     * // import '/path/to/module.js'
      *
-     * entity.esmscript.create(
-     *  new URL('https://domain.com/path/to/module.js'),
+     * entity.esmscript.import(
+     *  '/path/to/module.js',
      *  { particleCount: 10 }
      * )
      */
@@ -423,33 +444,18 @@ class EsmScriptComponent extends Component {
 
         const app = this.system.app;
 
-        // normalize the URL
+        // normalize the URL - dummy domain is necessary for parsing but not actually used.
         const url = new URL(path, 'https://example.com');
         const moduleSpecifier = url.pathname + url.search;
 
         DynamicImport(app, moduleSpecifier).then((ModuleExport) => {
 
-            const { default: ModuleClass, attributes: attributeDefinition } = ModuleExport;
-            const module = this.register(ModuleClass, attributeDefinition, attributes);
+            const { default: ESMScriptClass, attributes: attributeDefinition } = ModuleExport;
+            const module = this.add(ESMScriptClass, attributeDefinition, attributes);
 
-            // When the asset associated with this moduleSpecifier updates...
-            app.assets.once(`load:url:${moduleSpecifier}`, ({ resource }) => {
+            this.onSwapAvailable(moduleSpecifier, (NewESMScriptClass, newAttributeDefinition) => {
 
-                const NewModuleClass = resource;
-
-                // If the new class has a swap method, then remove the previous module class
-                if (classHasMethod(NewModuleClass, 'swap'))
-                    this.unregister(ModuleClass);
-
-                // Register the new class
-                const newModuleInstance = this.register(NewModuleClass, attributeDefinition, attributes);
-
-                // swap
-                const didSwap = this.swap(module, newModuleInstance);
-
-                // If it fails, then instantiate the module
-                if (!didSwap) newModuleInstance.initialize?.();
-                else this.register(ModuleClass, attributeDefinition, attributes);
+                this.swap(ESMScriptClass, NewESMScriptClass, newAttributeDefinition);
 
             });
 
@@ -459,20 +465,65 @@ class EsmScriptComponent extends Component {
     }
 
     /**
-     * If possible, this method will swap state between a target and source ESM Script.
+     * Registers a callback which is triggered whenever
+     * a module at the specified path is updated.
      *
-     * @param {ModuleInstance} sourceModule - The source ESM Script to copy state from
-     * @param {ModuleInstance} targetModule - The target ESM Script to copy state to
-     * @returns {Boolean} true if the state was swapped, or false if it failed.
+     * @param {string} moduleSpecifier - The path to the module to be watched
+     * @param {Function} callback - The path to the module to be watched
      */
-    swap(sourceModule, targetModule) {
-        if (classHasMethod(targetModule.constructor, 'swap')) {
-            targetModule.swap?.(sourceModule);
-            return true;
+    onSwapAvailable(moduleSpecifier, callback) {
+
+        // If this path is registered, warn and return
+        if (this.modulesSpecifiersEventMap.has(moduleSpecifier)) {
+            Debug.warn(`The path '${moduleSpecifier}' is already registered for hot swap events.`);
         }
 
-        Debug.warn(`ESM Script '${targetModule.constructor.name}' cannot be swapped, as it does not have a 'swap' method.`);
-        return false;
+        const onAssetLoad = ({ resource }) => {
+            const { default: NewEsmScriptClass, attributeDefinition } = resource;
+
+            if (classHasMethod(NewEsmScriptClass, 'swap'))
+                callback(NewEsmScriptClass, attributeDefinition);
+        };
+
+        // Listen for load event and add to event map
+        this.system.app.assets.on(`load:url:${moduleSpecifier}`, onAssetLoad);
+        this.modulesSpecifiersEventMap.set(moduleSpecifier, onAssetLoad);
+    }
+
+    /**
+     * This method will attempt to swap ESM Script, copying over attributes and state if possible
+     *
+     * @param {Function} SourceESMScriptClass - The source ESM Script to copy state from
+     * @param {Function} TargetESMScriptClass - The target ESM Script to copy state to
+     * @param {AttributeDefinition} attributeDefinition - Defines the attributes that will be copied from the SourceESMScriptClass
+     * @returns {Boolean} true if the state was swapped, or false if it failed.
+     */
+    swap(SourceESMScriptClass, TargetESMScriptClass, attributeDefinition) {
+
+        const moduleInstance = this.modules.get(SourceESMScriptClass);
+
+        if (!moduleInstance) {
+            Debug.warn(`The ESM Script '${SourceESMScriptClass?.name}' has not been added to this component`);
+            return false;
+        }
+
+        if (!classHasMethod(TargetESMScriptClass, 'swap')) {
+            Debug.warn(`The ESM Script '${TargetESMScriptClass?.name}' does not implement a 'swap' method, so is ineligible for hot swapping`);
+            return false;
+        }
+
+        // Remove the previous ESM Script
+        this.remove(SourceESMScriptClass);
+
+        // Add the new script, using the old instance as the attribute source
+        const attributes = moduleInstance;
+        const newModuleInstance = this.add(TargetESMScriptClass, attributeDefinition, attributes);
+
+        // and swap the state if possible
+        newModuleInstance.swap?.(module);
+
+        return true;
+
     }
 
     /**
