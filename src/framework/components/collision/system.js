@@ -333,11 +333,14 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     beforeInitialize(component, data) {}
 
     createAmmoMesh(mesh, node, shape, checkDuplicates) {
-        let triMesh;
+        const cache = this.system._triMeshCache;
+        let triMesh, triMeshShape;
 
-        if (this.system._triMeshCache[mesh.id]) {
-            triMesh = this.system._triMeshCache[mesh.id];
+        if (cache[mesh.id]) {
+            triMesh = cache[mesh.id].triMesh;
+            triMeshShape = cache[mesh.id].bvhShape;
         } else {
+            cache[mesh.id] = {};
             const vb = mesh.vertexBuffer;
 
             const format = vb.getFormat();
@@ -361,7 +364,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
-            this.system._triMeshCache[mesh.id] = triMesh;
+            cache[mesh.id].triMesh = triMesh;
 
             const numVertices = positions.length / stride;
 
@@ -370,7 +373,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             for (let i = 0; i < numVertices; i++) {
                 v1.setValue(positions[i * stride], positions[i * stride + 1], positions[i * stride + 2]);
-                triMesh.findOrAddVertex(v1, false);
+                triMesh.findOrAddVertex(v1, checkDuplicates);
             }
 
             for (var i = 0; i < numTriangles; i++) {
@@ -386,8 +389,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             Ammo.destroy(v1);
         }
 
-        const useQuantizedAabbCompression = true;
-        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+        if (!triMeshShape) {
+            const useQuantizedAabbCompression = true;
+            triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+            cache[mesh.id].bvhShape = triMeshShape;
+        }
 
         const scaling = this.system._getNodeScaling(node);
         triMeshShape.setLocalScaling(scaling);
@@ -701,13 +707,14 @@ class CollisionComponentSystem extends ComponentSystem {
     /**
      * Clears the internal cash
      * 
-     * @param {boolean} destroyCashed If true, forces Ammo to destroy trimesh stored in cache. Make sure no
+     * @param {boolean} destroyCashed If true, forces Ammo to destroy its objects stored in cache. Make sure no
      * active collision component is using it before destroying, otherwise Ammo will crash.
      */
     clearMeshCache(destroyCashed = false) {
         if (destroyCashed) {
-            for (const [key, val] of Object.entries(this._triMeshCache)) {
-                Ammo.destroy(val);
+            for (const [key, entry] of Object.entries(this._triMeshCache)) {
+                Ammo.destroy(entry.triMesh);
+                Ammo.destroy(entry.bvhShape);
             }
         }
 
