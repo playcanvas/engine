@@ -705,17 +705,17 @@ class CollisionComponentSystem extends ComponentSystem {
     }
 
     /**
-     * Clears the internal cash
-     * 
-     * @param {boolean} destroyCashed If true, forces Ammo to destroy its objects stored in cache. Make sure no
+     * @description Clears the internal mesh cash.
+     * @param {boolean} destroyCashed - If true, forces Ammo to destroy its objects stored in cache. Make sure no
      * active collision component is using it before destroying, otherwise Ammo will crash.
      */
     clearMeshCache(destroyCashed = false) {
         if (destroyCashed) {
-            for (const [key, entry] of Object.entries(this._triMeshCache)) {
-                Ammo.destroy(entry.triMesh);
-                Ammo.destroy(entry.bvhShape);
-            }
+            Object.entries(this._triMeshCache).forEach((entry) => {
+                const value = entry[1];
+                Ammo.destroy(value.triMesh);
+                Ammo.destroy(value.bvhShape);
+            });
         }
 
         this._triMeshCache = {};
