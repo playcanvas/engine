@@ -32,6 +32,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         bench: new pc.Asset('bench', 'container', { url: assetPath + 'models/bench_wooden_01.glb' }),
         model: new pc.Asset('model', 'container', { url: assetPath + 'models/bitmoji.glb' }),
         board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
+        boombox: new pc.Asset('statue', 'container', { url: assetPath + 'models/boom-box.glb' }),
         color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
     };
 
@@ -93,6 +94,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const entity3 = assets.board.resource.instantiateRenderEntity();
         entity3.setLocalScale(0.01, 0.01, 0.01);
         app.root.addChild(entity3);
+
+        const entity4 = assets.boombox.resource.instantiateRenderEntity();
+        entity4.setLocalPosition(0, 0.5, -3);
+        entity4.setLocalScale(100, 100, 100);
+        app.root.addChild(entity4);
 
         // a render component with a sphere and cone primitives
         const material = new pc.StandardMaterial();

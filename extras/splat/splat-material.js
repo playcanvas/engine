@@ -49,7 +49,7 @@ const splatCoreVS = `
     uniform highp sampler2D splatRotation;
     uniform highp sampler2D splatCenter;
 
-    #ifdef WEBGPU
+    #ifdef INT_INDICES
 
         attribute uint vertex_id;
         ivec2 dataUV;
@@ -60,7 +60,7 @@ const splatCoreVS = `
             vec2 invTextureSize = tex_params.zw;
 
             int gridV = int(float(vertex_id) * invTextureSize.x);
-            int gridU = int(vertex_id - gridV * textureSize.x);
+            int gridU = int(vertex_id) - gridV * textureSize.x;
             dataUV = ivec2(gridU, gridV);
         }
 
@@ -99,19 +99,19 @@ const splatCoreVS = `
         }
 
         vec4 getColor() {
-            return texture(splatColor, dataUV);
+            return texture2D(splatColor, dataUV);
         }
 
         vec3 getScale() {
-            return texture(splatScale, dataUV).xyz;
+            return texture2D(splatScale, dataUV).xyz;
         }
 
         vec3 getRotation() {
-            return texture(splatRotation, dataUV).xyz;
+            return texture2D(splatRotation, dataUV).xyz;
         }
 
         vec3 getCenter() {
-            return texture(splatCenter, dataUV).xyz;
+            return texture2D(splatCenter, dataUV).xyz;
         }
 
     #endif
@@ -267,7 +267,8 @@ const createSplatMaterial = (device, options = {}) => {
     result.blendType = BLEND_NORMAL;
     result.depthWrite = false;
 
-    const defines = debugRender ? '#define DEBUG_RENDER\n' : '';
+    const defines = (debugRender ? '#define DEBUG_RENDER\n' : '') +
+        (device.isWebGL1 ? '' : '#define INT_INDICES\n');
     const vs = defines + splatCoreVS + (options.vertex ?? splatMainVS);
     const fs = defines + splatCoreFS + (options.fragment ?? splatMainFS);
 
