@@ -263,7 +263,14 @@ function buildTarget(buildType, moduleFormat) {
     };
 
     const rootFile = 'src/index.js';
-    const pluginsRTI = buildType === 'rti' ? [resolve(), runtimeTypeInspector()] : [];
+    const pluginsRTI = buildType === 'rti' ? [
+        resolve(),
+        runtimeTypeInspector({
+            ignoredFiles: [
+                'framework/parsers/draco-worker.js' // runs in Worker context without RTI
+            ]
+        })
+    ] : [];
     return {
         input: rootFile,
         output: outputOptions,
