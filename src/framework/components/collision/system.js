@@ -35,7 +35,8 @@ const _schema = [
     'renderAsset',
     'shape',
     'model',
-    'render'
+    'render',
+    'checkVertexDuplicates'
 ];
 
 // Collision system implementations
@@ -205,7 +206,8 @@ class CollisionSystemImpl {
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
-            render: src.data.render
+            render: src.data.render,
+            checkVertexDuplicates: src.data.checkVertexDuplicates
         };
 
         return this.system.addComponent(clone, data);
@@ -330,7 +332,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
-    createAmmoMesh(mesh, node, shape) {
+    createAmmoMesh(mesh, node, shape, checkDuplicates) {
         let triMesh;
 
         if (this.system._triMeshCache[mesh.id]) {
@@ -355,27 +357,33 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             const numTriangles = mesh.primitive[0].count / 3;
 
             const v1 = new Ammo.btVector3();
-            const v2 = new Ammo.btVector3();
-            const v3 = new Ammo.btVector3();
             let i1, i2, i3;
 
             const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
             this.system._triMeshCache[mesh.id] = triMesh;
 
-            for (let i = 0; i < numTriangles; i++) {
-                i1 = indices[base + i * 3] * stride;
-                i2 = indices[base + i * 3 + 1] * stride;
-                i3 = indices[base + i * 3 + 2] * stride;
-                v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                triMesh.addTriangle(v1, v2, v3, true);
+            const numVertices = positions.length / stride;
+
+            const indexedArray = triMesh.getIndexedMeshArray();
+            indexedArray.at(0).m_numTriangles = numTriangles;
+
+            for (let i = 0; i < numVertices; i++) {
+                v1.setValue(positions[i * stride], positions[i * stride + 1], positions[i * stride + 2]);
+                triMesh.findOrAddVertex(v1, false);
+            }
+
+            for (var i = 0; i < numTriangles; i++) {
+                i1 = indices[base + i * 3];
+                i2 = indices[base + i * 3 + 1];
+                i3 = indices[base + i * 3 + 2];
+
+                triMesh.addIndex(i1);
+                triMesh.addIndex(i2);
+                triMesh.addIndex(i3);
             }
 
             Ammo.destroy(v1);
-            Ammo.destroy(v2);
-            Ammo.destroy(v3);
         }
 
         const useQuantizedAabbCompression = true;
@@ -400,12 +408,12 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             if (data.model) {
                 const meshInstances = data.model.meshInstances;
                 for (let i = 0; i < meshInstances.length; i++) {
-                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, data.checkVertexDuplicates);
                 }
             } else if (data.render) {
                 const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    this.createAmmoMesh(meshes[i], tempGraphNode, shape);
+                    this.createAmmoMesh(meshes[i], tempGraphNode, shape, data.checkVertexDuplicates);
                 }
             }
 
@@ -628,7 +636,8 @@ class CollisionComponentSystem extends ComponentSystem {
             'renderAsset',
             'enabled',
             'linearOffset',
-            'angularOffset'
+            'angularOffset',
+            'checkVertexDuplicates'
         ];
 
         // duplicate the input data because we are modifying it
@@ -687,6 +696,22 @@ class CollisionComponentSystem extends ComponentSystem {
         super.initializeComponentData(component, data, properties);
 
         impl.afterInitialize(component, data);
+    }
+
+    /**
+     * Clears the internal cash
+     * 
+     * @param {boolean} destroyCashed If true, forces Ammo to destroy trimesh stored in cache. Make sure no
+     * active collision component is using it before destroying, otherwise Ammo will crash.
+     */
+    clearMeshCache(destroyCashed = false) {
+        if (destroyCashed) {
+            for (const [key, val] of Object.entries(this._triMeshCache)) {
+                Ammo.destroy(val);
+            }
+        }
+
+        this._triMeshCache = {};
     }
 
     // Creates an implementation based on the collision type and caches it
