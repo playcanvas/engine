@@ -55,7 +55,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        splat: new pc.Asset('splat', 'container', { url: assetPath + 'splats/guitar.ply' }),
+        gallery: new pc.Asset('gallery', 'container', { url: assetPath + 'models/vr-gallery.glb' }),
+        guitar: new pc.Asset('splat', 'container', { url: assetPath + 'splats/guitar.ply' }),
+        biker: new pc.Asset('splat', 'container', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
@@ -64,20 +66,42 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.start();
 
-        app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
+        // get the instance of the gallery and set up with render component
+        const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
+        app.root.addChild(galleryEntity);
 
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
-        camera.setLocalPosition(-4, 1, 4);
+        camera.setLocalPosition(-3, 1, 2);
+
+        const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
+
+            const splat = resource.instantiateRenderEntity({
+                cameraEntity: camera,
+                debugRender: false,
+                fragment: fragment,
+                vertex: vertex
+            });
+            splat.setLocalPosition(px, py, pz);
+            splat.setLocalScale(scale, scale, scale);
+            app.root.addChild(splat);
+            return splat;
+        };
+
+        const splatGuitar = createSplatInstance(assets.guitar.resource, 0, 0.8, 0, 0.4, files['shader.vert'], files['shader.frag']);
+        const biker1 = createSplatInstance(assets.biker.resource, -1.5, 0.05, 0, 0.7);
+        const biker2 = createSplatInstance(assets.biker.resource, 1.5, 0.05, 0.8, 0.7);
+        biker2.rotate(0, 150, 0);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
+                focusEntity: splatGuitar,
                 distanceMax: 60,
                 frameOnStart: false
             }
@@ -86,19 +110,11 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
-        const entity = assets.splat.resource.instantiateRenderEntity({
-            cameraEntity: camera,
-            debugRender: false,
-            fragment: files['shader.frag'],
-            vertex: files['shader.vert']
-        });
-        app.root.addChild(entity);
-
         let currentTime = 0;
         app.on("update", function (dt) {
             currentTime += dt;
 
-            const material = entity.render.meshInstances[0].material;
+            const material = splatGuitar.render.meshInstances[0].material;
             material.setParameter('uTime', currentTime);
         });
     });
@@ -121,7 +137,8 @@ export class SplatExample {
                 vec3 centerLocal = evalCenter();
 
                 // modify it
-                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3;
+                float heightIntensity = centerLocal.y * 0.2;
+                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3 * heightIntensity;
 
                 // output y-coordinate
                 height = centerLocal.y;
