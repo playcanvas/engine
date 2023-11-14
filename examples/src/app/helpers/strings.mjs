@@ -65,9 +65,17 @@ function countLeadingSpaces(str) {
  * @returns {string} Same code, but removed reduddant spaces.
  */
 function removeRedundantSpaces(code) {
-    const n = Math.min(...code.split('\n').filter(Boolean).map(countLeadingSpaces));
+    const lines = code
+        .split('\n')
+        .slice(0, -1) // ignore last line - it's just used for nice template-string indentation
+        .filter(_ => Boolean(_.trim())) // ignore spaces-only lines
+        .map(countLeadingSpaces);
+    if (!lines.length) {
+        return code;
+    }
+    const n = Math.min(...lines);
     const removeSpacesRegExp = new RegExp(' '.repeat(n), 'g');
-    const prettyCode = code.replace(removeSpacesRegExp, '');
+    const prettyCode = code.replace(removeSpacesRegExp, '').trim() + '\n';
     return prettyCode;
 }
 

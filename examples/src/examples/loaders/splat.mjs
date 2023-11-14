@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, pcx }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, pcx, files }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -71,7 +71,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
-        camera.setLocalPosition(4, 1, 4);
+        camera.setLocalPosition(-4, 1, 4);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
@@ -88,9 +88,19 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         const entity = assets.splat.resource.instantiateRenderEntity({
             cameraEntity: camera,
-            debugRender: false
+            debugRender: false,
+            fragment: files['shader.frag'],
+            vertex: files['shader.vert']
         });
         app.root.addChild(entity);
+
+        let currentTime = 0;
+        app.on("update", function (dt) {
+            currentTime += dt;
+
+            const material = entity.render.meshInstances[0].material;
+            material.setParameter('uTime', currentTime);
+        });
     });
     return app;
 }
@@ -99,4 +109,44 @@ export class SplatExample {
     static CATEGORY = 'Loaders';
     static NAME = 'Splat';
     static example = example;
+
+    static FILES = {
+        'shader.vert': /* glsl */`
+            uniform float uTime;
+            varying float height;
+
+            void main(void)
+            {
+                // evaluate center of the splat in object space
+                vec3 centerLocal = evalCenter();
+
+                // modify it
+                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3;
+
+                // output y-coordinate
+                height = centerLocal.y;
+
+                // evaluate the rest of the splat using world space center
+                vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
+                gl_Position = evalSplat(centerWorld);
+            }
+        `,
+
+        'shader.frag': /* glsl */`
+            uniform float uTime;
+            varying float height;
+
+            void main(void)
+            {
+                // get splat color and alpha
+                gl_FragColor = evalSplat();
+
+                // modify it
+                vec3 gold = vec3(1.0, 0.85, 0.0);
+                float sineValue = abs(sin(uTime * 5.0 + height));
+                float blend = smoothstep(0.9, 1.0, sineValue);
+                gl_FragColor.xyz = mix(gl_FragColor.xyz, gold, blend);
+            }
+        `
+    };
 }
