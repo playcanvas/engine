@@ -257,6 +257,17 @@ const splatMainFS = `
     }
 `;
 
+// extracted from engine, hash.js
+const hashCode = (str) => {
+    let hash = 0;
+    for (let i = 0, len = str.length; i < len; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        // Convert to 32bit integer
+        hash |= 0;
+    }
+    return hash;
+};
+
 const createSplatMaterial = (device, options = {}) => {
 
     const debugRender = options.debugRender;
@@ -271,8 +282,10 @@ const createSplatMaterial = (device, options = {}) => {
         (device.isWebGL1 ? '' : '#define INT_INDICES\n');
     const vs = defines + splatCoreVS + (options.vertex ?? splatMainVS);
     const fs = defines + splatCoreFS + (options.fragment ?? splatMainFS);
+    const vsHash = hashCode(vs);
+    const fsHash = hashCode(fs);
 
-    result.shader = createShaderFromCode(device, vs, fs, `splatShader-${debugRender}`, {
+    result.shader = createShaderFromCode(device, vs, fs, `splatShader-${debugRender}-${vsHash}-${fsHash}`, {
         vertex_position: SEMANTIC_POSITION,
         vertex_id: SEMANTIC_ATTR13
     });
