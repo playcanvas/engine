@@ -6,7 +6,7 @@ import { Ray } from '../../core/shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
-import { now } from '../core/time.js';
+import { now } from '../../core/time.js';
 
 const vec3A = new Vec3();
 const quat = new Quat();
@@ -490,7 +490,7 @@ class XrInputSource extends EventHandler {
                         this._linearVelocity.copy(gripPose.linearVelocity);
                     } else if (dt > 0) {
                         vec3A.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
-                        this._linearVelocity.lerp(thos._linearVelocity, vec3A, 0.15);
+                        this._linearVelocity.lerp(this._linearVelocity, vec3A, 0.15);
                     }
                 } else {
                     this._velocitiesAvailable = false;
@@ -601,7 +601,7 @@ class XrInputSource extends EventHandler {
      * @returns {Vec3|null} The world space linear velocity of handheld input source.
      */
     getLinearVelocity() {
-        if (! this._velocitiesAvailable)
+        if (!this._velocitiesAvailable)
             return null;
 
         return this._linearVelocity;
