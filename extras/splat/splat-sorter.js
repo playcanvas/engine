@@ -1,3 +1,5 @@
+import { EventHandler } from 'playcanvas';
+
 // sort blind set of data
 function SortWorker() {
 
@@ -14,6 +16,9 @@ function SortWorker() {
     let cameraPosition;
     let cameraDirection;
     let intIndices;
+
+    const lastCameraPosition = { x: 0, y: 0, z: 0 };
+    const lastCameraDirection = { x: 0, y: 0, z: 0 };
 
     const boundMin = { x: 0, y: 0, z: 0 };
     const boundMax = { x: 0, y: 0, z: 0 };
@@ -32,6 +37,24 @@ function SortWorker() {
         const dx = cameraDirection.x;
         const dy = cameraDirection.y;
         const dz = cameraDirection.z;
+
+        const epsilon = 0.001;
+
+        if (Math.abs(px - lastCameraPosition.x) < epsilon &&
+            Math.abs(py - lastCameraPosition.y) < epsilon &&
+            Math.abs(pz - lastCameraPosition.z) < epsilon &&
+            Math.abs(dx - lastCameraDirection.x) < epsilon &&
+            Math.abs(dy - lastCameraDirection.y) < epsilon &&
+            Math.abs(dz - lastCameraDirection.z) < epsilon) {
+            return;
+        }
+
+        lastCameraPosition.x = px;
+        lastCameraPosition.y = py;
+        lastCameraPosition.z = pz;
+        lastCameraDirection.x = dx;
+        lastCameraDirection.y = dy;
+        lastCameraDirection.z = dz;
 
         // create distance buffer
         const numVertices = centers.length / 3;
@@ -144,12 +167,14 @@ function SortWorker() {
     };
 }
 
-class SplatSorter {
+class SplatSorter extends EventHandler {
     worker;
 
     vertexBuffer;
 
     constructor() {
+        super();
+
         this.worker = new Worker(URL.createObjectURL(new Blob([`(${SortWorker.toString()})()`], {
             type: 'application/javascript'
         })));
@@ -163,7 +188,12 @@ class SplatSorter {
                 data: oldData
             }, [oldData]);
 
-            this.vertexBuffer.setData(newData);
+            // update vertex buffer data in the next event cycle so the above postMesssage
+            // call is queued before the relatively slow setData call below is invoked
+            setTimeout(() => {
+                this.vertexBuffer.setData(newData);
+                this.fire('updated');
+            });
         };
     }
 

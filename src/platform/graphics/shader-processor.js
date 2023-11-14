@@ -387,7 +387,7 @@ class ShaderProcessor {
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
-                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize) {
+                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
 
                         const attribNumElements = ShaderProcessor.getTypeCount(type);
                         const newName = `_private_${name}`;

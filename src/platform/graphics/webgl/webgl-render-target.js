@@ -198,6 +198,12 @@ class WebglRenderTarget {
         // ##### Create MSAA FBO (WebGL2 only) #####
         if (device.isWebGL2 && target._samples > 1) {
 
+            Debug.call(() => {
+                if (target.width <= 0 || target.height <= 0) {
+                    Debug.warnOnce(`Invalid render target size: ${target.width} x ${target.height}`, target);
+                }
+            });
+
             // Use previous FBO for resolves
             this._glResolveFrameBuffer = this._glFrameBuffer;
 
@@ -339,6 +345,9 @@ class WebglRenderTarget {
     internalResolve(device, src, dst, target, mask) {
 
         Debug.assert(src !== dst, 'Source and destination framebuffers must be different when blitting.');
+
+        // blit is affected by scissor test, so make it full size
+        device.setScissor(0, 0, target.width, target.height);
 
         const gl = device.gl;
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src);
