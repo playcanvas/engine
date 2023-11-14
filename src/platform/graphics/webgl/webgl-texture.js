@@ -263,6 +263,7 @@ class WebglTexture {
                 }
                 break;
             case PIXELFORMAT_111110F: // WebGL2 only
+                Debug.assert(device.isWebGL2, "PIXELFORMAT_111110F texture format is not supported by WebGL1.");
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.R11F_G11F_B10F;
                 this._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
