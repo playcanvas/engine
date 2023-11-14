@@ -69,7 +69,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
-        camera.setLocalPosition(-3, 1, 2);
+        camera.setLocalPosition(2, 1, 1);
 
         const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
 
