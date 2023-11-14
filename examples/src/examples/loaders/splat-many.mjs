@@ -77,7 +77,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         });
         camera.setLocalPosition(-3, 1, 2);
 
-        const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
+        const createSplatInstance = (name, resource, px, py, pz, scale, vertex, fragment) => {
 
             const splat = resource.instantiateRenderEntity({
                 cameraEntity: camera,
@@ -85,15 +85,16 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
                 fragment: fragment,
                 vertex: vertex
             });
+            splat.name = name;
             splat.setLocalPosition(px, py, pz);
             splat.setLocalScale(scale, scale, scale);
             app.root.addChild(splat);
             return splat;
         };
 
-        const splatGuitar = createSplatInstance(assets.guitar.resource, 0, 0.8, 0, 0.4, files['shader.vert'], files['shader.frag']);
-        const biker1 = createSplatInstance(assets.biker.resource, -1.5, 0.05, 0, 0.7);
-        const biker2 = createSplatInstance(assets.biker.resource, 1.5, 0.05, 0.8, 0.7);
+        const guitar = createSplatInstance('guitar', assets.guitar.resource, 0, 0.8, 0, 0.4, files['shader.vert'], files['shader.frag']);
+        const biker1 = createSplatInstance('biker1', assets.biker.resource, -1.5, 0.05, 0, 0.7);
+        const biker2 = createSplatInstance('biker2', assets.biker.resource, 1.5, 0.05, 0.8, 0.7);
         biker2.rotate(0, 150, 0);
 
         // add orbit camera script with a mouse and a touch support
@@ -101,7 +102,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
-                focusEntity: splatGuitar,
+                focusEntity: guitar,
                 distanceMax: 60,
                 frameOnStart: false
             }
@@ -114,7 +115,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         app.on("update", function (dt) {
             currentTime += dt;
 
-            const material = splatGuitar.render.meshInstances[0].material;
+            const material = guitar.render.meshInstances[0].material;
             material.setParameter('uTime', currentTime);
         });
     });
