@@ -498,7 +498,7 @@ class XrInputSource extends EventHandler {
             }
 
             // ray
-            const targetRayPose = frame.getPose(this._xrInputSource.targetRayMode, this._manager._referenceSpace);
+            const targetRayPose = frame.getPose(this._xrInputSource.targetRaySpace, this._manager._referenceSpace);
             if (targetRayPose) {
                 this._dirtyRay = true;
                 this._rayLocal.origin.copy(targetRayPose.transform.position);
