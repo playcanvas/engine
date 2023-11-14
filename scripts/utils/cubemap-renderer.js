@@ -46,9 +46,10 @@ CubemapRenderer.prototype.initialize = function () {
 
     // Create cubemap render target with specified resolution and mipmap generation
     this.cubeMap = new pc.Texture(this.app.graphicsDevice, {
+        name: this.entity.name + ':CubemapRenderer-' + resolution,
         width: resolution,
         height: resolution,
-        format: pc.PIXELFORMAT_R8_G8_B8_A8,
+        format: pc.PIXELFORMAT_RGBA8,
         cubemap: true,
         mipmaps: this.mipmaps,
         minFilter: pc.FILTER_LINEAR_MIPMAP_LINEAR,
@@ -57,21 +58,24 @@ CubemapRenderer.prototype.initialize = function () {
 
     // angles to render camera for all 6 faces
     var cameraRotations = [
-        new pc.Quat().setFromEulerAngles(0, 90, 180),
-        new pc.Quat().setFromEulerAngles(0, -90, 180),
-        new pc.Quat().setFromEulerAngles(90, 0, 0),
-        new pc.Quat().setFromEulerAngles(-90, 0, 0),
-        new pc.Quat().setFromEulerAngles(0, 180, 180),
-        new pc.Quat().setFromEulerAngles(0, 0, 180)
+        new pc.Quat().setFromEulerAngles(0, 90, 0),
+        new pc.Quat().setFromEulerAngles(0, -90, 0),
+        new pc.Quat().setFromEulerAngles(-90, 0, 180),
+        new pc.Quat().setFromEulerAngles(90, 0, 180),
+        new pc.Quat().setFromEulerAngles(0, 180, 0),
+        new pc.Quat().setFromEulerAngles(0, 0, 0)
     ];
 
     // set up rendering for all 6 faces
     for (var i = 0; i < 6; i++) {
 
         // render target, connected to cubemap texture face
-        var renderTarget = new pc.RenderTarget(this.app.graphicsDevice, this.cubeMap, {
+        var renderTarget = new pc.RenderTarget({
+            name: 'CubemapRenderer-Face' + i,
+            colorBuffer: this.cubeMap,
             depth: this.depth,
-            face: i
+            face: i,
+            flipY: !this.app.graphicsDevice.isWebGPU
         });
 
         // create a child entity with the camera for this face
@@ -104,5 +108,20 @@ CubemapRenderer.prototype.initialize = function () {
 
         // set up its rotation
         e.setRotation(cameraRotations[i]);
+
+        // Before the first camera renders, trigger onCubemapPreRender event on the entity.
+        if (i === 0) {
+            e.camera.onPreRender = () => {
+                this.entity.fire('onCubemapPreRender');
+            };
+        }
+
+        // When last camera is finished rendering, trigger onCubemapPostRender event on the entity.
+        // This can be listened to by the user, and the resulting cubemap can be further processed (e.g prefiltered)
+        if (i === 5) {
+            e.camera.onPostRender = () => {
+                this.entity.fire('onCubemapPostRender');
+            };
+        }
     }
 };

@@ -1,4 +1,21 @@
-var standardMaterialParameterTypes = {
+function _textureParameter(name, channel = true, vertexColor = true) {
+    const result = {};
+    result[`${name}Map`] = 'texture';
+    result[`${name}MapTiling`] = 'vec2';
+    result[`${name}MapOffset`] = 'vec2';
+    result[`${name}MapRotation`] = 'number';
+    result[`${name}MapUv`] = 'number';
+    if (channel) {
+        result[`${name}MapChannel`] = 'string';
+        if (vertexColor) {
+            result[`${name}VertexColor`] = 'boolean';
+            result[`${name}VertexColorChannel`] = 'string';
+        }
+    }
+    return result;
+}
+
+const standardMaterialParameterTypes = {
     name: 'string',
     chunks: 'chunks',
 
@@ -7,150 +24,108 @@ var standardMaterialParameterTypes = {
 
     ambient: 'rgb',
     ambientTint: 'boolean',
-
-    aoVertexColor: 'boolean',
-    aoVertexColorChannel: 'string',
-    aoMap: 'texture',
-    aoMapChannel: 'string',
-    aoMapUv: 'number',
-    aoMapTiling: 'vec2',
-    aoMapOffset: 'vec2',
+    ..._textureParameter('ao'),
+    ..._textureParameter('aoDetail', true, false),
+    aoDetailMode: 'string',
 
     diffuse: 'rgb',
     diffuseTint: 'boolean',
-    diffuseVertexColor: 'boolean',
-    diffuseVertexColorChannel: 'string',
-    diffuseMap: 'texture',
-    diffuseMapChannel: 'string',
-    diffuseMapUv: 'number',
-    diffuseMapTiling: 'vec2',
-    diffuseMapOffset: 'vec2',
-    diffuseDetailMap: 'texture',
-    diffuseDetailMapChannel: 'string',
-    diffuseDetailMapUv: 'number',
-    diffuseDetailMapTiling: 'vec2',
-    diffuseDetailMapOffset: 'vec2',
+    ..._textureParameter('diffuse'),
+    ..._textureParameter('diffuseDetail', true, false),
     diffuseDetailMode: 'string',
 
     specular: 'rgb',
     specularTint: 'boolean',
-    specularVertexColor: 'boolean',
-    specularVertexColorChannel: 'string',
-    specularMap: 'texture',
-    specularMapChannel: 'string',
-    specularMapUv: 'number',
-    specularMapTiling: 'vec2',
-    specularMapOffset: 'vec2',
-    specularAntialias: 'boolean',
+    ..._textureParameter('specular'),
     occludeSpecular: 'enum:occludeSpecular',
+    specularityFactor: 'number',
+    specularityFactorTint: 'boolean',
+    ..._textureParameter('specularityFactor'),
 
     useMetalness: 'boolean',
     metalness: 'number',
     enableGGXSpecular: 'boolean',
     anisotropy: 'number',
     metalnessTint: 'boolean',
-    metalnessVertexColor: 'boolean',
-    metalnessVertexColorChannel: 'string',
-    metalnessMap: 'texture',
-    metalnessMapChannel: 'string',
-    metalnessMapUv: 'number',
-    metalnessMapTiling: 'vec2',
-    metalnessMapOffset: 'vec2',
+    ..._textureParameter('metalness'),
+    useMetalnessSpecularColor: 'boolean',
 
     conserveEnergy: 'boolean',
     shininess: 'number',
-    glossVertexColor: 'boolean',
-    glossVertexColorChannel: 'string',
-    glossMap: 'texture',
-    glossMapChannel: 'string',
-    glossMapUv: 'number',
-    glossMapTiling: 'vec2',
-    glossMapOffset: 'vec2',
+    gloss: 'number',
+    glossInvert: 'boolean',
+    ..._textureParameter('gloss'),
 
     clearCoat: 'number',
-    clearCoatVertexColor: 'boolean',
-    clearCoatVertexColorChannel: 'string',
-    clearCoatMap: 'texture',
-    clearCoatMapChannel: 'string',
-    clearCoatMapUv: 'number',
-    clearCoatMapTiling: 'vec2',
-    clearCoatMapOffset: 'vec2',
-    clearCoatGlossiness: 'number',
-    clearCoatGlossVertexColor: 'boolean',
-    clearCoatGlossVertexColorChannel: 'string',
-    clearCoatGlossMap: 'texture',
-    clearCoatGlossMapChannel: 'string',
-    clearCoatGlossMapUv: 'number',
-    clearCoatGlossMapTiling: 'vec2',
-    clearCoatGlossMapOffset: 'vec2',
+    ..._textureParameter('clearCoat'),
+    clearCoatGloss: 'number',
+    clearCoatGlossInvert: 'boolean',
+    ..._textureParameter('clearCoatGloss'),
     clearCoatBumpiness: 'number',
-    clearCoatNormalMap: 'texture',
-    clearCoatNormalMapUv: 'number',
-    clearCoatNormalMapTiling: 'vec2',
-    clearCoatNormalMapOffset: 'vec2',
+    ..._textureParameter('clearCoatNormal', false),
+
+    useSheen: 'boolean',
+    sheen: 'rgb',
+    sheenTint: 'boolean',
+    ..._textureParameter('sheen'),
+    sheenGloss: 'number',
+    sheenGlossTint: 'boolean',
+    sheenGlossInvert: 'boolean',
+    ..._textureParameter('sheenGloss'),
 
     fresnelModel: 'number',
 
     emissive: 'rgb',
     emissiveTint: 'boolean',
-    emissiveVertexColor: 'boolean',
-    emissiveVertexColorChannel: 'string',
-    emissiveMap: 'texture',
-    emissiveMapChannel: 'string',
-    emissiveMapUv: 'number',
-    emissiveMapTiling: 'vec2',
-    emissiveMapOffset: 'vec2',
+    ..._textureParameter('emissive'),
     emissiveIntensity: 'number',
 
-    normalMap: 'texture',
-    normalMapTiling: 'vec2',
-    normalMapOffset: 'vec2',
-    normalMapUv: 'number',
+    ..._textureParameter('normal', false),
     bumpiness: 'number',
     // normalMapFactor: 'number', // TODO rename bumpiness to normalMapFactor
-    normalDetailMap: 'texture',
-    normalDetailMapTiling: 'vec2',
-    normalDetailMapOffset: 'vec2',
-    normalDetailMapUv: 'number',
+    ..._textureParameter('normalDetail', false),
     normalDetailMapBumpiness: 'number',
 
-    heightMap: 'texture',
-    heightMapChannel: 'string',
-    heightMapUv: 'number',
-    heightMapTiling: 'vec2',
-    heightMapOffset: 'vec2',
+    ..._textureParameter('height', true, false),
     heightMapFactor: 'number',
 
     alphaToCoverage: 'boolean',
     alphaTest: 'number',
     alphaFade: 'number',
     opacity: 'number',
-    opacityVertexColor: 'boolean',
-    opacityVertexColorChannel: 'string',
-    opacityMap: 'texture',
-    opacityMapChannel: 'string',
-    opacityMapUv: 'number',
-    opacityMapTiling: 'vec2',
-    opacityMapOffset: 'vec2',
+    ..._textureParameter('opacity'),
     opacityFadesSpecular: 'boolean',
 
     reflectivity: 'number',
     refraction: 'number',
+    refractionTint: 'boolean',
+    ..._textureParameter('refraction'),
     refractionIndex: 'number',
+    thickness: 'number',
+    thicknessTint: 'boolean',
+    ..._textureParameter('thickness'),
+    attenuation: 'rgb',
+    attenuationDistance: 'number',
+    useDynamicRefraction: 'boolean',
     sphereMap: 'texture',
     cubeMap: 'cubemap',
     cubeMapProjection: 'number',
     cubeMapProjectionBox: 'boundingbox',
 
-    lightVertexColor: 'boolean',
-    lightVertexColorChannel: 'string',
-    lightMap: 'texture',
-    lightMapChannel: 'string',
-    lightMapUv: 'number',
-    lightMapTiling: 'vec2',
-    lightMapOffset: 'vec2',
+    useIridescence: 'boolean',
+    iridescence: 'number',
+    iridescenceTint: 'boolean',
+    ..._textureParameter('iridescence'),
+    iridescenceThicknessTint: 'boolean',
+    iridescenceThicknessMin: 'number',
+    iridescenceThicknessMax: 'number',
+    iridescenceRefractionIndex: 'number',
+    ..._textureParameter('iridescenceThickness'),
+
+    ..._textureParameter('light'),
 
     depthTest: 'boolean',
+    depthFunc: 'enum:depthFunc',
     depthWrite: 'boolean',
     depthBias: 'number',
     slopeDepthBias: 'number',
@@ -164,14 +139,10 @@ var standardMaterialParameterTypes = {
     useSkybox: 'boolean',
     useGammaTonemap: 'boolean',
 
-    prefilteredCubeMap128: 'texture',
-    prefilteredCubeMap64: 'texture',
-    prefilteredCubeMap32: 'texture',
-    prefilteredCubeMap16: 'texture',
-    prefilteredCubeMap8: 'texture',
-    prefilteredCubeMap4: 'texture'
+    envAtlas: 'texture',
 
-    // twoSidedLighting
+    twoSidedLighting: 'boolean'
+
     // nineSlicedMode
     // pixelSnap
     // forceUv1
@@ -185,25 +156,44 @@ var standardMaterialParameterTypes = {
     // msdfMapUv
     // msdfMapTiling
     // msdfMapOffset
+    // msdfTextAttribute
     // msdfVertexColor
     // msdfVertexColorChannel
 };
 
-var key, type;
-var standardMaterialTextureParameters = [];
-for (key in standardMaterialParameterTypes) {
-    type = standardMaterialParameterTypes[key];
+const standardMaterialTextureParameters = [];
+for (const key in standardMaterialParameterTypes) {
+    const type = standardMaterialParameterTypes[key];
     if (type === 'texture') {
         standardMaterialTextureParameters.push(key);
     }
 }
 
-var standardMaterialCubemapParameters = [];
-for (key in standardMaterialParameterTypes) {
-    type = standardMaterialParameterTypes[key];
+const standardMaterialCubemapParameters = [];
+for (const key in standardMaterialParameterTypes) {
+    const type = standardMaterialParameterTypes[key];
     if (type === 'cubemap') {
         standardMaterialCubemapParameters.push(key);
     }
 }
 
-export { standardMaterialParameterTypes, standardMaterialCubemapParameters, standardMaterialTextureParameters };
+const standardMaterialRemovedParameters = {
+    aoMapVertexColor: 'boolean',
+    diffuseMapTint: 'boolean',
+    diffuseMapVertexColor: 'boolean',
+    emissiveMapTint: 'boolean',
+    emissiveMapVertexColor: 'boolean',
+    glossMapVertexColor: 'boolean',
+    metalnessMapVertexColor: 'boolean',
+    opacityMapVertexColor: 'boolean',
+    specularAntialias: 'boolean',
+    specularMapTint: 'boolean',
+    specularMapVertexColor: 'boolean'
+};
+
+export {
+    standardMaterialParameterTypes,
+    standardMaterialCubemapParameters,
+    standardMaterialTextureParameters,
+    standardMaterialRemovedParameters
+};

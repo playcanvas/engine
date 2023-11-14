@@ -1,4 +1,4 @@
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -9,15 +9,18 @@ import { ZoneComponentData } from './data.js';
 const _schema = ['enabled'];
 
 /**
- * @private
- * @class
- * @name ZoneComponentSystem
- * @classdesc Defines zone in world.
- * @description Create a new ZoneComponentSystem.
- * @param {Application} app - The application.
+ * Creates and manages {@link ZoneComponent} instances.
+ *
  * @augments ComponentSystem
+ * @ignore
  */
 class ZoneComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ZoneComponentSystem.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -44,7 +47,7 @@ class ZoneComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var data = {
+        const data = {
             size: entity.zone.size
         };
 

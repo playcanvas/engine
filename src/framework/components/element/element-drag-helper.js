@@ -1,19 +1,21 @@
 import { platform } from '../../../core/platform.js';
 import { EventHandler } from '../../../core/event-handler.js';
 
-import { Quat } from '../../../math/quat.js';
-import { Vec2 } from '../../../math/vec2.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Quat } from '../../../core/math/quat.js';
+import { Vec2 } from '../../../core/math/vec2.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { ElementComponent } from './component.js';
+import { Ray } from '../../../core/shape/ray.js';
+import { Plane } from '../../../core/shape/plane.js';
 
-var _inputScreenPosition = new Vec2();
-var _inputWorldPosition = new Vec3();
-var _rayOrigin = new Vec3();
-var _rayDirection = new Vec3();
-var _planeOrigin = new Vec3();
-var _planeNormal = new Vec3();
-var _entityRotation = new Quat();
+const _inputScreenPosition = new Vec2();
+const _inputWorldPosition = new Vec3();
+const _ray = new Ray();
+const _plane = new Plane();
+const _normal = new Vec3();
+const _point = new Vec3();
+const _entityRotation = new Quat();
 
 const OPPOSITE_AXIS = {
     x: 'y',
@@ -21,15 +23,18 @@ const OPPOSITE_AXIS = {
 };
 
 /**
- * @class
- * @name ElementDragHelper
+ * Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
+ *
  * @augments EventHandler
- * @description Create a new ElementDragHelper.
- * @classdesc Helper class that makes it easy to create Elements that can be dragged by the mouse or touch.
- * @param {ElementComponent} element - The Element that should become draggable.
- * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
+ * @category User Interface
  */
 class ElementDragHelper extends EventHandler {
+    /**
+     * Create a new ElementDragHelper instance.
+     *
+     * @param {ElementComponent} element - The Element that should become draggable.
+     * @param {string} [axis] - Optional axis to constrain to, either 'x', 'y' or null.
+     */
     constructor(element, axis) {
         super();
 
@@ -55,37 +60,63 @@ class ElementDragHelper extends EventHandler {
         this._toggleLifecycleListeners('on');
     }
 
+    /**
+     * Fired when a new drag operation starts.
+     *
+     * @event ElementDragHelper#drag:start
+     */
+
+    /**
+     * Fired when the current new drag operation ends.
+     *
+     * @event ElementDragHelper#drag:end
+     */
+
+    /**
+     * Fired whenever the position of the dragged element changes.
+     *
+     * @event ElementDragHelper#drag:move
+     * @param {Vec3} value - The current position.
+     */
+
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
+     */
     _toggleLifecycleListeners(onOrOff) {
         this._element[onOrOff]('mousedown', this._onMouseDownOrTouchStart, this);
         this._element[onOrOff]('touchstart', this._onMouseDownOrTouchStart, this);
+        this._element[onOrOff]('selectstart', this._onMouseDownOrTouchStart, this);
     }
 
+    /**
+     * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.
+     * @private
+     */
     _toggleDragListeners(onOrOff) {
-        var isOn = onOrOff === 'on';
-        var addOrRemoveEventListener = isOn ? 'addEventListener' : 'removeEventListener';
+        const isOn = onOrOff === 'on';
 
         // Prevent multiple listeners
         if (this._hasDragListeners && isOn) {
             return;
         }
 
-        if (!this._handleMouseUpOrTouchEnd) {
-            this._handleMouseUpOrTouchEnd = this._onMouseUpOrTouchEnd.bind(this);
-        }
-
-        // Note that we handle release events directly on the window object, rather than
-        // on app.mouse or app.touch. This is in order to correctly handle cases where the
-        // user releases the mouse/touch outside of the window.
+        // mouse events, if mouse is available
         if (this._app.mouse) {
-            this._app.mouse[onOrOff]('mousemove', this._onMove, this);
-            window[addOrRemoveEventListener]('mouseup', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('mousemove', this._onMove, this);
+            this._element[onOrOff]('mouseup', this._onMouseUpOrTouchEnd, this);
         }
 
+        // touch events, if touch is available
         if (platform.touch) {
-            this._app.touch[onOrOff]('touchmove', this._onMove, this);
-            window[addOrRemoveEventListener]('touchend', this._handleMouseUpOrTouchEnd, false);
-            window[addOrRemoveEventListener]('touchcancel', this._handleMouseUpOrTouchEnd, false);
+            this._element[onOrOff]('touchmove', this._onMove, this);
+            this._element[onOrOff]('touchend', this._onMouseUpOrTouchEnd, this);
+            this._element[onOrOff]('touchcancel', this._onMouseUpOrTouchEnd, this);
         }
+
+        // webxr events
+        this._element[onOrOff]('selectmove', this._onMove, this);
+        this._element[onOrOff]('selectend', this._onMouseUpOrTouchEnd, this);
 
         this._hasDragListeners = isOn;
     }
@@ -95,7 +126,7 @@ class ElementDragHelper extends EventHandler {
             this._dragCamera = event.camera;
             this._calculateDragScale();
 
-            var currentMousePosition = this._screenToLocal(event);
+            const currentMousePosition = this._screenToLocal(event);
 
             if (currentMousePosition) {
                 this._toggleDragListeners('on');
@@ -117,33 +148,37 @@ class ElementDragHelper extends EventHandler {
         }
     }
 
+    /**
+     * This method calculates the `Vec3` intersection point of plane/ray intersection based on
+     * the mouse/touch input event. If there is no intersection, it returns `null`.
+     *
+     * @param {import('../../input/element-input').ElementTouchEvent | import('../../input/element-input').ElementMouseEvent | import('../../input/element-input').ElementSelectEvent} event - The event.
+     * @returns {Vec3|null} The `Vec3` intersection point of plane/ray intersection, if there
+     * is an intersection, otherwise `null`
+     * @private
+     */
     _screenToLocal(event) {
-        this._determineInputPosition(event);
-        this._chooseRayOriginAndDirection();
+        if (event.inputSource) {
+            _ray.set(event.inputSource.getOrigin(), event.inputSource.getDirection());
+        } else {
+            this._determineInputPosition(event);
+            this._chooseRayOriginAndDirection();
+        }
 
-        _planeOrigin.copy(this._element.entity.getPosition());
-        _planeNormal.copy(this._element.entity.forward).mulScalar(-1);
+        _normal.copy(this._element.entity.forward).mulScalar(-1);
+        _plane.setFromPointNormal(this._element.entity.getPosition(), _normal);
 
-        var denominator = _planeNormal.dot(_rayDirection);
-
-        // If the ray and plane are not parallel
-        if (Math.abs(denominator) > 0) {
-            var rayOriginToPlaneOrigin = _planeOrigin.sub(_rayOrigin);
-            var collisionDistance = rayOriginToPlaneOrigin.dot(_planeNormal) / denominator;
-            var position = _rayOrigin.add(_rayDirection.mulScalar(collisionDistance));
-
-            _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(position, position);
-
-            position.mul(this._dragScale);
-
-            return position;
+        if (_plane.intersectsRay(_ray, _point)) {
+            _entityRotation.copy(this._element.entity.getRotation()).invert().transformVector(_point, _point);
+            _point.mul(this._dragScale);
+            return _point;
         }
 
         return null;
     }
 
     _determineInputPosition(event) {
-        var devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
+        const devicePixelRatio = this._app.graphicsDevice.maxPixelRatio;
 
         if (typeof event.x !== 'undefined' && typeof event.y !== 'undefined') {
             _inputScreenPosition.x = event.x * devicePixelRatio;
@@ -158,21 +193,21 @@ class ElementDragHelper extends EventHandler {
 
     _chooseRayOriginAndDirection() {
         if (this._element.screen && this._element.screen.screen.screenSpace) {
-            _rayOrigin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
-            _rayDirection.set(0, 0, -1);
+            _ray.origin.set(_inputScreenPosition.x, -_inputScreenPosition.y, 0);
+            _ray.direction.copy(Vec3.FORWARD);
         } else {
             _inputWorldPosition.copy(this._dragCamera.screenToWorld(_inputScreenPosition.x, _inputScreenPosition.y, 1));
-            _rayOrigin.copy(this._dragCamera.entity.getPosition());
-            _rayDirection.copy(_inputWorldPosition).sub(_rayOrigin).normalize();
+            _ray.origin.copy(this._dragCamera.entity.getPosition());
+            _ray.direction.copy(_inputWorldPosition).sub(_ray.origin).normalize();
         }
     }
 
     _calculateDragScale() {
-        var current = this._element.entity.parent;
-        var screen = this._element.screen && this._element.screen.screen;
-        var isWithin2DScreen = screen && screen.screenSpace;
-        var screenScale = isWithin2DScreen ? screen.scale : 1;
-        var dragScale = this._dragScale;
+        let current = this._element.entity.parent;
+        const screen = this._element.screen && this._element.screen.screen;
+        const isWithin2DScreen = screen && screen.screenSpace;
+        const screenScale = isWithin2DScreen ? screen.scale : 1;
+        const dragScale = this._dragScale;
 
         dragScale.set(screenScale, screenScale, screenScale);
 
@@ -187,25 +222,36 @@ class ElementDragHelper extends EventHandler {
 
         dragScale.x = 1 / dragScale.x;
         dragScale.y = 1 / dragScale.y;
-        dragScale.z = 1 / dragScale.z;
+        dragScale.z = 0;
     }
 
+    /**
+     * This method is linked to `_element` events: `mousemove` and `touchmove`
+     *
+     * @param {import('../../input/element-input').ElementTouchEvent} event - The event.
+     * @private
+     */
     _onMove(event) {
-        if (this._element && this._isDragging && this.enabled && this._element.enabled && this._element.entity.enabled) {
-            var currentMousePosition = this._screenToLocal(event);
+        const {
+            _element: element,
+            _deltaMousePosition: deltaMousePosition,
+            _deltaHandlePosition: deltaHandlePosition,
+            _axis: axis
+        } = this;
+        if (element && this._isDragging && this.enabled && element.enabled && element.entity.enabled) {
+            const currentMousePosition = this._screenToLocal(event);
+            if (currentMousePosition) {
+                deltaMousePosition.sub2(currentMousePosition, this._dragStartMousePosition);
+                deltaHandlePosition.add2(this._dragStartHandlePosition, deltaMousePosition);
 
-            if (this._dragStartMousePosition && currentMousePosition) {
-                this._deltaMousePosition.copy(currentMousePosition).sub(this._dragStartMousePosition);
-                this._deltaHandlePosition.copy(this._dragStartHandlePosition).add(this._deltaMousePosition);
-
-                if (this._axis) {
-                    var currentPosition = this._element.entity.getLocalPosition();
-                    var constrainedAxis = OPPOSITE_AXIS[this._axis];
-                    this._deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
+                if (axis) {
+                    const currentPosition = element.entity.getLocalPosition();
+                    const constrainedAxis = OPPOSITE_AXIS[axis];
+                    deltaHandlePosition[constrainedAxis] = currentPosition[constrainedAxis];
                 }
 
-                this._element.entity.setLocalPosition(this._deltaHandlePosition);
-                this.fire('drag:move', this._deltaHandlePosition);
+                element.entity.setLocalPosition(deltaHandlePosition);
+                this.fire('drag:move', deltaHandlePosition);
             }
         }
     }
@@ -215,36 +261,17 @@ class ElementDragHelper extends EventHandler {
         this._toggleDragListeners('off');
     }
 
-    get enabled() {
-        return this._enabled;
-    }
-
     set enabled(value) {
         this._enabled = value;
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     get isDragging() {
         return this._isDragging;
     }
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:start
-     * @description Fired when a new drag operation starts.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:end
-     * @description Fired when the current new drag operation ends.
-     */
-
-    /**
-     * @event
-     * @name ElementDragHelper#drag:move
-     * @description Fired whenever the position of the dragged element changes.
-     * @param {Vec3} value - The current position.
-     */
 }
 
 export { ElementDragHelper };

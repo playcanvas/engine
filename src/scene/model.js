@@ -4,26 +4,48 @@ import { MorphInstance } from './morph-instance.js';
 import { SkinInstance } from './skin-instance.js';
 
 /**
- * @class
- * @name Model
- * @classdesc A model is a graphical object that can be added to or removed from a scene.
- * It contains a hierarchy and any number of mesh instances.
- * @description Creates a new model.
- * @example
- * // Create a new model
- * var model = new pc.Model();
- * @property {GraphNode} graph The root node of the model's graph node hierarchy.
- * @property {MeshInstance[]} meshInstances An array of MeshInstances contained in this model.
- * @property {SkinInstance[]} skinInstances An array of SkinInstances contained in this model.
- * @property {MorphInstance[]} morphInstances An array of MorphInstances contained in this model.
+ * A model is a graphical object that can be added to or removed from a scene. It contains a
+ * hierarchy and any number of mesh instances.
+ *
+ * @category Graphics
  */
 class Model {
-    constructor() {
-        this.graph = null;
-        this.meshInstances = [];
-        this.skinInstances = [];
-        this.morphInstances = [];
+    /**
+     * The root node of the model's graph node hierarchy.
+     *
+     * @type {import('./graph-node.js').GraphNode|null}
+     */
+    graph = null;
 
+    /**
+     * An array of MeshInstances contained in this model.
+     *
+     * @type {MeshInstance[]}
+     */
+    meshInstances = [];
+
+    /**
+     * An array of SkinInstances contained in this model.
+     *
+     * @type {SkinInstance[]}
+     */
+    skinInstances = [];
+
+    /**
+     * An array of MorphInstances contained in this model.
+     *
+     * @type {MorphInstance[]}
+     */
+    morphInstances = [];
+
+    /**
+     * Creates a new model.
+     *
+     * @example
+     * // Create a new model
+     * const model = new pc.Model();
+     */
+    constructor() {
         this.cameras = [];
         this.lights = [];
 
@@ -58,10 +80,9 @@ class Model {
     }
 
     getMaterials() {
-        var i;
-        var materials = [];
-        for (i = 0; i < this.meshInstances.length; i++) {
-            var meshInstance = this.meshInstances[i];
+        const materials = [];
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            const meshInstance = this.meshInstances[i];
             if (materials.indexOf(meshInstance.material) === -1) {
                 materials.push(meshInstance.material);
             }
@@ -70,50 +91,47 @@ class Model {
     }
 
     /**
-     * @function
-     * @name Model#clone
-     * @description Clones a model. The returned model has a newly created hierarchy
-     * and mesh instances, but meshes are shared between the clone and the specified
-     * model.
+     * Clones a model. The returned model has a newly created hierarchy and mesh instances, but
+     * meshes are shared between the clone and the specified model.
+     *
      * @returns {Model} A clone of the specified model.
      * @example
-     * var clonedModel = model.clone();
+     * const clonedModel = model.clone();
      */
     clone() {
-        var i, j;
 
         // Duplicate the node hierarchy
-        var srcNodes = [];
-        var cloneNodes = [];
+        const srcNodes = [];
+        const cloneNodes = [];
 
-        var _duplicate = function (node) {
-            var newNode = node.clone();
+        const _duplicate = function (node) {
+            const newNode = node.clone();
 
             srcNodes.push(node);
             cloneNodes.push(newNode);
 
-            for (var idx = 0; idx < node._children.length; idx++) {
+            for (let idx = 0; idx < node._children.length; idx++) {
                 newNode.addChild(_duplicate(node._children[idx]));
             }
 
             return newNode;
         };
 
-        var cloneGraph = _duplicate(this.graph);
-        var cloneMeshInstances = [];
-        var cloneSkinInstances = [];
-        var cloneMorphInstances = [];
+        const cloneGraph = _duplicate(this.graph);
+        const cloneMeshInstances = [];
+        const cloneSkinInstances = [];
+        const cloneMorphInstances = [];
 
         // Clone the skin instances
-        for (i = 0; i < this.skinInstances.length; i++) {
-            var skin = this.skinInstances[i].skin;
-            var cloneSkinInstance = new SkinInstance(skin);
+        for (let i = 0; i < this.skinInstances.length; i++) {
+            const skin = this.skinInstances[i].skin;
+            const cloneSkinInstance = new SkinInstance(skin);
 
             // Resolve bone IDs to actual graph nodes
-            var bones = [];
-            for (j = 0; j < skin.boneNames.length; j++) {
-                var boneName = skin.boneNames[j];
-                var bone = cloneGraph.findByName(boneName);
+            const bones = [];
+            for (let j = 0; j < skin.boneNames.length; j++) {
+                const boneName = skin.boneNames[j];
+                const bone = cloneGraph.findByName(boneName);
                 bones.push(bone);
             }
             cloneSkinInstance.bones = bones;
@@ -122,32 +140,32 @@ class Model {
         }
 
         // Clone the morph instances
-        for (i = 0; i < this.morphInstances.length; i++) {
-            var morph = this.morphInstances[i].morph;
-            var cloneMorphInstance = new MorphInstance(morph);
+        for (let i = 0; i < this.morphInstances.length; i++) {
+            const morph = this.morphInstances[i].morph;
+            const cloneMorphInstance = new MorphInstance(morph);
             cloneMorphInstances.push(cloneMorphInstance);
         }
 
         // Clone the mesh instances
-        for (i = 0; i < this.meshInstances.length; i++) {
-            var meshInstance = this.meshInstances[i];
-            var nodeIndex = srcNodes.indexOf(meshInstance.node);
-            var cloneMeshInstance = new MeshInstance(meshInstance.mesh, meshInstance.material, cloneNodes[nodeIndex]);
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            const meshInstance = this.meshInstances[i];
+            const nodeIndex = srcNodes.indexOf(meshInstance.node);
+            const cloneMeshInstance = new MeshInstance(meshInstance.mesh, meshInstance.material, cloneNodes[nodeIndex]);
 
             if (meshInstance.skinInstance) {
-                var skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
+                const skinInstanceIndex = this.skinInstances.indexOf(meshInstance.skinInstance);
                 cloneMeshInstance.skinInstance = cloneSkinInstances[skinInstanceIndex];
             }
 
             if (meshInstance.morphInstance) {
-                var morphInstanceIndex = this.morphInstances.indexOf(meshInstance.morphInstance);
+                const morphInstanceIndex = this.morphInstances.indexOf(meshInstance.morphInstance);
                 cloneMeshInstance.morphInstance = cloneMorphInstances[morphInstanceIndex];
             }
 
             cloneMeshInstances.push(cloneMeshInstance);
         }
 
-        var clone = new Model();
+        const clone = new Model();
         clone.graph = cloneGraph;
         clone.meshInstances = cloneMeshInstances;
         clone.skinInstances = cloneSkinInstances;
@@ -159,31 +177,28 @@ class Model {
     }
 
     /**
-     * @function
-     * @name Model#destroy
-     * @description Destroys skinning texture and possibly deletes vertex/index buffers of a model.
-     * Mesh is reference-counted, so buffers are only deleted if all models with referencing mesh instances were deleted.
-     * That means all in-scene models + the "base" one (asset.resource) which is created when the model is parsed.
-     * It is recommended to use asset.unload() instead, which will also remove the model from the scene.
+     * Destroys skinning texture and possibly deletes vertex/index buffers of a model. Mesh is
+     * reference-counted, so buffers are only deleted if all models with referencing mesh instances
+     * were deleted. That means all in-scene models + the "base" one (asset.resource) which is
+     * created when the model is parsed. It is recommended to use asset.unload() instead, which
+     * will also remove the model from the scene.
      */
     destroy() {
-        var meshInstances = this.meshInstances;
-        for (var i = 0; i < meshInstances.length; i++) {
+        const meshInstances = this.meshInstances;
+        for (let i = 0; i < meshInstances.length; i++) {
             meshInstances[i].destroy();
         }
         this.meshInstances.length = 0;
     }
 
     /**
-     * @function
-     * @name Model#generateWireframe
-     * @description Generates the necessary internal data for a model to be
-     * renderable as wireframe. Once this function has been called, any mesh
-     * instance in the model can have its renderStyle property set to
-     * {@link RENDERSTYLE_WIREFRAME}.
+     * Generates the necessary internal data for a model to be renderable as wireframe. Once this
+     * function has been called, any mesh instance in the model can have its renderStyle property
+     * set to {@link RENDERSTYLE_WIREFRAME}.
+     *
      * @example
      * model.generateWireframe();
-     * for (var i = 0; i < model.meshInstances.length; i++) {
+     * for (let i = 0; i < model.meshInstances.length; i++) {
      *     model.meshInstances[i].renderStyle = pc.RENDERSTYLE_WIREFRAME;
      * }
      */

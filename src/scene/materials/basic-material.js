@@ -1,19 +1,22 @@
-import { Color } from '../../math/color.js';
+import { Color } from '../../core/math/color.js';
 
+import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
+
+import {
+    SHADERDEF_INSTANCING, SHADERDEF_MORPH_NORMAL, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_TEXTURE_BASED,
+    SHADERDEF_SCREENSPACE, SHADERDEF_SKIN
+} from '../constants.js';
+import { getProgramLibrary } from '../shader-lib/get-program-library.js';
+import { basic } from '../shader-lib/programs/basic.js';
 import { Material } from './material.js';
 
 /**
- * @class
- * @name BasicMaterial
- * @augments Material
- * @classdesc A Basic material is for rendering unlit geometry, either using a constant color or a
- * color map modulated with a color.
- * @property {Color} color The flat color of the material (RGBA, where each component is 0 to 1).
- * @property {Texture|null} colorMap The color map of the material (default is null). If specified, the color map is
- * modulated by the color property.
- * @example
+ * A BasicMaterial is for rendering unlit geometry, either using a constant color or a color map
+ * modulated with a color.
+ *
+ * ```javascript
  * // Create a new Basic material
- * var material = new pc.BasicMaterial();
+ * const material = new pc.BasicMaterial();
  *
  * // Set the material to have a texture map that is multiplied by a red color
  * material.color.set(1, 0, 0);
@@ -21,38 +24,55 @@ import { Material } from './material.js';
  *
  * // Notify the material that it has been modified
  * material.update();
+ * ```
+ *
+ * @augments Material
+ * @category Graphics
  */
 class BasicMaterial extends Material {
-    constructor() {
-        super();
+    /**
+     * The flat color of the material (RGBA, where each component is 0 to 1).
+     *
+     * @type {Color}
+     */
+    color = new Color(1, 1, 1, 1);
 
-        this.color = new Color(1, 1, 1, 1);
-        this.colorUniform = new Float32Array(4);
+    /** @ignore */
+    colorUniform = new Float32Array(4);
 
-        this.colorMap = null;
-        this.vertexColors = false;
+    /**
+     * The color map of the material (default is null). If specified, the color map is
+     * modulated by the color property.
+     *
+     * @type {import('../../platform/graphics/texture.js').Texture|null}
+     */
+    colorMap = null;
+
+    /** @ignore */
+    vertexColors = false;
+
+    /**
+     * Copy a `BasicMaterial`.
+     *
+     * @param {BasicMaterial} source - The material to copy from.
+     * @returns {BasicMaterial} The destination material.
+     */
+    copy(source) {
+        super.copy(source);
+
+        this.color.copy(source.color);
+        this.colorMap = source.colorMap;
+        this.vertexColors = source.vertexColors;
+
+        return this;
     }
 
     /**
-     * @function
-     * @name BasicMaterial#clone
-     * @description Duplicates a Basic material. All properties are duplicated except textures
-     * where only the references are copied.
-     * @returns {BasicMaterial} A cloned Basic material.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../scene.js').Scene} scene - The scene.
+     * @ignore
      */
-    clone() {
-        var clone = new BasicMaterial();
-
-        Material.prototype._cloneInternal.call(this, clone);
-
-        clone.color.copy(this.color);
-        clone.colorMap = this.colorMap;
-        clone.vertexColors = this.vertexColors;
-
-        return clone;
-    }
-
-    updateUniforms() {
+    updateUniforms(device, scene) {
         this.clearParameters();
 
         this.colorUniform[0] = this.color.r;
@@ -65,15 +85,28 @@ class BasicMaterial extends Material {
         }
     }
 
-    updateShader(device, scene, objDefs, staticLightList, pass, sortedLights) {
-        var options = {
-            skin: !!this.meshInstances[0].skinInstance,
+    getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
+
+        const options = {
+            skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,
+            screenSpace: objDefs && (objDefs & SHADERDEF_SCREENSPACE) !== 0,
+            useInstancing: objDefs && (objDefs & SHADERDEF_INSTANCING) !== 0,
+            useMorphPosition: objDefs && (objDefs & SHADERDEF_MORPH_POSITION) !== 0,
+            useMorphNormal: objDefs && (objDefs & SHADERDEF_MORPH_NORMAL) !== 0,
+            useMorphTextureBased: objDefs && (objDefs & SHADERDEF_MORPH_TEXTURE_BASED) !== 0,
+
+            alphaTest: this.alphaTest > 0,
             vertexColors: this.vertexColors,
             diffuseMap: !!this.colorMap,
             pass: pass
         };
-        var library = device.getProgramLibrary();
-        this.shader = library.getProgram('basic', options);
+
+        const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat, vertexFormat);
+
+        const library = getProgramLibrary(device);
+        library.register('basic', basic);
+
+        return library.getProgram('basic', options, processingOptions, this.userId);
     }
 }
 

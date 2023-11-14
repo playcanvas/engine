@@ -1,107 +1,106 @@
-// Word atlas
+import { FILTER_NEAREST, math, Texture } from 'playcanvas';
+
 class WordAtlas {
-    constructor(texture, words) {
-        var canvas = document.createElement('canvas');
-        canvas.width = texture.width;
-        canvas.height = texture.height;
+    constructor(device, words) {
 
-        // configure the context
-        var context = canvas.getContext('2d', { alpha: true });
-        context.font = '10px "Lucida Console", Monaco, monospace';
-        context.textAlign = "left";
-        context.textBaseline = "alphabetic";
-        context.fillStyle = "rgb(255, 255, 255)";
+        const initContext = (context) => {
+            context.font = '10px "Lucida Console", Monaco, monospace';
+            context.textAlign = 'left';
+            context.textBaseline = 'alphabetic';
+        };
 
-        var padding = 5;
-        var x = padding;
-        var y = padding;
-        var placements = [];
-        var i;
+        const isNumber = (word) => {
+            return word === '.' || (word.length === 1 && word.charCodeAt(0) >= 48 && word.charCodeAt(0) <= 57);
+        };
 
-        for (i = 0; i < words.length; ++i) {
-            // measure the word
-            var measurement = context.measureText(words[i]);
+        // create a canvas
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { alpha: true });
+        initContext(context);
 
-            var l = Math.ceil(-measurement.actualBoundingBoxLeft);
-            var r = Math.ceil(measurement.actualBoundingBoxRight);
-            var a = Math.ceil(measurement.actualBoundingBoxAscent);
-            var d = Math.ceil(measurement.actualBoundingBoxDescent);
+        // measure words
+        const placements = new Map();
+        const padding = 5;
+        const width = 512;
+        let x = padding;
+        let y = padding;
 
-            var w = l + r;
-            var h = a + d;
+        words.forEach((word) => {
+            const measurement = context.measureText(word);
+            const l = Math.ceil(-measurement.actualBoundingBoxLeft);
+            const r = Math.ceil(measurement.actualBoundingBoxRight);
+            const a = Math.ceil(measurement.actualBoundingBoxAscent);
+            const d = Math.ceil(measurement.actualBoundingBoxDescent);
+            const w = l + r;
+            const h = a + d;
 
-            // wrap text
-            if (x + w >= canvas.width) {
+            if (x + w + padding >= width) {
                 x = padding;
                 y += 16;
             }
 
-            // digits and '.' are white, the rest grey
-            context.fillStyle = words[i].length === 1 ? "rgb(255, 255, 255)" : "rgb(150, 150, 150)";
-
-            // render the word
-            context.fillText(words[i], x - l, y + a);
-
-            placements.push({
-                l: l,
-                r: r,
-                a: a,
-                d: d,
-                x: x,
-                y: y,
-                w: w,
-                h: h
-            });
+            placements.set(word, { l, r, a, d, w, h, x: x, y: y });
 
             x += w + padding;
-        }
-
-        var wordMap = { };
-        words.forEach(function (w, i) {
-            wordMap[w] = i;
         });
 
-        this.words = words;
-        this.wordMap = wordMap;
+        // size canvas
+        canvas.width = 512;
+        canvas.height = math.nextPowerOfTwo(y + 16 + padding);
+
+        initContext(context);
+        context.fillStyle = 'rgb(0, 0, 0)';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
+        // render words
+        placements.forEach((m, word) => {
+            // digits and '.' are white, the rest grey
+            context.fillStyle = isNumber(word) ? 'rgb(255, 255, 255)' : 'rgb(170, 170, 170)';
+
+            // render the word
+            context.fillText(word, m.x - m.l, m.y + m.a);
+        });
+
         this.placements = placements;
-        this.texture = texture;
 
-        // copy pixel data to target
-        var source = context.getImageData(0, 0, canvas.width, canvas.height);
-        var dest = texture.lock();
-        var red, alpha;
-        for (y = 0; y < source.height; ++y) {
-            for (x = 0; x < source.width; ++x) {
-                var offset = (x + y * texture.width) * 4;
-
-                // set .rgb white to allow shader to identify text
-                dest[offset] = 255;
-                dest[offset + 1] = 255;
-                dest[offset + 2] = 255;
-
-                // red red and alpha from image
-                red = source.data[(x + (source.height - 1 - y) * source.width) * 4];
-                alpha = source.data[(x + (source.height - 1 - y) * source.width) * 4 + 3];
-
-                // alpha contains greyscale letters, use red to make non-digits darker
-                dest[offset + 3] = alpha * (red > 150 ? 1 : 0.7);
-            }
+        // convert from black and white data to white texture with alpha
+        const data = context.getImageData(0, 0, canvas.width, canvas.height).data;
+        for (let i = 0; i < data.length; i += 4) {
+            data[i + 3] = data[i + 0];
+            data[i + 0] = 255;
+            data[i + 1] = 255;
+            data[i + 2] = 255;
         }
+
+        this.texture = new Texture(device, {
+            name: 'mini-stats-word-atlas',
+            width: canvas.width,
+            height: canvas.height,
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            levels: [data]
+        });
+    }
+
+    destroy() {
+        this.texture.destroy();
+        this.texture = null;
     }
 
     render(render2d, word, x, y) {
-        var p = this.placements[this.wordMap[word]];
+        const p = this.placements.get(word);
         if (p) {
-            var padding = 1;
-            render2d.quad(this.texture,
-                          x + p.l - padding,
+            const padding = 1;
+            render2d.quad(x + p.l - padding,
                           y - p.d + padding,
                           p.w + padding * 2,
                           p.h + padding * 2,
                           p.x - padding,
-                          64 - p.y - p.h - padding,
+                          this.texture.height - p.y - p.h - padding,
                           undefined, undefined,
-                          true);
+                          this.texture,
+                          1);
             return p.w;
         }
         return 0;

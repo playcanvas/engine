@@ -1,4 +1,4 @@
-import { Vec3 } from '../../../math/vec3.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
 import { BLEND_NORMAL, EMITTERSHAPE_BOX, LAYERID_WORLD, PARTICLEMODE_GPU, PARTICLEORIENTATION_SCREEN } from '../../../scene/constants.js';
 
@@ -76,8 +76,6 @@ class ParticleSystemComponentData {
         this.radialSpeedGraph2 = null;
 
         this.blendType = BLEND_NORMAL;
-
-        this.model = null;
 
         this.enabled = true;
 

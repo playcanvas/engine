@@ -1,91 +1,258 @@
 import { EventHandler } from '../core/event-handler.js';
 import { Tags } from '../core/tags.js';
+import { Debug } from '../core/debug.js';
 
-import { Mat3 } from '../math/mat3.js';
-import { Mat4 } from '../math/mat4.js';
-import { Quat } from '../math/quat.js';
-import { Vec3 } from '../math/vec3.js';
+import { Mat3 } from '../core/math/mat3.js';
+import { Mat4 } from '../core/math/mat4.js';
+import { Quat } from '../core/math/quat.js';
+import { Vec3 } from '../core/math/vec3.js';
 
-var scaleCompensatePosTransform = new Mat4();
-var scaleCompensatePos = new Vec3();
-var scaleCompensateRot = new Quat();
-var scaleCompensateRot2 = new Quat();
-var scaleCompensateScale = new Vec3();
-var scaleCompensateScaleForParent = new Vec3();
-var tmpMat4 = new Mat4();
-var tmpQuat = new Quat();
-var position = new Vec3();
-var invParentWtm = new Mat4();
-var rotation = new Quat();
-var invParentRot = new Quat();
-var matrix = new Mat4();
-var target = new Vec3();
-var up = new Vec3();
+const scaleCompensatePosTransform = new Mat4();
+const scaleCompensatePos = new Vec3();
+const scaleCompensateRot = new Quat();
+const scaleCompensateRot2 = new Quat();
+const scaleCompensateScale = new Vec3();
+const scaleCompensateScaleForParent = new Vec3();
+const tmpMat4 = new Mat4();
+const tmpQuat = new Quat();
+const position = new Vec3();
+const invParentWtm = new Mat4();
+const rotation = new Quat();
+const invParentRot = new Quat();
+const matrix = new Mat4();
+const target = new Vec3();
+const up = new Vec3();
 
 /**
- * @class
- * @name GraphNode
+ * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
+ * node and all of its descendants.
+ *
+ * @callback FindNodeCallback
+ * @param {GraphNode} node - The current graph node.
+ * @returns {boolean} Returning `true` will result in that node being returned from
+ * {@link GraphNode#find} or {@link GraphNode#findOne}.
+ */
+
+/**
+ * Callback used by {@link GraphNode#forEach} to iterate through a graph node and all of its
+ * descendants.
+ *
+ * @callback ForEachNodeCallback
+ * @param {GraphNode} node - The current graph node.
+ */
+
+/**
+ * A hierarchical scene node.
+ *
  * @augments EventHandler
- * @classdesc A hierarchical scene node.
- * @param {string} [name] - The non-unique name of the graph node, default is "Untitled".
- * @property {string} name The non-unique name of a graph node.
- * @property {Tags} tags Interface for tagging graph nodes. Tag based searches can be performed using the {@link GraphNode#findByTag} function.
  */
 class GraphNode extends EventHandler {
-    constructor(name) {
+    /**
+     * The non-unique name of a graph node. Defaults to 'Untitled'.
+     *
+     * @type {string}
+     */
+    name;
+
+    /**
+     * Interface for tagging graph nodes. Tag based searches can be performed using the
+     * {@link GraphNode#findByTag} function.
+     *
+     * @type {Tags}
+     */
+    tags = new Tags(this);
+
+    /** @private */
+    _labels = {};
+
+    // Local-space properties of transform (only first 3 are settable by the user)
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localPosition = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    localRotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localScale = new Vec3(1, 1, 1);
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    localEulerAngles = new Vec3(); // Only calculated on request
+
+    // World-space properties of transform
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    position = new Vec3();
+
+    /**
+     * @type {Quat}
+     * @private
+     */
+    rotation = new Quat();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    eulerAngles = new Vec3();
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _scale = null;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    localTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyLocal = false;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _aabbVer = 0;
+
+    /**
+     * Marks the node to ignore hierarchy sync entirely (including children nodes). The engine code
+     * automatically freezes and unfreezes objects whenever required. Segregating dynamic and
+     * stationary nodes into subhierarchies allows to reduce sync time significantly.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _frozen = false;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    worldTransform = new Mat4();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyWorld = false;
+
+    /**
+     * Cached value representing the negatively scaled world transform. If the value is 0, this
+     * marks this value as dirty and it needs to be recalculated. If the value is 1, the world
+     * transform is not negatively scaled. If the value is -1, the world transform is negatively
+     * scaled.
+     *
+     * @type {number}
+     * @private
+     */
+    _worldScaleSign = 0;
+
+    /**
+     * @type {Mat3}
+     * @private
+     */
+    _normalMatrix = new Mat3();
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _dirtyNormal = true;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _right = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _up = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _forward = null;
+
+    /**
+     * @type {GraphNode|null}
+     * @private
+     */
+    _parent = null;
+
+    /**
+     * @type {GraphNode[]}
+     * @private
+     */
+    _children = [];
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _graphDepth = 0;
+
+    /**
+     * Represents enabled state of the entity. If the entity is disabled, the entity including all
+     * children are excluded from updates.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * Represents enabled state of the entity in the hierarchy. It's true only if this entity and
+     * all parent entities all the way to the scene's root are enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabledInHierarchy = false;
+
+    /**
+     * @type {boolean}
+     * @ignore
+     */
+    scaleCompensation = false;
+
+    /**
+     * Create a new GraphNode instance.
+     *
+     * @param {string} [name] - The non-unique name of a graph node. Defaults to 'Untitled'.
+     */
+    constructor(name = 'Untitled') {
         super();
 
-        this.name = typeof name === "string" ? name : "Untitled"; // Non-unique human readable name
-        this.tags = new Tags(this);
-
-        this._labels = {};
-
-        // Local-space properties of transform (only first 3 are settable by the user)
-        this.localPosition = new Vec3(0, 0, 0);
-        this.localRotation = new Quat(0, 0, 0, 1);
-        this.localScale = new Vec3(1, 1, 1);
-        this.localEulerAngles = new Vec3(0, 0, 0); // Only calculated on request
-
-        // World-space properties of transform
-        this.position = new Vec3(0, 0, 0);
-        this.rotation = new Quat(0, 0, 0, 1);
-        this.eulerAngles = new Vec3(0, 0, 0);
-        this._scale = null;
-
-        this.localTransform = new Mat4();
-        this._dirtyLocal = false;
-        this._aabbVer = 0;
-
-        // _frozen flag marks the node to ignore hierarchy sync entirely (including children nodes)
-        // engine code automatically freezes and unfreezes objects whenever required
-        // segregating dynamic and stationary nodes into subhierarchies allows to reduce sync time significantly
-        this._frozen = false;
-
-        this.worldTransform = new Mat4();
-        this._dirtyWorld = false;
-
-        this.normalMatrix = new Mat3();
-        this._dirtyNormal = true;
-
-        this._right = null;
-        this._up = null;
-        this._forward = null;
-
-        this._parent = null;
-        this._children = [];
-        this._graphDepth = 0;
-
-        this._enabled = true;
-        this._enabledInHierarchy = false;
-
-        this.scaleCompensation = false;
+        this.name = name;
     }
 
     /**
-     * @readonly
-     * @name GraphNode#right
+     * The normalized local space X-axis vector of the graph node in world space.
+     *
      * @type {Vec3}
-     * @description The normalized local space X-axis vector of the graph node in world space.
      */
     get right() {
         if (!this._right) {
@@ -95,10 +262,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
-     * @name GraphNode#up
+     * The normalized local space Y-axis vector of the graph node in world space.
+     *
      * @type {Vec3}
-     * @description The normalized local space Y-axis vector of the graph node in world space.
      */
     get up() {
         if (!this._up) {
@@ -108,10 +274,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @readonly
-     * @name GraphNode#forward
+     * The normalized local space negative Z-axis vector of the graph node in world space.
+     *
      * @type {Vec3}
-     * @description The normalized local space negative Z-axis vector of the graph node in world space.
      */
     get forward() {
         if (!this._forward) {
@@ -121,12 +286,41 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @name GraphNode#enabled
-     * @type {boolean}
-     * @description Enable or disable a GraphNode. If one of the GraphNode's parents is disabled
-     * there will be no other side effects. If all the parents are enabled then
-     * the new value will activate / deactivate all the enabled children of the GraphNode.
+     * A matrix used to transform the normal.
+     *
+     * @type  {Mat3}
+     * @ignore
      */
+    get normalMatrix() {
+
+        const normalMat = this._normalMatrix;
+        if (this._dirtyNormal) {
+            normalMat.invertMat4(this.getWorldTransform()).transpose();
+            this._dirtyNormal = false;
+        }
+
+        return normalMat;
+    }
+
+    /**
+     * Enable or disable a GraphNode. If one of the GraphNode's parents is disabled there will be
+     * no other side effects. If all the parents are enabled then the new value will activate or
+     * deactivate all the enabled children of the GraphNode.
+     *
+     * @type {boolean}
+     */
+    set enabled(enabled) {
+        if (this._enabled !== enabled) {
+            this._enabled = enabled;
+
+            // if enabling entity, make all children enabled in hierarchy only when the parent is as well
+            // if disabling entity, make all children disabled in hierarchy in all cases
+            if (enabled && this._parent?.enabled || !enabled) {
+                this._notifyHierarchyStateChanged(this, enabled);
+            }
+        }
+    }
+
     get enabled() {
         // make sure to check this._enabled too because if that
         // was false when a parent was updated the _enabledInHierarchy
@@ -134,100 +328,87 @@ class GraphNode extends EventHandler {
         return this._enabled && this._enabledInHierarchy;
     }
 
-    set enabled(enabled) {
-        if (this._enabled !== enabled) {
-            this._enabled = enabled;
-
-            if (!this._parent || this._parent.enabled)
-                this._notifyHierarchyStateChanged(this, enabled);
-        }
-    }
-
     /**
-     * @readonly
-     * @name GraphNode#parent
-     * @type {GraphNode}
-     * @description A read-only property to get a parent graph node.
+     * A read-only property to get a parent graph node.
+     *
+     * @type {GraphNode|null}
      */
     get parent() {
         return this._parent;
     }
 
     /**
-     * @readonly
-     * @name GraphNode#path
+     * A read-only property to get the path of the graph node relative to the root of the hierarchy.
+     *
      * @type {string}
-     * @description A read-only property to get the path of the graph node relative to
-     * the root of the hierarchy.
      */
     get path() {
-        var parent = this._parent;
-        if (parent) {
-            var path = this.name;
-
-            while (parent && parent._parent) {
-                path = parent.name + "/" + path;
-                parent = parent._parent;
-            }
-
-            return path;
+        let node = this._parent;
+        if (!node) {
+            return '';
         }
-        return '';
+
+        let result = this.name;
+        while (node && node._parent) {
+            result = `${node.name}/${result}`;
+            node = node._parent;
+        }
+        return result;
     }
 
     /**
-     * @readonly
-     * @name GraphNode#root
+     * A read-only property to get highest graph node from current node.
+     *
      * @type {GraphNode}
-     * @description A read-only property to get highest graph node from current node.
      */
     get root() {
-        var parent = this._parent;
-        if (!parent)
-            return this;
-
-        while (parent._parent)
-            parent = parent._parent;
-
-        return parent;
+        let result = this;
+        while (result._parent) {
+            result = result._parent;
+        }
+        return result;
     }
 
     /**
-     * @readonly
-     * @name GraphNode#children
+     * A read-only property to get the children of this graph node.
+     *
      * @type {GraphNode[]}
-     * @description A read-only property to get the children of this graph node.
      */
     get children() {
         return this._children;
     }
 
     /**
-     * @readonly
-     * @name GraphNode#graphDepth
+     * A read-only property to get the depth of this child within the graph. Note that for
+     * performance reasons this is only recalculated when a node is added to a new parent, i.e. It
+     * is not recalculated when a node is simply removed from the graph.
+     *
      * @type {number}
-     * @description A read-only property to get the depth of this child within the graph. Note that for performance reasons this is only recalculated when a node is added to a new parent, i.e. It is not recalculated when a node is simply removed from the graph.
      */
     get graphDepth() {
         return this._graphDepth;
     }
 
+    /**
+     * @param {GraphNode} node - Graph node to update.
+     * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
+     * @private
+     */
     _notifyHierarchyStateChanged(node, enabled) {
         node._onHierarchyStateChanged(enabled);
 
-        var c = node._children;
-        for (var i = 0, len = c.length; i < len; i++) {
+        const c = node._children;
+        for (let i = 0, len = c.length; i < len; i++) {
             if (c[i]._enabled)
                 this._notifyHierarchyStateChanged(c[i], enabled);
         }
     }
 
     /**
-     * @private
-     * @function
-     * @name GraphNode#_onHierarchyStateChanged
-     * @description Called when the enabled flag of the entity or one of its parents changes.
+     * Called when the enabled flag of the entity or one of its parents changes.
+     *
      * @param {boolean} enabled - True if enabled in the hierarchy, false if disabled.
+     * @private
      */
     _onHierarchyStateChanged(enabled) {
         // Override in derived classes
@@ -236,11 +417,16 @@ class GraphNode extends EventHandler {
             this._unfreezeParentToRoot();
     }
 
+    /**
+     * @param {this} clone - The cloned graph node to copy into.
+     * @private
+     */
     _cloneInternal(clone) {
         clone.name = this.name;
 
-        var tags = this.tags._list;
-        for (var i = 0; i < tags.length; i++)
+        const tags = this.tags._list;
+        clone.tags.clear();
+        for (let i = 0; i < tags.length; i++)
             clone.tags.add(tags[i]);
 
         clone._labels = Object.assign({}, this._labels);
@@ -270,53 +456,101 @@ class GraphNode extends EventHandler {
         clone._enabledInHierarchy = false;
     }
 
+    /**
+     * Clone a graph node.
+     *
+     * @returns {this} A clone of the specified graph node.
+     */
     clone() {
-        var clone = new GraphNode();
+        const clone = new this.constructor();
         this._cloneInternal(clone);
         return clone;
     }
 
     /**
-     * @function
-     * @name GraphNode#find
-     * @description Search the graph node and all of its descendants for the nodes that satisfy some search criteria.
-     * @param {callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
-     * for each descendant node to test if node satisfies the search logic. Returning true from the function will
-     * include the node into the results. If it's a string then it represents the name of a field or a method of the
-     * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
-     * If this is the name of a function then the return value of the function will be checked for equality against
-     * the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
-     * the value of the property.
+     * Copy a graph node.
+     *
+     * @param {GraphNode} source - The graph node to copy.
+     * @returns {GraphNode} The destination graph node.
+     * @ignore
+     */
+    copy(source) {
+        source._cloneInternal(this);
+        return this;
+    }
+
+
+    /**
+     * Detach a GraphNode from the hierarchy and recursively destroy all children.
+     *
+     * @example
+     * const firstChild = this.entity.children[0];
+     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     */
+    destroy() {
+        // Detach from parent
+        this.remove();
+
+        // Recursively destroy all children
+        const children = this._children;
+        while (children.length) {
+            // Remove last child from the array
+            const child = children.pop();
+            // Disconnect it from the parent: this is only an optimization step, to prevent calling
+            // GraphNode#removeChild which would try to refind it via this._children.indexOf (which
+            // will fail, because we just removed it).
+            child._parent = null;
+            child.destroy();
+        }
+
+        // fire destroy event
+        this.fire('destroy', this);
+
+        // clear all events
+        this.off();
+    }
+
+    /**
+     * Search the graph node and all of its descendants for the nodes that satisfy some search
+     * criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each descendant node to test if node satisfies the search
+     * logic. Returning true from the function will include the node into the results. If it's a
+     * string then it represents the name of a field or a method of the node. If this is the name
+     * of a field then the value passed as the second argument will be checked for equality. If
+     * this is the name of a function then the return value of the function will be checked for
+     * equality against the valued passed as the second argument to this function.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
      * @returns {GraphNode[]} The array of graph nodes that match the search criteria.
      * @example
-     * // Finds all nodes that have a model component and have `door` in their lower-cased name
-     * var doors = house.find(function (node) {
+     * // Finds all nodes that have a model component and have 'door' in their lower-cased name
+     * const doors = house.find(function (node) {
      *     return node.model && node.name.toLowerCase().indexOf('door') !== -1;
      * });
      * @example
      * // Finds all nodes that have the name property set to 'Test'
-     * var entities = parent.find('name', 'Test');
+     * const entities = parent.find('name', 'Test');
      */
     find(attr, value) {
-        var result, results = [];
-        var len = this._children.length;
-        var i, descendants;
+        let result, results = [];
+        const len = this._children.length;
 
         if (attr instanceof Function) {
-            var fn = attr;
+            const fn = attr;
 
             result = fn(this);
             if (result)
                 results.push(this);
 
-            for (i = 0; i < len; i++) {
-                descendants = this._children[i].find(fn);
+            for (let i = 0; i < len; i++) {
+                const descendants = this._children[i].find(fn);
                 if (descendants.length)
                     results = results.concat(descendants);
             }
         } else {
-            var testValue;
+            let testValue;
 
             if (this[attr]) {
                 if (this[attr] instanceof Function) {
@@ -328,8 +562,8 @@ class GraphNode extends EventHandler {
                     results.push(this);
             }
 
-            for (i = 0; i < len; ++i) {
-                descendants = this._children[i].find(attr, value);
+            for (let i = 0; i < len; ++i) {
+                const descendants = this._children[i].find(attr, value);
                 if (descendants.length)
                     results = results.concat(descendants);
             }
@@ -339,46 +573,47 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#findOne
-     * @description Search the graph node and all of its descendants for the first node that satisfies some search criteria.
-     * @param {callbacks.FindNode|string} attr - This can either be a function or a string. If it's a function, it is executed
-     * for each descendant node to test if node satisfies the search logic. Returning true from the function will
-     * result in that node being returned from findOne. If it's a string then it represents the name of a field or a method of the
-     * node. If this is the name of a field then the value passed as the second argument will be checked for equality.
-     * If this is the name of a function then the return value of the function will be checked for equality against
-     * the valued passed as the second argument to this function.
-     * @param {object} [value] - If the first argument (attr) is a property name then this value will be checked against
-     * the value of the property.
-     * @returns {GraphNode} A graph node that match the search criteria.
+     * Search the graph node and all of its descendants for the first node that satisfies some
+     * search criteria.
+     *
+     * @param {FindNodeCallback|string} attr - This can either be a function or a string. If it's a
+     * function, it is executed for each descendant node to test if node satisfies the search
+     * logic. Returning true from the function will result in that node being returned from
+     * findOne. If it's a string then it represents the name of a field or a method of the node. If
+     * this is the name of a field then the value passed as the second argument will be checked for
+     * equality. If this is the name of a function then the return value of the function will be
+     * checked for equality against the valued passed as the second argument to this function.
+     * @param {object} [value] - If the first argument (attr) is a property name then this value
+     * will be checked against the value of the property.
+     * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+     * node is found.
      * @example
-     * // Find the first node that is called `head` and has a model component
-     * var head = player.findOne(function (node) {
+     * // Find the first node that is called 'head' and has a model component
+     * const head = player.findOne(function (node) {
      *     return node.model && node.name === 'head';
      * });
      * @example
      * // Finds the first node that has the name property set to 'Test'
-     * var node = parent.findOne('name', 'Test');
+     * const node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
-        var i;
-        var len = this._children.length;
-        var result = null;
+        const len = this._children.length;
+        let result = null;
 
         if (attr instanceof Function) {
-            var fn = attr;
+            const fn = attr;
 
             result = fn(this);
             if (result)
                 return this;
 
-            for (i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 result = this._children[i].findOne(fn);
                 if (result)
                     return result;
             }
         } else {
-            var testValue;
+            let testValue;
             if (this[attr]) {
                 if (this[attr] instanceof Function) {
                     testValue = this[attr]();
@@ -390,7 +625,7 @@ class GraphNode extends EventHandler {
                 }
             }
 
-            for (i = 0; i < len; i++) {
+            for (let i = 0; i < len; i++) {
                 result = this._children[i].findOne(attr, value);
                 if (result !== null)
                     return result;
@@ -401,115 +636,97 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#findByTag
-     * @description Return all graph nodes that satisfy the search query.
-     * Query can be simply a string, or comma separated strings,
-     * to have inclusive results of assets that match at least one query.
-     * A query that consists of an array of tags can be used to match graph nodes that have each tag of array.
-     * @param {string|string[]} query - Name of a tag or array of tags.
+     * Return all graph nodes that satisfy the search query. Query can be simply a string, or comma
+     * separated strings, to have inclusive results of assets that match at least one query. A
+     * query that consists of an array of tags can be used to match graph nodes that have each tag
+     * of array.
+     *
+     * @param {...*} query - Name of a tag or array of tags.
      * @returns {GraphNode[]} A list of all graph nodes that match the query.
      * @example
      * // Return all graph nodes that tagged by `animal`
-     * var animals = node.findByTag("animal");
+     * const animals = node.findByTag("animal");
      * @example
      * // Return all graph nodes that tagged by `bird` OR `mammal`
-     * var birdsAndMammals = node.findByTag("bird", "mammal");
+     * const birdsAndMammals = node.findByTag("bird", "mammal");
      * @example
      * // Return all assets that tagged by `carnivore` AND `mammal`
-     * var meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
+     * const meatEatingMammals = node.findByTag(["carnivore", "mammal"]);
      * @example
      * // Return all assets that tagged by (`carnivore` AND `mammal`) OR (`carnivore` AND `reptile`)
-     * var meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
+     * const meatEatingMammalsAndReptiles = node.findByTag(["carnivore", "mammal"], ["carnivore", "reptile"]);
      */
     findByTag() {
-        var tags = this.tags._processArguments(arguments);
-        return this._findByTag(tags);
-    }
+        const query = arguments;
+        const results = [];
 
-    _findByTag(tags) {
-        var result = [];
-        var i, len = this._children.length;
-        var descendants;
+        const queryNode = (node, checkNode) => {
+            if (checkNode && node.tags.has(...query)) {
+                results.push(node);
+            }
 
-        for (i = 0; i < len; i++) {
-            if (this._children[i].tags._has(tags))
-                result.push(this._children[i]);
+            for (let i = 0; i < node._children.length; i++) {
+                queryNode(node._children[i], true);
+            }
+        };
 
-            descendants = this._children[i]._findByTag(tags);
-            if (descendants.length)
-                result = result.concat(descendants);
-        }
+        queryNode(this, false);
 
-        return result;
+        return results;
     }
 
     /**
-     * @function
-     * @name GraphNode#findByName
-     * @description Get the first node found in the graph with the name. The search
-     * is depth first.
+     * Get the first node found in the graph with the name. The search is depth first.
+     *
      * @param {string} name - The name of the graph.
-     * @returns {GraphNode} The first node to be found matching the supplied name.
+     * @returns {GraphNode|null} The first node to be found matching the supplied name. Returns
+     * null if no node is found.
      */
     findByName(name) {
         if (this.name === name) return this;
 
-        for (var i = 0; i < this._children.length; i++) {
-            var found = this._children[i].findByName(name);
+        for (let i = 0; i < this._children.length; i++) {
+            const found = this._children[i].findByName(name);
             if (found !== null) return found;
         }
         return null;
     }
 
     /**
-     * @function
-     * @name GraphNode#findByPath
-     * @description Get the first node found in the graph by its full path in the graph.
-     * The full path has this form 'parent/child/sub-child'. The search is depth first.
-     * @param {string|Array} path - The full path of the {@link GraphNode} as either a string or array of {@link GraphNode} names.
-     * @returns {GraphNode} The first node to be found matching the supplied path.
+     * Get the first node found in the graph by its full path in the graph. The full path has this
+     * form 'parent/child/sub-child'. The search is depth first.
+     *
+     * @param {string|string[]} path - The full path of the {@link GraphNode} as either a string or
+     * array of {@link GraphNode} names.
+     * @returns {GraphNode|null} The first node to be found matching the supplied path. Returns
+     * null if no node is found.
      * @example
-     * var path = this.entity.findByPath('child/another_child');
+     * // String form
+     * const grandchild = this.entity.findByPath('child/grandchild');
+     * @example
+     * // Array form
+     * const grandchild = this.entity.findByPath(['child', 'grandchild']);
      */
     findByPath(path) {
-        // if the path isn't an array, split the path in parts. Each part represents a deeper hierarchy level
-        var parts;
-        if (Array.isArray(path)) {
-            if (path.length === 0) return null;
-            parts = path;
-        } else {
-            parts = path.split('/');
-        }
-        var currentParent = this;
-        var result = null;
+        // accept either string path with '/' separators or array of parts.
+        const parts = Array.isArray(path) ? path : path.split('/');
 
-        for (var i = 0, imax = parts.length; i < imax && currentParent; i++) {
-            var part = parts[i];
-
-            result = null;
-
-            // check all the children
-            var children = currentParent._children;
-            for (var j = 0, jmax = children.length; j < jmax; j++) {
-                if (children[j].name === part) {
-                    result = children[j];
-                    break;
-                }
+        let result = this;
+        for (let i = 0, imax = parts.length; i < imax; ++i) {
+            result = result.children.find(c => c.name === parts[i]);
+            if (!result) {
+                return null;
             }
-
-            // keep going deeper in the hierarchy
-            currentParent = result;
         }
 
         return result;
     }
 
     /**
-     * @function
-     * @name GraphNode#forEach
-     * @description Executes a provided function once on this graph node and all of its descendants.
-     * @param {callbacks.ForEach} callback - The function to execute on the graph node and each descendant.
+     * Executes a provided function once on this graph node and all of its descendants.
+     *
+     * @param {ForEachNodeCallback} callback - The function to execute on the graph node and each
+     * descendant.
      * @param {object} [thisArg] - Optional value to use as this when executing callback function.
      * @example
      * // Log the path and name of each node in descendant tree starting with "parent"
@@ -520,16 +737,15 @@ class GraphNode extends EventHandler {
     forEach(callback, thisArg) {
         callback.call(thisArg, this);
 
-        var children = this._children;
-        for (var i = 0; i < children.length; i++) {
+        const children = this._children;
+        for (let i = 0; i < children.length; i++) {
             children[i].forEach(callback, thisArg);
         }
     }
 
     /**
-     * @function
-     * @name GraphNode#isDescendantOf
-     * @description Check if node is descendant of another node.
+     * Check if node is descendant of another node.
+     *
      * @param {GraphNode} node - Potential ancestor of node.
      * @returns {boolean} If node is descendant of another node.
      * @example
@@ -538,7 +754,7 @@ class GraphNode extends EventHandler {
      * }
      */
     isDescendantOf(node) {
-        var parent = this._parent;
+        let parent = this._parent;
         while (parent) {
             if (parent === node)
                 return true;
@@ -549,9 +765,8 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#isAncestorOf
-     * @description Check if node is ancestor for another node.
+     * Check if node is ancestor for another node.
+     *
      * @param {GraphNode} node - Potential descendant of node.
      * @returns {boolean} If node is ancestor for another node.
      * @example
@@ -564,16 +779,15 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getEulerAngles
-     * @description Get the world space rotation for the specified GraphNode in Euler angle
-     * form. The order of the returned Euler angles is XYZ. The value returned by this function
-     * should be considered read-only. In order to set the world-space rotation of the graph
-     * node, use {@link GraphNode#setEulerAngles}.
+     * Get the world space rotation for the specified GraphNode in Euler angle form. The rotation
+     * is returned as euler angles in a {@link Vec3}. The value returned by this function should be
+     * considered read-only. In order to set the world-space rotation of the graph node, use
+     * {@link GraphNode#setEulerAngles}.
+     *
      * @returns {Vec3} The world space rotation of the graph node in Euler angle form.
      * @example
-     * var angles = this.entity.getEulerAngles(); // [0,0,0]
-     * angles[1] = 180; // rotate the entity around Y by 180 degrees
+     * const angles = this.entity.getEulerAngles();
+     * angles.y = 180; // rotate the entity around Y by 180 degrees
      * this.entity.setEulerAngles(angles);
      */
     getEulerAngles() {
@@ -582,16 +796,14 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getLocalEulerAngles
-     * @description Get the rotation in local space for the specified GraphNode. The rotation
-     * is returned as euler angles in a 3-dimensional vector where the order is XYZ. The
-     * returned vector should be considered read-only. To update the local rotation, use
-     * {@link GraphNode#setLocalEulerAngles}.
+     * Get the rotation in local space for the specified GraphNode. The rotation is returned as
+     * euler angles in a {@link Vec3}. The returned vector should be considered read-only. To
+     * update the local rotation, use {@link GraphNode#setLocalEulerAngles}.
+     *
      * @returns {Vec3} The local space rotation of the graph node as euler angles in XYZ order.
      * @example
-     * var angles = this.entity.getLocalEulerAngles();
-     * angles[1] = 180;
+     * const angles = this.entity.getLocalEulerAngles();
+     * angles.y = 180;
      * this.entity.setLocalEulerAngles(angles);
      */
     getLocalEulerAngles() {
@@ -600,15 +812,14 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getLocalPosition
-     * @description Get the position in local space for the specified GraphNode. The position
-     * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
-     * To update the local position, use {@link GraphNode#setLocalPosition}.
+     * Get the position in local space for the specified GraphNode. The position is returned as a
+     * {@link Vec3}. The returned vector should be considered read-only. To update the local
+     * position, use {@link GraphNode#setLocalPosition}.
+     *
      * @returns {Vec3} The local space position of the graph node.
      * @example
-     * var position = this.entity.getLocalPosition();
-     * position[0] += 1; // move the entity 1 unit along x.
+     * const position = this.entity.getLocalPosition();
+     * position.x += 1; // move the entity 1 unit along x.
      * this.entity.setLocalPosition(position);
      */
     getLocalPosition() {
@@ -616,28 +827,26 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getLocalRotation
-     * @description Get the rotation in local space for the specified GraphNode. The rotation
-     * is returned as a quaternion. The returned quaternion should be considered read-only.
-     * To update the local rotation, use {@link GraphNode#setLocalRotation}.
+     * Get the rotation in local space for the specified GraphNode. The rotation is returned as a
+     * {@link Quat}. The returned quaternion should be considered read-only. To update the local
+     * rotation, use {@link GraphNode#setLocalRotation}.
+     *
      * @returns {Quat} The local space rotation of the graph node as a quaternion.
      * @example
-     * var rotation = this.entity.getLocalRotation();
+     * const rotation = this.entity.getLocalRotation();
      */
     getLocalRotation() {
         return this.localRotation;
     }
 
     /**
-     * @function
-     * @name GraphNode#getLocalScale
-     * @description Get the scale in local space for the specified GraphNode. The scale
-     * is returned as a 3-dimensional vector. The returned vector should be considered read-only.
-     * To update the local scale, use {@link GraphNode#setLocalScale}.
+     * Get the scale in local space for the specified GraphNode. The scale is returned as a
+     * {@link Vec3}. The returned vector should be considered read-only. To update the local scale,
+     * use {@link GraphNode#setLocalScale}.
+     *
      * @returns {Vec3} The local space scale of the graph node.
      * @example
-     * var scale = this.entity.getLocalScale();
+     * const scale = this.entity.getLocalScale();
      * scale.x = 100;
      * this.entity.setLocalScale(scale);
      */
@@ -646,13 +855,12 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getLocalTransform
-     * @description Get the local transform matrix for this graph node. This matrix
-     * is the transform relative to the node's parent's world transformation matrix.
+     * Get the local transform matrix for this graph node. This matrix is the transform relative to
+     * the node's parent's world transformation matrix.
+     *
      * @returns {Mat4} The node's local transformation matrix.
      * @example
-     * var transform = this.entity.getLocalTransform();
+     * const transform = this.entity.getLocalTransform();
      */
     getLocalTransform() {
         if (this._dirtyLocal) {
@@ -663,14 +871,13 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getPosition
-     * @description Get the world space position for the specified GraphNode. The
-     * value returned by this function should be considered read-only. In order to set
-     * the world-space position of the graph node, use {@link GraphNode#setPosition}.
+     * Get the world space position for the specified GraphNode. The position is returned as a
+     * {@link Vec3}. The value returned by this function should be considered read-only. In order
+     * to set the world-space position of the graph node, use {@link GraphNode#setPosition}.
+     *
      * @returns {Vec3} The world space position of the graph node.
      * @example
-     * var position = this.entity.getPosition();
+     * const position = this.entity.getPosition();
      * position.x = 10;
      * this.entity.setPosition(position);
      */
@@ -680,14 +887,13 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getRotation
-     * @description Get the world space rotation for the specified GraphNode in quaternion
-     * form. The value returned by this function should be considered read-only. In order
+     * Get the world space rotation for the specified GraphNode. The rotation is returned as a
+     * {@link Quat}. The value returned by this function should be considered read-only. In order
      * to set the world-space rotation of the graph node, use {@link GraphNode#setRotation}.
+     *
      * @returns {Quat} The world space rotation of the graph node as a quaternion.
      * @example
-     * var rotation = this.entity.getRotation();
+     * const rotation = this.entity.getRotation();
      */
     getRotation() {
         this.rotation.setFromMat4(this.getWorldTransform());
@@ -695,17 +901,17 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name GraphNode#getScale
-     * @description Get the world space scale for the specified GraphNode. The returned value
-     * will only be correct for graph nodes that have a non-skewed world transform (a skew can
-     * be introduced by the compounding of rotations and scales higher in the graph node
-     * hierarchy). The value returned by this function should be considered read-only. Note
-     * that it is not possible to set the world space scale of a graph node directly.
+     * Get the world space scale for the specified GraphNode. The returned value will only be
+     * correct for graph nodes that have a non-skewed world transform (a skew can be introduced by
+     * the compounding of rotations and scales higher in the graph node hierarchy). The scale is
+     * returned as a {@link Vec3}. The value returned by this function should be considered
+     * read-only. Note that it is not possible to set the world space scale of a graph node
+     * directly.
+     *
      * @returns {Vec3} The world space scale of the graph node.
      * @example
-     * var scale = this.entity.getScale();
+     * const scale = this.entity.getScale();
+     * @ignore
      */
     getScale() {
         if (!this._scale) {
@@ -715,12 +921,11 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#getWorldTransform
-     * @description Get the world transformation matrix for this graph node.
+     * Get the world transformation matrix for this graph node.
+     *
      * @returns {Mat4} The node's world transformation matrix.
      * @example
-     * var transform = this.entity.getWorldTransform();
+     * const transform = this.entity.getWorldTransform();
      */
     getWorldTransform() {
         if (!this._dirtyLocal && !this._dirtyWorld)
@@ -735,18 +940,35 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#reparent
-     * @description Remove graph node from current parent and add as child to new parent.
+     * Returns cached value of negative scale of the world transform.
+     *
+     * @returns {number} -1 if world transform has negative scale, 1 otherwise.
+     * @ignore
+     */
+    get worldScaleSign() {
+
+        if (this._worldScaleSign === 0) {
+            this._worldScaleSign = this.getWorldTransform().scaleSign;
+        }
+
+        return this._worldScaleSign;
+    }
+
+    /**
+     * Remove graph node from current parent.
+     */
+    remove() {
+        this._parent?.removeChild(this);
+    }
+
+    /**
+     * Remove graph node from current parent and add as child to new parent.
+     *
      * @param {GraphNode} parent - New parent to attach graph node to.
      * @param {number} [index] - The child index where the child node should be placed.
      */
     reparent(parent, index) {
-        var current = this._parent;
-
-        if (current)
-            current.removeChild(this);
-
+        this.remove();
         if (parent) {
             if (index >= 0) {
                 parent.insertChild(this, index);
@@ -757,12 +979,11 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#setLocalEulerAngles
-     * @description Sets the local-space rotation of the specified graph node using euler angles.
-     * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * local-space euler rotation.
+     * Sets the local-space rotation of the specified graph node using euler angles. Eulers are
+     * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
+     * signatures: you can either pass a 3D vector or 3 numbers to specify the local-space euler
+     * rotation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding eulers or rotation around local-space
      * x-axis in degrees.
      * @param {number} [y] - Rotation around local-space y-axis in degrees.
@@ -772,26 +993,21 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalEulerAngles(0, 90, 0);
      * @example
      * // Set rotation of 90 degrees around y-axis via a vector
-     * var angles = new pc.Vec3(0, 90, 0);
+     * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setLocalEulerAngles(angles);
      */
     setLocalEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (!this._dirtyLocal)
             this._dirtifyLocal();
     }
 
     /**
-     * @function
-     * @name GraphNode#setLocalPosition
-     * @description Sets the local-space position of the specified graph node. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * local-space position.
+     * Sets the local-space position of the specified graph node. This function has two valid
+     * signatures: you can either pass a 3D vector or 3 numbers to specify the local-space
+     * position.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding local-space position or
      * x-coordinate of local-space position.
      * @param {number} [y] - Y-coordinate of local-space position.
@@ -801,7 +1017,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalPosition(0, 10, 0);
      * @example
      * // Set via vector
-     * var pos = new pc.Vec3(0, 10, 0);
+     * const pos = new pc.Vec3(0, 10, 0);
      * this.entity.setLocalPosition(pos);
      */
     setLocalPosition(x, y, z) {
@@ -816,11 +1032,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#setLocalRotation
-     * @description Sets the local-space rotation of the specified graph node. This function
-     * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
-     * local-space rotation.
+     * Sets the local-space rotation of the specified graph node. This function has two valid
+     * signatures: you can either pass a quaternion or 3 numbers to specify the local-space
+     * rotation.
+     *
      * @param {Quat|number} x - Quaternion holding local-space rotation or x-component of
      * local-space quaternion rotation.
      * @param {number} [y] - Y-component of local-space quaternion rotation.
@@ -831,7 +1046,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalRotation(0, 0, 0, 1);
      * @example
      * // Set via quaternion
-     * var q = pc.Quat();
+     * const q = pc.Quat();
      * this.entity.setLocalRotation(q);
      */
     setLocalRotation(x, y, z, w) {
@@ -846,11 +1061,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#setLocalScale
-     * @description Sets the local-space scale factor of the specified graph node. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * local-space scale.
+     * Sets the local-space scale factor of the specified graph node. This function has two valid
+     * signatures: you can either pass a 3D vector or 3 numbers to specify the local-space scale.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding local-space scale or x-coordinate
      * of local-space scale.
      * @param {number} [y] - Y-coordinate of local-space scale.
@@ -860,7 +1073,7 @@ class GraphNode extends EventHandler {
      * this.entity.setLocalScale(10, 10, 10);
      * @example
      * // Set via vector
-     * var scale = new pc.Vec3(10, 10, 10);
+     * const scale = new pc.Vec3(10, 10, 10);
      * this.entity.setLocalScale(scale);
      */
     setLocalScale(x, y, z) {
@@ -874,6 +1087,7 @@ class GraphNode extends EventHandler {
             this._dirtifyLocal();
     }
 
+    /** @private */
     _dirtifyLocal() {
         if (!this._dirtyLocal) {
             this._dirtyLocal = true;
@@ -882,39 +1096,42 @@ class GraphNode extends EventHandler {
         }
     }
 
+    /** @private */
     _unfreezeParentToRoot() {
-        var p = this._parent;
+        let p = this._parent;
         while (p) {
             p._frozen = false;
             p = p._parent;
         }
     }
 
+    /** @private */
     _dirtifyWorld() {
         if (!this._dirtyWorld)
             this._unfreezeParentToRoot();
         this._dirtifyWorldInternal();
     }
 
+    /** @private */
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
             this._dirtyWorld = true;
-            for (var i = 0; i < this._children.length; i++) {
+            for (let i = 0; i < this._children.length; i++) {
                 if (!this._children[i]._dirtyWorld)
                     this._children[i]._dirtifyWorldInternal();
             }
         }
         this._dirtyNormal = true;
+        this._worldScaleSign = 0;   // world matrix is dirty, mark this flag dirty too
         this._aabbVer++;
     }
 
     /**
-     * @function
-     * @name GraphNode#setPosition
-     * @description Sets the world-space position of the specified graph node. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * world-space position.
+     * Sets the world-space position of the specified graph node. This function has two valid
+     * signatures: you can either pass a 3D vector or 3 numbers to specify the world-space
+     * position.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding world-space position or
      * x-coordinate of world-space position.
      * @param {number} [y] - Y-coordinate of world-space position.
@@ -924,7 +1141,7 @@ class GraphNode extends EventHandler {
      * this.entity.setPosition(0, 10, 0);
      * @example
      * // Set via vector
-     * var position = new pc.Vec3(0, 10, 0);
+     * const position = new pc.Vec3(0, 10, 0);
      * this.entity.setPosition(position);
      */
     setPosition(x, y, z) {
@@ -946,11 +1163,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#setRotation
-     * @description Sets the world-space rotation of the specified graph node. This function
-     * has two valid signatures: you can either pass a quaternion or 3 numbers to specify the
-     * world-space rotation.
+     * Sets the world-space rotation of the specified graph node. This function has two valid
+     * signatures: you can either pass a quaternion or 3 numbers to specify the world-space
+     * rotation.
+     *
      * @param {Quat|number} x - Quaternion holding world-space rotation or x-component of
      * world-space quaternion rotation.
      * @param {number} [y] - Y-component of world-space quaternion rotation.
@@ -961,7 +1177,7 @@ class GraphNode extends EventHandler {
      * this.entity.setRotation(0, 0, 0, 1);
      * @example
      * // Set via quaternion
-     * var q = pc.Quat();
+     * const q = pc.Quat();
      * this.entity.setRotation(q);
      */
     setRotation(x, y, z, w) {
@@ -974,7 +1190,7 @@ class GraphNode extends EventHandler {
         if (this._parent === null) {
             this.localRotation.copy(rotation);
         } else {
-            var parentRot = this._parent.getRotation();
+            const parentRot = this._parent.getRotation();
             invParentRot.copy(parentRot).invert();
             this.localRotation.copy(invParentRot).mul(rotation);
         }
@@ -984,12 +1200,11 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#setEulerAngles
-     * @description Sets the world-space rotation of the specified graph node using euler angles.
-     * Eulers are interpreted in XYZ order. Eulers must be specified in degrees. This function
-     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
-     * world-space euler rotation.
+     * Sets the world-space rotation of the specified graph node using euler angles. Eulers are
+     * interpreted in XYZ order. Eulers must be specified in degrees. This function has two valid
+     * signatures: you can either pass a 3D vector or 3 numbers to specify the world-space euler
+     * rotation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding eulers or rotation around world-space
      * x-axis in degrees.
      * @param {number} [y] - Rotation around world-space y-axis in degrees.
@@ -999,18 +1214,14 @@ class GraphNode extends EventHandler {
      * this.entity.setEulerAngles(0, 90, 0);
      * @example
      * // Set rotation of 90 degrees around world-space y-axis via a vector
-     * var angles = new pc.Vec3(0, 90, 0);
+     * const angles = new pc.Vec3(0, 90, 0);
      * this.entity.setEulerAngles(angles);
      */
     setEulerAngles(x, y, z) {
-        if (x instanceof Vec3) {
-            this.localRotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            this.localRotation.setFromEulerAngles(x, y, z);
-        }
+        this.localRotation.setFromEulerAngles(x, y, z);
 
         if (this._parent !== null) {
-            var parentRot = this._parent.getRotation();
+            const parentRot = this._parent.getRotation();
             invParentRot.copy(parentRot).invert();
             this.localRotation.mul2(invParentRot, this.localRotation);
         }
@@ -1020,37 +1231,36 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#addChild
-     * @description Add a new child to the child list and update the parent value of the child node.
+     * Add a new child to the child list and update the parent value of the child node.
+     * If the node already had a parent, it is removed from its child list.
+     *
      * @param {GraphNode} node - The new child to add.
      * @example
-     * var e = new pc.Entity(app);
+     * const e = new pc.Entity(app);
      * this.entity.addChild(e);
      */
     addChild(node) {
-        if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
-
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
-
+        this._prepareInsertChild(node);
         this._children.push(node);
         this._onInsertChild(node);
     }
 
+    /**
+     * Add a child to this node, maintaining the child's transform in world space.
+     * If the node already had a parent, it is removed from its child list.
+     *
+     * @param {GraphNode} node - The child to add.
+     * @example
+     * const e = new pc.Entity(app);
+     * this.entity.addChildAndSaveTransform(e);
+     * @ignore
+     */
     addChildAndSaveTransform(node) {
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
 
-        var wPos = node.getPosition();
-        var wRot = node.getRotation();
+        const wPos = node.getPosition();
+        const wRot = node.getRotation();
 
-        var current = node._parent;
-        if (current)
-            current.removeChild(node);
+        this._prepareInsertChild(node);
 
         node.setPosition(tmpMat4.copy(this.worldTransform).invert().transformPoint(wPos));
         node.setRotation(tmpQuat.copy(this.getRotation()).invert().mul(wRot));
@@ -1060,43 +1270,66 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#insertChild
-     * @description Insert a new child to the child list at the specified index and update the parent value of the child node.
+     * Insert a new child to the child list at the specified index and update the parent value of
+     * the child node. If the node already had a parent, it is removed from its child list.
+     *
      * @param {GraphNode} node - The new child to insert.
-     * @param {number} index - The index in the child list of the parent where the new node will be inserted.
+     * @param {number} index - The index in the child list of the parent where the new node will be
+     * inserted.
      * @example
-     * var e = new pc.Entity(app);
+     * const e = new pc.Entity(app);
      * this.entity.insertChild(e, 1);
      */
     insertChild(node, index) {
-        if (node._parent !== null)
-            throw new Error("GraphNode is already parented");
 
-        // #if _DEBUG
-        this._debugInsertChild(node);
-        // #endif
-
+        this._prepareInsertChild(node);
         this._children.splice(index, 0, node);
         this._onInsertChild(node);
     }
 
-    // #if _DEBUG
-    _debugInsertChild(node) {
-        if (this === node)
-            throw new Error("GraphNode cannot be a child of itself");
+    /**
+     * Prepares node for being inserted to a parent node, and removes it from the previous parent.
+     *
+     * @param {GraphNode} node - The node being inserted.
+     * @private
+     */
+    _prepareInsertChild(node) {
 
-        if (this.isDescendantOf(node))
-            throw new Error("GraphNode cannot add an ancestor as a child");
+        // remove it from the existing parent
+        node.remove();
+
+        Debug.assert(node !== this, `GraphNode ${node?.name} cannot be a child of itself`);
+        Debug.assert(!this.isDescendantOf(node), `GraphNode ${node?.name} cannot add an ancestor as a child`);
     }
-    // #endif
 
+    /**
+     * Fires an event on all children of the node. The event `name` is fired on the first (root)
+     * node only. The event `nameHierarchy` is fired for all children.
+     *
+     * @param {string} name - The name of the event to fire on the root.
+     * @param {string} nameHierarchy - The name of the event to fire for all descendants.
+     * @param {GraphNode} parent - The parent of the node being added/removed from the hierarchy.
+     * @private
+     */
+    _fireOnHierarchy(name, nameHierarchy, parent) {
+        this.fire(name, parent);
+        for (let i = 0; i < this._children.length; i++) {
+            this._children[i]._fireOnHierarchy(nameHierarchy, nameHierarchy, parent);
+        }
+    }
+
+    /**
+     * Called when a node is inserted into a node's child list.
+     *
+     * @param {GraphNode} node - The node that was inserted.
+     * @private
+     */
     _onInsertChild(node) {
         node._parent = this;
 
         // the child node should be enabled in the hierarchy only if itself is enabled and if
         // this parent is enabled
-        var enabledInHierarchy = (node._enabled && this.enabled);
+        const enabledInHierarchy = (node._enabled && this.enabled);
         if (node._enabledInHierarchy !== enabledInHierarchy) {
             node._enabledInHierarchy = enabledInHierarchy;
 
@@ -1116,55 +1349,58 @@ class GraphNode extends EventHandler {
         if (this._frozen)
             node._unfreezeParentToRoot();
 
-        // alert an entity that it has been inserted
-        if (node.fire) node.fire('insert', this);
+        // alert an entity hierarchy that it has been inserted
+        node._fireOnHierarchy('insert', 'inserthierarchy', this);
 
         // alert the parent that it has had a child inserted
         if (this.fire) this.fire('childinsert', node);
     }
 
+    /**
+     * Recurse the hierarchy and update the graph depth at each node.
+     *
+     * @private
+     */
     _updateGraphDepth() {
-        if (this._parent) {
-            this._graphDepth = this._parent._graphDepth + 1;
-        } else {
-            this._graphDepth = 0;
-        }
+        this._graphDepth = this._parent ? this._parent._graphDepth + 1 : 0;
 
-        for (var i = 0, len = this._children.length; i < len; i++) {
+        for (let i = 0, len = this._children.length; i < len; i++) {
             this._children[i]._updateGraphDepth();
         }
     }
 
     /**
-     * @function
-     * @name GraphNode#removeChild
-     * @description Remove the node from the child list and update the parent value of the child.
+     * Remove the node from the child list and update the parent value of the child.
+     *
      * @param {GraphNode} child - The node to remove.
      * @example
-     * var child = this.entity.children[0];
+     * const child = this.entity.children[0];
      * this.entity.removeChild(child);
      */
     removeChild(child) {
-        var i;
-        var length = this._children.length;
+        const index = this._children.indexOf(child);
+        if (index === -1) {
+            return;
+        }
 
         // Remove from child list
-        for (i = 0; i < length; ++i) {
-            if (this._children[i] === child) {
-                this._children.splice(i, 1);
+        this._children.splice(index, 1);
 
-                // Clear parent
-                child._parent = null;
+        // Clear parent
+        child._parent = null;
 
-                // alert child that it has been removed
-                if (child.fire) child.fire('remove', this);
+        // NOTE: see PR #4047 - this fix is removed for now as it breaks other things
+        // notify the child hierarchy it has been removed from the parent,
+        // which marks them as not enabled in hierarchy
+        // if (child._enabledInHierarchy) {
+        //     child._notifyHierarchyStateChanged(child, false);
+        // }
 
-                // alert the parent that it has had a child removed
-                if (this.fire) this.fire('childremove', child);
+        // alert children that they has been removed
+        child._fireOnHierarchy('remove', 'removehierarchy', this);
 
-                return;
-            }
-        }
+        // alert the parent that it has had a child removed
+        this.fire('childremove', child);
     }
 
     _sync() {
@@ -1179,12 +1415,12 @@ class GraphNode extends EventHandler {
                 this.worldTransform.copy(this.localTransform);
             } else {
                 if (this.scaleCompensation) {
-                    var parentWorldScale;
-                    var parent = this._parent;
+                    let parentWorldScale;
+                    const parent = this._parent;
 
                     // Find a parent of the first uncompensated node up in the hierarchy and use its scale * localScale
-                    var scale = this.localScale;
-                    var parentToUseScaleFrom = parent; // current parent
+                    let scale = this.localScale;
+                    let parentToUseScaleFrom = parent; // current parent
                     if (parentToUseScaleFrom) {
                         while (parentToUseScaleFrom && parentToUseScaleFrom.scaleCompensation) {
                             parentToUseScaleFrom = parentToUseScaleFrom._parent;
@@ -1205,7 +1441,7 @@ class GraphNode extends EventHandler {
                     scaleCompensateRot.mul2(scaleCompensateRot2, this.localRotation);
 
                     // Find matrix to transform position
-                    var tmatrix = parent.worldTransform;
+                    let tmatrix = parent.worldTransform;
                     if (parent.scaleCompensation) {
                         scaleCompensateScaleForParent.mul2(parentWorldScale, parent.getLocalScale());
                         scaleCompensatePosTransform.setTRS(parent.worldTransform.getTranslation(scaleCompensatePos),
@@ -1227,10 +1463,9 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @private
-     * @function
-     * @name GraphNode#syncHierarchy
-     * @description Updates the world transformation matrices at this node and all of its descendants.
+     * Updates the world transformation matrices at this node and all of its descendants.
+     *
+     * @ignore
      */
     syncHierarchy() {
         if (!this._enabled)
@@ -1244,33 +1479,32 @@ class GraphNode extends EventHandler {
             this._sync();
         }
 
-        var children = this._children;
-        for (var i = 0, len = children.length; i < len; i++) {
+        const children = this._children;
+        for (let i = 0, len = children.length; i < len; i++) {
             children[i].syncHierarchy();
         }
     }
 
     /**
-     * @function
-     * @name GraphNode#lookAt
-     * @description Reorients the graph node so that the negative z-axis points towards the target.
-     * This function has two valid signatures. Either pass 3D vectors for the look at coordinate and up
+     * Reorients the graph node so that the negative z-axis points towards the target. This
+     * function has two valid signatures. Either pass 3D vectors for the look at coordinate and up
      * vector, or pass numbers to represent the vectors.
+     *
      * @param {Vec3|number} x - If passing a 3D vector, this is the world-space coordinate to look at.
      * Otherwise, it is the x-component of the world-space coordinate to look at.
      * @param {Vec3|number} [y] - If passing a 3D vector, this is the world-space up vector for look at
      * transform. Otherwise, it is the y-component of the world-space coordinate to look at.
      * @param {number} [z] - Z-component of the world-space coordinate to look at.
-     * @param {number} [ux=0] - X-component of the up vector for the look at transform.
-     * @param {number} [uy=1] - Y-component of the up vector for the look at transform.
-     * @param {number} [uz=0] - Z-component of the up vector for the look at transform.
+     * @param {number} [ux] - X-component of the up vector for the look at transform. Defaults to 0.
+     * @param {number} [uy] - Y-component of the up vector for the look at transform. Defaults to 1.
+     * @param {number} [uz] - Z-component of the up vector for the look at transform. Defaults to 0.
      * @example
      * // Look at another entity, using the (default) positive y-axis for up
-     * var position = otherEntity.getPosition();
+     * const position = otherEntity.getPosition();
      * this.entity.lookAt(position);
      * @example
      * // Look at another entity, using the negative world y-axis for up
-     * var position = otherEntity.getPosition();
+     * const position = otherEntity.getPosition();
      * this.entity.lookAt(position, pc.Vec3.DOWN);
      * @example
      * // Look at the world space origin, using the (default) positive y-axis for up
@@ -1301,11 +1535,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#translate
-     * @description Translates the graph node in world-space by the specified translation vector.
-     * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
-     * specify the world-space translation.
+     * Translates the graph node in world-space by the specified translation vector. This function
+     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+     * world-space translation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding world-space translation or
      * x-coordinate of world-space translation.
      * @param {number} [y] - Y-coordinate of world-space translation.
@@ -1315,7 +1548,7 @@ class GraphNode extends EventHandler {
      * this.entity.translate(10, 0, 0);
      * @example
      * // Translate via vector
-     * var t = new pc.Vec3(10, 0, 0);
+     * const t = new pc.Vec3(10, 0, 0);
      * this.entity.translate(t);
      */
     translate(x, y, z) {
@@ -1330,11 +1563,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#translateLocal
-     * @description Translates the graph node in local-space by the specified translation vector.
-     * This function has two valid signatures: you can either pass a 3D vector or 3 numbers to
-     * specify the local-space translation.
+     * Translates the graph node in local-space by the specified translation vector. This function
+     * has two valid signatures: you can either pass a 3D vector or 3 numbers to specify the
+     * local-space translation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding local-space translation or
      * x-coordinate of local-space translation.
      * @param {number} [y] - Y-coordinate of local-space translation.
@@ -1344,7 +1576,7 @@ class GraphNode extends EventHandler {
      * this.entity.translateLocal(10, 0, 0);
      * @example
      * // Translate via vector
-     * var t = new pc.Vec3(10, 0, 0);
+     * const t = new pc.Vec3(10, 0, 0);
      * this.entity.translateLocal(t);
      */
     translateLocal(x, y, z) {
@@ -1362,11 +1594,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#rotate
-     * @description Rotates the graph node in world-space by the specified Euler angles.
-     * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
-     * you can either pass a 3D vector or 3 numbers to specify the world-space rotation.
+     * Rotates the graph node in world-space by the specified Euler angles. Eulers are specified in
+     * degrees in XYZ order. This function has two valid signatures: you can either pass a 3D
+     * vector or 3 numbers to specify the world-space rotation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding world-space rotation or
      * rotation around world-space x-axis in degrees.
      * @param {number} [y] - Rotation around world-space y-axis in degrees.
@@ -1376,21 +1607,17 @@ class GraphNode extends EventHandler {
      * this.entity.rotate(0, 90, 0);
      * @example
      * // Rotate via vector
-     * var r = new pc.Vec3(0, 90, 0);
+     * const r = new pc.Vec3(0, 90, 0);
      * this.entity.rotate(r);
      */
     rotate(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         if (this._parent === null) {
             this.localRotation.mul2(rotation, this.localRotation);
         } else {
-            var rot = this.getRotation();
-            var parentRot = this._parent.getRotation();
+            const rot = this.getRotation();
+            const parentRot = this._parent.getRotation();
 
             invParentRot.copy(parentRot).invert();
             rotation.mul2(invParentRot, rotation);
@@ -1402,11 +1629,10 @@ class GraphNode extends EventHandler {
     }
 
     /**
-     * @function
-     * @name GraphNode#rotateLocal
-     * @description Rotates the graph node in local-space by the specified Euler angles.
-     * Eulers are specified in degrees in XYZ order. This function has two valid signatures:
-     * you can either pass a 3D vector or 3 numbers to specify the local-space rotation.
+     * Rotates the graph node in local-space by the specified Euler angles. Eulers are specified in
+     * degrees in XYZ order. This function has two valid signatures: you can either pass a 3D
+     * vector or 3 numbers to specify the local-space rotation.
+     *
      * @param {Vec3|number} x - 3-dimensional vector holding local-space rotation or
      * rotation around local-space x-axis in degrees.
      * @param {number} [y] - Rotation around local-space y-axis in degrees.
@@ -1416,15 +1642,11 @@ class GraphNode extends EventHandler {
      * this.entity.rotateLocal(0, 90, 0);
      * @example
      * // Rotate via vector
-     * var r = new pc.Vec3(0, 90, 0);
+     * const r = new pc.Vec3(0, 90, 0);
      * this.entity.rotateLocal(r);
      */
     rotateLocal(x, y, z) {
-        if (x instanceof Vec3) {
-            rotation.setFromEulerAngles(x.x, x.y, x.z);
-        } else {
-            rotation.setFromEulerAngles(x, y, z);
-        }
+        rotation.setFromEulerAngles(x, y, z);
 
         this.localRotation.mul(rotation);
 

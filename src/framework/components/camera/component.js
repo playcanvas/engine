@@ -1,186 +1,458 @@
-import { ASPECT_AUTO, LAYERID_UI } from '../../../scene/constants.js';
+import { Debug } from '../../../core/debug.js';
+
+import { ASPECT_AUTO, LAYERID_UI, LAYERID_DEPTH } from '../../../scene/constants.js';
 import { Camera } from '../../../scene/camera.js';
+import { ShaderPass } from '../../../scene/shader-pass.js';
 
 import { Component } from '../component.js';
 
 import { PostEffectQueue } from './post-effect-queue.js';
 
 /**
- * @component
- * @class
- * @name CameraComponent
- * @augments Component
- * @classdesc The Camera Component enables an Entity to render the scene. A scene
- * requires at least one enabled camera component to be rendered. Note that multiple
- * camera components can be enabled simultaneously (for split-screen or offscreen
- * rendering, for example).
- * @description Create a new Camera Component.
- * @param {CameraComponentSystem} system - The ComponentSystem that created this
- * Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @example
+ * Callback used by {@link CameraComponent#calculateTransform} and {@link CameraComponent#calculateProjection}.
+ *
+ * @callback CalculateMatrixCallback
+ * @param {import('../../../core/math/mat4.js').Mat4} transformMatrix - Output of the function.
+ * @param {number} view - Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}. Left and right are only used in stereo rendering.
+ */
+
+/**
+ * The Camera Component enables an Entity to render the scene. A scene requires at least one
+ * enabled camera component to be rendered. Note that multiple camera components can be enabled
+ * simultaneously (for split-screen or offscreen rendering, for example).
+ *
+ * ```javascript
  * // Add a pc.CameraComponent to an entity
- * var entity = new pc.Entity();
+ * const entity = new pc.Entity();
  * entity.addComponent('camera', {
  *     nearClip: 1,
  *     farClip: 100,
  *     fov: 55
  * });
- * @example
+ *
  * // Get the pc.CameraComponent on an entity
- * var cameraComponent = entity.camera;
- * @example
+ * const cameraComponent = entity.camera;
+ *
  * // Update a property on a camera component
  * entity.camera.nearClip = 2;
- * @property {number} projection The type of projection used to render the camera.
- * Can be:
+ * ```
  *
- * * {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
- * resembles a truncated pyramid.
- * * {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
- * frustum is a cuboid.
- *
- * Defaults to {@link PROJECTION_PERSPECTIVE}.
- * @property {number} aspectRatio The aspect ratio (width divided by height) of the
- * camera. If aspectRatioMode is {@link ASPECT_AUTO}, then this value will be automatically
- * calculated every frame, and you can only read it. If it's ASPECT_MANUAL, you can set
- * the value.
- * @property {number} aspectRatioMode The aspect ratio mode of the camera. Can be:
- *
- * * {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
- * target's width divided by height.
- * * {@link ASPECT_MANUAL}: use the aspectRatio value.
- *
- * Defaults to {@link ASPECT_AUTO}.
- * @property {Color} clearColor The color used to clear the canvas to before the
- * camera starts to render. Defaults to [0.75, 0.75, 0.75, 1].
- * @property {boolean} clearColorBuffer If true the camera will clear the color buffer
- * to the color set in clearColor. Defaults to true.
- * @property {boolean} clearDepthBuffer If true the camera will clear the depth buffer.
- * Defaults to true.
- * @property {boolean} clearStencilBuffer If true the camera will clear the stencil
- * buffer. Defaults to true.
- * @property {number} farClip The distance from the camera after which no rendering
- * will take place. Defaults to 1000.
- * @property {number} fov The field of view of the camera in degrees. Usually this is
- * the Y-axis field of view, see {@link CameraComponent#horizontalFov}. Used for
- * {@link PROJECTION_PERSPECTIVE} cameras only. Defaults to 45.
- * @property {boolean} horizontalFov Set which axis to use for the Field of View
- * calculation. Defaults to false.
- * @property {number} nearClip The distance from the camera before which no rendering
- * will take place. Defaults to 0.1.
- * @property {number} orthoHeight The half-height of the orthographic view window (in
- * the Y-axis). Used for {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
- * @property {number} priority Controls the order in which cameras are rendered. Cameras
- * with smaller values for priority are rendered first. Defaults to 0.
- * @property {RenderTarget} renderTarget Render target to which rendering of the cameras
- * is performed. If not set, it will render simply to the screen.
- * @property {Vec4} rect Controls where on the screen the camera will be rendered in
- * normalized screen coordinates. Defaults to [0, 0, 1, 1].
- * @property {Vec4} scissorRect Clips all pixels which are not in the rectangle.
- * The order of the values is [x, y, width, height]. Defaults to [0, 0, 1, 1].
- * @property {PostEffectQueue} postEffects The post effects queue for this camera.
- * Use this to add or remove post effects from the camera.
- * @property {boolean} frustumCulling Controls the culling of mesh instances against
- * the camera frustum, i.e. if objects outside of camera should be omitted from rendering.
- * If false, all mesh instances in the scene are rendered by the camera, regardless of
- * visibility. Defaults to false.
- * @property {callbacks.CalculateMatrix} calculateTransform Custom function you can
- * provide to calculate the camera transformation matrix manually. Can be used for complex
- * effects like reflections. Function is called using component's scope.
- * Arguments:
- * * {@link Mat4} transformMatrix: output of the function.
- * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
- * Left and right are only used in stereo rendering.
- * @property {callbacks.CalculateMatrix} calculateProjection Custom function you can
- * provide to calculate the camera projection matrix manually. Can be used for complex
- * effects like doing oblique projection. Function is called using component's scope.
- * Arguments:
- * * {{@link Mat4}} transformMatrix: output of the function
- * * {number} view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
- * Left and right are only used in stereo rendering.
- * @property {boolean} cullFaces If true the camera will take material.cull into account.
- * Otherwise both front and back faces will be rendered. Defaults to true.
- * @property {boolean} flipFaces If true the camera will invert front and back faces.
- * Can be useful for reflection rendering. Defaults to false.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this
- * camera should belong. Don't push/pop/splice or modify this array, if you want to
- * change it, set a new one instead. Defaults to [LAYERID_WORLD, LAYERID_DEPTH,
- * LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
- * @property {number} disablePostEffectsLayer Layer ID of a layer on which the postprocessing of the camera stops being applied to.
- * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and
- * any following layers for the camera. Set to undefined for post-processing to be applied to all layers of the camera.
+ * @augments Component
+ * @category Graphics
  */
 class CameraComponent extends Component {
+    /**
+     * Custom function that is called when postprocessing should execute.
+     *
+     * @type {Function}
+     * @ignore
+     */
+    onPostprocessing = null;
+
+    /**
+     * Custom function that is called before the camera renders the scene.
+     *
+     * @type {Function}
+     */
+    onPreRender = null;
+
+    /**
+     * Custom function that is called after the camera renders the scene.
+     *
+     * @type {Function}
+     */
+    onPostRender = null;
+
+    /**
+     * A counter of requests of depth map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneDepthMap = 0;
+
+    /**
+     * A counter of requests of color map rendering.
+     *
+     * @type {number}
+     * @private
+     */
+    _renderSceneColorMap = 0;
+
+    /** @private */
+    _sceneDepthMapRequested = false;
+
+    /** @private */
+    _sceneColorMapRequested = false;
+
+    /** @private */
+    _priority = 0;
+
+    /**
+     * Layer id at which the postprocessing stops for the camera.
+     *
+     * @type {number}
+     * @private
+     */
+    _disablePostEffectsLayer = LAYERID_UI;
+
+    /** @private */
+    _camera = new Camera();
+
+    /**
+     * Create a new CameraComponent instance.
+     *
+     * @param {import('./system.js').CameraComponentSystem} system - The ComponentSystem that
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
-        this._camera = new Camera();
         this._camera.node = entity;
-
-        this._priority = 0;
-
-        // event called when postprocessing should execute
-        this.onPostprocessing = null;
-
-        // layer id at which the postprocessing stops for the camera
-        this._disablePostEffectsLayer = LAYERID_UI;
 
         // postprocessing management
         this._postEffects = new PostEffectQueue(system.app, this);
     }
 
     /**
-     * @readonly
-     * @name CameraComponent#frustum
-     * @type {Frustum}
-     * @description Queries the camera's frustum shape.
+     * Sets the name of the shader pass the camera will use when rendering.
+     *
+     * In addition to existing names (see the parameter description), a new name can be specified,
+     * which creates a new shader pass with the given name. The name provided can only use
+     * alphanumeric characters and underscores. When a shader is compiled for the new pass, a define
+     * is added to the shader. For example, if the name is 'custom_rendering', the define
+     * 'CUSTOM_RENDERING_PASS' is added to the shader, allowing the shader code to conditionally
+     * execute code only when that shader pass is active.
+     *
+     * Another instance where this approach may prove useful is when a camera needs to render a more
+     * cost-effective version of shaders, such as when creating a reflection texture. To accomplish
+     * this, a callback on the material that triggers during shader compilation can be used. This
+     * callback can modify the shader generation options specifically for this shader pass.
+     *
+     * ```javascript
+     * const shaderPassId = camera.setShaderPass('custom_rendering');
+     *
+     * material.onUpdateShader = function (options) {
+     *     if (options.pass === shaderPassId) {
+     *         options.litOptions.normalMapEnabled = false;
+     *         options.litOptions.useSpecular = false;
+     *     }
+     *     return options;
+     * };
+     * ```
+     *
+     * @param {string} name - The name of the shader pass. Defaults to undefined, which is
+     * equivalent to {@link SHADERPASS_FORWARD}. Can be:
+     *
+     * - {@link SHADERPASS_FORWARD}
+     * - {@link SHADERPASS_ALBEDO}
+     * - {@link SHADERPASS_OPACITY}
+     * - {@link SHADERPASS_WORLDNORMAL}
+     * - {@link SHADERPASS_SPECULARITY}
+     * - {@link SHADERPASS_GLOSS}
+     * - {@link SHADERPASS_METALNESS}
+     * - {@link SHADERPASS_AO}
+     * - {@link SHADERPASS_EMISSION}
+     * - {@link SHADERPASS_LIGHTING}
+     * - {@link SHADERPASS_UV0}
+     *
+     * @returns {number} The id of the shader pass.
      */
-    /**
-     * @readonly
-     * @name CameraComponent#projectionMatrix
-     * @type {Mat4}
-     * @description Queries the camera's projection matrix.
-     */
-    /**
-     * @readonly
-     * @name CameraComponent#viewMatrix
-     * @type {Mat4}
-     * @description Queries the camera's view matrix.
-     */
+    setShaderPass(name) {
+        const shaderPass =  ShaderPass.get(this.system.app.graphicsDevice);
+        const shaderPassInfo = name ? shaderPass.allocate(name, {
+            isForward: true
+        }) : null;
+        this._camera.shaderPassInfo = shaderPassInfo;
 
+        return shaderPassInfo.index;
+    }
+
+    /**
+     * Shader pass name.
+     *
+     * @returns {string} The name of the shader pass, or undefined if no shader pass is set.
+     */
+    getShaderPass() {
+        return this._camera.shaderPassInfo?.name;
+    }
+
+    /**
+     * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
+     *
+     * @type {number}
+     */
+    set aperture(value) {
+        this._camera.aperture = value;
+    }
+
+    get aperture() {
+        return this._camera.aperture;
+    }
+
+    /**
+     * The aspect ratio (width divided by height) of the camera. If aspectRatioMode is
+     * {@link ASPECT_AUTO}, then this value will be automatically calculated every frame, and you
+     * can only read it. If it's ASPECT_MANUAL, you can set the value.
+     *
+     * @type {number}
+     */
+    set aspectRatio(value) {
+        this._camera.aspectRatio = value;
+    }
+
+    get aspectRatio() {
+        return this._camera.aspectRatio;
+    }
+
+    /**
+     * The aspect ratio mode of the camera. Can be:
+     *
+     * - {@link ASPECT_AUTO}: aspect ratio will be calculated from the current render
+     * target's width divided by height.
+     * - {@link ASPECT_MANUAL}: use the aspectRatio value.
+     *
+     * Defaults to {@link ASPECT_AUTO}.
+     *
+     * @type {number}
+     */
+    set aspectRatioMode(value) {
+        this._camera.aspectRatioMode = value;
+    }
+
+    get aspectRatioMode() {
+        return this._camera.aspectRatioMode;
+    }
+
+    /**
+     * Custom function you can provide to calculate the camera projection matrix manually. Can be
+     * used for complex effects like doing oblique projection. Function is called using component's
+     * scope. Arguments:
+     *
+     * - {@link Mat4} transformMatrix: output of the function
+     * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+     *
+     * Left and right are only used in stereo rendering.
+     *
+     * @type {CalculateMatrixCallback}
+     */
+    set calculateProjection(value) {
+        this._camera.calculateProjection = value;
+    }
+
+    get calculateProjection() {
+        return this._camera.calculateProjection;
+    }
+
+    /**
+     * Custom function you can provide to calculate the camera transformation matrix manually. Can
+     * be used for complex effects like reflections. Function is called using component's scope.
+     * Arguments:
+     *
+     * - {@link Mat4} transformMatrix: output of the function.
+     * - view: Type of view. Can be {@link VIEW_CENTER}, {@link VIEW_LEFT} or {@link VIEW_RIGHT}.
+     *
+     * Left and right are only used in stereo rendering.
+     *
+     * @type {CalculateMatrixCallback}
+     */
+    set calculateTransform(value) {
+        this._camera.calculateTransform = value;
+    }
+
+    get calculateTransform() {
+        return this._camera.calculateTransform;
+    }
+
+    /**
+     * Queries the camera component's underlying Camera instance.
+     *
+     * @type {Camera}
+     * @ignore
+     */
     get camera() {
         return this._camera;
     }
 
-    dirtyLayerCompositionCameras() {
-        // layer composition needs to update order
-        const layerComp = this.system.app.scene.layers;
-        layerComp._dirtyCameras = true;
+    /**
+     * The color used to clear the canvas to before the camera starts to render. Defaults to
+     * [0.75, 0.75, 0.75, 1].
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
+    set clearColor(value) {
+        this._camera.clearColor = value;
+    }
+
+    get clearColor() {
+        return this._camera.clearColor;
+    }
+
+    /**
+     * If true the camera will clear the color buffer to the color set in clearColor. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set clearColorBuffer(value) {
+        this._camera.clearColorBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearColorBuffer() {
+        return this._camera.clearColorBuffer;
+    }
+
+    /**
+     * If true the camera will clear the depth buffer. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set clearDepthBuffer(value) {
+        this._camera.clearDepthBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearDepthBuffer() {
+        return this._camera.clearDepthBuffer;
+    }
+
+    /**
+     * If true the camera will clear the stencil buffer. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set clearStencilBuffer(value) {
+        this._camera.clearStencilBuffer = value;
+        this.dirtyLayerCompositionCameras();
+    }
+
+    get clearStencilBuffer() {
+        return this._camera.clearStencilBuffer;
+    }
+
+    /**
+     * If true the camera will take material.cull into account. Otherwise both front and back faces
+     * will be rendered. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set cullFaces(value) {
+        this._camera.cullFaces = value;
+    }
+
+    get cullFaces() {
+        return this._camera.cullFaces;
+    }
+
+    /**
+     * Layer ID of a layer on which the postprocessing of the camera stops being applied to.
+     * Defaults to LAYERID_UI, which causes post processing to not be applied to UI layer and any
+     * following layers for the camera. Set to undefined for post-processing to be applied to all
+     * layers of the camera.
+     *
+     * @type {number}
+     */
+    set disablePostEffectsLayer(layer) {
+        this._disablePostEffectsLayer = layer;
+        this.dirtyLayerCompositionCameras();
     }
 
     get disablePostEffectsLayer() {
         return this._disablePostEffectsLayer;
     }
 
-    set disablePostEffectsLayer(layer) {
-        this._disablePostEffectsLayer = layer;
-        this.dirtyLayerCompositionCameras();
+    /**
+     * The distance from the camera after which no rendering will take place. Defaults to 1000.
+     *
+     * @type {number}
+     */
+    set farClip(value) {
+        this._camera.farClip = value;
     }
 
-    get postEffectsEnabled() {
-        return this._postEffects.enabled;
+    get farClip() {
+        return this._camera.farClip;
     }
 
-    get layers() {
-        return this._camera.layers;
+    /**
+     * If true the camera will invert front and back faces. Can be useful for reflection rendering.
+     * Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set flipFaces(value) {
+        this._camera.flipFaces = value;
     }
 
+    get flipFaces() {
+        return this._camera.flipFaces;
+    }
+
+    /**
+     * The field of view of the camera in degrees. Usually this is the Y-axis field of view, see
+     * {@link CameraComponent#horizontalFov}. Used for {@link PROJECTION_PERSPECTIVE} cameras only.
+     * Defaults to 45.
+     *
+     * @type {number}
+     */
+    set fov(value) {
+        this._camera.fov = value;
+    }
+
+    get fov() {
+        return this._camera.fov;
+    }
+
+    /**
+     * Queries the camera's frustum shape.
+     *
+     * @type {import('../../../core/shape/frustum.js').Frustum}
+     */
+    get frustum() {
+        return this._camera.frustum;
+    }
+
+    /**
+     * Controls the culling of mesh instances against the camera frustum, i.e. if objects outside
+     * of camera should be omitted from rendering. If false, all mesh instances in the scene are
+     * rendered by the camera, regardless of visibility. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set frustumCulling(value) {
+        this._camera.frustumCulling = value;
+    }
+
+    get frustumCulling() {
+        return this._camera.frustumCulling;
+    }
+
+    /**
+     * Set which axis to use for the Field of View calculation. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set horizontalFov(value) {
+        this._camera.horizontalFov = value;
+    }
+
+    get horizontalFov() {
+        return this._camera.horizontalFov;
+    }
+
+    /**
+     * An array of layer IDs ({@link Layer#id}) to which this camera should belong. Don't push,
+     * pop, splice or modify this array, if you want to change it, set a new one instead. Defaults
+     * to [LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE].
+     *
+     * @type {number[]}
+     */
     set layers(newValue) {
-        var i, layer;
-        var layers = this._camera.layers;
-        for (i = 0; i < layers.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this._camera.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (!layer) continue;
             layer.removeCamera(this);
         }
@@ -189,51 +461,156 @@ class CameraComponent extends Component {
 
         if (!this.enabled || !this.entity.enabled) return;
 
-        for (i = 0; i < newValue.length; i++) {
-            layer = this.system.app.scene.layers.getLayerById(newValue[i]);
+        for (let i = 0; i < newValue.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             layer.addCamera(this);
         }
+    }
+
+    get layers() {
+        return this._camera.layers;
+    }
+
+    get layersSet() {
+        return this._camera.layersSet;
+    }
+
+    /**
+     * The distance from the camera before which no rendering will take place. Defaults to 0.1.
+     *
+     * @type {number}
+     */
+    set nearClip(value) {
+        this._camera.nearClip = value;
+    }
+
+    get nearClip() {
+        return this._camera.nearClip;
+    }
+
+    /**
+     * The half-height of the orthographic view window (in the Y-axis). Used for
+     * {@link PROJECTION_ORTHOGRAPHIC} cameras only. Defaults to 10.
+     *
+     * @type {number}
+     */
+    set orthoHeight(value) {
+        this._camera.orthoHeight = value;
+    }
+
+    get orthoHeight() {
+        return this._camera.orthoHeight;
     }
 
     get postEffects() {
         return this._postEffects;
     }
 
-    get priority() {
-        return this._priority;
+    /**
+     * The post effects queue for this camera. Use this to add or remove post effects from the camera.
+     *
+     * @type {PostEffectQueue}
+     */
+    get postEffectsEnabled() {
+        return this._postEffects.enabled;
     }
 
+    /**
+     * Controls the order in which cameras are rendered. Cameras with smaller values for priority
+     * are rendered first. Defaults to 0.
+     *
+     * @type {number}
+     */
     set priority(newValue) {
         this._priority = newValue;
         this.dirtyLayerCompositionCameras();
     }
 
-
-    get clearColorBuffer() {
-        return this._camera.clearColorBuffer;
+    get priority() {
+        return this._priority;
     }
 
-    set clearColorBuffer(value) {
-        this._camera.clearColorBuffer = value;
-        this.dirtyLayerCompositionCameras();
+    /**
+     * The type of projection used to render the camera. Can be:
+     *
+     * - {@link PROJECTION_PERSPECTIVE}: A perspective projection. The camera frustum
+     * resembles a truncated pyramid.
+     * - {@link PROJECTION_ORTHOGRAPHIC}: An orthographic projection. The camera
+     * frustum is a cuboid.
+     *
+     * Defaults to {@link PROJECTION_PERSPECTIVE}.
+     *
+     * @type {number}
+     */
+    set projection(value) {
+        this._camera.projection = value;
     }
 
-    get clearDepthBuffer() {
-        return this._camera.clearDepthBuffer;
+    get projection() {
+        return this._camera.projection;
     }
 
-    set clearDepthBuffer(value) {
-        this._camera.clearDepthBuffer = value;
-        this.dirtyLayerCompositionCameras();
+    /**
+     * Queries the camera's projection matrix.
+     *
+     * @type {import('../../../core/math/mat4.js').Mat4}
+     */
+    get projectionMatrix() {
+        return this._camera.projectionMatrix;
     }
 
-    get clearStencilBuffer() {
-        return this._camera.clearStencilBuffer;
+    /**
+     * Controls where on the screen the camera will be rendered in normalized screen coordinates.
+     * Defaults to [0, 0, 1, 1].
+     *
+     * @type {import('../../../core/math/vec4.js').Vec4}
+     */
+    set rect(value) {
+        this._camera.rect = value;
+        this.fire('set:rect', this._camera.rect);
     }
 
-    set clearStencilBuffer(value) {
-        this._camera.clearStencilBuffer = value;
+    get rect() {
+        return this._camera.rect;
+    }
+
+    set renderSceneColorMap(value) {
+        if (value && !this._sceneColorMapRequested) {
+            this.requestSceneColorMap(true);
+            this._sceneColorMapRequested = true;
+        } else if (this._sceneColorMapRequested) {
+            this.requestSceneColorMap(false);
+            this._sceneColorMapRequested = false;
+        }
+    }
+
+    get renderSceneColorMap() {
+        return this._renderSceneColorMap > 0;
+    }
+
+    set renderSceneDepthMap(value) {
+        if (value && !this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(true);
+            this._sceneDepthMapRequested = true;
+        } else if (this._sceneDepthMapRequested) {
+            this.requestSceneDepthMap(false);
+            this._sceneDepthMapRequested = false;
+        }
+    }
+
+    get renderSceneDepthMap() {
+        return this._renderSceneDepthMap > 0;
+    }
+
+    /**
+     * Render target to which rendering of the cameras is performed. If not set, it will render
+     * simply to the screen.
+     *
+     * @type {import('../../../platform/graphics/render-target.js').RenderTarget}
+     */
+    set renderTarget(value) {
+        this._camera.renderTarget = value;
         this.dirtyLayerCompositionCameras();
     }
 
@@ -241,110 +618,242 @@ class CameraComponent extends Component {
         return this._camera.renderTarget;
     }
 
-    set renderTarget(value) {
-        this._camera.renderTarget = value;
-        this.dirtyLayerCompositionCameras();
+    /**
+     * Clips all pixels which are not in the rectangle. The order of the values is
+     * [x, y, width, height]. Defaults to [0, 0, 1, 1].
+     *
+     * @type {import('../../../core/math/vec4.js').Vec4}
+     */
+    set scissorRect(value) {
+        this._camera.scissorRect = value;
+    }
+
+    get scissorRect() {
+        return this._camera.scissorRect;
     }
 
     /**
-     * @function
-     * @name CameraComponent#screenToWorld
-     * @description Convert a point from 2D screen space to 3D world space.
-     * @param {number} screenx - X coordinate on PlayCanvas' canvas element.
-     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element.
-     * @param {number} cameraz - The distance from the camera in world space to create
-     * the new point.
-     * @param {Vec3} [worldCoord] - 3D vector to receive world coordinate result.
+     * Set camera sensitivity in ISO, the default value is 1000. Higher value means more exposure.
+     *
+     * @type {number}
+     */
+    set sensitivity(value) {
+        this._camera.sensitivity = value;
+    }
+
+    get sensitivity() {
+        return this._camera.sensitivity;
+    }
+
+    /**
+     * Set camera shutter speed in seconds, the default value is 1/1000s. Longer shutter means more exposure.
+     *
+     * @type {number}
+     */
+    set shutter(value) {
+        this._camera.shutter = value;
+    }
+
+    get shutter() {
+        return this._camera.shutter;
+    }
+
+    /**
+     * Queries the camera's view matrix.
+     *
+     * @type {import('../../../core/math/mat4.js').Mat4}
+     */
+    get viewMatrix() {
+        return this._camera.viewMatrix;
+    }
+
+    /**
+     * Based on the value, the depth layer's enable counter is incremented or decremented.
+     *
+     * @param {boolean} value - True to increment the counter, false to decrement it.
+     * @returns {boolean} True if the counter was incremented or decremented, false if the depth
+     * layer is not present.
+     * @private
+     */
+    _enableDepthLayer(value) {
+        const hasDepthLayer = this.layers.find(layerId => layerId === LAYERID_DEPTH);
+        if (hasDepthLayer) {
+
+            /** @type {import('../../../scene/layer.js').Layer} */
+            const depthLayer = this.system.app.scene.layers.getLayerById(LAYERID_DEPTH);
+
+            if (value) {
+                depthLayer?.incrementCounter();
+            } else {
+                depthLayer?.decrementCounter();
+            }
+        } else if (value) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene color map. Note that this call
+     * is accumulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneColorMap(enabled) {
+        this._renderSceneColorMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneColorMap >= 0);
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+
+        this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
+    }
+
+    /**
+     * Request the scene to generate a texture containing the scene depth map. Note that this call
+     * is accumulative, and for each enable request, a disable request need to be called.
+     *
+     * @param {boolean} enabled - True to request the generation, false to disable it.
+     */
+    requestSceneDepthMap(enabled) {
+        this._renderSceneDepthMap += enabled ? 1 : -1;
+        Debug.assert(this._renderSceneDepthMap >= 0);
+        const ok = this._enableDepthLayer(enabled);
+        if (!ok) {
+            Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
+        }
+
+        this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
+    }
+
+    dirtyLayerCompositionCameras() {
+        // layer composition needs to update order
+        const layerComp = this.system.app.scene.layers;
+        layerComp._dirty = true;
+    }
+
+    /**
+     * Convert a point from 2D screen space to 3D world space.
+     *
+     * @param {number} screenx - X coordinate on PlayCanvas' canvas element. Should be in the range
+     * 0 to `canvas.offsetWidth` of the application's canvas element.
+     * @param {number} screeny - Y coordinate on PlayCanvas' canvas element. Should be in the range
+     * 0 to `canvas.offsetHeight` of the application's canvas element.
+     * @param {number} cameraz - The distance from the camera in world space to create the new
+     * point.
+     * @param {import('../../../core/math/vec3.js').Vec3} [worldCoord] - 3D vector to receive world
+     * coordinate result.
      * @example
      * // Get the start and end points of a 3D ray fired from a screen click position
-     * var start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
-     * var end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
+     * const start = entity.camera.screenToWorld(clickX, clickY, entity.camera.nearClip);
+     * const end = entity.camera.screenToWorld(clickX, clickY, entity.camera.farClip);
      *
      * // Use the ray coordinates to perform a raycast
      * app.systems.rigidbody.raycastFirst(start, end, function (result) {
      *     console.log("Entity " + result.entity.name + " was selected");
      * });
-     * @returns {Vec3} The world space coordinate.
+     * @returns {import('../../../core/math/vec3.js').Vec3} The world space coordinate.
      */
     screenToWorld(screenx, screeny, cameraz, worldCoord) {
-        var device = this.system.app.graphicsDevice;
-        var w = device.clientRect.width;
-        var h = device.clientRect.height;
+        const device = this.system.app.graphicsDevice;
+        const w = device.clientRect.width;
+        const h = device.clientRect.height;
         return this._camera.screenToWorld(screenx, screeny, cameraz, w, h, worldCoord);
     }
 
     /**
-     * @function
-     * @name CameraComponent#worldToScreen
-     * @description Convert a point from 3D world space to 2D screen space.
-     * @param {Vec3} worldCoord - The world space coordinate.
-     * @param {Vec3} [screenCoord] - 3D vector to receive screen coordinate result.
-     * @returns {Vec3} The screen space coordinate.
+     * Convert a point from 3D world space to 2D screen space.
+     *
+     * @param {import('../../../core/math/vec3.js').Vec3} worldCoord - The world space coordinate.
+     * @param {import('../../../core/math/vec3.js').Vec3} [screenCoord] - 3D vector to receive
+     * screen coordinate result.
+     * @returns {import('../../../core/math/vec3.js').Vec3} The screen space coordinate.
      */
     worldToScreen(worldCoord, screenCoord) {
-        var device = this.system.app.graphicsDevice;
-        var w = device.clientRect.width;
-        var h = device.clientRect.height;
+        const device = this.system.app.graphicsDevice;
+        const w = device.clientRect.width;
+        const h = device.clientRect.height;
         return this._camera.worldToScreen(worldCoord, w, h, screenCoord);
     }
 
-    // called before application renders the scene
+    /**
+     * Called before application renders the scene.
+     *
+     * @ignore
+     */
     onAppPrerender() {
         this._camera._viewMatDirty = true;
         this._camera._viewProjMatDirty = true;
     }
 
+    /** @private */
     addCameraToLayers() {
-        var layers = this.layers;
-        for (var i = 0; i < layers.length; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.addCamera(this);
             }
         }
     }
 
+    /** @private */
     removeCameraFromLayers() {
-        var layers = this.layers;
-        for (var i = 0; i < layers.length; i++) {
-            var layer = this.system.app.scene.layers.getLayerById(layers[i]);
+        const layers = this.layers;
+        for (let i = 0; i < layers.length; i++) {
+            const layer = this.system.app.scene.layers.getLayerById(layers[i]);
             if (layer) {
                 layer.removeCamera(this);
             }
         }
     }
 
+    /**
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} oldComp - Old layer composition.
+     * @param {import('../../../scene/composition/layer-composition.js').LayerComposition} newComp - New layer composition.
+     * @private
+     */
     onLayersChanged(oldComp, newComp) {
         this.addCameraToLayers();
-        oldComp.off("add", this.onLayerAdded, this);
-        oldComp.off("remove", this.onLayerRemoved, this);
-        newComp.on("add", this.onLayerAdded, this);
-        newComp.on("remove", this.onLayerRemoved, this);
+        oldComp.off('add', this.onLayerAdded, this);
+        oldComp.off('remove', this.onLayerRemoved, this);
+        newComp.on('add', this.onLayerAdded, this);
+        newComp.on('remove', this.onLayerRemoved, this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to add the camera to.
+     * @private
+     */
     onLayerAdded(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.addCamera(this);
     }
 
+    /**
+     * @param {import('../../../scene/layer.js').Layer} layer - The layer to remove the camera from.
+     * @private
+     */
     onLayerRemoved(layer) {
-        var index = this.layers.indexOf(layer.id);
+        const index = this.layers.indexOf(layer.id);
         if (index < 0) return;
         layer.removeCamera(this);
     }
 
     onEnable() {
-        var system = this.system;
-        var scene = system.app.scene;
-        var layers = scene.layers;
+        const system = this.system;
+        const scene = system.app.scene;
+        const layers = scene.layers;
 
         system.addCamera(this);
 
-        scene.on("set:layers", this.onLayersChanged, this);
+        scene.on('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.on("add", this.onLayerAdded, this);
-            layers.on("remove", this.onLayerRemoved, this);
+            layers.on('add', this.onLayerAdded, this);
+            layers.on('remove', this.onLayerRemoved, this);
         }
 
         if (this.enabled && this.entity.enabled) {
@@ -355,18 +864,18 @@ class CameraComponent extends Component {
     }
 
     onDisable() {
-        var system = this.system;
-        var scene = system.app.scene;
-        var layers = scene.layers;
+        const system = this.system;
+        const scene = system.app.scene;
+        const layers = scene.layers;
 
         this.postEffects.disable();
 
         this.removeCameraFromLayers();
 
-        scene.off("set:layers", this.onLayersChanged, this);
+        scene.off('set:layers', this.onLayersChanged, this);
         if (layers) {
-            layers.off("add", this.onLayerAdded, this);
-            layers.off("remove", this.onLayerRemoved, this);
+            layers.off('add', this.onLayerAdded, this);
+            layers.off('remove', this.onLayerRemoved, this);
         }
 
         system.removeCamera(this);
@@ -375,197 +884,85 @@ class CameraComponent extends Component {
     onRemove() {
         this.onDisable();
         this.off();
+
+        this.camera.destroy();
     }
 
     /**
-     * @function
-     * @name CameraComponent#calculateAspectRatio
-     * @description Calculates aspect ratio value for a given render target.
-     * @param {RenderTarget} [rt] - Optional render target. If unspecified, the
-     * backbuffer is assumed.
+     * Calculates aspect ratio value for a given render target.
+     *
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Optional
+     * render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
     calculateAspectRatio(rt) {
-        var src = rt ? rt : this.system.app.graphicsDevice;
-        var rect = this.rect;
-        return (src.width * rect.z) / (src.height * rect.w);
+        const device = this.system.app.graphicsDevice;
+        const width = rt ? rt.width : device.width;
+        const height = rt ? rt.height : device.height;
+        return (width * this.rect.z) / (height * this.rect.w);
     }
 
     /**
-     * @function
-     * @private
-     * @name CameraComponent#frameBegin
-     * @description Start rendering the frame for this camera.
-     * @param {RenderTarget} rt - Render target to which rendering will be performed.
-     * Will affect camera's aspect ratio, if aspectRatioMode is {@link ASPECT_AUTO}.
+     * Prepare the camera for frame rendering.
+     *
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} rt - Render
+     * target to which rendering will be performed. Will affect camera's aspect ratio, if
+     * aspectRatioMode is {@link ASPECT_AUTO}.
+     * @ignore
      */
-    frameBegin(rt) {
+    frameUpdate(rt) {
         if (this.aspectRatioMode === ASPECT_AUTO) {
             this.aspectRatio = this.calculateAspectRatio(rt);
         }
     }
 
     /**
-     * @private
-     * @function
-     * @name CameraComponent#frameEnd
-     * @description End rendering the frame for this camera.
-     */
-    frameEnd() {}
-
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#enterVr
-     * @variation 2
-     * @description Attempt to start presenting this camera to a {@link VrDisplay}.
-     * @param {VrDisplay} display - The VrDisplay to present. If not supplied this uses
-     * {@link VrManager#display} as the default.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate success
-     * of failure. The callback takes one argument (err). On success it returns null on
-     * failure it returns the error message.
-     * @example
-     * // On an entity with a camera component
-     * this.entity.camera.enterVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // in VR!
-     *     }
-     * });
-     */
-    enterVr(display, callback) {
-        if ((display instanceof Function) && !callback) {
-            callback = display;
-            display = null;
-        }
-
-        if (!this.system.app.vr) {
-            callback("VrManager not created. Enable VR in project settings.");
-            return;
-        }
-
-        if (!display) {
-            display = this.system.app.vr.display;
-        }
-
-        if (display) {
-            var self = this;
-            if (display.capabilities.canPresent) {
-                // try and present
-                display.requestPresent(function (err) {
-                    if (!err) {
-                        self.vrDisplay = display;
-                        // camera component uses internal 'before' event
-                        // this means display nulled before anyone other
-                        // code gets to update
-                        self.vrDisplay.once('beforepresentchange', function (display) {
-                            if (!display.presenting) {
-                                self.vrDisplay = null;
-                            }
-                        });
-                    }
-                    callback(err);
-                });
-            } else {
-                // mono rendering
-                self.vrDisplay = display;
-                callback();
-            }
-        } else {
-            callback("No pc.VrDisplay to present");
-        }
-    }
-
-    /**
-     * @private
-     * @deprecated
-     * @function
-     * @name CameraComponent#exitVr
-     * @description Attempt to stop presenting this camera.
-     * @param {callbacks.VrCamera} callback - Function called once to indicate
-     * success of failure. The callback takes one argument (err).
-     * On success it returns null on failure it returns the error message.
-     * @example
-     * this.entity.camera.exitVr(function (err) {
-     *     if (err) {
-     *         console.error(err);
-     *     } else {
-     *         // exited successfully
-     *     }
-     * });
-     */
-    exitVr(callback) {
-        if (this.vrDisplay) {
-            if (this.vrDisplay.capabilities.canPresent) {
-                var display = this.vrDisplay;
-                this.vrDisplay = null;
-                display.exitPresent(callback);
-            } else {
-                this.vrDisplay = null;
-                callback();
-            }
-        } else {
-            callback("Not presenting VR");
-        }
-    }
-
-    /**
-     * @function
-     * @name CameraComponent#startXr
-     * @description Attempt to start XR session with this camera.
+     * Attempt to start XR session with this camera.
+     *
      * @param {string} type - The type of session. Can be one of the following:
      *
-     * * {@link XRTYPE_INLINE}: Inline - always available type of session. It has
-     * limited feature availability and is rendered into HTML element.
-     * * {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access
-     * to the VR device with the best available tracking features.
-     * * {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access
-     * to the VR/AR device that is intended to be blended with the real-world environment.
+     * - {@link XRTYPE_INLINE}: Inline - always available type of session. It has limited feature
+     * availability and is rendered into HTML element.
+     * - {@link XRTYPE_VR}: Immersive VR - session that provides exclusive access to the VR device
+     * with the best available tracking features.
+     * - {@link XRTYPE_AR}: Immersive AR - session that provides exclusive access to the VR/AR
+     * device that is intended to be blended with the real-world environment.
      *
      * @param {string} spaceType - Reference space type. Can be one of the following:
      *
-     * * {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic
-     * tracking capabilities.
-     * * {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native
-     * origin near the viewer at the time of creation. It is meant for seated or basic
-     * local XR sessions.
-     * * {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with
-     * a native origin at the floor in a safe position for the user to stand. The y-axis
-     * equals 0 at floor level. Floor level value might be estimated by the underlying
-     * platform. It is meant for seated or basic local XR sessions.
-     * * {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space
-     * with its native origin at the floor, where the user is expected to move within a
-     * pre-established boundary.
-     * * {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the
-     * user is expected to move freely around their environment, potentially long
-     * distances from their starting point.
+     * - {@link XRSPACE_VIEWER}: Viewer - always supported space with some basic tracking
+     * capabilities.
+     * - {@link XRSPACE_LOCAL}: Local - represents a tracking space with a native origin near the
+     * viewer at the time of creation. It is meant for seated or basic local XR sessions.
+     * - {@link XRSPACE_LOCALFLOOR}: Local Floor - represents a tracking space with a native origin
+     * at the floor in a safe position for the user to stand. The y-axis equals 0 at floor level.
+     * Floor level value might be estimated by the underlying platform. It is meant for seated or
+     * basic local XR sessions.
+     * - {@link XRSPACE_BOUNDEDFLOOR}: Bounded Floor - represents a tracking space with its native
+     * origin at the floor, where the user is expected to move within a pre-established boundary.
+     * - {@link XRSPACE_UNBOUNDED}: Unbounded - represents a tracking space where the user is
+     * expected to move freely around their environment, potentially long distances from their
+     * starting point.
      *
      * @param {object} [options] - Object with options for XR session initialization.
-     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is used for getting access to additional WebXR spec extensions.
-     * @param {callbacks.XrError} [options.callback] - Optional callback function called once
-     * the session is started. The callback has one argument Error - it is null if the XR
-     * session started successfully.
+     * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
+     * used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.imageTracking] - Set to true to attempt to enable {@link XrImageTracking}.
+     * @param {boolean} [options.planeDetection] - Set to true to attempt to enable {@link XrPlaneDetection}.
+     * @param {import('../../xr/xr-manager.js').XrErrorCallback} [options.callback] - Optional
+     * callback function called once the session is started. The callback has one argument Error -
+     * it is null if the XR session started successfully.
+     * @param {boolean} [options.anchors] - Optional boolean to attempt to enable {@link XrAnchors}.
+     * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
+     * attempt to enable {@link XrDepthSensing}.
+     * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth
+     * sensing, can be 'cpu-optimized' or 'gpu-optimized' (XRDEPTHSENSINGUSAGE_*), defaults to
+     * 'cpu-optimized'. Most preferred and supported will be chosen by the underlying depth sensing
+     * system.
+     * @param {string} [options.depthSensing.dataFormatPreference] - Optional data format
+     * preference for depth sensing. Can be 'luminance-alpha' or 'float32' (XRDEPTHSENSINGFORMAT_*),
+     * defaults to 'luminance-alpha'. Most preferred and supported will be chosen by the underlying
+     * depth sensing system.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
@@ -583,12 +980,11 @@ class CameraComponent extends Component {
     }
 
     /**
-     * @function
-     * @name CameraComponent#endXr
-     * @description Attempt to end XR session of this camera.
-     * @param {callbacks.XrError} [callback] - Optional callback function called once
-     * session is ended. The callback has one argument Error - it is null if successfully
-     * ended XR session.
+     * Attempt to end XR session of this camera.
+     *
+     * @param {import('../../xr/xr-manager.js').XrErrorCallback} [callback] - Optional callback
+     * function called once session is ended. The callback has one argument Error - it is null if
+     * successfully ended XR session.
      * @example
      * // On an entity with a camera component
      * this.entity.camera.endXr(function (err) {
@@ -597,53 +993,49 @@ class CameraComponent extends Component {
      */
     endXr(callback) {
         if (!this._camera.xr) {
-            if (callback) callback(new Error("Camera is not in XR"));
+            if (callback) callback(new Error('Camera is not in XR'));
             return;
         }
 
         this._camera.xr.end(callback);
     }
-}
 
-// for common properties, create getters and setters which use this._camera as a storage for their values
-[
-    { name: 'aspectRatio', readonly: false },
-    { name: 'aspectRatioMode', readonly: false },
-    { name: 'calculateProjection', readonly: false },
-    { name: 'calculateTransform', readonly: false },
-    { name: 'clearColor', readonly: false },
-    { name: 'cullFaces', readonly: false },
-    { name: 'farClip', readonly: false },
-    { name: 'flipFaces', readonly: false },
-    { name: 'fov', readonly: false },
-    { name: 'frustum', readonly: true },
-    { name: 'frustumCulling', readonly: false },
-    { name: 'horizontalFov', readonly: false },
-    { name: 'nearClip', readonly: false },
-    { name: 'orthoHeight', readonly: false },
-    { name: 'projection', readonly: false },
-    { name: 'projectionMatrix', readonly: true },
-    { name: 'rect', readonly: false },
-    { name: 'scissorRect', readonly: false },
-    { name: 'viewMatrix', readonly: true },
-    { name: 'vrDisplay', readonly: false }
-].forEach(function (property) {
-    var name = property.name;
-    var options = {};
-
-    // getter
-    options.get = function () {
-        return this._camera[name];
-    };
-
-    // setter
-    if (!property.readonly) {
-        options.set = function (newValue) {
-            this._camera[name] = newValue;
-        };
+    /**
+     * Function to copy properties from the source CameraComponent.
+     * Properties not copied: postEffects.
+     * Inherited properties not copied (all): system, entity, enabled.
+     *
+     * @param {CameraComponent} source - The source component.
+     * @ignore
+     */
+    copy(source) {
+        this.aperture = source.aperture;
+        this.aspectRatio = source.aspectRatio;
+        this.aspectRatioMode = source.aspectRatioMode;
+        this.calculateProjection = source.calculateProjection;
+        this.calculateTransform = source.calculateTransform;
+        this.clearColor = source.clearColor;
+        this.clearColorBuffer = source.clearColorBuffer;
+        this.clearDepthBuffer = source.clearDepthBuffer;
+        this.clearStencilBuffer = source.clearStencilBuffer;
+        this.cullFaces = source.cullFaces;
+        this.disablePostEffectsLayer = source.disablePostEffectsLayer;
+        this.farClip = source.farClip;
+        this.flipFaces = source.flipFaces;
+        this.fov = source.fov;
+        this.frustumCulling = source.frustumCulling;
+        this.horizontalFov = source.horizontalFov;
+        this.layers = source.layers;
+        this.nearClip = source.nearClip;
+        this.orthoHeight = source.orthoHeight;
+        this.priority = source.priority;
+        this.projection = source.projection;
+        this.rect = source.rect;
+        this.renderTarget = source.renderTarget;
+        this.scissorRect = source.scissorRect;
+        this.sensitivity = source.sensitivity;
+        this.shutter = source.shutter;
     }
-
-    Object.defineProperty(CameraComponent.prototype, name, options);
-});
+}
 
 export { CameraComponent };

@@ -1,14 +1,14 @@
 /**
- * @constant
+ * Always use the application's resolution as the resolution for the {@link ScreenComponent}.
+ *
  * @type {string}
- * @name SCALEMODE_NONE
- * @description Always use the application's resolution as the resolution for the {@link ScreenComponent}.
  */
-export const SCALEMODE_NONE = "none";
+export const SCALEMODE_NONE = 'none';
+
 /**
- * @constant
+ * Scale the {@link ScreenComponent} when the application's resolution is different than the
+ * ScreenComponent's referenceResolution.
+ *
  * @type {string}
- * @name SCALEMODE_BLEND
- * @description Scale the {@link ScreenComponent} when the application's resolution is different than the ScreenComponent's referenceResolution.
  */
-export const SCALEMODE_BLEND = "blend";
+export const SCALEMODE_BLEND = 'blend';

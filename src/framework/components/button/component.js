@@ -1,64 +1,78 @@
 import { now } from '../../../core/time.js';
 
-import { math } from '../../../math/math.js';
-import { Color } from '../../../math/color.js';
+import { math } from '../../../core/math/math.js';
+import { Color } from '../../../core/math/color.js';
 
 import { EntityReference } from '../../utils/entity-reference.js';
 
 import { Component } from '../component.js';
 
 import { BUTTON_TRANSITION_MODE_SPRITE_CHANGE, BUTTON_TRANSITION_MODE_TINT } from './constants.js';
+import { ELEMENTTYPE_GROUP } from '../element/constants.js';
 
-var VisualState = {
+const VisualState = {
     DEFAULT: 'DEFAULT',
     HOVER: 'HOVER',
     PRESSED: 'PRESSED',
     INACTIVE: 'INACTIVE'
 };
 
-var STATES_TO_TINT_NAMES = {};
+const STATES_TO_TINT_NAMES = {};
 STATES_TO_TINT_NAMES[VisualState.DEFAULT] = '_defaultTint';
 STATES_TO_TINT_NAMES[VisualState.HOVER] = 'hoverTint';
 STATES_TO_TINT_NAMES[VisualState.PRESSED] = 'pressedTint';
 STATES_TO_TINT_NAMES[VisualState.INACTIVE] = 'inactiveTint';
 
-var STATES_TO_SPRITE_ASSET_NAMES = {};
+const STATES_TO_SPRITE_ASSET_NAMES = {};
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.DEFAULT] = '_defaultSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.HOVER] = 'hoverSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.PRESSED] = 'pressedSpriteAsset';
 STATES_TO_SPRITE_ASSET_NAMES[VisualState.INACTIVE] = 'inactiveSpriteAsset';
 
-var STATES_TO_SPRITE_FRAME_NAMES = {};
+const STATES_TO_SPRITE_FRAME_NAMES = {};
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.DEFAULT] = '_defaultSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.HOVER] = 'hoverSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.PRESSED] = 'pressedSpriteFrame';
 STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
 
 /**
- * @component
- * @class
- * @name ButtonComponent
- * @augments Component
- * @classdesc A ButtonComponent enables a group of entities to behave like a button, with different visual states for hover and press interactions.
- * @description Create a new ButtonComponent.
- * @param {ButtonComponentSystem} system - The ComponentSystem that created this Component.
- * @param {Entity} entity - The Entity that this Component is attached to.
- * @property {boolean} active If set to false, the button will be visible but will not respond to hover or touch interactions.
- * @property {Entity} imageEntity A reference to the entity to be used as the button background. The entity must have an ImageElement component.
- * @property {Vec4} hitPadding Padding to be used in hit-test calculations. Can be used to expand the bounding box so that the button is easier to tap.
- * @property {number} transitionMode Controls how the button responds when the user hovers over it/presses it.
+ * A ButtonComponent enables a group of entities to behave like a button, with different visual
+ * states for hover and press interactions.
+ *
+ * @property {boolean} active If set to false, the button will be visible but will not respond to
+ * hover or touch interactions.
+ * @property {import('../../entity.js').Entity} imageEntity A reference to the entity to be used as
+ * the button background. The entity must have an ImageElement component.
+ * @property {import('../../../core/math/vec4.js').Vec4} hitPadding Padding to be used in hit-test
+ * calculations. Can be used to expand the bounding box so that the button is easier to tap.
+ * @property {number} transitionMode Controls how the button responds when the user hovers over
+ * it/presses it.
  * @property {Color} hoverTint Color to be used on the button image when the user hovers over it.
  * @property {Color} pressedTint Color to be used on the button image when the user presses it.
- * @property {Color} inactiveTint Color to be used on the button image when the button is not interactive.
+ * @property {Color} inactiveTint Color to be used on the button image when the button is not
+ * interactive.
  * @property {number} fadeDuration Duration to be used when fading between tints, in milliseconds.
- * @property {Asset} hoverSpriteAsset Sprite to be used as the button image when the user hovers over it.
+ * @property {import('../../asset/asset.js').Asset} hoverSpriteAsset Sprite to be used as the
+ * button image when the user hovers over it.
  * @property {number} hoverSpriteFrame Frame to be used from the hover sprite.
- * @property {Asset} pressedSpriteAsset Sprite to be used as the button image when the user presses it.
+ * @property {import('../../asset/asset.js').Asset} pressedSpriteAsset Sprite to be used as the
+ * button image when the user presses it.
  * @property {number} pressedSpriteFrame Frame to be used from the pressed sprite.
- * @property {Asset} inactiveSpriteAsset Sprite to be used as the button image when the button is not interactive.
+ * @property {import('../../asset/asset.js').Asset} inactiveSpriteAsset Sprite to be used as the
+ * button image when the button is not interactive.
  * @property {number} inactiveSpriteFrame Frame to be used from the inactive sprite.
+ * @augments Component
+ * @category User Interface
  */
 class ButtonComponent extends Component {
+    /**
+     * Create a new ButtonComponent instance.
+     *
+     * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
+     * created this component.
+     * @param {import('../../entity.js').Entity} entity - The entity that this component is
+     * attached to.
+     */
     constructor(system, entity) {
         super(system, entity);
 
@@ -144,7 +158,7 @@ class ButtonComponent extends Component {
 
     _toggleHitElementListeners(onOrOff) {
         if (this.entity.element) {
-            var isAdding = (onOrOff === 'on');
+            const isAdding = (onOrOff === 'on');
 
             // Prevent duplicate listeners
             if (isAdding && this._hasHitElementListeners) {
@@ -170,11 +184,15 @@ class ButtonComponent extends Component {
     }
 
     _storeDefaultVisualState() {
+        // If the element is of group type, all it's visual properties are null
         if (this._imageReference.hasComponent('element')) {
-            this._storeDefaultColor(this._imageReference.entity.element.color);
-            this._storeDefaultOpacity(this._imageReference.entity.element.opacity);
-            this._storeDefaultSpriteAsset(this._imageReference.entity.element.spriteAsset);
-            this._storeDefaultSpriteFrame(this._imageReference.entity.element.spriteFrame);
+            const element = this._imageReference.entity.element;
+            if (element.type !== ELEMENTTYPE_GROUP) {
+                this._storeDefaultColor(element.color);
+                this._storeDefaultOpacity(element.opacity);
+                this._storeDefaultSpriteAsset(element.spriteAsset);
+                this._storeDefaultSpriteFrame(element.spriteFrame);
+            }
         }
     }
 
@@ -337,8 +355,8 @@ class ButtonComponent extends Component {
     }
 
     _updateVisualState(force) {
-        var oldVisualState = this._visualState;
-        var newVisualState = this._determineVisualState();
+        const oldVisualState = this._visualState;
+        const newVisualState = this._determineVisualState();
 
         if ((oldVisualState !== newVisualState || force) && this.enabled) {
             this._visualState = newVisualState;
@@ -360,19 +378,20 @@ class ButtonComponent extends Component {
             }
 
             switch (this.transitionMode) {
-                case BUTTON_TRANSITION_MODE_TINT:
-                    var tintName = STATES_TO_TINT_NAMES[this._visualState];
-                    var tintColor = this[tintName];
+                case BUTTON_TRANSITION_MODE_TINT: {
+                    const tintName = STATES_TO_TINT_NAMES[this._visualState];
+                    const tintColor = this[tintName];
                     this._applyTint(tintColor);
                     break;
-
-                case BUTTON_TRANSITION_MODE_SPRITE_CHANGE:
-                    var spriteAssetName = STATES_TO_SPRITE_ASSET_NAMES[this._visualState];
-                    var spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
-                    var spriteAsset = this[spriteAssetName];
-                    var spriteFrame = this[spriteFrameName];
+                }
+                case BUTTON_TRANSITION_MODE_SPRITE_CHANGE: {
+                    const spriteAssetName = STATES_TO_SPRITE_ASSET_NAMES[this._visualState];
+                    const spriteFrameName = STATES_TO_SPRITE_FRAME_NAMES[this._visualState];
+                    const spriteAsset = this[spriteAssetName];
+                    const spriteFrame = this[spriteFrameName];
                     this._applySprite(spriteAsset, spriteFrame);
                     break;
+                }
             }
         }
     }
@@ -419,8 +438,15 @@ class ButtonComponent extends Component {
 
         if (this._imageReference.hasComponent('element')) {
             this._isApplyingSprite = true;
-            this._imageReference.entity.element.spriteAsset = spriteAsset;
-            this._imageReference.entity.element.spriteFrame = spriteFrame;
+
+            if (this._imageReference.entity.element.spriteAsset !== spriteAsset) {
+                this._imageReference.entity.element.spriteAsset = spriteAsset;
+            }
+
+            if (this._imageReference.entity.element.spriteFrame !== spriteFrame) {
+                this._imageReference.entity.element.spriteFrame = spriteFrame;
+            }
+
             this._isApplyingSprite = false;
         }
     }
@@ -436,35 +462,48 @@ class ButtonComponent extends Component {
     }
 
     _applyTintImmediately(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            this._isApplyingTint = true;
-            this._imageReference.entity.element.color = toColor3(tintColor);
+        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
+            return;
+
+        const color3 = toColor3(tintColor);
+
+        this._isApplyingTint = true;
+
+        if (!color3.equals(this._imageReference.entity.element.color))
+            this._imageReference.entity.element.color = color3;
+
+        if (this._imageReference.entity.element.opacity !== tintColor.a)
             this._imageReference.entity.element.opacity = tintColor.a;
-            this._isApplyingTint = false;
-        }
+
+        this._isApplyingTint = false;
     }
 
     _applyTintWithTween(tintColor) {
-        if (this._imageReference.hasComponent('element') && tintColor) {
-            var color = this._imageReference.entity.element.color;
-            var opacity = this._imageReference.entity.element.opacity;
+        if (!tintColor || !this._imageReference.hasComponent('element') || this._imageReference.entity.element.type === ELEMENTTYPE_GROUP)
+            return;
 
-            this._tweenInfo = {
-                startTime: now(),
-                from: new Color(color.r, color.g, color.b, opacity),
-                to: tintColor.clone(),
-                lerpColor: new Color()
-            };
-        }
+        const color3 = toColor3(tintColor);
+        const color = this._imageReference.entity.element.color;
+        const opacity = this._imageReference.entity.element.opacity;
+
+        if (color3.equals(color) && tintColor.a === opacity)
+            return;
+
+        this._tweenInfo = {
+            startTime: now(),
+            from: new Color(color.r, color.g, color.b, opacity),
+            to: tintColor.clone(),
+            lerpColor: new Color()
+        };
     }
 
     _updateTintTween() {
-        var elapsedTime = now() - this._tweenInfo.startTime;
-        var elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
+        const elapsedTime = now() - this._tweenInfo.startTime;
+        let elapsedProportion = this.fadeDuration === 0 ? 1 : (elapsedTime / this.fadeDuration);
         elapsedProportion = math.clamp(elapsedProportion, 0, 1);
 
         if (Math.abs(elapsedProportion - 1) > 1e-5) {
-            var lerpColor = this._tweenInfo.lerpColor;
+            const lerpColor = this._tweenInfo.lerpColor;
             lerpColor.lerp(this._tweenInfo.from, this._tweenInfo.to, elapsedProportion);
             this._applyTintImmediately(new Color(lerpColor.r, lerpColor.g, lerpColor.b, lerpColor.a));
         } else {
@@ -510,118 +549,119 @@ function toColor3(color4) {
 }
 
 /**
- * @event
- * @name ButtonComponent#mousedown
- * @description Fired when the mouse is pressed while the cursor is on the component.
- * @param {ElementMouseEvent} event - The event.
+ * Fired when the mouse is pressed while the cursor is on the component.
+ *
+ * @event ButtonComponent#mousedown
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseup
- * @description Fired when the mouse is released while the cursor is on the component.
- * @param {ElementMouseEvent} event - The event.
+ * Fired when the mouse is released while the cursor is on the component.
+ *
+ * @event ButtonComponent#mouseup
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseenter
- * @description Fired when the mouse cursor enters the component.
- * @param {ElementMouseEvent} event - The event.
+ * Fired when the mouse cursor enters the component.
+ *
+ * @event ButtonComponent#mouseenter
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#mouseleave
- * @description Fired when the mouse cursor leaves the component.
- * @param {ElementMouseEvent} event - The event.
+ * Fired when the mouse cursor leaves the component.
+ *
+ * @event ButtonComponent#mouseleave
+ * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#click
- * @description Fired when the mouse is pressed and released on the component or when a touch starts and ends on the component.
- * @param {ElementMouseEvent|ElementTouchEvent} event - The event.
+ * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
+ * the component.
+ *
+ * @event ButtonComponent#click
+ * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchstart
- * @description Fired when a touch starts on the component.
- * @param {ElementTouchEvent} event - The event.
+ * Fired when a touch starts on the component.
+ *
+ * @event ButtonComponent#touchstart
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchend
- * @description Fired when a touch ends on the component.
- * @param {ElementTouchEvent} event - The event.
+ * Fired when a touch ends on the component.
+ *
+ * @event ButtonComponent#touchend
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchcancel
- * @description Fired when a touch is canceled on the component.
- * @param {ElementTouchEvent} event - The event.
+ * Fired when a touch is canceled on the component.
+ *
+ * @event ButtonComponent#touchcancel
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#touchleave
- * @description Fired when a touch leaves the component.
- * @param {ElementTouchEvent} event - The event.
+ * Fired when a touch leaves the component.
+ *
+ * @event ButtonComponent#touchleave
+ * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectstart
- * @description Fired when a xr select starts on the component.
- * @param {ElementSelectEvent} event - The event.
+ * Fired when a xr select starts on the component.
+ *
+ * @event ButtonComponent#selectstart
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectend
- * @description Fired when a xr select ends on the component.
- * @param {ElementSelectEvent} event - The event.
+ * Fired when a xr select ends on the component.
+ *
+ * @event ButtonComponent#selectend
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectenter
- * @description Fired when a xr select now hovering over the component.
- * @param {ElementSelectEvent} event - The event.
+ * Fired when a xr select now hovering over the component.
+ *
+ * @event ButtonComponent#selectenter
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#selectleave
- * @description Fired when a xr select not hovering over the component.
- * @param {ElementSelectEvent} event - The event.
+ * Fired when a xr select not hovering over the component.
+ *
+ * @event ButtonComponent#selectleave
+ * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
  */
 
 /**
- * @event
- * @name ButtonComponent#hoverstart
- * @description Fired when the button changes state to be hovered.
+ * Fired when the button changes state to be hovered.
+ *
+ * @event ButtonComponent#hoverstart
  */
 
 /**
- * @event
- * @name ButtonComponent#hoverend
- * @description Fired when the button changes state to be not hovered.
+ * Fired when the button changes state to be not hovered.
+ *
+ * @event ButtonComponent#hoverend
  */
 
 /**
- * @event
- * @name ButtonComponent#pressedstart
- * @description Fired when the button changes state to be pressed.
+ * Fired when the button changes state to be pressed.
+ *
+ * @event ButtonComponent#pressedstart
  */
 
 /**
- * @event
- * @name ButtonComponent#pressedend
- * @description Fired when the button changes state to be not pressed.
+ * Fired when the button changes state to be not pressed.
+ *
+ * @event ButtonComponent#pressedend
  */
 
 export { ButtonComponent };

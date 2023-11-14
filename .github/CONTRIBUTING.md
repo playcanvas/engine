@@ -32,7 +32,9 @@ Simple code is always better. Modular (horizontal dependencies) code is easier t
 
 For example, use "Initialize" instead of "Initialise", and "color" instead of "colour".
 
-### Whitelisted ES6+ features:
+### Permitted ES6+ features:
+
+You may use the following JavaScript language features in the engine codebase:
 
 * [`let`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let)
 * [`const`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/const)
@@ -42,6 +44,10 @@ For example, use "Initialize" instead of "Initialise", and "color" instead of "c
 * [Default parameters](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters)
 * [Modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules)
 * [Optional chaining](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining)
+* [Static keyword](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static)
+* [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
+* [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set) - only functionality supported by all browsers, including Safari 8 - see the table at the end of the page. `for..of` type of loop should not be used to iterate a set as it is not supported on Safari 8.
+* [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) - only functionality supported by all browsers, including Safari 8 - see the table at the end of the page. `for..of` type of loop should not be used to iterate a map as it is not supported on Safari 8.
 
 ### Opening braces should be on the same line as the statement
 
@@ -169,11 +175,29 @@ let mixedCase = 1;
 // Function are usually variables so should be mixedCase
 // (unless they are class constructors)
 let myFunction = function () { };
+let myFunction = () => { };
 
 // Constants should be ALL_CAPITALS separated by underscores.
 // Note, ES5 doesn't support constants,
 // so this is just convention.
 const THIS_IS_CONSTANT = "well, kind of";
+
+// Enum constants follow similar rules as normal constants. In general,
+// the enum consists of the type, and its values.
+// In other languages, this is implemented as
+// enum CubeFace {
+//     PosX: 0,
+//     PosY: 1
+// }
+// Due to the lack of native enum support by JavaScript, the enums are
+// represented by constants. The constant name contains the enum name without
+// the underscores, followed by the values with optional underscores as
+// needed to improve the readibility. This is one possible implementation:
+const CUBEFACE_POSX = 0;
+const CUBEFACE_POSY = 1;
+// and this is also acceptable
+const CUBEFACE_POS_X = 0;
+const CUBEFACE_POS_Y = 1;
 
 // Private variables should start with a leading underscore.
 // Note, you should attempt to make private variables actually private using

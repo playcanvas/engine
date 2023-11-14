@@ -1,61 +1,51 @@
-let desktop = false;
-let mobile = false;
-let windows = false;
-let xbox = false;
-let android = false;
-let ios = false;
-let touch = false;
-let gamepads = false;
-let workers = false;
-let passiveEvents = false;
-
-if (typeof navigator !== 'undefined') {
-    const ua = navigator.userAgent;
-
-    if (/(windows|mac os|linux|cros)/i.test(ua))
-        desktop = true;
-
-    if (/xbox/i.test(ua))
-        xbox = true;
-
-    if (/(windows phone|iemobile|wpdesktop)/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        windows = true;
-    } else if (/android/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        android = true;
-    } else if (/ip([ao]d|hone)/i.test(ua)) {
-        desktop = false;
-        mobile = true;
-        ios = true;
-    }
-
-    if (typeof window !== 'undefined') {
-        touch = 'ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0);
-    }
-
-    gamepads = 'getGamepads' in navigator;
-
-    workers = (typeof(Worker) !== 'undefined');
+// detect whether passive events are supported by the browser
+const detectPassiveEvents = () => {
+    let result = false;
 
     try {
         const opts = Object.defineProperty({}, 'passive', {
             get: function () {
-                passiveEvents = true;
+                result = true;
                 return false;
             }
         });
-        window.addEventListener("testpassive", null, opts);
-        window.removeEventListener("testpassive", null, opts);
+        window.addEventListener('testpassive', null, opts);
+        window.removeEventListener('testpassive', null, opts);
     } catch (e) {}
-}
+
+    return result;
+};
+
+const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
+const environment = (typeof window !== 'undefined') ? 'browser' : 'node';
+
+// detect platform
+const platformName =
+    (/android/i.test(ua) ? 'android' :
+        (/ip([ao]d|hone)/i.test(ua) ? 'ios' :
+            (/windows/i.test(ua) ? 'windows' :
+                (/mac os/i.test(ua) ? 'osx' :
+                    (/linux/i.test(ua) ? 'linux' :
+                        (/cros/i.test(ua) ? 'cros' : null))))));
+
+// detect browser
+const browserName =
+    (environment !== 'browser') ? null :
+        (/(Chrome\/|Chromium\/|Edg.*\/)/.test(ua) ? 'chrome' :  // chrome, chromium, edge
+            (/Safari\//.test(ua) ? 'safari' :                   // safari, ios chrome/firefox
+                (/Firefox\//.test(ua) ? 'firefox' :
+                    'other')));
+
+const xbox = /xbox/i.test(ua);
+const touch = (environment === 'browser') && ('ontouchstart' in window || ('maxTouchPoints' in navigator && navigator.maxTouchPoints > 0));
+const gamepads = (environment === 'browser') && (!!navigator.getGamepads || !!navigator.webkitGetGamepads);
+const workers = (typeof Worker !== 'undefined');
+const passiveEvents = detectPassiveEvents();
 
 /**
+ * Global namespace that stores flags regarding platform environment and features support.
+ *
  * @namespace
- * @name platform
- * @description Global namespace that stores flags regarding platform environment and features support.
  * @example
  * if (pc.platform.touch) {
  *     // touch is supported
@@ -63,96 +53,99 @@ if (typeof navigator !== 'undefined') {
  */
 const platform = {
     /**
-     * @static
-     * @readonly
-     * @type {boolean}
-     * @name platform.desktop
-     * @description Is it a desktop or laptop device.
+     * String identifying the current runtime environment. Either 'browser' or 'node'.
+     *
+     * @type {'browser' | 'node'}
      */
-    desktop: desktop,
+    environment: environment,
 
     /**
-     * @static
-     * @readonly
-     * @type {boolean}
-     * @name platform.mobile
-     * @description Is it a mobile or tablet device.
+     * The global object. This will be the window object when running in a browser and the global
+     * object when running in nodejs.
+     *
+     * @type {object}
      */
-    mobile: mobile,
+    global: (environment === 'browser') ? window : global,
 
     /**
-     * @static
-     * @readonly
+     * Convenience boolean indicating whether we're running in the browser.
+     *
      * @type {boolean}
-     * @name platform.ios
-     * @description If it is iOS.
      */
-    ios: ios,
+    browser: environment === 'browser',
 
     /**
-     * @static
-     * @readonly
+     * True if running on a desktop or laptop device.
+     *
      * @type {boolean}
-     * @name platform.android
-     * @description If it is Android.
      */
-    android: android,
+    desktop: ['windows', 'osx', 'linux', 'cros'].includes(platformName),
 
     /**
-     * @static
-     * @readonly
+     * True if running on a mobile or tablet device.
+     *
      * @type {boolean}
-     * @name platform.windows
-     * @description If it is Windows.
      */
-    windows: windows,
+    mobile: ['android', 'ios'].includes(platformName),
 
     /**
-     * @static
-     * @readonly
+     * True if running on an iOS device.
+     *
      * @type {boolean}
-     * @name platform.xbox
-     * @description If it is Xbox.
+     */
+    ios: platformName === 'ios',
+
+    /**
+     * True if running on an Android device.
+     *
+     * @type {boolean}
+     */
+    android: platformName === 'android',
+
+    /**
+     * True if running on an Xbox device.
+     *
+     * @type {boolean}
      */
     xbox: xbox,
 
     /**
-     * @static
-     * @readonly
+     * True if the platform supports gamepads.
+     *
      * @type {boolean}
-     * @name platform.gamepads
-     * @description If platform supports gamepads.
      */
     gamepads: gamepads,
 
     /**
-     * @static
-     * @readonly
+     * True if the supports touch input.
+     *
      * @type {boolean}
-     * @name platform.touch
-     * @description If platform supports touch input.
      */
     touch: touch,
 
     /**
-     * @static
-     * @readonly
+     * True if the platform supports Web Workers.
+     *
      * @type {boolean}
-     * @name platform.workers
-     * @description If the platform supports Web Workers.
      */
     workers: workers,
 
     /**
-     * @private
-     * @static
-     * @readonly
+     * True if the platform supports an options object as the third parameter to
+     * `EventTarget.addEventListener()` and the passive property is supported.
+     *
      * @type {boolean}
-     * @name platform.passiveEvents
-     * @description If the platform supports an options object as the third parameter
-     * to `EventTarget.addEventListener()` and the passive property is supported.
+     * @ignore
      */
-    passiveEvents: passiveEvents
+    passiveEvents: passiveEvents,
+
+    /**
+     * Get the browser name.
+     *
+     * @type {'chrome' | 'safari' | 'firefox' | 'other' | null}
+     * @ignore
+     */
+    browserName: browserName
 };
 
 export { platform };

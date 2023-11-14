@@ -1,10 +1,8 @@
-import { Curve } from '../../../math/curve.js';
-import { CurveSet } from '../../../math/curve-set.js';
-import { Vec3 } from '../../../math/vec3.js';
+import { Curve } from '../../../core/math/curve.js';
+import { CurveSet } from '../../../core/math/curve-set.js';
+import { Vec3 } from '../../../core/math/vec3.js';
 
-import { LIGHTTYPE_DIRECTIONAL } from '../../../scene/constants.js';
-
-import { Asset } from '../../../asset/asset.js';
+import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
@@ -47,6 +45,7 @@ const _schema = [
     'normalMapAsset',
     'mesh',
     'meshAsset',
+    'renderAsset',
     'orientation',
     'particleNormal',
     'localVelocityGraph',
@@ -78,14 +77,18 @@ const _schema = [
 ];
 
 /**
- * @class
- * @name ParticleSystemComponentSystem
+ * Allows an Entity to render a particle system.
+ *
  * @augments ComponentSystem
- * @classdesc Allows an Entity to render a particle system.
- * @description Create a new ParticleSystemComponentSystem.
- * @param {Application} app - The Application.
+ * @category Graphics
  */
 class ParticleSystemComponentSystem extends ComponentSystem {
+    /**
+     * Create a new ParticleSystemComponentSystem.
+     *
+     * @param {import('../../app-base.js').AppBase} app - The Application.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
 
@@ -118,15 +121,14 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         };
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        ComponentSystem.bind('update', this.onUpdate, this);
+        this.app.systems.on('update', this.onUpdate, this);
     }
 
     initializeComponentData(component, _data, properties) {
-        var data = {};
+        const data = {};
 
         properties = [];
-        var types = this.propertyTypes;
-        var t;
+        const types = this.propertyTypes;
 
         // we store the mesh asset id as "mesh" (it should be "meshAsset")
         // this re-maps "mesh" into "meshAsset" if it is an asset or an asset id
@@ -136,7 +138,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
             delete _data.mesh;
         }
 
-        for (var prop in _data) {
+        for (const prop in _data) {
             if (_data.hasOwnProperty(prop)) {
                 properties.push(prop);
                 // duplicate input data as we are modifying it
@@ -149,13 +151,13 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                 }
             } else if (types[prop] === 'curve') {
                 if (!(data[prop] instanceof Curve)) {
-                    t = data[prop].type;
+                    const t = data[prop].type;
                     data[prop] = new Curve(data[prop].keys);
                     data[prop].type = t;
                 }
             } else if (types[prop] === 'curveset') {
                 if (!(data[prop] instanceof CurveSet)) {
-                    t = data[prop].type;
+                    const t = data[prop].type;
                     data[prop] = new CurveSet(data[prop].keys);
                     data[prop].type = t;
                 }
@@ -171,21 +173,21 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     }
 
     cloneComponent(entity, clone) {
-        var source = entity.particlesystem.data;
-        var schema = this.schema;
+        const source = entity.particlesystem.data;
+        const schema = this.schema;
 
-        var data = {};
+        const data = {};
 
-        for (var i = 0, len = schema.length; i < len; i++) {
-            var prop = schema[i];
-            var sourceProp = source[prop];
+        for (let i = 0, len = schema.length; i < len; i++) {
+            const prop = schema[i];
+            let sourceProp = source[prop];
             if (sourceProp instanceof Vec3 ||
                 sourceProp instanceof Curve ||
                 sourceProp instanceof CurveSet) {
 
                 sourceProp = sourceProp.clone();
                 data[prop] = sourceProp;
-            } else if (prop === "layers") {
+            } else if (prop === 'layers') {
                 data.layers = source.layers.slice(0);
             } else {
                 if (sourceProp !== null && sourceProp !== undefined) {
@@ -198,50 +200,34 @@ class ParticleSystemComponentSystem extends ComponentSystem {
     }
 
     onUpdate(dt) {
-        var components = this.store;
-        var numSteps, i, j, c;
-        var stats = this.app.stats.particles;
+        const components = this.store;
+        let numSteps;
+        const stats = this.app.stats.particles;
+        const composition = this.app.scene.layers;
 
-        for (var id in components) {
+        // disable light cube on all layers first
+        for (let i = 0; i < composition.layerList.length; i++) {
+            composition.layerList[i].requiresLightCube = false;
+        }
+
+        for (const id in components) {
             if (components.hasOwnProperty(id)) {
-                c = components[id];
-                var entity = c.entity;
-                var data = c.data;
+                const component = components[id];
+                const entity = component.entity;
+                const data = component.data;
 
                 if (data.enabled && entity.enabled) {
-                    var emitter = data.model.emitter;
-                    if (!emitter.meshInstance.visible) continue;
+                    const emitter = entity.particlesystem.emitter;
+                    if (!emitter?.meshInstance.visible) continue;
 
-                    // Bake ambient and directional lighting into one ambient cube
-                    // TODO: only do if lighting changed
-                    // TODO: don't do for every emitter
+                    // if emitter is using lighting, enable light cube on all layers it is assigned to
                     if (emitter.lighting) {
-                        var layer, lightCube;
-                        var layers = data.layers;
-                        for (i = 0; i < layers.length; i++) {
-                            layer = this.app.scene.layers.getLayerById(layers[i]);
-                            if (!layer) continue;
-
-                            if (!layer._lightCube) {
-                                layer._lightCube = new Float32Array(6 * 3);
-                            }
-                            lightCube = layer._lightCube;
-                            for (i = 0; i < 6; i++) {
-                                lightCube[i * 3] = this.app.scene.ambientLight.r;
-                                lightCube[i * 3 + 1] = this.app.scene.ambientLight.g;
-                                lightCube[i * 3 + 2] = this.app.scene.ambientLight.b;
-                            }
-                            var dirs = layer._splitLights[LIGHTTYPE_DIRECTIONAL];
-                            for (j = 0; j < dirs.length; j++) {
-                                for (c = 0; c < 6; c++) {
-                                    var weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                    lightCube[c * 3] += dirs[j]._color.r * weight;
-                                    lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
-                                    lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
-                                }
-                            }
+                        const layers = data.layers;
+                        for (let i = 0; i < layers.length; i++) {
+                            const layer = composition.getLayerById(layers[i]);
+                            if (layer)
+                                layer.requiresLightCube = true;
                         }
-                        emitter.constantLightCube.setValue(lightCube); // ?
                     }
 
                     if (!data.paused) {
@@ -252,7 +238,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                         }
                         if (numSteps) {
                             numSteps = Math.min(numSteps, emitter.maxSubSteps);
-                            for (i = 0; i < numSteps; i++) {
+                            for (let i = 0; i < numSteps; i++) {
                                 emitter.addTime(emitter.fixedTimeStep, false);
                             }
                             stats._updatesPerFrame += numSteps;
@@ -268,6 +254,12 @@ class ParticleSystemComponentSystem extends ComponentSystem {
 
     onBeforeRemove(entity, component) {
         component.onBeforeRemove();
+    }
+
+    destroy() {
+        super.destroy();
+
+        this.app.systems.off('update', this.onUpdate, this);
     }
 }
 

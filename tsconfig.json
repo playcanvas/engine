@@ -1,0 +1,64 @@
+{
+    "compilerOptions": {
+        "baseUrl": ".",
+        "outDir": "types",
+        "allowJs": true,
+        "checkJs": true,
+        "module": "es6",
+        "target": "es6",
+        "moduleResolution": "node",
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": true,
+        "strictNullChecks": true,
+        "strictPropertyInitialization": true,
+        "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
+    },
+    "typedocOptions": {
+        "compilerOptions": {
+            "allowSyntheticDefaultImports": true,
+            "checkJs": false,
+            "typeRoots": [ "./node_modules/@types" ]
+        },
+        "entryPoints": [ "./src/index.js" ],
+        "excludeNotDocumented": true,
+        "excludeNotDocumentedKinds": [
+            "Module",
+            "Namespace",
+            "Enum",
+            // "EnumMember", // Not enabled by default
+            "Variable",
+            "Function",
+            "Class",
+            "Interface",
+            "Constructor",
+            "Property",
+            "Method",
+            "CallSignature",
+            "IndexSignature",
+            "ConstructorSignature",
+            "Accessor",
+            // We only document getters/setters with one JSDoc block so if there is a setter,
+            // the getter will appear undocumented (setters always appear before getters).
+            // "GetSignature",
+            "SetSignature",
+            "TypeAlias",
+            "Reference"
+        ],
+        "githubPages": false,
+        "name": "PlayCanvas Engine API",
+        "navigationLinks": {
+            "Developer Site": "https://developer.playcanvas.com/",
+            "Discord": "https://discord.gg/RSaMRzg",
+            "Forum": "https://forum.playcanvas.com/",
+            "GitHub": "https://github.com/playcanvas/engine"
+        },
+        "out": "typedocs",
+        "plugin": [
+            "./utils/typedoc-plugin.mjs",
+            "typedoc-plugin-mdn-links"
+        ],
+        "readme": "none"
+    },
+    "include": ["src/**/*.js", "rollup.config.mjs"]
+}

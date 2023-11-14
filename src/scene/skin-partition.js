@@ -29,17 +29,17 @@ class SkinPartition {
     }
 
     addVertex(vertex, idx, vertexArray) {
-        var remappedIndex = -1;
+        let remappedIndex = -1;
         if (this.indexMap[idx] !== undefined) {
             remappedIndex = this.indexMap[idx];
             this.indices.push(remappedIndex);
         } else {
             // Create new partitioned vertex
-            for (var influence = 0; influence < 4; influence++) {
+            for (let influence = 0; influence < 4; influence++) {
                 if (vertexArray.blendWeight.data[idx * 4 + influence] === 0)
                     continue;
 
-                var originalBoneIndex = vertexArray.blendIndices.data[vertex.index * 4 + influence];
+                const originalBoneIndex = vertexArray.blendIndices.data[vertex.index * 4 + influence];
                 vertex.boneIndices[influence] = this.getBoneRemap(originalBoneIndex);
             }
             remappedIndex = this.vertices.length;
@@ -51,18 +51,17 @@ class SkinPartition {
 
     addPrimitive(vertices, vertexIndices, vertexArray, boneLimit) {
         // Build a list of all the bones used by the vertex that aren't currently in this partition
-        var i, j;
-        var bonesToAdd = [];
-        var bonesToAddCount = 0;
-        var vertexCount = vertices.length;
-        for (i = 0; i < vertexCount; i++) {
-            var vertex = vertices[i];
-            var idx = vertex.index;
-            for (var influence = 0; influence < 4; influence++) {
+        const bonesToAdd = [];
+        let bonesToAddCount = 0;
+        const vertexCount = vertices.length;
+        for (let i = 0; i < vertexCount; i++) {
+            const vertex = vertices[i];
+            const idx = vertex.index;
+            for (let influence = 0; influence < 4; influence++) {
                 if (vertexArray.blendWeight.data[idx * 4 + influence] > 0) {
-                    var boneIndex = vertexArray.blendIndices.data[idx * 4 + influence];
-                    var needToAdd = true;
-                    for (j = 0; j < bonesToAddCount; j++) {
+                    const boneIndex = vertexArray.blendIndices.data[idx * 4 + influence];
+                    let needToAdd = true;
+                    for (let j = 0; j < bonesToAddCount; j++) {
                         if (bonesToAdd[j] === boneIndex) {
                             needToAdd = false;
                             break;
@@ -70,7 +69,7 @@ class SkinPartition {
                     }
                     if (needToAdd) {
                         bonesToAdd[bonesToAddCount] = boneIndex;
-                        var boneRemap = this.getBoneRemap(boneIndex);
+                        const boneRemap = this.getBoneRemap(boneIndex);
                         bonesToAddCount += (boneRemap === -1 ? 1 : 0);
                     }
                 }
@@ -83,12 +82,12 @@ class SkinPartition {
         }
 
         // Add bones
-        for (i = 0; i < bonesToAddCount; i++) {
+        for (let i = 0; i < bonesToAddCount; i++) {
             this.boneIndices.push(bonesToAdd[i]);
         }
 
         // Add vertices and indices
-        for (i = 0; i < vertexCount; i++) {
+        for (let i = 0; i < vertexCount; i++) {
             this.addVertex(vertices[i], vertexIndices[i], vertexArray);
         }
 
@@ -96,7 +95,7 @@ class SkinPartition {
     }
 
     getBoneRemap(boneIndex) {
-        for (var i = 0; i < this.boneIndices.length; i++) {
+        for (let i = 0; i < this.boneIndices.length; i++) {
             if (this.boneIndices[i] === boneIndex) {
                 return i;
             }
@@ -106,56 +105,54 @@ class SkinPartition {
 }
 
 function indicesToReferences(model) {
-    var i;
-    var vertices = model.vertices;
-    var skins = model.skins;
-    var meshes = model.meshes;
-    var meshInstances = model.meshInstances;
+    const vertices = model.vertices;
+    const skins = model.skins;
+    const meshes = model.meshes;
+    const meshInstances = model.meshInstances;
 
-    for (i = 0; i < meshes.length; i++) {
+    for (let i = 0; i < meshes.length; i++) {
         meshes[i].vertices = vertices[meshes[i].vertices];
         if (meshes[i].skin !== undefined) {
             meshes[i].skin = skins[meshes[i].skin];
         }
     }
-    for (i = 0; i < meshInstances.length; i++) {
+    for (let i = 0; i < meshInstances.length; i++) {
         meshInstances[i].mesh = meshes[meshInstances[i].mesh];
     }
 }
 
 function referencesToIndices(model) {
-    var i;
-    var vertices = model.vertices;
-    var skins = model.skins;
-    var meshes = model.meshes;
-    var meshInstances = model.meshInstances;
+    const vertices = model.vertices;
+    const skins = model.skins;
+    const meshes = model.meshes;
+    const meshInstances = model.meshInstances;
 
-    for (i = 0; i < meshes.length; i++) {
+    for (let i = 0; i < meshes.length; i++) {
         meshes[i].vertices = vertices.indexOf(meshes[i].vertices);
         if (meshes[i].skin !== undefined) {
             meshes[i].skin = skins.indexOf(meshes[i].skin);
         }
     }
-    for (i = 0; i < meshInstances.length; i++) {
+    for (let i = 0; i < meshInstances.length; i++) {
         meshInstances[i].mesh = meshes.indexOf(meshInstances[i].mesh);
     }
 }
 
 function partitionSkin(model, materialMappings, boneLimit) {
-    var i, j, k, index;
+    let i, j, k, index;
 
     // Replace object indices with actual object references
     // This simplifies insertion/removal of array items
     indicesToReferences(model);
 
-    var vertexArrays = model.vertices;
-    var skins = model.skins;
-    var mesh;
-    var meshes = model.meshes;
-    var meshInstances = model.meshInstances;
+    const vertexArrays = model.vertices;
+    const skins = model.skins;
+    let mesh;
+    const meshes = model.meshes;
+    const meshInstances = model.meshInstances;
 
-    var getVertex = function (idx) {
-        var vert = new PartitionedVertex();
+    const getVertex = function (idx) {
+        const vert = new PartitionedVertex();
         vert.index = idx;
         return vert;
     };
@@ -163,10 +160,10 @@ function partitionSkin(model, materialMappings, boneLimit) {
     for (i = skins.length - 1; i >= 0; i--) {
         // This skin exceeds the bone limit. Split it!
         if (skins[i].boneNames.length > boneLimit) {
-            var skin = skins.splice(i, 1)[0];
+            const skin = skins.splice(i, 1)[0];
 
             // Build a list of meshes that use this skin
-            var meshesToSplit = [];
+            const meshesToSplit = [];
             for (j = 0; j < meshes.length; j++) {
                 if (meshes[j].skin === skin) {
                     meshesToSplit.push(meshes[j]);
@@ -185,28 +182,28 @@ function partitionSkin(model, materialMappings, boneLimit) {
                 throw new Error('partitionSkin: There should be at least one mesh that references a skin');
             }
 
-            var vertexArray = meshesToSplit[0].vertices;
+            const vertexArray = meshesToSplit[0].vertices;
             for (j = 1; j < meshesToSplit.length; j++) {
                 if (meshesToSplit[j].vertices !== vertexArray) {
                     throw new Error('partitionSkin: All meshes that share a skin should also share the same vertex buffer');
                 }
             }
 
-            var partition;
-            var partitions = [];
+            let partition;
+            const partitions = [];
 
             // Phase 1:
             // Build the skin partitions
             // Go through index list and extract primitives and add them to bone partitions
             // Since we are working with a single triangle list, everything is a triangle
-            var primitiveVertices = [];
-            var primitiveIndices = [];
-            var basePartition = 0;
+            const primitiveVertices = [];
+            const primitiveIndices = [];
+            let basePartition = 0;
 
             for (j = 0; j < meshesToSplit.length; j++) {
                 mesh = meshesToSplit[j];
-                var indices = mesh.indices;
-                for (var iIndex = mesh.base; iIndex < mesh.base + mesh.count;) {
+                const indices = mesh.indices;
+                for (let iIndex = mesh.base; iIndex < mesh.base + mesh.count;) {
                     // Extract primitive
                     // Convert vertices
                     // There is a little bit of wasted time here if the vertex was already added previously
@@ -223,8 +220,8 @@ function partitionSkin(model, materialMappings, boneLimit) {
                     primitiveIndices[2] = index;
 
                     // Attempt to add the primitive to an existing bone partition
-                    var added = false;
-                    for (var iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
+                    let added = false;
+                    for (let iBonePartition = basePartition; iBonePartition < partitions.length; iBonePartition++) {
                         partition = partitions[iBonePartition];
                         if (partition.addPrimitive(primitiveVertices, primitiveIndices, vertexArray, boneLimit)) {
                             added = true;
@@ -246,8 +243,8 @@ function partitionSkin(model, materialMappings, boneLimit) {
 
             // Phase 2:
             // Gather vertex and index lists from all the partitions, then upload to GPU
-            var partitionedVertices = [];
-            var partitionedIndices = [];
+            const partitionedVertices = [];
+            const partitionedIndices = [];
 
             for (j = 0; j < partitions.length; j++) {
                 partition = partitions[j];
@@ -256,10 +253,10 @@ function partitionSkin(model, materialMappings, boneLimit) {
                     // this bone partition contains vertices and indices
 
                     // Find offsets
-                    var vertexStart = partitionedVertices.length;
-                    var vertexCount = partition.vertices.length;
-                    var indexStart = partitionedIndices.length;
-                    var indexCount = partition.indices.length;
+                    const vertexStart = partitionedVertices.length;
+                    const vertexCount = partition.vertices.length;
+                    const indexStart = partitionedIndices.length;
+                    const indexCount = partition.indices.length;
 
                     // Make a new sub set
                     partition.partition = j;
@@ -269,8 +266,8 @@ function partitionSkin(model, materialMappings, boneLimit) {
                     partition.indexCount = indexCount;
 
                     // Copy buffers
-                    var iSour;
-                    var iDest;
+                    let iSour;
+                    let iDest;
 
                     // Copy vertices to final list
                     iSour = 0;
@@ -290,18 +287,18 @@ function partitionSkin(model, materialMappings, boneLimit) {
 
             // Phase 3:
             // Create the split skins
-            var splitSkins = [];
+            const splitSkins = [];
             for (j = 0; j < partitions.length; j++) {
                 partition = partitions[j];
 
-                var ibp = [];
-                var boneNames = [];
+                const ibp = [];
+                const boneNames = [];
                 for (k = 0; k < partition.boneIndices.length; k++) {
                     ibp.push(skin.inverseBindMatrices[partition.boneIndices[k]]);
                     boneNames.push(skin.boneNames[partition.boneIndices[k]]);
                 }
 
-                var splitSkin = {
+                const splitSkin = {
                     inverseBindMatrices: ibp,
                     boneNames: boneNames
                 };
@@ -312,8 +309,8 @@ function partitionSkin(model, materialMappings, boneLimit) {
             // Phase 4
 
             // Create a partitioned vertex array
-            var attrib, attribName, data, components;
-            var splitVertexArray = {};
+            let attrib, attribName, data, components;
+            const splitVertexArray = {};
 
             // Create a vertex array of the same format as the input to take partitioned vertex data
             for (attribName in vertexArray) {
@@ -328,9 +325,9 @@ function partitionSkin(model, materialMappings, boneLimit) {
             // bone indices
             for (attribName in vertexArray) {
                 if (attribName === 'blendIndices') {
-                    var dstBoneIndices = splitVertexArray[attribName].data;
+                    const dstBoneIndices = splitVertexArray[attribName].data;
                     for (j = 0; j < partitionedVertices.length; j++) {
-                        var srcBoneIndices = partitionedVertices[j].boneIndices;
+                        const srcBoneIndices = partitionedVertices[j].boneIndices;
                         dstBoneIndices.push(srcBoneIndices[0], srcBoneIndices[1], srcBoneIndices[2], srcBoneIndices[3]);
                     }
                 } else {
