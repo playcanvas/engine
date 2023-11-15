@@ -1428,23 +1428,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
-        const rt = renderPass.renderTarget || this.backBuffer;
+        const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
 
         this.updateBegin();
 
+        // the pass always start using full size of the target
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
+
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
         if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
-
-            // the pass always clears full target
-            const rt = renderPass.renderTarget;
-            const width = rt ? rt.width : this.width;
-            const height = rt ? rt.height : this.height;
-            this.setViewport(0, 0, width, height);
-            this.setScissor(0, 0, width, height);
 
             let clearFlags = 0;
             const clearOptions = {};
