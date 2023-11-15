@@ -370,17 +370,23 @@ class EsmScriptComponent extends Component {
         return this.modules.get(moduleClass);
     }
 
+    /**
+     * Removes a module instance from the component.
+     * @param {*} ModuleClass - The ESM Script class to remove
+     */
     remove(ModuleClass) {
 
-        const moduleInstance = this.modules.delete(ModuleClass);
+        const moduleInstance = this.modules.get(ModuleClass);
 
-        if (moduleInstance) {
-            this.modulesWithPostUpdate.delete(moduleInstance);
-            this.modulesWithUpdate.delete(moduleInstance);
-            this.modules.delete(ModuleClass);
-        } else if (ModuleClass) {
-            Debug.warn(`The ESM Script '${ModuleClass.name}' has not been added to this component`);
+        if (!moduleInstance) {
+            Debug.warn(`The ESM Script '${ModuleClass?.name}' has not been added to this component`);
+            return;
         }
+
+        this.modulesWithPostUpdate.delete(moduleInstance);
+        this.modulesWithUpdate.delete(moduleInstance);
+        this.attributeDefinitions.delete(ModuleClass);
+        this.modules.delete(ModuleClass);
     }
 
     /**
@@ -420,76 +426,6 @@ class EsmScriptComponent extends Component {
         this.attributeDefinitions.set(ModuleClass, attributeDefinition);
 
         return moduleInstance;
-    }
-
-    /**
-     * The 'import' method provides a convenience function for importing an ESM Script and
-     * registering it with the component system. It will import the module, add or replace
-     * it within the component, and swap any state if if possible.
-     *
-     * Note that the ESM Script will be dynamically imported, which will trigger a
-     * network request if the module has not already been imported somewhere else.
-     *
-     * @param {string} path - The path to the ESM Script
-     * @param {Object} attributes - The set of attributes to attach to the ESM Script
-     *
-     * @example
-     * // Uncomment bellow to ensure the module is statically imported
-     * // import '/path/to/module.js'
-     *
-     * entity.esmscript.import(
-     *  '/path/to/module.js',
-     *  { particleCount: 10 }
-     * )
-     */
-    import(path, attributes = {}) {
-
-        const app = this.system.app;
-
-        // normalize the URL - dummy domain is necessary for parsing but not actually used.
-        const url = new URL(path, 'https://example.com');
-        const moduleSpecifier = url.pathname + url.search;
-
-        DynamicImport(app, moduleSpecifier).then((ModuleExport) => {
-
-            const { default: ESMScriptClass, attributes: attributeDefinition } = ModuleExport;
-            const module = this.add(ESMScriptClass, attributeDefinition, attributes);
-
-            this.onSwapAvailable(moduleSpecifier, (NewESMScriptClass, newAttributeDefinition) => {
-
-                this.swap(ESMScriptClass, NewESMScriptClass, newAttributeDefinition);
-
-            });
-
-            module.initialize?.();
-
-        }).catch(Debug.error);
-    }
-
-    /**
-     * Registers a callback which is triggered whenever
-     * a module at the specified path is updated.
-     *
-     * @param {string} moduleSpecifier - The path to the module to be watched
-     * @param {Function} callback - The path to the module to be watched
-     */
-    onSwapAvailable(moduleSpecifier, callback) {
-
-        // If this path is registered, warn and return
-        if (this.modulesSpecifiersEventMap.has(moduleSpecifier)) {
-            Debug.warn(`The path '${moduleSpecifier}' is already registered for hot swap events.`);
-        }
-
-        const onAssetLoad = ({ resource }) => {
-            const { default: NewEsmScriptClass, attributeDefinition } = resource;
-
-            if (classHasMethod(NewEsmScriptClass, 'swap'))
-                callback(NewEsmScriptClass, attributeDefinition);
-        };
-
-        // Listen for load event and add to event map
-        this.system.app.assets.on(`load:url:${moduleSpecifier}`, onAssetLoad);
-        this.modulesSpecifiersEventMap.set(moduleSpecifier, onAssetLoad);
     }
 
     /**
