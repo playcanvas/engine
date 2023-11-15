@@ -364,7 +364,7 @@ class Texture {
      * @type {number}
      */
     get requiredMipLevels() {
-        return this.mipmaps ? Math.floor(Math.log2(Math.max(this.width, this.height))) + 1 : 1;
+        return this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
     }
 
     /**
