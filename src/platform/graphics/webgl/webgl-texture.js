@@ -574,7 +574,7 @@ class WebglTexture {
         texture._gpuSize = texture.gpuSize;
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
 
-        texture.this = true;
+        this._glCreated = true;
     }
 }
 
