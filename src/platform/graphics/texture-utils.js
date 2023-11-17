@@ -30,7 +30,7 @@ class TextureUtils {
      * @returns {number} The number of mip levels required for the texture.
      */
     static calcMipLevelsCount(width, height, depth = 1) {
-        return 1 + Math.log2(Math.max(width, height, depth));
+        return 1 + Math.floor(Math.log2(Math.max(width, height, depth)));
     }
 
     /**
