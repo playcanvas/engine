@@ -57,11 +57,11 @@ class SplatData {
 
     vertexElement;
 
-    constructor(elements) {
+    constructor(elements, performZScale = true) {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
 
-        if (!this.isCompressed) {
+        if (!this.isCompressed && performZScale) {
             mat4.setScale(-1, -1, 1);
             this.transform(mat4);
         }
@@ -289,36 +289,46 @@ class SplatData {
 
         const unpack111011 = (value) => {
             return {
-                x: unpackUnorm(value >> 21, 11),
-                y: unpackUnorm(value >> 11, 10),
+                x: unpackUnorm(value >>> 21, 11),
+                y: unpackUnorm(value >>> 11, 10),
                 z: unpackUnorm(value, 11)
             };
         };
 
         const unpack8888 = (value) => {
             return {
-                x: unpackUnorm(value >> 24, 8),
-                y: unpackUnorm(value >> 16, 8),
-                z: unpackUnorm(value >> 8, 8),
+                x: unpackUnorm(value >>> 24, 8),
+                y: unpackUnorm(value >>> 16, 8),
+                z: unpackUnorm(value >>> 8, 8),
                 w: unpackUnorm(value, 8)
             };
         };
 
+        const unpackRot = (value) => {
+            const res = unpack111011(value);
+            res.x = res.x * 2 - 1;
+            res.y = res.y * 2 - 1;
+            res.z = res.z * 2 - 1;
+            res.w = Math.sqrt(1 - (res.x * res.x + res.y * res.y + res.z * res.z));
+            return res;
+        };
+
         for (let i = 0; i < vertices.count; ++i) {
+            const ci = Math.floor(i / 256);
+
             const p = unpack111011(position[i]);
-            const r = unpack111011(rotation[i]);
+            const r = unpackRot(rotation[i]);
             const s = unpack111011(scale[i]);
             const c = unpack8888(color[i]);
 
-            const ci = Math.floor(i / 256);
             data.x[i] = min_x[ci] + size_x[ci] * p.x;
             data.y[i] = min_y[ci] + size_y[ci] * p.y;
             data.z[i] = min_z[ci] + size_z[ci] * p.z;
 
-            data.rot_0[i] = r.x * 2 - 1;
-            data.rot_1[i] = r.y * 2 - 1;
-            data.rot_2[i] = r.z * 2 - 1;
-            data.rot_3[i] = Math.sqrt(1 - (data.rot_0[i] * data.rot_0[i] + data.rot_1[i] * data.rot_1[i] + data.rot_2[i] * data.rot_2[i]));
+            data.rot_0[i] = r.x;
+            data.rot_1[i] = r.y;
+            data.rot_2[i] = r.z;
+            data.rot_3[i] = r.w;
 
             data.scale_0[i] = scale_min_x[ci] + scale_size_x[ci] * s.x;
             data.scale_1[i] = scale_min_y[ci] + scale_size_y[ci] * s.y;
@@ -328,14 +338,6 @@ class SplatData {
             data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
             data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
             data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
-
-            // x = 1 / (1 + Math.exp(-a))
-            // x * (1 + Math.exp(-a)) = 1
-            // 1 + Math.exp(-a) = 1 / x
-            // Math.exp(-a) = 1 / x - 1
-            // -a = ln(1 / x - 1)
-            // a = -ln(1 / x - 1)
-
             data.opacity[i] = -Math.log(1 / c.w - 1);
         }
 
