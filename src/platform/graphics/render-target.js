@@ -300,22 +300,25 @@ class RenderTarget {
      */
     resize(width, height) {
 
-        // release existing
-        const device = this._device;
-        this.destroyFrameBuffers();
-        if (device.renderTarget === this) {
-            device.setRenderTarget(null);
+        if (this.width !== width || this.height !== height) {
+
+            // release existing
+            const device = this._device;
+            this.destroyFrameBuffers();
+            if (device.renderTarget === this) {
+                device.setRenderTarget(null);
+            }
+
+            // resize textures
+            this._depthBuffer?.resize(width, height);
+            this._colorBuffers?.forEach((colorBuffer) => {
+                colorBuffer.resize(width, height);
+            });
+
+            // initialize again
+            this.validateMrt();
+            this.impl = device.createRenderTargetImpl(this);
         }
-
-        // resize textures
-        this._depthBuffer?.resize(width, height);
-        this._colorBuffers?.forEach((colorBuffer) => {
-            colorBuffer.resize(width, height);
-        });
-
-        // initialize again
-        this.validateMrt();
-        this.impl = device.createRenderTargetImpl(this);
     }
 
     validateMrt() {

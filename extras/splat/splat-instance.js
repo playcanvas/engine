@@ -83,8 +83,11 @@ class SplatInstance {
         this.meshInstance.setInstancing(vb, true);
         this.meshInstance.splatInstance = this;
 
+        // clone centers to allow multiple instancing of sorter
+        this.centers = new Float32Array(splat.centers);
+
         this.sorter = new SplatSorter();
-        this.sorter.init(this.vb, this.splat.centers, !this.splat.device.isWebGL1);
+        this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
 
         // if camera entity is provided, automatically use it to sort splats
         const cameraEntity = options.cameraEntity;
