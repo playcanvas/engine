@@ -24,9 +24,8 @@ import { classHasMethod } from '../../../core/class-utils.js';
  */
 
 /**
- * @typedef {new (...args: any[]) => any} ModuleClass
- * @param {object} args - Arguments for the constructor.
- * @returns {ModuleInstance} - Instance of the module class.
+ * This type represents a generic class constructor.
+ * @typedef {Function} ModuleClass
  */
 
 /**
@@ -93,8 +92,6 @@ class EsmScriptComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
-
-        this.enabled = true;
 
         /**
          * Holds all ESM instances of this component.
