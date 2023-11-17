@@ -10,7 +10,7 @@ import {
     BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -285,7 +285,15 @@ class GraphicsDevice extends EventHandler {
       * @type {boolean}
       * @readonly
       */
-    textureFloatFilterable = true;
+    textureFloatFilterable = false;
+
+    /**
+     * True if filtering can be applied when sampling 16-bit float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -808,6 +816,47 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+    }
+
+    /**
+     * Get a renderable HDR pixel format supported by the graphics device.
+     *
+     * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
+     *
+     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RGBA16F}
+     * - {@link PIXELFORMAT_RGBA32F}
+     *
+     * @param {boolean} [filterable] - If true, the format aso needs to be filterable. Defaults to
+     * true.
+     * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
+     * supported.
+     */
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+        for (let i = 0; i < formats.length; i++) {
+            const format = formats[i];
+            switch (format) {
+
+                case PIXELFORMAT_111110F: {
+                    if (this.textureRG11B10Renderable)
+                        return format;
+                    break;
+                }
+
+                case PIXELFORMAT_RGBA16F:
+                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+
+                case PIXELFORMAT_RGBA32F:
+                    if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+            }
+        }
+        return undefined;
     }
 }
 
