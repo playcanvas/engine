@@ -5,11 +5,7 @@ export const attributes = {
     camera: { type: 'entity' }
 };
 
-export default class Geolocation {
-    constructor(app, entity) {
-        this.app = app;
-        this.entity = entity;
-    }
+export default class Geolocation  extends pc.EsmScriptType {
 
     teleport(lon, lat, alt) {
         const [x, y, z] = geodeticToCartesian(lon, lat, alt ?? 300);

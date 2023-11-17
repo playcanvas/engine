@@ -69,12 +69,7 @@ const m2 = new pc.Mat4();
 const m3 = new pc.Mat4();
 const q = new pc.Quat();
 
-export default class FlyCamera {
-    constructor(app, entity) {
-        this.app = app;
-        this.entity = entity;
-    }
-
+export default class FlyCamera extends pc.EsmScriptType {
     initialize() {
         this.pitch = new SmoothValue(0);
         this.yaw = new SmoothValue(0);

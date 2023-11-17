@@ -66,6 +66,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, dracoPath }
         clearColor: new pc.Color(0.5, 0.6, 0.9),
         farClip: 10000
     });
+
     camera.addComponent('esmscript', {
         enabled: true,
         modules: [{

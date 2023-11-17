@@ -7,12 +7,7 @@ export const attributes = {
     camera: { type: 'entity' }
 };
 
-export default class TileRenderer {
-    constructor(app, entity) {
-        this.app = app;
-        this.entity = entity;
-    }
-
+export default class TileRenderer extends pc.EsmScriptType {
     loadGlb(url) {
         return new Promise((resolve, reject) => {
             const filename = new URL(url).pathname.split("/").pop();

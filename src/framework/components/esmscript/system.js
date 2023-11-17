@@ -1,3 +1,4 @@
+import { DynamicImport } from '../../../framework/handlers/esmscript.js';
 import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
@@ -31,7 +32,6 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this._onBeforeRemove, this);
         this.app.systems.on('initialize', this._onInitialize, this);
-        this.app.systems.on('postInitialize', this._onPostInitialize, this);
         this.app.systems.on('update', this._onUpdate, this);
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
@@ -40,12 +40,18 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         this._components.add(component);
 
+        const ImportAndAddScript = async (moduleSpecifier, attributes) => {
+            const EsmModuleClass = await DynamicImport(this.app, moduleSpecifier);
+            component.add(EsmModuleClass, attributes);
+            return EsmModuleClass;
+        };
+
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
         if (data.hasOwnProperty('modules')) {
             for (let i = 0; i < data.modules.length; i++) {
                 const { moduleSpecifier, attributes } = data.modules[i];
-                component.import(moduleSpecifier, attributes);
+                ImportAndAddScript(moduleSpecifier, attributes);
             }
         }
     }
@@ -92,6 +98,11 @@ class EsmScriptComponentSystem extends ComponentSystem {
     }
 
     _onUpdate(dt) {
+
+        for (const component of this._components) {
+            if (component.enabled) component.flushActiveModules();
+        }
+
         for (const component of this._components) {
             if (component.enabled) component._onUpdate(dt);
         }
@@ -99,7 +110,11 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
     _onPostUpdate(dt) {
         for (const component of this._components) {
-            if (component.enabled) component._onPostUpdate();
+            if (component.enabled) component._onPostUpdate(dt);
+        }
+
+        for (const component of this._components) {
+            if (component.enabled) component.flushInactiveModules();
         }
     }
 
@@ -116,7 +131,6 @@ class EsmScriptComponentSystem extends ComponentSystem {
         super.destroy();
 
         this.app.systems.off('initialize', this._onInitialize, this);
-        this.app.systems.off('postInitialize', this._onPostInitialize, this);
         this.app.systems.off('update', this._onUpdate, this);
         this.app.systems.off('postUpdate', this._onPostUpdate, this);
     }

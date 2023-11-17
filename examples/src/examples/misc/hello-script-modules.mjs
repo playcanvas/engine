@@ -56,20 +56,23 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
         type: 'box'
     });
 
-    box.addComponent('esmscript', {
-        enabled: true,
-        modules: [
-            {
-                moduleSpecifier: '/scripts/make-confetti.js',
-                attributes: {
-                    confettiSettings: {
-                        particleCount: 200
-                    }
-                }
-            },
-            { moduleSpecifier: '/scripts/rotate.js' }
-        ]
+    box.addComponent('esmscript');
+
+
+    // The paths are in node, not relative to the url
+    // const path = require('path');
+    console.log(`${document.location.origin}/scripts/make-confetti.js`);
+    const Confetti = await import(`${document.location.origin}/scripts/make-confetti.js`);
+    // const Confetti = await import('/examples/src/examples/misc/make-confetti.js')
+    const Rotate = await import(`${document.location.origin}/scripts/rotate.js`);
+
+    box.esmscript.add(Rotate);
+    box.esmscript.add(Confetti, {
+        confettiSettings: {
+            particleCount: 200
+        }
     });
+
     app.root.addChild(box);
 
     // create camera entity
