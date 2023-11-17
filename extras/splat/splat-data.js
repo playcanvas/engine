@@ -245,6 +245,113 @@ class SplatData {
             app.drawLines(debugLines, debugColor);
         }
     }
+
+    // compressed splats
+    get isCompressed() {
+        return this.elements.some(e => e.name === 'chunk') &&
+               ['compressed_position', 'compressed_rotation', 'compressed_scale', 'compressed_color'].every(name => this.getProp(name));
+    }
+
+    get decompress() {
+        const members = ['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'scale_0', 'scale_1', 'scale_2'];
+        const chunks = this.elements.find(e => e.name === 'chunk');
+        const vertices = this.vertexElement;
+
+        // allocate uncompressed data
+        const data = {};
+        members.forEach(name => data[name] = new Float32Array(vertices.count));
+
+        const getChunkProp = (name) => chunks.properties.find(p => p.name === name && p.storage)?.storage;
+
+        const min_x = getChunkProp('min_x');
+        const min_y = getChunkProp('min_y');
+        const min_z = getChunkProp('min_z');
+        const size_x = getChunkProp('size_x');
+        const size_y = getChunkProp('size_y');
+        const size_z = getChunkProp('size_z');
+        const scale_min_x = getChunkProp('scale_min_x');
+        const scale_min_y = getChunkProp('scale_min_y');
+        const scale_min_z = getChunkProp('scale_min_z');
+        const scale_size_x = getChunkProp('scale_size_x');
+        const scale_size_y = getChunkProp('scale_size_y');
+        const scale_size_z = getChunkProp('scale_size_z');
+
+        const position = getProp('compressed_position');
+        const rotation = getProp('compressed_rotation');
+        const scale = getProp('compressed_scale');
+        const color = getProp('compressed_color');
+
+        const unpackUnorm = (value, bits) => {
+            const t = (1 << bits) - 1;
+            return (value & t) / t;
+        };
+
+        const unpack111011 = (value) => {
+            return {
+                x: unpackUnorm(value, 11) >> 21,
+                y: unpackUnorm(value, 10) >> 11,
+                z: unpackUnorm(value, 11)
+            };
+        };
+
+        const unpack8888 = (value) => {
+            return {
+                x: unpackUnorm(value, 8) >> 24,
+                y: unpackUnorm(value, 8) >> 16,
+                z: unpackUnorm(value, 8) >> 8,
+                w: unpackUnorm(value, 8)
+            };
+        };
+
+        for (let i = 0; i < vertices.count; ++i) {
+            const position = unpack111011(position[i]);
+            const rotation = unpack111011(rotation[i]);
+            const scale = unpack111011(scale[i]);
+            const color = unpack8888(color[i]);
+
+            const ci = Math.floor(i / 256);
+            data.x[i] = min_x[ci] + scale_x[ci] * position.x;
+            data.y[i] = min_y[ci] + scale_y[ci] * position.y;
+            data.z[i] = min_z[ci] + scale_z[ci] * position.z;
+
+            data.rot_0[i] = rotation.x;
+            data.rot_1[i] = rotation.y;
+            data.rot_2[i] = rotation.z;
+            data.rot_3[i] = Math.sqrt(1 - rotation.x * rotation.x - rotation.y * rotation.y - rotation.z * rotation.z);
+
+            data.scale_0[i] = scale_min_x[ci] + scale_size_x[ci] * scale.x;
+            data.scale_1[i] = scale_min_y[ci] + scale_size_y[ci] * scale.y;
+            data.scale_2[i] = scale_min_z[ci] + scale_size_z[ci] * scale.z;
+
+            const SH_C0 = 0.28209479177387814;
+            data.f_dc_0[i] = (color.x - 0.5) / SH_C0;
+            data.f_dc_1[i] = (color.y - 0.5) / SH_C0;
+            data.f_dc_2[i] = (color.z - 0.5) / SH_C0;
+
+            // x = 1 / (1 + Math.exp(-a))
+            // x * (1 + Math.exp(-a)) = 1
+            // 1 + Math.exp(-a) = 1 / x
+            // Math.exp(-a) = 1 / x - 1
+            // -a = ln(1 / x - 1)
+            // a = -ln(1 / x - 1)
+
+            data.opacity[i] = -Math.log(1 / color.w - 1);
+        }
+
+        return [{
+            name: 'vertex',
+            count: vertices.count,
+            properties: members.map(name => {
+                return {
+                    name: name,
+                    type: 'float',
+                    byteSize: 4,
+                    storage: data[name]
+                };
+            })
+        }];
+    }
+
 }
 
 export { SplatData };
