@@ -827,7 +827,7 @@ class GraphicsDevice extends EventHandler {
      * - {@link PIXELFORMAT_RGBA16F}
      * - {@link PIXELFORMAT_RGBA32F}
      *
-     * @param {boolean} [filterable] - If true, the format aso needs to be filterable. Defaults to
+     * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
      * true.
      * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
      * supported.
