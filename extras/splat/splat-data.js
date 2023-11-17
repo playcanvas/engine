@@ -61,9 +61,10 @@ class SplatData {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
 
-        mat4.setScale(-1, -1, 1);
-        // mat4.setFromEulerAngles(-90, -90, 0);
-        this.transform(mat4);
+        if (!this.isCompressed) {
+            mat4.setScale(-1, -1, 1);
+            this.transform(mat4);
+        }
     }
 
     get numSplats() {
@@ -252,7 +253,7 @@ class SplatData {
                ['compressed_position', 'compressed_rotation', 'compressed_scale', 'compressed_color'].every(name => this.getProp(name));
     }
 
-    get decompress() {
+    decompress() {
         const members = ['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'scale_0', 'scale_1', 'scale_2'];
         const chunks = this.elements.find(e => e.name === 'chunk');
         const vertices = this.vertexElement;
@@ -276,10 +277,10 @@ class SplatData {
         const scale_size_y = getChunkProp('scale_size_y');
         const scale_size_z = getChunkProp('scale_size_z');
 
-        const position = getProp('compressed_position');
-        const rotation = getProp('compressed_rotation');
-        const scale = getProp('compressed_scale');
-        const color = getProp('compressed_color');
+        const position = this.getProp('compressed_position');
+        const rotation = this.getProp('compressed_rotation');
+        const scale = this.getProp('compressed_scale');
+        const color = this.getProp('compressed_color');
 
         const unpackUnorm = (value, bits) => {
             const t = (1 << bits) - 1;
@@ -288,45 +289,45 @@ class SplatData {
 
         const unpack111011 = (value) => {
             return {
-                x: unpackUnorm(value, 11) >> 21,
-                y: unpackUnorm(value, 10) >> 11,
+                x: unpackUnorm(value >> 21, 11),
+                y: unpackUnorm(value >> 11, 10),
                 z: unpackUnorm(value, 11)
             };
         };
 
         const unpack8888 = (value) => {
             return {
-                x: unpackUnorm(value, 8) >> 24,
-                y: unpackUnorm(value, 8) >> 16,
-                z: unpackUnorm(value, 8) >> 8,
+                x: unpackUnorm(value >> 24, 8),
+                y: unpackUnorm(value >> 16, 8),
+                z: unpackUnorm(value >> 8, 8),
                 w: unpackUnorm(value, 8)
             };
         };
 
         for (let i = 0; i < vertices.count; ++i) {
-            const position = unpack111011(position[i]);
-            const rotation = unpack111011(rotation[i]);
-            const scale = unpack111011(scale[i]);
-            const color = unpack8888(color[i]);
+            const p = unpack111011(position[i]);
+            const r = unpack111011(rotation[i]);
+            const s = unpack111011(scale[i]);
+            const c = unpack8888(color[i]);
 
             const ci = Math.floor(i / 256);
-            data.x[i] = min_x[ci] + scale_x[ci] * position.x;
-            data.y[i] = min_y[ci] + scale_y[ci] * position.y;
-            data.z[i] = min_z[ci] + scale_z[ci] * position.z;
+            data.x[i] = min_x[ci] + size_x[ci] * p.x;
+            data.y[i] = min_y[ci] + size_y[ci] * p.y;
+            data.z[i] = min_z[ci] + size_z[ci] * p.z;
 
-            data.rot_0[i] = rotation.x;
-            data.rot_1[i] = rotation.y;
-            data.rot_2[i] = rotation.z;
-            data.rot_3[i] = Math.sqrt(1 - rotation.x * rotation.x - rotation.y * rotation.y - rotation.z * rotation.z);
+            data.rot_0[i] = r.x * 2 - 1;
+            data.rot_1[i] = r.y * 2 - 1;
+            data.rot_2[i] = r.z * 2 - 1;
+            data.rot_3[i] = Math.sqrt(1 - (data.rot_0[i] * data.rot_0[i] + data.rot_1[i] * data.rot_1[i] + data.rot_2[i] * data.rot_2[i]));
 
-            data.scale_0[i] = scale_min_x[ci] + scale_size_x[ci] * scale.x;
-            data.scale_1[i] = scale_min_y[ci] + scale_size_y[ci] * scale.y;
-            data.scale_2[i] = scale_min_z[ci] + scale_size_z[ci] * scale.z;
+            data.scale_0[i] = scale_min_x[ci] + scale_size_x[ci] * s.x;
+            data.scale_1[i] = scale_min_y[ci] + scale_size_y[ci] * s.y;
+            data.scale_2[i] = scale_min_z[ci] + scale_size_z[ci] * s.z;
 
             const SH_C0 = 0.28209479177387814;
-            data.f_dc_0[i] = (color.x - 0.5) / SH_C0;
-            data.f_dc_1[i] = (color.y - 0.5) / SH_C0;
-            data.f_dc_2[i] = (color.z - 0.5) / SH_C0;
+            data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
+            data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
+            data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
 
             // x = 1 / (1 + Math.exp(-a))
             // x * (1 + Math.exp(-a)) = 1
@@ -335,10 +336,10 @@ class SplatData {
             // -a = ln(1 / x - 1)
             // a = -ln(1 / x - 1)
 
-            data.opacity[i] = -Math.log(1 / color.w - 1);
+            data.opacity[i] = -Math.log(1 / c.w - 1);
         }
 
-        return [{
+        return new SplatData([{
             name: 'vertex',
             count: vertices.count,
             properties: members.map(name => {
@@ -349,7 +350,7 @@ class SplatData {
                     storage: data[name]
                 };
             })
-        }];
+        }]);
     }
 
 }
