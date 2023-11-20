@@ -205,7 +205,7 @@ const splatCoreVS = `
             // early out tiny splats
             // TODO: figure out length units and expose as uniform parameter
             // TODO: perhaps make this a shader compile-time option
-            if (dot(v1, v1) < 1.0 || dot(v2, v2) < 1.0) {
+            if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
                 return vec4(0.0, 0.0, 2.0, 1.0);
             }
 
