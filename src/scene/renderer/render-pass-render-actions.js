@@ -69,7 +69,7 @@ class RenderPassRenderActions extends RenderPass {
         }
     }
 
-    addLayer(camera, layer, transparent) {
+    addLayer(camera, layer, transparent, autoClears = true) {
 
         Debug.assert(camera);
         Debug.assert(this.renderTarget !== undefined, `Render pass needs to be initialized before adding layers`);
@@ -82,8 +82,10 @@ class RenderPassRenderActions extends RenderPass {
         ra.transparent = transparent;
 
         // camera / layer clear flags
-        const firstRa = this.renderActions.length === 0;
-        ra.setupClears(firstRa ? camera : undefined, layer);
+        if (autoClears) {
+            const firstRa = this.renderActions.length === 0;
+            ra.setupClears(firstRa ? camera : undefined, layer);
+        }
 
         this.addRenderAction(ra);
     }

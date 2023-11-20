@@ -311,9 +311,9 @@ class Texture {
         this.adjustVramSizeTracking(device._vram, -this._gpuSize);
         this.impl.destroy(device);
 
-        this._width = width;
-        this._height = height;
-        this._depth = depth;
+        this._width = Math.floor(width);
+        this._height = Math.floor(height);
+        this._depth = Math.floor(depth);
 
         // re-create the implementation
         this.impl = device.createTextureImpl(this);
