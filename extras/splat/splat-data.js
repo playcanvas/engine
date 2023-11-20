@@ -250,7 +250,7 @@ class SplatData {
     // compressed splats
     get isCompressed() {
         return this.elements.some(e => e.name === 'chunk') &&
-               ['compressed_position', 'compressed_rotation', 'compressed_scale', 'compressed_color'].every(name => this.getProp(name));
+               ['packed_position', 'packed_rotation', 'packed_scale', 'packed_color'].every(name => this.getProp(name));
     }
 
     decompress() {
@@ -267,20 +267,20 @@ class SplatData {
         const min_x = getChunkProp('min_x');
         const min_y = getChunkProp('min_y');
         const min_z = getChunkProp('min_z');
-        const size_x = getChunkProp('size_x');
-        const size_y = getChunkProp('size_y');
-        const size_z = getChunkProp('size_z');
-        const scale_min_x = getChunkProp('scale_min_x');
-        const scale_min_y = getChunkProp('scale_min_y');
-        const scale_min_z = getChunkProp('scale_min_z');
-        const scale_size_x = getChunkProp('scale_size_x');
-        const scale_size_y = getChunkProp('scale_size_y');
-        const scale_size_z = getChunkProp('scale_size_z');
+        const max_x = getChunkProp('max_x');
+        const max_y = getChunkProp('max_y');
+        const max_z = getChunkProp('max_z');
+        const min_scale_x = getChunkProp('min_scale_x');
+        const min_scale_y = getChunkProp('min_scale_y');
+        const min_scale_z = getChunkProp('min_scale_z');
+        const max_scale_x = getChunkProp('max_scale_x');
+        const max_scale_y = getChunkProp('max_scale_y');
+        const max_scale_z = getChunkProp('max_scale_z');
 
-        const position = this.getProp('compressed_position');
-        const rotation = this.getProp('compressed_rotation');
-        const scale = this.getProp('compressed_scale');
-        const color = this.getProp('compressed_color');
+        const position = this.getProp('packed_position');
+        const rotation = this.getProp('packed_rotation');
+        const scale = this.getProp('packed_scale');
+        const color = this.getProp('packed_color');
 
         const unpackUnorm = (value, bits) => {
             const t = (1 << bits) - 1;
@@ -304,14 +304,25 @@ class SplatData {
             };
         };
 
+        // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
         const unpackRot = (value) => {
-            const res = unpack111011(value);
-            res.x = res.x * 2 - 1;
-            res.y = res.y * 2 - 1;
-            res.z = res.z * 2 - 1;
-            res.w = Math.sqrt(1 - (res.x * res.x + res.y * res.y + res.z * res.z));
-            return res;
+            const norm = 1.0 / (Math.sqrt(2) * 0.5);
+            const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
+            const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
+            const c = (unpackUnorm(value, 10) - 0.5) * norm;
+            const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
+
+            switch (value >>> 30) {
+                case 0: quat.set(m, a, b, c); break;
+                case 1: quat.set(a, m, b, c); break;
+                case 2: quat.set(a, b, m, c); break;
+                case 3: quat.set(a, b, c, m); break;
+            }
+
+            return quat;
         };
+
+        const lerp = (a, b, t) => a * (1 - t) + b * t;
 
         for (let i = 0; i < vertices.count; ++i) {
             const ci = Math.floor(i / 256);
@@ -321,18 +332,18 @@ class SplatData {
             const s = unpack111011(scale[i]);
             const c = unpack8888(color[i]);
 
-            data.x[i] = min_x[ci] + size_x[ci] * p.x;
-            data.y[i] = min_y[ci] + size_y[ci] * p.y;
-            data.z[i] = min_z[ci] + size_z[ci] * p.z;
+            data.x[i] = lerp(min_x[ci], max_x[ci], p.x);
+            data.y[i] = lerp(min_y[ci], max_y[ci], p.y);
+            data.z[i] = lerp(min_z[ci], max_z[ci], p.z);
 
             data.rot_0[i] = r.x;
             data.rot_1[i] = r.y;
             data.rot_2[i] = r.z;
             data.rot_3[i] = r.w;
 
-            data.scale_0[i] = scale_min_x[ci] + scale_size_x[ci] * s.x;
-            data.scale_1[i] = scale_min_y[ci] + scale_size_y[ci] * s.y;
-            data.scale_2[i] = scale_min_z[ci] + scale_size_z[ci] * s.z;
+            data.scale_0[i] = lerp(min_scale_x[ci], max_scale_x[ci], s.x);
+            data.scale_1[i] = lerp(min_scale_y[ci], max_scale_y[ci], s.y);
+            data.scale_2[i] = lerp(min_scale_z[ci], max_scale_z[ci], s.z);
 
             const SH_C0 = 0.28209479177387814;
             data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
@@ -352,7 +363,7 @@ class SplatData {
                     storage: data[name]
                 };
             })
-        }]);
+        }], false);
     }
 
 }
