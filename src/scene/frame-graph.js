@@ -58,6 +58,13 @@ class FrameGraph {
                         prevPass.depthStencilOps.storeStencil = true;
                     }
                 }
+                // Magnopus patched
+                // pending the outcome from https://github.com/playcanvas/engine/issues/5823 this change 
+                // sets the store depth flag when a pass is requesting depth and there isn't a previous pass 
+                // and there is a valid render target 
+                else if (renderTarget?.depth) {
+                  renderPass.depthStencilOps.storeDepth = true;
+                }
 
                 // add the pass to the map
                 renderTargetMap.set(renderTarget, renderPass);
