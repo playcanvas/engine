@@ -260,9 +260,13 @@ class SplatData {
 
         // allocate uncompressed data
         const data = {};
-        members.forEach(name => data[name] = new Float32Array(vertices.count));
+        members.forEach((name) => {
+            data[name] = new Float32Array(vertices.count);
+        });
 
-        const getChunkProp = (name) => chunks.properties.find(p => p.name === name && p.storage)?.storage;
+        const getChunkProp = (name) => {
+            return chunks.properties.find(p => p.name === name && p.storage)?.storage;
+        };
 
         const min_x = getChunkProp('min_x');
         const min_y = getChunkProp('min_y');
@@ -355,7 +359,7 @@ class SplatData {
         return new SplatData([{
             name: 'vertex',
             count: vertices.count,
-            properties: members.map(name => {
+            properties: members.map((name) => {
                 return {
                     name: name,
                     type: 'float',
@@ -365,7 +369,6 @@ class SplatData {
             })
         }], false);
     }
-
 }
 
 export { SplatData };
