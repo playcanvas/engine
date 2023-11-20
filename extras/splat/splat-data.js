@@ -3,6 +3,7 @@ import {
     Color,
     Mat4,
     Vec3,
+    Vec4,
     Quat
 } from "playcanvas";
 
@@ -291,25 +292,21 @@ class SplatData {
             return (value & t) / t;
         };
 
-        const unpack111011 = (value) => {
-            return {
-                x: unpackUnorm(value >>> 21, 11),
-                y: unpackUnorm(value >>> 11, 10),
-                z: unpackUnorm(value, 11)
-            };
+        const unpack111011 = (result, value) => {
+            result.x = unpackUnorm(value >>> 21, 11);
+            result.y = unpackUnorm(value >>> 11, 10);
+            result.z = unpackUnorm(value, 11);
         };
 
-        const unpack8888 = (value) => {
-            return {
-                x: unpackUnorm(value >>> 24, 8),
-                y: unpackUnorm(value >>> 16, 8),
-                z: unpackUnorm(value >>> 8, 8),
-                w: unpackUnorm(value, 8)
-            };
+        const unpack8888 = (result, value) => {
+            result.x = unpackUnorm(value >>> 24, 8);
+            result.y = unpackUnorm(value >>> 16, 8);
+            result.z = unpackUnorm(value >>> 8, 8);
+            result.w = unpackUnorm(value, 8);
         };
 
         // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
-        const unpackRot = (value) => {
+        const unpackRot = (result, value) => {
             const norm = 1.0 / (Math.sqrt(2) * 0.5);
             const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
             const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
@@ -317,24 +314,27 @@ class SplatData {
             const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
 
             switch (value >>> 30) {
-                case 0: quat.set(m, a, b, c); break;
-                case 1: quat.set(a, m, b, c); break;
-                case 2: quat.set(a, b, m, c); break;
-                case 3: quat.set(a, b, c, m); break;
+                case 0: result.set(m, a, b, c); break;
+                case 1: result.set(a, m, b, c); break;
+                case 2: result.set(a, b, m, c); break;
+                case 3: result.set(a, b, c, m); break;
             }
-
-            return quat;
         };
 
         const lerp = (a, b, t) => a * (1 - t) + b * t;
 
+        const p = new Vec3();
+        const r = new Quat();
+        const s = new Vec3();
+        const c = new Vec4();
+
         for (let i = 0; i < vertices.count; ++i) {
             const ci = Math.floor(i / 256);
 
-            const p = unpack111011(position[i]);
-            const r = unpackRot(rotation[i]);
-            const s = unpack111011(scale[i]);
-            const c = unpack8888(color[i]);
+            unpack111011(p, position[i]);
+            unpackRot(r, rotation[i]);
+            unpack111011(s, scale[i]);
+            unpack8888(c, color[i]);
 
             data.x[i] = lerp(min_x[ci], max_x[ci], p.x);
             data.y[i] = lerp(min_y[ci], max_y[ci], p.y);
