@@ -1,5 +1,5 @@
 import confetti from "https://esm.sh/canvas-confetti@1.6.0";
-import Rotate from "./rotate.js";
+import * as Rotate from "./rotate.js";
 
 export const attributes = {
     confettiSettings: {

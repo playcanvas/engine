@@ -61,7 +61,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
     // The dynamic import here is only necessary due to the way the examples is set up
     const Confetti = await import(`${document.location.origin}/scripts/make-confetti.js`);
-    
+
     box.esmscript.add(Confetti, {
         confettiSettings: {
             particleCount: 50
