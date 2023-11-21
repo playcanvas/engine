@@ -512,10 +512,13 @@ class WebglTexture {
                         }
                     }
 
+                    const w = mipObject.width || mipObject.videoWidth;
+                    const h = mipObject.height || mipObject.videoHeight;
+
                     // Upload the image, canvas or video
                     device.setUnpackFlipY(texture._flipY);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                    if (this._glCreated && mipObject.width === texture._width && mipObject.height === texture._height) {
+                    if (this._glCreated && texture._width === w && texture._height === h) {
                         gl.texSubImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -533,6 +536,11 @@ class WebglTexture {
                             this._glPixelType,
                             mipObject
                         );
+
+                        if (mipLevel === 0) {
+                            texture._width = w;
+                            texture._height = h;
+                        }
                     }
                 } else {
                     // Upload the byte array
