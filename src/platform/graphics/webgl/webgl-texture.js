@@ -537,8 +537,10 @@ class WebglTexture {
                             mipObject
                         );
 
-                        texture._width = w;
-                        texture._height = h;
+                        if (mipLevel === 0) {
+                            texture._width = w;
+                            texture._height = h;
+                        }
                     }
                 } else {
                     // Upload the byte array
