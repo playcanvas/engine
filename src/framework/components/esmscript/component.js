@@ -94,6 +94,11 @@ class EsmScriptComponent extends Component {
         super(system, entity);
 
         /**
+         * Object shorthand passed to scripts update and postUpdate
+         */
+        this.appEntity = { app: system.app, entity: entity };
+
+        /**
          * Holds all ESM instances of this component.
          *
          * @type {Set.<ModuleInstance>}
@@ -216,15 +221,12 @@ class EsmScriptComponent extends Component {
     }
 
     flushActiveModules() {
-        // activate all modules awaiting to be enabled
-        const param = { app: this.system.app, entity: this.entity };
-
         for (const module of this.awaitingToBeEnabledModules) {
             if (!this.isActive) break;
             this.enabledModules.add(module);
             if (classHasMethod(module.constructor, 'update')) this.modulesWithUpdate.add(module);
             if (classHasMethod(module.constructor, 'postUpdate')) this.modulesWithPostUpdate.add(module);
-            module.active?.(param);
+            module.active?.(this.appEntity);
         }
         this.awaitingToBeEnabledModules.clear();
     }
@@ -237,18 +239,16 @@ class EsmScriptComponent extends Component {
     }
 
     _onUpdate(dt) {
-        const param = { app: this.system.app, entity: this.entity };
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
-            module.update(dt, param);
+            module.update(dt, this.appEntity);
         }
     }
 
     _onPostUpdate(dt) {
-        const param = { app: this.system.app, entity: this.entity };
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
-            module.postUpdate(dt, param);
+            module.postUpdate(dt, this.appEntity);
         }
     }
 
