@@ -97,7 +97,8 @@ class WebglTexture {
         this._glTexture = gl.createTexture();
 
         this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-            (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
+            (texture._volume ? gl.TEXTURE_3D :
+                (texture.array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
             case PIXELFORMAT_A8:
@@ -300,6 +301,16 @@ class WebglTexture {
 
         const requiredMipLevels = texture.requiredMipLevels;
 
+        if (texture.array) {
+            // for texture arrays we reserve the space in advance
+            gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
+                            requiredMipLevels,
+                            this._glInternalFormat,
+                            texture._width,
+                            texture._height,
+                            texture._arrayLength);
+        }
+
         // Upload all existing mip levels. Initialize 0 mip anyway.
         while (texture._levels[mipLevel] || mipLevel === 0) {
 
@@ -311,6 +322,7 @@ class WebglTexture {
             }
 
             mipObject = texture._levels[mipLevel];
+            resMult = 1 / Math.pow(2, mipLevel);
 
             if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
@@ -428,7 +440,6 @@ class WebglTexture {
                 // ----- 3D -----
                 // Image/canvas/video not supported (yet?)
                 // Upload the byte array
-                resMult = 1 / Math.pow(2, mipLevel);
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
                                             mipLevel,
@@ -451,6 +462,41 @@ class WebglTexture {
                                   this._glFormat,
                                   this._glPixelType,
                                   mipObject);
+                }
+            } else if (texture.array && typeof mipObject === "object") {
+                if (texture._arrayLength === mipObject.length) {
+                    if (texture._compressed) {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.compressedTexSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                1,
+                                this._glFormat,
+                                mipObject[index]
+                            );
+                        }
+                    } else {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.texSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                1,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject[index]
+                            );
+                        }
+                    }
                 }
             } else {
                 // ----- 2D -----
