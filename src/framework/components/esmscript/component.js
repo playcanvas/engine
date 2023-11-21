@@ -225,12 +225,12 @@ class EsmScriptComponent extends Component {
 
         for (const module of this.awaitingToBeEnabledModules) {
             if (!this.isActive) break;
+            this.awaitingToBeEnabledModules.delete(module);
             this.enabledModules.add(module);
             if (classHasMethod(module.constructor, 'update')) this.modulesWithUpdate.add(module);
             if (classHasMethod(module.constructor, 'postUpdate')) this.modulesWithPostUpdate.add(module);
             module.active?.(this.appEntity);
         }
-        this.awaitingToBeEnabledModules.clear();
     }
 
     flushInactiveModules() {
