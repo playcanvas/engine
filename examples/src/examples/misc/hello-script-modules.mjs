@@ -66,7 +66,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     box.esmscript.add(Rotate);
     box.esmscript.add(Confetti, {
         confettiSettings: {
-            particleCount: 1
+            particleCount: 50
         }
     });
 

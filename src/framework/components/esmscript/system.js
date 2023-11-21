@@ -77,7 +77,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
             const attributeDefinition = component.attributeDefinitions.get(module);
             const attributes = EsmScriptComponent.populateWithAttributes(attributeDefinition, module);
             const EsmModuleExport = { attributes: attributeDefinition, default: module.constructor };
-            data.modules[key] = { moduleSpecifier, attributes, EsmModuleExport };
+            data.modules.push({ moduleSpecifier, attributes, EsmModuleExport });
         });
 
         return this.addComponent(clone, data);
