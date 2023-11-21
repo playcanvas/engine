@@ -59,21 +59,23 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     box.addComponent('esmscript');
 
 
-    // The paths are in node, not relative to the url
-    // const path = require('path');
-    console.log(`${document.location.origin}/scripts/make-confetti.js`);
+    // The dynamic import here is only necessary due to the way the examples is set up
     const Confetti = await import(`${document.location.origin}/scripts/make-confetti.js`);
-    // const Confetti = await import('/examples/src/examples/misc/make-confetti.js')
     const Rotate = await import(`${document.location.origin}/scripts/rotate.js`);
 
     box.esmscript.add(Rotate);
     box.esmscript.add(Confetti, {
         confettiSettings: {
-            particleCount: 200
+            particleCount: 1
         }
     });
 
     app.root.addChild(box);
+
+    const box2 = box.clone();
+    box2.setLocalPosition(1, 0, 0);
+    app.root.addChild(box2);
+
 
     // create camera entity
     const camera = new pc.Entity('camera');

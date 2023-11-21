@@ -10,6 +10,7 @@ export default class MakeConfettiScript extends pc.EsmScriptType {
     confettiSettings = {};
 
     initialize() {
+        console.log(this.confettiSettings.particleCount)
         confetti(this.confettiSettings);
     }
 }

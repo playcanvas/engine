@@ -127,9 +127,6 @@ class EsmScriptComponent extends Component {
 
         // Contains all the modules awaiting to be enabled.
         this.awaitingToBeEnabledModules = new Set();
-
-        // Contains all the enabled modules that have not been marked as active modules.
-        this.enabledAndInactiveModules = new Set();
     }
 
     /**
@@ -483,16 +480,11 @@ class EsmScriptComponent extends Component {
         if (!ModuleClass || typeof ModuleClass !== 'function')
             throw new Error(`The ESM Script Module class is undefined`);
 
-        // if (this.modules.has(ModuleClass)) {
-        //     Debug.warn(`The ESM Script class '${ModuleClass?.name}' has already been added to this component`);
-        //     return null;
-        // }
-
         // Create the esm script instance
-        const module = new ModuleClass({ app: this.system.app, entity: this.entity });
+        const module = new ModuleClass();
 
         // Assign any attribute definition that have been provided, or if not, assign the default
-        EsmScriptComponent.populateWithAttributes(module, attributeDefinition, attributeValues);
+        EsmScriptComponent.populateWithAttributes(attributeDefinition, attributeValues, module);
 
         this.modules.add(module);
         this.attributeDefinitions.set(module, attributeDefinition);
@@ -515,10 +507,10 @@ class EsmScriptComponent extends Component {
      * Only attributes defined in the definition. Note that this does not perform any type-checking.
      * If no attribute is specified it uses the default value from the attribute definition if available.
      *
-     * @param {Object} object - The object to populate with attributes
      * @param {AttributeDefinitionDict} attributeDefDict - The definition
      * @param {Object} attributes - The attributes to apply
-     *
+     * @param {Object} [object] - The object to populate with attributes
+     * @returns {Object} the object with properties set
      * @example
      * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
      * const definitions = {
@@ -532,7 +524,7 @@ class EsmScriptComponent extends Component {
      * populateWithAttributes(object, attributeDefDict, attributes)
      * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
      */
-    static populateWithAttributes(object, attributeDefDict, attributes) {
+    static populateWithAttributes(attributeDefDict, attributes, object = {}) {
 
         for (const attributeName in attributeDefDict) {
             const attributeDefinition = attributeDefDict[attributeName];
@@ -544,12 +536,14 @@ class EsmScriptComponent extends Component {
             } else if (typeof attributeDefinition === 'object') {
 
                 this.populateWithAttributes(
-                    object[attributeName] = {},
                     attributeDefinition,
-                    attributes?.[attributeName]
+                    attributes?.[attributeName],
+                    object[attributeName] = {}
                 );
             }
         }
+
+        return object;
     }
 }
 

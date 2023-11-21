@@ -22,6 +22,8 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
     _components = new Set();
 
+    _componentDataMap = new Map();
+
     constructor(app) {
         super(app);
 
@@ -39,19 +41,20 @@ class EsmScriptComponentSystem extends ComponentSystem {
     initializeComponentData(component, data) {
 
         this._components.add(component);
+        this._componentDataMap.set(component, data);
 
-        const ImportAndAddScript = async (moduleSpecifier, attributes) => {
-            const EsmModuleClass = await DynamicImport(this.app, moduleSpecifier);
-            component.add(EsmModuleClass, attributes);
-            return EsmModuleClass;
+        const ImportAndAddScript = async ({ moduleSpecifier, attributes, EsmModuleExport }) => {
+            EsmModuleExport ??= await DynamicImport(this.app, moduleSpecifier);
+            component.add(EsmModuleExport, attributes);
+            return EsmModuleExport;
         };
 
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
         if (data.hasOwnProperty('modules')) {
             for (let i = 0; i < data.modules.length; i++) {
-                const { moduleSpecifier, attributes } = data.modules[i];
-                ImportAndAddScript(moduleSpecifier, attributes);
+                const moduleDefinition = data.modules[i];
+                ImportAndAddScript(moduleDefinition);
             }
         }
     }
@@ -62,24 +65,19 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         Debug.assert(component, `The entity '${entity.name}' does not have a 'ESMScriptComponent' to clone`);
 
-        const moduleEntries = Object.entries(component.modules);
+        const { modules, enabled = true } = this._componentDataMap.get(component);
+        const data = {
+            enabled,
+            modules: []
+        };
 
-        // For each module in the esm script component
-        const data = moduleEntries.map(([moduleSpecifier, moduleInstance]) => {
+        component.modules.forEach((module, key) => {
 
-            // Get the associated attribute definition and enabled state
-            const attributeDefinitions = component.attributeDefinitions.get(moduleSpecifier);
-            const attributes = {};
-            const enabled = !!moduleInstance.enabled;
-
-            // Copy each attribute in the definition from the module to the new attributes object
-            EsmScriptComponent.populateWithAttributes(attributes, attributeDefinitions, moduleInstance);
-
-            return {
-                enabled,
-                moduleSpecifier,
-                attributes
-            };
+            const moduleSpecifier = modules?.[key].moduleSpecifier;
+            const attributeDefinition = component.attributeDefinitions.get(module);
+            const attributes = EsmScriptComponent.populateWithAttributes(attributeDefinition, module);
+            const EsmModuleExport = { attributes: attributeDefinition, default: module.constructor };
+            data.modules[key] = { moduleSpecifier, attributes, EsmModuleExport };
         });
 
         return this.addComponent(clone, data);
@@ -125,6 +123,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         // remove from components array
         this._components.delete(component);
+        this._componentDataMap.delete(component);
     }
 
     destroy() {
