@@ -332,7 +332,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
-    createAmmoMesh(mesh, node, shape, checkDuplicates) {
+    createAmmoMesh(mesh, node, shape, checkDuplicates = true) {
         const cache = this.system._triMeshCache;
         let triMesh, triMeshShape;
 
