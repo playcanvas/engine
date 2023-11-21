@@ -568,7 +568,7 @@ class WebglTexture {
                     } else {
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                        if (this._glCreated && mipObject) {
+                        if (this._glCreated) {
                             gl.texSubImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,

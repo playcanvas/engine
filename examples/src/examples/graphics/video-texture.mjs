@@ -52,7 +52,6 @@ async function example({ canvas, assetPath }) {
 
         // Create a texture to hold the video frame data
         const videoTexture = new pc.Texture(app.graphicsDevice, {
-            name: 'video',
             format: pc.PIXELFORMAT_RGB565,
             mipmaps: false,
             minFilter: pc.FILTER_LINEAR,
