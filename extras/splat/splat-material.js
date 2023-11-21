@@ -119,28 +119,26 @@ const splatCoreVS = `
     void computeCov3d(in mat3 rot, in vec3 scale, out vec3 covA, out vec3 covB)
     {
         // M = S * R
-        float M[9] = float[9](
-            scale.x * rot[0][0],
-            scale.x * rot[0][1],
-            scale.x * rot[0][2],
-            scale.y * rot[1][0],
-            scale.y * rot[1][1],
-            scale.y * rot[1][2],
-            scale.z * rot[2][0],
-            scale.z * rot[2][1],
-            scale.z * rot[2][2]
-        );
+        float M0 = scale.x * rot[0][0];
+        float M1 = scale.x * rot[0][1];
+        float M2 = scale.x * rot[0][2];
+        float M3 = scale.y * rot[1][0];
+        float M4 = scale.y * rot[1][1];
+        float M5 = scale.y * rot[1][2];
+        float M6 = scale.z * rot[2][0];
+        float M7 = scale.z * rot[2][1];
+        float M8 = scale.z * rot[2][2];
 
         covA = vec3(
-            M[0] * M[0] + M[3] * M[3] + M[6] * M[6],
-            M[0] * M[1] + M[3] * M[4] + M[6] * M[7],
-            M[0] * M[2] + M[3] * M[5] + M[6] * M[8]
+            M0 * M0 + M3 * M3 + M6 * M6,
+            M0 * M1 + M3 * M4 + M6 * M7,
+            M0 * M2 + M3 * M5 + M6 * M8
         );
 
         covB = vec3(
-            M[1] * M[1] + M[4] * M[4] + M[7] * M[7],
-            M[1] * M[2] + M[4] * M[5] + M[7] * M[8],
-            M[2] * M[2] + M[5] * M[5] + M[8] * M[8]
+            M1 * M1 + M4 * M4 + M7 * M7,
+            M1 * M2 + M4 * M5 + M7 * M8,
+            M2 * M2 + M5 * M5 + M8 * M8
         );
     }
 
@@ -148,6 +146,18 @@ const splatCoreVS = `
         evalDataUV();
         return getCenter();
     }
+
+    #ifndef GL2
+    #ifndef WEBGPU
+    mat3 transpose(in mat3 m) {
+        return mat3(
+            m[0].x, m[1].x, m[2].x,
+            m[0].y, m[1].y, m[2].y,
+            m[0].z, m[1].z, m[2].z
+        );
+    }
+    #endif
+    #endif
 
     vec4 evalSplat(vec4 centerWorld)
     {
