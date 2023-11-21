@@ -333,14 +333,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     beforeInitialize(component, data) {}
 
     createAmmoMesh(mesh, node, shape, checkDuplicates = true) {
-        const cache = this.system._triMeshCache;
-        let triMesh, triMeshShape;
+        let triMesh;
 
-        if (cache[mesh.id]) {
-            triMesh = cache[mesh.id].triMesh;
-            triMeshShape = cache[mesh.id].bvhShape;
+        if (this.system._triMeshCache[mesh.id]) {
+            triMesh = this.system._triMeshCache[mesh.id];
         } else {
-            cache[mesh.id] = {};
             const vb = mesh.vertexBuffer;
 
             const format = vb.getFormat();
@@ -364,7 +361,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
-            cache[mesh.id].triMesh = triMesh;
+            this.system._triMeshCache[mesh.id] = triMesh;
 
             const numVertices = positions.length / stride;
 
@@ -389,11 +386,8 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             Ammo.destroy(v1);
         }
 
-        if (!triMeshShape) {
-            const useQuantizedAabbCompression = true;
-            triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
-            cache[mesh.id].bvhShape = triMeshShape;
-        }
+        const useQuantizedAabbCompression = true;
+        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
 
         const scaling = this.system._getNodeScaling(node);
         triMeshShape.setLocalScaling(scaling);
@@ -702,23 +696,6 @@ class CollisionComponentSystem extends ComponentSystem {
         super.initializeComponentData(component, data, properties);
 
         impl.afterInitialize(component, data);
-    }
-
-    /**
-     * @description Clears the internal mesh cash.
-     * @param {boolean} destroyCashed - If true, forces Ammo to destroy its objects stored in cache. Make sure no
-     * active collision component is using it before destroying, otherwise Ammo will crash.
-     */
-    clearMeshCache(destroyCashed = false) {
-        if (destroyCashed) {
-            Object.entries(this._triMeshCache).forEach((entry) => {
-                const value = entry[1];
-                Ammo.destroy(value.triMesh);
-                Ammo.destroy(value.bvhShape);
-            });
-        }
-
-        this._triMeshCache = {};
     }
 
     // Creates an implementation based on the collision type and caches it
