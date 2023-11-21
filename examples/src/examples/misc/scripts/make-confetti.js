@@ -6,7 +6,7 @@ export const attributes = {
     }
 };
 
-export default class MakeConfettiScript {
+export default class MakeConfettiScript extends pc.EsmScriptType {
     confettiSettings = {};
 
     initialize() {
