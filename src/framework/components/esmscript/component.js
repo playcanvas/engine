@@ -221,6 +221,11 @@ class EsmScriptComponent extends Component {
     }
 
     flushActiveModules() {
+
+        // ensure app-entity refs are up-to-date
+        this.appEntity.entity = this.entity;
+        this.appEntity.system = this.system;
+
         for (const module of this.awaitingToBeEnabledModules) {
             if (!this.isActive) break;
             this.enabledModules.add(module);
@@ -239,6 +244,11 @@ class EsmScriptComponent extends Component {
     }
 
     _onUpdate(dt) {
+
+        // ensure app-entity refs are up-to-date
+        this.appEntity.entity = this.entity;
+        this.appEntity.system = this.system;
+
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
             module.update(dt, this.appEntity);
@@ -246,6 +256,11 @@ class EsmScriptComponent extends Component {
     }
 
     _onPostUpdate(dt) {
+
+        // ensure app-entity refs are up-to-date
+        this.appEntity.entity = this.entity;
+        this.appEntity.system = this.system;
+
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
             module.postUpdate(dt, this.appEntity);
