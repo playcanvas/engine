@@ -1,4 +1,5 @@
-import confetti from "https://esm.sh/canvas-confetti@1.6.0"
+import confetti from "https://esm.sh/canvas-confetti@1.6.0";
+import Rotate from "./rotate.js";
 
 export const attributes = {
     confettiSettings: {
@@ -10,7 +11,7 @@ export default class MakeConfettiScript extends pc.EsmScriptType {
     confettiSettings = {};
 
     initialize() {
-        console.log(this.confettiSettings.particleCount)
+        this.entity.esmscript.add(Rotate);
         confetti(this.confettiSettings);
     }
 }
