@@ -386,7 +386,7 @@ class WebglTexture {
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
-                            if (this._glCreated) {
+                            if (this._glCreated && texData) {
                                 gl.compressedTexSubImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -409,7 +409,7 @@ class WebglTexture {
                         } else {
                             device.setUnpackFlipY(false);
                             device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                            if (this._glCreated) {
+                            if (this._glCreated && texData) {
                                 gl.texSubImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -546,7 +546,7 @@ class WebglTexture {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
-                        if (this._glCreated) {
+                        if (this._glCreated && mipObject) {
                             gl.compressedTexSubImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
@@ -570,7 +570,7 @@ class WebglTexture {
                     } else {
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                        if (this._glCreated) {
+                        if (this._glCreated && mipObject) {
                             gl.texSubImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
