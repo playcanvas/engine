@@ -33,6 +33,13 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             )
         ),
         jsx(Panel, { headerText: 'BLOOM' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.bloom.enabled' }
+                })
+            ),
             jsx(LabelGroup, { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -49,6 +56,42 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 1,
                     max: 10,
                     precision: 0
+                })
+            )
+        ),
+        jsx(Panel, { headerText: 'Grading' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.grading.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'saturation' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.grading.saturation' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'brightness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.grading.brightness' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'contrast' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.grading.contrast' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
                 })
             )
         )
@@ -319,6 +362,23 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 if (pathArray[2] === 'lastMipLevel') {
                     bloomPass.lastMipLevel = value;
                 }
+                if (pathArray[2] === 'enabled') {
+                    composePass.bloomTexture = value ? bloomPass.bloomTexture : null;
+                }
+            }
+            if (pathArray[1] === 'grading') {
+                if (pathArray[2] === 'saturation') {
+                    composePass.gradingSaturation = value;
+                }
+                if (pathArray[2] === 'brightness') {
+                    composePass.gradingBrightness = value;
+                }
+                if (pathArray[2] === 'contrast') {
+                    composePass.gradingContrast = value;
+                }
+                if (pathArray[2] === 'enabled') {
+                    composePass.gradingEnabled = value;
+                }
             }
         });
 
@@ -328,8 +388,15 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 tonemapping: pc.TONEMAP_ACES
             },
             bloom: {
+                enabled: true,
                 intensity: 20,
                 lastMipLevel: 1
+            },
+            grading: {
+                enabled: false,
+                saturation: 1,
+                brightness: 1,
+                contrast: 1
             }
         });
 
