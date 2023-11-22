@@ -244,7 +244,7 @@ class GraphNode extends EventHandler {
      */
     scaleCompensation = false;
 
-    _app = undefined;
+    _appRef = undefined;
 
     /**
      * Create a new GraphNode instance.
@@ -254,7 +254,7 @@ class GraphNode extends EventHandler {
      */
     constructor(name = 'Untitled', app) {
         super();
-        this._app = app;
+        this._appRef = app;
         this.name = name;
     }
 
@@ -433,6 +433,7 @@ class GraphNode extends EventHandler {
      */
     _cloneInternal(clone) {
         clone.name = this.name;
+        clone._appRef = this._appRef;
 
         const tags = this.tags._list;
         clone.tags.clear();
@@ -1126,8 +1127,8 @@ class GraphNode extends EventHandler {
     _dirtifyWorldInternal() {
         if (!this._dirtyWorld) {
             this._frozen = false;
-            if (this._app) {
-                this._app._dirtyZoneEntities.push(this);
+            if (this._appRef) {
+                this._appRef._dirtyZoneEntities.push(this);
             }
             this._dirtyZone = true;
             this._dirtyWorld = true;
