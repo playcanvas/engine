@@ -433,6 +433,7 @@ class GraphNode extends EventHandler {
      */
     _cloneInternal(clone) {
         clone.name = this.name;
+        clone._appRef = this._appRef;
 
         const tags = this.tags._list;
         clone.tags.clear();
