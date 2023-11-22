@@ -6,16 +6,41 @@ import {
 } from "playcanvas";
 
 const fragmentShader = `
-    uniform sampler2D sceneTexture;
-    uniform sampler2D bloomTexture;
-    uniform float bloomIntensity;
     varying vec2 uv0;
+    uniform sampler2D sceneTexture;
+
+    #ifdef BLOOM
+        uniform sampler2D bloomTexture;
+        uniform float bloomIntensity;
+    #endif
+
+    #ifdef GRADING
+        uniform vec3 brightnessContrastSaturation;
+
+        // for all parameters, 1.0 is the no-change value
+        vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+        {
+            color = color * brt;
+            float grey = dot(color, vec3(0.3, 0.59, 0.11));
+            color  = mix(vec3(grey), color, sat);
+            return max(mix(vec3(0.5), color, con), 0.0);
+        }
+    
+    #endif
+
     void main() {
         vec4 scene = texture2D(sceneTexture, uv0);
-        vec3 bloom = texture2D(bloomTexture, uv0).rgb;
-
         vec3 result = scene.rgb;
-        result += bloom * bloomIntensity;
+
+        #ifdef BLOOM
+            vec3 bloom = texture2D(bloomTexture, uv0).rgb;
+            result += bloom * bloomIntensity;
+        #endif
+
+        #ifdef GRADING
+            result = ContrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
+        #endif
+
         result = toneMap(result);
         result = gammaCorrectOutput(result);
 
@@ -24,9 +49,21 @@ const fragmentShader = `
 `;
 
 class RenderPassCompose extends RenderPassShaderQuad {
+    sceneTexture = null;
+
     bloomIntensity = 0.01;
 
+    _bloomTexture = null;
+
     _toneMapping = TONEMAP_ACES2;
+
+    _gradingEnabled = false;
+
+    gradingSaturation = 1;
+
+    gradingContrast = 1;
+
+    gradingBrightness = 1;
 
     _shaderDirty = true;
 
@@ -38,6 +75,29 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.sceneTextureId = graphicsDevice.scope.resolve('sceneTexture');
         this.bloomTextureId = graphicsDevice.scope.resolve('bloomTexture');
         this.bloomIntensityId = graphicsDevice.scope.resolve('bloomIntensity');
+        this.bcsId = graphicsDevice.scope.resolve('brightnessContrastSaturation');
+    }
+
+    set bloomTexture(value) {
+        if (this._bloomTexture !== value) {
+            this._bloomTexture = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get bloomTexture() {
+        return this._bloomTexture;
+    }
+
+    set gradingEnabled(value) {
+        if (this._gradingEnabled !== value) {
+            this._gradingEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get gradingEnabled() {
+        return this._gradingEnabled;
     }
 
     set toneMapping(value) {
@@ -74,16 +134,23 @@ class RenderPassCompose extends RenderPassShaderQuad {
         if (this._shaderDirty) {
             this._shaderDirty = false;
 
-            const key = `${this.toneMapping}`;
+            const key = `${this.toneMapping}` +
+                `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
+                `-${this.gradingEnabled ? 'grading' : 'nograding'}`;
+
             if (this._key !== key) {
                 this._key = key;
+
+                const defines =
+                    (this.bloomTexture ? `#define BLOOM\n` : '') +
+                    (this.gradingEnabled ? `#define GRADING\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +
                 shaderChunks.gamma2_2PS +
                 this.toneMapChunk;
 
-                this.shader = this.createQuadShader(`ComposeShader-${key}`, fsChunks + fragmentShader);
+                this.shader = this.createQuadShader(`ComposeShader-${key}`, defines + fsChunks + fragmentShader);
             }
         }
     }
@@ -91,8 +158,15 @@ class RenderPassCompose extends RenderPassShaderQuad {
     execute() {
 
         this.sceneTextureId.setValue(this.sceneTexture);
-        this.bloomTextureId.setValue(this.bloomTexture);
-        this.bloomIntensityId.setValue(this.bloomIntensity);
+
+        if (this._bloomTexture) {
+            this.bloomTextureId.setValue(this._bloomTexture);
+            this.bloomIntensityId.setValue(this.bloomIntensity);
+        }
+
+        if (this._gradingEnabled) {
+            this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
+        }
 
         super.execute();
     }
