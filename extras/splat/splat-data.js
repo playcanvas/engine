@@ -3,6 +3,7 @@ import {
     Color,
     Mat4,
     Vec3,
+    Vec4,
     Quat
 } from "playcanvas";
 
@@ -57,13 +58,14 @@ class SplatData {
 
     vertexElement;
 
-    constructor(elements) {
+    constructor(elements, performZScale = true) {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
 
-        mat4.setScale(-1, -1, 1);
-        // mat4.setFromEulerAngles(-90, -90, 0);
-        this.transform(mat4);
+        if (!this.isCompressed && performZScale) {
+            mat4.setScale(-1, -1, 1);
+            this.transform(mat4);
+        }
     }
 
     get numSplats() {
@@ -244,6 +246,128 @@ class SplatData {
 
             app.drawLines(debugLines, debugColor);
         }
+    }
+
+    // compressed splats
+    get isCompressed() {
+        return this.elements.some(e => e.name === 'chunk') &&
+               ['packed_position', 'packed_rotation', 'packed_scale', 'packed_color'].every(name => this.getProp(name));
+    }
+
+    decompress() {
+        const members = ['x', 'y', 'z', 'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'scale_0', 'scale_1', 'scale_2'];
+        const chunks = this.elements.find(e => e.name === 'chunk');
+        const vertices = this.vertexElement;
+
+        // allocate uncompressed data
+        const data = {};
+        members.forEach((name) => {
+            data[name] = new Float32Array(vertices.count);
+        });
+
+        const getChunkProp = (name) => {
+            return chunks.properties.find(p => p.name === name && p.storage)?.storage;
+        };
+
+        const min_x = getChunkProp('min_x');
+        const min_y = getChunkProp('min_y');
+        const min_z = getChunkProp('min_z');
+        const max_x = getChunkProp('max_x');
+        const max_y = getChunkProp('max_y');
+        const max_z = getChunkProp('max_z');
+        const min_scale_x = getChunkProp('min_scale_x');
+        const min_scale_y = getChunkProp('min_scale_y');
+        const min_scale_z = getChunkProp('min_scale_z');
+        const max_scale_x = getChunkProp('max_scale_x');
+        const max_scale_y = getChunkProp('max_scale_y');
+        const max_scale_z = getChunkProp('max_scale_z');
+
+        const position = this.getProp('packed_position');
+        const rotation = this.getProp('packed_rotation');
+        const scale = this.getProp('packed_scale');
+        const color = this.getProp('packed_color');
+
+        const unpackUnorm = (value, bits) => {
+            const t = (1 << bits) - 1;
+            return (value & t) / t;
+        };
+
+        const unpack111011 = (result, value) => {
+            result.x = unpackUnorm(value >>> 21, 11);
+            result.y = unpackUnorm(value >>> 11, 10);
+            result.z = unpackUnorm(value, 11);
+        };
+
+        const unpack8888 = (result, value) => {
+            result.x = unpackUnorm(value >>> 24, 8);
+            result.y = unpackUnorm(value >>> 16, 8);
+            result.z = unpackUnorm(value >>> 8, 8);
+            result.w = unpackUnorm(value, 8);
+        };
+
+        // unpack quaternion with 2,10,10,10 format (largest element, 3x10bit element)
+        const unpackRot = (result, value) => {
+            const norm = 1.0 / (Math.sqrt(2) * 0.5);
+            const a = (unpackUnorm(value >>> 20, 10) - 0.5) * norm;
+            const b = (unpackUnorm(value >>> 10, 10) - 0.5) * norm;
+            const c = (unpackUnorm(value, 10) - 0.5) * norm;
+            const m = Math.sqrt(1.0 - (a * a + b * b + c * c));
+
+            switch (value >>> 30) {
+                case 0: result.set(m, a, b, c); break;
+                case 1: result.set(a, m, b, c); break;
+                case 2: result.set(a, b, m, c); break;
+                case 3: result.set(a, b, c, m); break;
+            }
+        };
+
+        const lerp = (a, b, t) => a * (1 - t) + b * t;
+
+        const p = new Vec3();
+        const r = new Quat();
+        const s = new Vec3();
+        const c = new Vec4();
+
+        for (let i = 0; i < vertices.count; ++i) {
+            const ci = Math.floor(i / 256);
+
+            unpack111011(p, position[i]);
+            unpackRot(r, rotation[i]);
+            unpack111011(s, scale[i]);
+            unpack8888(c, color[i]);
+
+            data.x[i] = lerp(min_x[ci], max_x[ci], p.x);
+            data.y[i] = lerp(min_y[ci], max_y[ci], p.y);
+            data.z[i] = lerp(min_z[ci], max_z[ci], p.z);
+
+            data.rot_0[i] = r.x;
+            data.rot_1[i] = r.y;
+            data.rot_2[i] = r.z;
+            data.rot_3[i] = r.w;
+
+            data.scale_0[i] = lerp(min_scale_x[ci], max_scale_x[ci], s.x);
+            data.scale_1[i] = lerp(min_scale_y[ci], max_scale_y[ci], s.y);
+            data.scale_2[i] = lerp(min_scale_z[ci], max_scale_z[ci], s.z);
+
+            const SH_C0 = 0.28209479177387814;
+            data.f_dc_0[i] = (c.x - 0.5) / SH_C0;
+            data.f_dc_1[i] = (c.y - 0.5) / SH_C0;
+            data.f_dc_2[i] = (c.z - 0.5) / SH_C0;
+            data.opacity[i] = -Math.log(1 / c.w - 1);
+        }
+
+        return new SplatData([{
+            name: 'vertex',
+            count: vertices.count,
+            properties: members.map((name) => {
+                return {
+                    name: name,
+                    type: 'float',
+                    byteSize: 4,
+                    storage: data[name]
+                };
+            })
+        }], false);
     }
 }
 

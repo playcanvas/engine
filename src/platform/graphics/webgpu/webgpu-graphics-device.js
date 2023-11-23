@@ -151,6 +151,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
+        this.textureHalfFloatFilterable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.textureHalfFloatUpdatable = true;
@@ -206,7 +207,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         //      "depth32float-stencil8",
         //      "indirect-first-instance",
         //      "shader-f16",
-        //      "rg11b10ufloat-renderable",
         //      "bgra8unorm-storage",
 
         // request optional features
@@ -223,6 +223,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
+        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         /** @type {GPUDeviceDescriptor} */
