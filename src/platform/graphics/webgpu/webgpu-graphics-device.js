@@ -151,6 +151,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
+        this.textureHalfFloatFilterable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.textureHalfFloatUpdatable = true;

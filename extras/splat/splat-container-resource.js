@@ -18,7 +18,7 @@ class SplatContainerResource extends ContainerResource {
         super();
 
         this.device = device;
-        this.splatData = splatData;
+        this.splatData = splatData.isCompressed ? splatData.decompress() : splatData;
     }
 
     destroy() {
