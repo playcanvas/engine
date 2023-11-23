@@ -18,7 +18,7 @@ class SplatContainerResource extends ContainerResource {
         super();
 
         this.device = device;
-        this.splatData = splatData;
+        this.splatData = splatData.isCompressed ? splatData.decompress() : splatData;
     }
 
     destroy() {
@@ -85,9 +85,19 @@ class SplatContainerResource extends ContainerResource {
         // set custom aabb
         entity.render.customAabb = splat.aabb.clone();
 
+        // HACK: store splat instance on the render component, to allow it to be destroye in the following code
+        entity.render.splatInstance = splatInstance;
+
         // when the render component gets deleted, destroy the splat instance
         entity.render.system.on('beforeremove', (entity, component) => {
-            splatInstance.destroy();
+
+            // HACK: the render component is already destroyed, so cannot get splat instance from the mesh instance,
+            // and so get it from the temporary property
+            // TODO: if this gets integrated into the engine, mesh instance would destroy splat instance
+            if (component.splatInstance) {
+                component.splatInstance?.destroy();
+                component.splatInstance = null;
+            }
         }, this);
 
         return entity;
