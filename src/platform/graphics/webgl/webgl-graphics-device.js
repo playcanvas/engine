@@ -19,6 +19,7 @@ import {
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
     semanticToLocation,
+    UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
     DEVICETYPE_WEBGL2,
     DEVICETYPE_WEBGL1
@@ -550,6 +551,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         if (this.isWebGL2) {
             this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = UNIFORMTYPE_TEXTURE2D_SHADOW;
             this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_2D_ARRAY]    = UNIFORMTYPE_TEXTURE2D_ARRAY;
             this.pcUniformType[gl.SAMPLER_3D]          = UNIFORMTYPE_TEXTURE3D;
         }
 
@@ -932,11 +934,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
+            this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
+            this.textureRG11B10Renderable = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
@@ -952,7 +956,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
             this.extTextureFloat = this.getExtension("OES_texture_float");
-            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extUintElement = this.getExtension("OES_element_index_uint");
             this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
@@ -966,11 +969,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
+
+            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
+            this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+            this.textureHalfFloatFilterable = !!this.extTextureHalfFloatLinear;
         }
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
+
         this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
-        this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+        this.textureFloatFilterable = !!this.extTextureFloatLinear;
+
         this.extFloatBlend = this.getExtension("EXT_float_blend");
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
@@ -1427,23 +1436,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
-        const rt = renderPass.renderTarget || this.backBuffer;
+        const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
 
         this.updateBegin();
 
+        // the pass always start using full size of the target
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
+
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
         if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
-
-            // the pass always clears full target
-            const rt = renderPass.renderTarget;
-            const width = rt ? rt.width : this.width;
-            const height = rt ? rt.height : this.height;
-            this.setViewport(0, 0, width, height);
-            this.setScissor(0, 0, width, height);
 
             let clearFlags = 0;
             const clearOptions = {};
@@ -2649,39 +2656,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.attributesInvalidated = true;
         }
         return true;
-    }
-
-    /**
-     * Get a supported HDR pixel format given a set of hardware support requirements.
-     *
-     * @param {boolean} preferLargest - If true, prefer the highest precision format. Otherwise prefer the lowest precision format.
-     * @param {boolean} renderable - If true, only include pixel formats that can be used as render targets.
-     * @param {boolean} updatable - If true, only include formats that can be updated by the CPU.
-     * @param {boolean} filterable - If true, only include formats that support texture filtering.
-     *
-     * @returns {number} The HDR pixel format or null if there are none.
-     * @ignore
-     */
-    getHdrFormat(preferLargest, renderable, updatable, filterable) {
-        // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
-        // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-        // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
-        const f16Valid = this.extTextureHalfFloat &&
-            (!renderable || this.textureHalfFloatRenderable) &&
-            (!updatable || this.textureHalfFloatUpdatable) &&
-            (!filterable || this.extTextureHalfFloatLinear);
-        const f32Valid = this.extTextureFloat &&
-            (!renderable || this.textureFloatRenderable) &&
-            (!filterable || this.extTextureFloatLinear);
-
-        if (f16Valid && f32Valid) {
-            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-        } else if (f16Valid) {
-            return PIXELFORMAT_RGBA16F;
-        } else if (f32Valid) {
-            return PIXELFORMAT_RGBA32F;
-        } /* else */
-        return null;
     }
 
     /**

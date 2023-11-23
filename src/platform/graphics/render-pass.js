@@ -116,6 +116,11 @@ class RenderPass {
     renderTarget;
 
     /**
+     * The options specified when the render target was initialized.
+     */
+    options;
+
+    /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
      * or the main framebuffer if render target is null.
      *
@@ -191,7 +196,14 @@ class RenderPass {
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
      */
-    init(renderTarget = null) {
+    init(renderTarget = null, options = null) {
+
+        // sanitize options
+        this.options = options;
+        if (options) {
+            this.options.scaleX = this.options.scaleX ?? 1;
+            this.options.scaleY = this.options.scaleY ?? 1;
+        }
 
         // null represents the default framebuffer
         this.renderTarget = renderTarget;
@@ -217,6 +229,24 @@ class RenderPass {
             if (this.renderTarget?._colorBuffers?.[i].mipmaps) {
                 colorOps.mipmaps = true;
             }
+        }
+
+        this.postInit();
+    }
+
+    destroy() {
+    }
+
+    postInit() {
+    }
+
+    frameUpdate() {
+        // resize the render target if needed
+        if (this.options && this.renderTarget) {
+            const resizeSource = this.options.resizeSource ?? this.device.backBuffer;
+            const width = Math.floor(resizeSource.width * this.options.scaleX);
+            const height = Math.floor(resizeSource.height * this.options.scaleY);
+            this.renderTarget.resize(width, height);
         }
     }
 
@@ -313,10 +343,11 @@ class RenderPass {
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
-            const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+            const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
                 `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
+                ` ${rt.width} x ${rt.height}` +
                 `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
 
             Debug.trace(TRACEID_RENDER_PASS,
