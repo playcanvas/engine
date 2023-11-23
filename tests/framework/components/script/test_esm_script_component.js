@@ -1008,53 +1008,76 @@ describe("pc.EsmScriptComponent", function () {
     });
 
 
-    it("script attributes are initialized when loading scene for enabled entity", function () {
+    it("script attributes are initialized when loading scene for enabled entity", async function () {
         var a = app.root.findByName('EnabledEntity');
         expect(a).to.exist;
 
         var b = app.root.findByName('ReferencedEntity');
         expect(b).to.exist;
 
-        expect(a.script).to.exist;
+        expect(a.esmscript).to.exist;
 
-        // const scriptWithAttributes = a.esmscript.get('scriptWithAttributes');
-        // expect(scriptWithAttributes.attribute1).to.equal(b);
-        // expect(scriptWithAttributes.attribute2).to.equal(2);
+        await waitForNextFrame();
+
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+
+        expect(scriptWithAttributes).to.exist;
+
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
     });
 
-    // it("script attributes are initialized when loading scene for disabled entity", function () {
-    //     var a = app.root.findByName('DisabledEntity');
+    it("script attributes are initialized when loading scene for disabled entity", async function () {
+        var a = app.root.findByName('DisabledEntity');
 
-    //     var b = app.root.findByName('ReferencedEntity');
+        var b = app.root.findByName('ReferencedEntity');
 
-    //     expect(a).to.exist;
-    //     expect(b).to.exist;
+        expect(a).to.exist;
+        expect(b).to.exist;
 
-    //     expect(a.script.scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(a.script.scriptWithAttributes.attribute2).to.equal(2);
-    // });
+        await waitForNextFrame();
 
-    // it("script attributes are initialized when loading scene for disabled script component", function () {
-    //     var a = app.root.findByName('DisabledScriptComponent');
-    //     expect(a).to.exist;
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
-    //     var b = app.root.findByName('ReferencedEntity');
-    //     expect(b).to.exist;
+        expect(scriptWithAttributes).to.exist;
 
-    //     expect(a.script.scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(a.script.scriptWithAttributes.attribute2).to.equal(2);
-    // });
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
 
-    // it("script attributes are initialized when loading scene for disabled script instance", function () {
-    //     var a = app.root.findByName('DisabledScriptInstance');
-    //     expect(a).to.exist;
+    it("script attributes are initialized when loading scene for disabled script component", async function () {
+        var a = app.root.findByName('DisabledScriptComponent');
+        expect(a).to.exist;
 
-    //     var b = app.root.findByName('ReferencedEntity');
-    //     expect(b).to.exist;
+        var b = app.root.findByName('ReferencedEntity');
+        expect(b).to.exist;
 
-    //     expect(a.script.scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(a.script.scriptWithAttributes.attribute2).to.equal(2);
-    // });
+        await waitForNextFrame();
+
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+
+        expect(scriptWithAttributes).to.exist;
+
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
+
+    it("script attributes are initialized when loading scene for disabled script instance", async function () {
+        var a = app.root.findByName('DisabledScriptInstance');
+        expect(a).to.exist;
+
+        var b = app.root.findByName('ReferencedEntity');
+        expect(b).to.exist;
+
+        await waitForNextFrame();
+
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+
+        expect(scriptWithAttributes).to.exist;
+
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
 
     // it('script attributes are initialized when reloading scene', function (done) {
     //     // destroy current scene
@@ -1066,7 +1089,7 @@ describe("pc.EsmScriptComponent", function () {
     //     var names = ['EnabledEntity', 'DisabledEntity', 'DisabledScriptComponent', 'DisabledScriptInstance'];
     //     names.forEach(function (name) {
     //         expect(app.root.findByName(name)).to.not.exist;
-    //     })
+    // })
 
     //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.json', function () {
 
