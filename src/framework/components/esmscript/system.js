@@ -3,6 +3,13 @@ import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
 import { EsmScriptComponentData } from './data.js';
+import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
+
+// const convertRawAttributesToValues = (app, attributeDefinitions, values) => {
+//     return reduceAttributeDefinition(attributeDefinitions, values, (object, key, attributeDefinition, value) => {
+//         object[key] = rawToValue(app, attributeDefinition, value);
+//     });
+// };
 
 /**
  * Allows scripts to be attached to an Entity and executed.
@@ -43,27 +50,26 @@ class EsmScriptComponentSystem extends ComponentSystem {
         this._components.add(component);
         this._componentDataMap.set(component, data);
 
-        const ImportAndAddScript = async ({ moduleSpecifier, attributes, EsmModuleExport }) => {
+        const ImportAndAddScript = async ({ moduleSpecifier, attributes, EsmModuleExport, enabled }) => {
             EsmModuleExport ??= await DynamicImport(this.app, moduleSpecifier);
-            component.add(EsmModuleExport, attributes);
-            return EsmModuleExport;
+            // const attributes = convertRawAttributesToValues(this.app, EsmModuleExport.attributes, rawAttributes);
+            const module = component.add(EsmModuleExport, attributes);
+            if (!enabled) component.disableModule(module);
+            return module;
         };
 
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
-        if (data.hasOwnProperty('modules')) {
-            for (let i = 0; i < data.modules.length; i++) {
-                const moduleDefinition = data.modules[i];
-                ImportAndAddScript(moduleDefinition);
-            }
-        }
+        // Returns a promise that the component was initialized
+        const modules = data.modules ?? [];
+        return Promise.all(modules.map(ImportAndAddScript));
     }
 
     cloneComponent(entity, clone) {
 
         const component = entity.esmscript;
 
-        Debug.assert(component, `The entity '${entity.name}' does not have a 'ESMScriptComponent' to clone`);
+        Debug.assert(component, `The entity '${entity.name}' does not have a 'EsmScriptComponent' to clone`);
 
         const { modules, enabled = true } = this._componentDataMap.get(component);
         const data = {
@@ -73,11 +79,12 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         component.modules.forEach((module, key) => {
 
-            const moduleSpecifier = modules?.[key].moduleSpecifier;
+            const enabled = component.isModuleEnabled(module);
+            const moduleSpecifier = modules?.[key]?.moduleSpecifier;
             const attributeDefinition = component.attributeDefinitions.get(module);
-            const attributes = EsmScriptComponent.populateWithAttributes(attributeDefinition, module);
+            const attributes = EsmScriptComponent.populateWithAttributes(this.app, attributeDefinition, module);
             const EsmModuleExport = { attributes: attributeDefinition, default: module.constructor };
-            data.modules.push({ moduleSpecifier, attributes, EsmModuleExport });
+            data.modules.push({ moduleSpecifier, attributes, EsmModuleExport, enabled });
         });
 
         return this.addComponent(clone, data);

@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
-import { Entity } from '../../entity.js';
 import { classHasMethod } from '../../../core/class-utils.js';
+import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
 
 /**
  * @callback UpdateFunction
@@ -50,40 +50,6 @@ import { classHasMethod } from '../../../core/class-utils.js';
  */
 class EsmScriptComponent extends Component {
     /**
-     * A list of valid attribute types
-     * @ignore
-     */
-    static VALID_ATTR_TYPES = new Set([
-        "asset",
-        "boolean",
-        "curve",
-        "entity",
-        "json",
-        "number",
-        "rgb",
-        "rgba",
-        "string",
-        "vec2",
-        "vec3",
-        "vec4"
-    ]);
-
-    /**
-     * For any given attribute definition returns whether it conforms to the required
-     * shape of an attribute definition.
-     *
-     * @param {AttributeDefinition|object} attributeDefinition - The attribute to check
-     * @returns {boolean} True if the object can be treated as a attribute definition
-     * @example
-     * isValidAttributeDefinition({ type: 'entity' }); // true
-     * isValidAttributeDefinition({ type: 'invalidType' }); // false
-     * isValidAttributeDefinition({ x: 'y' }); // false
-     */
-    static isValidAttributeDefinition(attributeDefinition) {
-        return attributeDefinition && EsmScriptComponent.VALID_ATTR_TYPES.has(attributeDefinition.type);
-    }
-
-    /**
      * Create a new EsmScriptComponent instance.
      *
      * @param {import('./system.js').EsmScriptComponentSystem} system - The ComponentSystem that
@@ -100,19 +66,19 @@ class EsmScriptComponent extends Component {
 
         /**
          * Holds all ESM instances of this component.
-         *
          * @type {Set.<ModuleInstance>}
          */
         this.modules = new Set();
 
         /**
+         * Holds a map of modules class names to instances to enable shorthand lookup
+         * @type {Map.<string, ModuleInstance>}
+         */
+        this.moduleNameInstanceMap = new Map();
+
+        /**
          * Holds the attribute definitions for modules.
-         *
-         * Key: {string} moduleSpecifier - The identifier for the module.
-         * Value: {AttributeDefinition} attributeDefinition - The definitions of attributes provided by the module.
-         *
-         * Example:
-         * this.attributeDefinitions.set('moduleA', {'type': 'number', defaultValue 10});
+         * @type {Map.<ModuleInstance, AttributeDefinition>}
          */
         this.attributeDefinitions = new Map();
 
@@ -209,6 +175,7 @@ class EsmScriptComponent extends Component {
 
             // Remove from local data
             this.modules.delete(module);
+            this.moduleNameInstanceMap.delete(ModuleClass.name);
             this.attributeDefinitions.delete(ModuleClass);
         }
     }
@@ -321,132 +288,92 @@ class EsmScriptComponent extends Component {
      * entities that were cloned.
      * @internal
      */
-    resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
+    // resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
-        // for each module in the old component
-        oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
+    //     // for each module in the old component
+    //     oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
 
-            // Get the attribute definition for the specified module
-            const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
-            EsmScriptComponent.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
+    //         // Get the attribute definition for the specified module
+    //         const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
+    //         EsmScriptComponent.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
 
-                // If the attribute is an 'entity', then this needs to be resolved
-                if (attributeDefinition.type === 'entity') {
-                    const value = module?.[attributeName];
-                    const newModule = this.modules.get(moduleSpecifier);
+    //             // If the attribute is an 'entity', then this needs to be resolved
+    //             if (attributeDefinition.type === 'entity') {
+    //                 const value = module?.[attributeName];
+    //                 const newModule = this.modules.get(moduleSpecifier);
 
-                    this._resolveEntityScriptAttribute(
-                        attributeDefinition,
-                        attributeName,
-                        value,
-                        false,
-                        newModule,
-                        duplicatedIdsMap
-                    );
-                }
-            });
-        });
-    }
+    //                 this._resolveEntityScriptAttribute(
+    //                     attributeDefinition,
+    //                     attributeName,
+    //                     value,
+    //                     false,
+    //                     newModule,
+    //                     duplicatedIdsMap
+    //                 );
+    //             }
+    //         });
+    //     });
+    // }
 
-    /**
-     * This method iterates recursively over an attribute definition and executes the
-     * provided function once for each valid definition and it's children attributes in a flat structure
-     *
-     * @param {AttributeDefinition} attributeDefinitions - An iterable object or Map where each key-value pair consists of an attributeName and an attributeDefinition.
-     * @param {Function} callbackFn - A function to execute for each valid entry. The function is called with (attributeName, attributeDefinition).
-     * @param {array} [path] - A path
-     *
-     * @example
-     * forEachAttribute({
-     *   thisAttr: { type: 'entity' }
-     *   nested: {
-     *     thatAttr: { type: 'asset' }
-     *   }
-     * }, (name, definition) => console.log(`Name: ${name}, Type: ${definition.type}, Path: ${path}`) )
-     * Output: 'Name: thisAttr, Type: entity, Path: ''
-     *         'Name: thatAttr, Type: asset', Path: 'nested'
-     */
-    static forEachAttributeDefinition(attributeDefinitions = {}, callbackFn, path = []) {
+    // _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
+    //     if (attribute.array) {
+    //         // handle entity array attribute
+    //         const len = oldValue.length;
+    //         if (!len) {
+    //             return;
+    //         }
 
-        if (!callbackFn) return;
+    //         const newGuidArray = oldValue.slice();
+    //         for (let i = 0; i < len; i++) {
+    //             const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+    //             if (duplicatedIdsMap[guid]) {
+    //                 newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+    //             }
+    //         }
 
-        for (const attributeName in attributeDefinitions) {
+    //         newModule[attributeName] = newGuidArray;
+    //     } else {
 
-            const attributeDefinition = attributeDefinitions[attributeName];
-            if (!EsmScriptComponent.isValidAttributeDefinition(attributeDefinition)) {
+    //         // handle regular entity attribute
+    //         if (oldValue instanceof Entity) {
+    //             oldValue = oldValue.getGuid();
+    //         } else if (typeof oldValue !== 'string') {
+    //             return;
+    //         }
 
-                // If this is a nested attribute definition, then recurse
-                if (typeof attributeDefinition === 'object') {
-                    callbackFn(attributeName, attributeDefinition, path);
-                    EsmScriptComponent.forEachAttributeDefinition(attributeDefinition, callbackFn, [...path, attributeName]);
-                }
+    //         if (duplicatedIdsMap[oldValue]) {
 
-            } else {
-                callbackFn(attributeName, attributeDefinition, path);
-            }
-        }
-    }
+    //             newModule[attributeName] = duplicatedIdsMap[oldValue];
 
-    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
-        if (attribute.array) {
-            // handle entity array attribute
-            const len = oldValue.length;
-            if (!len) {
-                return;
-            }
-
-            const newGuidArray = oldValue.slice();
-            for (let i = 0; i < len; i++) {
-                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
-                if (duplicatedIdsMap[guid]) {
-                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
-                }
-            }
-
-            newModule[attributeName] = newGuidArray;
-        } else {
-
-            // handle regular entity attribute
-            if (oldValue instanceof Entity) {
-                oldValue = oldValue.getGuid();
-            } else if (typeof oldValue !== 'string') {
-                return;
-            }
-
-            if (duplicatedIdsMap[oldValue]) {
-
-                newModule[attributeName] = duplicatedIdsMap[oldValue];
-
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 
     /**
-     * Detect if script is attached to an entity.
+     * Checks if the component contains an esm script.
      *
-     * @param {ModuleInstance} module - The ESM Script Class.
+     * @param {string} moduleName - A case sensitive esm script name.
      * @returns {boolean} If script is attached to an entity.
      * @example
-     * if (entity.module.has(ModuleClass)) {
+     * if (entity.module.has('Rotator')) {
      *     // entity has script
      * }
      */
-    has(module) {
-        return this.modules.has(module);
+    has(moduleName) {
+        return this.moduleNameInstanceMap.has(moduleName);
     }
 
-    // /**
-    //  * Get a script instance (if attached).
-    //  *
-    //  * @param {Function} moduleClass - The ESM Script Class.
-    //  * @returns {ModuleInstance|undefined} If an ESM Script is attached, the
-    //  * instance is returned. Otherwise null is returned.
-    //  * @example
-    //  * const controller = entity.module.get(ModuleClass);
-    //  */
-    // get(moduleClass) {
-    //     return this.modules.get(module);
-    // }
+    /**
+     * Returns a module instance from it's name
+     *
+     * @param {string} moduleName - A case sensitive esm script name.
+     * @returns {ModuleInstance|undefined} the module if attached to this component
+     * @example
+     * const rotator = entity.esmscript.get('Rotator')
+     */
+    get(moduleName) {
+        return this.moduleNameInstanceMap.get(moduleName);
+    }
 
     /**
      * Removes a module instance from the component.
@@ -462,6 +389,7 @@ class EsmScriptComponent extends Component {
         this.disableModule(module);
         this.attributeDefinitions.delete(module);
         this.modules.delete(module);
+        this.moduleNameInstanceMap.delete(module.constructor.name);
     }
 
     /**
@@ -480,13 +408,16 @@ class EsmScriptComponent extends Component {
         if (!ModuleClass || typeof ModuleClass !== 'function')
             throw new Error(`The ESM Script Module class is undefined`);
 
+        if (!ModuleClass.name || ModuleClass.name === '')
+            throw new Error('Anonymous classes are not supported. Please use `class MyClass{}` as opposed to `const MyClass = class{}`');
+
         // Create the esm script instance
         const module = new ModuleClass();
 
         // Assign any attribute definition that have been provided, or if not, assign the default
-        EsmScriptComponent.populateWithAttributes(attributeDefinition, attributeValues, module);
-
+        EsmScriptComponent.populateWithAttributes(this.system.app, attributeDefinition, attributeValues, module);
         this.modules.add(module);
+        this.moduleNameInstanceMap.set(ModuleClass.name, module);
         this.attributeDefinitions.set(module, attributeDefinition);
 
         // Enable the module, so that it receives lifecycle hooks
@@ -507,9 +438,11 @@ class EsmScriptComponent extends Component {
      * Only attributes defined in the definition. Note that this does not perform any type-checking.
      * If no attribute is specified it uses the default value from the attribute definition if available.
      *
+     * @param {AppBase} app - The app base to search for asset references
      * @param {AttributeDefinitionDict} attributeDefDict - The definition
      * @param {Object} attributes - The attributes to apply
      * @param {Object} [object] - The object to populate with attributes
+     *
      * @returns {Object} the object with properties set
      * @example
      * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
@@ -521,29 +454,15 @@ class EsmScriptComponent extends Component {
      *  }
      * }
      *
-     * populateWithAttributes(object, attributeDefDict, attributes)
+     * populateWithAttributes(app, object, attributeDefDict, attributes)
      * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
      */
-    static populateWithAttributes(attributeDefDict, attributes, object = {}) {
+    static populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
 
-        for (const attributeName in attributeDefDict) {
-            const attributeDefinition = attributeDefDict[attributeName];
+        return reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
+            object[key] = rawToValue(app, attributeDefinition, value);
+        }, object);
 
-            if (EsmScriptComponent.isValidAttributeDefinition(attributeDefinition)) {
-                if (!Object.hasOwn(object, attributeName)) {
-                    object[attributeName] = attributes?.[attributeName] || attributeDefinition.default;
-                }
-            } else if (typeof attributeDefinition === 'object') {
-
-                this.populateWithAttributes(
-                    attributeDefinition,
-                    attributes?.[attributeName],
-                    object[attributeName] = {}
-                );
-            }
-        }
-
-        return object;
     }
 }
 

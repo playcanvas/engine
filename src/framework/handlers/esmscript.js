@@ -12,14 +12,12 @@
  * @ignore
  */
 export const DynamicImport = (app, moduleSpecifier) => {
-
     // eslint-disable-next-line multiline-comment-style
     /* #if _ASSET_BASE_URL
     const path = new URL(`${app.assets.prefix}.${moduleSpecifier}`, $_ASSET_BASE_URL).toString();
     // #else */
     const path = moduleSpecifier;
     // #endif
-
     return import(`${path}`);
 };
 

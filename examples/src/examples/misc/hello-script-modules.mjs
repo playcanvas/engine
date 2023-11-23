@@ -70,11 +70,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
     app.root.addChild(box);
 
-    const box2 = box.clone();
-    box2.setLocalPosition(1, 0, 0);
-    app.root.addChild(box2);
-
-
     // create camera entity
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
