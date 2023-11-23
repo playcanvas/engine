@@ -1,5 +1,3 @@
-// import { EsmScriptType } from "../../../../src/framework/script/esm-script-type";
-
 export const attributes = {
     entityToClone: { type: 'entity' }
 };
