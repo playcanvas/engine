@@ -240,7 +240,7 @@ class XrView {
 
         if (!this._textureColor) {
             // color texture
-            this._textureColor = new Texture(this._manager.app.graphicsDevice, {
+            this._textureColor = new Texture(device, {
                 format: PIXELFORMAT_RGB8,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,

@@ -297,7 +297,7 @@ class Renderer {
         if (camera.xr && camera.xr.session) {
             const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
-            viewCount = views.size;
+            viewCount = views.list.length;
             for (let v = 0; v < viewCount; v++) {
                 const view = views.list[v];
                 view.updateTransforms(transform);
@@ -478,7 +478,7 @@ class Renderer {
 
     updateCameraFrustum(camera) {
 
-        if (camera.xr && camera.xr.views.size) {
+        if (camera.xr && camera.xr.views.list.length) {
             // calculate frustum based on XR view
             const view = camera.xr.views.list[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);

@@ -773,7 +773,7 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthOld = this.views.size;
+        const lengthOld = this.views.list.length;
 
         // add views
         this.views.update(frame, pose.views);
@@ -785,7 +785,7 @@ class XrManager extends EventHandler {
         this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
         // update the camera fov properties only when we had 0 views
-        if (lengthOld === 0 && this.views.size > 0) {
+        if (lengthOld === 0 && this.views.list.length > 0) {
             const viewProjMat = new Mat4();
             const view = this.views.list[0];
 

@@ -153,7 +153,7 @@ async function example({ canvas }) {
         app.on('update', () => {
             // if camera color is available
             if (app.xr.views.availableColor) {
-                for(let i = 0; i < app.xr.views.size; i++) {
+                for(let i = 0; i < app.xr.views.list.length; i++) {
                     const view = app.xr.views.list[i];
                     if (!view.textureColor) // check if color texture is available
                         continue;

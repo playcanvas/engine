@@ -93,16 +93,6 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * How many views are available. Views can be added/removed mid-session by underlying
-     * WebXR system.
-     *
-     * @type {number}
-     */
-    get size() {
-        return this._list.length;
-    }
-
-    /**
      * Check if Camera Color is supported. It might be still unavailable even if requested,
      * based on hardware capabilities and granted permissions.
      *

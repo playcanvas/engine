@@ -621,10 +621,10 @@ class ForwardRenderer extends Renderer {
 
             drawCallback?.(drawCall, i);
 
-            if (camera.xr && camera.xr.session && camera.xr.views.size) {
+            if (camera.xr && camera.xr.session && camera.xr.views.list.length) {
                 const views = camera.xr.views;
 
-                for (let v = 0; v < views.size; v++) {
+                for (let v = 0; v < views.list.length; v++) {
                     const view = views.list[v];
 
                     device.setViewport(view.viewport.x, view.viewport.y, view.viewport.z, view.viewport.w);
