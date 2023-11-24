@@ -233,7 +233,7 @@ class XrViews extends EventHandler {
      * @returns {XrView|null} View or null if view of such eye is not available.
      */
     get(eye) {
-        return this._index.get(name) || null;
+        return this._index.get(eye) || null;
     }
 
     /**

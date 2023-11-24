@@ -128,6 +128,20 @@ class XrView extends EventHandler {
                 });
             }
         }
+
+        if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
+            this._textureDepth = new Texture(this._manager.app.graphicsDevice, {
+                format: this._manager.views.depthFormat,
+                mipmaps: false,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                minFilter: FILTER_LINEAR,
+                magFilter: FILTER_LINEAR,
+                width: 4,
+                height: 4,
+                name: `XrView-${this._xrView.eye}-Depth`
+            });
+        }
     }
 
     /**
@@ -312,7 +326,7 @@ class XrView extends EventHandler {
      * @private
      */
     _updateTextureDepth(frame) {
-        if (!this._manager.views.availableDepth)
+        if (!this._manager.views.availableDepth || !this._textureDepth)
             return;
 
         const binding = this._manager.webglBinding;
@@ -332,36 +346,36 @@ class XrView extends EventHandler {
         
         if (gpu) texture = info.texture;
 
-        const device = this._manager.app.graphicsDevice;
-        const gl = device.gl;
-        const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+        // const device = this._manager.app.graphicsDevice;
+        // const gl = device.gl;
+        // const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
 
         const width = info.width;
         const height = info.height;
 
-        if (!this._textureDepth) {
-            // color texture
-            this._textureDepth = new Texture(device, {
-                format: this._manager.views.depthFormat,
-                mipmaps: false,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE,
-                minFilter: FILTER_LINEAR,
-                magFilter: FILTER_LINEAR,
-                width: width,
-                height: height,
-                name: `XrView-${this._xrView.eye}-Depth`
-            });
+        // if (!this._textureDepth) {
+        //     // color texture
+        //     this._textureDepth = new Texture(device, {
+        //         format: this._manager.views.depthFormat,
+        //         mipmaps: false,
+        //         addressU: ADDRESS_CLAMP_TO_EDGE,
+        //         addressV: ADDRESS_CLAMP_TO_EDGE,
+        //         minFilter: FILTER_LINEAR,
+        //         magFilter: FILTER_LINEAR,
+        //         width: width,
+        //         height: height,
+        //         name: `XrView-${this._xrView.eye}-Depth`
+        //     });
 
-            // force initialize texture
-            // this._textureDepth.upload();
+        //     // force initialize texture
+        //     // this._textureDepth.upload();
 
-            // create frame buffer to read from
-            // this._frameBufferSource = gl.createFramebuffer();
+        //     // create frame buffer to read from
+        //     // this._frameBufferSource = gl.createFramebuffer();
 
-            // create frame buffer to write to
-            // this._frameBuffer = gl.createFramebuffer();
-        }
+        //     // create frame buffer to write to
+        //     // this._frameBuffer = gl.createFramebuffer();
+        // }
 
         let resized = false;
 
@@ -441,7 +455,9 @@ class XrView extends EventHandler {
         if (this._textureColor) {
             this._textureColor.destroy();
             this._textureColor = null;
+        }
 
+        if (this._frameBufferSource) {
             const gl = this._manager.app.graphicsDevice.gl;
 
             gl.deleteFramebuffer(this._frameBufferSource);
