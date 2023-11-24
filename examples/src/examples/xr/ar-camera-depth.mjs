@@ -155,7 +155,7 @@ async function example({ canvas }) {
         app.xr.on('start', function () {
             message("Immersive AR session has started");
             console.log('depth gpu optimized', app.xr.views.depthGpuOptimized);
-            console.log('depth texture format', app.xr.views.depthFormat);
+            console.log('depth texture format', app.xr.views.depthPixelFormat);
         });
         app.xr.on('end', function () {
             message("Immersive AR session has ended");
@@ -180,9 +180,9 @@ async function example({ canvas }) {
                     if (!view.textureDepth) // check if depth texture is available
                         continue;
 
-                    materialDepth.setParameter('colorMap', view.textureDepth)
-                    materialDepth.setParameter('matrix_depth_uv', app.xr.depthSensing.uvMatrix.data);
-                    materialDepth.setParameter('depth_raw_to_meters', app.xr.depthSensing.rawValueToMeters);
+                    materialDepth.setParameter('colorMap', view.textureDepth);
+                    materialDepth.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
+                    materialDepth.setParameter('depth_raw_to_meters', view.depthValueToMeters);
 
                     // debug draw camera depth texture on the screen
                     app.drawTexture(0.5, -0.5, 1, 1, view.textureDepth, materialDepth);

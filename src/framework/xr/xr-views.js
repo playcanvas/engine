@@ -177,14 +177,22 @@ class XrViews extends EventHandler {
     }
     
     /**
-     * The depth sensing data format. Currently supported either:
+     * The depth sensing pixel format. Currently supported either:
      * {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
      *
-     * @type {number}
+     * @type {number|null}
      * @ignore
      */
-    get depthFormat() {
-        return this._depthFormats[this._depthFormat];
+    get depthPixelFormat() {
+        return this._depthFormats[this._depthFormat] ?? null;
+    }
+
+    /**
+     * @type {string}
+     * @ignore
+     */
+    get depthUsage() {
+        return this._depthUsage;
     }
 
     /**

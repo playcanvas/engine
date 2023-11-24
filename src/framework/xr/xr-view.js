@@ -97,6 +97,24 @@ class XrView extends EventHandler {
     _textureDepth = null;
 
     /**
+     * @type {XRDepthInformation|null}
+     * @private
+     */
+    _depthInfo = null;
+
+    /**
+     * @type {Uint8Array}
+     * @private
+     */
+    _emptyDepthBuffer = new Uint8Array(32);
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _depthMatrix = new Mat4();
+
+    /**
      * Create a new XrView instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -131,7 +149,7 @@ class XrView extends EventHandler {
 
         if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
             this._textureDepth = new Texture(this._manager.app.graphicsDevice, {
-                format: this._manager.views.depthFormat,
+                format: this._manager.views.depthPixelFormat,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -162,6 +180,29 @@ class XrView extends EventHandler {
      */
     get textureDepth() {
         return this._textureDepth;
+    }
+
+    /**
+     * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
+     * It is updated when the depth texture is resized. Refer to {@link XrView#depthResize}.
+     *
+     * @type {Mat4}
+     * @example
+     * material.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
+     */
+    get depthUvMatrix() {
+        return this._depthMatrix;
+    }
+
+    /**
+     * Multiply this coefficient number by raw depth value to get depth in meters.
+     *
+     * @type {number}
+     * @example
+     * material.setParameter('depth_raw_to_meters', view.depthValueToMeters);
+     */
+    get depthValueToMeters() {
+        return this._depthInfo?.rawValueToMeters || 0;
     }
 
     /**
@@ -261,7 +302,7 @@ class XrView extends EventHandler {
         this._viewInvMat.set(this._xrView.transform.matrix);
 
         this._updateTextureColor();
-        this._updateTextureDepth(frame);
+        this._updateDepth(frame);
     }
 
     /**
@@ -325,106 +366,58 @@ class XrView extends EventHandler {
     /**
      * @private
      */
-    _updateTextureDepth(frame) {
+    _updateDepth(frame) {
         if (!this._manager.views.availableDepth || !this._textureDepth)
             return;
 
-        const binding = this._manager.webglBinding;
-        if (!binding)
-            return;
-
         const gpu = this._manager.views.depthGpuOptimized;
-        let info, texture;
 
-        if (gpu) {
-            info = binding.getDepthInformation(this._xrView);
-        } else {
-            info = frame.getDepthInformation(this._xrView);
-        }
+        const infoSource = gpu ? this._manager.webglBinding : frame;
+        if (!infoSource) return;
 
-        if (!info) return;
-        
-        if (gpu) texture = info.texture;
+        const depthInfo = infoSource.getDepthInformation(this._xrView);
+        let matrixDirty = !this._depthInfo !== !depthInfo;
+        this._depthInfo = depthInfo;
 
-        // const device = this._manager.app.graphicsDevice;
-        // const gl = device.gl;
-        // const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
-
-        const width = info.width;
-        const height = info.height;
-
-        // if (!this._textureDepth) {
-        //     // color texture
-        //     this._textureDepth = new Texture(device, {
-        //         format: this._manager.views.depthFormat,
-        //         mipmaps: false,
-        //         addressU: ADDRESS_CLAMP_TO_EDGE,
-        //         addressV: ADDRESS_CLAMP_TO_EDGE,
-        //         minFilter: FILTER_LINEAR,
-        //         magFilter: FILTER_LINEAR,
-        //         width: width,
-        //         height: height,
-        //         name: `XrView-${this._xrView.eye}-Depth`
-        //     });
-
-        //     // force initialize texture
-        //     // this._textureDepth.upload();
-
-        //     // create frame buffer to read from
-        //     // this._frameBufferSource = gl.createFramebuffer();
-
-        //     // create frame buffer to write to
-        //     // this._frameBuffer = gl.createFramebuffer();
-        // }
+        const width = this._depthInfo?.width || 4;
+        const height = this._depthInfo?.height || 4;
 
         let resized = false;
 
+        // resizing
         if (this._textureDepth.width !== width || this._textureDepth.height !== height) {
             this._textureDepth._width = width;
             this._textureDepth._height = height;
+            matrixDirty = true;
             resized = true;
         }
 
-        if (gpu) {
-            // set frame buffer to read from
-            // device.setFramebuffer(this._frameBufferSource);
-            // gl.framebufferTexture2D(
-            //     gl.FRAMEBUFFER,
-            //     attachmentBaseConstant,
-            //     gl.TEXTURE_2D,
-            //     texture,
-            //     0
-            // );
+        // update depth matrix
+        if (matrixDirty) {
+            if (this._depthInfo) {
+                this._depthMatrix.data.set(this._depthInfo.normDepthBufferFromNormView.matrix);
+            } else {
+                this._depthMatrix.setIdentity();
+            }
+        }
 
-            // // set frame buffer to write to
-            // device.setFramebuffer(this._frameBuffer);
-            // gl.framebufferTexture2D(
-            //     gl.FRAMEBUFFER,
-            //     attachmentBaseConstant,
-            //     gl.TEXTURE_2D,
-            //     this._textureDepth.impl._glTexture,
-            //     0
-            // );
-
-            // // bind buffers
-            // gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
-            // let ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-
-            // gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
-            // if (ready) ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-
-            // if (ready) {
-            //     // copy buffers with flip Y
-            //     gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
-            // }
+        // update texture
+        if (this._depthInfo) {
+            if (gpu) {
+                // gpu
+                console.log('not implemented')
+            } else {
+                // cpu
+                this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);
+                this._textureDepth.upload();
+            }
         } else {
-            this._textureDepth._levels[0] = new Uint8Array(info.data);
+            // clear
+            this._textureDepth._levels[0] = this._emptyDepthBuffer;
             this._textureDepth.upload();
         }
 
-        if (resized) {
-            this.fire('depthResize', width, height);
-        }
+        if (resized) this.fire('depthResize', width, height);
     }
 
     /**
@@ -446,6 +439,29 @@ class XrView extends EventHandler {
         this._positionData[0] = this._viewInvOffMat.data[12];
         this._positionData[1] = this._viewInvOffMat.data[13];
         this._positionData[2] = this._viewInvOffMat.data[14];
+    }
+
+    /**
+     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
+     * top-left corner of a texture.
+     *
+     * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (left to right).
+     * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (top to bottom).
+     * @returns {number|null} Depth in meters or null if depth information is currently not
+     * available.
+     * @example
+     * const depth = view.getDepth(u, v);
+     * if (depth !== null) {
+     *     // depth in meters
+     * }
+     */
+    getDepth(u, v) {
+        if (this._manager.views.depthGpuOptimized)
+            return null;
+
+        return this._depthInfo?.getDepthInMeters(u, v) ?? null;
     }
 
     /**

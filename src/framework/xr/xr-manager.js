@@ -221,6 +221,7 @@ class XrManager extends EventHandler {
         this._available[XRTYPE_VR] = false;
         this._available[XRTYPE_AR] = false;
 
+        this.views = new XrViews(this);
         this.depthSensing = new XrDepthSensing(this);
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
@@ -229,7 +230,6 @@ class XrManager extends EventHandler {
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
         this.anchors = new XrAnchors(this);
-        this.views = new XrViews(this);
 
         // TODO
         // 1. HMD class with its params
@@ -820,9 +820,6 @@ class XrManager extends EventHandler {
 
             if (this.lightEstimation.supported)
                 this.lightEstimation.update(frame);
-
-            if (this.depthSensing.supported)
-                this.depthSensing.update(frame, pose && pose.views[0]);
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);

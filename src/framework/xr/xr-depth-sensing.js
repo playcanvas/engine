@@ -64,6 +64,8 @@ import { XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGUSAGE_GPU } from './constants.js
  *
  * @augments EventHandler
  * @category XR
+ * @deprecated
+ * @ignore
  */
 class XrDepthSensing extends EventHandler {
     /**
@@ -78,65 +80,11 @@ class XrDepthSensing extends EventHandler {
      */
     _views;
 
-     /**
-      * @type {boolean}
-      * @private
-      */
-    _available = false;
-
-    /**
-     * @type {XRCPUDepthInformation|null}
-     * @private
-     */
-    _depthInfoCpu = null;
-
-    /**
-     * @type {XRCPUDepthInformation|null}
-     * @private
-     */
-    _depthInfoGpu = null;
-
-    /**
-     * @type {string|null}
-     * @private
-     */
-    _usage = null;
-
-    /**
-     * @type {string|null}
-     * @private
-     */
-    _dataFormat = null;
-
     /**
      * @type {boolean}
      * @private
      */
-    _matrixDirty = false;
-
-    /**
-     * @type {Mat4}
-     * @private
-     */
-    _matrix = new Mat4();
-
-    /**
-     * @type {Uint8Array}
-     * @private
-     */
-    _emptyBuffer = new Uint8Array(32);
-
-    /**
-     * @type {Uint8Array|null}
-     * @private
-     */
-    _depthBuffer = null;
-
-    /**
-     * @type {Texture}
-     * @private
-     */
-    _texture;
+    _available = false;
 
     /**
      * Create a new XrDepthSensing instance.
@@ -150,18 +98,7 @@ class XrDepthSensing extends EventHandler {
         this._manager = manager;
         this._views = manager.views;
 
-        // // TODO: data format can be different
-        // this._texture = new Texture(this._manager.app.graphicsDevice, {
-        //     format: PIXELFORMAT_LA8,
-        //     mipmaps: false,
-        //     addressU: ADDRESS_CLAMP_TO_EDGE,
-        //     addressV: ADDRESS_CLAMP_TO_EDGE,
-        //     minFilter: FILTER_LINEAR,
-        //     magFilter: FILTER_LINEAR,
-        //     name: 'XRDepthSensing'
-        // });
-
-        if (this.supported) {
+        if (this._views.supportedDepth) {
             this._manager.on('start', this._onSessionStart, this);
             this._manager.on('end', this._onSessionEnd, this);
         }
@@ -171,12 +108,16 @@ class XrDepthSensing extends EventHandler {
      * Fired when depth sensing data becomes available.
      *
      * @event XrDepthSensing#available
+     * @deprecated
+     * @ignore
      */
 
     /**
      * Fired when depth sensing data becomes unavailable.
      *
      * @event XrDepthSensing#unavailable
+     * @deprecated
+     * @ignore
      */
 
     /**
@@ -186,6 +127,8 @@ class XrDepthSensing extends EventHandler {
      * @event XrDepthSensing#resize
      * @param {number} width - The new width of the depth texture in pixels.
      * @param {number} height - The new height of the depth texture in pixels.
+     * @deprecated
+     * @ignore
      * @example
      * depthSensing.on('resize', function () {
      *     material.setParameter('matrix_depth_uv', depthSensing.uvMatrix);
@@ -200,118 +143,15 @@ class XrDepthSensing extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        const session = this._manager.session;
-
-        try {
-            this._usage = session.depthUsage;
-            this._dataFormat = session.depthDataFormat;
-        } catch (ex) {
-            this._usage = null;
-            this._dataFormat = null;
-            this._available = false;
-
-            this.fire('error', ex);
+        if (this._views.availableDepth) {
+            this._available = true;
+            this.fire('available')
         }
     }
 
     /** @private */
     _onSessionEnd() {
-        this._depthInfoCpu = null;
-        this._depthInfoGpu = null;
-
-        this._usage = null;
-        this._dataFormat = null;
-
         if (this._available) {
-            this._available = false;
-            this.fire('unavailable');
-        }
-
-        this._depthBuffer = null;
-        // this._texture._width = 4;
-        // this._texture._height = 4;
-        // this._texture._levels[0] = this._emptyBuffer;
-        // this._texture.upload();
-    }
-
-    /** @private */
-    _updateTexture() {
-        return;
-        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-
-        if (depthInfo) {
-            let resized = false;
-
-            // changed resolution
-            if (depthInfo.width !== this._texture.width || depthInfo.height !== this._texture.height) {
-                this._texture._width = depthInfo.width;
-                this._texture._height = depthInfo.height;
-                this._matrixDirty = true;
-                resized = true;
-            }
-
-            if (this._depthInfoCpu) {
-                const dataBuffer = this._depthInfoCpu.data;
-                this._depthBuffer = new Uint8Array(dataBuffer);
-                this._texture._levels[0] = this._depthBuffer;
-                this._texture.upload();
-            } else if (this._depthInfoGpu) {
-                this._texture._levels[0] = this._depthInfoGpu.texture;
-                this._texture.upload();
-            }
-
-            if (resized) this.fire('resize', depthInfo.width, depthInfo.height);
-        } else if (this._depthBuffer) {
-            // depth info not available anymore
-            this._depthBuffer = null;
-            this._texture._width = 4;
-            this._texture._height = 4;
-            this._texture._levels[0] = this._emptyBuffer;
-            this._texture.upload();
-        }
-    }
-
-    /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
-     * @param {*} view - First XRView of viewer XRPose.
-     * @ignore
-     */
-    update(frame, view) {
-        if (!this._usage)
-            return;
-
-        let depthInfoCpu = null;
-        let depthInfoGpu = null;
-        if (this._usage === XRDEPTHSENSINGUSAGE_CPU && view) {
-            depthInfoCpu = frame.getDepthInformation(view);
-        } else if (this._usage === XRDEPTHSENSINGUSAGE_GPU && view) {
-            depthInfoGpu = frame.getDepthInformation(view);
-        }
-
-        if ((this._depthInfoCpu && !depthInfoCpu) || (!this._depthInfoCpu && depthInfoCpu) || (this.depthInfoGpu && !depthInfoGpu) || (!this._depthInfoGpu && depthInfoGpu)) {
-            this._matrixDirty = true;
-        }
-        this._depthInfoCpu = depthInfoCpu;
-        this._depthInfoGpu = depthInfoGpu;
-
-        this._updateTexture();
-
-        if (this._matrixDirty) {
-            this._matrixDirty = false;
-
-            const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-
-            if (depthInfo) {
-                this._matrix.data.set(depthInfo.normDepthBufferFromNormView.matrix);
-            } else {
-                this._matrix.setIdentity();
-            }
-        }
-
-        if ((this._depthInfoCpu || this._depthInfoGpu) && !this._available) {
-            this._available = true;
-            this.fire('available');
-        } else if (!this._depthInfoCpu && !this._depthInfoGpu && this._available) {
             this._available = false;
             this.fire('unavailable');
         }
@@ -325,6 +165,8 @@ class XrDepthSensing extends EventHandler {
      * 1.0 (left to right).
      * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to
      * 1.0 (top to bottom).
+     * @deprecated
+     * @ignore
      * @returns {number|null} Depth in meters or null if depth information is currently not
      * available.
      * @example
@@ -334,35 +176,33 @@ class XrDepthSensing extends EventHandler {
      * }
      */
     getDepth(u, v) {
-        // TODO
-        // GPU usage
-
-        if (!this._depthInfoCpu)
-            return null;
-
-        return this._depthInfoCpu.getDepthInMeters(u, v);
+        return this._views.list[0]?.getDepth(u, v) ?? null;
     }
 
     /**
      * True if Depth Sensing is supported.
      *
      * @type {boolean}
+     * @deprecated
+     * @ignore
      */
     get supported() {
-        return platform.browser && !!window.XRDepthInformation;
+        return this._views.supportedDepth;
     }
 
     /**
      * True if depth sensing information is available.
      *
      * @type {boolean}
+     * @deprecated
+     * @ignore
      * @example
      * if (app.xr.depthSensing.available) {
      *     const depth = app.xr.depthSensing.getDepth(x, y);
      * }
      */
     get available() {
-        return this._available;
+        return this._views.availableDepth;
     }
 
     /**
@@ -373,7 +213,7 @@ class XrDepthSensing extends EventHandler {
      * @ignore
      */
     get usage() {
-        return this._usage;
+        return this._views.depthUsage;
     }
 
     /**
@@ -384,27 +224,29 @@ class XrDepthSensing extends EventHandler {
      * @ignore
      */
     get dataFormat() {
-        return this._dataFormat;
+        return this._views.depthFormat;
     }
 
     /**
      * Width of depth texture or 0 if not available.
      *
      * @type {number}
+     * @deprecated
+     * @ignore
      */
     get width() {
-        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-        return depthInfo && depthInfo.width || 0;
+        return this._views.list[0]?.textureDepth?.width ?? 0;
     }
 
     /**
      * Height of depth texture or 0 if not available.
      *
      * @type {number}
+     * @deprecated
+     * @ignore
      */
     get height() {
-        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-        return depthInfo && depthInfo.height || 0;
+        return this._views.list[0]?.textureDepth?.height ?? 0;
     }
 
     /* eslint-disable jsdoc/check-examples */
@@ -414,6 +256,8 @@ class XrDepthSensing extends EventHandler {
      * be normalized using {@link XrDepthSensing#uvMatrix}.
      *
      * @type {Texture}
+     * @deprecated
+     * @ignore
      * @example
      * material.diffuseMap = depthSensing.texture;
      * @example
@@ -442,7 +286,7 @@ class XrDepthSensing extends EventHandler {
      * }
      */
     get texture() {
-        return this._texture;
+        return this._views.list[0]?.textureDepth;
     }
     /* eslint-enable jsdoc/check-examples */
 
@@ -451,23 +295,26 @@ class XrDepthSensing extends EventHandler {
      * It is updated when the depth texture is resized. Refer to {@link XrDepthSensing#resize}.
      *
      * @type {Mat4}
+     * @deprecated
+     * @ignore
      * @example
      * material.setParameter('matrix_depth_uv', depthSensing.uvMatrix.data);
      */
     get uvMatrix() {
-        return this._matrix;
+        return this._views.list[0]?.depthUvMatrix;
     }
 
     /**
      * Multiply this coefficient number by raw depth value to get depth in meters.
      *
      * @type {number}
+     * @deprecated
+     * @ignore
      * @example
      * material.setParameter('depth_raw_to_meters', depthSensing.rawValueToMeters);
      */
     get rawValueToMeters() {
-        const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
-        return depthInfo && depthInfo.rawValueToMeters || 0;
+        return this._views.list[0]?.depthValueToMeters ?? 0;
     }
 }
 
