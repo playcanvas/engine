@@ -72,6 +72,12 @@ class XrDepthSensing extends EventHandler {
      */
     _manager;
 
+    /**
+     * @type {import('./xr-views.js').XrViews}
+     * @private
+     */
+    _views;
+
      /**
       * @type {boolean}
       * @private
@@ -142,17 +148,18 @@ class XrDepthSensing extends EventHandler {
         super();
 
         this._manager = manager;
+        this._views = manager.views;
 
-        // TODO: data format can be different
-        this._texture = new Texture(this._manager.app.graphicsDevice, {
-            format: PIXELFORMAT_LA8,
-            mipmaps: false,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR,
-            name: 'XRDepthSensing'
-        });
+        // // TODO: data format can be different
+        // this._texture = new Texture(this._manager.app.graphicsDevice, {
+        //     format: PIXELFORMAT_LA8,
+        //     mipmaps: false,
+        //     addressU: ADDRESS_CLAMP_TO_EDGE,
+        //     addressV: ADDRESS_CLAMP_TO_EDGE,
+        //     minFilter: FILTER_LINEAR,
+        //     magFilter: FILTER_LINEAR,
+        //     name: 'XRDepthSensing'
+        // });
 
         if (this.supported) {
             this._manager.on('start', this._onSessionStart, this);
@@ -221,14 +228,15 @@ class XrDepthSensing extends EventHandler {
         }
 
         this._depthBuffer = null;
-        this._texture._width = 4;
-        this._texture._height = 4;
-        this._texture._levels[0] = this._emptyBuffer;
-        this._texture.upload();
+        // this._texture._width = 4;
+        // this._texture._height = 4;
+        // this._texture._levels[0] = this._emptyBuffer;
+        // this._texture.upload();
     }
 
     /** @private */
     _updateTexture() {
+        return;
         const depthInfo = this._depthInfoCpu || this._depthInfoGpu;
 
         if (depthInfo) {
@@ -361,6 +369,7 @@ class XrDepthSensing extends EventHandler {
      * Whether the usage is CPU or GPU.
      *
      * @type {string}
+     * @deprecated
      * @ignore
      */
     get usage() {
@@ -371,6 +380,7 @@ class XrDepthSensing extends EventHandler {
      * The depth sensing data format.
      *
      * @type {string}
+     * @deprecated
      * @ignore
      */
     get dataFormat() {

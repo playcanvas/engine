@@ -1,5 +1,6 @@
 export * from "./ar-basic.mjs";
 export * from "./ar-camera-color.mjs";
+export * from "./ar-camera-depth.mjs";
 export * from "./ar-hit-test.mjs";
 export * from "./ar-hit-test-anchors.mjs";
 export * from "./ar-anchors-persistence.mjs";

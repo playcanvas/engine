@@ -1,3 +1,4 @@
+import { EventHandler } from '../../core/event-handler.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from "../../core/math/vec4.js";
 import { Mat3 } from "../../core/math/mat3.js";
@@ -10,7 +11,7 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../pl
  *
  * @category XR
  */
-class XrView {
+class XrView extends EventHandler {
     /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
@@ -90,6 +91,12 @@ class XrView {
     _textureColor = null;
 
     /**
+     * @type {Texture|null}
+     * @private
+     */
+    _textureDepth = null;
+
+    /**
      * Create a new XrView instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -98,13 +105,29 @@ class XrView {
      * @hideconstructor
      */
     constructor(manager, xrView) {
+        super();
+
         this._manager = manager;
         this._xrView = xrView;
 
-        if (this._manager.views.supportedColor)
+        if (this._manager.views.supportedColor) {
             this._xrCamera = this._xrView.camera;
 
-        this._updateTextureColor();
+            // color texture
+            if (this._manager.views.availableColor && this._xrCamera) {
+                this._textureColor = new Texture(this._manager.app.graphicsDevice, {
+                    format: PIXELFORMAT_RGB8,
+                    mipmaps: false,
+                    addressU: ADDRESS_CLAMP_TO_EDGE,
+                    addressV: ADDRESS_CLAMP_TO_EDGE,
+                    minFilter: FILTER_LINEAR,
+                    magFilter: FILTER_LINEAR,
+                    width: this._xrCamera.width,
+                    height: this._xrCamera.height,
+                    name: `XrView-${this._xrView.eye}-Color`
+                });
+            }
+        }
     }
 
     /**
@@ -115,6 +138,16 @@ class XrView {
      */
     get textureColor() {
         return this._textureColor;
+    }
+
+    /**
+     * Texture associated with this view's camera depth. Equals to null if camera depth is
+     * not available or not supported.
+     *
+     * @type {Texture|null}
+     */
+    get textureDepth() {
+        return this._textureDepth;
     }
 
     /**
@@ -214,13 +247,14 @@ class XrView {
         this._viewInvMat.set(this._xrView.transform.matrix);
 
         this._updateTextureColor();
+        this._updateTextureDepth(frame);
     }
 
     /**
      * @private
      */
     _updateTextureColor() {
-        if (!this._manager.views.availableColor || !this._xrCamera)
+        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor)
             return;
 
         const binding = this._manager.webglBinding;
@@ -233,15 +267,82 @@ class XrView {
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
+        
+        if (!this._frameBufferSource) {
+            // create frame buffer to read from
+            this._frameBufferSource = gl.createFramebuffer();
+
+            // create frame buffer to write to
+            this._frameBuffer = gl.createFramebuffer();
+        } else {
+            const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+            const width = this._xrCamera.width;
+            const height = this._xrCamera.height;
+
+            // set frame buffer to read from
+            device.setFramebuffer(this._frameBufferSource);
+            gl.framebufferTexture2D(
+                gl.FRAMEBUFFER,
+                attachmentBaseConstant,
+                gl.TEXTURE_2D,
+                texture,
+                0
+            );
+
+            // set frame buffer to write to
+            device.setFramebuffer(this._frameBuffer);
+            gl.framebufferTexture2D(
+                gl.FRAMEBUFFER,
+                attachmentBaseConstant,
+                gl.TEXTURE_2D,
+                this._textureColor.impl._glTexture,
+                0
+            );
+
+            // bind buffers
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
+            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
+
+            // copy buffers with flip Y
+            gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+        }
+    }
+
+    /**
+     * @private
+     */
+    _updateTextureDepth(frame) {
+        if (!this._manager.views.availableDepth)
+            return;
+
+        const binding = this._manager.webglBinding;
+        if (!binding)
+            return;
+
+        const gpu = this._manager.views.depthGpuOptimized;
+        let info, texture;
+
+        if (gpu) {
+            info = binding.getDepthInformation(this._xrView);
+        } else {
+            info = frame.getDepthInformation(this._xrView);
+        }
+
+        if (!info) return;
+        
+        if (gpu) texture = info.texture;
+
+        const device = this._manager.app.graphicsDevice;
+        const gl = device.gl;
         const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
 
-        const width = this._xrCamera.width;
-        const height = this._xrCamera.height;
+        const width = info.width;
+        const height = info.height;
 
-        if (!this._textureColor) {
+        if (!this._textureDepth) {
             // color texture
-            this._textureColor = new Texture(device, {
-                format: PIXELFORMAT_RGB8,
+            this._textureDepth = new Texture(device, {
+                format: this._manager.views.depthFormat,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -249,49 +350,66 @@ class XrView {
                 magFilter: FILTER_LINEAR,
                 width: width,
                 height: height,
-                name: `XrView-${this._xrView.eye}-Color`
+                name: `XrView-${this._xrView.eye}-Depth`
             });
 
             // force initialize texture
-            this._textureColor.upload();
+            // this._textureDepth.upload();
 
             // create frame buffer to read from
-            this._frameBufferSource = gl.createFramebuffer();
+            // this._frameBufferSource = gl.createFramebuffer();
 
             // create frame buffer to write to
-            this._frameBuffer = gl.createFramebuffer();
+            // this._frameBuffer = gl.createFramebuffer();
         }
 
-        // set frame buffer to read from
-        device.setFramebuffer(this._frameBufferSource);
-        gl.framebufferTexture2D(
-            gl.FRAMEBUFFER,
-            attachmentBaseConstant,
-            gl.TEXTURE_2D,
-            texture,
-            0
-        );
+        let resized = false;
 
-        // set frame buffer to write to
-        device.setFramebuffer(this._frameBuffer);
-        gl.framebufferTexture2D(
-            gl.FRAMEBUFFER,
-            attachmentBaseConstant,
-            gl.TEXTURE_2D,
-            this._textureColor.impl._glTexture,
-            0
-        );
+        if (this._textureDepth.width !== width || this._textureDepth.height !== height) {
+            this._textureDepth._width = width;
+            this._textureDepth._height = height;
+            resized = true;
+        }
 
-        // bind buffers
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
-        let ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+        if (gpu) {
+            // set frame buffer to read from
+            // device.setFramebuffer(this._frameBufferSource);
+            // gl.framebufferTexture2D(
+            //     gl.FRAMEBUFFER,
+            //     attachmentBaseConstant,
+            //     gl.TEXTURE_2D,
+            //     texture,
+            //     0
+            // );
 
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
-        if (ready) ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            // // set frame buffer to write to
+            // device.setFramebuffer(this._frameBuffer);
+            // gl.framebufferTexture2D(
+            //     gl.FRAMEBUFFER,
+            //     attachmentBaseConstant,
+            //     gl.TEXTURE_2D,
+            //     this._textureDepth.impl._glTexture,
+            //     0
+            // );
 
-        if (ready) {
-            // copy buffers with flip Y
-            gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+            // // bind buffers
+            // gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
+            // let ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+
+            // gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
+            // if (ready) ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+
+            // if (ready) {
+            //     // copy buffers with flip Y
+            //     gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+            // }
+        } else {
+            this._textureDepth._levels[0] = new Uint8Array(info.data);
+            this._textureDepth.upload();
+        }
+
+        if (resized) {
+            this.fire('depthResize', width, height);
         }
     }
 
