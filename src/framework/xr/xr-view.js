@@ -101,10 +101,24 @@ class XrView {
         this._manager = manager;
         this._xrView = xrView;
 
-        if (this._manager.views.supportedColor)
+        if (this._manager.views.supportedColor) {
             this._xrCamera = this._xrView.camera;
 
-        this._updateTextureColor();
+            // color texture
+            if (this._manager.views.availableColor && this._xrCamera) {
+                this._textureColor = new Texture(this._manager.app.graphicsDevice, {
+                    format: PIXELFORMAT_RGB8,
+                    mipmaps: false,
+                    addressU: ADDRESS_CLAMP_TO_EDGE,
+                    addressV: ADDRESS_CLAMP_TO_EDGE,
+                    minFilter: FILTER_LINEAR,
+                    magFilter: FILTER_LINEAR,
+                    width: this._xrCamera.width,
+                    height: this._xrCamera.height,
+                    name: `XrView-${this._xrView.eye}-Color`
+                });
+            }
+        }
     }
 
     /**
@@ -220,7 +234,7 @@ class XrView {
      * @private
      */
     _updateTextureColor() {
-        if (!this._manager.views.availableColor || !this._xrCamera)
+        if (!this._manager.views.availableColor || !this._xrCamera || !this._textureColor)
             return;
 
         const binding = this._manager.webglBinding;
@@ -233,63 +247,42 @@ class XrView {
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
-        const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
 
-        const width = this._xrCamera.width;
-        const height = this._xrCamera.height;
-
-        if (!this._textureColor) {
-            // color texture
-            this._textureColor = new Texture(device, {
-                format: PIXELFORMAT_RGB8,
-                mipmaps: false,
-                addressU: ADDRESS_CLAMP_TO_EDGE,
-                addressV: ADDRESS_CLAMP_TO_EDGE,
-                minFilter: FILTER_LINEAR,
-                magFilter: FILTER_LINEAR,
-                width: width,
-                height: height,
-                name: `XrView-${this._xrView.eye}-Color`
-            });
-
-            // force initialize texture
-            this._textureColor.upload();
-
+        if (!this._frameBufferSource) {
             // create frame buffer to read from
             this._frameBufferSource = gl.createFramebuffer();
 
             // create frame buffer to write to
             this._frameBuffer = gl.createFramebuffer();
-        }
+        } else {
+            const attachmentBaseConstant = device.isWebGL2 ? gl.COLOR_ATTACHMENT0 : (device.extDrawBuffers?.COLOR_ATTACHMENT0_WEBGL ?? gl.COLOR_ATTACHMENT0);
+            const width = this._xrCamera.width;
+            const height = this._xrCamera.height;
 
-        // set frame buffer to read from
-        device.setFramebuffer(this._frameBufferSource);
-        gl.framebufferTexture2D(
-            gl.FRAMEBUFFER,
-            attachmentBaseConstant,
-            gl.TEXTURE_2D,
-            texture,
-            0
-        );
+            // set frame buffer to read from
+            device.setFramebuffer(this._frameBufferSource);
+            gl.framebufferTexture2D(
+                gl.FRAMEBUFFER,
+                attachmentBaseConstant,
+                gl.TEXTURE_2D,
+                texture,
+                0
+            );
 
-        // set frame buffer to write to
-        device.setFramebuffer(this._frameBuffer);
-        gl.framebufferTexture2D(
-            gl.FRAMEBUFFER,
-            attachmentBaseConstant,
-            gl.TEXTURE_2D,
-            this._textureColor.impl._glTexture,
-            0
-        );
+            // set frame buffer to write to
+            device.setFramebuffer(this._frameBuffer);
+            gl.framebufferTexture2D(
+                gl.FRAMEBUFFER,
+                attachmentBaseConstant,
+                gl.TEXTURE_2D,
+                this._textureColor.impl._glTexture,
+                0
+            );
 
-        // bind buffers
-        gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
-        let ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+            // bind buffers
+            gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this._frameBufferSource);
+            gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
 
-        gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, this._frameBuffer);
-        if (ready) ready = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
-
-        if (ready) {
             // copy buffers with flip Y
             gl.blitFramebuffer(0, height, width, 0, 0, 0, width, height, gl.COLOR_BUFFER_BIT, gl.NEAREST);
         }
@@ -323,7 +316,9 @@ class XrView {
         if (this._textureColor) {
             this._textureColor.destroy();
             this._textureColor = null;
+        }
 
+        if (this._frameBufferSource) {
             const gl = this._manager.app.graphicsDevice.gl;
 
             gl.deleteFramebuffer(this._frameBufferSource);
