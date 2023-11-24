@@ -180,7 +180,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         // setup skydome
         app.scene.envAtlas = assets.helipad.resource;
         app.scene.skyboxMip = 2;
-        app.scene.exposure = 0.5;
+        app.scene.exposure = 0.3;
 
         // render in HDR mode
         app.scene.toneMapping = pc.TONEMAP_LINEAR;
@@ -194,6 +194,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const createBox = (x, y, z, sx, sy, sz, r, g, b) => {
             // create material of random color
             const material = new pc.StandardMaterial();
+            material.diffuse = pc.Color.BLACK;
             material.emissive = new pc.Color(r, g, b);
             material.update();
 
@@ -254,6 +255,21 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         });
         app.root.addChild(screen);
 
+        // add a directional light
+        const light = new pc.Entity();
+        light.addComponent("light", {
+            type: "directional",
+            color: pc.Color.WHITE,
+            intensity: 3,
+            range: 500,
+            shadowDistance: 500,
+            castShadows: true,
+            shadowBias: 0.2,
+            normalOffsetBias: 0.05
+        });
+        app.root.addChild(light);
+        light.setLocalEulerAngles(45, 30, 0);
+
         // a helper function to add a label to the screen
         const addLabel = (name, text, x, y, layer) => {
             const label = new pc.Entity(name);
@@ -289,7 +305,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             // create a multi-sampled HDR render target to render the scene into
             const format = app.graphicsDevice.getRenderableHdrFormat() || pc.PIXELFORMAT_RGBA8;
             const sceneTexture = new pc.Texture(device, {
-                name: 'RTTexture',
+                name: 'SceneTexture',
                 width: 4,
                 height: 4,
                 format: format,
