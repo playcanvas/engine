@@ -241,6 +241,9 @@ class XrManager extends EventHandler {
                 this._deviceAvailabilityCheck();
             });
             this._deviceAvailabilityCheck();
+
+            this.app.graphicsDevice.on('devicelost', this._onDeviceLost, this);
+            this.app.graphicsDevice.on('devicerestored', this._onDeviceRestored, this);
         }
     }
 
@@ -521,6 +524,35 @@ class XrManager extends EventHandler {
     }
 
     /**
+     * @private
+     */
+    _onDeviceLost() {
+        if (this.webglBinding)
+            this.webglBinding = null;
+    }
+
+    /**
+     * @private
+     */
+    _onDeviceRestored() {
+        if (!this._session)
+            return;
+
+        this.webglBinding = null;
+
+        if (platform.browser) {
+            const deviceType = this.app.graphicsDevice.deviceType;
+            if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
+                try {
+                    this.webglBinding = new XRWebGLBinding(this._session, this.app.graphicsDevice.gl); // eslint-disable-line no-undef
+                } catch (ex) {
+                    this.fire('error', ex);
+                }
+            }
+        }
+    }
+
+    /**
      * Attempts to end XR session and optionally fires callback when session is ended or failed to
      * end.
      *
@@ -539,6 +571,8 @@ class XrManager extends EventHandler {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
         }
+
+        this.webglBinding = null;
 
         if (callback) this.once('end', callback);
 

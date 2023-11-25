@@ -117,6 +117,8 @@ class XrView {
                     height: this._xrCamera.height,
                     name: `XrView-${this._xrView.eye}-Color`
                 });
+
+                this._manager.app.graphicsDevice?.on('devicelost', this._onDeviceLost, this);
             }
         }
     }
@@ -307,6 +309,11 @@ class XrView {
         this._positionData[0] = this._viewInvOffMat.data[12];
         this._positionData[1] = this._viewInvOffMat.data[13];
         this._positionData[2] = this._viewInvOffMat.data[14];
+    }
+
+    _onDeviceLost() {
+        this._frameBufferSource = null;
+        this._frameBuffer = null;
     }
 
     /**
