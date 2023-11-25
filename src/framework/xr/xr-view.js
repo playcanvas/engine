@@ -430,7 +430,10 @@ class XrView extends EventHandler {
         const gpu = this._manager.views.depthGpuOptimized;
 
         const infoSource = gpu ? this._manager.webglBinding : frame;
-        if (!infoSource) return;
+        if (!infoSource) {
+            this._depthInfo = null;
+            return;
+        }
 
         const depthInfo = infoSource.getDepthInformation(this._xrView);
         if (!depthInfo) {
@@ -467,7 +470,7 @@ class XrView extends EventHandler {
         if (this._depthInfo) {
             if (gpu) {
                 // gpu
-                console.log('not implemented');
+                // TODO
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);
@@ -506,6 +509,7 @@ class XrView extends EventHandler {
     _onDeviceLost() {
         this._frameBufferSource = null;
         this._frameBuffer = null;
+        this._depthInfo = null;
     }
 
     /**
@@ -535,9 +539,16 @@ class XrView extends EventHandler {
      * @ignore
      */
     destroy() {
+        this._depthInfo = null;
+
         if (this._textureColor) {
             this._textureColor.destroy();
             this._textureColor = null;
+        }
+
+        if (this._textureDepth) {
+            this._textureDepth.destroy();
+            this._textureDepth = null;
         }
 
         if (this._frameBufferSource) {

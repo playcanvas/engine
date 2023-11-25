@@ -189,7 +189,6 @@ class XrViews extends EventHandler {
      * {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
      *
      * @type {number|null}
-     * @ignore
      */
     get depthPixelFormat() {
         return this._depthFormats[this._depthFormat] ?? null;
