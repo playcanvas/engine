@@ -18,6 +18,10 @@ for (const category_ in realExamples) {
     exampleData[category] = {};
     const examples = realExamples[category_];
     for (const exampleName_ in examples) {
+        if (examples[exampleName_].HIDDEN) {
+            console.log(`build:example:data> skip hidden example: ${category_}/${exampleName_}`);
+            continue;
+        }
         const example = toKebabCase(exampleName_).replace('-example', '');
         // turn: turn into simple array...
         exampleData[category][example] = {};
