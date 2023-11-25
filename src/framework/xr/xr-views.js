@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from "../../core/event-handler.js";
 import { XrView } from "./xr-view.js";
-import { XRTYPE_AR } from "./constants.js";
+import { XRTYPE_AR, XRDEPTHSENSINGUSAGE_GPU, XRDEPTHSENSINGFORMAT_L8A8, XRDEPTHSENSINGFORMAT_F32 } from "./constants.js";
 import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/constants.js';
 
 /**
@@ -76,8 +76,8 @@ class XrViews extends EventHandler {
      * @private
      */
     _depthFormats = {
-        'luminance-alpha': PIXELFORMAT_LA8,
-        'float32': PIXELFORMAT_R32F
+        [XRDEPTHSENSINGFORMAT_L8A8]: PIXELFORMAT_LA8,
+        [XRDEPTHSENSINGFORMAT_F32]: PIXELFORMAT_R32F
     };
 
     /**
@@ -173,9 +173,17 @@ class XrViews extends EventHandler {
      * @ignore
      */
     get depthGpuOptimized() {
-        return this._depthUsage === 'gpu-optimized';
+        return this._depthUsage === XRDEPTHSENSINGUSAGE_GPU;
     }
-    
+
+    /**
+     * @type {string}
+     * @ignore
+     */
+    get depthFormat() {
+        return this._depthFormat;
+    }
+
     /**
      * The depth sensing pixel format. Currently supported either:
      * {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}

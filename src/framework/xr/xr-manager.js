@@ -319,10 +319,7 @@ class XrManager extends EventHandler {
      *
      * @ignore
      */
-    destroy() {
-        this.depthSensing.destroy();
-        this.depthSensing = null;
-    }
+    destroy() { }
 
     /**
      * Attempts to start XR session for provided {@link CameraComponent} and optionally fires

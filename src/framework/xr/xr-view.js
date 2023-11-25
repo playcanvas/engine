@@ -8,6 +8,8 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../pl
 
 /**
  * Represents XR View which represents a screen (mobile phone context) or an eye (HMD context).
+ * It provides access to view's color and depth information based on capabilities of underlying
+ * AR system.
  *
  * @category XR
  */
@@ -167,6 +169,19 @@ class XrView extends EventHandler {
     }
 
     /**
+     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
+     * to be updated for relevant shaders.
+     *
+     * @event XrView#depth:resize
+     * @param {number} width - The new width of the depth texture in pixels.
+     * @param {number} height - The new height of the depth texture in pixels.
+     * @example
+     * view.on('depth:resize', function () {
+     *     material.setParameter('matrix_depth_uv', view.depthUvMatrix);
+     * });
+     */
+
+    /**
      * Texture associated with this view's camera color. Equals to null if camera color is
      * not available or not supported.
      *
@@ -176,15 +191,52 @@ class XrView extends EventHandler {
         return this._textureColor;
     }
 
+    /* eslint-disable jsdoc/check-examples */
     /**
-     * Texture associated with this view's camera depth. Equals to null if camera depth is
-     * not available or not supported.
+     * Texture that contains packed depth information which is reconstructed using the underlying
+     * AR system. This texture can be used (not limited to) for reconstructing real world
+     * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
+     * and more.
+     * The format of this texture is {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
+     * based on {@link XrViews#depthFormat}. It is UV transformed based on the underlying AR
+     * system which can be normalized using {@link XrView#depthUvMatrix}. Equals to null if camera
+     * depth is not supported.
      *
      * @type {Texture|null}
+     * @example
+     * // GPU path, attaching texture to material
+     * material.setParameter('texture_depthSensingMap', view.textureDepth);
+     * material.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
+     * material.setParameter('depth_to_meters', view.depthValueToMeters);
+     * @example
+     * // GLSL shader to unpack depth texture
+     * varying vec2 vUv0;
+     *
+     * uniform sampler2D texture_depthSensingMap;
+     * uniform mat4 matrix_depth_uv;
+     * uniform float depth_to_meters;
+     *
+     * void main(void) {
+     *     // transform UVs using depth matrix
+     *     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
+     *
+     *     // get luminance alpha components from depth texture
+     *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
+     *
+     *     // unpack into single value in millimeters
+     *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)) * depth_to_meters; // m
+     *
+     *     // normalize: 0m to 8m distance
+     *     depth = min(depth / 8.0, 1.0); // 0..1 = 0m..8m
+     *
+     *     // paint scene from black to white based on distance
+     *     gl_FragColor = vec4(depth, depth, depth, 1.0);
+     * }
      */
     get textureDepth() {
         return this._textureDepth;
     }
+    /* eslint-enable jsdoc/check-examples */
 
     /**
      * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
@@ -203,7 +255,7 @@ class XrView extends EventHandler {
      *
      * @type {number}
      * @example
-     * material.setParameter('depth_raw_to_meters', view.depthValueToMeters);
+     * material.setParameter('depth_to_meters', view.depthValueToMeters);
      */
     get depthValueToMeters() {
         return this._depthInfo?.rawValueToMeters || 0;
@@ -282,7 +334,7 @@ class XrView extends EventHandler {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @param {XRView} xrView - XRView from WebXR API.
      * @ignore
      */
@@ -368,6 +420,7 @@ class XrView extends EventHandler {
     }
 
     /**
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @private
      */
     _updateDepth(frame) {
@@ -380,6 +433,8 @@ class XrView extends EventHandler {
         if (!infoSource) return;
 
         const depthInfo = infoSource.getDepthInformation(this._xrView);
+        if (!depthInfo) return;
+
         let matrixDirty = !this._depthInfo !== !depthInfo;
         this._depthInfo = depthInfo;
 
@@ -409,7 +464,7 @@ class XrView extends EventHandler {
         if (this._depthInfo) {
             if (gpu) {
                 // gpu
-                console.log('not implemented')
+                console.log('not implemented');
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);
@@ -421,7 +476,7 @@ class XrView extends EventHandler {
             this._textureDepth.upload();
         }
 
-        if (resized) this.fire('depthResize', width, height);
+        if (resized) this.fire('depth:resize', width, height);
     }
 
     /**
