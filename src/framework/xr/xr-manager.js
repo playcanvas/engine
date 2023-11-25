@@ -860,6 +860,9 @@ class XrManager extends EventHandler {
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);
+
+            if (this.depthSensing.supported)
+                this.depthSensing.update();
         }
 
         this.fire('update', frame);

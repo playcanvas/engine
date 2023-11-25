@@ -1,4 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
+import { Mat4 } from '../../core/math/mat4.js';
 
 /**
  * @augments EventHandler
@@ -30,6 +31,12 @@ class XrDepthSensing extends EventHandler {
      * @private
      */
     _evtDepthResize = null;
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _uvMatrix = Mat4.IDENTITY.clone();
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - manager
@@ -69,11 +76,8 @@ class XrDepthSensing extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        if (this._views.availableDepth) {
-            this._available = true;
+        if (this._views.availableDepth)
             this._evtDepthResize = this._views.list[0]?.on('depth:resize', this._onDepthResize, this);
-            this.fire('available');
-        }
     }
 
     /** @private */
@@ -103,6 +107,17 @@ class XrDepthSensing extends EventHandler {
      */
     getDepth(u, v) {
         return this._views.list[0]?.getDepth(u, v) ?? null;
+    }
+
+    /**
+     * @deprecated
+     * @ignore
+     */
+    update() {
+        if (this._manager.session && this.supported && this._views.availableDepth && this._views.list.length && !this._available) {
+            this._available = true;
+            this.fire('available');
+        }
     }
 
     /**
@@ -169,12 +184,12 @@ class XrDepthSensing extends EventHandler {
     }
 
     /**
-     * @type {import('../../core/math/mat4.js').Mat4}
+     * @type {Mat4}
      * @deprecated
      * @ignore
      */
     get uvMatrix() {
-        return this._views.list[0]?.depthUvMatrix;
+        return this._views.list[0]?.depthUvMatrix ?? this._uvMatrix;
     }
 
     /**
