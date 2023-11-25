@@ -433,7 +433,10 @@ class XrView extends EventHandler {
         if (!infoSource) return;
 
         const depthInfo = infoSource.getDepthInformation(this._xrView);
-        if (!depthInfo) return;
+        if (!depthInfo) {
+            this._depthInfo = null;
+            return;
+        }
 
         let matrixDirty = !this._depthInfo !== !depthInfo;
         this._depthInfo = depthInfo;
