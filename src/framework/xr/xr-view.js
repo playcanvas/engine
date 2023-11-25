@@ -144,6 +144,7 @@ class XrView extends EventHandler {
                     height: this._xrCamera.height,
                     name: `XrView-${this._xrView.eye}-Color`
                 });
+
             }
         }
 
@@ -160,6 +161,9 @@ class XrView extends EventHandler {
                 name: `XrView-${this._xrView.eye}-Depth`
             });
         }
+
+        if (this._textureColor || this._textureDepth)
+            this._manager.app.graphicsDevice?.on('devicelost', this._onDeviceLost, this);
     }
 
     /**
@@ -322,7 +326,7 @@ class XrView extends EventHandler {
 
         const device = this._manager.app.graphicsDevice;
         const gl = device.gl;
-        
+
         if (!this._frameBufferSource) {
             // create frame buffer to read from
             this._frameBufferSource = gl.createFramebuffer();
@@ -439,6 +443,11 @@ class XrView extends EventHandler {
         this._positionData[0] = this._viewInvOffMat.data[12];
         this._positionData[1] = this._viewInvOffMat.data[13];
         this._positionData[2] = this._viewInvOffMat.data[14];
+    }
+
+    _onDeviceLost() {
+        this._frameBufferSource = null;
+        this._frameBuffer = null;
     }
 
     /**
