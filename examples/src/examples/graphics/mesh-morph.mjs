@@ -218,7 +218,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class MeshMorphExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Morph';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

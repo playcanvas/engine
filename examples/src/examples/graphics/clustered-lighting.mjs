@@ -246,7 +246,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Lighting';
     static ENGINE = 'PERFORMANCE';
     static WEBGPU_ENABLED = true;
     static example = example;

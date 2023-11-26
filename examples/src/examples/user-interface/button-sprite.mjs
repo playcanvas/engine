@@ -189,7 +189,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class ButtonSpriteExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Button Sprite';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

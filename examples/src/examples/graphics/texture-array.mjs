@@ -264,7 +264,6 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
 
 export class TextureArrayExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Texture Array';
     static WEBGPU_ENABLED = false;
 
     static FILES = {

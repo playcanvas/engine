@@ -145,7 +145,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MaterialAnisotropicExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Material Anisotropic';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

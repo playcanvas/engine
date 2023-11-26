@@ -315,7 +315,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 }
 class BlendTrees2DCartesianExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Blend Trees 2D Cartesian';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

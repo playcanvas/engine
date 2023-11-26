@@ -128,6 +128,5 @@ async function example({ canvas, assetPath }) {
 
 export class VideoTextureExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Video Texture';
     static example = example;
 }

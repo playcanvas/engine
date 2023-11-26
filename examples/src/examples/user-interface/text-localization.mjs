@@ -182,7 +182,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class TextLocalizationExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text Localization';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

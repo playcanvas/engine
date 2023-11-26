@@ -181,7 +181,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class ParticleSystemExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Particle System';
     static example = example;
 }
 

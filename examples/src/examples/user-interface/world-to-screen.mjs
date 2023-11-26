@@ -247,7 +247,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class WorldToScreenExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'World to Screen';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

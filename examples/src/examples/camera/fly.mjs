@@ -128,7 +128,6 @@ async function example({ canvas, scriptsPath }) {
 
 class FlyExample {
     static CATEGORY = 'Camera';
-    static NAME = 'Fly';
     static example = example;
 }
 

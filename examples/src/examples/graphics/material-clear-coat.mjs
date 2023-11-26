@@ -145,7 +145,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MaterialClearCoatExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Material Clear Coat';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

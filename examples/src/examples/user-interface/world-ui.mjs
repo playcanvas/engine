@@ -186,7 +186,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class WorldUiExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'World UI';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

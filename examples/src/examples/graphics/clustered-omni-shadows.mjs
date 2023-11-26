@@ -311,7 +311,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Omni Shadows';
     static controls = controls;
     static example = example;
 }

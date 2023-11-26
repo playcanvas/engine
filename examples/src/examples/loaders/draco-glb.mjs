@@ -97,7 +97,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class DracoGlbExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'Draco GLB';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
