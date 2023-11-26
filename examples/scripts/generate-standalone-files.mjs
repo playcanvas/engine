@@ -294,23 +294,33 @@ ${exampleClass.example.toString()}
                 // console.log("Dispatch exampleLoading!");
                 const event = new CustomEvent("exampleLoading"); // just notify to clean UI, but not during hot-reload
                 window.top.dispatchEvent(event);
+            } else {
+                window.top.dispatchEvent(new CustomEvent("exampleHotReload"));
             }
-            const example = resolveFunction(files['example.mjs']);
             files['example.mjs'] = files['example.mjs'].toString();
-            const app = await example({
-                canvas,
-                deviceType,
-                data,
-                assetPath,
-                scriptsPath,
-                ammoPath,
-                basisPath,
-                dracoPath,
-                glslangPath,
-                twgslPath,
-                pcx,
-                files,
-            });
+            let app;
+            try {
+                const example = resolveFunction(files['example.mjs']);
+                app = await example({
+                    canvas,
+                    deviceType,
+                    data,
+                    assetPath,
+                    scriptsPath,
+                    ammoPath,
+                    basisPath,
+                    dracoPath,
+                    glslangPath,
+                    twgslPath,
+                    pcx,
+                    files,
+                });
+            } catch (e) {
+                console.error(e, "Stack:", e.stack);
+                window.top.dispatchEvent(new CustomEvent('exampleError', {detail: e}));
+                allowRestart = true;
+                return;
+            }
             ready = true;
             class ExampleLoadEvent extends CustomEvent {
                 constructor(deviceType) {

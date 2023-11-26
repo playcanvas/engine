@@ -48,6 +48,12 @@ class CodeEditor extends TypedComponent {
         showMinimap: getShowMinimap()
     };
 
+    /** @type {import('monaco-editor').editor.IStandaloneCodeEditor|undefined} */
+    editor;
+
+    /** @type {string[]} */
+    decorators = [];
+
     /**
      * @param {Partial<State>} state - New partial state.
      */
@@ -59,18 +65,29 @@ class CodeEditor extends TypedComponent {
 
     componentDidMount() {
         this.handleExampleLoad = this.handleExampleLoad.bind(this);
+        this.handleExampleError = this.handleExampleError.bind(this);
         this.handleExampleLoading = this.handleExampleLoading.bind(this);
+        this.handleExampleHotReload = this.handleExampleHotReload.bind(this);
         this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
         window.addEventListener('exampleLoad', this.handleExampleLoad);
+        window.addEventListener('exampleError', this.handleExampleError);
         window.addEventListener('exampleLoading', this.handleExampleLoading);
+        window.addEventListener('exampleHotReload', this.handleExampleHotReload);
         window.addEventListener("requestedFiles", this.handleRequestedFiles);
         iframeRequestFiles();
     }
 
     componentWillUnmount() {
         window.removeEventListener("exampleLoad", this.handleExampleLoad);
+        window.removeEventListener("exampleError", this.handleExampleError);
         window.removeEventListener("exampleLoading", this.handleExampleLoading);
+        window.removeEventListener("exampleHotReload", this.handleExampleHotReload);
         window.removeEventListener("requestedFiles", this.handleRequestedFiles);
+    }
+
+    handleExampleHotReload() {
+        this.clearDecorations();
+        // console.log("handleExampleHotReload> clear decorations");
     }
 
     handleExampleLoad(event) {
@@ -78,6 +95,44 @@ class CodeEditor extends TypedComponent {
         /** @type {Record<string, string>} */
         const files = event.files;
         this.mergeState({ files, selectedFile: 'example.mjs' });
+    }
+
+    /**
+     * @param {CustomEvent} event - Custom event containing error thrown in iframe.
+     */
+    handleExampleError(event) {
+        const { editor } = this;
+        if (!editor) {
+            return;
+        }
+        // error can be an actual error or e.g. only a string in case of throw "oh ohhh"
+        const error = event.detail;
+        if (!error.message) {
+            return;
+        }
+        const message = `**Error**\n${error.message}\n\n**Stack**\n ${error.stack}`;
+        const lines = error.stack.split('\n');
+        const firstLineWithAt = lines.find(line => / *at/.test(line));
+        // -2 to map to correct line in editor
+        const line = firstLineWithAt.split(':').at(-2) - 2;
+        const lineText = editor.getModel().getLineContent(line);
+        // const oldDecorators = [];
+        const newDecorator = {
+            range: new monaco.Range(line, 0, line, lineText.length),
+            options: {
+                className: 'squiggly-error',
+                hoverMessage: {
+                    value: message
+                }
+            }
+        };
+        this.decorators = editor.deltaDecorations(this.decorators, [newDecorator]);
+    }
+
+    clearDecorations() {
+        if (this.editor) {
+            this.decorators = this.editor.deltaDecorations(this.decorators, []);
+        }
     }
 
     handleExampleLoading(event) {
@@ -113,6 +168,7 @@ class CodeEditor extends TypedComponent {
      * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor
      */
     editorDidMount(editor) {
+        this.editor = editor;
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
