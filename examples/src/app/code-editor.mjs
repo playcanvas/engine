@@ -104,23 +104,21 @@ class CodeEditor extends TypedComponent {
             return;
         }
         // error can be an actual error or e.g. only a string in case of throw "oh ohhh"
-        const error = event.detail;
-        if (!error.message) {
+        const { lineno, colno, filename, error, message } = event.detail;
+        const stack = error.stack || 'missing';
+        const messageMarkdown = `**Error**\n${message}\n\n**Stack**\n${stack}\n\n**Filename**${filename}\n`;
+        const realLineNumber = lineno - 2;
+        // console.log("handleExampleError", { messageMarkdown, realLineNumber });
+        if (lineno < 1 || lineno > editor.getModel().getLineCount()) {
             return;
         }
-        const message = `**Error**\n${error.message}\n\n**Stack**\n ${error.stack}`;
-        const lines = error.stack.split('\n');
-        const firstLineWithAt = lines.find(line => / *at/.test(line));
-        // -2 to map to correct line in editor
-        const line = firstLineWithAt.split(':').at(-2) - 2;
-        const lineText = editor.getModel().getLineContent(line);
-        // const oldDecorators = [];
+        const lineText = editor.getModel().getLineContent(realLineNumber);
         const newDecorator = {
-            range: new monaco.Range(line, 0, line, lineText.length),
+            range: new monaco.Range(realLineNumber, 0, realLineNumber, lineText.length),
             options: {
                 className: 'squiggly-error',
                 hoverMessage: {
-                    value: message
+                    value: messageMarkdown
                 }
             }
         };

@@ -255,11 +255,32 @@ ${exampleClass.example.toString()}
             data = new observer.Observer({});
             main(files);
         }
+        /**
+         * Native error handling triggered by an error. We send them to UI so we can
+         * display them in Monaco editor or elsewhere.
+         */
+        function nativeError(event) {
+            const {lineno, colno, filename, error, message} = event;
+            const stack = error.stack || 'missing stack';
+            console.error(
+                'Error:\\n', error, '\\n',
+                'Stack:\\n', stack, '\\n',
+                {lineno, colno, filename, error, message}
+            );
+            if (event.error.name === 'SyntaxError') {
+                // Monaco displays syntax errors already
+                return;
+            }
+            const detail = {lineno, colno, filename, error, message};
+            const responseEvent = new CustomEvent("exampleError", {detail});
+            window.top.dispatchEvent(responseEvent);
+        }
         window.addEventListener('requestFiles', requestFiles);
         window.addEventListener('showStats'   , showStats   );
         window.addEventListener('hideStats'   , hideStats   );
         window.addEventListener('destroy'     , destroy     );
         window.addEventListener('hotReload'   , hotReload   );
+        window.addEventListener('error'       , nativeError );
         function updateControls() {
             const event = new CustomEvent("updateFiles", {
                 detail: {
@@ -273,6 +294,22 @@ ${exampleClass.example.toString()}
                 detail: pc.app.graphicsDevice.deviceType
             });
             window.top.dispatchEvent(event);
+        }
+        function lineNumberFromStack(stack) {
+            let lineNumber = -1;
+            try {
+                const lines = stack.split('\\n');
+                if (navigator.userAgent.includes('Chrome')) {
+                    const firstLineWithAt = lines.find(line => / *at/.test(line));
+                    lineNumber = firstLineWithAt.split(':').at(-2);
+                } else {
+                    // Tested on Firefox
+                    lineNumber = lines[0].split(':').at(-2);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            return lineNumber;
         }
         async function main(files) {
             allowRestart = false;
@@ -315,10 +352,21 @@ ${exampleClass.example.toString()}
                     pcx,
                     files,
                 });
-            } catch (e) {
-                console.error(e, "Stack:", e.stack);
-                window.top.dispatchEvent(new CustomEvent('exampleError', {detail: e}));
+            } catch (error) {
                 allowRestart = true;
+                console.error(error);
+                let lineno = 3; // 2 will be substracted in code-editor.mjs, minimum 1
+                let message = error; // could be only a string
+                if (typeof error !== 'string') {
+                    message = error.message;
+                }
+                if (error.stack) {
+                    lineno = lineNumberFromStack(error.stack);
+                }
+                const filename = location.href;
+                const detail = { error, message, lineno, filename };
+                const customEvent = new CustomEvent('exampleError', {detail});
+                window.top.dispatchEvent(customEvent);
                 return;
             }
             ready = true;
