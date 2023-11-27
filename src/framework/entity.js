@@ -383,15 +383,15 @@ class Entity extends GraphNode {
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
      * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
-     * @returns {import('./script/script-type.js').ScriptType} A script instance of specified type, if the entity or any of its descendants
+     * @returns {import('./script/script-type.js').ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
      * has one. Returns undefined otherwise.
      * @example
      * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
      * var controller = entity.findScript("playerController");
      */
     findScript(nameOrType) {
-        const entity = this.findOne(node => node.c && node.c.script && node.c.script.has(nameOrType));
-        return entity && entity.c.script.get(nameOrType);
+        const entity = this.findOne(node => node.c?.script?.has(nameOrType));
+        return entity?.c.script.get(nameOrType);
     }
 
     /**
@@ -405,7 +405,7 @@ class Entity extends GraphNode {
      * var controllers = entity.findScripts("playerController");
      */
     findScripts(nameOrType) {
-        const entities = this.find(node => node.c && node.c.script && node.c.script.has(nameOrType));
+        const entities = this.find(node => node.c?.script?.has(nameOrType));
         return entities.map(entity => entity.c.script.get(nameOrType));
     }
 

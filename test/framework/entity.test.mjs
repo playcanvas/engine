@@ -686,21 +686,21 @@ describe('Entity', function () {
             expect(script).to.be.an.instanceof(MyScript);
         });
 
-        it('returns null when script is not found', function () {
+        it('returns undefined when script is not found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
             child.addComponent('script');
             const script = root.findScript('myScript');
-            expect(script).to.be.null;
+            expect(script).to.be.undefined;
         });
 
-        it('returns null when script component is not found', function () {
+        it('returns undefined when script component is not found', function () {
             const root = new Entity();
             const child = new Entity();
             root.addChild(child);
             const script = root.findScript('myScript');
-            expect(script).to.be.null;
+            expect(script).to.be.undefined;
         });
 
         it('finds script on child entity', function () {
@@ -735,7 +735,7 @@ describe('Entity', function () {
             root.addComponent('script');
             root.script.create('myScript');
             const script = child.findScript('myScript');
-            expect(script).to.be.null;
+            expect(script).to.be.undefined;
         });
 
     });
