@@ -45,6 +45,29 @@ function createTest(attr, value) {
 }
 
 /**
+ * Helper function to recurse findOne without calling createTest constantly.
+ *
+ * @param {GraphNode} node - Current node.
+ * @param {FindNodeCallback} test - Test function.
+ * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+ * node is found.
+ * @ignore
+ */
+function findNode(node, test) {
+    if (test(node))
+        return node;
+
+    const len = node._children.length;
+    for (let i = 0; i < len; ++i) {
+        const result = findNode(node._children[i], test);
+        if (result)
+            return result;
+    }
+
+    return null;
+}
+
+/**
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
  *
@@ -592,18 +615,7 @@ class GraphNode extends EventHandler {
      */
     findOne(attr, value) {
         const test = createTest(attr, value);
-        const len = this._children.length;
-
-        if (test(this))
-            return this;
-
-        for (let i = 0; i < len; ++i) {
-            const result = this._children[i].findOne(test);
-            if (result)
-                return result;
-        }
-
-        return null;
+        return findNode(this, test);
     }
 
     /**
