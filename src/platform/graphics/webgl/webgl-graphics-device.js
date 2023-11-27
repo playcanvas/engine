@@ -354,6 +354,11 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
+        // #5856 - turn off antialiasing on Windows Firefox
+        if (platform.browserName === 'firefox' && platform.name === 'windows') {
+            options.antialias = false;
+        }
+
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
