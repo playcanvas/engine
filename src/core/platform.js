@@ -56,7 +56,7 @@ const platform = {
      * String identifying the current platform. Can be one of: android, ios, windows, osx, linux,
      * cros or null.
      *
-     * @type {string|null}
+     * @type {'android' | 'ios' | 'windows' | 'osx' | 'linux' | 'cros' | null}
      * @ignore
      */
     name: platformName,
