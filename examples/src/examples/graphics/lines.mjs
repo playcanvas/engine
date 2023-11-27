@@ -211,7 +211,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class LinesExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lines';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

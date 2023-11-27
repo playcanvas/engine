@@ -483,7 +483,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class ContactHardeningShadowsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Contact Hardening Shadows';
     static WEBGPU_ENABLED = false;
     static controls = controls;
     static example = example;

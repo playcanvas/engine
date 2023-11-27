@@ -132,7 +132,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class ShaderToonExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shader Toon';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

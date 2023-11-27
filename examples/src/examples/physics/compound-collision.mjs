@@ -420,7 +420,6 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
 
 class CompoundCollisionExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Compound Collision';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

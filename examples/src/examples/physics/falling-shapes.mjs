@@ -275,7 +275,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
 class FallingShapesExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Falling Shapes';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

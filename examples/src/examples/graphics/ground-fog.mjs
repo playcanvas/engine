@@ -205,7 +205,6 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
 
 export class GroundFogExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Ground Fog';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

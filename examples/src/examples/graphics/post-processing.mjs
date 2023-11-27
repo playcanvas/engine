@@ -418,7 +418,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class PostprocessingExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Post Processing XX';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

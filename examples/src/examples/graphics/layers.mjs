@@ -125,7 +125,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class LayersExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Layers';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

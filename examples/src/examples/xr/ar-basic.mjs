@@ -142,7 +142,6 @@ async function example({ canvas }) {
 
 class ArBasicExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Basic';
     static example = example;
 }
 

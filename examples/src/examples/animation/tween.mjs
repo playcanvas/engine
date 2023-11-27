@@ -175,7 +175,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class TweenExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Tween';
     static WEBGPU_ENABLED = true;
     static example = example;
     // added by examples/scripts/generate-standalone-files.mjs

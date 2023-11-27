@@ -164,7 +164,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 class LoadersGlExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'Loaders.gl';
     static FILES = {
         'shader.vert': vshader,
         'shader.frag': fshader,
