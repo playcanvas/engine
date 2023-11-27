@@ -166,7 +166,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class LitMaterialExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lit Material';
     static HIDDEN = true;
     static WEBGPU_ENABLED = true;
     static example = example;

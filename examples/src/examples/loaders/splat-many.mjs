@@ -124,7 +124,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 export class SplatManyExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'Splat Many';
     static example = example;
 
     static FILES = {

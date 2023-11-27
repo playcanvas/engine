@@ -200,7 +200,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data, glsla
 }
 class BlendTrees1DExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Blend Trees 1D';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

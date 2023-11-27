@@ -167,7 +167,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MaterialBasicExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Material Basic';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

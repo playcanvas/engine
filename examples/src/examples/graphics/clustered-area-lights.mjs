@@ -314,7 +314,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class ClusteredAreaLightsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Area Lights';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

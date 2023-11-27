@@ -153,6 +153,5 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ParticlesAnimIndexExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Particles: Anim Index';
     static example = example;
 }

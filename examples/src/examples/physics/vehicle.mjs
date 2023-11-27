@@ -237,7 +237,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, g
 
 class VehicleExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Vehicle';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

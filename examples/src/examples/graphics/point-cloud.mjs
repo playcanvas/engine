@@ -88,7 +88,6 @@ async function example({ canvas, files, assetPath }) {
 
 export class PointCloudExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud';
     static FILES = {
         'shader.vert': /* glsl */`
 // Attributes per vertex: position

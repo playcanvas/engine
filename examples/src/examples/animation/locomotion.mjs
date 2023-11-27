@@ -421,7 +421,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 }
 class LocomotionExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Locomotion';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;
