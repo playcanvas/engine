@@ -356,7 +356,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // #5856 - turn off antialiasing on Windows Firefox
         if (platform.browserName === 'firefox' && platform.name === 'windows') {
-            options.antialias = false;
+            const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
+            const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
+            const firefoxVersion = match ? match[1] : null;
+            if (firefoxVersion && parseFloat(firefoxVersion) >= 120) {
+                options.antialias = false;
+                Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox 120+. Current version: " + firefoxVersion);
+            }
         }
 
         let gl = null;
