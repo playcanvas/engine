@@ -24,8 +24,6 @@ const FILE_TYPE_LANGUAGES = {
     'mjs': 'javascript',
 };
 
-let monacoEditor;
-
 /**
  * @typedef {object} Props
  */
@@ -165,12 +163,11 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor
+     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The Monaco editor.
      */
     editorDidMount(editor) {
         this.editor = editor;
         window.editor = editor;
-        monacoEditor = editor;
         // Hot reload code via Shift + Enter
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
         const codePane = document.getElementById('codePane');
@@ -229,7 +226,7 @@ class CodeEditor extends TypedComponent {
      */
     selectFile(selectedFile) {
         this.mergeState({ selectedFile });
-        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+        this.editor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
     }
 
     renderTabs() {
