@@ -276,7 +276,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 class BlendTrees2DDirectionalExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Blend Trees 2D Directional';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

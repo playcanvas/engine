@@ -177,7 +177,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class RenderPassExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Render Pass';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

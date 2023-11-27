@@ -188,7 +188,6 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
 
 export class ModelOutlineExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Outline';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

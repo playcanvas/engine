@@ -83,6 +83,5 @@ async function example({ canvas, assetPath, scriptsPath }) {
 
 export class ObjExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'OBJ';
     static example = example;
 }

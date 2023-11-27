@@ -174,7 +174,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class GltfExportExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'GLTF Export';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

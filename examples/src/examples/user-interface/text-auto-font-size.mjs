@@ -128,7 +128,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class TextAutoFontSizeExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text Auto Font Size';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

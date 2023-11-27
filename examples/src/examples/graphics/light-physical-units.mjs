@@ -429,7 +429,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class LightPhysicalUnitsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Light Physical Units';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

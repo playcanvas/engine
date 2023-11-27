@@ -144,7 +144,6 @@ async function example({ canvas, files }) {
 
 export class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud Simulation';
     static FILES = {
         'shader.vert': /* glsl */`
 // Attributes per vertex: position

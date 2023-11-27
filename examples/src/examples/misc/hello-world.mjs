@@ -74,7 +74,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 class HelloWorldExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Hello World';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -151,7 +151,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class TextExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

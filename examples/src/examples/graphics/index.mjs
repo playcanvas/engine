@@ -33,7 +33,7 @@ export * from "./model-asset.mjs";
 export * from "./model-outline.mjs";
 export * from "./model-textured-box.mjs";
 export * from "./multi-view.mjs";
-export * from "./mrt.mjs";
+export * from "./multi-render-targets.mjs";
 export * from "./painter.mjs";
 export * from "./paint-mesh.mjs";
 export * from "./particles-anim-index.mjs";
