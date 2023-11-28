@@ -205,7 +205,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ShaderCompileExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shader Compile';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

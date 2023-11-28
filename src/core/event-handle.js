@@ -90,7 +90,7 @@ class EventHandle {
     }
 
     once(name, callback, scope = this) {
-        Debug.deprecated('Using chaning with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.');
+        Debug.deprecated('Using chaining with EventHandler.once is deprecated, subscribe to an event from EventHandler directly instead.');
         return this.handler._addCallback(name, callback, scope, true);
     }
 

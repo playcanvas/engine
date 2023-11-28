@@ -304,7 +304,6 @@ async function example({ canvas }) {
 
 class ArPlanesDetectionExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Plane Detection';
     static example = example;
 }
 

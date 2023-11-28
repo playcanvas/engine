@@ -142,7 +142,6 @@ async function example({ canvas, assetPath, scriptsPath, ammoPath }) {
 
 class FirstPersonExample {
     static CATEGORY = 'Camera';
-    static NAME = 'First Person';
     static example = example;
 }
 

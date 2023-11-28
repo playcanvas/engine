@@ -200,7 +200,6 @@ async function example({ canvas, files, assetPath }) {
 
 export class PaintMeshExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Paint Mesh';
 
     static FILES = {
         'shader.vert': /* glsl */`

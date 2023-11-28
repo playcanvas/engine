@@ -47,10 +47,12 @@ class RenderPassRenderActions extends RenderPass {
     addRenderAction(renderAction) {
         this.renderActions.push(renderAction);
 
-        // first render action sets up clear params
+        // first render action
         if (this.renderActions.length === 1) {
 
             const camera = renderAction.camera;
+
+            // set up clear params
             this.fullSizeClearRect = camera.camera.fullSizeClearRect;
 
             // only if camera rendering covers the full viewport
@@ -90,6 +92,38 @@ class RenderPassRenderActions extends RenderPass {
         this.addRenderAction(ra);
     }
 
+    frameUpdate() {
+        super.frameUpdate();
+
+        // add directional shadow passes if needed for the cameras used in this render pass
+        const { renderer, renderActions } = this;
+        for (let i = 0; i < renderActions.length; i++) {
+            const renderAction = renderActions[i];
+            const cameraComp = renderAction.camera;
+            const camera = cameraComp.camera;
+
+            // if this camera uses directional shadow lights
+            const shadowDirLights = this.renderer.cameraDirShadowLights.get(camera);
+            if (shadowDirLights) {
+
+                for (let l = 0; l < shadowDirLights.length; l++) {
+                    const light = shadowDirLights[l];
+
+                    // the the shadow map is not already rendered for this light
+                    if (renderer.dirLightShadows.get(light) !== camera) {
+                        renderer.dirLightShadows.set(light, camera);
+
+                        // render the shadow before this render pass
+                        const shadowPass = renderer._shadowRendererDirectional.getLightRenderPass(light, camera);
+                        if (shadowPass) {
+                            this.beforePasses.push(shadowPass);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     before() {
         const { renderActions } = this;
         if (renderActions.length) {
@@ -121,6 +155,9 @@ class RenderPassRenderActions extends RenderPass {
                 ra.camera.onPostRender();
             }
         }
+
+        // remove shadow before-passes
+        this.beforePasses.length = 0;
     }
 
     /**

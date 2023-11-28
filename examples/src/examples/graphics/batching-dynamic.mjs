@@ -144,7 +144,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Batching Dynamic';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

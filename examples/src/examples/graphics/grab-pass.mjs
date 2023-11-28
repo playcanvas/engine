@@ -180,7 +180,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class GrabPassExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Grab Pass';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

@@ -343,7 +343,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class LightsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

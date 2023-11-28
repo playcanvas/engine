@@ -419,7 +419,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights Baked AO';
     static controls = controls;
     static example = example;
     static WEBGPU_ENABLED = false; // house is just gray

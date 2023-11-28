@@ -429,7 +429,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 class ReflectionBoxExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Reflection Box';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

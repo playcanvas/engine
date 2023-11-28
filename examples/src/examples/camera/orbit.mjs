@@ -75,7 +75,6 @@ async function example({ canvas, assetPath, scriptsPath }) {
 
 class OrbitExample {
     static CATEGORY = 'Camera';
-    static NAME = 'Orbit';
     static example = example;
 }
 

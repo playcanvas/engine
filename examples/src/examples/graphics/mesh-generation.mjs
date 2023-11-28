@@ -231,7 +231,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MeshGenerationExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Generation';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -238,6 +238,9 @@ class XrManager extends EventHandler {
                 this._deviceAvailabilityCheck();
             });
             this._deviceAvailabilityCheck();
+
+            this.app.graphicsDevice.on('devicelost', this._onDeviceLost, this);
+            this.app.graphicsDevice.on('devicerestored', this._onDeviceRestored, this);
         }
     }
 
@@ -672,23 +675,8 @@ class XrManager extends EventHandler {
         // so we need to calculate this based on devicePixelRatio of the dislay and what
         // we've set this in the graphics device
         Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
-        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
 
-        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
-            alpha: true,
-            depth: true,
-            stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor,
-
-            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
-            antialias: false
-        });
-
-        session.updateRenderState({
-            baseLayer: this._baseLayer,
-            depthNear: this._depthNear,
-            depthFar: this._depthFar
-        });
+        this._createBaseLayer();
 
         // request reference space
         session.requestReferenceSpace(spaceType).then((referenceSpace) => {
@@ -729,6 +717,54 @@ class XrManager extends EventHandler {
             depthNear: this._depthNear,
             depthFar: this._depthFar
         });
+    }
+
+    _createBaseLayer() {
+        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
+
+        this._baseLayer = new XRWebGLLayer(this._session, this.app.graphicsDevice.gl, {
+            alpha: true,
+            depth: true,
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor,
+            antialias: false
+        });
+
+        this._session.updateRenderState({
+            baseLayer: this._baseLayer,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
+        });
+    }
+
+    /** @private */
+    _onDeviceLost() {
+        if (!this._session)
+            return;
+
+        this._baseLayer = null;
+
+        this._session.updateRenderState({
+            baseLayer: this._baseLayer,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
+        });
+    }
+
+    /** @private */
+    _onDeviceRestored() {
+        if (!this._session)
+            return;
+
+        setTimeout(() => {
+            this.app.graphicsDevice.gl.makeXRCompatible()
+                .then(() => {
+                    this._createBaseLayer();
+                })
+                .catch((ex) => {
+                    this.fire('error', ex);
+                });
+        }, 0);
     }
 
     /**
