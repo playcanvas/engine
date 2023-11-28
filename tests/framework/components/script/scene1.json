@@ -89,6 +89,21 @@
         1
       ],
       "components": {
+        "script": {
+          "enabled": true,
+          "order": [
+            "scriptWithAttributes"
+          ],
+          "scripts": {
+            "scriptWithAttributes": {
+              "enabled": true,
+              "attributes": {
+                "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
+                "attribute2": 2
+              }
+            }
+          }
+        },
         "esmscript": {
           "enabled": true,
           "modules": [{
@@ -149,6 +164,21 @@
         1
       ],
       "components": {
+        "script": {
+          "enabled": true,
+          "order": [
+            "scriptWithAttributes"
+          ],
+          "scripts": {
+            "scriptWithAttributes": {
+              "enabled": true,
+              "attributes": {
+                "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
+                "attribute2": 2
+              }
+            }
+          }
+        },
         "esmscript": {
           "enabled": true,
           "modules": [{
@@ -185,6 +215,21 @@
         1
       ],
       "components": {
+        "script": {
+          "enabled": false,
+          "order": [
+            "scriptWithAttributes"
+          ],
+          "scripts": {
+            "scriptWithAttributes": {
+              "enabled": true,
+              "attributes": {
+                "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
+                "attribute2": 2
+              }
+            }
+          }
+        },
         "esmscript": {
           "enabled": true,
           "modules": [{
@@ -221,6 +266,21 @@
         1
       ],
       "components": {
+        "script": {
+          "enabled": true,
+          "order": [
+            "scriptWithAttributes"
+          ],
+          "scripts": {
+            "scriptWithAttributes": {
+              "enabled": false,
+              "attributes": {
+                "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
+                "attribute2": 2
+              }
+            }
+          }
+        },
         "esmscript": {
           "enabled": true,
           "modules": [{
