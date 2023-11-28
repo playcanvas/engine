@@ -460,7 +460,14 @@ class EsmScriptComponent extends Component {
     static populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
 
         return reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
-            object[key] = rawToValue(app, attributeDefinition, value);
+            const mappedValue = rawToValue(app, attributeDefinition, value);
+
+            if (mappedValue === null) {
+                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`)
+            } else {
+                object[key] = mappedValue;
+            }
+
         }, object);
 
     }

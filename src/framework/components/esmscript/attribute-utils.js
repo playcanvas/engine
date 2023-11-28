@@ -6,6 +6,7 @@ import { Vec3 } from "../../../core/math/vec3.js";
 import { Vec4 } from "../../../core/math/vec4.js";
 import { Asset } from "../../../framework/asset/asset.js";
 import { GraphNode } from "../../../scene/graph-node.js";
+import { Debug } from "../../../core/debug.js";
 
 /**
  * @callback UpdateFunction
@@ -75,13 +76,17 @@ const VALID_ATTR_TYPES = new Set([
  * isValidAttributeDefinition({ x: 'y' }); // false
  */
 export const isValidAttributeDefinition = (attributeDefinition) => {
-    return attributeDefinition && VALID_ATTR_TYPES.has(attributeDefinition.type);
+
+    return attributeDefinition && attributeDefinition.hasOwnProperty('type');
+
+    // return VALID_ATTR_TYPES.has(attributeDefinition.type) ||
+    //     (typeof attributeDefinition.type === 'object' && !Array.isArray(attributeDefinition.type));
 };
 
 /**
- * A reducer function that recursively iterates over an attribute definition,
+ * A function that recursively iterates through an attribute definition,
  * performing a callback for each valid entry and accumulating the result.
- * Useful for copying, merging or assigning attributes onto an object
+ * Useful for copying, merging or assigning attributes onto objects
  *
  * @param {AttributeDefinitionDict} attributeDefDict - The set of attribute definitions to iterate over
  * @param {Object} attributes - An associated map of attribute values
@@ -95,21 +100,99 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
 
     return attributeDefEntries.reduce((nestedObject, [attributeName, attributeDefinition]) => {
 
-        // early out if the attribute already exists.
+        // Return early if the attribute already exists
         if (nestedObject.hasOwnProperty(attributeName)) return nestedObject;
 
-        // Check if it's a valid attribute definition and not already defined
+        const value = attributes?.hasOwnProperty(attributeName) ?
+            attributes[attributeName] :
+            attributeDefinition.default;
+        
+        const type = attributeDefinition?.type;
+        const isArrayType = !!attributeDefinition?.array;
+        const isValueArray = Array.isArray(value);
+        
+        // An attributes `type` can either be simple, ie. a string `{ type: 'rgba' }`
+        // or it can be an object containing nested attributes ie. `{ type: CustomObjectType }`
+        const isSimpleType = typeof type === 'string';
+
+        // Warn and return early if the attribute is marked with `{ array: true }`
+        // but the value is not an array
+        if (isArrayType && value !== undefined && !isValueArray) {
+            Debug.warn(`'${attributeName}' is an array attribute, but it's value or default is a '${typeof value}'`);
+            nestedObject[attributeName] = [];
+            return nestedObject;
+        }
+
+        // If the definition has a `type` property then assume it's valid attribute definition
         if (isValidAttributeDefinition(attributeDefinition)) {
 
-            // Return the attributes value if it exists, otherwise, use the 'default' value
-            const value = attributes?.hasOwnProperty(attributeName) ?
-                attributes[attributeName] :
-                attributeDefinition.default;
 
-            // perform the callback
-            callback(nestedObject, attributeName, attributeDefinition, value);
+            // A shorthand
+            const valueArr = isValueArray && isArrayType ? value : [value];
+
+            // A simple attribute type is one who's s
+            if (isSimpleType) {
+
+                /**
+                 * If this is a simple attribute defined with a string
+                 */
+
+                if (!isArrayType) {
+
+                    callback(nestedObject, attributeName, attributeDefinition, value);
+
+                } else {
+
+                    nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
+                        callback(acc, i, attributeDefinition, arrValue);
+                        return acc;
+                    }, []);
+
+                }
+
+            } else {
+
+                /**
+                 * For any complex attribute who's `type` is not a string,
+                 * we must recurse through the `type` itself
+                 */
+
+                if (!isArrayType) {
+
+                    nestedObject[attributeName] = reduceAttributeDefinition(type, value, callback, {});
+
+                } else {
+
+                    let attr;
+                    nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
+                        attr = reduceAttributeDefinition(type, arrValue, callback, {});
+                        if (attr !== undefined) acc[i] = attr;
+                        return acc;
+                    }, []);
+
+                }
+
+            }
+
+            // Run the callback on each item in the array and create a new array
+            // const arr = valueArr.reduce(reducer, []);
+
+            // If an array, assign the full array, otherwise use the first element
+            // nestedObject[attributeName] = arr;
 
         } else if (typeof attributeDefinition === 'object') {
+
+            /**
+             * This a mechanism to group attributes together
+             * @example
+             * const attr = {
+             *  color: { type: 'rgb', default: '#ff0000' },
+             *  motion: { // groups motion settings under `entity.motion.*`
+             *      speed: { type: 'number', default: 100 },
+             *      velocity: { type: 'number', default: 2 },
+             *  }
+             * }
+             */
 
             nestedObject[attributeName] = reduceAttributeDefinition(
                 attributeDefinition,
@@ -118,7 +201,12 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
                 {}
             );
 
+        } else {
+
+            // It's not an object or a attribute definition, and will be ignored
+            Debug.warn(`The attribute '${attributeName}' is not a valid definition and will be ignored.`);
         }
+
         return nestedObject;
     }, object);
 };
@@ -240,6 +328,4 @@ export function rawToValue(app, attributeDefinition, value) {
             }
             break;
     }
-
-    return value;
 }
