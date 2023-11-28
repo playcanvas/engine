@@ -483,6 +483,10 @@ function reprojectTexture(source, target, options = {}) {
         const innerWidth = w - p * 2;
         const innerHeight = h - p * 2;
 
+        if (innerWidth <= 0 || innerHeight <= 0) {
+            return false;
+        }
+
         uvModParam.setValue([
             (innerWidth + p * 2) / innerWidth,
             (innerHeight + p * 2) / innerHeight,
@@ -535,6 +539,8 @@ function reprojectTexture(source, target, options = {}) {
     }
 
     DebugGraphics.popGpuMarker(device);
+
+    return true;
 }
 
 export { reprojectTexture };
