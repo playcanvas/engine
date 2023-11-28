@@ -463,7 +463,7 @@ class EsmScriptComponent extends Component {
             const mappedValue = rawToValue(app, attributeDefinition, value);
 
             if (mappedValue === null) {
-                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`)
+                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`);
             } else {
                 object[key] = mappedValue;
             }

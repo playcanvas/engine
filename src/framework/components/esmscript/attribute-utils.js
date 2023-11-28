@@ -49,7 +49,7 @@ import { Debug } from "../../../core/debug.js";
  * A list of valid attribute types
  * @ignore
  */
-const VALID_ATTR_TYPES = new Set([
+export const VALID_ATTR_TYPES = new Set([
     "asset",
     "boolean",
     "curve",
@@ -106,11 +106,11 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
         const value = attributes?.hasOwnProperty(attributeName) ?
             attributes[attributeName] :
             attributeDefinition.default;
-        
+
         const type = attributeDefinition?.type;
         const isArrayType = !!attributeDefinition?.array;
         const isValueArray = Array.isArray(value);
-        
+
         // An attributes `type` can either be simple, ie. a string `{ type: 'rgba' }`
         // or it can be an object containing nested attributes ie. `{ type: CustomObjectType }`
         const isSimpleType = typeof type === 'string';

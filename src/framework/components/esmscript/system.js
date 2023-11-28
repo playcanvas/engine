@@ -3,13 +3,6 @@ import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
 import { EsmScriptComponentData } from './data.js';
-import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
-
-// const convertRawAttributesToValues = (app, attributeDefinitions, values) => {
-//     return reduceAttributeDefinition(attributeDefinitions, values, (object, key, attributeDefinition, value) => {
-//         object[key] = rawToValue(app, attributeDefinition, value);
-//     });
-// };
 
 /**
  * Allows scripts to be attached to an Entity and executed.
