@@ -414,6 +414,15 @@ function reprojectTexture(source, target, options = {}) {
         Debug.deprecated('please use the updated pc.reprojectTexture API.');
     }
 
+    // calculate inner width and height
+    const seamPixels = options.seamPixels ?? 0;
+    const innerWidth = (options.rect?.z ?? target.width) - seamPixels * 2;
+    const innerHeight = (options.rect?.w ?? target.height) - seamPixels * 2;
+    if (innerWidth <= 0 || innerHeight <= 0) {
+        // early out if inner space is empty
+        return false;
+    }
+
     // table of distribution -> function name
     const funcNames = {
         'none': 'reproject',
@@ -475,23 +484,12 @@ function reprojectTexture(source, target, options = {}) {
     const constantParams2 = device.scope.resolve("params2");
 
     const uvModParam = device.scope.resolve("uvMod");
-    if (options?.seamPixels) {
-        const p = options.seamPixels;
-        const w = options.rect ? options.rect.z : target.width;
-        const h = options.rect ? options.rect.w : target.height;
-
-        const innerWidth = w - p * 2;
-        const innerHeight = h - p * 2;
-
-        if (innerWidth <= 0 || innerHeight <= 0) {
-            return false;
-        }
-
+    if (seamPixels > 0) {
         uvModParam.setValue([
-            (innerWidth + p * 2) / innerWidth,
-            (innerHeight + p * 2) / innerHeight,
-            -p / innerWidth,
-            -p / innerHeight
+            (innerWidth + seamPixels * 2) / innerWidth,
+            (innerHeight + seamPixels * 2) / innerHeight,
+            -seamPixels / innerWidth,
+            -seamPixels / innerHeight
         ]);
     } else {
         uvModParam.setValue([1, 1, 0, 0]);
