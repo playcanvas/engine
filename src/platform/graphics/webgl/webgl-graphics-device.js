@@ -359,9 +359,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
             const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
             const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
             const firefoxVersion = match ? match[1] : null;
-            if (firefoxVersion && parseFloat(firefoxVersion) >= 120) {
-                options.antialias = false;
-                Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox 120+. Current version: " + firefoxVersion);
+            if (firefoxVersion) {
+                const version = parseFloat(firefoxVersion);
+                if (version >= 120 || version === 115) {
+                    options.antialias = false;
+                    Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: " + firefoxVersion);
+                }
             }
         }
 
