@@ -96,7 +96,7 @@ class WebgpuTexture {
             size: {
                 width: texture.width,
                 height: texture.height,
-                depthOrArrayLayers: texture.cubemap ? 6 : 1
+                depthOrArrayLayers: texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1)
             },
             format: this.format,
             mipLevelCount: mipLevelCount,
@@ -166,6 +166,7 @@ class WebgpuTexture {
         const defaultViewDimension = () => {
             if (texture.cubemap) return 'cube';
             if (texture.volume) return '3d';
+            if (texture.array) return '2d-array';
             return '2d';
         };
 
@@ -296,6 +297,7 @@ class WebgpuTexture {
 
             // upload texture data if any
             let anyUploads = false;
+            let anyLevelMissing = false;
             const requiredMipLevels = texture.requiredMipLevels;
             for (let mipLevel = 0; mipLevel < requiredMipLevels; mipLevel++) {
 
@@ -322,12 +324,40 @@ class WebgpuTexture {
 
                                     Debug.error('Unsupported texture source data for cubemap face', faceSource);
                                 }
+                            } else {
+                                anyLevelMissing = true;
                             }
                         }
 
                     } else if (texture._volume) {
 
                         Debug.warn('Volume texture data upload is not supported yet', this.texture);
+
+                    } else if (texture.array) { // texture array
+
+                        if (texture.arrayLength === mipObject.length) {
+
+                            for (let index = 0; index < texture._arrayLength; index++) {
+                                const arraySource = mipObject[index];
+
+                                if (this.isExternalImage(arraySource)) {
+
+                                    this.uploadExternalImage(device, arraySource, mipLevel, index);
+                                    anyUploads = true;
+
+                                } else if (ArrayBuffer.isView(arraySource)) { // typed array
+
+                                    this.uploadTypedArrayData(device, arraySource, mipLevel, index);
+                                    anyUploads = true;
+
+                                } else {
+
+                                    Debug.error('Unsupported texture source data for texture array entry', arraySource);
+                                }
+                            }
+                        } else {
+                            anyLevelMissing = true;
+                        }
 
                     } else { // 2d texture
 
@@ -346,10 +376,12 @@ class WebgpuTexture {
                             Debug.error('Unsupported texture source data', mipObject);
                         }
                     }
+                } else {
+                    anyLevelMissing = true;
                 }
             }
 
-            if (anyUploads && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
+            if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
         }
@@ -363,7 +395,7 @@ class WebgpuTexture {
             (image instanceof OffscreenCanvas);
     }
 
-    uploadExternalImage(device, image, mipLevel, face) {
+    uploadExternalImage(device, image, mipLevel, index) {
 
         Debug.assert(mipLevel < this.descr.mipLevelCount, `Accessing mip level ${mipLevel} of texture with ${this.descr.mipLevelCount} mip levels`, this);
 
@@ -376,7 +408,7 @@ class WebgpuTexture {
         const dst = {
             texture: this.gpuTexture,
             mipLevel: mipLevel,
-            origin: [0, 0, face],
+            origin: [0, 0, index],
             aspect: 'all'  // can be: "all", "stencil-only", "depth-only"
         };
 
@@ -392,11 +424,11 @@ class WebgpuTexture {
         // create 2d context so webgpu can upload the texture
         dummyUse(image instanceof HTMLCanvasElement && image.getContext('2d'));
 
-        Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
+        Debug.trace(TRACEID_RENDER_QUEUE, `IMAGE-TO-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
         device.wgpu.queue.copyExternalImageToTexture(src, dst, copySize);
     }
 
-    uploadTypedArrayData(device, data, mipLevel, face) {
+    uploadTypedArrayData(device, data, mipLevel, index) {
 
         const texture = this.texture;
         const wgpu = device.wgpu;
@@ -404,7 +436,7 @@ class WebgpuTexture {
         /** @type {GPUImageCopyTexture} */
         const dest = {
             texture: this.gpuTexture,
-            origin: [0, 0, face],
+            origin: [0, 0, index],
             mipLevel: mipLevel
         };
 
@@ -456,7 +488,7 @@ class WebgpuTexture {
         // submit existing scheduled commands to the queue before copying to preserve the order
         device.submit();
 
-        Debug.trace(TRACEID_RENDER_QUEUE, `WRITE-TEX: mip:${mipLevel} face:${face} ${this.texture.name}`);
+        Debug.trace(TRACEID_RENDER_QUEUE, `WRITE-TEX: mip:${mipLevel} index:${index} ${this.texture.name}`);
         wgpu.queue.writeTexture(dest, data, dataLayout, size);
     }
 }
