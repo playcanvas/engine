@@ -57,9 +57,10 @@ function findNode(node, test) {
     if (test(node))
         return node;
 
-    const len = node._children.length;
+    const children = node._children;
+    const len = children.length;
     for (let i = 0; i < len; ++i) {
-        const result = findNode(node._children[i], test);
+        const result = findNode(children[i], test);
         if (result)
             return result;
     }
@@ -715,7 +716,8 @@ class GraphNode extends EventHandler {
         callback.call(thisArg, this);
 
         const children = this._children;
-        for (let i = 0; i < children.length; i++) {
+        const len = children.length;
+        for (let i = 0; i < len; ++i) {
             children[i].forEach(callback, thisArg);
         }
     }
