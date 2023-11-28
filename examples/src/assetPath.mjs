@@ -150,3 +150,20 @@ function getThumbnailPath() {
     return href.substring(0, i) + "/examples/dist/thumbnails/";
 }
 export const thumbnailPath = getThumbnailPath();
+
+/**
+ * @example
+ * console.log(getLogo());
+ * // Via app.html, outputs:
+ * // 'http://127.0.0.1/playcanvas-engine/examples/src/static/playcanvas-logo.png'
+ * // Via `npm run serve`, outputs: './playcanvas-logo.png'
+ * @returns {string} URL of logo.
+ */
+function getLogo() {
+    const i = href.lastIndexOf("/examples/");
+    if (i === -1) { // npm run serve
+        return './playcanvas-logo.png';
+    }
+    return href.substring(0, i) + "/examples/src/static/playcanvas-logo.png";
+}
+export const logo = getLogo();
