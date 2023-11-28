@@ -419,7 +419,7 @@ function reprojectTexture(source, target, options = {}) {
     const seamPixels = options.seamPixels ?? 0;
     const innerWidth = (options.rect?.z ?? target.width) - seamPixels * 2;
     const innerHeight = (options.rect?.w ?? target.height) - seamPixels * 2;
-    if (innerWidth <= 0 || innerHeight <= 0) {
+    if (innerWidth < 1 || innerHeight < 1) {
         // early out if inner space is empty
         return false;
     }
