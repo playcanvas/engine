@@ -95,6 +95,7 @@ ${exampleClass.example.toString()}
         <script>
         const ENGINE_PATH = '${process.env.ENGINE_PATH ?? ''}';
         const NODE_ENV = '${process.env.NODE_ENV ?? ''}';
+        const RTI = '${process.env.RTI ?? ''}';
         /**
          * Used in outline and posteffects to make ES5 scripts work in ES6
          * @example
@@ -168,6 +169,9 @@ ${exampleClass.example.toString()}
             if (ENGINE_PATH.length) {
                 const entryPoint = ENGINE_PATH.split('/').pop();
                 specifiedEngine = './ENGINE_PATH/' + entryPoint;
+            }
+            if (RTI === 'ON') {
+                specifiedEngine = './ENGINE_PATH/playcanvas.rti.js';
             }
             return specifiedEngine;
         }

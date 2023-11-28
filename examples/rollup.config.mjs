@@ -11,6 +11,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
+import { buildTargetRTI } from '../utils/rollup-build-target-rti.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -65,7 +66,7 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-let { NODE_ENV = '', ENGINE_PATH = '' } = process.env;
+let { NODE_ENV = '', ENGINE_PATH = '', RTI = '' } = process.env;
 
 // If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
 // requires no additional build shells.
@@ -166,7 +167,7 @@ function buildAndWatchStandaloneExamples() {
             }
         },
         generateBundle() {
-            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} npm run build:standalone`;
+            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} RTI=${RTI} npm run build:standalone`;
             console.log(cmd);
             exec(cmd);
         }
@@ -239,7 +240,8 @@ const builds = [
             timestamp()
         ]
     },
-    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
+    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js'),
+    process.env.RTI ? buildTargetRTI('es6') : undefined
 ];
 
 export default builds;
