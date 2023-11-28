@@ -41,10 +41,6 @@ class RenderAction {
         // true if this is the last render action using this camera
         this.lastCameraUse = false;
 
-        // directional lights that needs to update their shadows for this render action. The array is
-        // filled in during light culling each frame.
-        this.directionalLights = [];
-
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
         /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
         this.viewBindGroups = [];
@@ -66,10 +62,6 @@ class RenderAction {
         this.clearColor = camera?.clearColorBuffer || layer.clearColorBuffer;
         this.clearDepth = camera?.clearDepthBuffer || layer.clearDepthBuffer;
         this.clearStencil = camera?.clearStencilBuffer || layer.clearStencilBuffer;
-    }
-
-    get hasDirectionalShadowLights() {
-        return this.directionalLights.length > 0;
     }
 }
 

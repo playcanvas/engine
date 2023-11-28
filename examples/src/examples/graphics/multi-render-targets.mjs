@@ -197,11 +197,9 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
     return app;
 }
 
-export class MrtExample {
+export class MultiRenderTargetsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Multi Render Targets';
     static WEBGPU_ENABLED = true;
-
     static FILES = {
 
         // shader chunk which outputs to multiple render targets

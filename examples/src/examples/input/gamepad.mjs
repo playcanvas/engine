@@ -94,7 +94,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class GamepadExample {
     static CATEGORY = 'Input';
-    static NAME = 'Gamepad';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -24,6 +24,7 @@ class FrameGraph {
      */
     addRenderPass(renderPass) {
         Debug.assert(renderPass);
+        renderPass.frameUpdate();
 
         const passes = this.renderPasses;
 
@@ -31,6 +32,7 @@ class FrameGraph {
         for (let i = 0; i < beforePasses.length; i++) {
             const pass = beforePasses[i];
             if (pass.enabled) {
+                pass.frameUpdate();
                 passes.push(pass);
             }
         }
@@ -43,6 +45,7 @@ class FrameGraph {
         for (let i = 0; i < afterPasses.length; i++) {
             const pass = afterPasses[i];
             if (pass.enabled) {
+                pass.frameUpdate();
                 passes.push(pass);
             }
         }

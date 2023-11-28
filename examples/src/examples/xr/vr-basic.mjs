@@ -140,7 +140,6 @@ async function example({ canvas }) {
 
 class VrBasicExample {
     static CATEGORY = 'XR';
-    static NAME = 'VR Basic';
     static example = example;
 }
 

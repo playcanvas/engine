@@ -113,7 +113,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ModelTexturedBoxExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Textured Box';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

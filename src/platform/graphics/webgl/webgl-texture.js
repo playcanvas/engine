@@ -97,7 +97,8 @@ class WebglTexture {
         this._glTexture = gl.createTexture();
 
         this._glTarget = texture._cubemap ? gl.TEXTURE_CUBE_MAP :
-            (texture._volume ? gl.TEXTURE_3D : gl.TEXTURE_2D);
+            (texture._volume ? gl.TEXTURE_3D :
+                (texture.array ? gl.TEXTURE_2D_ARRAY : gl.TEXTURE_2D));
 
         switch (texture._format) {
             case PIXELFORMAT_A8:
@@ -263,6 +264,7 @@ class WebglTexture {
                 }
                 break;
             case PIXELFORMAT_111110F: // WebGL2 only
+                Debug.assert(device.isWebGL2, "PIXELFORMAT_111110F texture format is not supported by WebGL1.");
                 this._glFormat = gl.RGB;
                 this._glInternalFormat = gl.R11F_G11F_B10F;
                 this._glPixelType = gl.UNSIGNED_INT_10F_11F_11F_REV;
@@ -299,6 +301,16 @@ class WebglTexture {
 
         const requiredMipLevels = texture.requiredMipLevels;
 
+        if (texture.array) {
+            // for texture arrays we reserve the space in advance
+            gl.texStorage3D(gl.TEXTURE_2D_ARRAY,
+                            requiredMipLevels,
+                            this._glInternalFormat,
+                            texture._width,
+                            texture._height,
+                            texture._arrayLength);
+        }
+
         // Upload all existing mip levels. Initialize 0 mip anyway.
         while (texture._levels[mipLevel] || mipLevel === 0) {
 
@@ -310,6 +322,7 @@ class WebglTexture {
             }
 
             mipObject = texture._levels[mipLevel];
+            resMult = 1 / Math.pow(2, mipLevel);
 
             if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
@@ -344,7 +357,7 @@ class WebglTexture {
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
 
-                        if (texture._glCreated) {
+                        if (this._glCreated) {
                             gl.texSubImage2D(
                                 gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                 mipLevel,
@@ -373,7 +386,7 @@ class WebglTexture {
 
                         const texData = mipObject[face];
                         if (texture._compressed) {
-                            if (texture._glCreated) {
+                            if (this._glCreated && texData) {
                                 gl.compressedTexSubImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -396,7 +409,7 @@ class WebglTexture {
                         } else {
                             device.setUnpackFlipY(false);
                             device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                            if (texture._glCreated) {
+                            if (this._glCreated && texData) {
                                 gl.texSubImage2D(
                                     gl.TEXTURE_CUBE_MAP_POSITIVE_X + face,
                                     mipLevel,
@@ -427,7 +440,6 @@ class WebglTexture {
                 // ----- 3D -----
                 // Image/canvas/video not supported (yet?)
                 // Upload the byte array
-                resMult = 1 / Math.pow(2, mipLevel);
                 if (texture._compressed) {
                     gl.compressedTexImage3D(gl.TEXTURE_3D,
                                             mipLevel,
@@ -451,6 +463,41 @@ class WebglTexture {
                                   this._glPixelType,
                                   mipObject);
                 }
+            } else if (texture.array && typeof mipObject === "object") {
+                if (texture._arrayLength === mipObject.length) {
+                    if (texture._compressed) {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.compressedTexSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                1,
+                                this._glFormat,
+                                mipObject[index]
+                            );
+                        }
+                    } else {
+                        for (let index = 0; index < texture._arrayLength; index++) {
+                            gl.texSubImage3D(
+                                gl.TEXTURE_2D_ARRAY,
+                                mipLevel,
+                                0,
+                                0,
+                                index,
+                                Math.max(Math.floor(texture._width * resMult), 1),
+                                Math.max(Math.floor(texture._height * resMult), 1),
+                                1,
+                                this._glFormat,
+                                this._glPixelType,
+                                mipObject[index]
+                            );
+                        }
+                    }
+                }
             } else {
                 // ----- 2D -----
                 if (device._isBrowserInterface(mipObject)) {
@@ -465,10 +512,13 @@ class WebglTexture {
                         }
                     }
 
+                    const w = mipObject.width || mipObject.videoWidth;
+                    const h = mipObject.height || mipObject.videoHeight;
+
                     // Upload the image, canvas or video
                     device.setUnpackFlipY(texture._flipY);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                    if (texture._glCreated && mipObject.width === texture._width && mipObject.height === texture._height) {
+                    if (this._glCreated && texture._width === w && texture._height === h) {
                         gl.texSubImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -486,12 +536,17 @@ class WebglTexture {
                             this._glPixelType,
                             mipObject
                         );
+
+                        if (mipLevel === 0) {
+                            texture._width = w;
+                            texture._height = h;
+                        }
                     }
                 } else {
                     // Upload the byte array
                     resMult = 1 / Math.pow(2, mipLevel);
                     if (texture._compressed) {
-                        if (texture._glCreated) {
+                        if (this._glCreated && mipObject) {
                             gl.compressedTexSubImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
@@ -515,7 +570,7 @@ class WebglTexture {
                     } else {
                         device.setUnpackFlipY(false);
                         device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                        if (texture._glCreated) {
+                        if (this._glCreated && mipObject) {
                             gl.texSubImage2D(
                                 gl.TEXTURE_2D,
                                 mipLevel,
@@ -573,7 +628,7 @@ class WebglTexture {
         texture._gpuSize = texture.gpuSize;
         texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
 
-        texture._glCreated = true;
+        this._glCreated = true;
     }
 }
 

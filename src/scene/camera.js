@@ -110,9 +110,6 @@ class Camera {
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
 
-        this.renderPasses.forEach((pass) => {
-            pass.destroy();
-        });
         this.renderPasses.length = 0;
     }
 

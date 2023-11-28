@@ -86,7 +86,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class KeyboardExample {
     static CATEGORY = 'Input';
-    static NAME = 'Keyboard';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

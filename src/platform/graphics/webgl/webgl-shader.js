@@ -362,7 +362,8 @@ class WebglShader {
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
-                (device.isWebGL2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                (device.isWebGL2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW ||
+                    info.type === gl.SAMPLER_3D || info.type === gl.SAMPLER_2D_ARRAY))
             ) {
                 this.samplers.push(shaderInput);
             } else {

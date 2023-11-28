@@ -90,6 +90,8 @@ class WebgpuTexture {
         const wgpu = device.wgpu;
         const mipLevelCount = texture.requiredMipLevels;
 
+        Debug.assert(texture.width > 0 && texture.height > 0, `Invalid texture dimensions ${texture.width}x${texture.height} for texture ${texture.name}`, texture);
+
         this.descr = {
             size: {
                 width: texture.width,

@@ -8,6 +8,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
 import { BasisParser } from '../parsers/texture/basis.js';
 import { ImgParser } from '../parsers/texture/img.js';
@@ -93,7 +94,7 @@ class TextureParser {
 // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
 const _completePartialMipmapChain = function (texture) {
 
-    const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+    const requiredMipLevels = TextureUtils.calcMipLevelsCount(texture._width, texture._height);
 
     const isHtmlElement = function (object) {
         return (object instanceof HTMLCanvasElement) ||

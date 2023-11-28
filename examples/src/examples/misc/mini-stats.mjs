@@ -244,7 +244,6 @@ async function example({ canvas, pcx }) {
 
 class MiniStatsExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Mini Stats';
     static WEBGPU_ENABLED = true;
     static ENGINE = 'PERFORMANCE';
     static MINISTATS = true;

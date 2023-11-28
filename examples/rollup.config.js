@@ -35,6 +35,7 @@ const staticFiles = [
     { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
     { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' },
 ];
 
 // ^ = beginning of line

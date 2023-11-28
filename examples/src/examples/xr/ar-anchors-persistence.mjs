@@ -283,7 +283,6 @@ async function example({ canvas }) {
 
 class ArAnchorsPersistentExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Anchors Persistence';
     static example = example;
 }
 

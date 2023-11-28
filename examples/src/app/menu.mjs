@@ -1,6 +1,7 @@
 import { Component } from 'react';
 import { Button, Container } from '@playcanvas/pcui/react';
 import { jsx } from './jsx.mjs';
+import { logo } from '../assetPath.mjs';
 //import { iframeShowStats } from './code-editor.mjs';
 
 /**
@@ -83,7 +84,7 @@ class Menu extends TypedComponent {
                 },
                 jsx("img", {
                     id: 'playcanvas-icon',
-                    src: 'https://playcanvas.com/viewer/static/playcanvas-logo.png',
+                    src: logo,
                     onClick: () => {
                         window.open("https://github.com/playcanvas/engine");
                     }
