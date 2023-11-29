@@ -809,7 +809,9 @@ class ForwardRenderer extends Renderer {
                     if (isDepthLayer) {
 
                         if (camera.renderSceneColorMap) {
-                            frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
+                            const colorGrabPass = camera.camera.renderPassColorGrab;
+                            colorGrabPass.source = camera.renderTarget;
+                            frameGraph.addRenderPass(colorGrabPass);
                         }
 
                         if (camera.renderSceneDepthMap && !webgl1) {
