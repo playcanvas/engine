@@ -18,7 +18,7 @@ const fragmentShader = `
         uniform vec3 brightnessContrastSaturation;
 
         // for all parameters, 1.0 is the no-change value
-        vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+        vec3 contrastSaturationBrightness(vec3 color, float brt, float sat, float con)
         {
             color = color * brt;
             float grey = dot(color, vec3(0.3, 0.59, 0.11));
@@ -26,6 +26,29 @@ const fragmentShader = `
             return max(mix(vec3(0.5), color, con), 0.0);
         }
     
+    #endif
+
+    #ifdef VIGNETTE
+
+        uniform vec4 vignetterParams;
+
+        float vignette(vec2 uv) {
+
+            float inner = vignetterParams.x;
+            float outer = vignetterParams.y;
+            float curvature = vignetterParams.z;
+            float intensity = vignetterParams.w;
+
+            // edge curvature
+            vec2 curve = pow(abs(uv * 2.0 -1.0), vec2(1.0 / curvature));
+
+            // distance to edge
+            float edge = pow(length(curve), curvature);
+
+            // gradient and intensity
+            return 1.0 - intensity * smoothstep(inner, outer, edge);
+        }        
+
     #endif
 
     void main() {
@@ -38,11 +61,15 @@ const fragmentShader = `
         #endif
 
         #ifdef GRADING
-            result = ContrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
+            result = contrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
         #endif
 
         result = toneMap(result);
         result = gammaCorrectOutput(result);
+
+        #ifdef VIGNETTE
+            result *= vignette(uv0);
+        #endif
 
         gl_FragColor = vec4(result, scene.a);
     }
@@ -67,6 +94,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _shaderDirty = true;
 
+    _vignetteEnabled = false;
+
+    vignetteInner = 0.5;
+
+    vignetteOuter = 1.0;
+
+    vignetteCurvature = 0.5;
+
+    vignetteIntensity = 0.3;
+
     _key = '';
 
     constructor(graphicsDevice) {
@@ -76,6 +113,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.bloomTextureId = graphicsDevice.scope.resolve('bloomTexture');
         this.bloomIntensityId = graphicsDevice.scope.resolve('bloomIntensity');
         this.bcsId = graphicsDevice.scope.resolve('brightnessContrastSaturation');
+        this.vignetterParamsId = graphicsDevice.scope.resolve('vignetterParams');
     }
 
     set bloomTexture(value) {
@@ -98,6 +136,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get gradingEnabled() {
         return this._gradingEnabled;
+    }
+
+    set vignetteEnabled(value) {
+        if (this._vignetteEnabled !== value) {
+            this._vignetteEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get vignetteEnabled() {
+        return this._vignetteEnabled;
     }
 
     set toneMapping(value) {
@@ -136,14 +185,16 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
             const key = `${this.toneMapping}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
-                `-${this.gradingEnabled ? 'grading' : 'nograding'}`;
+                `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
+                `-${this.vignetteEnabled ? 'vignette' : 'novignette'}`;
 
             if (this._key !== key) {
                 this._key = key;
 
                 const defines =
                     (this.bloomTexture ? `#define BLOOM\n` : '') +
-                    (this.gradingEnabled ? `#define GRADING\n` : '');
+                    (this.gradingEnabled ? `#define GRADING\n` : '') +
+                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +
@@ -166,6 +217,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
+        }
+
+        if (this._vignetteEnabled) {
+            this.vignetterParamsId.setValue([this.vignetteInner, this.vignetteOuter, this.vignetteCurvature, this.vignetteIntensity]);
         }
 
         super.execute();
