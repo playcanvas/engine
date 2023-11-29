@@ -15,6 +15,13 @@ async function example({ canvas }) {
         if (!el) {
             el = document.createElement('div');
             el.classList.add('message');
+            el.style.position = 'absolute';
+            el.style.bottom = '96px';
+            el.style.right = '0';
+            el.style.padding = '8px 16px';
+            el.style.fontFamily = 'Helvetica, Arial, sans-serif';
+            el.style.color = '#fff';
+            el.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
             document.body.append(el);
         }
         el.textContent = msg;
@@ -23,8 +30,10 @@ async function example({ canvas }) {
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(canvas),
         touch: new pc.TouchDevice(canvas),
-        keyboard: new pc.Keyboard(window)
+        keyboard: new pc.Keyboard(window),
+        graphicsDeviceOptions: { alpha: true }
     });
+
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
@@ -43,7 +52,7 @@ async function example({ canvas }) {
     // create camera
     const c = new pc.Entity();
     c.addComponent('camera', {
-        clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
+        clearColor: new pc.Color(0, 0, 0, 0),
         farClip: 10000
     });
     app.root.addChild(c);
@@ -56,6 +65,8 @@ async function example({ canvas }) {
     l.translate(0, 10, 0);
     app.root.addChild(l);
 
+    const material = new pc.StandardMaterial();
+
     /**
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
@@ -66,29 +77,31 @@ async function example({ canvas }) {
         cube.addComponent("render", {
             type: "box"
         });
-        cube.setLocalScale(1, 1, 1);
-        cube.translate(x, y, z);
+        cube.render.material = material;
+        cube.setLocalScale(0.5, 0.5, 0.5);
+        cube.translate(x * 0.5, y, z * 0.5);
         app.root.addChild(cube);
     };
 
     // create a grid of cubes
-    const SIZE = 16;
+    const SIZE = 4;
     for (let x = 0; x < SIZE; x++) {
         for (let y = 0; y < SIZE; y++) {
-            createCube(2 * x - SIZE, -1.5, 2 * y - SIZE);
+            createCube(2 * x - SIZE, 0.25, 2 * y - SIZE);
         }
     }
 
     if (app.xr.supported) {
         const activate = function () {
-            if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-                c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
+            if (app.xr.isAvailable(pc.XRTYPE_AR)) {
+                c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+                    cameraColor: true, // request access to camera color
                     callback: function (err) {
-                        if (err) message("WebXR Immersive VR failed to start: " + err.message);
+                        if (err) message("WebXR Immersive AR failed to start: " + err.message);
                     }
                 });
             } else {
-                message("Immersive VR is not available");
+                message("Immersive AR is not available");
             }
         };
 
@@ -120,17 +133,58 @@ async function example({ canvas }) {
         });
 
         app.xr.on('start', function () {
-            message("Immersive VR session has started");
+            message("Immersive AR session has started");
         });
         app.xr.on('end', function () {
-            message("Immersive VR session has ended");
+            message("Immersive AR session has ended");
         });
-        app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
-            message("Immersive VR is " + (available ? 'available' : 'unavailable'));
+        app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
+            if (available) {
+                if (!app.xr.views.supportedColor) {
+                    message("AR Camera Color is not supported");
+                } else {
+                    message("Touch screen to start AR session");
+                }
+            } else {
+                message("Immersive AR is not available");
+            }
         });
 
-        if (!app.xr.isAvailable(pc.XRTYPE_VR)) {
-            message("Immersive VR is not available");
+        app.on('update', () => {
+            // if camera color is available
+            if (app.xr.views.availableColor) {
+                for(let i = 0; i < app.xr.views.list.length; i++) {
+                    const view = app.xr.views.list[i];
+                    if (!view.textureColor) // check if color texture is available
+                        continue;
+
+                    // apply camera color texture to material diffuse channel
+                    if (!material.diffuseMap) {
+                        material.diffuseMap = view.textureColor;
+                        material.update();
+                    }
+
+                    // debug draw camera color texture on the screen
+                    app.drawTexture(0.5, -0.5, 1, 1, view.textureColor);
+                }
+            }
+        });
+
+        app.xr.on('end', () => {
+            if (!material.diffuseMap)
+                return;
+
+            // clear camera color texture when XR session ends
+            material.diffuseMap = null;
+            material.update();
+        })
+
+        if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
+            message("Immersive AR is not available");
+        } else if (!app.xr.views.supportedColor) {
+            message("AR Camera Color is not supported");
+        } else {
+            message("Touch screen to start AR session");
         }
     } else {
         message("WebXR is not supported");
@@ -138,9 +192,10 @@ async function example({ canvas }) {
     return app;
 }
 
-class VrBasicExample {
+class ArCameraColorExample {
     static CATEGORY = 'XR';
+    static NAME = 'AR Camera Color';
     static example = example;
 }
 
-export { VrBasicExample };
+export { ArCameraColorExample };

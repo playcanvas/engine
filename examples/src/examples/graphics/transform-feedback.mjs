@@ -162,7 +162,6 @@ async function example({ canvas, files, assetPath }) {
 
 export class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Transform Feedback';
     static FILES = {
         'shaderFeedback.vert': /* glsl */`
 // vertex shader used to move particles during transform-feedback simulation step

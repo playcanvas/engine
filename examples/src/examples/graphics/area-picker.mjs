@@ -257,7 +257,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class AreaPickerExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Area Picker';
     static example = example;
     static WEBGPU_ENABLED = false; // device.updateBegin() is not a function
 }

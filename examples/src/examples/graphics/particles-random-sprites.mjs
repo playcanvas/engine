@@ -155,6 +155,5 @@ async function example({ canvas, assetPath }) {
 
 export class ParticlesRandomSpritesExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Particles: Random Sprites';
     static example = example;
 }

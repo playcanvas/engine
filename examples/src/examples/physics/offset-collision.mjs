@@ -273,7 +273,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
 class OffsetCollisionExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Offset Collision';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

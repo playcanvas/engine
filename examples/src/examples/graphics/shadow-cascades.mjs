@@ -293,7 +293,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class ShadowCascadesExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shadow Cascades';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

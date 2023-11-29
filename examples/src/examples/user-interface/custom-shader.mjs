@@ -120,7 +120,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 class CustomShaderExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Custom Shader';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

@@ -104,6 +104,23 @@ class Renderer {
     localLights = [];
 
     /**
+     * A list of unique directional shadow casting lights for each enabled camera. This is generated
+     * each frame during light culling.
+     *
+     * @type {Map<import('../camera.js').Camera, Array<import('../light.js').Light>>}
+     */
+    cameraDirShadowLights = new Map();
+
+    /**
+     * A mapping of a directional light to a camera, for which the shadow is currently valid. This
+     * is cleared each frame, and updated each time a directional light shadow is rendered for a
+     * camera, and allows us to manually schedule shadow passes when a new camera needs a shadow.
+     *
+     * @type {Map<import('../light.js').Light, import('../camera.js').Camera>}
+     */
+    dirLightShadows = new Map();
+
+    /**
      * Create a new instance.
      *
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
@@ -295,31 +312,12 @@ class Renderer {
 
         let viewCount = 1;
         if (camera.xr && camera.xr.session) {
-            let transform;
-            const parent = camera._node.parent;
-            if (parent)
-                transform = parent.getWorldTransform();
-
+            const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
-            viewCount = views.length;
+            viewCount = views.list.length;
             for (let v = 0; v < viewCount; v++) {
-                const view = views[v];
-
-                if (parent) {
-                    view.viewInvOffMat.mul2(transform, view.viewInvMat);
-                    view.viewOffMat.copy(view.viewInvOffMat).invert();
-                } else {
-                    view.viewInvOffMat.copy(view.viewInvMat);
-                    view.viewOffMat.copy(view.viewMat);
-                }
-
-                view.viewMat3.setFromMat4(view.viewOffMat);
-                view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
-
-                view.position[0] = view.viewInvOffMat.data[12];
-                view.position[1] = view.viewInvOffMat.data[13];
-                view.position[2] = view.viewInvOffMat.data[14];
-
+                const view = views.list[v];
+                view.updateTransforms(transform);
                 camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
@@ -497,9 +495,9 @@ class Renderer {
 
     updateCameraFrustum(camera) {
 
-        if (camera.xr && camera.xr.views.length) {
+        if (camera.xr && camera.xr.views.list.length) {
             // calculate frustum based on XR view
-            const view = camera.xr.views[0];
+            const view = camera.xr.views.list[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);
             camera.frustum.setFromMat4(viewProjMat);
             return;
@@ -1017,17 +1015,16 @@ class Renderer {
             }
         }
 
-        // shadow casters culling for directional lights
-        const renderActions = comp._renderActions;
-        for (let i = 0; i < renderActions.length; i++) {
-            const renderAction = renderActions[i];
-            renderAction.directionalLights.length = 0;
-            const camera = renderAction.camera.camera;
-
-            // first use of each camera renders directional shadows
-            if (renderAction.firstCameraUse)  {
+        // shadow casters culling for directional lights - start with none and collect lights for cameras
+        this.cameraDirShadowLights.clear();
+        const cameras = comp.cameras;
+        for (let i = 0; i < cameras.length; i++) {
+            const cameraComponent = cameras[i];
+            if (cameraComponent.enabled) {
+                const camera = cameraComponent.camera;
 
                 // get directional lights from all layers of the camera
+                let lightList;
                 const cameraLayers = camera.layers;
                 for (let l = 0; l < cameraLayers.length; l++) {
                     const cameraLayer = comp.getLayerById(cameraLayers[l]);
@@ -1040,13 +1037,19 @@ class Renderer {
                             // unique shadow casting lights
                             if (light.castShadows && !_tempSet.has(light)) {
                                 _tempSet.add(light);
-                                renderAction.directionalLights.push(light);
+
+                                lightList = lightList ?? [];
+                                lightList.push(light);
 
                                 // frustum culling for the directional shadow when rendering the camera
                                 this._shadowRendererDirectional.cull(light, comp, camera);
                             }
                         }
                     }
+                }
+
+                if (lightList) {
+                    this.cameraDirShadowLights.set(camera, lightList);
                 }
 
                 _tempSet.clear();
@@ -1273,6 +1276,9 @@ class Renderer {
         this.clustersDebugRendered = false;
 
         this.initViewBindGroupFormat(this.scene.clusteredLightingEnabled);
+
+        // no valid shadows at the start of the frame
+        this.dirLightShadows.clear();
     }
 }
 

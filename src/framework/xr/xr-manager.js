@@ -2,13 +2,12 @@ import { Debug } from "../../core/debug.js";
 
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { Quat } from '../../core/math/quat.js';
 import { Vec3 } from '../../core/math/vec3.js';
-import { Vec4 } from '../../core/math/vec4.js';
 
 import { XRTYPE_INLINE, XRTYPE_VR, XRTYPE_AR, XRDEPTHSENSINGUSAGE_CPU, XRDEPTHSENSINGFORMAT_L8A8 } from './constants.js';
+import { DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2 } from '../../platform/graphics/constants.js';
 import { XrDepthSensing } from './xr-depth-sensing.js';
 import { XrDomOverlay } from './xr-dom-overlay.js';
 import { XrHitTest } from './xr-hit-test.js';
@@ -18,6 +17,7 @@ import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 import { XrAnchors } from './xr-anchors.js';
 import { XrMeshDetection } from './xr-mesh-detection.js';
+import { XrViews } from './xr-views.js';
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -81,6 +81,12 @@ class XrManager extends EventHandler {
      * @private
      */
     _baseLayer = null;
+
+    /**
+     * @type {XRWebGLBinding|null}
+     * @ignore
+     */
+    webglBinding = null;
 
     /**
      * @type {XRReferenceSpace|null}
@@ -152,6 +158,14 @@ class XrManager extends EventHandler {
     lightEstimation;
 
     /**
+     * Provides access to views and their capabilities.
+     *
+     * @type {XrViews}
+     * @ignore
+     */
+    views;
+
+    /**
      * Provides access to Anchors.
      *
      * @type {XrAnchors}
@@ -163,18 +177,6 @@ class XrManager extends EventHandler {
      * @private
      */
     _camera = null;
-
-    /**
-     * @type {Array<*>}
-     * @ignore
-     */
-    views = [];
-
-    /**
-     * @type {Array<*>}
-     * @ignore
-     */
-    viewsPool = [];
 
     /**
      * @type {Vec3}
@@ -237,6 +239,7 @@ class XrManager extends EventHandler {
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
         this.anchors = new XrAnchors(this);
+        this.views = new XrViews(this);
 
         // TODO
         // 1. HMD class with its params
@@ -248,6 +251,9 @@ class XrManager extends EventHandler {
                 this._deviceAvailabilityCheck();
             });
             this._deviceAvailabilityCheck();
+
+            this.app.graphicsDevice.on('devicelost', this._onDeviceLost, this);
+            this.app.graphicsDevice.on('devicerestored', this._onDeviceRestored, this);
         }
     }
 
@@ -433,6 +439,8 @@ class XrManager extends EventHandler {
             optionalFeatures: []
         };
 
+        const webgl = this.app.graphicsDevice?.isWebGL1 || this.app.graphicsDevice?.isWebGL2;
+
         if (type === XRTYPE_AR) {
             opts.optionalFeatures.push('light-estimation');
             opts.optionalFeatures.push('hit-test');
@@ -479,6 +487,10 @@ class XrManager extends EventHandler {
                     usagePreference: usagePreference,
                     dataFormatPreference: dataFormatPreference
                 };
+            }
+
+            if (webgl && options && options.cameraColor && this.views.supportedColor) {
+                opts.optionalFeatures.push('camera-access');
             }
         } else if (type === XRTYPE_VR) {
             opts.optionalFeatures.push('hand-tracking');
@@ -545,6 +557,8 @@ class XrManager extends EventHandler {
             if (callback) callback(new Error('XR Session is not initialized'));
             return;
         }
+
+        this.webglBinding = null;
 
         if (callback) this.once('end', callback);
 
@@ -666,7 +680,6 @@ class XrManager extends EventHandler {
 
             this._session = null;
             this._referenceSpace = null;
-            this.views = [];
             this._width = 0;
             this._height = 0;
             this._type = null;
@@ -674,7 +687,8 @@ class XrManager extends EventHandler {
 
             // old requestAnimationFrame will never be triggered,
             // so queue up new tick
-            this.app.tick();
+            if (this.app.systems)
+                this.app.tick();
         };
 
         session.addEventListener('end', onEnd);
@@ -687,23 +701,8 @@ class XrManager extends EventHandler {
         // so we need to calculate this based on devicePixelRatio of the dislay and what
         // we've set this in the graphics device
         Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
-        const framebufferScaleFactor = this.app.graphicsDevice.maxPixelRatio / window.devicePixelRatio;
 
-        this._baseLayer = new XRWebGLLayer(session, this.app.graphicsDevice.gl, {
-            alpha: true,
-            depth: true,
-            stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor,
-
-            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
-            antialias: false
-        });
-
-        session.updateRenderState({
-            baseLayer: this._baseLayer,
-            depthNear: this._depthNear,
-            depthFar: this._depthFar
-        });
+        this._createBaseLayer();
 
         // request reference space
         session.requestReferenceSpace(spaceType).then((referenceSpace) => {
@@ -746,6 +745,67 @@ class XrManager extends EventHandler {
         });
     }
 
+    _createBaseLayer() {
+        const device = this.app.graphicsDevice;
+        const framebufferScaleFactor = device.maxPixelRatio / window.devicePixelRatio;
+
+        this._baseLayer = new XRWebGLLayer(this._session, device.gl, {
+            alpha: true,
+            depth: true,
+            stencil: true,
+            framebufferScaleFactor: framebufferScaleFactor,
+            antialias: false
+        });
+
+        const deviceType = device.deviceType;
+        if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
+            try {
+                this.webglBinding = new XRWebGLBinding(this._session, device.gl); // eslint-disable-line no-undef
+            } catch (ex) {
+                this.fire('error', ex);
+            }
+        }
+
+        this._session.updateRenderState({
+            baseLayer: this._baseLayer,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
+        });
+    }
+
+    /** @private */
+    _onDeviceLost() {
+        if (!this._session)
+            return;
+
+        if (this.webglBinding)
+            this.webglBinding = null;
+
+        this._baseLayer = null;
+
+        this._session.updateRenderState({
+            baseLayer: this._baseLayer,
+            depthNear: this._depthNear,
+            depthFar: this._depthFar
+        });
+    }
+
+    /** @private */
+    _onDeviceRestored() {
+        if (!this._session)
+            return;
+
+        setTimeout(() => {
+            this.app.graphicsDevice.gl.makeXRCompatible()
+                .then(() => {
+                    this._createBaseLayer();
+                })
+                .catch((ex) => {
+                    this.fire('error', ex);
+                });
+        }, 0);
+    }
+
     /**
      * @param {*} frame - XRFrame from requestAnimationFrame callback.
      *
@@ -768,32 +828,10 @@ class XrManager extends EventHandler {
 
         if (!pose) return false;
 
-        const lengthOld = this.views.length;
-        const lengthNew = pose.views.length;
+        const lengthOld = this.views.list.length;
 
-        while (lengthNew > this.views.length) {
-            let view = this.viewsPool.pop();
-            if (!view) {
-                view = {
-                    viewport: new Vec4(),
-                    projMat: new Mat4(),
-                    viewMat: new Mat4(),
-                    viewOffMat: new Mat4(),
-                    viewInvMat: new Mat4(),
-                    viewInvOffMat: new Mat4(),
-                    projViewOffMat: new Mat4(),
-                    viewMat3: new Mat3(),
-                    position: new Float32Array(3),
-                    rotation: new Quat()
-                };
-            }
-
-            this.views.push(view);
-        }
-        // remove views from list into pool
-        while (lengthNew < this.views.length) {
-            this.viewsPool.push(this.views.pop());
-        }
+        // add views
+        this.views.update(frame, pose.views);
 
         // reset position
         const posePosition = pose.transform.position;
@@ -801,28 +839,10 @@ class XrManager extends EventHandler {
         this._localPosition.set(posePosition.x, posePosition.y, posePosition.z);
         this._localRotation.set(poseOrientation.x, poseOrientation.y, poseOrientation.z, poseOrientation.w);
 
-        const layer = frame.session.renderState.baseLayer;
-
-        for (let i = 0; i < pose.views.length; i++) {
-            // for each view, calculate matrices
-            const viewRaw = pose.views[i];
-            const view = this.views[i];
-            const viewport = layer.getViewport(viewRaw);
-
-            view.viewport.x = viewport.x;
-            view.viewport.y = viewport.y;
-            view.viewport.z = viewport.width;
-            view.viewport.w = viewport.height;
-
-            view.projMat.set(viewRaw.projectionMatrix);
-            view.viewMat.set(viewRaw.transform.inverse.matrix);
-            view.viewInvMat.set(viewRaw.transform.matrix);
-        }
-
         // update the camera fov properties only when we had 0 views
-        if (lengthOld === 0 && this.views.length > 0) {
+        if (lengthOld === 0 && this.views.list.length > 0) {
             const viewProjMat = new Mat4();
-            const view = this.views[0];
+            const view = this.views.list[0];
 
             viewProjMat.copy(view.projMat);
             const data = viewProjMat.data;
@@ -832,7 +852,6 @@ class XrManager extends EventHandler {
             const farClip = data[14] / (data[10] + 1);
             const nearClip = data[14] / (data[10] - 1);
             const horizontalFov = false;
-
 
             const camera = this._camera.camera;
             camera.setXrProperties({

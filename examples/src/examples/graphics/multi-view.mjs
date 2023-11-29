@@ -234,7 +234,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class MultiViewExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Multi View';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

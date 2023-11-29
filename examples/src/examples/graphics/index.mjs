@@ -8,7 +8,7 @@ export * from "./clustered-lighting.mjs";
 export * from "./clustered-omni-shadows.mjs";
 export * from "./clustered-spot-shadows.mjs";
 export * from "./contact-hardening-shadows.mjs";
-// export * from "./lit-material";   // note that this is also excluded in read-dir.mjs
+export * from "./lit-material.mjs";
 export * from "./grab-pass.mjs";
 export * from "./ground-fog.mjs";
 export * from "./hardware-instancing.mjs";
@@ -33,7 +33,7 @@ export * from "./model-asset.mjs";
 export * from "./model-outline.mjs";
 export * from "./model-textured-box.mjs";
 export * from "./multi-view.mjs";
-export * from "./mrt.mjs";
+export * from "./multi-render-targets.mjs";
 export * from "./painter.mjs";
 export * from "./paint-mesh.mjs";
 export * from "./particles-anim-index.mjs";
