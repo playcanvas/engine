@@ -65,11 +65,12 @@ const fragmentShader = `
         #endif
 
         result = toneMap(result);
-        result = gammaCorrectOutput(result);
 
         #ifdef VIGNETTE
             result *= vignette(uv0);
         #endif
+
+        result = gammaCorrectOutput(result);
 
         gl_FragColor = vec4(result, scene.a);
     }
