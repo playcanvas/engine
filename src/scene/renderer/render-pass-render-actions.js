@@ -46,29 +46,6 @@ class RenderPassRenderActions extends RenderPass {
 
     addRenderAction(renderAction) {
         this.renderActions.push(renderAction);
-
-        // first render action
-        if (this.renderActions.length === 1) {
-
-            const camera = renderAction.camera;
-
-            // set up clear params
-            this.fullSizeClearRect = camera.camera.fullSizeClearRect;
-
-            // only if camera rendering covers the full viewport
-            if (this.fullSizeClearRect) {
-
-                if (renderAction.clearColor) {
-                    this.setClearColor(camera.camera.clearColor);
-                }
-                if (renderAction.clearDepth) {
-                    this.setClearDepth(camera.camera.clearDepth);
-                }
-                if (renderAction.clearStencil) {
-                    this.setClearStencil(camera.camera.clearStencil);
-                }
-            }
-        }
     }
 
     addLayer(camera, layer, transparent, autoClears = true) {
@@ -92,9 +69,7 @@ class RenderPassRenderActions extends RenderPass {
         this.addRenderAction(ra);
     }
 
-    frameUpdate() {
-        super.frameUpdate();
-
+    updateDirectionalShadows() {
         // add directional shadow passes if needed for the cameras used in this render pass
         const { renderer, renderActions } = this;
         for (let i = 0; i < renderActions.length; i++) {
@@ -122,6 +97,29 @@ class RenderPassRenderActions extends RenderPass {
                 }
             }
         }
+    }
+
+    updateClears() {
+
+        // based on the first render action
+        const renderAction = this.renderActions[0];
+        if (renderAction) {
+
+            // set up clear params if the camera covers the full viewport
+            const cameraComponent = renderAction.camera;
+            const camera = cameraComponent.camera;
+            const fullSizeClearRect = camera.fullSizeClearRect;
+
+            this.setClearColor(fullSizeClearRect && renderAction.clearColor ? camera.clearColor : undefined);
+            this.setClearDepth(fullSizeClearRect && renderAction.clearDepth ? camera.clearDepth : undefined);
+            this.setClearStencil(fullSizeClearRect && renderAction.clearStencil ? camera.clearStencil : undefined);
+        }
+    }
+
+    frameUpdate() {
+        super.frameUpdate();
+        this.updateDirectionalShadows();
+        this.updateClears();
     }
 
     before() {
