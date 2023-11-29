@@ -522,35 +522,6 @@ class XrManager extends EventHandler {
     }
 
     /**
-     * @private
-     */
-    _onDeviceLost() {
-        if (this.webglBinding)
-            this.webglBinding = null;
-    }
-
-    /**
-     * @private
-     */
-    _onDeviceRestored() {
-        if (!this._session)
-            return;
-
-        this.webglBinding = null;
-
-        if (platform.browser) {
-            const deviceType = this.app.graphicsDevice.deviceType;
-            if ((deviceType === DEVICETYPE_WEBGL1 || deviceType === DEVICETYPE_WEBGL2) && window.XRWebGLBinding) {
-                try {
-                    this.webglBinding = new XRWebGLBinding(this._session, this.app.graphicsDevice.gl); // eslint-disable-line no-undef
-                } catch (ex) {
-                    this.fire('error', ex);
-                }
-            }
-        }
-    }
-
-    /**
      * Attempts to end XR session and optionally fires callback when session is ended or failed to
      * end.
      *

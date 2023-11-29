@@ -130,12 +130,14 @@ class XrView extends EventHandler {
         this._manager = manager;
         this._xrView = xrView;
 
+        const device = this._manager.app.graphicsDevice;
+
         if (this._manager.views.supportedColor) {
             this._xrCamera = this._xrView.camera;
 
             // color texture
             if (this._manager.views.availableColor && this._xrCamera) {
-                this._textureColor = new Texture(this._manager.app.graphicsDevice, {
+                this._textureColor = new Texture(device, {
                     format: PIXELFORMAT_RGB8,
                     mipmaps: false,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -151,7 +153,7 @@ class XrView extends EventHandler {
         }
 
         if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
-            this._textureDepth = new Texture(this._manager.app.graphicsDevice, {
+            this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -165,7 +167,7 @@ class XrView extends EventHandler {
         }
 
         if (this._textureColor || this._textureDepth)
-            this._manager.app.graphicsDevice?.on('devicelost', this._onDeviceLost, this);
+            device.on('devicelost', this._onDeviceLost, this);
     }
 
     /**
