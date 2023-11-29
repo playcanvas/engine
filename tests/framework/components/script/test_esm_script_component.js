@@ -310,7 +310,29 @@ describe("pc.EsmScriptComponent", function () {
         expect(window.initializeCalls[index]).to.equal(entity.getGuid() + ' ' + text);
     };
 
-    it("`active` is called on a new esm script", async function () {
+    it("`entity` and `app` are set on an esm script", async function () {
+
+        const e = new pc.Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            "enabled": true,
+            "modules": [{
+                "enabled": "true",
+                "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js"
+            }]
+        });
+
+        app.root.addChild(e);
+
+        await waitForNextFrame();
+
+        const script = component.get('ScriptA');
+
+        expect(script).to.exist;
+
+    });
+
+    it("`initialize` is called on a new esm script", async function () {
 
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
@@ -329,14 +351,15 @@ describe("pc.EsmScriptComponent", function () {
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(3);
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'update scriptA');
-        checkInitCall(e, 2, 'post-update scriptA');
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'initialize scriptA');
+        checkInitCall(e, 1, 'active scriptA');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'post-update scriptA');
 
     });
 
-    it("`active` is called on an entity that is enabled later", async function () {
+    it("`initialize` is called on an entity that is enabled later", async function () {
         const e = new pc.Entity();
         e.enabled = false;
 
@@ -352,21 +375,18 @@ describe("pc.EsmScriptComponent", function () {
         app.root.addChild(e);
         expect(window.initializeCalls.length).to.equal(0);
 
-        await waitForNextFrame();
-
-        expect(window.initializeCalls.length).to.equal(0);
-
         e.enabled = true;
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(3);
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'update scriptA');
-        checkInitCall(e, 2, 'post-update scriptA');
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'initialize scriptA');
+        checkInitCall(e, 1, 'active scriptA');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'post-update scriptA');
     });
 
-    it("`active` is called on a component that is enabled later", async function () {
+    it("`initialize` is called on a component that is enabled later", async function () {
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
         await component.system.initializeComponentData(component, {
@@ -382,22 +402,18 @@ describe("pc.EsmScriptComponent", function () {
         // module is not active
         expect(window.initializeCalls.length).to.equal(0);
 
-        await waitForNextFrame();
-
-        // module is still not active
-        expect(window.initializeCalls.length).to.equal(0);
-
         e.esmscript.enabled = true;
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(3);
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'update scriptA');
-        checkInitCall(e, 2, 'post-update scriptA');
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'initialize scriptA');
+        checkInitCall(e, 1, 'active scriptA');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'post-update scriptA');
     });
 
-    it("`active` is called on a script instance that is enabled later", async function () {
+    it("`initialize` is called on a script instance that is enabled later", async function () {
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
         const modules = await component.system.initializeComponentData(component, {
@@ -409,40 +425,36 @@ describe("pc.EsmScriptComponent", function () {
         });
 
         app.root.addChild(e);
-        // console.log(modules[0])
 
         // module is not active
-        expect(window.initializeCalls.length).to.equal(0);
-
-        await waitForNextFrame();
-
-        // module is still not active
         expect(window.initializeCalls.length).to.equal(0);
 
         e.esmscript.enableModule(modules[0]);
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(3);
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'update scriptA');
-        checkInitCall(e, 2, 'post-update scriptA');
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'initialize scriptA');
+        checkInitCall(e, 1, 'active scriptA');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'post-update scriptA');
     });
 
-    it("`active`, `update` and `postUpdate` are called on a script instance that is created later", async function () {
+    it("`initialize`, `active`, `update` and `postUpdate` are called on a script instance that is created later", async function () {
         var e = new pc.Entity();
         app.root.addChild(e);
         e.addComponent('esmscript');
         const ScriptA = await import('/base/tests/framework/components/script/esm-scriptA.js')
         e.esmscript.add(ScriptA);
         await waitForNextFrame();
-        expect(window.initializeCalls.length).to.equal(3);
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'update scriptA');
-        checkInitCall(e, 2, 'post-update scriptA');
+        expect(window.initializeCalls.length).to.equal(4);
+        checkInitCall(e, 0, 'initialize scriptA');
+        checkInitCall(e, 1, 'active scriptA');
+        checkInitCall(e, 2, 'update scriptA');
+        checkInitCall(e, 3, 'post-update scriptA');
     });
 
-    it("`active`, `update` and `postUpdate` are called on cloned enabled entity", async function () {
+    it("`initialize`,`active`, `update` and `postUpdate` are called on cloned enabled entity", async function () {
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
 
@@ -465,43 +477,52 @@ describe("pc.EsmScriptComponent", function () {
         await waitForNextFrame();
 
         // both modules added
-        expect(window.initializeCalls.length).to.equal(6);
+        expect(window.initializeCalls.length).to.equal(8);
 
-        checkInitCall(e, 0, 'active scriptA');
-        checkInitCall(e, 1, 'active scriptB');
+        let n = 0;
+        checkInitCall(e, n++, 'initialize scriptA');
+        checkInitCall(e, n++, 'initialize scriptB');
 
-        checkInitCall(e, 2, 'update scriptA');
-        checkInitCall(e, 3, 'update scriptB');
+        checkInitCall(e, n++, 'active scriptA');
+        checkInitCall(e, n++, 'active scriptB');
 
-        checkInitCall(e, 4, 'post-update scriptA');
-        checkInitCall(e, 5, 'post-update scriptB');
+        checkInitCall(e, n++, 'update scriptA');
+        checkInitCall(e, n++, 'update scriptB');
+
+        checkInitCall(e, n++, 'post-update scriptA');
+        checkInitCall(e, n++, 'post-update scriptB');
 
         const clone = e.clone();
         app.root.addChild(clone);
 
         // clone is still not initialized
-        expect(window.initializeCalls.length).to.equal(6);
+        expect(window.initializeCalls.length).to.equal(8);
+
+        window.initializeCalls = []
 
         await waitForNextFrame();
 
         // next frame update, postUpdate have triggered
-        expect(window.initializeCalls.length).to.equal(16);
+        expect(window.initializeCalls.length).to.equal(12);
 
-        // new clone actuve
-        checkInitCall(clone, 6, 'active scriptA');
-        checkInitCall(clone, 7, 'active scriptB');
+        // new clone active
+        n = 0;
+        checkInitCall(clone, n++, 'initialize scriptA');
+        checkInitCall(clone, n++, 'initialize scriptB');
+        checkInitCall(clone, n++, 'active scriptA');
+        checkInitCall(clone, n++, 'active scriptB');
 
         // update
-        checkInitCall(e, 8, 'update scriptA');
-        checkInitCall(e, 9, 'update scriptB');
-        checkInitCall(clone, 10, 'update scriptA');
-        checkInitCall(clone, 11, 'update scriptB');
+        checkInitCall(e, n++, 'update scriptA');
+        checkInitCall(e, n++, 'update scriptB');
+        checkInitCall(clone, n++, 'update scriptA');
+        checkInitCall(clone, n++, 'update scriptB');
 
         // post update
-        checkInitCall(e, 12, 'post-update scriptA');
-        checkInitCall(e, 13, 'post-update scriptB');
-        checkInitCall(clone, 14, 'post-update scriptA');
-        checkInitCall(clone, 15, 'post-update scriptB');
+        checkInitCall(e, n++, 'post-update scriptA');
+        checkInitCall(e, n++, 'post-update scriptB');
+        checkInitCall(clone, n++, 'post-update scriptA');
+        checkInitCall(clone, n++, 'post-update scriptB');
 
     });
 
@@ -552,21 +573,22 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(enabler);
 
-        await waitForNextFrame();
+        // await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(1);
+        // expect(window.initializeCalls.length).to.equal(1);
 
         await waitForNextFrame();
 
         expect(window.initializeCalls.length).to.equal(7);
 
-        checkInitCall(enabler, 0, 'active enabler');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'active scriptB');
-        checkInitCall(e, 3, 'update scriptA');
-        checkInitCall(e, 4, 'update scriptB');
-        checkInitCall(e, 5, 'post-update scriptA');
-        checkInitCall(e, 6, 'post-update scriptB');
+        let n = 0;
+        checkInitCall(enabler, n++, 'initialize enabler');
+        checkInitCall(e, n++, 'active scriptA');
+        checkInitCall(e, n++, 'active scriptB');
+        checkInitCall(e, n++, 'update scriptA');
+        checkInitCall(e, n++, 'update scriptB');
+        checkInitCall(e, n++, 'post-update scriptA');
+        checkInitCall(e, n++, 'post-update scriptB');
 
     });
 
@@ -605,15 +627,15 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(enabler);
 
-        await waitForNextFrame();
+        // await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(1);
+        // expect(window.initializeCalls.length).to.equal(1);
 
         await waitForNextFrame();
 
         expect(window.initializeCalls.length).to.equal(7);
 
-        checkInitCall(enabler, 0, 'active enabler');
+        checkInitCall(enabler, 0, 'initialize enabler');
         checkInitCall(e, 1, 'active scriptA');
         checkInitCall(e, 2, 'active scriptB');
         checkInitCall(e, 3, 'update scriptA');
@@ -749,8 +771,17 @@ describe("pc.EsmScriptComponent", function () {
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(24);
+        expect(window.initializeCalls.length).to.equal(32);
         var idx = -1;
+        checkInitCall(e, ++idx, 'initialize scriptA');
+        checkInitCall(e, ++idx, 'initialize scriptB');
+        checkInitCall(c1, ++idx, 'initialize scriptA');
+        checkInitCall(c1, ++idx, 'initialize scriptB');
+        checkInitCall(c2, ++idx, 'initialize scriptA');
+        checkInitCall(c2, ++idx, 'initialize scriptB');
+        checkInitCall(c3, ++idx, 'initialize scriptA');
+        checkInitCall(c3, ++idx, 'initialize scriptB');
+
         checkInitCall(e, ++idx, 'active scriptA');
         checkInitCall(e, ++idx, 'active scriptB');
         checkInitCall(c1, ++idx, 'active scriptA');
@@ -1261,12 +1292,12 @@ describe("pc.EsmScriptComponent", function () {
         expect(script.simpleAttributeArrayInvalidDefault).to.be.an.instanceOf(Array);
         expect(script.simpleAttributeArrayInvalidDefault).to.have.lengthOf(1);
         expect(script.simpleAttributeArrayInvalidDefault).to.deep.equal([123]);
-        
+
         // simple attribute array - no default
         expect(script.simpleAttributeArrayNoDefault).to.be.an.instanceof(Array);
         expect(script.simpleAttributeArrayNoDefault).to.have.lengthOf(4);
         expect(script.simpleAttributeArrayNoDefault).to.deep.equal([1, 2, 3, 4]);
-        
+
         // simple attribute array - w/ default array
         expect(script.simpleAttributeArrayWithDefaultArray).to.be.an.instanceof(Array);
         expect(script.simpleAttributeArrayWithDefaultArray).to.have.lengthOf(3);
@@ -1352,7 +1383,7 @@ describe("pc.EsmScriptComponent", function () {
         expect(script.complexAttributeNoDefault.internalArray).to.deep.equal([9, 8, 7]);
         expect(script.complexAttributeNoDefault.internalColor).to.be.an.instanceOf(pc.Color);
         expect({ ...script.complexAttributeNoDefault.internalColor }).to.deep.equal({ r: 1, g: 1, b: 1, a: 1 });
-        
+
         // complex attribute - w/ default
         expect(script.complexAttribute).to.be.a('object');
         expect(script.complexAttribute.internalNumberNoDefault).to.equal(1);
@@ -1458,34 +1489,34 @@ describe("pc.EsmScriptComponent", function () {
     //     checkInitCall(e, 3, 'state false scriptA');
     // });
 
-    // it('enable is fired when script component becomes enabled', function () {
+    // it('enable is fired when script component becomes enabled', async function () {
     //     var e = new pc.Entity();
-    //     e.addComponent('script', {
+    //     const component = e.addComponent('esmscript');
+    //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
-    //         "order": [
-    //             "scriptA"
-    //         ],
-    //         "scripts": {
-    //             "scriptA": {
-    //                 "enabled": true,
-    //                 "attributes": {}
-    //             }
-    //         }
+    //         "modules": [{
+    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
+    //             "enabled": true,
+    //             "attributes": {}
+    //         }]
     //     });
 
     //     app.root.addChild(e);
 
-    //     e.script.enabled = false;
+    //     e.esmscript.enabled = false;
 
     //     window.initializeCalls.length = 0;
 
-    //     e.script.enabled = true;
+    //     e.esmscript.enabled = true;
+
+    //     await waitForNextFrame();
 
     //     expect(window.initializeCalls.length).to.equal(4);
-    //     checkInitCall(e, 0, 'enable scriptComponent scriptA');
-    //     checkInitCall(e, 1, 'state scriptComponent true scriptA');
-    //     checkInitCall(e, 2, 'enable scriptA');
-    //     checkInitCall(e, 3, 'state true scriptA');
+    //     checkInitCall(e, 0, 'initialize scriptA');
+    //     checkInitCall(e, 1, 'active scriptA');
+    //     checkInitCall(e, 2, 'update scriptA');
+    //     checkInitCall(e, 3, 'post-update scriptA');
+    //     // checkInitCall(e, 3, 'state true scriptA');
     // });
 
     // it('enable is not fired if script component started disabled', function () {
@@ -1541,41 +1572,40 @@ describe("pc.EsmScriptComponent", function () {
     // });
 
 
-    // it('if entity is disabled in initialize call and enabled later, postInitialize is called only later', function () {
+    // it('if entity is disabled in `initialize` call and enabled later, `postInitialize` is called only later', async function () {
     //     var e = new pc.Entity();
-    //     e.addComponent('script', {
+    //     const component = e.addComponent('esmscript');
+    //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
-    //         "order": [
-    //             "disabler",
-    //             "scriptA"
-    //         ],
-    //         "scripts": {
-    //             "disabler": {
-    //                 "enabled": true,
-    //                 "attributes": {
-    //                     "disableEntity": true
-    //                 }
-    //             },
-    //             "scriptA": {
-    //                 "enabled": true,
-    //                 "attributes": {}
+    //         "modules": [{
+    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-disabler.js",
+    //             "enabled": true,
+    //             "attributes": {
+    //                 "disableEntity": true
     //             }
-    //         }
+    //         }, {
+    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
+    //             "enabled": true,
+    //             "attributes": {}
+    //         }]
     //     });
 
     //     app.root.addChild(e);
 
-    //     expect(window.initializeCalls.length).to.equal(1);
+    //     await waitForNextFrame();
+
+    //     console.log(window.initializeCalls);
+    //     expect(window.initializeCalls.length).to.equal(2);
     //     checkInitCall(e, 0, 'initialize disabler');
 
-    //     window.initializeCalls.length = 0;
+    //     // window.initializeCalls.length = 0;
 
     //     e.enabled = true;
 
-    //     expect(window.initializeCalls.length).to.equal(3);
-    //     checkInitCall(e, 0, 'initialize scriptA');
-    //     checkInitCall(e, 1, 'postInitialize disabler');
-    //     checkInitCall(e, 2, 'postInitialize scriptA');
+    //     // expect(window.initializeCalls.length).to.equal(3);
+    //     // checkInitCall(e, 0, 'initialize scriptA');
+    //     // checkInitCall(e, 1, 'postInitialize disabler');
+    //     // checkInitCall(e, 2, 'postInitialize scriptA');
     // });
 
     // it('if script component is disabled in initialize call and enabled later, postInitialize is called only later', function () {

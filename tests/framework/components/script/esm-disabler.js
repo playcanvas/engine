@@ -27,7 +27,7 @@ export default class Disabler {
         }
     }
 
-    // postInitialize() {
-    //     window.initializeCalls.push(this.entity.getGuid() + ' postInitialize disabler');
-    // }
+    postInitialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' postInitialize disabler');
+    }
 }

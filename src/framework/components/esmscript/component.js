@@ -2,6 +2,7 @@ import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 import { classHasMethod } from '../../../core/class-utils.js';
 import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
+import { Entity } from '../../../framework/entity.js';
 
 /**
  * @callback UpdateFunction
@@ -17,6 +18,8 @@ import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
 
 /**
  * @typedef {Object} ModuleInstance
+ * @property {Function} [initialize] - A function called once when the module becomes initialized
+ * @property {Function} [postInitialize] - A function called once after all modules become initialized
  * @property {Function} [active] - A function called when the module becomes active
  * @property {Function} [inactive] - A function called when the module becomes inactive
  * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
@@ -40,6 +43,11 @@ import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
  * @property {Object.<string, AttributeDefinition>} attributes - An object containing the names of attributes and their definitions;
  */
 
+const appEntityDefinition = {
+    app: { type: 'app' },
+    entity: { type: 'entity' }
+};
+
 /**
  * The EsmScriptComponent extends the functionality of an Entity by
  * allowing you to attach your own ESM modules to it.
@@ -58,6 +66,8 @@ class EsmScriptComponent extends Component {
      */
     constructor(system, entity) {
         super(system, entity);
+
+        this.initialized = false;
 
         /**
          * Object shorthand passed to scripts update and postUpdate
@@ -88,8 +98,11 @@ class EsmScriptComponent extends Component {
         // Holds all modules with a `postUpdate` method
         this.modulesWithPostUpdate = new Set();
 
-        // Contains all the enabled modules. An enabled module, is one that is locally considered as
+        // Contains all the enabled modules.
         this.enabledModules = new Set();
+
+        // Contains all the uninitialized modules.
+        this.uninitializedModules = new Set();
 
         // Contains all the modules awaiting to be enabled.
         this.awaitingToBeEnabledModules = new Set();
@@ -207,6 +220,26 @@ class EsmScriptComponent extends Component {
         }
     }
 
+    flushUninitializedModules() {
+        for (const module of this.uninitializedModules) {
+            if (!this.isActive) break;
+            module.initialize();
+            this.uninitializedModules.delete(module);
+        }
+    }
+
+    _onInitialize() {
+        if (!this.initialized) this.flushUninitializedModules();
+        this.initialized = true;
+    }
+
+    _onPostInitialize() {
+        for (const module of this.modules) {
+            if (!this.isActive) break;
+            if (!this.enabledModules.has(module)) module.postInitialize?.();
+        }
+    }
+
     _onUpdate(dt) {
 
         // ensure app-entity refs are up-to-date
@@ -288,66 +321,66 @@ class EsmScriptComponent extends Component {
      * entities that were cloned.
      * @internal
      */
-    // resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
+    resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
-    //     // for each module in the old component
-    //     oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
+        // for each module in the old component
+        oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
 
-    //         // Get the attribute definition for the specified module
-    //         const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
-    //         EsmScriptComponent.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
+            // Get the attribute definition for the specified module
+            const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
+            EsmScriptComponent.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
 
-    //             // If the attribute is an 'entity', then this needs to be resolved
-    //             if (attributeDefinition.type === 'entity') {
-    //                 const value = module?.[attributeName];
-    //                 const newModule = this.modules.get(moduleSpecifier);
+                // If the attribute is an 'entity', then this needs to be resolved
+                if (attributeDefinition.type === 'entity') {
+                    const value = module?.[attributeName];
+                    const newModule = this.modules.get(moduleSpecifier);
 
-    //                 this._resolveEntityScriptAttribute(
-    //                     attributeDefinition,
-    //                     attributeName,
-    //                     value,
-    //                     false,
-    //                     newModule,
-    //                     duplicatedIdsMap
-    //                 );
-    //             }
-    //         });
-    //     });
-    // }
+                    this._resolveEntityScriptAttribute(
+                        attributeDefinition,
+                        attributeName,
+                        value,
+                        false,
+                        newModule,
+                        duplicatedIdsMap
+                    );
+                }
+            });
+        });
+    }
 
-    // _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
-    //     if (attribute.array) {
-    //         // handle entity array attribute
-    //         const len = oldValue.length;
-    //         if (!len) {
-    //             return;
-    //         }
+    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
+        if (attribute.array) {
+            // handle entity array attribute
+            const len = oldValue.length;
+            if (!len) {
+                return;
+            }
 
-    //         const newGuidArray = oldValue.slice();
-    //         for (let i = 0; i < len; i++) {
-    //             const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
-    //             if (duplicatedIdsMap[guid]) {
-    //                 newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
-    //             }
-    //         }
+            const newGuidArray = oldValue.slice();
+            for (let i = 0; i < len; i++) {
+                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
+                if (duplicatedIdsMap[guid]) {
+                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
+                }
+            }
 
-    //         newModule[attributeName] = newGuidArray;
-    //     } else {
+            newModule[attributeName] = newGuidArray;
+        } else {
 
-    //         // handle regular entity attribute
-    //         if (oldValue instanceof Entity) {
-    //             oldValue = oldValue.getGuid();
-    //         } else if (typeof oldValue !== 'string') {
-    //             return;
-    //         }
+            // handle regular entity attribute
+            if (oldValue instanceof Entity) {
+                oldValue = oldValue.getGuid();
+            } else if (typeof oldValue !== 'string') {
+                return;
+            }
 
-    //         if (duplicatedIdsMap[oldValue]) {
+            if (duplicatedIdsMap[oldValue]) {
 
-    //             newModule[attributeName] = duplicatedIdsMap[oldValue];
+                newModule[attributeName] = duplicatedIdsMap[oldValue];
 
-    //         }
-    //     }
-    // }
+            }
+        }
+    }
 
     /**
      * Checks if the component contains an esm script.
@@ -414,11 +447,23 @@ class EsmScriptComponent extends Component {
         // Create the esm script instance
         const module = new ModuleClass();
 
-        // Assign any attribute definition that have been provided, or if not, assign the default
-        EsmScriptComponent.populateWithAttributes(this.system.app, attributeDefinition, attributeValues, module);
+        // Create an attribute definition and values with { app, entity }
+        const attributeDefinitionWithAppEntity = { ...attributeDefinition, ...appEntityDefinition };
+        const attributeValueWithAppEntity = { ...attributeValues, ...this.appEntity };
+
+        // Assign any provided attributes
+        EsmScriptComponent.populateWithAttributes(
+            this.system.app,
+            attributeDefinitionWithAppEntity,
+            attributeValueWithAppEntity,
+            module);
+
         this.modules.add(module);
         this.moduleNameInstanceMap.set(ModuleClass.name, module);
         this.attributeDefinitions.set(module, attributeDefinition);
+
+        // If the class has an initialize method, add it to a set of uninitialized
+        if (classHasMethod(ModuleClass, 'initialize')) this.uninitializedModules.add(module);
 
         // Enable the module, so that it receives lifecycle hooks
         this.enableModule(module);

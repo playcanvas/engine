@@ -1,6 +1,14 @@
 export default class ScriptA {
-    active({ entity }) {
-        window.initializeCalls.push(entity.getGuid() + ' active scriptA');
+    initialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' initialize scriptA');
+    }
+
+    postInitialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' postInitialize scriptA');
+    }
+
+    active() {
+        window.initializeCalls.push(this.entity.getGuid() + ' active scriptA');
     }
 
     inactive() {

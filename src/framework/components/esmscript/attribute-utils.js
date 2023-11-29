@@ -230,6 +230,8 @@ export function rawToValue(app, attributeDefinition, value) {
     switch (type) {
         case 'boolean':
             return !!value;
+        case 'app':
+            return value;
         case 'number':
             if (typeof value === 'number') {
                 return value;

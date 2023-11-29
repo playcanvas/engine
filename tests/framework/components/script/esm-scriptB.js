@@ -1,4 +1,12 @@
 export default class ScriptB {
+    initialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' initialize scriptB');
+    }
+
+    postInitialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' postInitialize scriptB');
+    }
+
     active({ entity }) {
         window.initializeCalls.push(entity.getGuid() + ' active scriptB');
     }

@@ -80,6 +80,9 @@ export class EsmScriptInterface {
     // The constructor will Do not assume when the constructor will be called at a particular point in the application lifecycle
     // constructor() {}
 
+    // called when the script first becomes initialized
+    initialize() {}
+
     // called whenever the script becomes active, ie. it is part of the component tree and can receive updates
     active({ entity, app }) {}
 

@@ -85,17 +85,20 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
     _onInitialize() {
         for (const component of this._components) {
-            if (component.enabled) component.flushActiveModules();
+            if (component.enabled) component._onInitialize();
         }
     }
 
-    // _onPostInitialize() {
-    //     for (const component of this._components) {
-    //         if (component.enabled) component._onPostInitialize();
-    //     }
-    // }
+    _onPostInitialize() {
+        for (const component of this._components) {
+            if (component.enabled) component._onPostInitialize();
+        }
+    }
 
     _onUpdate(dt) {
+        for (const component of this._components) {
+            if (component.enabled) component.flushUninitializedModules();
+        }å
 
         for (const component of this._components) {
             if (component.enabled) component.flushActiveModules();

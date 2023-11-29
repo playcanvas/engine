@@ -3,8 +3,8 @@ export const attributes = {
 };
 
 export default class Enabler {
-    active({ entity }) {
-        window.initializeCalls.push(entity.getGuid() + ' active enabler');
+    initialize() {
+        window.initializeCalls.push(this.entity.getGuid() + ' initialize enabler');
         this.entityToEnable.enabled = true;
         this.entityToEnable.esmscript.enabled = true;
         // if (this.entityToEnable.script.scriptA) {
@@ -13,6 +13,5 @@ export default class Enabler {
         // if (this.entityToEnable.script.scriptB) {
         //     this.entityToEnable.script.scriptB.enabled = true;
         // }
-
     }
 }
