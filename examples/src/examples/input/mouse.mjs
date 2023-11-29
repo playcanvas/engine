@@ -88,7 +88,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class MouseExample {
     static CATEGORY = 'Input';
-    static NAME = 'Mouse';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

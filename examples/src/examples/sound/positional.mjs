@@ -117,7 +117,6 @@ async function example({ canvas, assetPath }) {
 
 class PositionalExample {
     static CATEGORY = 'Sound';
-    static NAME = 'Positional';
     static example = example;
 }
 

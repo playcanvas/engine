@@ -183,7 +183,6 @@ async function example({ canvas }) {
 
 class ArHitTestExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Hit Test';
     static example = example;
 }
 

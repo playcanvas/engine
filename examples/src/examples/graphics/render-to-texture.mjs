@@ -294,7 +294,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class RenderToTextureExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Render to Texture';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -182,7 +182,6 @@ async function example({ canvas, assetPath }) {
 
 class VrControllersExample {
     static CATEGORY = 'XR';
-    static NAME = 'VR Controllers';
     static example = example;
 }
 

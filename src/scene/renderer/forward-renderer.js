@@ -781,11 +781,6 @@ class ForwardRenderer extends Renderer {
 
                 const isGrabPass = isDepthLayer && (camera.renderSceneColorMap || camera.renderSceneDepthMap);
 
-                // directional shadows get re-rendered for each camera
-                if (renderAction.hasDirectionalShadowLights && camera) {
-                    this._shadowRendererDirectional.buildFrameGraph(frameGraph, renderAction.directionalLights, camera);
-                }
-
                 // start of block of render actions rendering to the same render target
                 if (newStart) {
                     newStart = false;
@@ -797,10 +792,12 @@ class ForwardRenderer extends Renderer {
                 const nextRenderAction = renderActions[i + 1];
                 const isNextLayerDepth = nextRenderAction ? nextRenderAction.layer.id === LAYERID_DEPTH : false;
                 const isNextLayerGrabPass = isNextLayerDepth && (camera.renderSceneColorMap || camera.renderSceneDepthMap) && !webgl1;
+                const nextNeedDirShadows = nextRenderAction ? (nextRenderAction.firstCameraUse && this.cameraDirShadowLights.has(nextRenderAction.camera.camera)) : false;
 
-                // end of the block using the same render target
+                // end of the block using the same render target if the next render action uses a different render target, or needs directional shadows
+                // rendered before it or similar or needs other pass before it.
                 if (!nextRenderAction || nextRenderAction.renderTarget !== renderTarget ||
-                    nextRenderAction.hasDirectionalShadowLights || isNextLayerGrabPass || isGrabPass) {
+                    nextNeedDirShadows || isNextLayerGrabPass || isGrabPass) {
 
                     // render the render actions in the range
                     const isDepthOnly = isDepthLayer && startIndex === i;

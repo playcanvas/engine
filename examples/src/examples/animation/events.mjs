@@ -201,7 +201,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 }
 class EventsExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Events';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -114,7 +114,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class GlbExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'GLB';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

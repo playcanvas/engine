@@ -141,7 +141,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MeshDeformationExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Deformation';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

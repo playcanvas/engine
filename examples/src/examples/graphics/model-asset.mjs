@@ -99,7 +99,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ModelAssetExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Asset';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

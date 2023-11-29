@@ -38,7 +38,6 @@ class FrameGraph {
         }
 
         if (renderPass.enabled) {
-            renderPass.frameUpdate();
             passes.push(renderPass);
         }
 

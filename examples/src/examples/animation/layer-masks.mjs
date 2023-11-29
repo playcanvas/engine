@@ -298,7 +298,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class LayerMasksExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Layer Masks';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

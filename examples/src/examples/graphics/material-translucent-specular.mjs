@@ -149,7 +149,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MaterialTranslucentSpecularExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Material Translucent Specular';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

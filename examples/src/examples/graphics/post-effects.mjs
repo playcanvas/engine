@@ -433,7 +433,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class PostEffectsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Post Effects';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;
