@@ -6,6 +6,7 @@ import { Mat3 } from '../core/math/mat3.js';
 import { Mat4 } from '../core/math/mat4.js';
 import { Quat } from '../core/math/quat.js';
 import { Vec3 } from '../core/math/vec3.js';
+import { getApplication } from '../framework/globals.js';
 
 const scaleCompensatePosTransform = new Mat4();
 const scaleCompensatePos = new Vec3();
@@ -254,7 +255,8 @@ class GraphNode extends EventHandler {
      */
     constructor(name = 'Untitled', app) {
         super();
-        this._appRef = app;
+        // Magnopus Patched OB-3070
+        this._appRef = app ?? getApplication();
         this.name = name;
     }
 
