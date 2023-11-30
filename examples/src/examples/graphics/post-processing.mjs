@@ -112,6 +112,51 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 2
                 })
             )
+        ),
+        jsx(Panel, { headerText: 'Vignette' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'inner' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.inner' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'outer' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.outer' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'curvature' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.curvature' },
+                    min: 0.01,
+                    max: 10,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.intensity' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
+            )
         )
     );
 }
@@ -458,6 +503,23 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                     composePass.gradingEnabled = value;
                 }
             }
+            if (pathArray[1] === 'vignette') {
+                if (pathArray[2] === 'enabled') {
+                    composePass.vignetteEnabled = value;
+                }
+                if (pathArray[2] === 'inner') {
+                    composePass.vignetteInner = value;
+                }
+                if (pathArray[2] === 'outer') {
+                    composePass.vignetteOuter = value;
+                }
+                if (pathArray[2] === 'curvature') {
+                    composePass.vignetteCurvature = value;
+                }
+                if (pathArray[2] === 'intensity') {
+                    composePass.vignetteIntensity = value;
+                }
+            }
         });
 
         data.set('data', {
@@ -477,6 +539,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 saturation: 1,
                 brightness: 1,
                 contrast: 1
+            },
+            vignette: {
+                enabled: false,
+                inner: 0.5,
+                outer: 1.0,
+                curvature: 0.5,
+                intensity: 0.3
             }
         });
 
