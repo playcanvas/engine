@@ -193,6 +193,15 @@ class EsmScriptComponent extends Component {
         }
     }
 
+    set enabled(value) {
+        this._enabled = value;
+        if (this.isActive) this.flushUninitializedModules();
+    }
+
+    get enabled() {
+        return !!this._enabled;
+    }
+
     get isActive() {
         return this.enabled && this.entity.enabled;
     }
@@ -205,6 +214,7 @@ class EsmScriptComponent extends Component {
 
         for (const module of this.awaitingToBeEnabledModules) {
             if (!this.isActive) break;
+            if (this.uninitializedModules.has(module)) continue;
             this.awaitingToBeEnabledModules.delete(module);
             this.enabledModules.add(module);
             if (classHasMethod(module.constructor, 'update')) this.modulesWithUpdate.add(module);
@@ -216,16 +226,22 @@ class EsmScriptComponent extends Component {
     flushInactiveModules() {
         for (const module of this.modules) {
             if (!this.isActive) break;
-            if (!this.enabledModules.has(module)) module.inactive?.();
+            if (this.enabledModules.has(module)) continue;
+            module.inactive?.();
         }
     }
 
     flushUninitializedModules() {
         for (const module of this.uninitializedModules) {
             if (!this.isActive) break;
+            if (!this.isModuleEnabled(module) && !this.awaitingToBeEnabledModules.has(module)) continue;
             module.initialize();
             this.uninitializedModules.delete(module);
         }
+    }
+
+    onEnable() {
+        if (this.isActive) this.flushUninitializedModules();
     }
 
     _onInitialize() {
@@ -431,9 +447,10 @@ class EsmScriptComponent extends Component {
      *
      * @param {ModuleExport} moduleExport - The export of the ESM Script to add to the component
      * @param {Object.<string, AttributeDefinition>} [attributeValues] - A set of attributes to be assigned to the Script Module instance
+     * @param {boolean} [enabled] - Whether the script is enabled or not.
      * @returns {ModuleInstance|null} An instance of the module
      */
-    add(moduleExport, attributeValues = {}) {
+    add(moduleExport, attributeValues = {}, enabled = true) {
 
         // destructure the module export
         const { default: ModuleClass, attributes: attributeDefinition = {} } = moduleExport;
@@ -462,11 +479,18 @@ class EsmScriptComponent extends Component {
         this.moduleNameInstanceMap.set(ModuleClass.name, module);
         this.attributeDefinitions.set(module, attributeDefinition);
 
-        // If the class has an initialize method, add it to a set of uninitialized
-        if (classHasMethod(ModuleClass, 'initialize')) this.uninitializedModules.add(module);
+        // If the class has an initialize method ...
+        if (classHasMethod(ModuleClass, 'initialize')) {
+
+            // If the component and hierarchy are currently active, initialize now.
+            if (this.isActive && enabled) module.initialize();
+
+            // otherwise mark to initialize later
+            else this.uninitializedModules.add(module);
+        }
 
         // Enable the module, so that it receives lifecycle hooks
-        this.enableModule(module);
+        if (enabled) this.enableModule(module);
 
         this.fire('create', module);
 
@@ -507,10 +531,11 @@ class EsmScriptComponent extends Component {
         return reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
             const mappedValue = rawToValue(app, attributeDefinition, value);
 
-            if (mappedValue === null) {
-                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`);
-            } else {
+            // check for undefined | null
+            if (value != null) {
                 object[key] = mappedValue;
+            } else if (value === null && mappedValue === null) {
+                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`);
             }
 
         }, object);

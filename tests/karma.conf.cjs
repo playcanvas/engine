@@ -6,7 +6,7 @@ var sourceFiles;
 
 if (release) {
     console.log('Testing release build');
-    sourceFiles = [path.resolve('build/playcanvas.js')];
+    sourceFiles = [/*path.resolve('build/playcanvas.js')*/];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {
@@ -43,7 +43,9 @@ module.exports = function (config) {
             { pattern: 'tests/framework/components/script/esm-*.js', type: 'module', included: false, served: true, watched: true, nocache: false },
             { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'tests/platform/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
-            { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true }
+            { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true },
+
+            { pattern: path.resolve('src') + '/**/*.*', included: false, served: true, watched: true, nocache: true },
         ]),
 
         // Serve .gz files with Content-Encoding: gzip

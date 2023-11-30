@@ -118,7 +118,7 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
         // Warn and return early if the attribute is marked with `{ array: true }`
         // but the value is not an array
         if (isArrayType && value !== undefined && !isValueArray) {
-            Debug.warn(`'${attributeName}' is an array attribute, but it's value or default is a '${typeof value}'`);
+            Debug.warn(`'${attributeName}' is an array and cannot be assigned a '${typeof value}'`);
             nestedObject[attributeName] = [];
             return nestedObject;
         }

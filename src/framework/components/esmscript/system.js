@@ -45,9 +45,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         const ImportAndAddScript = async ({ moduleSpecifier, attributes, EsmModuleExport, enabled }) => {
             EsmModuleExport ??= await DynamicImport(this.app, moduleSpecifier);
-            // const attributes = convertRawAttributesToValues(this.app, EsmModuleExport.attributes, rawAttributes);
-            const module = component.add(EsmModuleExport, attributes);
-            if (!enabled) component.disableModule(module);
+            const module = component.add(EsmModuleExport, attributes, enabled);
             return module;
         };
 
@@ -98,7 +96,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
     _onUpdate(dt) {
         for (const component of this._components) {
             if (component.enabled) component.flushUninitializedModules();
-        }å
+        }
 
         for (const component of this._components) {
             if (component.enabled) component.flushActiveModules();

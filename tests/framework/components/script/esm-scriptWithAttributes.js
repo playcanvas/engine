@@ -84,7 +84,7 @@ export const attributes = {
 
     attribute1: { type: 'entity' },
     attribute2: { type: 'number', default: 2 },
-    // attribute3: SomeType,
+    attribute3: CustomType,
 
     // attribute4: {
     //     title: 'asdqasw',

@@ -1,8 +1,14 @@
+import * as pc from '/base/src/index.js'
+import { Debug } from '/base/src/core/debug.js'
+
 describe("pc.EsmScriptComponent", function () {
     var app;
 
     beforeEach(function (done) {
         this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
+
+        // Override the debug to remove console mess
+        Debug.warn = warning => null;
 
         app = new pc.Application(document.createElement("canvas"));
 
@@ -30,7 +36,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm=-scriptA.js",
                     "size": 1,
                     // "hash": "script a hash",
-                    "url": "../tests/framework/components/script/esm-scriptA.js"
+                    "url": "/base/tests/framework/components/script/esm-scriptA.js"
                 },
                 "region": "eu-west-1",
                 "id": "1"
@@ -55,7 +61,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-scriptB.js",
                     "size": 1,
                     // "hash": "script b hash",
-                    "url": "../tests/framework/components/script/esm-scriptB.js"
+                    "url": "/base/tests/framework/components/script/esm-scriptB.js"
                 },
                 "region": "eu-west-1",
                 "id": "2"
@@ -80,7 +86,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-cloner.js",
                     "size": 1,
                     // "hash": "cloner hash",
-                    "url": "../tests/framework/components/script/esm-cloner.js"
+                    "url": "/base/tests/framework/components/script/esm-cloner.js"
                 },
                 "region": "eu-west-1",
                 "id": "3"
@@ -105,7 +111,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-enabler.js",
                     "size": 1,
                     // "hash": "enabler hash",
-                    "url": "../tests/framework/components/script/esm-enabler.js"
+                    "url": "/base/tests/framework/components/script/esm-enabler.js"
                 },
                 "region": "eu-west-1",
                 "id": "4"
@@ -130,7 +136,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-disabler.js",
                     "size": 1,
                     // "hash": "disabler hash",
-                    "url": "../tests/framework/components/script/esm-disabler.js"
+                    "url": "/base/tests/framework/components/script/esm-disabler.js"
                 },
                 "region": "eu-west-1",
                 "id": "5"
@@ -176,7 +182,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-scriptWithAttributes.js",
                     "size": 1,
                     // "hash": "scriptWithAttributes hash",
-                    "url": "../tests/framework/components/script/esm-scriptWithAttributes.js"
+                    "url": "/base/tests/framework/components/script/esm-scriptWithAttributes.js"
                 },
                 "region": "eu-west-1",
                 "id": "6"
@@ -201,7 +207,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-loadedLater.js",
                     "size": 1,
                     // "hash": "loadedLater hash",
-                    "url": "../tests/framework/components/script/esm-loadedLater.js"
+                    "url": "/base/tests/framework/components/script/esm-loadedLater.js"
                 },
                 "region": "eu-west-1",
                 "id": "7"
@@ -226,7 +232,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-destroyer.js",
                     "size": 1,
                     // "hash": "destroyer hash",
-                    "url": "../tests/framework/components/script/esm-destroyer.js"
+                    "url": "/base/tests/framework/components/script/esm-destroyer.js"
                 },
                 "region": "eu-west-1",
                 "id": "8"
@@ -251,7 +257,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-postCloner.js",
                     "size": 1,
                     // "hash": "postCloner hash",
-                    "url": "../tests/framework/components/script/esm-postCloner.js"
+                    "url": "/base/tests/framework/components/script/esm-postCloner.js"
                 },
                 "region": "eu-west-1",
                 "id": "9"
@@ -276,7 +282,7 @@ describe("pc.EsmScriptComponent", function () {
                     "filename": "esm-postInitializeReporter.js",
                     "size": 1,
                     // "hash": "postInitializeReporter hash",
-                    "url": "../tests/framework/components/script/esm-postInitializeReporter.js"
+                    "url": "/base/tests/framework/components/script/esm-postInitializeReporter.js"
                 },
                 "region": "eu-west-1",
                 "id": "10"
@@ -288,7 +294,7 @@ describe("pc.EsmScriptComponent", function () {
                 console.error(err);
             }
 
-            app.scenes.loadScene('base/tests/framework/components/script/scene1.json', function () {
+            app.scenes.loadScene('base/tests/framework/components/script/esmscript-scene1.json', function () {
                 app.start();
                 done();
             });
@@ -324,11 +330,11 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        await waitForNextFrame();
-
         const script = component.get('ScriptA');
 
         expect(script).to.exist;
+        expect(script.entity).to.equal(e);
+        expect(script.app).to.equal(component.system.app);
 
     });
 
@@ -347,15 +353,9 @@ describe("pc.EsmScriptComponent", function () {
         app.root.addChild(e);
 
         expect(e.esmscript).to.exist;
-        expect(window.initializeCalls.length).to.equal(0);
 
-        await waitForNextFrame();
-
-        expect(window.initializeCalls.length).to.equal(4);
+        expect(window.initializeCalls.length).to.equal(1);
         checkInitCall(e, 0, 'initialize scriptA');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'update scriptA');
-        checkInitCall(e, 3, 'post-update scriptA');
 
     });
 
@@ -377,13 +377,8 @@ describe("pc.EsmScriptComponent", function () {
 
         e.enabled = true;
 
-        await waitForNextFrame();
+        expect(window.initializeCalls.length).to.equal(1);
 
-        expect(window.initializeCalls.length).to.equal(4);
-        checkInitCall(e, 0, 'initialize scriptA');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'update scriptA');
-        checkInitCall(e, 3, 'post-update scriptA');
     });
 
     it("`initialize` is called on a component that is enabled later", async function () {
@@ -404,13 +399,8 @@ describe("pc.EsmScriptComponent", function () {
 
         e.esmscript.enabled = true;
 
-        await waitForNextFrame();
+        expect(window.initializeCalls.length).to.equal(1);
 
-        expect(window.initializeCalls.length).to.equal(4);
-        checkInitCall(e, 0, 'initialize scriptA');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'update scriptA');
-        checkInitCall(e, 3, 'post-update scriptA');
     });
 
     it("`initialize` is called on a script instance that is enabled later", async function () {
@@ -434,10 +424,6 @@ describe("pc.EsmScriptComponent", function () {
         await waitForNextFrame();
 
         expect(window.initializeCalls.length).to.equal(4);
-        checkInitCall(e, 0, 'initialize scriptA');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'update scriptA');
-        checkInitCall(e, 3, 'post-update scriptA');
     });
 
     it("`initialize`, `active`, `update` and `postUpdate` are called on a script instance that is created later", async function () {
@@ -472,7 +458,7 @@ describe("pc.EsmScriptComponent", function () {
         });
 
         app.root.addChild(e);
-        expect(window.initializeCalls.length).to.equal(0);
+        expect(window.initializeCalls.length).to.equal(2);
 
         await waitForNextFrame();
 
@@ -492,13 +478,13 @@ describe("pc.EsmScriptComponent", function () {
         checkInitCall(e, n++, 'post-update scriptA');
         checkInitCall(e, n++, 'post-update scriptB');
 
+        window.initializeCalls = [];
+
         const clone = e.clone();
         app.root.addChild(clone);
 
-        // clone is still not initialized
-        expect(window.initializeCalls.length).to.equal(8);
-
-        window.initializeCalls = []
+        // clone is initialized
+        expect(window.initializeCalls.length).to.equal(2);
 
         await waitForNextFrame();
 
@@ -537,7 +523,8 @@ describe("pc.EsmScriptComponent", function () {
         checkInitCall(e, 0, 'active disabler');
     });
 
-    it("all `active` calls are before `update` calls when enabling entity from inside a separate `active` call", async function () {
+    it("all `initialize` calls are before `update` calls when enabling entity from inside a separate `initialize` call", async function () {
+
         const e = new pc.Entity('entity to enable');
         e.enabled = false;
         const component = e.addComponent('esmscript');
@@ -573,16 +560,16 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(enabler);
 
-        // await waitForNextFrame();
-
-        // expect(window.initializeCalls.length).to.equal(1);
+        expect(window.initializeCalls.length).to.equal(3);
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(7);
+        expect(window.initializeCalls.length).to.equal(9);
 
         let n = 0;
         checkInitCall(enabler, n++, 'initialize enabler');
+        checkInitCall(e, n++, 'initialize scriptA');
+        checkInitCall(e, n++, 'initialize scriptB');
         checkInitCall(e, n++, 'active scriptA');
         checkInitCall(e, n++, 'active scriptB');
         checkInitCall(e, n++, 'update scriptA');
@@ -627,21 +614,22 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(enabler);
 
-        // await waitForNextFrame();
-
-        // expect(window.initializeCalls.length).to.equal(1);
+        expect(window.initializeCalls.length).to.equal(3);
 
         await waitForNextFrame();
 
-        expect(window.initializeCalls.length).to.equal(7);
+        expect(window.initializeCalls.length).to.equal(9);
 
-        checkInitCall(enabler, 0, 'initialize enabler');
-        checkInitCall(e, 1, 'active scriptA');
-        checkInitCall(e, 2, 'active scriptB');
-        checkInitCall(e, 3, 'update scriptA');
-        checkInitCall(e, 4, 'update scriptB');
-        checkInitCall(e, 5, 'post-update scriptA');
-        checkInitCall(e, 6, 'post-update scriptB');
+        let n = 0;
+        checkInitCall(enabler, n++, 'initialize enabler');
+        checkInitCall(e, n++, 'initialize scriptA');
+        checkInitCall(e, n++, 'initialize scriptB');
+        checkInitCall(e, n++, 'active scriptA');
+        checkInitCall(e, n++, 'active scriptB');
+        checkInitCall(e, n++, 'update scriptA');
+        checkInitCall(e, n++, 'update scriptB');
+        checkInitCall(e, n++, 'post-update scriptA');
+        checkInitCall(e, n++, 'post-update scriptB');
 
     });
 
@@ -700,7 +688,7 @@ describe("pc.EsmScriptComponent", function () {
 
     // });
 
-    it("initialize is called for entity and all children before postInitialize", async function () {
+    it("initialize is called for entity and all children before `active` and `update`", async function () {
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
         await component.system.initializeComponentData(component, {
@@ -765,9 +753,9 @@ describe("pc.EsmScriptComponent", function () {
         });
         c1.addChild(c3);
 
-        expect(window.initializeCalls.length).to.equal(0);
-
         app.root.addChild(e);
+
+        expect(window.initializeCalls.length).to.equal(8);
 
         await waitForNextFrame();
 
@@ -777,10 +765,10 @@ describe("pc.EsmScriptComponent", function () {
         checkInitCall(e, ++idx, 'initialize scriptB');
         checkInitCall(c1, ++idx, 'initialize scriptA');
         checkInitCall(c1, ++idx, 'initialize scriptB');
-        checkInitCall(c2, ++idx, 'initialize scriptA');
-        checkInitCall(c2, ++idx, 'initialize scriptB');
         checkInitCall(c3, ++idx, 'initialize scriptA');
         checkInitCall(c3, ++idx, 'initialize scriptB');
+        checkInitCall(c2, ++idx, 'initialize scriptA');
+        checkInitCall(c2, ++idx, 'initialize scriptB');
 
         checkInitCall(e, ++idx, 'active scriptA');
         checkInitCall(e, ++idx, 'active scriptB');
@@ -1199,8 +1187,6 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        await waitForNextFrame();
-
         const script = e.esmscript.get('ScriptWithAttributes');
 
         // simple attribute - No default
@@ -1278,11 +1264,11 @@ describe("pc.EsmScriptComponent", function () {
         // simple color attribute - w/ default
         expect(script.simpleColorHex).to.be.an.instanceof(pc.Color);
         expect({ ...script.simpleColorHex }).to.deep.equal({ r: 0.5, g: 0.5, b: 0.5, a: 0.5 });
-        
+
         // simple attribute - w/ default
         expect(script.simpleColorAsArray).to.be.an.instanceof(pc.Color);
         expect({ ...script.simpleColorAsArray }).to.deep.equal({ r: 0.9, g: 0.8, b: 0.7, a: 0.6 });
-        
+
         // simple attribute array - w/ default
         expect(script.simpleAttributeArray).to.be.an.instanceof(Array);
         expect(script.simpleAttributeArray).to.have.lengthOf(4);
@@ -1396,180 +1382,58 @@ describe("pc.EsmScriptComponent", function () {
 
     });
 
-    // it('default values work for partially initialized script attributes', async function () {
-    //     var e = new pc.Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         modules: [{
-    //             moduleSpecifier: "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-    //             enabled: true,
-    //             attributes: {
-    //                 attribute2: 3,
-    //                 attribute3: {
-    //                     fieldNumber: 10
-    //                     // fieldNumberArray: { type: 'number', array: true, default: 5 }
-    //                 }
-    //             }
-    //         }]
-    //     });
+    it('default values work for partially initialized script attributes', async function () {
+        var e = new pc.Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            modules: [{
+                moduleSpecifier: "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
+                enabled: true,
+                attributes: {
+                    attribute2: 3,
+                    attribute3: {
+                        internalNumber: 10,
+                        internalArrayNoDefault: [4]
+                    }
+                }
+            }]
+        });
 
-    //     app.root.addChild(e);
+        app.root.addChild(e);
 
-    //     await waitForNextFrame();
+        const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     const scriptWithAttributes = e.esmscript.get('ScriptWithAttributes');
+        expect(script).to.exist;
+        expect(script.attribute3.internalNumber).to.equal(10);
 
-    //     expect(scriptWithAttributes).to.exist;
-    //     expect(scriptWithAttributes.attribute3.fieldNumber).to.equal(10);
+        expect(script.attribute3.internalArrayNoDefault).to.deep.equal([4]);
+        expect(script.attribute3.internalArray).to.deep.equal([1, 2, 3, 4]);
+    });
 
-    //     console.log(scriptWithAttributes.attribute3);
+    it('should warn when assigning an invalid value to a attribute', async function () {
 
-    //     expect(scriptWithAttributes.attribute3[0]).to.equal(5);
-    //     // expect(scriptWithAttributes.attribute4[0].fieldNumberArray).to.deep.equal([]);
-    // });
+        const warnings = [];
+        Debug.warn = warning => warnings.push(warning);
 
-    // it('enable is fired when entity becomes enabled', async function () {
-    //     var e = new pc.Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
+        var e = new pc.Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            modules: [{
+                moduleSpecifier: "/base/tests/framework/components/script/esm-scriptWithSimpleAttributes.js",
+                enabled: true,
+                attributes: {
+                    simpleAttribute: 'This should warn',
+                    simpleAttributeNoDefault: false,
+                    attribute3: {} // This should warn
+                }
+            }]
+        });
 
-    //     app.root.addChild(e);
+        app.root.addChild(e);
 
-    //     await waitForNextFrame();
+        expect(warnings).to.have.a.lengthOf(4);
 
-    //     expect(window.initializeCalls.length).to.equal(2);
-    //     checkInitCall(e, 0, 'initialize scriptA');
-    //     checkInitCall(e, 1, 'update scriptA');
-
-    //     e.enabled = false;
-
-    //     window.initializeCalls.length = 0;
-
-    //     e.enabled = true;
-
-    //     expect(window.initializeCalls.length).to.equal(2);
-    //     // checkInitCall(e, 0, 'enable scriptComponent scriptA');
-    //     // checkInitCall(e, 1, 'state scriptComponent true scriptA');
-    //     // checkInitCall(e, 2, 'enable scriptA');
-    //     // checkInitCall(e, 3, 'state true scriptA');
-    // });
-
-    // it('disable is fired when entity becomes disabled', function () {
-    //     var e = new pc.Entity();
-    //     e.addComponent('script', {
-    //         "enabled": true,
-    //         "order": [
-    //             "scriptA"
-    //         ],
-    //         "scripts": {
-    //             "scriptA": {
-    //                 "enabled": true,
-    //                 "attributes": {}
-    //             }
-    //         }
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     window.initializeCalls.length = 0;
-
-    //     e.enabled = false;
-
-    //     expect(window.initializeCalls.length).to.equal(4);
-    //     checkInitCall(e, 0, 'disable scriptComponent scriptA');
-    //     checkInitCall(e, 1, 'state scriptComponent false scriptA');
-    //     checkInitCall(e, 2, 'disable scriptA');
-    //     checkInitCall(e, 3, 'state false scriptA');
-    // });
-
-    // it('enable is fired when script component becomes enabled', async function () {
-    //     var e = new pc.Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     e.esmscript.enabled = false;
-
-    //     window.initializeCalls.length = 0;
-
-    //     e.esmscript.enabled = true;
-
-    //     await waitForNextFrame();
-
-    //     expect(window.initializeCalls.length).to.equal(4);
-    //     checkInitCall(e, 0, 'initialize scriptA');
-    //     checkInitCall(e, 1, 'active scriptA');
-    //     checkInitCall(e, 2, 'update scriptA');
-    //     checkInitCall(e, 3, 'post-update scriptA');
-    //     // checkInitCall(e, 3, 'state true scriptA');
-    // });
-
-    // it('enable is not fired if script component started disabled', function () {
-    //     var e = new pc.Entity();
-    //     e.addComponent('script', {
-    //         "enabled": false,
-    //         "order": [
-    //             "scriptA"
-    //         ],
-    //         "scripts": {
-    //             "scriptA": {
-    //                 "enabled": true,
-    //                 "attributes": {}
-    //             }
-    //         }
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     e.script.enabled = true;
-
-    //     expect(window.initializeCalls.length).to.equal(2);
-    //     checkInitCall(e, 0, 'initialize scriptA');
-    //     checkInitCall(e, 1, 'postInitialize scriptA');
-    // });
-
-    // it('disable is fired when script component becomes disabled', function () {
-    //     var e = new pc.Entity();
-    //     e.addComponent('script', {
-    //         "enabled": true,
-    //         "order": [
-    //             "scriptA"
-    //         ],
-    //         "scripts": {
-    //             "scriptA": {
-    //                 "enabled": true,
-    //                 "attributes": {}
-    //             }
-    //         }
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     window.initializeCalls.length = 0;
-
-    //     e.script.enabled = false;
-
-    //     expect(window.initializeCalls.length).to.equal(4);
-    //     checkInitCall(e, 0, 'disable scriptComponent scriptA');
-    //     checkInitCall(e, 1, 'state scriptComponent false scriptA');
-    //     checkInitCall(e, 2, 'disable scriptA');
-    //     checkInitCall(e, 3, 'state false scriptA');
-    // });
+    })
 
 
     // it('if entity is disabled in `initialize` call and enabled later, `postInitialize` is called only later', async function () {
@@ -3262,5 +3126,149 @@ describe("pc.EsmScriptComponent", function () {
     //     expect(e.script.has('')).to.equal(false);
     //     expect(e.script.has(undefined)).to.equal(false);
     //     expect(e.script.has(null)).to.equal(false);
+    // });
+
+
+    // it('enable is fired when entity becomes enabled', async function () {
+    //     var e = new pc.Entity();
+    //     const component = e.addComponent('esmscript');
+    //     await component.system.initializeComponentData(component, {
+    //         "enabled": true,
+    //         "modules": [{
+    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
+    //             "enabled": true,
+    //             "attributes": {}
+    //         }]
+    //     });
+
+    //     app.root.addChild(e);
+
+    //     await waitForNextFrame();
+
+    //     expect(window.initializeCalls.length).to.equal(2);
+    //     checkInitCall(e, 0, 'initialize scriptA');
+    //     checkInitCall(e, 1, 'update scriptA');
+
+    //     e.enabled = false;
+
+    //     window.initializeCalls.length = 0;
+
+    //     e.enabled = true;
+
+    //     expect(window.initializeCalls.length).to.equal(2);
+    //     // checkInitCall(e, 0, 'enable scriptComponent scriptA');
+    //     // checkInitCall(e, 1, 'state scriptComponent true scriptA');
+    //     // checkInitCall(e, 2, 'enable scriptA');
+    //     // checkInitCall(e, 3, 'state true scriptA');
+    // });
+
+    // it('disable is fired when entity becomes disabled', function () {
+    //     var e = new pc.Entity();
+    //     e.addComponent('script', {
+    //         "enabled": true,
+    //         "order": [
+    //             "scriptA"
+    //         ],
+    //         "scripts": {
+    //             "scriptA": {
+    //                 "enabled": true,
+    //                 "attributes": {}
+    //             }
+    //         }
+    //     });
+
+    //     app.root.addChild(e);
+
+    //     window.initializeCalls.length = 0;
+
+    //     e.enabled = false;
+
+    //     expect(window.initializeCalls.length).to.equal(4);
+    //     checkInitCall(e, 0, 'disable scriptComponent scriptA');
+    //     checkInitCall(e, 1, 'state scriptComponent false scriptA');
+    //     checkInitCall(e, 2, 'disable scriptA');
+    //     checkInitCall(e, 3, 'state false scriptA');
+    // });
+
+    // it('enable is fired when script component becomes enabled', async function () {
+    //     var e = new pc.Entity();
+    //     const component = e.addComponent('esmscript');
+    //     await component.system.initializeComponentData(component, {
+    //         "enabled": true,
+    //         "modules": [{
+    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
+    //             "enabled": true,
+    //             "attributes": {}
+    //         }]
+    //     });
+
+    //     app.root.addChild(e);
+
+    //     e.esmscript.enabled = false;
+
+    //     window.initializeCalls.length = 0;
+
+    //     e.esmscript.enabled = true;
+
+    //     await waitForNextFrame();
+
+    //     expect(window.initializeCalls.length).to.equal(4);
+    //     checkInitCall(e, 0, 'initialize scriptA');
+    //     checkInitCall(e, 1, 'active scriptA');
+    //     checkInitCall(e, 2, 'update scriptA');
+    //     checkInitCall(e, 3, 'post-update scriptA');
+    //     // checkInitCall(e, 3, 'state true scriptA');
+    // });
+
+    // it('enable is not fired if script component started disabled', function () {
+    //     var e = new pc.Entity();
+    //     e.addComponent('script', {
+    //         "enabled": false,
+    //         "order": [
+    //             "scriptA"
+    //         ],
+    //         "scripts": {
+    //             "scriptA": {
+    //                 "enabled": true,
+    //                 "attributes": {}
+    //             }
+    //         }
+    //     });
+
+    //     app.root.addChild(e);
+
+    //     e.script.enabled = true;
+
+    //     expect(window.initializeCalls.length).to.equal(2);
+    //     checkInitCall(e, 0, 'initialize scriptA');
+    //     checkInitCall(e, 1, 'postInitialize scriptA');
+    // });
+
+    // it('disable is fired when script component becomes disabled', function () {
+    //     var e = new pc.Entity();
+    //     e.addComponent('script', {
+    //         "enabled": true,
+    //         "order": [
+    //             "scriptA"
+    //         ],
+    //         "scripts": {
+    //             "scriptA": {
+    //                 "enabled": true,
+    //                 "attributes": {}
+    //             }
+    //         }
+    //     });
+
+    //     app.root.addChild(e);
+
+    //     window.initializeCalls.length = 0;
+
+    //     e.script.enabled = false;
+
+    //     expect(window.initializeCalls.length).to.equal(4);
+    //     checkInitCall(e, 0, 'disable scriptComponent scriptA');
+    //     checkInitCall(e, 1, 'state scriptComponent false scriptA');
+    //     checkInitCall(e, 2, 'disable scriptA');
+    //     checkInitCall(e, 3, 'state false scriptA');
     // });
 });
