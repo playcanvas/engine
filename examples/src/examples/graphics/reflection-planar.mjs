@@ -205,7 +205,6 @@ async function example({ canvas, deviceType, files, scriptsPath, assetPath, glsl
 
 export class ReflectionPlanarExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Reflection Planar';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

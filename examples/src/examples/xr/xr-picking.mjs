@@ -184,7 +184,6 @@ async function example({ canvas }) {
 
 class XrPickingExample {
     static CATEGORY = 'XR';
-    static NAME = 'XR Picking';
     static example = example;
 }
 

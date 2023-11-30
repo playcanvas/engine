@@ -180,6 +180,21 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the render passes the camera will use for rendering, instead of its default rendering.
+     * Set this to an empty array to return to the default behavior.
+     *
+     * @type {import('../../../platform/graphics/render-pass.js').RenderPass[]}
+     * @ignore
+     */
+    set renderPasses(passes) {
+        this._camera.renderPasses = passes;
+    }
+
+    get renderPasses() {
+        return this._camera.renderPasses;
+    }
+
+    /**
      * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
      *
      * @type {number}

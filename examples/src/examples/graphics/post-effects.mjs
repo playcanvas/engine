@@ -176,9 +176,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
         twgslUrl: twgslPath + 'twgsl.js',
-
-        // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
-        antialias: false
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -433,7 +430,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class PostEffectsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Post Effects';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

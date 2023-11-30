@@ -133,7 +133,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shader Wobble';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

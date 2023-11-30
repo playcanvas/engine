@@ -110,9 +110,6 @@ class Camera {
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
 
-        this.renderPasses.forEach((pass) => {
-            pass.destroy();
-        });
         this.renderPasses.length = 0;
     }
 
@@ -459,7 +456,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+                this.renderPassColorGrab = new RenderPassColorGrab(device);
             }
         } else {
             this.renderPassColorGrab?.destroy();

@@ -1194,6 +1194,7 @@ export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
 export const UNIFORMTYPE_MAT4ARRAY = 24;
+export const UNIFORMTYPE_TEXTURE2D_ARRAY = 25;
 
 export const uniformTypeToName = [
     'bool',

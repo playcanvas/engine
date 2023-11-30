@@ -279,7 +279,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MeshDecalsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Decals';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

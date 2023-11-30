@@ -97,7 +97,6 @@ async function example({ canvas, assetPath }) {
 
 export class ParticlesSnowExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Particles: Snow';
     static example = example;
     static WEBGPU_ENABLED = false; // no particles visible after hot-reload
 }

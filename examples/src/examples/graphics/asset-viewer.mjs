@@ -267,7 +267,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class AssetViewerExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Asset Viewer';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

@@ -236,7 +236,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
 class RaycastExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Raycast';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
