@@ -461,6 +461,9 @@ class EsmScriptComponent extends Component {
         if (!ModuleClass.name || ModuleClass.name === '')
             throw new Error('Anonymous classes are not supported. Please use `class MyClass{}` as opposed to `const MyClass = class{}`');
 
+        if (this.moduleNameInstanceMap.has(ModuleClass.name))
+            throw new Error(`A esm script class called '${ModuleClass.name}' has already been added to this component.`);
+
         // Create the esm script instance
         const module = new ModuleClass();
 
