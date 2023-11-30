@@ -51,9 +51,30 @@ const fragmentShader = `
 
     #endif
 
+    #ifdef FRINGING
+
+        uniform float fringingIntensity;
+
+        vec3 fringing(vec2 uv, vec3 color) {
+
+            // offset depends on the direction from the center, raised to power to make it stronger away from the center
+            vec2 centerDistance = uv0 - 0.5;
+            vec2 offset = fringingIntensity * pow(centerDistance, vec2(2.0, 2.0));
+
+            color.r = texture2D(sceneTexture, uv0 - offset).r;
+            color.b = texture2D(sceneTexture, uv0 + offset).b;
+            return color;
+        }
+
+    #endif
+
     void main() {
         vec4 scene = texture2D(sceneTexture, uv0);
         vec3 result = scene.rgb;
+
+        #ifdef FRINGING
+            result = fringing(uv0, result);
+        #endif
 
         #ifdef BLOOM
             vec3 bloom = texture2D(bloomTexture, uv0).rgb;
@@ -105,6 +126,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     vignetteIntensity = 0.3;
 
+    _fringingEnabled = false;
+
+    fringingIntensity = 10;
+
     _key = '';
 
     constructor(graphicsDevice) {
@@ -115,6 +140,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.bloomIntensityId = graphicsDevice.scope.resolve('bloomIntensity');
         this.bcsId = graphicsDevice.scope.resolve('brightnessContrastSaturation');
         this.vignetterParamsId = graphicsDevice.scope.resolve('vignetterParams');
+        this.fringingIntensityId = graphicsDevice.scope.resolve('fringingIntensity');
     }
 
     set bloomTexture(value) {
@@ -148,6 +174,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get vignetteEnabled() {
         return this._vignetteEnabled;
+    }
+
+    set fringingEnabled(value) {
+        if (this._fringingEnabled !== value) {
+            this._fringingEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get fringingEnabled() {
+        return this._fringingEnabled;
     }
 
     set toneMapping(value) {
@@ -187,7 +224,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
             const key = `${this.toneMapping}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
-                `-${this.vignetteEnabled ? 'vignette' : 'novignette'}`;
+                `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
+                `-${this.fringingEnabled ? 'fringing' : 'nofringing'}`;
 
             if (this._key !== key) {
                 this._key = key;
@@ -195,7 +233,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 const defines =
                     (this.bloomTexture ? `#define BLOOM\n` : '') +
                     (this.gradingEnabled ? `#define GRADING\n` : '') +
-                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '');
+                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
+                    (this.fringingEnabled ? `#define FRINGING\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +
@@ -222,6 +261,10 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._vignetteEnabled) {
             this.vignetterParamsId.setValue([this.vignetteInner, this.vignetteOuter, this.vignetteCurvature, this.vignetteIntensity]);
+        }
+
+        if (this._fringingEnabled) {
+            this.fringingIntensityId.setValue(this.fringingIntensity / this.sceneTexture.height);
         }
 
         super.execute();

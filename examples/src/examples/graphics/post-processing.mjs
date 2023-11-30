@@ -157,6 +157,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 2
                 })
             )
+        ),
+        jsx(Panel, { headerText: 'Fringing' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.fringing.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.fringing.intensity' },
+                    min: 0,
+                    max: 100,
+                    precision: 0
+                })
+            )
         )
     );
 }
@@ -520,6 +538,14 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                     composePass.vignetteIntensity = value;
                 }
             }
+            if (pathArray[1] === 'fringing') {
+                if (pathArray[2] === 'enabled') {
+                    composePass.fringingEnabled = value;
+                }
+                if (pathArray[2] === 'intensity') {
+                    composePass.fringingIntensity = value;
+                }
+            }
         });
 
         data.set('data', {
@@ -546,6 +572,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 outer: 1.0,
                 curvature: 0.5,
                 intensity: 0.3
+            },
+            fringing: {
+                enabled: false,
+                intensity: 50
             }
         });
 
