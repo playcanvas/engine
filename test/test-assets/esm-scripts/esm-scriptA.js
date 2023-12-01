@@ -1,31 +1,31 @@
-import { call } from '../../framework/components/esmscript/method-util.js';
+import { ACTIVE, DESTROY, INACTIVE, INITIALIZE, POST_INITIALIZE, POST_UPDATE, UPDATE, call } from '../../framework/components/esmscript/method-util.js';
 
 export default class ScriptA {
     initialize() {
-        call(this.entity.getGuid() + ' initialize scriptA');
+        call(INITIALIZE(this));
     }
 
     postInitialize() {
-        call(this.entity.getGuid() + ' postInitialize scriptA');
+        call(POST_INITIALIZE(this));
     }
 
     active() {
-        call(this.entity.getGuid() + ' active scriptA');
+        call(ACTIVE(this));
     }
 
     inactive() {
-
+        call(INACTIVE(this));
     }
 
     update(dt) {
-        call(this.entity.getGuid() + ' update scriptA');
+        call(UPDATE(this));
     }
 
     postUpdate(dt) {
-        call(this.entity.getGuid() + ' post-update scriptA');
+        call(POST_UPDATE(this));
     }
 
     destroy() {
-
+        call(DESTROY(this));
     }
 }

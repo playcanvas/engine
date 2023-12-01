@@ -7,17 +7,301 @@ import { Color } from '../../../../src/core/math/color.js';
 import { expect } from 'chai';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-import { reset } from './method-util.js';
-
-const initializeCalls = [];
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame } from './method-util.js';
 
 describe('EsmScriptComponent', function () {
     let app;
 
-    beforeEach(function () {
+    beforeEach(function (done) {
         reset();
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas);
+
+        // add script assets
+        app._parseAssets({
+            "1": {
+                "tags": [],
+                "name": "esm-scriptA.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm=-scriptA.js",
+                    "size": 1,
+                    // "hash": "script a hash",
+                    "url": "/base/tests/framework/components/script/esm-scriptA.js"
+                },
+                "region": "eu-west-1",
+                "id": "1"
+            },
+            "2": {
+                "tags": [],
+                "name": "esm-scriptB.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptB.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-scriptB.js",
+                    "size": 1,
+                    // "hash": "script b hash",
+                    "url": "/base/tests/framework/components/script/esm-scriptB.js"
+                },
+                "region": "eu-west-1",
+                "id": "2"
+            },
+            "3": {
+                "tags": [],
+                "name": "esm-cloner.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-cloner.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-cloner.js",
+                    "size": 1,
+                    // "hash": "cloner hash",
+                    "url": "/base/tests/framework/components/script/esm-cloner.js"
+                },
+                "region": "eu-west-1",
+                "id": "3"
+            },
+            "4": {
+                "tags": [],
+                "name": "esm-enabler.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-enabler.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-enabler.js",
+                    "size": 1,
+                    // "hash": "enabler hash",
+                    "url": "/base/tests/framework/components/script/esm-enabler.js"
+                },
+                "region": "eu-west-1",
+                "id": "4"
+            },
+            "5": {
+                "tags": [],
+                "name": "esm-disabler.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-disabler.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-disabler.js",
+                    "size": 1,
+                    // "hash": "disabler hash",
+                    "url": "/base/tests/framework/components/script/esm-disabler.js"
+                },
+                "region": "eu-west-1",
+                "id": "5"
+            },
+            "6": {
+                "tags": [],
+                "name": "esm-scriptWithAttributes.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
+                        "attributes": {
+                            "attribute1": {
+                                "type": "entity"
+                            },
+                            "attribute2": {
+                                "type": "number",
+                                "default": 2
+                            },
+                            "attribute3": {
+                                "type": "json",
+                                "schema": [{
+                                    "name": 'fieldNumber',
+                                    "type": 'number'
+                                }]
+                            },
+                            "attribute4": {
+                                "type": "json",
+                                "array": true,
+                                "schema": [{
+                                    "name": 'fieldNumber',
+                                    "type": 'number'
+                                }]
+                            }
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-scriptWithAttributes.js",
+                    "size": 1,
+                    // "hash": "scriptWithAttributes hash",
+                    "url": "/base/tests/framework/components/script/esm-scriptWithAttributes.js"
+                },
+                "region": "eu-west-1",
+                "id": "6"
+            },
+            "7": {
+                "tags": [],
+                "name": "esm-loadedLater.js",
+                "revision": 1,
+                "preload": false,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-loadedLater.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-loadedLater.js",
+                    "size": 1,
+                    // "hash": "loadedLater hash",
+                    "url": "/base/tests/framework/components/script/esm-loadedLater.js"
+                },
+                "region": "eu-west-1",
+                "id": "7"
+            },
+            "8": {
+                "tags": [],
+                "name": "esm-destroyer.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-destroyer.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-destroyer.js",
+                    "size": 1,
+                    // "hash": "destroyer hash",
+                    "url": "/base/tests/framework/components/script/esm-destroyer.js"
+                },
+                "region": "eu-west-1",
+                "id": "8"
+            },
+            "9": {
+                "tags": [],
+                "name": "esm-postCloner.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-postCloner.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-postCloner.js",
+                    "size": 1,
+                    // "hash": "postCloner hash",
+                    "url": "/base/tests/framework/components/script/esm-postCloner.js"
+                },
+                "region": "eu-west-1",
+                "id": "9"
+            },
+            "10": {
+                "tags": [],
+                "name": "esm-postInitializeReporter.js",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "/base/tests/framework/components/script/esm-postInitializeReporter.js",
+                        "attributes": {
+
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-postInitializeReporter.js",
+                    "size": 1,
+                    // "hash": "postInitializeReporter hash",
+                    "url": "/base/tests/framework/components/script/esm-postInitializeReporter.js"
+                },
+                "region": "eu-west-1",
+                "id": "10"
+            }
+        });
+
+        app.preload(function (err) {
+            if (err) {
+                console.error(err);
+            }
+
+            app.scenes.loadScene('http://localhost:3000/test/test-assets/esmscripts/scene1.json', function () {
+                app.start();
+                done();
+            });
+        });
     });
 
     afterEach(function () {
@@ -30,419 +314,136 @@ describe('EsmScriptComponent', function () {
     //     // Override the debug to remove console mess
     //     Debug.warn = warning => null;
 
-    //     const canvas = new HTMLCanvasElement(500, 500);
-    //     app = new Application(canvas);
-
-    //     initializeCalls.length = 0;
-
-    //     // add script assets
-    //     // app._parseAssets({
-    //     //     "1": {
-    //     //         "tags": [],
-    //     //         "name": "esm-scriptA.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm=-scriptA.js",
-    //     //             "size": 1,
-    //     //             // "hash": "script a hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-scriptA.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "1"
-    //     //     },
-    //     //     "2": {
-    //     //         "tags": [],
-    //     //         "name": "esm-scriptB.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptB.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-scriptB.js",
-    //     //             "size": 1,
-    //     //             // "hash": "script b hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-scriptB.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "2"
-    //     //     },
-    //     //     "3": {
-    //     //         "tags": [],
-    //     //         "name": "esm-cloner.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-cloner.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-cloner.js",
-    //     //             "size": 1,
-    //     //             // "hash": "cloner hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-cloner.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "3"
-    //     //     },
-    //     //     "4": {
-    //     //         "tags": [],
-    //     //         "name": "esm-enabler.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-enabler.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-enabler.js",
-    //     //             "size": 1,
-    //     //             // "hash": "enabler hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-enabler.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "4"
-    //     //     },
-    //     //     "5": {
-    //     //         "tags": [],
-    //     //         "name": "esm-disabler.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-disabler.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-disabler.js",
-    //     //             "size": 1,
-    //     //             // "hash": "disabler hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-disabler.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "5"
-    //     //     },
-    //     //     "6": {
-    //     //         "tags": [],
-    //     //         "name": "esm-scriptWithAttributes.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-    //     //                 "attributes": {
-    //     //                     "attribute1": {
-    //     //                         "type": "entity"
-    //     //                     },
-    //     //                     "attribute2": {
-    //     //                         "type": "number",
-    //     //                         "default": 2
-    //     //                     },
-    //     //                     "attribute3": {
-    //     //                         "type": "json",
-    //     //                         "schema": [{
-    //     //                             "name": 'fieldNumber',
-    //     //                             "type": 'number'
-    //     //                         }]
-    //     //                     },
-    //     //                     "attribute4": {
-    //     //                         "type": "json",
-    //     //                         "array": true,
-    //     //                         "schema": [{
-    //     //                             "name": 'fieldNumber',
-    //     //                             "type": 'number'
-    //     //                         }]
-    //     //                     }
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-scriptWithAttributes.js",
-    //     //             "size": 1,
-    //     //             // "hash": "scriptWithAttributes hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-scriptWithAttributes.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "6"
-    //     //     },
-    //     //     "7": {
-    //     //         "tags": [],
-    //     //         "name": "esm-loadedLater.js",
-    //     //         "revision": 1,
-    //     //         "preload": false,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-loadedLater.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-loadedLater.js",
-    //     //             "size": 1,
-    //     //             // "hash": "loadedLater hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-loadedLater.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "7"
-    //     //     },
-    //     //     "8": {
-    //     //         "tags": [],
-    //     //         "name": "esm-destroyer.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-destroyer.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-destroyer.js",
-    //     //             "size": 1,
-    //     //             // "hash": "destroyer hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-destroyer.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "8"
-    //     //     },
-    //     //     "9": {
-    //     //         "tags": [],
-    //     //         "name": "esm-postCloner.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-postCloner.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-postCloner.js",
-    //     //             "size": 1,
-    //     //             // "hash": "postCloner hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-postCloner.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "9"
-    //     //     },
-    //     //     "10": {
-    //     //         "tags": [],
-    //     //         "name": "esm-postInitializeReporter.js",
-    //     //         "revision": 1,
-    //     //         "preload": true,
-    //     //         "meta": null,
-    //     //         "data": {
-    //     //             "modules": [{
-    //     //                 "moduleSpecifier": "/base/tests/framework/components/script/esm-postInitializeReporter.js",
-    //     //                 "attributes": {
-
-    //     //                 }
-    //     //             }],
-    //     //             "loading": false
-    //     //         },
-    //     //         "type": "esmscript",
-    //     //         "file": {
-    //     //             "filename": "esm-postInitializeReporter.js",
-    //     //             "size": 1,
-    //     //             // "hash": "postInitializeReporter hash",
-    //     //             "url": "/base/tests/framework/components/script/esm-postInitializeReporter.js"
-    //     //         },
-    //     //         "region": "eu-west-1",
-    //     //         "id": "10"
-    //     //     }
-    //     // });
-
-    //     app.preload(function (err) {
-    //         if (err) {
-    //             console.error(err);
-    //         }
-
-    //         app.scenes.loadScene('http://localhost:3000/test/test-assets/esmscripts/scene1.json', function () {
-    //             app.start();
-    //             done();
-    //         });
-    //     });
     // });
 
-    // function waitForNextFrame() {
-    //     return new Promise((resolve) => {
-    //         requestAnimationFrame(() => resolve());
-    //     });
-    // }
+    describe('#initialize', function () {
 
-    const checkInitCall = function (entity, index, text) {
-        expect(initializeCalls[index]).to.equal(entity.getGuid() + ' ' + text);
-    };
+        it('expects `entity` and `app` to be set on a new ESM Script', async function () {
 
-    it('`entity` and `app` are set on an esm script', async function () {
-
-        const e = new Entity();
-        const component = e.addComponent('esmscript');
-        await component.system.initializeComponentData(component, {
-            enabled: true,
-            modules: [{
+            const e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
                 enabled: true,
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
-            }]
+                modules: [{
+                    enabled: true,
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                }]
+            });
+
+            app.root.addChild(e);
+
+            const script = component.get('ScriptA');
+
+            expect(script).to.exist;
+            expect(script.entity).to.equal(e);
+            expect(script.app).to.equal(component.system.app);
+
         });
 
-        app.root.addChild(e);
+        it('expects `initialize` to be called on a new ESM Script', async function () {
 
-        const script = component.get('ScriptA');
+            const e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                enabled: true,
+                modules: [{
+                    enabled: true,
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                }]
+            });
 
-        expect(script).to.exist;
-        expect(script.entity).to.equal(e);
-        expect(script.app).to.equal(component.system.app);
+            app.root.addChild(e);
+            expect(e.esmscript).to.exist;
 
-    });
+            const script = e.esmscript.get('ScriptA');
+            expect(script).to.exist;
 
-    it("`initialize` is called on a new esm script", async function () {
+            expect(calls.length).to.equal(1);
+            expectCall(0, INITIALIZE(script));
 
-        const e = new Entity();
-        const component = e.addComponent('esmscript');
-        await component.system.initializeComponentData(component, {
-            "enabled": true,
-            "modules": [{
-                "enabled": "true",
-                "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js"
-            }]
         });
 
-        app.root.addChild(e);
+        it('expects `initialize` to be called on an entity that is enabled later', async function () {
 
-        expect(e.esmscript).to.exist;
+            const e = new Entity();
+            e.enabled = false;
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                enabled: true,
+                modules: [{
+                    enabled: true,
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                }]
+            });
 
-        expect(initializeCalls.length).to.equal(1);
-        checkInitCall(e, 0, 'initialize scriptA');
+            app.root.addChild(e);
+            expect(e.esmscript).to.exist;
 
+            const script = e.esmscript.get('ScriptA');
+            expect(script).to.exist;
+
+            e.enabled = true;
+
+            expectCall(0, INITIALIZE(script));
+
+        });
+
+        it('expects `initialize()` to be called on a component that is enabled later', async function () {
+            const e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                enabled: false,
+                modules: [{
+                    enabled: true,
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                }]
+            });
+
+            app.root.addChild(e);
+
+            const script = e.esmscript.get('ScriptA');
+            expect(script).to.exist;
+
+            expect(calls).to.have.a.lengthOf(0);
+
+            e.esmscript.enabled = true;
+
+            expectCall(0, INITIALIZE(script));
+
+        });
+
+        it('expects `initialize` to be called on an ESM Script that is enabled later', async function () {
+            const e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                enabled: true,
+                modules: [{
+                    enabled: false,
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                }]
+            });
+
+            app.root.addChild(e);
+
+            // module is not active
+            expect(calls).to.have.a.lengthOf(0);
+
+            const script = e.esmscript.get('ScriptA');
+
+            e.esmscript.enableModule(script);
+
+            await waitForNextFrame();
+            await waitForNextFrame();
+            await waitForNextFrame();
+            await waitForNextFrame();
+            await waitForNextFrame();
+
+            expect(calls[0]).to.equal('sdfs')
+            expectCall(0, INITIALIZE(script));
+        });
     });
 
-    // it("`initialize` is called on an entity that is enabled later", async function () {
-    //     const e = new Entity();
-    //     e.enabled = false;
 
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "enabled": "false",
-    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js"
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-    //     expect(initializeCalls.length).to.equal(0);
-
-    //     e.enabled = true;
-
-    //     expect(initializeCalls.length).to.equal(1);
-
-    // });
-
-    // it("`initialize` is called on a component that is enabled later", async function () {
-    //     const e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": false,
-    //         "modules": [{
-    //             "enabled": "true",
-    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js"
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     // module is not active
-    //     expect(initializeCalls.length).to.equal(0);
-
-    //     e.esmscript.enabled = true;
-
-    //     expect(initializeCalls.length).to.equal(1);
-
-    // });
-
-    // it("`initialize` is called on a script instance that is enabled later", async function () {
-    //     const e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "enabled": false,
-    //             "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptA.js"
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     // module is not active
-    //     expect(initializeCalls.length).to.equal(0);
-
-    //     const script = e.esmscript.get('ScriptA');
-
-    //     e.esmscript.enableModule(script);
-
-    //     await waitForNextFrame();
-
-    //     expect(initializeCalls.length).to.equal(4);
-    // });
 
     // it("`initialize`, `active`, `update` and `postUpdate` are called on a script instance that is created later", async function () {
     //     var e = new Entity();
