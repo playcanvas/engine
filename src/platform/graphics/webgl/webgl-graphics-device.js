@@ -853,14 +853,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     // #if _DEBUG
     pushMarker(name) {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             window.spector.setMarker(`${label} #`);
         }
     }
 
     popMarker() {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             if (label.length)
                 window.spector.setMarker(`${label} #`);
