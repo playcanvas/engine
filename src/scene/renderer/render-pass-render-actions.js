@@ -268,7 +268,6 @@ class RenderPassRenderActions extends RenderPass {
             device.setBlendState(BlendState.NOBLEND);
             device.setStencilState(null, null);
             device.setAlphaToCoverage(false);
-            device.setDepthBias(false);
         }
 
         // Call layer's post-render callback if there's one
