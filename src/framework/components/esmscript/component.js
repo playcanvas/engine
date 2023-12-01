@@ -510,7 +510,7 @@ class EsmScriptComponent extends Component {
      * Only attributes defined in the definition. Note that this does not perform any type-checking.
      * If no attribute is specified it uses the default value from the attribute definition if available.
      *
-     * @param {AppBase} app - The app base to search for asset references
+     * @param {import('../../app-base.js').AppBase} app - The app base to search for asset references
      * @param {AttributeDefinitionDict} attributeDefDict - The definition
      * @param {Object} attributes - The attributes to apply
      * @param {Object} [object] - The object to populate with attributes
