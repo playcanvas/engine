@@ -15,12 +15,12 @@ export default class ScriptA {
 
     }
 
-    update(dt, { entity }) {
-        window.initializeCalls.push(entity.getGuid() + ' update scriptA');
+    update(dt) {
+        window.initializeCalls.push(this.entity.getGuid() + ' update scriptA');
     }
 
-    postUpdate(dt, { entity }) {
-        window.initializeCalls.push(entity.getGuid() + ' post-update scriptA');
+    postUpdate(dt) {
+        window.initializeCalls.push(this.entity.getGuid() + ' post-update scriptA');
     }
 
     destroy() {

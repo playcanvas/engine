@@ -406,7 +406,7 @@ describe("pc.EsmScriptComponent", function () {
     it("`initialize` is called on a script instance that is enabled later", async function () {
         const e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const modules = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "enabled": false,
@@ -419,7 +419,9 @@ describe("pc.EsmScriptComponent", function () {
         // module is not active
         expect(window.initializeCalls.length).to.equal(0);
 
-        e.esmscript.enableModule(modules[0]);
+        const script = e.esmscript.get('ScriptA');
+
+        e.esmscript.enableModule(script);
 
         await waitForNextFrame();
 
@@ -432,9 +434,11 @@ describe("pc.EsmScriptComponent", function () {
         e.addComponent('esmscript');
         const ScriptA = await import('/base/tests/framework/components/script/esm-scriptA.js')
         e.esmscript.add(ScriptA);
-        await waitForNextFrame();
-        expect(window.initializeCalls.length).to.equal(4);
+        expect(window.initializeCalls.length).to.equal(1);
+
         checkInitCall(e, 0, 'initialize scriptA');
+        await waitForNextFrame();
+
         checkInitCall(e, 1, 'active scriptA');
         checkInitCall(e, 2, 'update scriptA');
         checkInitCall(e, 3, 'post-update scriptA');
@@ -512,7 +516,7 @@ describe("pc.EsmScriptComponent", function () {
 
     });
 
-    it('`update` is *not* called when a script disables itself', async function () {
+    it('`update` is _not_ called when a script disables itself', async function () {
         var e = new pc.Entity();
         app.root.addChild(e);
         e.addComponent('esmscript');
@@ -797,7 +801,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -810,8 +814,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
     });
 
 
@@ -822,9 +828,9 @@ describe("pc.EsmScriptComponent", function () {
         expect(e2).to.exist;
 
         var e = new pc.Entity();
-        e.enabled = false
+        e.enabled = false;
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -837,8 +843,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
     });
 
 
@@ -850,7 +858,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": false,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -863,8 +871,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
     });
 
     it("script attributes are initialized for disabled script instance", async function () {
@@ -875,7 +885,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -888,8 +898,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
     });
 
     it("script attributes are initialized when cloning enabled entity", async function () {
@@ -900,7 +912,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -913,8 +925,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
 
         var clone = e.clone();
         app.root.addChild(clone);
@@ -935,7 +949,7 @@ describe("pc.EsmScriptComponent", function () {
         var e = new pc.Entity();
         e.enabled = false;
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -948,8 +962,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
 
         var clone = e.clone();
         app.root.addChild(clone);
@@ -968,7 +984,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": false,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -981,8 +997,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
 
         var clone = e.clone();
         app.root.addChild(clone);
@@ -1001,7 +1019,7 @@ describe("pc.EsmScriptComponent", function () {
 
         var e = new pc.Entity();
         const component = e.addComponent('esmscript');
-        const [module] = await component.system.initializeComponentData(component, {
+        await component.system.initializeComponentData(component, {
             "enabled": true,
             "modules": [{
                 "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
@@ -1014,8 +1032,10 @@ describe("pc.EsmScriptComponent", function () {
 
         app.root.addChild(e);
 
-        expect(module.attribute1).to.equal(e2);
-        expect(module.attribute2).to.equal(2);
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
 
         var clone = e.clone();
         app.root.addChild(clone);
@@ -1412,26 +1432,22 @@ describe("pc.EsmScriptComponent", function () {
 
     it('should warn when assigning an invalid value to a attribute', async function () {
 
+        var e = new pc.Entity();
+        app.root.addChild(e);
+        e.addComponent('esmscript');
+        const EsmScript = await import('/base/tests/framework/components/script/esm-scriptWithSimpleAttributes.js')
+
+        // collect warnings
         const warnings = [];
         Debug.warn = warning => warnings.push(warning);
 
-        var e = new pc.Entity();
-        const component = e.addComponent('esmscript');
-        await component.system.initializeComponentData(component, {
-            modules: [{
-                moduleSpecifier: "/base/tests/framework/components/script/esm-scriptWithSimpleAttributes.js",
-                enabled: true,
-                attributes: {
-                    simpleAttribute: 'This should warn',
-                    simpleAttributeNoDefault: false,
-                    attribute3: {} // This should warn
-                }
-            }]
+        const module = e.esmscript.add(EsmScript, {
+            simpleAttribute: 'This should warn',
+            simpleAttributeNoDefault: 'Yep, another warning',
+            attribute3: 'yep, more warnings',
         });
 
-        app.root.addChild(e);
-
-        expect(warnings).to.have.a.lengthOf(4);
+        expect(warnings).to.have.a.lengthOf(2);
 
     })
 

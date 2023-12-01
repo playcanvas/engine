@@ -2,14 +2,12 @@ import { EventHandler } from "../../core/event-handler.js";
 
 /**
  * A base class for esm scripts that provide a similar set features and functionality
- * to the traditional scripts interface. Events, `initialize()` and 'enabled' prop.
+ * to the traditional scripts interface. Events and 'enabled' prop.
  *
  * Note that implementing this base class is not required by the component system, it's
  * simply to provide a convenient and familiar api to migrate users to the new ESM script system
  */
 export class EsmScriptType extends EventHandler {
-    hasInitialized = false;
-
     /**
      * The {@link AppBase} that the instance of this type belongs to.
      *
@@ -24,14 +22,7 @@ export class EsmScriptType extends EventHandler {
      */
     app;
 
-    initialize() {}
-
     set enabled(isEnabled) {
-
-        // if (!this.hasInitialized) {
-        //     Debug.error(`The EsmScript 'enabled' prop cannot be set until it has been initialized.`);
-        //     return;
-        // }
 
         if (isEnabled) {
             this.entity.esmscript.enableModule(this);
@@ -45,17 +36,6 @@ export class EsmScriptType extends EventHandler {
 
     get enabled() {
         return this.entity.esmscript.isModuleEnabled(this);
-    }
-
-    active({ entity, app }) {
-
-        this.entity = entity;
-        this.app = app;
-
-        if (!this.hasInitialized) {
-            this.hasInitialized = true;
-            this.initialize();
-        }
     }
 }
 
@@ -78,7 +58,8 @@ export class EsmScriptType extends EventHandler {
  */
 export class EsmScriptInterface {
     // The constructor will Do not assume when the constructor will be called at a particular point in the application lifecycle
-    // constructor() {}
+    // eslint-disable-next-line no-useless-constructor
+    constructor() {}
 
     // called when the script first becomes initialized
     initialize() {}
@@ -90,10 +71,10 @@ export class EsmScriptInterface {
     inactive() {}
 
     // called every frame whilst the script is active
-    update(dt, { entity, app }) {}
+    update(dt) {}
 
     // called after every frame whilst the script is active
-    postUpdate(dt, { entity, app }) {}
+    postUpdate(dt) {}
 
     // called when the script, component or parent entity is destroyed.
     destroy() {}
