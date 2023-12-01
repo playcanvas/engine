@@ -34,7 +34,7 @@ const staticFiles = [
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' },
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' }
 ];
 
 // ^ = beginning of line
@@ -54,7 +54,7 @@ const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
  *    import './polyfill/OESVertexArrayObject.js';
  *`);
  * @param {string} content - The file content to test.
- * @returns {boolean}
+ * @returns {boolean} Whether content is a module.
  */
 function isModuleWithExternalDependencies(content) {
     const a = regexpExportStarFrom.test(content);
@@ -179,7 +179,7 @@ const aliasEntries = {
 };
 
 /** @type {RollupOptions[]} */
-const builds = [
+const targets = [
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
@@ -212,13 +212,29 @@ const builds = [
             timestamp()
         ]
     },
-    // Outputs: dist/iframe/playcanvas.js
-    buildTarget('release', 'es5', '../src/index.js', 'dist/iframe'),
-    // Outputs: dist/iframe/playcanvas.dbg.js
-    buildTarget('debug', 'es5', '../src/index.js', 'dist/iframe'),
-    // Outputs: dist/iframe/playcanvas.prf.js
-    buildTarget('profiler', 'es5', '../src/index.js', 'dist/iframe'),
     scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
 ];
 
-export default builds;
+// We skip building PlayCanvas ourselves when ENGINE_PATH is given.
+// In that case we have a watcher which copies all necessary files.
+if (ENGINE_PATH === '') {
+    /** @type {RollupOptions|undefined} */
+    let target;
+    if (NODE_ENV === 'production') {
+        // Outputs: dist/iframe/playcanvas.js
+        target = buildTarget('release', 'es5', '../src/index.js', 'dist/iframe');
+    } else if (NODE_ENV === 'development') {
+        // Outputs: dist/iframe/playcanvas.dbg.js
+        target = buildTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+    } else if (NODE_ENV === 'profiler') {
+        // Outputs: dist/iframe/playcanvas.prf.js
+        target = buildTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+    } else {
+        console.warn("NODE_ENV is neither production, development nor profiler.");
+    }
+    if (target) {
+        targets.push(target);
+    }
+}
+
+export default targets;
