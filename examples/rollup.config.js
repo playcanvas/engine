@@ -12,7 +12,8 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
-import { buildTarget } from '../rollup.config.mjs';
+//import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { scriptTarget } from '../utils/rollup-script-target.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -35,7 +36,6 @@ const staticFiles = [
     // { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
     // { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
     // { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
-    { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' },
 ];
@@ -180,32 +180,6 @@ const aliasEntries = {
     '@playcanvas/pcui/react': PCUI_REACT_PATH,
     '@playcanvas/pcui/styles': PCUI_STYLES_PATH
 };
-
-/**
- * Build an ES5 target that rollup is supposed to build.
- *
- * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `dist/iframe/playcanvas-extras.js`.
- * @returns {RollupOptions} One rollup target.
- */
-function scriptTarget(name, input, output) {
-    return {
-        input: input,
-        output: {
-            name: name,
-            file: output,
-            format: 'umd',
-            indent: '\t',
-            globals: { playcanvas: 'pc' }
-        },
-        plugins: [
-            resolve()
-        ],
-        external: ['playcanvas'],
-        cache: false
-    };
-}
 
 /** @type {RollupOptions[]} */
 const builds = [

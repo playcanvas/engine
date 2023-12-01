@@ -251,5 +251,3 @@ export default (args) => {
 
     return targets;
 };
-
-export { buildTarget, scriptTarget };
