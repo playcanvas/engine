@@ -55,8 +55,8 @@ class EsmScriptComponentSystem extends ComponentSystem {
         // add the modules to the components
         for (const i in modules) {
             const { attributes, enabled } = modules[i];
-            const EsmModuleExport = esmExports[i];
-            component.add(EsmModuleExport, attributes, enabled);
+            const esmModuleExport = esmExports[i];
+            component.add(esmModuleExport, attributes, enabled);
         }
     }
 
@@ -98,6 +98,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
             if (component.enabled) component.flushUninitializedModules();
         }
 
+        // Call `active()` on any scripts that have become active/enabled during the current game step
         for (const component of this._components) {
             if (component.enabled) component.flushActiveModules();
         }
@@ -112,8 +113,9 @@ class EsmScriptComponentSystem extends ComponentSystem {
             if (component.enabled) component._onPostUpdate(dt);
         }
 
+        // Call `inactive()` on any scripts that have become inactive/disabled during the current game step
         for (const component of this._components) {
-            if (component.enabled) component.flushInactiveModules();
+            component.flushInactiveModules();
         }
     }
 

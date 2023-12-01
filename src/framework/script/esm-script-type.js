@@ -41,41 +41,81 @@ export class EsmScriptType extends EventHandler {
 
 /**
  * The EsmScriptInterface below illustrates the set of features available for an esm script.
- * All of the methods are optional, but the component will call them if available,
- * so if you want to rotate an entity you can simply create a script with just an
- * 'update' method.
  *
- * It also has no internal state, which makes things much simpler for the component system
- * as there is no need to check.
+ * ** Note you do not have to implement or extend this class directly, it's purely for illustrative purposes**
  *
- * Of course, this is a very minimal set of features, which is why we've provided the EsmScriptType class
- * which does have state and is functionally very similar to the regular ScriptType class.
- * It provides events and and a once-only `initialize()` method. You can simply extend this base class to
- * get most of the functionality you might be familiar with from original scripting system. However, more importantly,
- * this is entirely optional, and there are many use-cases that we haven't considered, so you can create your own Script Base
- * class with your own functionality. What's important is that you have the flexibility, whilst we can keep the core scripting system
- * fast and simple.
+ * All of the life-cycle methods below are optional, you only use what you need, but the'll be
+ * invoked where available. So if you just want to rotate an entity you'd likely only need the `update()` hook.
+ * @example update(){ this.entity.rotateLocal(0, 1, 0); }
+ *
+ * By design, this is a very minimal api with no dependencies on internal state or events,
+ * however we recognize this might not provide all the features you need which is why we've
+ * provided the {@link EsmScriptType} base class which you can extend and provides a familiar
+ * set of features to the older `ScriptType` class. The aim of this class isn't to provide
+ * an identical feature set, but to give a familiar set of functionality to begin using ESM Scripts.
+ * Of course, you can also use your own base class, on a per Script basis which gives you the freedom
+ * to build much more powerful Script types.
+ *
+ * The game loop for an ESM Script can be seen as...
+ *
+ * +--------------+    +--------------+    +-------------+    +--------------+    +--------------+     +--------------+
+ * | initialize() | -> | active()     | -> | update()    | -> | postUpdate() | -> | inactive()   |  -> | destroy()    |
+ * +--------------+    +--------------+    +-------------+    +--------------+    +--------------+     +--------------+
+ *                     |                                   Game Loop                             |
+ *                     +-------------------------------------------------------------------------+
  */
 export class EsmScriptInterface {
-    // The constructor will Do not assume when the constructor will be called at a particular point in the application lifecycle
+    // Do not assume when the constructor will be called at a particular point in the application lifecycle
     // eslint-disable-next-line no-useless-constructor
     constructor() {}
 
-    // called when the script first becomes initialized
+    /**
+     * This lifecycle method is invoked immediately when added to an esm component
+     * with `esmscript.add(YourScript)`. It's only ever invoked once and should be
+     * used to initialize any internal state required by the script
+     */
     initialize() {}
 
-    // called whenever the script becomes active, ie. it is part of the component tree and can receive updates
-    active({ entity, app }) {}
+    /**
+     * This lifecycle method is called as part of the the game loop before any
+     * other method. If a script, its component, entity or any parent entity
+     * in it's hierarchy becomes enabled in the previous in the scene hierarchy
+     */
+    active() {}
 
-    // called whenever the script becomes inactive, and will no longer receive lifecycle events
-    inactive() {}
-
-    // called every frame whilst the script is active
+    /**
+     * This method is called once per frame. It's a general purpose hook for updating
+     * and animating things every game tick.
+     *
+     * @param {number} dt - The delta time (time since the last frame) measured in milliseconds.
+     * @example update(dt){ this.entity.rotateLocal(0, 10 * dt, 0);}
+     */
     update(dt) {}
 
-    // called after every frame whilst the script is active
+    /**
+     * This is a kind of late update method called immediately after every ESM Scripts has finished their
+     * `update()` step. It can be used as a way to guarantee the order of behaviors. For example,
+     * if you're positioning an object in one script and want a camera to follow it, you might use
+     * the `update` to position it in one script, and the `postUpdate` on the camera to follow it
+     * in a separate script. It allows you to keep your logic separate but guarantee things happen
+     * in a certain order.
+     *
+     * @param {number} dt - The delta time (time since the last frame) measured in milliseconds.
+     */
     postUpdate(dt) {}
 
-    // called when the script, component or parent entity is destroyed.
+    /**
+     * During the game loop entities, scripts and components often become disabled. If any of those
+     * happen which would result in this script becoming inactive, meaning that it won't participate
+     * in the next game loop, then this `inactive()` method will be called at the end of the current frame.
+     * This allows you to react to this as late as possible
+     */
+    inactive() {}
+
+    /**
+     * This method ia called immediately when an ESM Script, it's component or entity is either
+     * destroyed or removed from the scene hierarchy. It doesn't occur as part of the game loop,
+     * it's called immediately as a response to the Script being removed.
+     */
     destroy() {}
 }

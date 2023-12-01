@@ -257,11 +257,6 @@ class EsmScriptComponent extends Component {
     }
 
     _onUpdate(dt) {
-
-        // ensure app-entity refs are up-to-date
-        this.appEntity.entity = this.entity;
-        this.appEntity.system = this.system;
-
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
             module.update(dt);
@@ -269,11 +264,6 @@ class EsmScriptComponent extends Component {
     }
 
     _onPostUpdate(dt) {
-
-        // ensure app-entity refs are up-to-date
-        this.appEntity.entity = this.entity;
-        this.appEntity.system = this.system;
-
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
             module.postUpdate(dt);
@@ -510,7 +500,7 @@ class EsmScriptComponent extends Component {
      * Only attributes defined in the definition. Note that this does not perform any type-checking.
      * If no attribute is specified it uses the default value from the attribute definition if available.
      *
-     * @param {AppBase} app - The app base to search for asset references
+     * @param {import('../../app-base.js').AppBase} app - The app base to search for asset references
      * @param {AttributeDefinitionDict} attributeDefDict - The definition
      * @param {Object} attributes - The attributes to apply
      * @param {Object} [object] - The object to populate with attributes

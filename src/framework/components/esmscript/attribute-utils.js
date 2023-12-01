@@ -126,10 +126,6 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
         // If the definition has a `type` property then assume it's valid attribute definition
         if (isValidAttributeDefinition(attributeDefinition)) {
 
-
-            // A shorthand
-            const valueArr = isValueArray && isArrayType ? value : [value];
-
             // A simple attribute type is one who's s
             if (isSimpleType) {
 
@@ -143,6 +139,8 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
 
                 } else {
 
+                    // convert to array if not already one
+                    const valueArr = isValueArray ? value : [value];
                     nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
                         callback(acc, i, attributeDefinition, arrValue);
                         return acc;
@@ -164,6 +162,8 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
                 } else {
 
                     let attr;
+                    // convert to array if not already one
+                    const valueArr = isValueArray ? value : [value];
                     nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
                         attr = reduceAttributeDefinition(type, arrValue, callback, {});
                         if (attr !== undefined) acc[i] = attr;
@@ -218,7 +218,7 @@ const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 /**
  * Converts raw attribute data to actual values
  *
- * @param {AppBase} app - The app to use for asset lookup
+ * @param {import('../../app-base.js').AppBase} app - The app to use for asset lookup
  * @param {AttributeDefinition} attributeDefinition - The attribute definition
  * @param {*} value - The raw value to convert
  * @returns {*} The converted value

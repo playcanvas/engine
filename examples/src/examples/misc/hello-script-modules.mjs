@@ -89,7 +89,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 class HelloScriptModulesExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Hello Script Modules';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
