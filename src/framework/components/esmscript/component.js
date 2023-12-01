@@ -264,7 +264,7 @@ class EsmScriptComponent extends Component {
 
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
-            module.update(dt, this.appEntity);
+            module.update(dt);
         }
     }
 
@@ -276,7 +276,7 @@ class EsmScriptComponent extends Component {
 
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
-            module.postUpdate(dt, this.appEntity);
+            module.postUpdate(dt);
         }
     }
 
@@ -535,9 +535,9 @@ class EsmScriptComponent extends Component {
             const mappedValue = rawToValue(app, attributeDefinition, value);
 
             // check for undefined | null
-            if (value != null) {
+            if (mappedValue != null) {
                 object[key] = mappedValue;
-            } else if (value === null && mappedValue === null) {
+            } else if (value != null && mappedValue === null) {
                 Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`);
             }
 
