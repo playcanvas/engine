@@ -98,6 +98,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
             if (component.enabled) component.flushUninitializedModules();
         }
 
+        // Call `active()` on any scripts that have become active/enabled during the current game step
         for (const component of this._components) {
             if (component.enabled) component.flushActiveModules();
         }
@@ -112,6 +113,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
             if (component.enabled) component._onPostUpdate(dt);
         }
 
+        // Call `inactive()` on any scripts that have become inactive/disabled during the current game step
         for (const component of this._components) {
             component.flushInactiveModules();
         }
