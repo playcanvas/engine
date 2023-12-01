@@ -55,6 +55,14 @@ export class EsmScriptType extends EventHandler {
  * an identical feature set, but to give a familiar set of functionality to begin using ESM Scripts.
  * Of course, you can also use your own base class, on a per Script basis which gives you the freedom
  * to build much more powerful Script types.
+ *
+ * The game loop for an ESM Script can be seen as...
+ *
+ * +--------------+    +--------------+    +-------------+    +--------------+    +--------------+     +--------------+
+ * | initialize() | -> | active()     | -> | update()    | -> | postUpdate() | -> | inactive()   |  -> | destroy()    |
+ * +--------------+    +--------------+    +-------------+    +--------------+    +--------------+     +--------------+
+ *                     |                                   Game Loop                             |
+ *                     +-------------------------------------------------------------------------+
  */
 export class EsmScriptInterface {
     // Do not assume when the constructor will be called at a particular point in the application lifecycle
@@ -71,7 +79,7 @@ export class EsmScriptInterface {
     /**
      * This lifecycle method is called as part of the the game loop before any
      * other method. If a script, its component, entity or any parent entity
-     * becomes enabled in the previous in the scene hierarchy
+     * in it's hierarchy becomes enabled in the previous in the scene hierarchy
      */
     active() {}
 

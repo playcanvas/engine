@@ -257,11 +257,6 @@ class EsmScriptComponent extends Component {
     }
 
     _onUpdate(dt) {
-
-        // ensure app-entity refs are up-to-date
-        this.appEntity.entity = this.entity;
-        this.appEntity.system = this.system;
-
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
             module.update(dt);
@@ -269,11 +264,6 @@ class EsmScriptComponent extends Component {
     }
 
     _onPostUpdate(dt) {
-
-        // ensure app-entity refs are up-to-date
-        this.appEntity.entity = this.entity;
-        this.appEntity.system = this.system;
-
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
             module.postUpdate(dt);

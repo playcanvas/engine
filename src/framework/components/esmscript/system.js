@@ -113,7 +113,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
         }
 
         for (const component of this._components) {
-            if (component.enabled) component.flushInactiveModules();
+            component.flushInactiveModules();
         }
     }
 
