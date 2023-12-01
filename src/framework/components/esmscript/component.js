@@ -287,7 +287,7 @@ class EsmScriptComponent extends Component {
     disableModule(module) {
 
         if (!this.modules.has(module)) {
-            Debug.error(`The module '${module?.constructor?.name}' has not been added to this component.`);
+            Debug.error(`The ESM Script '${module?.constructor?.name}' has not been added to this component.`);
             return;
         }
 
@@ -305,7 +305,7 @@ class EsmScriptComponent extends Component {
     enableModule(module) {
 
         if (!this.modules.has(module)) {
-            Debug.error(`The module '${module?.constructor?.name}' has not been added to this component.`);
+            Debug.error(`The ESM Script '${module?.constructor?.name}' has not been added to this component.`);
             return;
         }
 
@@ -431,7 +431,7 @@ class EsmScriptComponent extends Component {
     remove(module) {
 
         if (!this.modules.has(module)) {
-            Debug.warn(`The esm script '${module.constructor?.name}' has not been added to this component`);
+            Debug.warn(`The ESM Script '${module.constructor?.name}' has not been added to this component`);
             return;
         }
 
@@ -456,13 +456,13 @@ class EsmScriptComponent extends Component {
         const { default: ModuleClass, attributes: attributeDefinition = {} } = moduleExport;
 
         if (!ModuleClass || typeof ModuleClass !== 'function')
-            throw new Error(`The ESM Script Module class is undefined`);
+            throw new Error(`The ESM Script is undefined`);
 
         if (!ModuleClass.name || ModuleClass.name === '')
             throw new Error('Anonymous classes are not supported. Please use `class MyClass{}` as opposed to `const MyClass = class{}`');
 
         if (this.moduleNameInstanceMap.has(ModuleClass.name))
-            throw new Error(`A esm script class called '${ModuleClass.name}' has already been added to this component.`);
+            throw new Error(`An ESM Script called '${ModuleClass.name}' has already been added to this component.`);
 
         // Create the esm script instance
         const module = new ModuleClass();

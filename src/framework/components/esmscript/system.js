@@ -64,7 +64,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         const component = entity.esmscript;
 
-        Debug.assert(component, `The entity '${entity.name}' does not have a 'EsmScriptComponent' to clone`);
+        Debug.assert(component, `The entity '${entity.name}' does not have an 'EsmScriptComponent' to clone`);
 
         const { enabled = true } = this._componentDataMap.get(component);
 
