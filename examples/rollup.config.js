@@ -12,9 +12,8 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
-//import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTarget } from '../utils/rollup-script-target.mjs';
 import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { scriptTarget } from '../utils/rollup-script-target.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
