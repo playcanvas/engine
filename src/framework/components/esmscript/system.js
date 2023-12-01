@@ -55,8 +55,8 @@ class EsmScriptComponentSystem extends ComponentSystem {
         // add the modules to the components
         for (const i in modules) {
             const { attributes, enabled } = modules[i];
-            const EsmModuleExport = esmExports[i];
-            component.add(EsmModuleExport, attributes, enabled);
+            const esmModuleExport = esmExports[i];
+            component.add(esmModuleExport, attributes, enabled);
         }
     }
 
