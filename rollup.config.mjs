@@ -1,9 +1,8 @@
-import { exec, execSync } from 'node:child_process';
+import { exec } from 'node:child_process';
 import * as fs from 'node:fs';
 
 // 1st party Rollup plugins
 import { babel } from '@rollup/plugin-babel';
-import resolve from '@rollup/plugin-node-resolve';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
 
@@ -17,104 +16,20 @@ import { shaderChunks } from './utils/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './utils/rollup-import-validation.mjs';
 import { spacesToTabs } from './utils/rollup-spaces-to-tabs.mjs';
 
+import { version, revision } from './utils/rollup-version-revision.mjs';
+import { getBanner } from './utils/rollup-get-banner.mjs';
+import { es5Options } from './utils/rollup-es5-options.mjs';
+import { scriptTarget } from './utils/rollup-script-target.mjs';
+import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
+import { moduleOptions } from './utils/rollup-module-options.mjs';
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
 /** @typedef {import('@rollup/plugin-babel').RollupBabelInputPluginOptions} RollupBabelInputPluginOptions */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
-/**
- * @returns {string} Version string like `1.58.0-dev`
- */
-function getVersion() {
-    const text = fs.readFileSync('./package.json', 'utf8');
-    const json = JSON.parse(text);
-    return json.version;
-}
-
-/**
- * @returns {string} Revision string like `644d08d39` (9 digits/chars).
- */
-function getRevision() {
-    let revision;
-    try {
-        revision = execSync('git rev-parse --short HEAD').toString().trim();
-    } catch (e) {
-        revision = 'unknown';
-    }
-    return revision;
-}
-
-const version = getVersion();
-const revision = getRevision();
 console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
-
-/**
- * Build the banner with build date and revision. Revision only works for git repo, not zip.
- *
- * @param {string} config - A string like `(DEBUG PROFILER)` or even an empty string.
- * @returns {string} - The banner.
- */
-function getBanner(config) {
-    return [
-        '/**',
-        ' * @license',
-        ' * PlayCanvas Engine v' + version + ' revision ' + revision + config,
-        ' * Copyright 2011-' + new Date().getFullYear() + ' PlayCanvas Ltd. All rights reserved.',
-        ' */'
-    ].join('\n');
-}
-
-/**
- * The ES5 options for babel(...) plugin.
- *
- * @param {string} buildType - Only 'debug' requires special handling so far.
- * @returns {RollupBabelInputPluginOptions} The babel options.
- */
-const es5Options = buildType => ({
-    babelHelpers: 'bundled',
-    babelrc: false,
-    comments: buildType === 'debug',
-    compact: false,
-    minified: false,
-    presets: [
-        [
-            '@babel/preset-env', {
-                loose: true,
-                modules: false,
-                targets: {
-                    ie: '11'
-                }
-            }
-        ]
-    ]
-});
-
-/**
- * The ES6 options for babel(...) plugin.
- *
- * @param {string} buildType - Only 'debug' requires special handling so far.
- * @returns {RollupBabelInputPluginOptions} The babel options.
- */
-const moduleOptions = buildType => ({
-    babelHelpers: 'bundled',
-    babelrc: false,
-    comments: buildType === 'debug',
-    compact: false,
-    minified: false,
-    presets: [
-        [
-            '@babel/preset-env', {
-                bugfixes: true,
-                loose: true,
-                modules: false,
-                targets: {
-                    esmodules: true
-                }
-            }
-        ]
-    ]
-});
 
 const stripFunctions = [
     'Debug.assert',
@@ -274,63 +189,6 @@ function buildTarget(buildType, moduleFormat) {
     };
 }
 
-/**
- * Build an ES5 target that rollup is supposed to build.
- *
- * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} [output] - If not given, input is used.
- * @returns {RollupOptions} One rollup target.
- */
-function scriptTarget(name, input, output) {
-    return {
-        input: input,
-        output: {
-            name: name,
-            banner: getBanner(''),
-            file: output || input.replace('.mjs', '.js'),
-            format: 'umd',
-            indent: '\t',
-            globals: { playcanvas: 'pc' }
-        },
-        plugins: [
-            resolve(),
-            babel(es5Options('release')),
-            spacesToTabs(true)
-        ],
-        external: ['playcanvas'],
-        cache: false
-    };
-}
-
-/**
- * Build an ES6 target that rollup is supposed to build.
- *
- * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
- * @returns {RollupOptions} One rollup target.
- */
-function scriptTargetEs6(name, input, output) {
-    return {
-        input: input,
-        output: {
-            name: name,
-            banner: getBanner(''),
-            dir: output,
-            format: 'es',
-            indent: '\t',
-            preserveModules: true
-        },
-        plugins: [
-            resolve(),
-            babel(moduleOptions('release')),
-            spacesToTabs(true)
-        ],
-        external: ['playcanvas', 'fflate']
-    };
-}
-
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
@@ -393,3 +251,5 @@ export default (args) => {
 
     return targets;
 };
+
+export { buildTarget, scriptTarget };

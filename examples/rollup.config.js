@@ -12,6 +12,8 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
+import { buildTarget } from '../rollup.config.mjs';
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
 
@@ -30,9 +32,9 @@ const staticFiles = [
     { src: './assets', dest: 'dist/static/assets/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
-    { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
-    { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
+    // { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
+    // { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
+    // { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
     { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' },
