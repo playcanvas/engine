@@ -54,9 +54,11 @@ const stripFunctions = [
  *
  * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
  * @param {'es5'|'es6'} moduleFormat - The module format.
+ * @param {string} input - Only used for Examples to change it to `../src/index.js`.
+ * @param {string} [buildDir] - Only used for examples to change the output location.
  * @returns {RollupOptions} One rollup target.
  */
-function buildTarget(buildType, moduleFormat) {
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build') {
     const banner = {
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
@@ -94,10 +96,10 @@ function buildTarget(buildType, moduleFormat) {
     }
 
     const outputFile = {
-        debug: 'build/playcanvas.dbg',
-        release: 'build/playcanvas',
-        profiler: 'build/playcanvas.prf',
-        min: 'build/playcanvas.min'
+        debug: 'playcanvas.dbg',
+        release: 'playcanvas',
+        profiler: 'playcanvas.prf',
+        min: 'playcanvas.min'
     };
 
     const outputExtension = {
@@ -126,7 +128,8 @@ function buildTarget(buildType, moduleFormat) {
         preserveModules: moduleFormat === 'es6'
     };
 
-    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = `${outputFile[buildType]}${outputExtension[moduleFormat]}`;
+    const loc = `${buildDir}/${outputFile[buildType]}${outputExtension[moduleFormat]}`;
+    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = loc;
 
     const sdkVersion = {
         _CURRENT_SDK_VERSION: version,
@@ -165,14 +168,13 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions(buildType)
     };
 
-    const rootFile = 'src/index.js';
     return {
-        input: rootFile,
+        input,
         output: outputOptions,
         plugins: [
             jscc(jsccOptions[buildType] || jsccOptions.release),
             shaderChunks({ enabled: buildType !== 'debug' }),
-            engineLayerImportValidation(rootFile, buildType === 'debug'),
+            engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')

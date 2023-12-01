@@ -14,6 +14,7 @@ import terser from '@rollup/plugin-terser';
 
 //import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { scriptTarget } from '../utils/rollup-script-target.mjs';
+import { buildTarget } from '../utils/rollup-build-target.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -33,9 +34,6 @@ const staticFiles = [
     { src: './assets', dest: 'dist/static/assets/' },
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    // { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
-    // { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
-    // { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' },
 ];
@@ -102,7 +100,7 @@ function timestamp() {
 }
 
 /**
- * @param {import('rollup').Plugin} - The Rollup plugin.
+ * @param {import('rollup').Plugin} plugin - The Rollup plugin.
  * @param {string} src - File or path to watch.
  */
 function watch(plugin, src) {
@@ -215,6 +213,12 @@ const builds = [
             timestamp()
         ]
     },
+    // Outputs: dist/iframe/playcanvas.js
+    buildTarget('release', 'es5', '../src/index.js', 'dist/iframe'),
+    // Outputs: dist/iframe/playcanvas.dbg.js
+    buildTarget('debug', 'es5', '../src/index.js', 'dist/iframe'),
+    // Outputs: dist/iframe/playcanvas.prf.js
+    buildTarget('profiler', 'es5', '../src/index.js', 'dist/iframe'),
     scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
 ];
 
