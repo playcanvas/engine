@@ -314,9 +314,10 @@ class LayerComposition extends EventHandler {
 
         // clear flags - use camera clear flags in the first render action for each camera,
         // or when render target (from layer) was not yet cleared by this camera
-        const needsClear = cameraFirstRenderAction || !used;
-        if (needsClear) {
-            renderAction.setupClears(needsClear ? camera : undefined, layer);
+        const needsCameraClear = cameraFirstRenderAction || !used;
+        const needsLayerClear = layer.clearColorBuffer || layer.clearDepthBuffer || layer.clearStencilBuffer;
+        if (needsCameraClear || needsLayerClear) {
+            renderAction.setupClears(needsCameraClear ? camera : undefined, layer);
         }
 
         return renderAction;
