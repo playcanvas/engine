@@ -262,7 +262,7 @@ function buildTarget(buildType, moduleFormat) {
         es6: moduleOptions(buildType)
     };
 
-    const rootFile = 'src/index.js';
+    const rootFile = buildType !== 'rti' ? 'src/index.js' : 'src/index.rti.js';
     const pluginsRTI = buildType === 'rti' ? [
         resolve(),
         runtimeTypeInspector({

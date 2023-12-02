@@ -170,7 +170,7 @@ ${exampleClass.example.toString()}
                 const entryPoint = ENGINE_PATH.split('/').pop();
                 specifiedEngine = './ENGINE_PATH/' + entryPoint;
             }
-            if (RTI === 'ON') {
+            if (RTI === 'on') {
                 specifiedEngine = './ENGINE_PATH/playcanvas.rti.js';
             }
             return specifiedEngine;

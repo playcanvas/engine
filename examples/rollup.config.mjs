@@ -241,7 +241,7 @@ const builds = [
         ]
     },
     scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js'),
-    process.env.RTI ? buildTargetRTI('es6') : undefined
+    process.env.RTI ? buildTargetRTI('es5') : undefined
 ];
 
 export default builds;

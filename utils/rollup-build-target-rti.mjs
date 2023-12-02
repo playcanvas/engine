@@ -1,5 +1,4 @@
 import resolve from '@rollup/plugin-node-resolve';
-import { shaderChunks } from './rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './rollup-import-validation.mjs';
 import { runtimeTypeInspector } from '@runtime-type-inspector/plugin-rollup';
 
