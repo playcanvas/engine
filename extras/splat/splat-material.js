@@ -278,6 +278,19 @@ const hashCode = (str) => {
     return hash;
 };
 
+/**
+ * @typedef {object} SplatMaterialOptions - The options.
+ * @property {boolean} [debugRender] - Adds #define DEBUG_RENDER for shader.
+ * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
+ * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
+ */
+
+/**
+ * @param {import('playcanvas').GraphicsDevice} device - The graphics device to use
+ * for the material creation.
+ * @param {SplatMaterialOptions} [options] - The options.
+ * @returns {Material} The GS material.
+ */
 const createSplatMaterial = (device, options = {}) => {
 
     const debugRender = options.debugRender;
