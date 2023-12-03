@@ -6,13 +6,6 @@ import { Quat } from './core/math/quat.js';
 import { Mat3 } from './core/math/mat3.js';
 import { Mat4 } from './core/math/mat4.js';
 import { customTypes, customValidations, validateNumber } from '@runtime-type-inspector/runtime';
-// todo: https://github.com/kungfooman/RuntimeTypeInspector.js/issues/69
-import * as rti from '@runtime-type-inspector/runtime';
-//window.rti = rti;
-export {
-    rti
-};
-console.log("add custom type checks...123");
 Object.assign(customTypes, {
     AnimSetter(value) {
         // console.log("@todo Is AnimSetter?", value);
