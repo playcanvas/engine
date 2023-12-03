@@ -13,27 +13,30 @@ const dataTypeMap = new Map([
 ]);
 
 /**
+ * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
+ */
+
+/**
  * @typedef {object} PlyProperty
- * @property {string} type
- * @property {string} name
- * @property {Float32Array} storage
- * @property {number} byteSize
+ * @property {string} type - E.g. 'float'.
+ * @property {string} name - E.g. 'x', 'y', 'z', 'f_dc_0' etc.
+ * @property {DataType} storage - Data type, e.g. instance of Float32Array.
+ * @property {number} byteSize - BYTES_PER_ELEMENT of given data type.
  */
 
 /**
  * @typedef {object} PlyElement
- * @property {string} name
- * @property {number} count
+ * @property {string} name - E.g. 'vertex'.
+ * @property {number} count - Given count.
  * @property {PlyProperty[]} properties - The properties.
  */
-
 
 /**
  * asynchronously read a ply file data
  *
  * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
  * @param {Function|null} propertyFilter - Function to filter properties with.
- * @returns {Promise<PlyElement[]>}
+ * @returns {Promise<PlyElement[]>} The ply file data.
  */
 const readPly = async (reader, propertyFilter = null) => {
     const concat = (a, b) => {
