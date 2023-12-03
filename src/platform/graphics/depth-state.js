@@ -39,6 +39,8 @@ class DepthState {
      * A unique number representing the depth state. You can use this number to quickly compare
      * two depth states for equality. The key is always maintained valid without a dirty flag,
      * to avoid condition check at runtime, considering these change rarely.
+     *
+     * @type {number}
      */
     key = 0;
 
