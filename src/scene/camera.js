@@ -456,7 +456,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+                this.renderPassColorGrab = new RenderPassColorGrab(device);
             }
         } else {
             this.renderPassColorGrab?.destroy();

@@ -262,7 +262,8 @@ class RenderPass {
     /**
      * Mark render pass as clearing the full color buffer.
      *
-     * @param {Color} color - The color to clear to.
+     * @param {Color|undefined} color - The color to clear to, or undefined to preserve the existing
+     * content.
      */
     setClearColor(color) {
 
@@ -271,29 +272,34 @@ class RenderPass {
         const count = this.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
             const colorOps = this.colorArrayOps[i];
-            colorOps.clearValue.copy(color);
-            colorOps.clear = true;
+            if (color)
+                colorOps.clearValue.copy(color);
+            colorOps.clear = !!color;
         }
     }
 
     /**
      * Mark render pass as clearing the full depth buffer.
      *
-     * @param {number} depthValue - The depth value to clear to.
+     * @param {number|undefined} depthValue - The depth value to clear to, or undefined to preserve
+     * the existing content.
      */
     setClearDepth(depthValue) {
-        this.depthStencilOps.clearDepthValue = depthValue;
-        this.depthStencilOps.clearDepth = true;
+        if (depthValue)
+            this.depthStencilOps.clearDepthValue = depthValue;
+        this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
     /**
      * Mark render pass as clearing the full stencil buffer.
      *
-     * @param {number} stencilValue - The stencil value to clear to.
+     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to preserve the
+     * existing content.
      */
     setClearStencil(stencilValue) {
-        this.depthStencilOps.clearStencilValue = stencilValue;
-        this.depthStencilOps.clearStencil = true;
+        if (stencilValue)
+            this.depthStencilOps.clearStencilValue = stencilValue;
+        this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
     /**

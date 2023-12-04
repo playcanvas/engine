@@ -584,15 +584,7 @@ class ForwardRenderer extends Renderer {
 
                 device.setBlendState(material.blendState);
                 device.setDepthState(material.depthState);
-
                 device.setAlphaToCoverage(material.alphaToCoverage);
-
-                if (material.depthBias || material.slopeDepthBias) {
-                    device.setDepthBias(true);
-                    device.setDepthBiasValues(material.depthBias, material.slopeDepthBias);
-                } else {
-                    device.setDepthBias(false);
-                }
 
                 DebugGraphics.popGpuMarker(device);
             }
@@ -809,7 +801,9 @@ class ForwardRenderer extends Renderer {
                     if (isDepthLayer) {
 
                         if (camera.renderSceneColorMap) {
-                            frameGraph.addRenderPass(camera.camera.renderPassColorGrab);
+                            const colorGrabPass = camera.camera.renderPassColorGrab;
+                            colorGrabPass.source = camera.renderTarget;
+                            frameGraph.addRenderPass(colorGrabPass);
                         }
 
                         if (camera.renderSceneDepthMap && !webgl1) {

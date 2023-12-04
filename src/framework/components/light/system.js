@@ -70,7 +70,7 @@ class LightComponentSystem extends ComponentSystem {
             data.shape = LIGHTSHAPE_PUNCTUAL;
         }
 
-        const light = new Light(this.app.graphicsDevice);
+        const light = new Light(this.app.graphicsDevice, this.app.scene.clusteredLightingEnabled);
         light.type = lightTypes[data.type];
         light._node = component.entity;
         component.data.light = light;
