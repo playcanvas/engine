@@ -1215,10 +1215,6 @@ class Renderer {
         }
     }
 
-    /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     */
     updateLightTextureAtlas() {
         this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }

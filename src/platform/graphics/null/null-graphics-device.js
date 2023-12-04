@@ -126,12 +126,6 @@ class NullGraphicsDevice extends GraphicsDevice {
     clear(options) {
     }
 
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
-    }
-
     setViewport(x, y, w, h) {
     }
 
