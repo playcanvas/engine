@@ -114,7 +114,13 @@ async function example({ canvas }) {
             app.xr.on('start', function () {
                 message("Immersive AR session has started");
 
-                // TODO
+                // Trigger manual room capture
+                // With a delay due to some issues on Quest 3 triggering immediately
+                setTimeout(() => {
+                    app.xr.initiateRoomCapture((err) => {
+                        if (err) console.log(err);
+                    });
+                }, 500);
             });
             app.xr.on('end', function () {
                 message("Immersive AR session has ended");
@@ -265,7 +271,6 @@ async function example({ canvas }) {
 
 class ArMeshDetectionExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Mesh Detection';
     static example = example;
 }
 

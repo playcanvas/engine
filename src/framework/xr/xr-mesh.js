@@ -2,8 +2,6 @@ import { EventHandler } from "../../core/event-handler.js";
 import { Vec3 } from "../../core/math/vec3.js";
 import { Quat } from "../../core/math/quat.js";
 
-let ids = 0;
-
 /**
  * Detected Mesh instance that provides its transform (position, rotation),
  * triangles (vertices, indices) and its semantic label. Any of its properties can
@@ -13,16 +11,10 @@ let ids = 0;
  */
 class XrMesh extends EventHandler {
     /**
-     * @type {number}
-     * @private
-     */
-    _id;
-
-    /**
      * @type {import('./xr-mesh-detection.js').XrMeshDetection}
      * @private
      */
-    _meshes;
+    _meshDetection;
 
     /**
      * @type {XRMesh}
@@ -51,16 +43,15 @@ class XrMesh extends EventHandler {
     /**
      * Create a new XrMesh instance.
      *
-     * @param {import('./xr-mesh-detection.js').XrMeshDetection} meshes - Mesh Detection
+     * @param {import('./xr-mesh-detection.js').XrMeshDetection} meshDetection - Mesh Detection
      * interface.
      * @param {XRMesh} xrMesh - XRMesh that is instantiated by WebXR system.
      * @hideconstructor
      */
-    constructor(meshes, xrMesh) {
+    constructor(meshDetection, xrMesh) {
         super();
 
-        this._id = ++ids;
-        this._meshes = meshes;
+        this._meshDetection = meshDetection;
         this._xrMesh = xrMesh;
         this._lastChanged = this._xrMesh.lastChangedTime;
     }
@@ -85,15 +76,6 @@ class XrMesh extends EventHandler {
      *     // mesh attributes have been changed
      * });
      */
-
-    /**
-     * Unique identifier of a mesh.
-     *
-     * @type {number}
-     */
-    get id() {
-        return this._id;
-    }
 
     /**
      * @type {XRMesh}
@@ -143,7 +125,7 @@ class XrMesh extends EventHandler {
      * @ignore
      */
     update(frame) {
-        const manager = this._meshes._manager;
+        const manager = this._meshDetection._manager;
         const pose = frame.getPose(this._xrMesh.meshSpace, manager._referenceSpace);
         if (pose) {
             this._position.copy(pose.transform.position);
