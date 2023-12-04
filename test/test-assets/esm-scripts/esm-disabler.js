@@ -1,3 +1,5 @@
+import { INITIALIZE, POST_INITIALIZE, call } from '../../framework/components/esmscript/method-util.js';
+
 export const attributes = {
     disableEntity: { type: 'boolean' },
     disableScriptComponent: { type: 'boolean' },
@@ -5,29 +7,29 @@ export const attributes = {
 };
 
 export default class Disabler {
-    active({ entity }) {
-        window.initializeCalls.push(entity.getGuid() + ' active disabler');
+    initialize() {
+        call(INITIALIZE(this));
 
         if (this.disableEntity) {
-            entity.enabled = false;
+            this.entity.enabled = false;
         }
 
         if (this.disableScriptComponent) {
-            entity.script.enabled = false;
+            this.entity.script.enabled = false;
         }
 
         if (this.disableScriptInstance) {
-            if (entity.script.scriptA) {
-                entity.script.scriptA.enabled = false;
+            if (this.entity.script.scriptA) {
+                this.entity.script.scriptA.enabled = false;
             }
 
-            if (entity.script.scriptB) {
-                entity.script.scriptB.enabled = false;
+            if (this.entity.script.scriptB) {
+                this.entity.script.scriptB.enabled = false;
             }
         }
     }
 
     postInitialize() {
-        window.initializeCalls.push(this.entity.getGuid() + ' postInitialize disabler');
+        call(POST_INITIALIZE(this));
     }
 }
