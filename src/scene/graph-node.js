@@ -49,7 +49,7 @@ function createTest(attr, value) {
  *
  * @param {GraphNode} node - Current node.
  * @param {FindNodeCallback} test - Test function.
- * @returns {GraphNode|null} A graph node that match the search criteria. Returns null if no
+ * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
  * node is found.
  * @ignore
  */
