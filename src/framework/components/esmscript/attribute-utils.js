@@ -100,12 +100,10 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
 
     return attributeDefEntries.reduce((nestedObject, [attributeName, attributeDefinition]) => {
 
-        // Return early if the attribute already exists
-        if (nestedObject.hasOwnProperty(attributeName)) return nestedObject;
-
-        const value = attributes?.hasOwnProperty(attributeName) ?
-            attributes[attributeName] :
-            attributeDefinition.default;
+        // determine the attribute value
+        const value = attributes?.[attributeName] ??
+            attributeDefinition?.default ??
+            nestedObject?.[attributeName];
 
         const type = attributeDefinition?.type;
         const isArrayType = !!attributeDefinition?.array;
