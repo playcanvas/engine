@@ -62,6 +62,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
+     *
+     * @type {boolean}
      */
     backBufferAntialias = false;
 
