@@ -5,7 +5,7 @@ import { XrAnchor } from './xr-anchor.js';
 /**
  * Callback used by {@link XrAnchors#create}.
  *
- * @callback XrAnchorCreate
+ * @callback XrAnchorCreateCallback
  * @param {Error|null} err - The Error object if failed to create an anchor or null.
  * @param {XrAnchor|null} anchor - The anchor that is tracked against real world geometry.
  */
@@ -84,7 +84,7 @@ class XrAnchors extends EventHandler {
      * Map of callbacks to XRAnchors so that we can call its callback once
      * an anchor is updated with a pose for the first time.
      *
-     * @type {Map<XrAnchor,XrAnchorCreate>}
+     * @type {Map<XrAnchor, XrAnchorCreateCallback>}
      * @private
      */
     _callbacksAnchors = new Map();
@@ -212,8 +212,8 @@ class XrAnchors extends EventHandler {
      * Create anchor with position, rotation and a callback.
      *
      * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor.
-     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreate} [rotation] - Rotation for an anchor.
-     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreateCallback} [rotation] - Rotation for an anchor.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
      * // create an anchor using a position and rotation
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
@@ -274,7 +274,7 @@ class XrAnchors extends EventHandler {
      * Restore anchor using persistent UUID.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
      * // restore an anchor using uuid string
      * app.xr.anchors.restore(uuid, function (err, anchor) {
