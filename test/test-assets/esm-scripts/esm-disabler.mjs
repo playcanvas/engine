@@ -1,4 +1,4 @@
-import { INITIALIZE, POST_INITIALIZE, call } from '../../framework/components/esmscript/method-util.js';
+import { INITIALIZE, POST_INITIALIZE, call } from '../../framework/components/esmscript/method-util.mjs';
 
 export const attributes = {
     disableEntity: { type: 'boolean' },

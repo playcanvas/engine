@@ -92,7 +92,7 @@
         "esmscript": {
           "enabled": true,
           "modules": [{
-            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.js",
+            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
             "enabled": true,
             "attributes": {
               "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
@@ -152,7 +152,7 @@
         "esmscript": {
           "enabled": true,
           "modules": [{
-            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.js",
+            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
             "enabled": true,
             "attributes": {
               "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
@@ -188,7 +188,7 @@
         "esmscript": {
           "enabled": true,
           "modules": [{
-            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.js",
+            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
             "enabled": true,
             "attributes": {
               "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
@@ -224,7 +224,7 @@
         "esmscript": {
           "enabled": true,
           "modules": [{
-            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.js",
+            "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
             "enabled": true,
             "attributes": {
               "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",

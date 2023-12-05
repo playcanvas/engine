@@ -227,6 +227,7 @@ class EsmScriptComponent extends Component {
         for (const module of this.modules) {
             if (!this.isActive) break;
             if (this.enabledModules.has(module)) continue;
+            if (this.uninitializedModules.has(module)) continue;
             module.inactive?.();
         }
     }

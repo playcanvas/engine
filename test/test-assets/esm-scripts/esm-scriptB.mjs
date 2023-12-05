@@ -1,4 +1,4 @@
-import { ACTIVE, DESTROY, INACTIVE, INITIALIZE, POST_INITIALIZE, POST_UPDATE, UPDATE, call } from '../../framework/components/esmscript/method-util.js';
+import { ACTIVE, DESTROY, INACTIVE, INITIALIZE, POST_INITIALIZE, POST_UPDATE, UPDATE, call } from '../../framework/components/esmscript/method-util.mjs';
 
 export default class ScriptB {
     initialize() {

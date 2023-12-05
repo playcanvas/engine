@@ -8,7 +8,7 @@ import { expect } from 'chai';
 import sinon from 'sinon';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.js';
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.mjs';
 import createOptions from './basic-app-options.mjs';
 import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
@@ -24,13 +24,13 @@ describe('EsmScriptComponent', function () {
         // app._parseAssets({
         //     "1": {
         //         "tags": [],
-        //         "name": "esm-scriptA.js",
+        //         "name": "esm-scriptA.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptA.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptA.mjs",
         //                 "attributes": {
 
         //                 }
@@ -39,23 +39,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm=-scriptA.js",
+        //             "filename": "esm=-scriptA.mjs",
         //             "size": 1,
         //             // "hash": "script a hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-scriptA.js"
+        //             "url": "../../../test/test-assets/esmscripts/esm-scriptA.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "1"
         //     },
         //     "2": {
         //         "tags": [],
-        //         "name": "esm-scriptB.js",
+        //         "name": "esm-scriptB.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptB.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptB.mjs",
         //                 "attributes": {
 
         //                 }
@@ -64,23 +64,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-scriptB.js",
+        //             "filename": "esm-scriptB.mjs",
         //             "size": 1,
         //             // "hash": "script b hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-scriptB.js"
+        //             "url": "../../../test/test-assets/esmscripts/esm-scriptB.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "2"
         //     },
         //     "3": {
         //         "tags": [],
-        //         "name": "esm-cloner.js",
+        //         "name": "esm-cloner.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-cloner.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-cloner.mjs",
         //                 "attributes": {
 
         //                 }
@@ -89,23 +89,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-cloner.js",
+        //             "filename": "esm-cloner.mjs",
         //             "size": 1,
         //             // "hash": "cloner hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-cloner.js"
+        //             "url": "../../../test/test-assets/esmscripts/esm-cloner.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "3"
         //     },
         //     "4": {
         //         "tags": [],
-        //         "name": "esm-enabler.js",
+        //         "name": "esm-enabler.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-enabler.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-enabler.mjs",
         //                 "attributes": {
 
         //                 }
@@ -114,23 +114,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-enabler.js",
+        //             "filename": "esm-enabler.mjs",
         //             "size": 1,
         //             // "hash": "enabler hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-enabler.js"
+        //             "url": "../../../test/test-assets/esmscripts/esm-enabler.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "4"
         //     },
         //     "5": {
         //         "tags": [],
-        //         "name": "esm-disabler.js",
+        //         "name": "esm-disabler.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-disabler.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-disabler.mjs",
         //                 "attributes": {
 
         //                 }
@@ -139,23 +139,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-disabler.js",
+        //             "filename": "esm-disabler.mjs",
         //             "size": 1,
         //             // "hash": "disabler hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-disabler.js"
+        //             "url": "../../../test/test-assets/esmscripts/esm-disabler.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "5"
         //     },
         //     "6": {
         //         "tags": [],
-        //         "name": "esm-scriptWithAttributes.js",
+        //         "name": "esm-scriptWithAttributes.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
         //                 "attributes": {
         //                     "attribute1": {
         //                         "type": "entity"
@@ -185,23 +185,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-scriptWithAttributes.js",
+        //             "filename": "esm-scriptWithAttributes.mjs",
         //             "size": 1,
         //             // "hash": "scriptWithAttributes hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js"
+        //             "url": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "6"
         //     },
         //     "7": {
         //         "tags": [],
-        //         "name": "esm-loadedLater.js",
+        //         "name": "esm-loadedLater.mjs",
         //         "revision": 1,
         //         "preload": false,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-loadedLater.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs",
         //                 "attributes": {
 
         //                 }
@@ -210,23 +210,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-loadedLater.js",
+        //             "filename": "esm-loadedLater.mjs",
         //             "size": 1,
         //             // "hash": "loadedLater hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-loadedLater.js"
+        //             "url": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "7"
         //     },
         //     "8": {
         //         "tags": [],
-        //         "name": "esm-destroyer.js",
+        //         "name": "esm-destroyer.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-destroyer.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs",
         //                 "attributes": {
 
         //                 }
@@ -235,23 +235,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-destroyer.js",
+        //             "filename": "esm-destroyer.mjs",
         //             "size": 1,
         //             // "hash": "destroyer hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-destroyer.js"
+        //             "url": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "8"
         //     },
         //     "9": {
         //         "tags": [],
-        //         "name": "esm-postCloner.js",
+        //         "name": "esm-postCloner.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postCloner.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs",
         //                 "attributes": {
 
         //                 }
@@ -260,23 +260,23 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-postCloner.js",
+        //             "filename": "esm-postCloner.mjs",
         //             "size": 1,
         //             // "hash": "postCloner hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-postCloner.js"
+        //             "url": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "9"
         //     },
         //     "10": {
         //         "tags": [],
-        //         "name": "esm-postInitializeReporter.js",
+        //         "name": "esm-postInitializeReporter.mjs",
         //         "revision": 1,
         //         "preload": true,
         //         "meta": null,
         //         "data": {
         //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.js",
+        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs",
         //                 "attributes": {
 
         //                 }
@@ -285,10 +285,10 @@ describe('EsmScriptComponent', function () {
         //         },
         //         "type": "esmscript",
         //         "file": {
-        //             "filename": "esm-postInitializeReporter.js",
+        //             "filename": "esm-postInitializeReporter.mjs",
         //             "size": 1,
         //             // "hash": "postInitializeReporter hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.js"
+        //             "url": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs"
         //         },
         //         "region": "eu-west-1",
         //         "id": "10"
@@ -300,7 +300,7 @@ describe('EsmScriptComponent', function () {
         //         console.error(err);
         //     }
 
-        //     app.scenes.loadScene('http://localhost:3000/test/test-assets/esmscripts/scene1.json', function () {
+        //     app.scenes.loadScene('http://localhost:3000/test/test-assets/esmscripts/scene1.mjson', function () {
         // app.init(createOptions);
         // app.start();
         // done();
@@ -336,7 +336,7 @@ describe('EsmScriptComponent', function () {
                 enabled: true,
                 modules: [{
                     enabled: true,
-                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
                 }]
             });
 
@@ -358,7 +358,7 @@ describe('EsmScriptComponent', function () {
                 enabled: true,
                 modules: [{
                     enabled: true,
-                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
                 }]
             });
 
@@ -382,7 +382,7 @@ describe('EsmScriptComponent', function () {
                 enabled: true,
                 modules: [{
                     enabled: true,
-                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
                 }]
             });
 
@@ -405,7 +405,7 @@ describe('EsmScriptComponent', function () {
                 enabled: false,
                 modules: [{
                     enabled: true,
-                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
                 }]
             });
 
@@ -429,7 +429,7 @@ describe('EsmScriptComponent', function () {
                 enabled: true,
                 modules: [{
                     enabled: false,
-                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js'
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
                 }]
             });
 
@@ -458,7 +458,7 @@ describe('EsmScriptComponent', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('esmscript');
-        const ScriptA = await import('../../../test-assets/esm-scripts/esm-scriptA.js');
+        const ScriptA = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
         e.esmscript.add(ScriptA);
 
         const script = e.esmscript.get('ScriptA');
@@ -478,11 +478,11 @@ describe('EsmScriptComponent', function () {
         await component.system.initializeComponentData(component, {
             enabled: true,
             modules: [{
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
                 enabled: true,
                 attributes: {}
             }, {
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
                 enabled: true,
                 attributes: {}
             }]
@@ -548,7 +548,7 @@ describe('EsmScriptComponent', function () {
         const e = new Entity();
         app.root.addChild(e);
         e.addComponent('esmscript');
-        const Disabler = await import('../../../test-assets/esm-scripts/esm-disabler.js');
+        const Disabler = await import('../../../test-assets/esm-scripts/esm-disabler.mjs');
         e.esmscript.add(Disabler);
 
         const DisablerScript = e.esmscript.get('Disabler');
@@ -567,11 +567,11 @@ describe('EsmScriptComponent', function () {
         await component.system.initializeComponentData(component, {
             enabled: true,
             modules: [{
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
                 enabled: true,
                 attributes: {}
             }, {
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
                 enabled: true,
                 attributes: {}
             }]
@@ -586,7 +586,7 @@ describe('EsmScriptComponent', function () {
         await enablerComponent.system.initializeComponentData(enablerComponent, {
             enabled: true,
             modules: [{
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
                 enabled: true,
                 attributes: {
                     entityToEnable: e
@@ -626,16 +626,18 @@ describe('EsmScriptComponent', function () {
     });
 
     it('expects all `active` calls are called before `update` for an entity whose script component is enabled inside a separate `initialize` call', async function () {
+
+        // Create a disabled entity, awaiting to be enabled
         const e = new Entity('entity to enable');
         const component = e.addComponent('esmscript');
         await component.system.initializeComponentData(component, {
             enabled: false,
             modules: [{
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
                 enabled: true,
                 attributes: {}
             }, {
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
                 enabled: true,
                 attributes: {}
             }]
@@ -645,12 +647,13 @@ describe('EsmScriptComponent', function () {
 
         expect(calls).to.have.lengthOf(0);
 
+        // Create an entity/script that enables the previous entity
         const enabler = new Entity('enabler');
         const enablerComponent = enabler.addComponent('esmscript');
         await enablerComponent.system.initializeComponentData(enablerComponent, {
             enabled: true,
             modules: [{
-                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.js',
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
                 enabled: true,
                 attributes: {
                     entityToEnable: e
@@ -684,436 +687,457 @@ describe('EsmScriptComponent', function () {
 
     });
 
-    // it("initialize and postInitialize are fired together for script instance that is enabled in initialize function", function () {
-    //     var e = new Entity('entity to enable');
-
-    //     e.addComponent('script', {
-    //         "enabled": true,
-    //         "order": [
-    //             "scriptA",
-    //             "scriptB",
-    //         ],
-    //         "scripts": {
-    //             "scriptA": {
-    //                 "enabled": false,
-    //                 "attributes": {}
-    //             },
-    //             "scriptB": {
-    //                 "enabled": false,
-    //                 "attributes": {}
-    //             }
-    //         }
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     expect(initializeCalls.length).to.equal(0);
-
-    //     var enabler = new Entity();
-
-    //     enabler.addComponent('script', {
-    //         "enabled": true,
-    //         "order": [
-    //             "enabler",
-    //         ],
-    //         "scripts": {
-    //             "enabler": {
-    //                 "enabled": true,
-    //                 "attributes": {
-    //                     "entityToEnable": e.getGuid()
-    //                 }
-    //             }
-    //         }
-    //     });
-
-    //     app.root.addChild(enabler);
-
-    //     expect(initializeCalls.length).to.equal(6);
-    //     var idx = -1;
-    //     checkInitCall(enabler, ++idx, 'initialize enabler');
-    //     checkInitCall(e, ++idx, 'initialize scriptA');
-    //     checkInitCall(e, ++idx, 'postInitialize scriptA');
-    //     checkInitCall(e, ++idx, 'initialize scriptB');
-    //     checkInitCall(e, ++idx, 'postInitialize scriptB');
-    //     checkInitCall(enabler, ++idx, 'postInitialize enabler');
-
-    // });
-
-    // it("initialize is called for entity and all children before `active` and `update`", async function () {
-    //     const e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }, {
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptB.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
-
-    //     const c1 = new Entity('c1');
-    //     const child1component = c1.addComponent('esmscript');
-    //     await child1component.system.initializeComponentData(child1component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }, {
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptB.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
-
-    //     e.addChild(c1);
-
-    //     const c2 = new Entity('c2');
-    //     const child2component = c2.addComponent('esmscript');
-    //     await child2component.system.initializeComponentData(child2component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }, {
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptB.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
-    //     e.addChild(c2);
-
-    //     const c3 = new Entity('c3');
-    //     const child3component = c3.addComponent('esmscript');
-    //     await child3component.system.initializeComponentData(child3component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptA.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }, {
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptB.js",
-    //             "enabled": true,
-    //             "attributes": {}
-    //         }]
-    //     });
-    //     c1.addChild(c3);
-
-    //     app.root.addChild(e);
-
-    //     expect(initializeCalls.length).to.equal(8);
-
-    //     await waitForNextFrame();
-
-    //     expect(initializeCalls.length).to.equal(32);
-    //     var idx = -1;
-    //     checkInitCall(e, ++idx, 'initialize scriptA');
-    //     checkInitCall(e, ++idx, 'initialize scriptB');
-    //     checkInitCall(c1, ++idx, 'initialize scriptA');
-    //     checkInitCall(c1, ++idx, 'initialize scriptB');
-    //     checkInitCall(c3, ++idx, 'initialize scriptA');
-    //     checkInitCall(c3, ++idx, 'initialize scriptB');
-    //     checkInitCall(c2, ++idx, 'initialize scriptA');
-    //     checkInitCall(c2, ++idx, 'initialize scriptB');
-
-    //     checkInitCall(e, ++idx, 'active scriptA');
-    //     checkInitCall(e, ++idx, 'active scriptB');
-    //     checkInitCall(c1, ++idx, 'active scriptA');
-    //     checkInitCall(c1, ++idx, 'active scriptB');
-    //     checkInitCall(c2, ++idx, 'active scriptA');
-    //     checkInitCall(c2, ++idx, 'active scriptB');
-    //     checkInitCall(c3, ++idx, 'active scriptA');
-    //     checkInitCall(c3, ++idx, 'active scriptB');
-
-    //     checkInitCall(e, ++idx, 'update scriptA');
-    //     checkInitCall(e, ++idx, 'update scriptB');
-    //     checkInitCall(c1, ++idx, 'update scriptA');
-    //     checkInitCall(c1, ++idx, 'update scriptB');
-    //     checkInitCall(c2, ++idx, 'update scriptA');
-    //     checkInitCall(c2, ++idx, 'update scriptB');
-    //     checkInitCall(c3, ++idx, 'update scriptA');
-    //     checkInitCall(c3, ++idx, 'update scriptB');
-    // });
-
-    // it("script attributes are initialized for enabled entity", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-    // });
-
-
-    // it("script attributes are initialized with disabled entity", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     e.enabled = false;
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-    // });
-
-
-    // it("script attributes are initialized for disabled script component", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": false,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-    // });
-
-    // it("script attributes are initialized for disabled script instance", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": false,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-    // });
-
-    // it("script attributes are initialized when cloning enabled entity", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-
-    //     var clone = e.clone();
-    //     app.root.addChild(clone);
-
-    //     const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-
-    //     expect(clonedModule.attribute1).to.equal(e2);
-    //     expect(clonedModule.attribute2).to.equal(2);
-
-    // });
-
-    // it("script attributes are initialized when cloning disabled entity", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     e.enabled = false;
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-
-    //     var clone = e.clone();
-    //     app.root.addChild(clone);
-
-    //     const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-
-    //     expect(clonedModule.attribute1).to.equal(e2);
-    //     expect(clonedModule.attribute2).to.equal(2);
-    // });
-
-    // it("script attributes are initialized when cloning disabled script component", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": false,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": true,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-
-    //     var clone = e.clone();
-    //     app.root.addChild(clone);
-
-    //     const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-
-    //     expect(clonedModule.attribute1).to.equal(e2);
-    //     expect(clonedModule.attribute2).to.equal(2);
-    // });
-
-    // it("script attributes are initialized when cloning disabled script instance", async function () {
-    //     var e2 = new Entity();
-    //     app.root.addChild(e2);
-
-    //     expect(e2).to.exist;
-
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
-    //             "enabled": false,
-    //             "attributes": {
-    //                 "attribute1": e2
-    //             }
-    //         }]
-    //     });
-
-    //     app.root.addChild(e);
-
-    //     const script = e.esmscript.get('ScriptWithAttributes');
-
-    //     expect(script.attribute1).to.equal(e2);
-    //     expect(script.attribute2).to.equal(2);
-
-    //     var clone = e.clone();
-    //     app.root.addChild(clone);
-
-    //     const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-
-    //     expect(clonedModule.attribute1).to.equal(e2);
-    //     expect(clonedModule.attribute2).to.equal(2);
-    // });
-
-
-    // it("script attributes are initialized when loading scene for enabled entity", async function () {
-    //     var a = app.root.findByName('EnabledEntity');
-    //     expect(a).to.exist;
-
-    //     var b = app.root.findByName('ReferencedEntity');
-    //     expect(b).to.exist;
-
-    //     expect(a.esmscript).to.exist;
-
-    //     await waitForNextFrame();
-
-    //     const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-
-    //     expect(scriptWithAttributes).to.exist;
-
-    //     expect(scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(scriptWithAttributes.attribute2).to.equal(2);
-    // });
-
-    // it("script attributes are initialized when loading scene for disabled entity", async function () {
+    it('expects `initialize` is called together for script instance that when during the initialize stage', async function () {
+        // Create a disabled entity, awaiting to be enabled
+        const e = new Entity('entity to enable');
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
+                enabled: false,
+                attributes: {}
+            }, {
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
+                enabled: false,
+                attributes: {}
+            }]
+        });
+
+        app.root.addChild(e);
+
+        expect(calls).to.have.lengthOf(0);
+
+        // Create an entity/script that enables the previous entity
+        const enabler = new Entity('enabler');
+        const enablerComponent = enabler.addComponent('esmscript');
+        await enablerComponent.system.initializeComponentData(enablerComponent, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
+                enabled: true,
+                attributes: {
+                    entityToEnable: e
+                }
+            }]
+        });
+
+        app.root.addChild(enabler);
+
+        expect(calls).to.have.lengthOf(1);
+
+        const enablerScript = enabler.esmscript.get('Enabler');
+        const scriptA = e.esmscript.get('ScriptA');
+        const scriptB = e.esmscript.get('ScriptB');
+
+        // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+        app.update(16.6);
+
+        let n = 0;
+        expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
+        expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
+        expectCall(n++, INITIALIZE(scriptB)); // 'initialize scriptB');
+        expectCall(n++, ACTIVE(scriptA)); // 'active scriptA');
+        expectCall(n++, ACTIVE(scriptB)); // 'active scriptB');
+        expectCall(n++, UPDATE(scriptA)); // 'update scriptA');
+        expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
+        expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
+        expectCall(n++, POST_UPDATE(scriptB)); // 'post-update scriptB');
+
+    });
+
+    it('expects `initialize` is called for entity and all children before `active` and `update`', async function () {
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
+                enabled: true,
+                attributes: {}
+            }, {
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
+                enabled: true,
+                attributes: {}
+            }]
+        });
+
+        const eScriptA = e.esmscript.get('ScriptA');
+        const eScriptB = e.esmscript.get('ScriptB');
+
+        const c1 = new Entity('c1');
+        const child1component = c1.addComponent('esmscript');
+        await child1component.system.initializeComponentData(child1component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
+                enabled: true,
+                attributes: {}
+            }, {
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
+                enabled: true,
+                attributes: {}
+            }]
+        });
+
+        const c1ScriptA = c1.esmscript.get('ScriptA');
+        const c1ScriptB = c1.esmscript.get('ScriptB');
+
+        e.addChild(c1);
+
+        const c2 = new Entity('c2');
+        const child2component = c2.addComponent('esmscript');
+        await child2component.system.initializeComponentData(child2component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
+                enabled: true,
+                attributes: {}
+            }, {
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
+                enabled: true,
+                attributes: {}
+            }]
+        });
+
+        const c2ScriptA = c2.esmscript.get('ScriptA');
+        const c2ScriptB = c2.esmscript.get('ScriptB');
+
+        e.addChild(c2);
+
+        const c3 = new Entity('c3');
+        const child3component = c3.addComponent('esmscript');
+        await child3component.system.initializeComponentData(child3component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
+                enabled: true,
+                attributes: {}
+            }, {
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs',
+                enabled: true,
+                attributes: {}
+            }]
+        });
+
+        const c3ScriptA = c3.esmscript.get('ScriptA');
+        const c3ScriptB = c3.esmscript.get('ScriptB');
+
+        c1.addChild(c3);
+        app.root.addChild(e);
+
+        expect(calls).to.have.lengthOf(8);
+
+        // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+        app.update(16.6);
+
+        expect(calls).to.have.lengthOf(32);
+        // expect(initializeCalls.length).to.equal(32);
+
+        let idx = -1;
+        expectCall(++idx, INITIALIZE(eScriptA));
+        expectCall(++idx, INITIALIZE(eScriptB));
+        expectCall(++idx, INITIALIZE(c1ScriptA)); // , ++idx, 'initialize scriptA');
+        expectCall(++idx, INITIALIZE(c1ScriptB)); // , ++idx, 'initialize scriptB');
+        expectCall(++idx, INITIALIZE(c3ScriptA)); // , ++idx, 'initialize scriptA');
+        expectCall(++idx, INITIALIZE(c3ScriptB)); // , ++idx, 'initialize scriptB');
+        expectCall(++idx, INITIALIZE(c2ScriptA)); // , ++idx, 'initialize scriptA');
+        expectCall(++idx, INITIALIZE(c2ScriptB)); // , ++idx, 'initialize scriptB');
+
+        expectCall(++idx, ACTIVE(eScriptA)); //  ++idx, 'active scriptA');
+        expectCall(++idx, ACTIVE(eScriptB)); //  ++idx, 'active scriptB');
+        expectCall(++idx, ACTIVE(c1ScriptA)); // , ++idx, 'active scriptA');
+        expectCall(++idx, ACTIVE(c1ScriptB)); // , ++idx, 'active scriptB');
+        expectCall(++idx, ACTIVE(c2ScriptA)); // , ++idx, 'active scriptA');
+        expectCall(++idx, ACTIVE(c2ScriptB)); // , ++idx, 'active scriptB');
+        expectCall(++idx, ACTIVE(c3ScriptA)); // , ++idx, 'active scriptA');
+        expectCall(++idx, ACTIVE(c3ScriptB)); // , ++idx, 'active scriptB');
+
+        expectCall(++idx, UPDATE(eScriptA)); //  ++idx, 'update scriptA');
+        expectCall(++idx, UPDATE(eScriptB)); //  ++idx, 'update scriptB');
+        expectCall(++idx, UPDATE(c1ScriptA)); // , ++idx, 'update scriptA');
+        expectCall(++idx, UPDATE(c1ScriptB)); // , ++idx, 'update scriptB');
+        expectCall(++idx, UPDATE(c2ScriptA)); // , ++idx, 'update scriptA');
+        expectCall(++idx, UPDATE(c2ScriptB)); // , ++idx, 'update scriptB');
+        expectCall(++idx, UPDATE(c3ScriptA)); // , ++idx, 'update scriptA');
+        expectCall(++idx, UPDATE(c3ScriptB)); // , ++idx, 'update scriptB');
+
+    });
+
+    it('should initialize script attributes for an enabled entity', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+    });
+
+
+    it('should initialize a script with attributes on a disabled entity', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        e.enabled = false;
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+    });
+
+
+    it('should initialize script with attributes on a disabled script component', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: false,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+    });
+
+    it('should initiailize a script with attributes on a disabled script instance', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: false,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+    });
+
+    it('should initialize a script with attributes when cloning an enabled entity', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const clonedModule = clone.esmscript.get('ScriptWithAttributes');
+
+        expect(clonedModule.attribute1).to.equal(e2);
+        expect(clonedModule.attribute2).to.equal(2);
+
+    });
+
+    it('should initialize a script with attributes when cloning a disabled entity', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        e.enabled = false;
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const clonedModule = clone.esmscript.get('ScriptWithAttributes');
+
+        expect(clonedModule.attribute1).to.equal(e2);
+        expect(clonedModule.attribute2).to.equal(2);
+    });
+
+    it('should initialize a script with attributes when cloning a disabled script component', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: false,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: true,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const clonedModule = clone.esmscript.get('ScriptWithAttributes');
+
+        expect(clonedModule.attribute1).to.equal(e2);
+        expect(clonedModule.attribute2).to.equal(2);
+    });
+
+    it('should initialize a script with attributes when cloning a disabled script instance', async function () {
+        const e2 = new Entity();
+        app.root.addChild(e2);
+
+        expect(e2).to.exist;
+
+        const e = new Entity();
+        const component = e.addComponent('esmscript');
+        await component.system.initializeComponentData(component, {
+            enabled: true,
+            modules: [{
+                moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                enabled: false,
+                attributes: {
+                    attribute1: e2
+                }
+            }]
+        });
+
+        app.root.addChild(e);
+
+        const script = e.esmscript.get('ScriptWithAttributes');
+
+        expect(script.attribute1).to.equal(e2);
+        expect(script.attribute2).to.equal(2);
+
+        const clone = e.clone();
+        app.root.addChild(clone);
+
+        const clonedModule = clone.esmscript.get('ScriptWithAttributes');
+
+        expect(clonedModule.attribute1).to.equal(e2);
+        expect(clonedModule.attribute2).to.equal(2);
+    });
+
+
+    it('should initialize a script with attributes when loading a scene with an enabled entity', async function () {
+        const a = app.root.findByName('EnabledEntity');
+        expect(a).to.exist;
+
+        const b = app.root.findByName('ReferencedEntity');
+        expect(b).to.exist;
+
+        expect(a.esmscript).to.exist;
+
+        await waitForNextFrame();
+
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+
+        expect(scriptWithAttributes).to.exist;
+
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
+
+    it("script attributes are initialized when loading scene for disabled entity", async function () {
     //     var a = app.root.findByName('DisabledEntity');
 
     //     var b = app.root.findByName('ReferencedEntity');
@@ -1177,7 +1201,7 @@ describe('EsmScriptComponent', function () {
     //         expect(app.root.findByName(name)).to.not.exist;
     //     })
 
-    //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.json', function () {
+    //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.mjson', function () {
 
     //         // verify entities are loaded
     //         names.forEach(function (name) {
@@ -1210,7 +1234,7 @@ describe('EsmScriptComponent', function () {
     //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
     //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true,
     //             attributes: {
     //                 invalidAttribute: 'Should not instantiate',
@@ -1247,7 +1271,7 @@ describe('EsmScriptComponent', function () {
     //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
     //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true
     //         }]
     //     });
@@ -1297,7 +1321,7 @@ describe('EsmScriptComponent', function () {
     //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
     //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true,
     //             attributes: {
     //                 simpleAttributeNoDefault: 54321,
@@ -1364,7 +1388,7 @@ describe('EsmScriptComponent', function () {
     //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
     //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true
     //         }]
     //     });
@@ -1400,7 +1424,7 @@ describe('EsmScriptComponent', function () {
     //     await component.system.initializeComponentData(component, {
     //         "enabled": true,
     //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true,
     //             attributes: {
     //                 complexAttributeNoDefault: {
@@ -1454,7 +1478,7 @@ describe('EsmScriptComponent', function () {
     //     const component = e.addComponent('esmscript');
     //     await component.system.initializeComponentData(component, {
     //         modules: [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.js",
+    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
     //             enabled: true,
     //             attributes: {
     //                 attribute2: 3,
@@ -1484,7 +1508,7 @@ describe('EsmScriptComponent', function () {
     //         var e = new Entity();
     //         app.root.addChild(e);
     //         e.addComponent('esmscript');
-    //         const EsmScript = await import('../../../test/test-assets/esm-scripts/esm-scriptWithSimpleAttributes.js')
+    //         const EsmScript = await import('../../../test/test-assets/esm-scripts/esm-scriptWithSimpleAttributes.mjs')
 
     //         // collect warnings
     //         const warnings = [];
@@ -1499,6 +1523,6 @@ describe('EsmScriptComponent', function () {
     //         expect(warnings).to.have.a.lengthOf(2);
 
     //     })
-    // })
+    });
 
 });
