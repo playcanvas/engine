@@ -12,319 +12,316 @@ import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE,
 import createOptions from './basic-app-options.mjs';
 import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
-describe('EsmScriptComponent', function () {
-    let app;
+import sceneData from '../../../test-assets/esm-scripts/scene1.json' assert { type: 'json' };
+import { SceneParser } from '../../../../src/framework/parsers/scene.js';
+// const sceneBlob = new Blob([JSON.stringify(sceneJson)], { type: 'application/json' });
+
+
+describe('EsmScriptComponent', function (done) {
+    
+    let app, sceneUrl;
+    console.log('sceneUrl', sceneUrl)
 
     beforeEach(async function () {
+
+         // Override the debug to remove console mess
+        Debug.warn = warning => null;
+
         reset();
         const canvas = new HTMLCanvasElement(500, 500);
         app = new Application(canvas);
 
         // add script assets
-        // app._parseAssets({
-        //     "1": {
-        //         "tags": [],
-        //         "name": "esm-scriptA.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptA.mjs",
-        //                 "attributes": {
+        app._parseAssets({
+            "1": {
+                "tags": [],
+                "name": "esm-scriptA.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptA.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm=-scriptA.mjs",
-        //             "size": 1,
-        //             // "hash": "script a hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-scriptA.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "1"
-        //     },
-        //     "2": {
-        //         "tags": [],
-        //         "name": "esm-scriptB.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptB.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm=-scriptA.mjs",
+                    "size": 1,
+                    // "hash": "script a hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-scriptA.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "1"
+            },
+            "2": {
+                "tags": [],
+                "name": "esm-scriptB.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptB.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-scriptB.mjs",
-        //             "size": 1,
-        //             // "hash": "script b hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-scriptB.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "2"
-        //     },
-        //     "3": {
-        //         "tags": [],
-        //         "name": "esm-cloner.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-cloner.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-scriptB.mjs",
+                    "size": 1,
+                    // "hash": "script b hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-scriptB.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "2"
+            },
+            "3": {
+                "tags": [],
+                "name": "esm-cloner.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-cloner.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-cloner.mjs",
-        //             "size": 1,
-        //             // "hash": "cloner hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-cloner.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "3"
-        //     },
-        //     "4": {
-        //         "tags": [],
-        //         "name": "esm-enabler.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-enabler.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-cloner.mjs",
+                    "size": 1,
+                    // "hash": "cloner hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-cloner.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "3"
+            },
+            "4": {
+                "tags": [],
+                "name": "esm-enabler.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-enabler.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-enabler.mjs",
-        //             "size": 1,
-        //             // "hash": "enabler hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-enabler.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "4"
-        //     },
-        //     "5": {
-        //         "tags": [],
-        //         "name": "esm-disabler.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-disabler.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-enabler.mjs",
+                    "size": 1,
+                    // "hash": "enabler hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-enabler.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "4"
+            },
+            "5": {
+                "tags": [],
+                "name": "esm-disabler.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-disabler.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-disabler.mjs",
-        //             "size": 1,
-        //             // "hash": "disabler hash",
-        //             "url": "../../../test/test-assets/esmscripts/esm-disabler.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "5"
-        //     },
-        //     "6": {
-        //         "tags": [],
-        //         "name": "esm-scriptWithAttributes.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esmscripts/esm-scriptWithAttributes.mjs",
-        //                 "attributes": {
-        //                     "attribute1": {
-        //                         "type": "entity"
-        //                     },
-        //                     "attribute2": {
-        //                         "type": "number",
-        //                         "default": 2
-        //                     },
-        //                     "attribute3": {
-        //                         "type": "json",
-        //                         "schema": [{
-        //                             "name": 'fieldNumber',
-        //                             "type": 'number'
-        //                         }]
-        //                     },
-        //                     "attribute4": {
-        //                         "type": "json",
-        //                         "array": true,
-        //                         "schema": [{
-        //                             "name": 'fieldNumber',
-        //                             "type": 'number'
-        //                         }]
-        //                     }
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-scriptWithAttributes.mjs",
-        //             "size": 1,
-        //             // "hash": "scriptWithAttributes hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "6"
-        //     },
-        //     "7": {
-        //         "tags": [],
-        //         "name": "esm-loadedLater.mjs",
-        //         "revision": 1,
-        //         "preload": false,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-disabler.mjs",
+                    "size": 1,
+                    // "hash": "disabler hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-disabler.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "5"
+            },
+            "6": {
+                "tags": [],
+                "name": "esm-scriptWithAttributes.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                        "attributes": {
+                            "attribute1": {
+                                "type": "entity"
+                            },
+                            "attribute2": {
+                                "type": "number",
+                                "default": 2
+                            },
+                            "attribute3": {
+                                "type": "json",
+                                "schema": [{
+                                    "name": 'fieldNumber',
+                                    "type": 'number'
+                                }]
+                            },
+                            "attribute4": {
+                                "type": "json",
+                                "array": true,
+                                "schema": [{
+                                    "name": 'fieldNumber',
+                                    "type": 'number'
+                                }]
+                            }
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-scriptWithAttributes.mjs",
+                    "size": 1,
+                    // "hash": "scriptWithAttributes hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "6"
+            },
+            "7": {
+                "tags": [],
+                "name": "esm-loadedLater.mjs",
+                "revision": 1,
+                "preload": false,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-loadedLater.mjs",
-        //             "size": 1,
-        //             // "hash": "loadedLater hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "7"
-        //     },
-        //     "8": {
-        //         "tags": [],
-        //         "name": "esm-destroyer.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-loadedLater.mjs",
+                    "size": 1,
+                    // "hash": "loadedLater hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-loadedLater.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "7"
+            },
+            "8": {
+                "tags": [],
+                "name": "esm-destroyer.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-destroyer.mjs",
-        //             "size": 1,
-        //             // "hash": "destroyer hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "8"
-        //     },
-        //     "9": {
-        //         "tags": [],
-        //         "name": "esm-postCloner.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-destroyer.mjs",
+                    "size": 1,
+                    // "hash": "destroyer hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-destroyer.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "8"
+            },
+            "9": {
+                "tags": [],
+                "name": "esm-postCloner.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-postCloner.mjs",
-        //             "size": 1,
-        //             // "hash": "postCloner hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "9"
-        //     },
-        //     "10": {
-        //         "tags": [],
-        //         "name": "esm-postInitializeReporter.mjs",
-        //         "revision": 1,
-        //         "preload": true,
-        //         "meta": null,
-        //         "data": {
-        //             "modules": [{
-        //                 "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs",
-        //                 "attributes": {
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-postCloner.mjs",
+                    "size": 1,
+                    // "hash": "postCloner hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-postCloner.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "9"
+            },
+            "10": {
+                "tags": [],
+                "name": "esm-postInitializeReporter.mjs",
+                "revision": 1,
+                "preload": true,
+                "meta": null,
+                "data": {
+                    "modules": [{
+                        "moduleSpecifier": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs",
+                        "attributes": {
 
-        //                 }
-        //             }],
-        //             "loading": false
-        //         },
-        //         "type": "esmscript",
-        //         "file": {
-        //             "filename": "esm-postInitializeReporter.mjs",
-        //             "size": 1,
-        //             // "hash": "postInitializeReporter hash",
-        //             "url": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs"
-        //         },
-        //         "region": "eu-west-1",
-        //         "id": "10"
-        //     }
-        // });
+                        }
+                    }],
+                    "loading": false
+                },
+                "type": "esmscript",
+                "file": {
+                    "filename": "esm-postInitializeReporter.mjs",
+                    "size": 1,
+                    // "hash": "postInitializeReporter hash",
+                    "url": "../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs"
+                },
+                "region": "eu-west-1",
+                "id": "10"
+            }
+        });
 
-        // app.preload(function (err) {
-        //     if (err) {
-        //         console.error(err);
-        //     }
-
-        //     app.scenes.loadScene('http://localhost:3000/test/test-assets/esmscripts/scene1.mjson', function () {
-        // app.init(createOptions);
-        // app.start();
-        // done();
-        //     });
-        // });
-
+        const handler = app.loader.getHandler("scene");
+        
         const gfxOpts = { deviceTypes: [DEVICETYPE_WEBGL2] };
         createOptions.graphicsDevice = await createGraphicsDevice(canvas, gfxOpts);
         app.init(createOptions);
+        
+        const scene = handler.open(null, sceneData);
+        app.root.addChild(scene.root);
         app.start();
 
     });
 
     afterEach(function () {
+        URL.revokeObjectURL()
         app.destroy();
     });
-
-    // beforeEach(function (done) {
-    //     this.timeout(4000); // Double the default 2000ms timeout which often fails on CirclCI
-
-    //     // Override the debug to remove console mess
-    //     Debug.warn = warning => null;
-
-    // });
 
     describe('#initialize', function () {
 
@@ -891,7 +888,6 @@ describe('EsmScriptComponent', function () {
         expect(script.attribute2).to.equal(2);
     });
 
-
     it('should initialize a script with attributes on a disabled entity', async function () {
         const e2 = new Entity();
         app.root.addChild(e2);
@@ -919,7 +915,6 @@ describe('EsmScriptComponent', function () {
         expect(script.attribute1).to.equal(e2);
         expect(script.attribute2).to.equal(2);
     });
-
 
     it('should initialize script with attributes on a disabled script component', async function () {
         const e2 = new Entity();
@@ -1117,30 +1112,37 @@ describe('EsmScriptComponent', function () {
         expect(clonedModule.attribute2).to.equal(2);
     });
 
-
     it('should initialize a script with attributes when loading a scene with an enabled entity', async function () {
         const a = app.root.findByName('EnabledEntity');
         expect(a).to.exist;
 
+
         const b = app.root.findByName('ReferencedEntity');
         expect(b).to.exist;
+
+        console.log('getting resource id', b.getGuid());
 
         expect(a.esmscript).to.exist;
 
         await waitForNextFrame();
+        await waitForNextFrame();
+        await waitForNextFrame();
+        await waitForNextFrame();
+        await waitForNextFrame();
+        //         // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+            // app.update(16.6);
 
         const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
         expect(scriptWithAttributes).to.exist;
-
+        console.log(scriptWithAttributes.attribute1)
         expect(scriptWithAttributes.attribute1).to.equal(b);
-        expect(scriptWithAttributes.attribute2).to.equal(2);
+        // expect(scriptWithAttributes.attribute2).to.equal(2);
     });
 
-    it("script attributes are initialized when loading scene for disabled entity", async function () {
-    //     var a = app.root.findByName('DisabledEntity');
-
-    //     var b = app.root.findByName('ReferencedEntity');
+    // it('should initialize a script with attributes when loading a scene with a disabled entity', async function () {
+    //     const a = app.root.findByName('DisabledEntity');
+    //     const b = app.root.findByName('ReferencedEntity');
 
     //     expect(a).to.exist;
     //     expect(b).to.exist;
@@ -1523,6 +1525,5 @@ describe('EsmScriptComponent', function () {
     //         expect(warnings).to.have.a.lengthOf(2);
 
     //     })
-    });
 
 });

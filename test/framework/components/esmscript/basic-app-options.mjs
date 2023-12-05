@@ -3,6 +3,7 @@ import { CameraComponentSystem } from '../../../../src/framework/components/came
 import { EsmScriptComponentSystem } from '../../../../src/framework/components/esmscript/system.js';
 import { LightComponentSystem } from '../../../../src/framework/components/light/system.js';
 import { RenderComponentSystem } from '../../../../src/framework/components/render/system.js';
+import { ScriptComponentSystem } from '../../../../src/framework/components/script/system.js';
 import { ContainerHandler } from '../../../../src/framework/handlers/container.js';
 import { TextureHandler } from '../../../../src/framework/handlers/texture.js';
 // import { DEVICETYPE_WEBGL1 } from '../../../../src/platform/graphics/constants.js';
@@ -20,13 +21,10 @@ import { TextureHandler } from '../../../../src/framework/handlers/texture.js';
 const createOptions = new AppOptions();
 
 createOptions.componentSystems = [
-    // @ts-ignore
+    ScriptComponentSystem,
     EsmScriptComponentSystem,
-    // @ts-ignore
     RenderComponentSystem,
-    // @ts-ignore
     CameraComponentSystem,
-    // @ts-ignore
     LightComponentSystem
 
 ];
