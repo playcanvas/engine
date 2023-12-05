@@ -266,6 +266,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         app.scene.skyboxMip = 2;
         app.scene.exposure = 0.3;
 
+        // disable skydome rendering itself, we don't need it as we use camera clear color
+        app.scene.layers.getLayerByName('Skybox').enabled = false;
+
         // render in HDR mode
         app.scene.toneMapping = pc.TONEMAP_LINEAR;
         app.scene.gammaCorrection = pc.GAMMA_NONE;
@@ -396,90 +399,30 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
         addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
-        // render passes
-        let scenePass;
-        let composePass;
-        let bloomPass;
-        let colorGrabPass;
+        // ------ Custom render passes set up ------
 
-        // helper function to create a render passes for the camera
-        const setupRenderPasses = () => {
+        // Use a render pass camera, which is a render pass that implements typical rendering of a camera.
+        // Internally this sets up additional passes it needs, based on the options passed to it.
+        const renderPassCamera = new pcx.RenderPassCamera(app, {
+            camera: cameraEntity.camera,    // camera used to render those passes
+            samples: 2,                     // number of samples for multi-sampling
+            sceneColorMap: true             // true if the scene color should be captured
+        });
 
-            // create a multi-sampled HDR render target to render the scene into
-            const format = app.graphicsDevice.getRenderableHdrFormat() || pc.PIXELFORMAT_RGBA8;
-            const sceneTexture = new pc.Texture(device, {
-                name: 'SceneTexture',
-                width: 4,
-                height: 4,
-                format: format,
-                mipmaps: false,
-                minFilter: pc.FILTER_LINEAR,
-                magFilter: pc.FILTER_LINEAR,
-                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-                addressV: pc.ADDRESS_CLAMP_TO_EDGE
-            });
+        // and set up these rendering passes to be used by the camera, instead of its default rendering
+        cameraEntity.camera.renderPasses = [renderPassCamera];
 
-            const rt = new pc.RenderTarget({
-                colorBuffer: sceneTexture,
-                depth: true,
-                samples: 4
-            });
+        // ------
 
-            // grab pass allowing us to copy the render scene into a texture and use for refraction
-            // the source for the copy is the texture we render the scene to
-            colorGrabPass = new pc.RenderPassColorGrab(app.graphicsDevice);
-            colorGrabPass.source = rt;
-
-            // render pass that renders the opaque scene to the render target. Render target size
-            // automatically matches the back-buffer size with the optional scale. Note that the scale
-            // parameters allow us to render the 3d scene at lower resolution, improving performance.
-            scenePass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            scenePass.init(rt, {
-                resizeSource: null,
-                scaleX: 1,
-                scaleY: 1
-            });
-
-            // this pass render opaquemeshes on the world layer
-            let clearRenderTarget = true;
-            scenePass.addLayer(cameraEntity.camera, worldLayer, false, clearRenderTarget);
-
-            // similar pass that renders transparent meshes from the world layer to the same render target
-            clearRenderTarget = false;
-            const scenePassTransparent = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            scenePassTransparent.init(rt);
-            scenePassTransparent.addLayer(cameraEntity.camera, worldLayer, true, clearRenderTarget);
-
-            // create a bloom pass, which generates bloom texture based on the just rendered scene texture
-            bloomPass = new pcx.RenderPassBloom(app.graphicsDevice, sceneTexture, format);
-
-            // create a compose pass, which combines the scene texture with the bloom texture
-            composePass = new pcx.RenderPassCompose(app.graphicsDevice);
-            composePass.sceneTexture = sceneTexture;
-            composePass.bloomTexture = bloomPass.bloomTexture;
-
-            // compose pass renders directly to a back-buffer
-            composePass.init(null);
-
-            // final pass renders directly to the back-buffer on top of the bloomed scene, and it renders a transparent UI layer
-            const afterPass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            afterPass.init(null);
-            afterPass.addLayer(cameraEntity.camera, uiLayer, true, clearRenderTarget);
-
-            // return these prepared render passes in the order they should be executed
-            return [scenePass, colorGrabPass, scenePassTransparent, bloomPass, composePass, afterPass];
-        };
-
-        // set up render passes on the camera, to use those instead of the default camera rendering
-        const renderPasses = setupRenderPasses();
-        cameraEntity.camera.renderPasses = renderPasses;
+        // access compose pass to change its settings - this is the pass that combines the scene
+        // with the post-processing effects
+        const { composePass } = renderPassCamera;
 
         data.on('*:set', (/** @type {string} */ path, value) => {
             const pathArray = path.split('.');
             if (pathArray[1] === 'scene') {
                 if (pathArray[2] === 'scale') {
-                    scenePass.options.scaleX = value;
-                    scenePass.options.scaleY = value;
+                    renderPassCamera.renderTargetScale = value;
                 }
                 if (pathArray[2] === 'tonemapping') {
                     composePass.toneMapping = value;
@@ -501,10 +444,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                     composePass.bloomIntensity = pc.math.lerp(0, 0.1, value / 100);
                 }
                 if (pathArray[2] === 'lastMipLevel') {
-                    bloomPass.lastMipLevel = value;
+                    renderPassCamera.lastMipLevel = value;
                 }
                 if (pathArray[2] === 'enabled') {
-                    composePass.bloomTexture = value ? bloomPass.bloomTexture : null;
+                    renderPassCamera.bloomEnabled = value;
                 }
             }
             if (pathArray[1] === 'grading') {
