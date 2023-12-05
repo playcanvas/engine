@@ -522,17 +522,26 @@ class EsmScriptComponent extends Component {
      */
     static populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
 
-        return reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
+        const result = reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
             const mappedValue = rawToValue(app, attributeDefinition, value);
 
             // check for undefined | null
             if (mappedValue != null) {
                 object[key] = mappedValue;
             } else if (value != null && mappedValue === null) {
-                Debug.warn(`The attribute '${key}' has an invalid type of '${attributeDefinition.type}'`);
+                Debug.warn(`'${key}' is a '${typeof value}' but a '${attributeDefinition.type}' was expected. Please see the attribute definition.`);
             }
 
         }, object);
+
+        // Perform a shallow comparison to check for any attributes that are not defined in the definition
+        for (const key in attributes) {
+            if (attributeDefDict[key] === undefined) {
+                Debug.warn(`'${key}' is not defined. Please see the attribute definition.`);
+            }
+        }
+
+        return result;
 
     }
 }

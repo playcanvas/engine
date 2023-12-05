@@ -5,7 +5,7 @@ export const attributes = {
 export default class Cloner {
     initialize() {
         window.initializeCalls.push(this.entity.getGuid() + ' initialize cloner');
-        var clone = this.entityToClone.clone();
+        const clone = this.entityToClone.clone();
         clone.name += ' - clone';
         this.app.root.addChild(clone);
     }

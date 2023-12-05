@@ -153,6 +153,7 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
                  * we must recurse through the `type` itself
                  */
 
+
                 if (!isArrayType) {
 
                     nestedObject[attributeName] = reduceAttributeDefinition(type, value, callback, {});
@@ -202,7 +203,7 @@ export const reduceAttributeDefinition = (attributeDefDict, attributes, callback
         } else {
 
             // It's not an object or a attribute definition, and will be ignored
-            Debug.warn(`The attribute '${attributeName}' is not a valid definition and will be ignored.`);
+            Debug.warn(`The attribute '${attributeName}' has not been defined as an attribute definition.`);
         }
 
         return nestedObject;

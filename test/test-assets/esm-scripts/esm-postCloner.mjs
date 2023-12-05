@@ -4,7 +4,7 @@ export const attributes = {
 
 export default class PostCloner {
     postInitialize() {
-        var clone = this.entityToClone.clone();
+        const clone = this.entityToClone.clone();
         this.app.root.addChild(clone);
         clone.enabled = true;
     }
