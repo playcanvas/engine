@@ -3,24 +3,18 @@ import { Debug } from '../../../../src/core/debug.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Color } from '../../../../src/core/math/color.js';
 import { createGraphicsDevice } from '../../../../src/platform/graphics/graphics-device-create.js';
-
-import { expect } from 'chai';
-import sinon from 'sinon';
-
-import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
-import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.mjs';
-import createOptions from './basic-app-options.mjs';
+import sceneData from '../../../test-assets/esm-scripts/scene1.json' assert { type: 'json' };
 import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
-import sceneData from '../../../test-assets/esm-scripts/scene1.json' assert { type: 'json' };
-import { SceneParser } from '../../../../src/framework/parsers/scene.js';
-// const sceneBlob = new Blob([JSON.stringify(sceneJson)], { type: 'application/json' });
 
+import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
+import { expect } from 'chai';
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.mjs';
+import createOptions from './basic-app-options.mjs';
 
 describe('EsmScriptComponent', function (done) {
     
-    let app, sceneUrl;
-    console.log('sceneUrl', sceneUrl)
+    let app;
 
     beforeEach(async function () {
 
@@ -1114,84 +1108,69 @@ describe('EsmScriptComponent', function (done) {
 
     it('should initialize a script with attributes when loading a scene with an enabled entity', async function () {
         const a = app.root.findByName('EnabledEntity');
-        expect(a).to.exist;
-
-
         const b = app.root.findByName('ReferencedEntity');
+
+        expect(a).to.exist;
         expect(b).to.exist;
 
-        console.log('getting resource id', b.getGuid());
-
-        expect(a.esmscript).to.exist;
-
         await waitForNextFrame();
-        await waitForNextFrame();
-        await waitForNextFrame();
-        await waitForNextFrame();
-        await waitForNextFrame();
-        //         // Node doesn't have `requestAnimationFrame` so manually trigger a tick
-            // app.update(16.6);
 
         const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
         expect(scriptWithAttributes).to.exist;
-        console.log(scriptWithAttributes.attribute1)
         expect(scriptWithAttributes.attribute1).to.equal(b);
-        // expect(scriptWithAttributes.attribute2).to.equal(2);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
     });
 
-    // it('should initialize a script with attributes when loading a scene with a disabled entity', async function () {
-    //     const a = app.root.findByName('DisabledEntity');
-    //     const b = app.root.findByName('ReferencedEntity');
+    it('should initialize a script with attributes when loading a scene with a disabled entity', async function () {
+        const a = app.root.findByName('DisabledEntity');
+        const b = app.root.findByName('ReferencedEntity');
 
-    //     expect(a).to.exist;
-    //     expect(b).to.exist;
+        expect(a).to.exist;
+        expect(b).to.exist;
 
-    //     await waitForNextFrame();
+        await waitForNextFrame();
 
-    //     const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
-    //     expect(scriptWithAttributes).to.exist;
+        expect(scriptWithAttributes).to.exist;
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
 
-    //     expect(scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(scriptWithAttributes.attribute2).to.equal(2);
-    // });
+    it("should initialize a script with attributes when loading a scene for a disabled script component", async function () {
+        var a = app.root.findByName('DisabledScriptComponent');
+        var b = app.root.findByName('ReferencedEntity');
 
-    // it("script attributes are initialized when loading scene for disabled script component", async function () {
-    //     var a = app.root.findByName('DisabledScriptComponent');
-    //     expect(a).to.exist;
+        expect(a).to.exist;
+        expect(b).to.exist;
 
-    //     var b = app.root.findByName('ReferencedEntity');
-    //     expect(b).to.exist;
+        await waitForNextFrame();
 
-    //     await waitForNextFrame();
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
-    //     const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+        expect(scriptWithAttributes).to.exist;
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
 
-    //     expect(scriptWithAttributes).to.exist;
+    it('should initialize a script with attributes when loading scene for disabled script instance', async function () {
+        const a = app.root.findByName('DisabledScriptInstance');
+        const b = app.root.findByName('ReferencedEntity');
 
-    //     expect(scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(scriptWithAttributes.attribute2).to.equal(2);
-    // });
+        expect(a).to.exist;
+        expect(b).to.exist;
 
-    // it("script attributes are initialized when loading scene for disabled script instance", async function () {
-    //     var a = app.root.findByName('DisabledScriptInstance');
-    //     expect(a).to.exist;
+        await waitForNextFrame();
 
-    //     var b = app.root.findByName('ReferencedEntity');
-    //     expect(b).to.exist;
+        const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
-    //     await waitForNextFrame();
+        expect(scriptWithAttributes).to.exist;
+        expect(scriptWithAttributes.attribute1).to.equal(b);
+        expect(scriptWithAttributes.attribute2).to.equal(2);
+    });
 
-    //     const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-
-    //     expect(scriptWithAttributes).to.exist;
-
-    //     expect(scriptWithAttributes.attribute1).to.equal(b);
-    //     expect(scriptWithAttributes.attribute2).to.equal(2);
-    // });
-
-    // it('script attributes are initialized when reloading scene', function (done) {
+    // it('should initialize a script with attributes when reloading a scene', function (done) {
     //     // destroy current scene
     //     app.root.children[0].destroy();
 
@@ -1203,7 +1182,7 @@ describe('EsmScriptComponent', function (done) {
     //         expect(app.root.findByName(name)).to.not.exist;
     //     })
 
-    //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.mjson', function () {
+    //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.json', function () {
 
     //         // verify entities are loaded
     //         names.forEach(function (name) {
@@ -1230,300 +1209,305 @@ describe('EsmScriptComponent', function (done) {
     //     });
     // });
 
-    // it('invalid or malformed script attributes initialize correctly', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true,
-    //             attributes: {
-    //                 invalidAttribute: 'Should not instantiate',
-    //                 invalidAttributeType: 'Should not instantiate',
-    //                 invalidAttributeTypeWithDefault: 'Should not instantiate',
-    //                 invalidAttributeTypeArray: ['Should not instantiate']
-    //             }
-    //         }]
-    //     });
+    describe('script attributes', function () {
 
-    //     app.root.addChild(e);
+        it('expects invalid or malformed script attributes to initialize correctly', async function () {
+            var e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                "enabled": true,
+                "modules": [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true,
+                    attributes: {
+                        invalidAttribute: 'Should not instantiate',
+                        invalidAttributeType: 'Should not instantiate',
+                        invalidAttributeTypeWithDefault: 'Should not instantiate',
+                        invalidAttributeTypeArray: ['Should not instantiate']
+                    }
+                }]
+            });
 
-    //     await waitForNextFrame();
+            app.root.addChild(e);
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            await waitForNextFrame();
 
-    //     // invalid attribute
-    //     expect(script.invalidAttribute).to.equal(undefined);
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     // invalid attribute type
-    //     expect(script.invalidAttributeType).to.equal(undefined);
+            // invalid attribute
+            expect(script.invalidAttribute).to.equal(undefined);
 
-    //     // invalid attribute type with default
-    //     expect(script.invalidAttributeTypeWithDefault).to.equal(undefined);
+            // invalid attribute type
+            expect(script.invalidAttributeType).to.equal(undefined);
 
-    //     // invalid attribute type with array
-    //     expect(script.invalidAttributeTypeArray).to.be.an.instanceOf(Array);
+            // invalid attribute type with default
+            expect(script.invalidAttributeTypeWithDefault).to.equal(undefined);
 
-    // });
+            // invalid attribute type with array
+            expect(script.invalidAttributeTypeArray).to.be.an.instanceOf(Array);
 
-    // it('Defaults: simple script attributes initialize with correct defaults', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true
-    //         }]
-    //     });
+        });
 
-    //     app.root.addChild(e);
+        it('should initialize simple script attributes with their correct defaults', async function () {
+            var e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                "enabled": true,
+                "modules": [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true
+                }]
+            });
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            app.root.addChild(e);
 
-    //     // simple attribute - No default
-    //     expect(script.simpleAttributeNoDefault).to.equal(undefined);
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     // simple attribute - No default
-    //     expect(script.simpleAttributeWithFalsyDefault).to.equal(false);
+            // simple attribute - No default
+            expect(script.simpleAttributeNoDefault).to.equal(undefined);
 
-    //     // simple attribute - w/ default
-    //     expect(script.simpleAttribute).to.equal(10);
+            // simple attribute - No default
+            expect(script.simpleAttributeWithFalsyDefault).to.equal(false);
 
-    //     // simple color attribute - w/ default
-    //     expect(script.simpleColorHex).to.be.an.instanceof(Color);
+            // simple attribute - w/ default
+            expect(script.simpleAttribute).to.equal(10);
 
-    //     // simple attribute - w/ default
-    //     expect(script.simpleColorAsArray).to.be.an.instanceof(Color);
+            // simple color attribute - w/ default
+            expect(script.simpleColorHex).to.be.an.instanceof(Color);
 
-    //     // simple attribute array - w/ default
-    //     expect(script.simpleAttributeArray).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArray).to.have.lengthOf(1);
-    //     expect(script.simpleAttributeArray[0]).to.equal(10);
+            // simple attribute - w/ default
+            expect(script.simpleColorAsArray).to.be.an.instanceof(Color);
 
-    //     // Simple attribute array with an invalid default
-    //     expect(script.simpleAttributeArrayInvalidDefault).to.be.an.instanceOf(Array);
-    //     expect(script.simpleAttributeArrayInvalidDefault).to.have.lengthOf(0);
+            // simple attribute array - w/ default
+            expect(script.simpleAttributeArray).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArray).to.have.lengthOf(1);
+            expect(script.simpleAttributeArray[0]).to.equal(10);
 
-    //     // simple attribute array - no default
-    //     expect(script.simpleAttributeArrayNoDefault).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArrayNoDefault).to.have.lengthOf(0);
+            // Simple attribute array with an invalid default
+            expect(script.simpleAttributeArrayInvalidDefault).to.be.an.instanceOf(Array);
+            expect(script.simpleAttributeArrayInvalidDefault).to.have.lengthOf(0);
 
-    //     // simple attribute array - w/ default array
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.have.lengthOf(3);
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.deep.equal([10, 20, 30]);
+            // simple attribute array - no default
+            expect(script.simpleAttributeArrayNoDefault).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArrayNoDefault).to.have.lengthOf(0);
 
-    // });
+            // simple attribute array - w/ default array
+            expect(script.simpleAttributeArrayWithDefaultArray).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArrayWithDefaultArray).to.have.lengthOf(3);
+            expect(script.simpleAttributeArrayWithDefaultArray).to.deep.equal([10, 20, 30]);
 
-    // it('Override: simple script attributes initialize with correct values', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true,
-    //             attributes: {
-    //                 simpleAttributeNoDefault: 54321,
-    //                 simpleAttributeWithFalsyDefault: true,
-    //                 simpleAttribute: 1234,
-    //                 simpleColorHex: [0.5, 0.5, 0.5, 0.5],
-    //                 simpleColorAsArray: [0.9, 0.8, 0.7, 0.6],
-    //                 simpleAttributeArray: [1, 2, 4, 5],
-    //                 simpleAttributeArrayInvalidDefault: [123],
-    //                 simpleAttributeArrayNoDefault: [1, 2, 3, 4],
-    //                 simpleAttributeArrayWithDefaultArray: [9, 8, 7]
-    //             }
-    //         }]
-    //     });
+        });
 
-    //     app.root.addChild(e);
+        it('should override simple script attributes with their correct values', async function () {
+            var e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                "enabled": true,
+                "modules": [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true,
+                    attributes: {
+                        simpleAttributeNoDefault: 54321,
+                        simpleAttributeWithFalsyDefault: true,
+                        simpleAttribute: 1234,
+                        simpleColorHex: [0.5, 0.5, 0.5, 0.5],
+                        simpleColorAsArray: [0.9, 0.8, 0.7, 0.6],
+                        simpleAttributeArray: [1, 2, 4, 5],
+                        simpleAttributeArrayInvalidDefault: [123],
+                        simpleAttributeArrayNoDefault: [1, 2, 3, 4],
+                        simpleAttributeArrayWithDefaultArray: [9, 8, 7]
+                    }
+                }]
+            });
 
-    //     await waitForNextFrame();
+            app.root.addChild(e);
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            await waitForNextFrame();
 
-    //     // simple attribute - No default
-    //     expect(script.simpleAttributeNoDefault).to.equal(54321);
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     // // simple attribute - No default
-    //     expect(script.simpleAttributeWithFalsyDefault).to.equal(true);
+            // simple attribute - No default
+            expect(script.simpleAttributeNoDefault).to.equal(54321);
 
-    //     // // simple attribute - w/ default
-    //     expect(script.simpleAttribute).to.equal(1234);
+            // // simple attribute - No default
+            expect(script.simpleAttributeWithFalsyDefault).to.equal(true);
 
-    //     // simple color attribute - w/ default
-    //     expect(script.simpleColorHex).to.be.an.instanceof(Color);
-    //     expect({ ...script.simpleColorHex }).to.deep.equal({ r: 0.5, g: 0.5, b: 0.5, a: 0.5 });
+            // // simple attribute - w/ default
+            expect(script.simpleAttribute).to.equal(1234);
 
-    //     // simple attribute - w/ default
-    //     expect(script.simpleColorAsArray).to.be.an.instanceof(Color);
-    //     expect({ ...script.simpleColorAsArray }).to.deep.equal({ r: 0.9, g: 0.8, b: 0.7, a: 0.6 });
+            // simple color attribute - w/ default
+            expect(script.simpleColorHex).to.be.an.instanceof(Color);
+            expect({ ...script.simpleColorHex }).to.deep.equal({ r: 0.5, g: 0.5, b: 0.5, a: 0.5 });
 
-    //     // simple attribute array - w/ default
-    //     expect(script.simpleAttributeArray).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArray).to.have.lengthOf(4);
-    //     expect(script.simpleAttributeArray).to.deep.equal([1, 2, 4, 5]);
+            // simple attribute - w/ default
+            expect(script.simpleColorAsArray).to.be.an.instanceof(Color);
+            expect({ ...script.simpleColorAsArray }).to.deep.equal({ r: 0.9, g: 0.8, b: 0.7, a: 0.6 });
 
-    //     // Simple attribute array with an invalid default
-    //     expect(script.simpleAttributeArrayInvalidDefault).to.be.an.instanceOf(Array);
-    //     expect(script.simpleAttributeArrayInvalidDefault).to.have.lengthOf(1);
-    //     expect(script.simpleAttributeArrayInvalidDefault).to.deep.equal([123]);
+            // simple attribute array - w/ default
+            expect(script.simpleAttributeArray).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArray).to.have.lengthOf(4);
+            expect(script.simpleAttributeArray).to.deep.equal([1, 2, 4, 5]);
 
-    //     // simple attribute array - no default
-    //     expect(script.simpleAttributeArrayNoDefault).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArrayNoDefault).to.have.lengthOf(4);
-    //     expect(script.simpleAttributeArrayNoDefault).to.deep.equal([1, 2, 3, 4]);
+            // Simple attribute array with an invalid default
+            expect(script.simpleAttributeArrayInvalidDefault).to.be.an.instanceOf(Array);
+            expect(script.simpleAttributeArrayInvalidDefault).to.have.lengthOf(1);
+            expect(script.simpleAttributeArrayInvalidDefault).to.deep.equal([123]);
 
-    //     // simple attribute array - w/ default array
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.be.an.instanceof(Array);
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.have.lengthOf(3);
-    //     expect(script.simpleAttributeArrayWithDefaultArray).to.deep.equal([9, 8, 7]);
+            // simple attribute array - no default
+            expect(script.simpleAttributeArrayNoDefault).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArrayNoDefault).to.have.lengthOf(4);
+            expect(script.simpleAttributeArrayNoDefault).to.deep.equal([1, 2, 3, 4]);
 
-    // });
+            // simple attribute array - w/ default array
+            expect(script.simpleAttributeArrayWithDefaultArray).to.be.an.instanceof(Array);
+            expect(script.simpleAttributeArrayWithDefaultArray).to.have.lengthOf(3);
+            expect(script.simpleAttributeArrayWithDefaultArray).to.deep.equal([9, 8, 7]);
 
-    // it('Defaults: complex script attributes initialize with correct defaults', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true
-    //         }]
-    //     });
+        });
 
-    //     app.root.addChild(e);
+        it('should initialize complex script attributes with their correct values', async function () {
+            var e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                "enabled": true,
+                "modules": [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true
+                }]
+            });
 
-    //     await waitForNextFrame();
+            app.root.addChild(e);
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            await waitForNextFrame();
 
-    //     // complex attribute - no default
-    //     expect(script.complexAttributeNoDefault).to.be.a('object');
-    //     expect(script.complexAttributeNoDefault.internalNumberNoDefault).to.equal(undefined);
-    //     expect(script.complexAttributeNoDefault.internalNumber).to.equal(1);
-    //     expect(script.complexAttributeNoDefault.internalArrayNoDefault).to.deep.equal([]);
-    //     expect(script.complexAttributeNoDefault.internalArray).to.deep.equal([1, 2, 3, 4]);
-    //     expect(script.complexAttributeNoDefault.internalColor).to.be.an.instanceOf(Color);
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     // complex attribute - w/ default
-    //     expect(script.complexAttribute).to.be.a('object');
-    //     expect(script.complexAttribute.internalNumberNoDefault).to.equal(10);
-    //     expect(script.complexAttribute.internalNumber).to.equal(1);
-    //     expect(script.complexAttribute.internalArrayNoDefault).to.deep.equal([]);
-    //     expect(script.complexAttribute.internalArray).to.deep.equal([6, 7, 8, 9]);
-    //     expect(script.complexAttribute.internalColor).to.be.an.instanceOf(Color);
-    //     expect(script.complexAttribute.nonExistent).to.equal(undefined);
+            // complex attribute - no default
+            expect(script.complexAttributeNoDefault).to.be.a('object');
+            expect(script.complexAttributeNoDefault.internalNumberNoDefault).to.equal(undefined);
+            expect(script.complexAttributeNoDefault.internalNumber).to.equal(1);
+            expect(script.complexAttributeNoDefault.internalArrayNoDefault).to.deep.equal([]);
+            expect(script.complexAttributeNoDefault.internalArray).to.deep.equal([1, 2, 3, 4]);
+            expect(script.complexAttributeNoDefault.internalColor).to.be.an.instanceOf(Color);
 
-    // });
+            // complex attribute - w/ default
+            expect(script.complexAttribute).to.be.a('object');
+            expect(script.complexAttribute.internalNumberNoDefault).to.equal(10);
+            expect(script.complexAttribute.internalNumber).to.equal(1);
+            expect(script.complexAttribute.internalArrayNoDefault).to.deep.equal([]);
+            expect(script.complexAttribute.internalArray).to.deep.equal([6, 7, 8, 9]);
+            expect(script.complexAttribute.internalColor).to.be.an.instanceOf(Color);
+            expect(script.complexAttribute.nonExistent).to.equal(undefined);
 
-    // it('Overrides: complex script attributes initialize with correct defaults', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         "enabled": true,
-    //         "modules": [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true,
-    //             attributes: {
-    //                 complexAttributeNoDefault: {
-    //                     internalNumberNoDefault: 20,
-    //                     internalNumber: 10,
-    //                     internalArrayNoDefault: [1, 2, 3],
-    //                     internalArray: [9, 8, 7],
-    //                     internalColor: '#ffffff'
-    //                 },
-    //                 complexAttribute: {
-    //                     internalNumberNoDefault: 1,
-    //                     internalNumber: 2,
-    //                     internalArrayNoDefault: [1, 2, 3],
-    //                     internalArray: [9, 8, 7],
-    //                     internalColor: '#ffffff',
-    //                     nonExistent: 'SHOULD NOT EXIST'
-    //                 }
-    //             }
-    //         }]
-    //     });
+        });
 
-    //     app.root.addChild(e);
+        it('should override complex script attributes with their correct defaults', async function () {
+            var e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                "enabled": true,
+                "modules": [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true,
+                    attributes: {
+                        complexAttributeNoDefault: {
+                            internalNumberNoDefault: 20,
+                            internalNumber: 10,
+                            internalArrayNoDefault: [1, 2, 3],
+                            internalArray: [9, 8, 7],
+                            internalColor: '#ffffff'
+                        },
+                        complexAttribute: {
+                            internalNumberNoDefault: 1,
+                            internalNumber: 2,
+                            internalArrayNoDefault: [1, 2, 3],
+                            internalArray: [9, 8, 7],
+                            internalColor: '#ffffff',
+                            nonExistent: 'SHOULD NOT EXIST'
+                        }
+                    }
+                }]
+            });
 
-    //     await waitForNextFrame();
+            app.root.addChild(e);
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            await waitForNextFrame();
 
-    //     // complex attribute - no default
-    //     expect(script.complexAttributeNoDefault).to.be.a('object');
-    //     expect(script.complexAttributeNoDefault.internalNumberNoDefault).to.equal(20);
-    //     expect(script.complexAttributeNoDefault.internalNumber).to.equal(10);
-    //     expect(script.complexAttributeNoDefault.internalArrayNoDefault).to.deep.equal([1, 2, 3]);
-    //     expect(script.complexAttributeNoDefault.internalArray).to.deep.equal([9, 8, 7]);
-    //     expect(script.complexAttributeNoDefault.internalColor).to.be.an.instanceOf(Color);
-    //     expect({ ...script.complexAttributeNoDefault.internalColor }).to.deep.equal({ r: 1, g: 1, b: 1, a: 1 });
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     // complex attribute - w/ default
-    //     expect(script.complexAttribute).to.be.a('object');
-    //     expect(script.complexAttribute.internalNumberNoDefault).to.equal(1);
-    //     expect(script.complexAttribute.internalNumber).to.equal(2);
-    //     expect(script.complexAttribute.internalArrayNoDefault).to.deep.equal([1, 2, 3]);
-    //     expect(script.complexAttribute.internalArray).to.deep.equal([9, 8, 7]);
-    //     expect(script.complexAttribute.internalColor).to.be.an.instanceOf(Color);
-    //     expect({ ...script.complexAttribute.internalColor }).to.deep.equal({ r: 1, g: 1, b: 1, a: 1 });
-    //     expect(script.complexAttribute.nonExistent).to.equal(undefined);
+            // complex attribute - no default
+            expect(script.complexAttributeNoDefault).to.be.a('object');
+            expect(script.complexAttributeNoDefault.internalNumberNoDefault).to.equal(20);
+            expect(script.complexAttributeNoDefault.internalNumber).to.equal(10);
+            expect(script.complexAttributeNoDefault.internalArrayNoDefault).to.deep.equal([1, 2, 3]);
+            expect(script.complexAttributeNoDefault.internalArray).to.deep.equal([9, 8, 7]);
+            expect(script.complexAttributeNoDefault.internalColor).to.be.an.instanceOf(Color);
+            expect({ ...script.complexAttributeNoDefault.internalColor }).to.deep.equal({ r: 1, g: 1, b: 1, a: 1 });
 
-    // });
+            // complex attribute - w/ default
+            expect(script.complexAttribute).to.be.a('object');
+            expect(script.complexAttribute.internalNumberNoDefault).to.equal(1);
+            expect(script.complexAttribute.internalNumber).to.equal(2);
+            expect(script.complexAttribute.internalArrayNoDefault).to.deep.equal([1, 2, 3]);
+            expect(script.complexAttribute.internalArray).to.deep.equal([9, 8, 7]);
+            expect(script.complexAttribute.internalColor).to.be.an.instanceOf(Color);
+            expect({ ...script.complexAttribute.internalColor }).to.deep.equal({ r: 1, g: 1, b: 1, a: 1 });
+            expect(script.complexAttribute.nonExistent).to.equal(undefined);
 
-    // it('default values work for partially initialized script attributes', async function () {
-    //     var e = new Entity();
-    //     const component = e.addComponent('esmscript');
-    //     await component.system.initializeComponentData(component, {
-    //         modules: [{
-    //             moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
-    //             enabled: true,
-    //             attributes: {
-    //                 attribute2: 3,
-    //                 attribute3: {
-    //                     internalNumber: 10,
-    //                     internalArrayNoDefault: [4]
-    //                 }
-    //             }
-    //         }]
-    //     });
+        });
 
-    //     app.root.addChild(e);
+        it('should initialize scripts with attributes with default values', async function () {
+            const e = new Entity();
+            const component = e.addComponent('esmscript');
+            await component.system.initializeComponentData(component, {
+                modules: [{
+                    moduleSpecifier: "../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs",
+                    enabled: true,
+                    attributes: {
+                        attribute2: 3,
+                        attribute3: {
+                            internalNumber: 10,
+                            internalArrayNoDefault: [4]
+                        }
+                    }
+                }]
+            });
 
-    //     const script = e.esmscript.get('ScriptWithAttributes');
+            app.root.addChild(e);
 
-    //     expect(script).to.exist;
-    //     expect(script.attribute3.internalNumber).to.equal(10);
+            const script = e.esmscript.get('ScriptWithAttributes');
 
-    //     expect(script.attribute3.internalArrayNoDefault).to.deep.equal([4]);
-    //     expect(script.attribute3.internalArray).to.deep.equal([1, 2, 3, 4]);
-    // });
+            expect(script).to.exist;
+            expect(script.attribute3.internalNumber).to.equal(10);
 
-    // describe('Warnings and notifications', function(){
+            expect(script.attribute3.internalArrayNoDefault).to.deep.equal([4]);
+            expect(script.attribute3.internalArray).to.deep.equal([1, 2, 3, 4]);
+        });
+    })
 
-    //     it('should warn when assigning an invalid value to a attribute', async function () {
+    describe('Warnings and notifications', function(){
 
-    //         var e = new Entity();
-    //         app.root.addChild(e);
-    //         e.addComponent('esmscript');
-    //         const EsmScript = await import('../../../test/test-assets/esm-scripts/esm-scriptWithSimpleAttributes.mjs')
+        it('should warn when assigning an invalid value to a attribute', async function () {
 
-    //         // collect warnings
-    //         const warnings = [];
-    //         Debug.warn = warning => warnings.push(warning);
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptWithSimpleAttributes.mjs')
 
-    //         const module = e.esmscript.add(EsmScript, {
-    //             simpleAttribute: 'This should warn',
-    //             simpleAttributeNoDefault: 'Yep, another warning',
-    //             attribute3: 'yep, more warnings',
-    //         });
+            // collect warnings
+            const warnings = [];
+            Debug.warn = warning => warnings.push(warning);
 
-    //         expect(warnings).to.have.a.lengthOf(2);
+            e.esmscript.add(EsmScript, {
+                simpleAttribute: 'This should warn',
+                simpleAttributeNoDefault: 'Yep, another warning',
+                attribute3: 'yep, more warnings',
+            });
 
-    //     })
+            expect(warnings).to.have.a.lengthOf(2);
+
+        })
+
+    })
 
 });
