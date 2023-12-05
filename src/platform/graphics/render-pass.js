@@ -96,7 +96,7 @@ class RenderPass {
     /**
      * The graphics device.
      *
-     * @type {import('../graphics/graphics-device.js').GraphicsDevice};
+     * @type {import('../graphics/graphics-device.js').GraphicsDevice}
      */
     device;
 
