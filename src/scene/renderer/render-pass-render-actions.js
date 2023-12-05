@@ -53,7 +53,7 @@ class RenderPassRenderActions extends RenderPass {
      *
      * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent -
      * The camera component that is used to render the layers.
-     * @param {import ('../layer.js').Layer} layer - The layer to be added.
+     * @param {import('../layer.js').Layer} layer - The layer to be added.
      * @param {boolean} transparent - True if the layer is transparent.
      * @param {boolean} autoClears - True if the render target should be cleared based on the camera
      * and layer clear flags. Defaults to true.
