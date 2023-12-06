@@ -1,15 +1,18 @@
+import { readFileSync } from 'fs';
 import { Application } from '../../../../src/framework/application.js';
 import { Debug } from '../../../../src/core/debug.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Color } from '../../../../src/core/math/color.js';
 import { createGraphicsDevice } from '../../../../src/platform/graphics/graphics-device-create.js';
-import sceneData from '../../../test-assets/esm-scripts/scene1.json' assert { type: 'json' };
 import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.mjs';
 import createOptions from './basic-app-options.mjs';
+
+// Can use import assertion, but eslint doesn't like it.
+const sceneData = JSON.parse(readFileSync(new URL('../../../test-assets/esm-scripts/scene1.json', import.meta.url)));
 
 describe('EsmScriptComponent', function () {
 
@@ -172,18 +175,18 @@ describe('EsmScriptComponent', function () {
             e.addComponent('esmscript');
             const ScriptA = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
             e.esmscript.add(ScriptA);
-    
+
             const script = e.esmscript.get('ScriptA');
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expectCall(0, INITIALIZE(script));
             expectCall(1, ACTIVE(script));
             expectCall(2, UPDATE(script));
             expectCall(3, POST_UPDATE(script));
         });
-    
+
         it('expects `initialize`, `active`, `update` and `postUpdate` to be called on cloned enabled entity', async function () {
             const e = new Entity();
             const component = e.addComponent('esmscript');
@@ -199,80 +202,80 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const ScriptA = e.esmscript.get('ScriptA');
             const ScriptB = e.esmscript.get('ScriptB');
-    
+
             let n = 0;
             expectCall(n++, INITIALIZE(ScriptA));
             expectCall(n++, INITIALIZE(ScriptB));
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expectCall(n++, ACTIVE(ScriptA));
             expectCall(n++, ACTIVE(ScriptB));
-    
+
             expectCall(n++, UPDATE(ScriptA));
             expectCall(n++, UPDATE(ScriptB));
-    
+
             expectCall(n++, POST_UPDATE(ScriptA));
             expectCall(n++, POST_UPDATE(ScriptB));
-    
+
             // reset calls
             reset();
-    
+
             const clone = e.clone();
             app.root.addChild(clone);
-    
+
             // clone is initialized
             const cloneScriptA = clone.esmscript.get('ScriptA');
             const cloneScriptB = clone.esmscript.get('ScriptB');
-    
+
             n = 0;
             expectCall(n++, INITIALIZE(cloneScriptA));
             expectCall(n++, INITIALIZE(cloneScriptB));
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             // The clone becomes active in the next game step
             expectCall(n++, ACTIVE(cloneScriptA));
             expectCall(n++, ACTIVE(cloneScriptB));
-    
+
             // existing scripts then clones updated
             expectCall(n++, UPDATE(ScriptA));
             expectCall(n++, UPDATE(ScriptB));
             expectCall(n++, UPDATE(cloneScriptA));
             expectCall(n++, UPDATE(cloneScriptB));
-    
+
             // existing scripts then clones post-updated
             expectCall(n++, POST_UPDATE(ScriptA));
             expectCall(n++, POST_UPDATE(ScriptB));
             expectCall(n++, POST_UPDATE(cloneScriptA));
             expectCall(n++, POST_UPDATE(cloneScriptB));
-    
+
         });
-    
+
         it('expects `update` not to be called when a script disables itself', async function () {
             const e = new Entity();
             app.root.addChild(e);
             e.addComponent('esmscript');
             const Disabler = await import('../../../test-assets/esm-scripts/esm-disabler.mjs');
             e.esmscript.add(Disabler);
-    
+
             const DisablerScript = e.esmscript.get('Disabler');
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expectCall(0, INITIALIZE(DisablerScript));
         });
-    
+
         it('expects that all `initialize` calls are before `update` calls when enabling entity from inside a separate `initialize` call', async function () {
-    
+
             const e = new Entity('entity to enable');
             e.enabled = false;
             const component = e.addComponent('esmscript');
@@ -288,11 +291,11 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             expect(calls).to.have.lengthOf(0);
-    
+
             const enabler = new Entity('enabler');
             const enablerComponent = enabler.addComponent('esmscript');
             await enablerComponent.system.initializeComponentData(enablerComponent, {
@@ -305,27 +308,25 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(enabler);
-    
+
             const enablerScript = enabler.esmscript.get('Enabler');
             const scriptA = e.esmscript.get('ScriptA');
-    
-    
             const scriptB = e.esmscript.get('ScriptB');
-    
+
             // scripts should exist
             expect(enablerScript).to.exist;
             expect(scriptA).to.exist;
             expect(scriptB).to.exist;
-    
+
             expect(calls).to.have.lengthOf(3);
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expect(calls).to.have.lengthOf(9);
-    
+
             let n = 0;
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
@@ -336,11 +337,11 @@ describe('EsmScriptComponent', function () {
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
             expectCall(n++, POST_UPDATE(scriptB)); // 'post-update scriptB');
-    
+
         });
-    
+
         it('expects all `active` calls are called before `update` for an entity whose script component is enabled inside a separate `initialize` call', async function () {
-    
+
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
             const component = e.addComponent('esmscript');
@@ -356,11 +357,11 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             expect(calls).to.have.lengthOf(0);
-    
+
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
             const enablerComponent = enabler.addComponent('esmscript');
@@ -374,20 +375,20 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(enabler);
-    
+
             expect(calls).to.have.lengthOf(3);
-    
+
             const enablerScript = enabler.esmscript.get('Enabler');
             const scriptA = e.esmscript.get('ScriptA');
             const scriptB = e.esmscript.get('ScriptB');
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expect(calls).to.have.lengthOf(9);
-    
+
             let n = 0;
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
@@ -398,9 +399,9 @@ describe('EsmScriptComponent', function () {
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
             expectCall(n++, POST_UPDATE(scriptB)); // 'post-update scriptB');
-    
+
         });
-    
+
         it('expects `initialize` is called together for script instance that when during the initialize stage', async function () {
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
@@ -417,11 +418,11 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             expect(calls).to.have.lengthOf(0);
-    
+
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
             const enablerComponent = enabler.addComponent('esmscript');
@@ -435,18 +436,18 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(enabler);
-    
+
             expect(calls).to.have.lengthOf(1);
-    
+
             const enablerScript = enabler.esmscript.get('Enabler');
             const scriptA = e.esmscript.get('ScriptA');
             const scriptB = e.esmscript.get('ScriptB');
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             let n = 0;
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
@@ -457,9 +458,9 @@ describe('EsmScriptComponent', function () {
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
             expectCall(n++, POST_UPDATE(scriptB)); // 'post-update scriptB');
-    
+
         });
-    
+
         it('expects `initialize` is called for entity and all children before `active` and `update`', async function () {
             const e = new Entity();
             const component = e.addComponent('esmscript');
@@ -475,10 +476,10 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             const eScriptA = e.esmscript.get('ScriptA');
             const eScriptB = e.esmscript.get('ScriptB');
-    
+
             const c1 = new Entity('c1');
             const child1component = c1.addComponent('esmscript');
             await child1component.system.initializeComponentData(child1component, {
@@ -493,12 +494,12 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             const c1ScriptA = c1.esmscript.get('ScriptA');
             const c1ScriptB = c1.esmscript.get('ScriptB');
-    
+
             e.addChild(c1);
-    
+
             const c2 = new Entity('c2');
             const child2component = c2.addComponent('esmscript');
             await child2component.system.initializeComponentData(child2component, {
@@ -513,12 +514,12 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             const c2ScriptA = c2.esmscript.get('ScriptA');
             const c2ScriptB = c2.esmscript.get('ScriptB');
-    
+
             e.addChild(c2);
-    
+
             const c3 = new Entity('c3');
             const child3component = c3.addComponent('esmscript');
             await child3component.system.initializeComponentData(child3component, {
@@ -533,21 +534,21 @@ describe('EsmScriptComponent', function () {
                     attributes: {}
                 }]
             });
-    
+
             const c3ScriptA = c3.esmscript.get('ScriptA');
             const c3ScriptB = c3.esmscript.get('ScriptB');
-    
+
             c1.addChild(c3);
             app.root.addChild(e);
-    
+
             expect(calls).to.have.lengthOf(8);
-    
+
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-    
+
             expect(calls).to.have.lengthOf(32);
             // expect(initializeCalls.length).to.equal(32);
-    
+
             let idx = -1;
             expectCall(++idx, INITIALIZE(eScriptA));
             expectCall(++idx, INITIALIZE(eScriptB));
@@ -557,7 +558,7 @@ describe('EsmScriptComponent', function () {
             expectCall(++idx, INITIALIZE(c3ScriptB)); // , ++idx, 'initialize scriptB');
             expectCall(++idx, INITIALIZE(c2ScriptA)); // , ++idx, 'initialize scriptA');
             expectCall(++idx, INITIALIZE(c2ScriptB)); // , ++idx, 'initialize scriptB');
-    
+
             expectCall(++idx, ACTIVE(eScriptA)); //  ++idx, 'active scriptA');
             expectCall(++idx, ACTIVE(eScriptB)); //  ++idx, 'active scriptB');
             expectCall(++idx, ACTIVE(c1ScriptA)); // , ++idx, 'active scriptA');
@@ -566,7 +567,7 @@ describe('EsmScriptComponent', function () {
             expectCall(++idx, ACTIVE(c2ScriptB)); // , ++idx, 'active scriptB');
             expectCall(++idx, ACTIVE(c3ScriptA)); // , ++idx, 'active scriptA');
             expectCall(++idx, ACTIVE(c3ScriptB)); // , ++idx, 'active scriptB');
-    
+
             expectCall(++idx, UPDATE(eScriptA)); //  ++idx, 'update scriptA');
             expectCall(++idx, UPDATE(eScriptB)); //  ++idx, 'update scriptB');
             expectCall(++idx, UPDATE(c1ScriptA)); // , ++idx, 'update scriptA');
@@ -575,15 +576,15 @@ describe('EsmScriptComponent', function () {
             expectCall(++idx, UPDATE(c2ScriptB)); // , ++idx, 'update scriptB');
             expectCall(++idx, UPDATE(c3ScriptA)); // , ++idx, 'update scriptA');
             expectCall(++idx, UPDATE(c3ScriptB)); // , ++idx, 'update scriptB');
-    
+
         });
-    
+
         it('should initialize script attributes for an enabled entity', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -596,21 +597,20 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-            console.log(script)
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes on a disabled entity', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             e.enabled = false;
             const component = e.addComponent('esmscript');
@@ -624,21 +624,21 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
         });
-    
+
         it('should initialize script with attributes on a disabled script component', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -651,21 +651,21 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
         });
-    
+
         it('should initiailize a script with attributes on a disabled script instance', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -678,21 +678,21 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when cloning an enabled entity', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -705,30 +705,30 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
-    
+
             const clone = e.clone();
             app.root.addChild(clone);
-    
+
             const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-    
+
             expect(clonedModule.attribute1).to.equal(e2);
             expect(clonedModule.attribute2).to.equal(2);
-    
+
         });
-    
+
         it('should initialize a script with attributes when cloning a disabled entity', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             e.enabled = false;
             const component = e.addComponent('esmscript');
@@ -742,29 +742,29 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
-    
+
             const clone = e.clone();
             app.root.addChild(clone);
-    
+
             const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-    
+
             expect(clonedModule.attribute1).to.equal(e2);
             expect(clonedModule.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when cloning a disabled script component', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -777,29 +777,29 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
-    
+
             const clone = e.clone();
             app.root.addChild(clone);
-    
+
             const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-    
+
             expect(clonedModule.attribute1).to.equal(e2);
             expect(clonedModule.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when cloning a disabled script instance', async function () {
             const e2 = new Entity();
             app.root.addChild(e2);
-    
+
             expect(e2).to.exist;
-    
+
             const e = new Entity();
             const component = e.addComponent('esmscript');
             await component.system.initializeComponentData(component, {
@@ -812,82 +812,82 @@ describe('EsmScriptComponent', function () {
                     }
                 }]
             });
-    
+
             app.root.addChild(e);
-    
+
             const script = e.esmscript.get('ScriptWithAttributes');
-    
+
             expect(script.attribute1).to.equal(e2);
             expect(script.attribute2).to.equal(2);
-    
+
             const clone = e.clone();
             app.root.addChild(clone);
-    
+
             const clonedModule = clone.esmscript.get('ScriptWithAttributes');
-    
+
             expect(clonedModule.attribute1).to.equal(e2);
             expect(clonedModule.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when loading a scene with an enabled entity', async function () {
             const a = app.root.findByName('EnabledEntity');
             const b = app.root.findByName('ReferencedEntity');
-    
+
             expect(a).to.exist;
             expect(b).to.exist;
-    
+
             await waitForNextFrame();
-    
+
             const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-    
+
             expect(scriptWithAttributes).to.exist;
             expect(scriptWithAttributes.attribute1).to.equal(b);
             expect(scriptWithAttributes.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when loading a scene with a disabled entity', async function () {
             const a = app.root.findByName('DisabledEntity');
             const b = app.root.findByName('ReferencedEntity');
-    
+
             expect(a).to.exist;
             expect(b).to.exist;
-    
+
             await waitForNextFrame();
-    
+
             const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-    
+
             expect(scriptWithAttributes).to.exist;
             expect(scriptWithAttributes.attribute1).to.equal(b);
             expect(scriptWithAttributes.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when loading a scene for a disabled script component', async function () {
             const a = app.root.findByName('DisabledScriptComponent');
             const b = app.root.findByName('ReferencedEntity');
-    
+
             expect(a).to.exist;
             expect(b).to.exist;
-    
+
             await waitForNextFrame();
-    
+
             const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-    
+
             expect(scriptWithAttributes).to.exist;
             expect(scriptWithAttributes.attribute1).to.equal(b);
             expect(scriptWithAttributes.attribute2).to.equal(2);
         });
-    
+
         it('should initialize a script with attributes when loading scene for disabled script instance', async function () {
             const a = app.root.findByName('DisabledScriptInstance');
             const b = app.root.findByName('ReferencedEntity');
-    
+
             expect(a).to.exist;
             expect(b).to.exist;
-    
+
             await waitForNextFrame();
-    
+
             const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-    
+
             expect(scriptWithAttributes).to.exist;
             expect(scriptWithAttributes.attribute1).to.equal(b);
             expect(scriptWithAttributes.attribute2).to.equal(2);
@@ -1221,7 +1221,7 @@ describe('EsmScriptComponent', function () {
             // collect warnings
             const warnings = [];
             Debug.warn = (warning) => {
-                console.error(warning)
+                console.error(warning);
                 warnings.push(warning);
             };
 
@@ -1234,7 +1234,7 @@ describe('EsmScriptComponent', function () {
             expect(warnings[0]).to.equal('\'attribute3\' is not defined. Please see the attribute definition.');
             expect(warnings[1]).to.equal('\'attribute4\' is not defined. Please see the attribute definition.');
 
-        })
+        });
 
         it('should warn when assigning an invalid value type to a attribute', async function () {
 
@@ -1245,7 +1245,7 @@ describe('EsmScriptComponent', function () {
 
             // collect warnings
             const warnings = [];
-            Debug.warn = (warning) => warnings.push(warning);
+            Debug.warn = warning => warnings.push(warning);
 
             e.esmscript.add(EsmScript, {
                 simpleAttribute: 'This should warn',
@@ -1259,7 +1259,7 @@ describe('EsmScriptComponent', function () {
         });
 
         it('should raise an error when attributes definitions are malformed', async function () {
-            
+
             const e = new Entity();
             app.root.addChild(e);
             e.addComponent('esmscript');
@@ -1271,7 +1271,7 @@ describe('EsmScriptComponent', function () {
 
             e.esmscript.add(EsmScript);
 
-            expect(errors[0]).to.equal(`The attribute definition for 'invalidAttributeType' is malformed with a type of 'An invalid attribute type'.`);
+            expect(errors[0]).to.equal('The attribute definition for \'invalidAttributeType\' is malformed with a type of \'An invalid attribute type\'.');
 
         });
 
@@ -1294,11 +1294,11 @@ describe('EsmScriptComponent', function () {
     //         await waitForNextFrame();
 
     //         const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
-            
+
     //         // verify script attributes are initialized
     //         expect(scriptWithAttributes).to.exist;
     //         expect(scriptWithAttributes.attribute1).to.equal(b);
-        
+
     //         const clone = a.clone();
     //         app.root.addChild(clone);
 
@@ -1306,7 +1306,7 @@ describe('EsmScriptComponent', function () {
     //         const clonedScriptWithAttributes = clone.esmscript.get('ScriptWithAttributes');
     //         expect(clonedScriptWithAttributes).to.exist;
     //         expect(clonedScriptWithAttributes.attribute1).to.equal(b)
-            
+
     //     })
 
     //     it('should clone a script component that contains entity attributes', async function () {
@@ -1327,10 +1327,10 @@ describe('EsmScriptComponent', function () {
     //         });
 
     //         const script = parent.esmscript.get('ScriptWithAttributes');
-            
+
     //         expect(script.attribute1).to.equal(child);
     //         expect(script.folder.entityAttribute).to.equal(child);
-            
+
     //         const clone = parent.clone();
     //         const clonedScript = clone.esmscript.get('ScriptWithAttributes');
 
