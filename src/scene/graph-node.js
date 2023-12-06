@@ -24,6 +24,51 @@ const target = new Vec3();
 const up = new Vec3();
 
 /**
+ * Helper function that handles signature overloading to receive a test function.
+ *
+ * @param {FindNodeCallback|string} attr - Attribute or lambda.
+ * @param {*} [value] - Optional value in case of `attr` being a `string`
+ * @returns {FindNodeCallback} Test function that receives a GraphNode and returns a boolean.
+ * @ignore
+ */
+function createTest(attr, value) {
+    if (attr instanceof Function) {
+        return attr;
+    }
+    return (node) => {
+        let x = node[attr];
+        if (x instanceof Function) {
+            x = x();
+        }
+        return x === value;
+    };
+}
+
+/**
+ * Helper function to recurse findOne without calling createTest constantly.
+ *
+ * @param {GraphNode} node - Current node.
+ * @param {FindNodeCallback} test - Test function.
+ * @returns {GraphNode|null} A graph node that matches the search criteria. Returns null if no
+ * node is found.
+ * @ignore
+ */
+function findNode(node, test) {
+    if (test(node))
+        return node;
+
+    const children = node._children;
+    const len = children.length;
+    for (let i = 0; i < len; ++i) {
+        const result = findNode(children[i], test);
+        if (result)
+            return result;
+    }
+
+    return null;
+}
+
+/**
  * Callback used by {@link GraphNode#find} and {@link GraphNode#findOne} to search through a graph
  * node and all of its descendants.
  *
@@ -534,40 +579,13 @@ class GraphNode extends EventHandler {
      * const entities = parent.find('name', 'Test');
      */
     find(attr, value) {
-        let result, results = [];
-        const len = this._children.length;
+        const results = [];
+        const test = createTest(attr, value);
 
-        if (attr instanceof Function) {
-            const fn = attr;
-
-            result = fn(this);
-            if (result)
-                results.push(this);
-
-            for (let i = 0; i < len; i++) {
-                const descendants = this._children[i].find(fn);
-                if (descendants.length)
-                    results = results.concat(descendants);
-            }
-        } else {
-            let testValue;
-
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value)
-                    results.push(this);
-            }
-
-            for (let i = 0; i < len; ++i) {
-                const descendants = this._children[i].find(attr, value);
-                if (descendants.length)
-                    results = results.concat(descendants);
-            }
-        }
+        this.forEach((node) => {
+            if (test(node))
+                results.push(node);
+        });
 
         return results;
     }
@@ -597,42 +615,8 @@ class GraphNode extends EventHandler {
      * const node = parent.findOne('name', 'Test');
      */
     findOne(attr, value) {
-        const len = this._children.length;
-        let result = null;
-
-        if (attr instanceof Function) {
-            const fn = attr;
-
-            result = fn(this);
-            if (result)
-                return this;
-
-            for (let i = 0; i < len; i++) {
-                result = this._children[i].findOne(fn);
-                if (result)
-                    return result;
-            }
-        } else {
-            let testValue;
-            if (this[attr]) {
-                if (this[attr] instanceof Function) {
-                    testValue = this[attr]();
-                } else {
-                    testValue = this[attr];
-                }
-                if (testValue === value) {
-                    return this;
-                }
-            }
-
-            for (let i = 0; i < len; i++) {
-                result = this._children[i].findOne(attr, value);
-                if (result !== null)
-                    return result;
-            }
-        }
-
-        return null;
+        const test = createTest(attr, value);
+        return findNode(this, test);
     }
 
     /**
@@ -683,13 +667,7 @@ class GraphNode extends EventHandler {
      * null if no node is found.
      */
     findByName(name) {
-        if (this.name === name) return this;
-
-        for (let i = 0; i < this._children.length; i++) {
-            const found = this._children[i].findByName(name);
-            if (found !== null) return found;
-        }
-        return null;
+        return this.findOne('name', name);
     }
 
     /**
@@ -738,7 +716,8 @@ class GraphNode extends EventHandler {
         callback.call(thisArg, this);
 
         const children = this._children;
-        for (let i = 0; i < children.length; i++) {
+        const len = children.length;
+        for (let i = 0; i < len; ++i) {
             children[i].forEach(callback, thisArg);
         }
     }
