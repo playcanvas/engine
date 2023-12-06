@@ -2,7 +2,6 @@ import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 import { classHasMethod } from '../../../core/class-utils.js';
 import { populateWithAttributes } from './attribute-utils.js';
-import { Entity } from '../../../framework/entity.js';
 
 /**
  * @callback UpdateFunction
@@ -331,13 +330,13 @@ class EsmScriptComponent extends Component {
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
         // for each module in the old component
-        for (const esmscript of oldScriptComponent.modules) {
+        // for (const esmscript of oldScriptComponent.modules) {
 
             // Get the attribute definition for the specified esm script
-            const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
-            const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
+            // const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
+            // const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
 
-            let newMapping = {};
+            // let newMapping = {};
             // reduceAttributeDefinition(attributeDefinitions, esmscript, (subRef, attributeName, attributeDefinition, value) => {
 
             //     if (!!attributeDefinition) newMapping = newMapping[attributeName] = {};
@@ -353,7 +352,7 @@ class EsmScriptComponent extends Component {
             //         }
             //     }
             // });
-        }
+        // }
     }
 
     /**
