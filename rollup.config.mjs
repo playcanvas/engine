@@ -57,7 +57,7 @@ export default (args) => {
     } else if (envTarget === 'extras') {
         targets.push(...target_extras);
     } else {
-        ['release', 'debug', 'profiler', 'min'].forEach((t) => {
+        ['release', 'debug', 'profiler', 'min', 'rti'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
                 if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
                     targets.push(buildTarget(t, m));
