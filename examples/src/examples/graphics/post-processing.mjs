@@ -183,7 +183,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -218,17 +218,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
