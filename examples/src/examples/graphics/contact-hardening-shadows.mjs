@@ -153,15 +153,10 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
