@@ -2,12 +2,10 @@
 import { babel } from '@rollup/plugin-babel';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
-import resolve from '@rollup/plugin-node-resolve';
 
 // 3rd party Rollup plugins
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
-import { runtimeTypeInspector } from '@runtime-type-inspector/plugin-rollup';
 
 // custom Rollup plugins
 import { shaderChunks } from './rollup-shader-chunks.mjs';

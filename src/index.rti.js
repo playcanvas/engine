@@ -40,7 +40,7 @@ const propsXYZW = ['x', 'y', 'z', 'w'];
 const props9    = [0, 1, 2, 3, 4, 5, 6, 7, 8];
 const props16   = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
 /**
- * @ignoreRTI
+ * `@ignoreRTI`
  * @param {any} value - The value.
  * @returns {boolean} Only false if we can find some NaN issues.
  */
