@@ -3,6 +3,7 @@ import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
 import { EsmScriptComponentData } from './data.js';
+import { populateWithAttributes } from './attribute-utils.js';
 
 /**
  * Allows scripts to be attached to an Entity and executed.
@@ -73,7 +74,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
         component.modules.forEach((module, key) => {
             const enabled = component.isModuleEnabled(module);
             const attributeDefinition = component.attributeDefinitions.get(module);
-            const attributes = EsmScriptComponent.populateWithAttributes(this.app, attributeDefinition, module);
+            const attributes = populateWithAttributes(this.app, attributeDefinition, module);
             const EsmModuleExport = { attributes: attributeDefinition, default: module.constructor };
             clonedComponent.add(EsmModuleExport, attributes, enabled);
         });

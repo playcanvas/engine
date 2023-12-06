@@ -86,6 +86,10 @@ export const attributes = {
     attribute2: { type: 'number', default: 2 },
     attribute3: CustomType,
 
+    folder: {
+        entityAttribute: { type: 'entity' }
+    }
+
     // attribute4: {
     //     title: 'asdqasw',
     //     description: 'hello',

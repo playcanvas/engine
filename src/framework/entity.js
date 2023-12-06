@@ -650,6 +650,11 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
             newEntity.script.resolveDuplicatedEntityReferenceProperties(components.script, duplicatedIdsMap);
         }
 
+        // Handle entity ESM Script attributes
+        if (components.esmscript) {
+            newEntity.esmscript.resolveDuplicatedEntityReferenceProperties(components.esmscript, duplicatedIdsMap);
+        }
+
         // Handle entity render attributes
         if (components.render) {
             newEntity.render.resolveDuplicatedEntityReferenceProperties(components.render, duplicatedIdsMap);

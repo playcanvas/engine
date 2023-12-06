@@ -76,139 +76,150 @@ export const VALID_ATTR_TYPES = new Set([
  * isValidAttributeDefinition({ x: 'y' }); // false
  */
 export const isValidAttributeDefinition = (attributeDefinition) => {
-
     return attributeDefinition && attributeDefinition.hasOwnProperty('type');
-
-    // return VALID_ATTR_TYPES.has(attributeDefinition.type) ||
-    //     (typeof attributeDefinition.type === 'object' && !Array.isArray(attributeDefinition.type));
 };
 
-/**
- * A function that recursively iterates through an attribute definition,
- * performing a callback for each valid entry and accumulating the result.
- * Useful for copying, merging or assigning attributes onto objects
- *
- * @param {AttributeDefinitionDict} attributeDefDict - The set of attribute definitions to iterate over
- * @param {Object} attributes - An associated map of attribute values
- * @param {Function} callback - Called per attribute definition with (object, key, attributeDefinition, value)
- * @param {Object} [object] - the object to assign them to
- * @returns {Object} The accumulated result
- */
-export const reduceAttributeDefinition = (attributeDefDict, attributes, callback, object = {}) => {
+export const getValueAtPath = (object, path) => {
+    return path.reduce((prev, curr) => prev?.[curr], object);
+};
+
+export const setValueAtPath = (object, path, value) => {
+    const last = path[path.length - 1];
+    const parent = path.slice(0, -1).reduce((prev, curr) => {
+        if (!prev[curr]) prev[curr] = {};
+        return prev[curr];
+    }, object);
+    parent[last] = value;
+    return value;
+};
+
+
+export const forEachAttributeDefinition = (attributeDefDict, callback, path = []) => {
 
     const attributeDefEntries = Object.entries(attributeDefDict);
 
-    return attributeDefEntries.reduce((nestedObject, [attributeName, attributeDefinition]) => {
+    attributeDefEntries.forEach(([attributeName, def]) => {
 
-        // determine the attribute value
-        const value = attributes?.[attributeName] ??
-            attributeDefinition?.default ??
-            nestedObject?.[attributeName];
+        const localPath = [...path, attributeName];
 
-        const type = attributeDefinition?.type;
-        const isArrayType = !!attributeDefinition?.array;
-        const isValueArray = Array.isArray(value);
+        if (isValidAttributeDefinition(def)) {
 
-        // An attributes `type` can either be simple, ie. a string `{ type: 'rgba' }`
-        // or it can be an object containing nested attributes ie. `{ type: CustomObjectType }`
-        const isSimpleType = typeof type === 'string';
+            callback(def, localPath);
 
-        // Warn and return early if the attribute is marked with `{ array: true }`
-        // but the value is not an array
-        if (isArrayType && value !== undefined && !isValueArray) {
-            Debug.warn(`'${attributeName}' is an array and cannot be assigned a '${typeof value}'`);
-            nestedObject[attributeName] = [];
-            return nestedObject;
+            // // If the attribute is a complex type, recurse into it
+            // if (typeof def.type === 'object')
+            //     forEachAttributeDefinition(def.type, callback, localPath);
+
+        } else if (typeof def === 'object') {
+            forEachAttributeDefinition(def, callback, localPath);
         }
+    });
+};
 
-        // If the definition has a `type` property then assume it's valid attribute definition
-        if (isValidAttributeDefinition(attributeDefinition)) {
+/**
+ * A Dictionary object where each key is a string and each value is an AttributeDefinition.
+ * @typedef {Object.<string, AttributeDefinition>} AttributeDefinitionDict
+ */
 
-            // A simple attribute type is one who's s
-            if (isSimpleType) {
+/**
+ * This function recursively populates an object with attributes based on an attribute definition.
+ * Only attributes defined in the definition. Note that this does not perform any type-checking.
+ * If no attribute is specified it uses the default value from the attribute definition if available.
+ *
+ * @param {import('../../app-base.js').AppBase} app - The app base to search for asset references
+ * @param {AttributeDefinitionDict} attributeDefDict - The definition
+ * @param {Object} attributes - The attributes to apply
+ * @param {Object} [object] - The object to populate with attributes
+ *
+ * @returns {Object} the object with properties set
+ * @example
+ * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
+ * const definitions = {
+ *  someNum: { type: 'number' },
+ *  nested: {
+ *      notStr: { type: 'string' },
+ *      otherValue: { type: 'number', default: 3 }
+ *  }
+ * }
+ *
+ * populateWithAttributes(app, object, attributeDefDict, attributes)
+ * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
+ */
+export function populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
 
-                /**
-                 * If this is a simple attribute defined with a string
-                 */
+    forEachAttributeDefinition(attributeDefDict, (def, path) => {
 
-                if (!isArrayType) {
+        const isSimpleType = typeof def.type === 'string';
+        const valueFromAttributes = getValueAtPath(attributes, path);
+        const valueFromObject = getValueAtPath(object, path);
 
-                    callback(nestedObject, attributeName, attributeDefinition, value);
+        if (def.array) {
 
-                } else {
+            // In order of preference, take the value from the attributes, from the object, the default, or an empty array
+            const arr = valueFromAttributes ??
+                valueFromObject ??
+                def.default ??
+                [];
 
-                    // convert to array if not already one
-                    const valueArr = isValueArray ? value : [value];
-                    nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
-                        callback(acc, i, attributeDefinition, arrValue);
-                        return acc;
-                    }, []);
 
-                }
+            // If the array is not an array, then warn and set it to an empty array
+            if (!Array.isArray(arr)) {
+
+                Debug.warn(`The attribute '${path.join('.')}' is an array but the value provided is not an array.`);
+                setValueAtPath(object, path, []);
 
             } else {
+                // If the array is a simple type, just copy it
+                let value = [...arr];
 
-                /**
-                 * For any complex attribute who's `type` is not a string,
-                 * we must recurse through the `type` itself
-                 */
+                // If the array is a complex type, then recurse through each element
+                if (!isSimpleType) value = arr.map(v => populateWithAttributes(app, def.type, v, {}));
 
-
-                if (!isArrayType) {
-
-                    nestedObject[attributeName] = reduceAttributeDefinition(type, value, callback, {});
-
-                } else {
-
-                    let attr;
-                    // convert to array if not already one
-                    const valueArr = isValueArray ? value : [value];
-                    nestedObject[attributeName] = valueArr.reduce((acc, arrValue, i) => {
-                        attr = reduceAttributeDefinition(type, arrValue, callback, {});
-                        if (attr !== undefined) acc[i] = attr;
-                        return acc;
-                    }, []);
-
-                }
-
+                // Set the resulting array on the path
+                setValueAtPath(object, path, value);
             }
-
-            // Run the callback on each item in the array and create a new array
-            // const arr = valueArr.reduce(reducer, []);
-
-            // If an array, assign the full array, otherwise use the first element
-            // nestedObject[attributeName] = arr;
-
-        } else if (typeof attributeDefinition === 'object') {
-
-            /**
-             * This a mechanism to group attributes together
-             * @example
-             * const attr = {
-             *  color: { type: 'rgb', default: '#ff0000' },
-             *  motion: { // groups motion settings under `entity.motion.*`
-             *      speed: { type: 'number', default: 100 },
-             *      velocity: { type: 'number', default: 2 },
-             *  }
-             * }
-             */
-
-            nestedObject[attributeName] = reduceAttributeDefinition(
-                attributeDefinition,
-                attributes?.[attributeName],
-                callback,
-                {}
-            );
 
         } else {
 
-            // It's not an object or a attribute definition, and will be ignored
-            Debug.warn(`The attribute '${attributeName}' has not been defined as an attribute definition.`);
-        }
+            const value = valueFromAttributes ?? def.default;
+            const mappedValue = rawToValue(app, def, value);
 
-        return nestedObject;
-    }, object);
-};
+            // If we have a complex object (ie {type: CustomType}) then recurse into it
+            if (typeof def.type === 'object') {
+
+                const localValue = setValueAtPath(object, [...path], {});
+                populateWithAttributes(app, def.type, value, localValue);
+
+            // We have a valid value so set it on the object
+            } else if (mappedValue != null) {
+
+                setValueAtPath(object, [...path], mappedValue);
+
+            // We have an invalid value so warn
+            } else if (value != null && mappedValue === null) {
+
+                Debug.warn(`'${path.join('.')}' is a '${typeof value}' but a '${def.type}' was expected. Please see the attribute definition.`);
+
+            // Assert the type is valid
+            } else {
+
+                const isValidAttributeType = VALID_ATTR_TYPES.has(def.type);
+                Debug.assert(isValidAttributeType, `The attribute definition for '${path.join('.')}' is malformed with a type of '${def.type}'.`);
+
+            }
+        }
+    });
+
+    // Perform a shallow comparison to warn of any attributes that are not defined in the definition
+    for (const key in attributes) {
+        if (attributeDefDict[key] === undefined) {
+            Debug.warn(`'${key}' is not defined. Please see the attribute definition.`);
+        }
+    }
+
+    return object;
+
+}
 
 
 const components = ['x', 'y', 'z', 'w'];
@@ -225,6 +236,9 @@ const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 export function rawToValue(app, attributeDefinition, value) {
 
     const { type } = attributeDefinition;
+
+    // If the type is an object, assume it's a complex type and simply return it
+    if (typeof type === 'object') return {};
 
     switch (type) {
         case 'boolean':

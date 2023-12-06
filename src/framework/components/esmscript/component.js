@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 import { classHasMethod } from '../../../core/class-utils.js';
-import { rawToValue, reduceAttributeDefinition } from './attribute-utils.js';
+import { populateWithAttributes } from './attribute-utils.js';
 import { Entity } from '../../../framework/entity.js';
 
 /**
@@ -316,9 +316,10 @@ class EsmScriptComponent extends Component {
     }
 
     /**
+     * @internal
      * @todo
      * When an entity is cloned and it has entity script attributes that point to other entities in
-     * the same subtree that is cloned, then we want the new script attributes to point at the
+     * the same subtree that are also cloned, then we want the new script attributes to point at the
      * cloned entities. This method remaps the script attributes for this entity and it assumes
      * that this entity is the result of the clone operation.
      *
@@ -326,66 +327,32 @@ class EsmScriptComponent extends Component {
      * the entity that was being cloned.
      * @param {object} duplicatedIdsMap - A dictionary with guid-entity values that contains the
      * entities that were cloned.
-     * @internal
      */
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
         // for each module in the old component
-        oldScriptComponent.modules.forEach((module, moduleSpecifier) => {
+        for (const esmscript of oldScriptComponent.modules) {
 
-            // Get the attribute definition for the specified module
-            const attributeDefinitions = this.attributeDefinitions.get(moduleSpecifier);
-            EsmScriptComponent.forEachAttributeDefinition(attributeDefinitions, (attributeName, attributeDefinition) => {
+            // Get the attribute definition for the specified esm script
+            const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
+            const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
 
-                // If the attribute is an 'entity', then this needs to be resolved
-                if (attributeDefinition.type === 'entity') {
-                    const value = module?.[attributeName];
-                    const newModule = this.modules.get(moduleSpecifier);
+            let newMapping = {};
+            // reduceAttributeDefinition(attributeDefinitions, esmscript, (subRef, attributeName, attributeDefinition, value) => {
 
-                    this._resolveEntityScriptAttribute(
-                        attributeDefinition,
-                        attributeName,
-                        value,
-                        false,
-                        newModule,
-                        duplicatedIdsMap
-                    );
-                }
-            });
-        });
-    }
+            //     if (!!attributeDefinition) newMapping = newMapping[attributeName] = {};
 
-    _resolveEntityScriptAttribute(attribute, attributeName, oldValue, useGuid, newModule, duplicatedIdsMap) {
-        if (attribute.array) {
-            // handle entity array attribute
-            const len = oldValue.length;
-            if (!len) {
-                return;
-            }
-
-            const newGuidArray = oldValue.slice();
-            for (let i = 0; i < len; i++) {
-                const guid = newGuidArray[i] instanceof Entity ? newGuidArray[i].getGuid() : newGuidArray[i];
-                if (duplicatedIdsMap[guid]) {
-                    newGuidArray[i] = useGuid ? duplicatedIdsMap[guid].getGuid() : duplicatedIdsMap[guid];
-                }
-            }
-
-            newModule[attributeName] = newGuidArray;
-        } else {
-
-            // handle regular entity attribute
-            if (oldValue instanceof Entity) {
-                oldValue = oldValue.getGuid();
-            } else if (typeof oldValue !== 'string') {
-                return;
-            }
-
-            if (duplicatedIdsMap[oldValue]) {
-
-                newModule[attributeName] = duplicatedIdsMap[oldValue];
-
-            }
+            //     // If the attribute is an 'entity', then this needs to be resolved
+            //     if (attributeDefinition?.type === 'entity') {
+            //         const guid = value?.getGuid();
+            //         // newMapping[attributeName] = guid;
+            //         if (guid && duplicatedIdsMap[guid]) {
+            //             newMapping[attributeName] = duplicatedIdsMap[guid];
+            //             // esmscript[attributeName] = rawToValue(oldScriptComponent.appEntity.app, attributeDefinition, duplicatedIdsMap[guid].getGuid());
+            //             console.log('set here', attributeName, guid, '==>', duplicatedIdsMap[guid].getGuid());
+            //         }
+            //     }
+            // });
         }
     }
 
@@ -463,7 +430,7 @@ class EsmScriptComponent extends Component {
         const attributeValueWithAppEntity = { ...attributeValues, ...this.appEntity };
 
         // Assign any provided attributes
-        EsmScriptComponent.populateWithAttributes(
+        populateWithAttributes(
             this.system.app,
             attributeDefinitionWithAppEntity,
             attributeValueWithAppEntity,
@@ -489,60 +456,6 @@ class EsmScriptComponent extends Component {
         this.fire('create', module);
 
         return module;
-    }
-
-    /**
-     * A Dictionary object where each key is a string and each value is an AttributeDefinition.
-     * @typedef {Object.<string, AttributeDefinition>} AttributeDefinitionDict
-     */
-
-    /**
-     * This function recursively populates an object with attributes based on an attribute definition.
-     * Only attributes defined in the definition. Note that this does not perform any type-checking.
-     * If no attribute is specified it uses the default value from the attribute definition if available.
-     *
-     * @param {import('../../app-base.js').AppBase} app - The app base to search for asset references
-     * @param {AttributeDefinitionDict} attributeDefDict - The definition
-     * @param {Object} attributes - The attributes to apply
-     * @param {Object} [object] - The object to populate with attributes
-     *
-     * @returns {Object} the object with properties set
-     * @example
-     * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
-     * const definitions = {
-     *  someNum: { type: 'number' },
-     *  nested: {
-     *      notStr: { type: 'string' },
-     *      otherValue: { type: 'number', default: 3 }
-     *  }
-     * }
-     *
-     * populateWithAttributes(app, object, attributeDefDict, attributes)
-     * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
-     */
-    static populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
-
-        const result = reduceAttributeDefinition(attributeDefDict, attributes, (object, key, attributeDefinition, value) => {
-            const mappedValue = rawToValue(app, attributeDefinition, value);
-
-            // check for undefined | null
-            if (mappedValue != null) {
-                object[key] = mappedValue;
-            } else if (value != null && mappedValue === null) {
-                Debug.warn(`'${key}' is a '${typeof value}' but a '${attributeDefinition.type}' was expected. Please see the attribute definition.`);
-            }
-
-        }, object);
-
-        // Perform a shallow comparison to check for any attributes that are not defined in the definition
-        for (const key in attributes) {
-            if (attributeDefDict[key] === undefined) {
-                Debug.warn(`'${key}' is not defined. Please see the attribute definition.`);
-            }
-        }
-
-        return result;
-
     }
 }
 
