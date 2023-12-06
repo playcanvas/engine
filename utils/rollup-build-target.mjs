@@ -54,7 +54,7 @@ const stripFunctions = [
 /**
  * Build a target that rollup is supposed to build.
  *
- * @param {'debug'|'release'|'profiler'|'min'|'rti'} buildType - The build type.
+ * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @param {string} input - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [buildDir] - Only used for examples to change the output location.
@@ -65,8 +65,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
         profiler: ' (PROFILE)',
-        min: ' (RELEASE)',
-        rti: ' (RUNTIME-TYPE-INSPECTOR)'
+        min: ' (RELEASE)'
     };
 
     const outputPlugins = {
@@ -102,8 +101,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         debug: 'playcanvas.dbg',
         release: 'playcanvas',
         profiler: 'playcanvas.prf',
-        min: 'playcanvas.min',
-        rti: 'playcanvas.rti'
+        min: 'playcanvas.min'
     };
 
     const outputExtension = {
@@ -172,14 +170,6 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         es6: moduleOptions(buildType)
     };
 
-    const pluginsRTI = buildType === 'rti' ? [
-        resolve(),
-        runtimeTypeInspector({
-            ignoredFiles: [
-                'framework/parsers/draco-worker.js' // runs in Worker context without RTI
-            ]
-        })
-    ] : [];
     return {
         input,
         output: outputOptions,
@@ -188,7 +178,6 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
-            ...pluginsRTI,
             babel(babelOptions[moduleFormat]),
             spacesToTabs(buildType !== 'debug')
         ]

@@ -214,7 +214,7 @@ const targets = [
         ]
     },
     scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js'),
-    process.env.RTI ? buildTargetRTI('es5') : undefined
+    process.env.RTI ? buildTargetRTI('es5', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH') : undefined
 ];
 
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.
