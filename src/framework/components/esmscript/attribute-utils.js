@@ -79,10 +79,23 @@ export const isValidAttributeDefinition = (attributeDefinition) => {
     return attributeDefinition && attributeDefinition.hasOwnProperty('type');
 };
 
+/**
+ * This function returns the value at a path from an object.
+ * @param {Object} object - The object to get the value from
+ * @param {Array.<string>} path - The path to the value as an array of strings
+ * @returns {*} The value at the path or undefined if it doesn't exist
+ */
 export const getValueAtPath = (object, path) => {
     return path.reduce((prev, curr) => prev?.[curr], object);
 };
 
+/**
+ * This function sets the value at a path on an object.
+ * @param {Object} object - The object to set the value on
+ * @param {Array.<string>} path - The path to the value as an array of strings
+ * @param {*} value - The value to set
+ * @returns {*} The value that was set
+ */
 export const setValueAtPath = (object, path, value) => {
     const last = path[path.length - 1];
     const parent = path.slice(0, -1).reduce((prev, curr) => {
