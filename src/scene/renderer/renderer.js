@@ -1077,9 +1077,8 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // update camera and frustum
-            camera.frameUpdate(camera.renderTarget);
-            this.updateCameraFrustum(camera.camera);
+            let currentRenderTarget;
+            let cameraChanged = true;
             this._camerasRendered++;
 
             // for all of its enabled layers
@@ -1087,6 +1086,17 @@ class Renderer {
             for (let j = 0; j < layerIds.length; j++) {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer && layer.enabled) {
+
+                    // update camera and frustum when the render target changes
+                    // TODO: This is done here to handle the backwards compatibility with the deprecated Layer.renderTarget,
+                    // when this is no longer needed, this code can be moved up to execute once per camera.
+                    const renderTarget = camera.renderTarget ?? layer.renderTarget;
+                    if (cameraChanged || renderTarget !== currentRenderTarget) {
+                        cameraChanged = false;
+                        currentRenderTarget = renderTarget;
+                        camera.frameUpdate(renderTarget);
+                        this.updateCameraFrustum(camera.camera);
+                    }
 
                     // cull each layer's non-directional lights once with each camera
                     // lights aren't collected anywhere, but marked as visible
@@ -1215,10 +1225,6 @@ class Renderer {
         }
     }
 
-    /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     */
     updateLightTextureAtlas() {
         this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }

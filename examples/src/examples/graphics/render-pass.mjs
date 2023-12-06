@@ -47,9 +47,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
         twgslUrl: twgslPath + 'twgsl.js',
-
-        // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
-        antialias: false
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

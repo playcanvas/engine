@@ -17,6 +17,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 1
                 })
             ),
+            jsx(LabelGroup, { text: 'background' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.background' },
+                    min: 0,
+                    max: 50,
+                    precision: 1
+                })
+            ),
+            jsx(LabelGroup, { text: 'emissive' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.emissive' },
+                    min: 0,
+                    max: 400,
+                    precision: 1
+                })
+            ),
             jsx(LabelGroup, { text: 'Tonemapping' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
@@ -94,6 +112,69 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 2
                 })
             )
+        ),
+        jsx(Panel, { headerText: 'Vignette' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'inner' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.inner' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'outer' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.outer' },
+                    min: 0,
+                    max: 3,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'curvature' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.curvature' },
+                    min: 0.01,
+                    max: 10,
+                    precision: 2
+                })
+            ),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.vignette.intensity' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
+            )
+        ),
+        jsx(Panel, { headerText: 'Fringing' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.fringing.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'intensity' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.fringing.intensity' },
+                    min: 0,
+                    max: 100,
+                    precision: 0
+                })
+            )
         )
     );
 }
@@ -113,7 +194,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
     const assets = {
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
+        platform: new pc.Asset('statue', 'container', { url: assetPath + 'models/scifi-platform.glb' }),
+        mosquito: new pc.Asset('mosquito', 'container', { url: assetPath + 'models/MosquitoInAmber.glb' }),
         font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
@@ -123,7 +205,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         glslangUrl: glslangPath + 'glslang.js',
         twgslUrl: twgslPath + 'twgsl.js',
 
-        // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
+        // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
+        // to avoid the additional cost. This is only used for the UI which renders on top of the
+        // post-processed scene, and we're typically happy with some aliasing on the UI.
         antialias: false
     };
 
@@ -177,7 +261,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         app.start();
 
-        // setup skydome
+        // setup skydome with low intensity
         app.scene.envAtlas = assets.helipad.resource;
         app.scene.skyboxMip = 2;
         app.scene.exposure = 0.3;
@@ -186,12 +270,28 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         app.scene.toneMapping = pc.TONEMAP_LINEAR;
         app.scene.gammaCorrection = pc.GAMMA_NONE;
 
-        // get the instance of the chess board and set up with render component
-        const boardEntity = assets.board.resource.instantiateRenderEntity();
-        app.root.addChild(boardEntity);
+        // create an instance of the platform and add it to the scene
+        const platformEntity = assets.platform.resource.instantiateRenderEntity();
+        platformEntity.setLocalScale(10, 10, 10);
+        app.root.addChild(platformEntity);
+
+        // get a list of emissive materials from the scene to allow their intensity to be changed
+        const emissiveMaterials = [];
+        const emissiveNames = new Set(['Light_Upper_Light-Upper_0', 'Emissive_Cyan__0']);
+        platformEntity.findComponents("render").forEach((render) => {
+            if (emissiveNames.has(render.entity.name)) {
+                render.meshInstances.forEach(meshInstance => emissiveMaterials.push(meshInstance.material));
+            }
+        });
+
+        // add an instance of the mosquito mesh
+        const mosquitoEntity = assets.mosquito.resource.instantiateRenderEntity();
+        mosquitoEntity.setLocalScale(600, 600, 600);
+        mosquitoEntity.setLocalPosition(0, 20, 0);
+        app.root.addChild(mosquitoEntity);
 
         // helper function to create a box primitive
-        const createBox = (x, y, z, sx, sy, sz, r, g, b) => {
+        const createBox = (x, y, z, r, g, b) => {
             // create material of random color
             const material = new pc.StandardMaterial();
             material.diffuse = pc.Color.BLACK;
@@ -207,7 +307,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
             // set position and scale
             primitive.setLocalPosition(x, y, z);
-            primitive.setLocalScale(sx, sy, sz);
             app.root.addChild(primitive);
 
             return primitive;
@@ -215,16 +314,16 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         // create 3 emissive boxes
         const boxes = [
-            createBox(0, 20, 0, 10, 10, 10, 300, 0, 0),
-            createBox(40, 20, 0, 10, 10, 10, 0, 80, 0),
-            createBox(-40, 20, 0, 15, 15, 15, 80, 80, 20)
+            createBox(100, 20, 0, 200, 0, 0),
+            createBox(-50, 20, 100, 0, 80, 0),
+            createBox(90, 20, -80, 80, 80, 20)
         ];
 
         // Create an Entity with a camera component
         const cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0, 0, 0),
-            farClip: 500
+            farClip: 500,
+            fov: 80
         });
 
         // add orbit camera script with a mouse and a touch support
@@ -232,8 +331,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         cameraEntity.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
-                focusEntity: boxes[0],
-                distanceMax: 160,
+                focusEntity: mosquitoEntity,
+                distanceMax: 190,
                 frameOnStart: false
             }
         });
@@ -241,7 +340,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         cameraEntity.script.create("orbitCameraInputTouch");
 
         // position the camera in the world
-        cameraEntity.setLocalPosition(0, 40, -160);
+        cameraEntity.setLocalPosition(0, 40, -220);
         cameraEntity.lookAt(0, 0, 100);
         app.root.addChild(cameraEntity);
 
@@ -255,20 +354,22 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         });
         app.root.addChild(screen);
 
-        // add a directional light
+        // add a shadow casting directional light
+        const lightColor = new pc.Color(1, 0.7, 0.1);
         const light = new pc.Entity();
         light.addComponent("light", {
             type: "directional",
-            color: pc.Color.WHITE,
-            intensity: 3,
-            range: 500,
-            shadowDistance: 500,
+            color: lightColor,
+            intensity: 80,
+            range: 400,
+            shadowResolution: 4096,
+            shadowDistance: 400,
             castShadows: true,
             shadowBias: 0.2,
             normalOffsetBias: 0.05
         });
         app.root.addChild(light);
-        light.setLocalEulerAngles(45, 30, 0);
+        light.setLocalEulerAngles(80, 10, 0);
 
         // a helper function to add a label to the screen
         const addLabel = (name, text, x, y, layer) => {
@@ -295,9 +396,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
         addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
+        // render passes
         let scenePass;
         let composePass;
         let bloomPass;
+        let colorGrabPass;
 
         // helper function to create a render passes for the camera
         const setupRenderPasses = () => {
@@ -322,8 +425,14 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 samples: 4
             });
 
-            // render pass that renders the scene to the render target. Render target size automatically
-            // matches the back-buffer size with the optional scale.
+            // grab pass allowing us to copy the render scene into a texture and use for refraction
+            // the source for the copy is the texture we render the scene to
+            colorGrabPass = new pc.RenderPassColorGrab(app.graphicsDevice);
+            colorGrabPass.source = rt;
+
+            // render pass that renders the opaque scene to the render target. Render target size
+            // automatically matches the back-buffer size with the optional scale. Note that the scale
+            // parameters allow us to render the 3d scene at lower resolution, improving performance.
             scenePass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
             scenePass.init(rt, {
                 resizeSource: null,
@@ -331,9 +440,15 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 scaleY: 1
             });
 
-            // this pass render both opaque and transparent meshes on the world layer
-            scenePass.addLayer(cameraEntity.camera, worldLayer, false);
-            scenePass.addLayer(cameraEntity.camera, worldLayer, true);
+            // this pass render opaquemeshes on the world layer
+            let clearRenderTarget = true;
+            scenePass.addLayer(cameraEntity.camera, worldLayer, false, clearRenderTarget);
+
+            // similar pass that renders transparent meshes from the world layer to the same render target
+            clearRenderTarget = false;
+            const scenePassTransparent = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+            scenePassTransparent.init(rt);
+            scenePassTransparent.addLayer(cameraEntity.camera, worldLayer, true, clearRenderTarget);
 
             // create a bloom pass, which generates bloom texture based on the just rendered scene texture
             bloomPass = new pcx.RenderPassBloom(app.graphicsDevice, sceneTexture, format);
@@ -349,10 +464,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             // final pass renders directly to the back-buffer on top of the bloomed scene, and it renders a transparent UI layer
             const afterPass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
             afterPass.init(null);
-            afterPass.addLayer(cameraEntity.camera, uiLayer, true, false);
+            afterPass.addLayer(cameraEntity.camera, uiLayer, true, clearRenderTarget);
 
-            // return these prepared render passes
-            return [scenePass, bloomPass, composePass, afterPass];
+            // return these prepared render passes in the order they should be executed
+            return [scenePass, colorGrabPass, scenePassTransparent, bloomPass, composePass, afterPass];
         };
 
         // set up render passes on the camera, to use those instead of the default camera rendering
@@ -369,6 +484,16 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 if (pathArray[2] === 'tonemapping') {
                     composePass.toneMapping = value;
                     composePass._shaderDirty = true;
+                }
+                if (pathArray[2] === 'background') {
+                    cameraEntity.camera.clearColor = new pc.Color(lightColor.r * value, lightColor.g * value, lightColor.b * value);
+                    light.light.intensity = value;
+                }
+                if (pathArray[2] === 'emissive') {
+                    emissiveMaterials.forEach((material) => {
+                        material.emissiveIntensity = value;
+                        material.update();
+                    });
                 }
             }
             if (pathArray[1] === 'bloom') {
@@ -396,11 +521,38 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                     composePass.gradingEnabled = value;
                 }
             }
+            if (pathArray[1] === 'vignette') {
+                if (pathArray[2] === 'enabled') {
+                    composePass.vignetteEnabled = value;
+                }
+                if (pathArray[2] === 'inner') {
+                    composePass.vignetteInner = value;
+                }
+                if (pathArray[2] === 'outer') {
+                    composePass.vignetteOuter = value;
+                }
+                if (pathArray[2] === 'curvature') {
+                    composePass.vignetteCurvature = value;
+                }
+                if (pathArray[2] === 'intensity') {
+                    composePass.vignetteIntensity = value;
+                }
+            }
+            if (pathArray[1] === 'fringing') {
+                if (pathArray[2] === 'enabled') {
+                    composePass.fringingEnabled = value;
+                }
+                if (pathArray[2] === 'intensity') {
+                    composePass.fringingIntensity = value;
+                }
+            }
         });
 
         data.set('data', {
             scene: {
                 scale: 1.8,
+                background: 6,
+                emissive: 200,
                 tonemapping: pc.TONEMAP_ACES
             },
             bloom: {
@@ -413,6 +565,17 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 saturation: 1,
                 brightness: 1,
                 contrast: 1
+            },
+            vignette: {
+                enabled: false,
+                inner: 0.5,
+                outer: 1.0,
+                curvature: 0.5,
+                intensity: 0.3
+            },
+            fringing: {
+                enabled: false,
+                intensity: 50
             }
         });
 
@@ -424,9 +587,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             // scale the boxes
             for (let i = 0; i < boxes.length; i++) {
                 const offset = Math.PI * 2 * i / (boxes.length);
-                const scale = 10 + Math.sin(angle + offset) * 7;
+                const scale = 25 + Math.sin(angle + offset) * 10;
                 boxes[i].setLocalScale(scale, scale, scale);
             }
+
+            // rotate the mosquitoEntity
+            mosquitoEntity.setLocalEulerAngles(0, angle * 30, 0);
         });
     });
     return app;

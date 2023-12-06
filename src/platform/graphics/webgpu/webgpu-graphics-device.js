@@ -731,12 +731,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
-    }
-
     setViewport(x, y, w, h) {
         // TODO: only execute when it changes. Also, the viewport of encoder  matches the rendering attachments,
         // so we can skip this if fullscreen

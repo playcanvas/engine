@@ -16,6 +16,7 @@ import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
 import { XrAnchors } from './xr-anchors.js';
+import { XrMeshDetection } from './xr-mesh-detection.js';
 import { XrViews } from './xr-views.js';
 
 /**
@@ -134,6 +135,14 @@ class XrManager extends EventHandler {
     planeDetection;
 
     /**
+     * Provides access to mesh detection capabilities.
+     *
+     * @type {XrMeshDetection}
+     * @ignore
+     */
+    meshDetection;
+
+    /**
      * Provides access to Input Sources.
      *
      * @type {XrInput}
@@ -226,6 +235,7 @@ class XrManager extends EventHandler {
         this.hitTest = new XrHitTest(this);
         this.imageTracking = new XrImageTracking(this);
         this.planeDetection = new XrPlaneDetection(this);
+        this.meshDetection = new XrMeshDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
         this.anchors = new XrAnchors(this);
@@ -365,6 +375,8 @@ class XrManager extends EventHandler {
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
      * {@link XrPlaneDetection}.
+     * @param {boolean} [options.meshDetection] - Set to true to attempt to enable
+     * {@link XrMeshDetection}.
      * @param {XrErrorCallback} [options.callback] - Optional callback function called once session
      * is started. The callback has one argument Error - it is null if successfully started XR
      * session.
@@ -439,6 +451,9 @@ class XrManager extends EventHandler {
 
                 if (options.planeDetection)
                     opts.optionalFeatures.push('plane-detection');
+
+                if (options.meshDetection)
+                    opts.optionalFeatures.push('mesh-detection');
             }
 
             if (this.domOverlay.supported && this.domOverlay.root) {
@@ -872,6 +887,9 @@ class XrManager extends EventHandler {
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);
+
+            if (this.meshDetection.supported)
+                this.meshDetection.update(frame);
         }
 
         this.fire('update', frame);

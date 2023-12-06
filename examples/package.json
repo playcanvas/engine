@@ -48,7 +48,12 @@
     "settings": {
       "import/resolver": {
         "node": {
-          "extensions": [".js", ".jsx", ".ts", ".tsx"]
+          "extensions": [
+            ".js",
+            ".jsx",
+            ".ts",
+            ".tsx"
+          ]
         }
       }
     }
@@ -95,7 +100,7 @@
     "resize-observer-polyfill": "^1.5.1",
     "rollup": "^2.79.1",
     "serve": "^14.2.0",
-    "sharp": "^0.30.7",
+    "sharp": "^0.32.6",
     "tslib": "^2.6.1",
     "typescript": "^5.1.6",
     "url-search-params-polyfill": "^8.2.4",
