@@ -106,7 +106,12 @@ export const setValueAtPath = (object, path, value) => {
     return value;
 };
 
-
+/**
+ * This function iterates over an attribute definition dictionary and calls a callback for each valid definition.
+ * @param {AttributeDefinitionDict} attributeDefDict - The attribute definition dictionary to iterate over.
+ * @param {Function} callback - The callback to call for each valid attribute definition.
+ * @param {Array.<string>} [path] - The path to begin iterating from attribute definition. If empty, it starts from the root.
+ */
 export const forEachAttributeDefinition = (attributeDefDict, callback, path = []) => {
 
     const attributeDefEntries = Object.entries(attributeDefDict);
@@ -118,10 +123,6 @@ export const forEachAttributeDefinition = (attributeDefDict, callback, path = []
         if (isValidAttributeDefinition(def)) {
 
             callback(def, localPath);
-
-            // // If the attribute is a complex type, recurse into it
-            // if (typeof def.type === 'object')
-            //     forEachAttributeDefinition(def.type, callback, localPath);
 
         } else if (typeof def === 'object') {
             forEachAttributeDefinition(def, callback, localPath);
@@ -136,15 +137,16 @@ export const forEachAttributeDefinition = (attributeDefDict, callback, path = []
 
 /**
  * This function recursively populates an object with attributes based on an attribute definition.
- * Only attributes defined in the definition. Note that this does not perform any type-checking.
+ * It's used to populate the attributes of an ESM Script Component from an object literal, only
+ * copying those attributes that are defined in the attributes definition and have the correct type.
  * If no attribute is specified it uses the default value from the attribute definition if available.
  *
  * @param {import('../../app-base.js').AppBase} app - The app base to search for asset references
  * @param {AttributeDefinitionDict} attributeDefDict - The definition
  * @param {Object} attributes - The attributes to apply
  * @param {Object} [object] - The object to populate with attributes
- *
  * @returns {Object} the object with properties set
+ *
  * @example
  * const attributes = { someNum: 1, nested: { notStr: 2, ignoredValue: 20 }}
  * const definitions = {
@@ -155,17 +157,20 @@ export const forEachAttributeDefinition = (attributeDefDict, callback, path = []
  *  }
  * }
  *
+ * // only the attributes that are defined in the definition are copied
  * populateWithAttributes(app, object, attributeDefDict, attributes)
  * // outputs { someNum: 1, nested: { notStr: 2, otherValue: 3 }}
  */
 export function populateWithAttributes(app, attributeDefDict, attributes, object = {}) {
 
+    // Iterate over each attribute definition
     forEachAttributeDefinition(attributeDefDict, (def, path) => {
 
         const isSimpleType = typeof def.type === 'string';
         const valueFromAttributes = getValueAtPath(attributes, path);
         const valueFromObject = getValueAtPath(object, path);
 
+        // If the attribute is an array, then we need to recurse into each element
         if (def.array) {
 
             // In order of preference, take the value from the attributes, from the object, the default, or an empty array
