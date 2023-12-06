@@ -23,6 +23,7 @@ describe('EsmScriptComponent', function () {
          // Override the debug to remove console noise
         Debug.warn = () => null;
         Debug.error = () => null;
+        console.error = () => null;
 
         reset();
         const canvas = new HTMLCanvasElement(500, 500);
