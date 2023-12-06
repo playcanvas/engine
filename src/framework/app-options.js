@@ -93,14 +93,14 @@ class AppOptions {
     /**
      * The component systems the app requires.
      *
-     * @type {import('./components/system.js').ComponentSystem[]}
+     * @type {typeof import('./components/system.js').ComponentSystem[]}
      */
     componentSystems = [];
 
     /**
      * The resource handlers the app requires.
      *
-     * @type {import('./handlers/handler.js').ResourceHandler[]}
+     * @type {typeof import('./handlers/handler.js').ResourceHandler[]}
      */
     resourceHandlers = [];
 }

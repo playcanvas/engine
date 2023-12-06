@@ -1,7 +1,8 @@
 {
     "plugins": [
         "plugins/markdown",
-        "./node_modules/jsdoc-tsimport-plugin/index.js"
+        "./node_modules/jsdoc-tsimport-plugin/index.js",
+        "./node_modules/jsdoc-typeof-plugin"
     ],
     "recurseDepth": 10,
     "source": {
@@ -10,7 +11,7 @@
     "sourceType": "module",
     "tags": {
         "allowUnknownTags": true,
-        "dictionaries": ["jsdoc","closure"]
+        "dictionaries": ["jsdoc", "closure"]
     },
     "templates": {
         "cleverLinks": false,
