@@ -28,7 +28,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
     constructor(app) {
         super(app);
 
-        Debug.warn('The EsmScriptComponentSystem is experimental and the api is likely to change, use at your own discretion');
+        Debug.warnOnce('The EsmScriptComponentSystem is experimental and the api is likely to change, use at your own discretion');
 
         this.id = 'esmscript';
 
