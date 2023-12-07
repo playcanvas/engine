@@ -55,7 +55,7 @@ class EsmScriptComponent extends Component {
      *
      * @param {import('./system.js').EsmScriptComponentSystem} system - The ComponentSystem that
      * created this Component.
-     * @param {Entity} entity - The Entity that this Component is attached to.
+     * @param {import('./../../../framework/entity.js').Entity} entity - The Entity that this Component is attached to.
      */
     constructor(system, entity) {
         super(system, entity);
