@@ -48,25 +48,84 @@ class RenderPassRenderActions extends RenderPass {
         this.renderActions.push(renderAction);
     }
 
-    addLayer(camera, layer, transparent, autoClears = true) {
+    /**
+     * Adds a layer to be rendered by this render pass.
+     *
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent -
+     * The camera component that is used to render the layers.
+     * @param {import('../layer.js').Layer} layer - The layer to be added.
+     * @param {boolean} transparent - True if the layer is transparent.
+     * @param {boolean} autoClears - True if the render target should be cleared based on the camera
+     * and layer clear flags. Defaults to true.
+     */
+    addLayer(cameraComponent, layer, transparent, autoClears = true) {
 
-        Debug.assert(camera);
+        Debug.assert(cameraComponent);
         Debug.assert(this.renderTarget !== undefined, `Render pass needs to be initialized before adding layers`);
-        Debug.assert(camera.camera.layersSet.has(layer.id), `Camera ${camera.entity.name} does not render layer ${layer.name}.`);
+        Debug.assert(cameraComponent.camera.layersSet.has(layer.id), `Camera ${cameraComponent.entity.name} does not render layer ${layer.name}.`);
 
         const ra = new RenderAction();
         ra.renderTarget = this.renderTarget;
-        ra.camera = camera;
+        ra.camera = cameraComponent;
         ra.layer = layer;
         ra.transparent = transparent;
 
         // camera / layer clear flags
         if (autoClears) {
             const firstRa = this.renderActions.length === 0;
-            ra.setupClears(firstRa ? camera : undefined, layer);
+            ra.setupClears(firstRa ? cameraComponent : undefined, layer);
         }
 
         this.addRenderAction(ra);
+    }
+
+    /**
+     * Adds layers to be rendered by this render pass, starting from the given index of the layer
+     * in the layer composition, till the end of the layer list, or till the last layer with the
+     * given id and transparency is reached (inclusive). Note that only layers that are enabled
+     * and are rendered by the specified camera are added.
+     *
+     * @param {import('../composition/layer-composition.js').LayerComposition} composition - The
+     * layer composition containing the layers to be added, typically the scene layer composition.
+     * @param {import('../../framework/components/camera/component.js').CameraComponent} cameraComponent -
+     * The camera component that is used to render the layers.
+     * @param {number} startIndex - The index of the first layer to be considered for adding.
+     * @param {boolean} firstLayerClears - True if the first layer added should clear the render
+     * target.
+     * @param {number} [lastLayerId] - The id of the last layer to be added. If not specified, all
+     * layers till the end of the layer list are added.
+     * @param {boolean} [lastLayerIsTransparent] - True if the last layer to be added is transparent.
+     * Defaults to true.
+     * @returns {number} Returns the index of last layer added.
+     */
+    addLayers(composition, cameraComponent, startIndex, firstLayerClears, lastLayerId, lastLayerIsTransparent = true) {
+
+        const { layerList, subLayerEnabled, subLayerList } = composition;
+        let clearRenderTarget = firstLayerClears;
+
+        let index = startIndex;
+        while (index < layerList.length) {
+
+            const layer = layerList[index];
+            const isTransparent = subLayerList[index];
+            const enabled = layer.enabled && subLayerEnabled[index];
+            const renderedbyCamera = cameraComponent.camera.layersSet.has(layer.id);
+
+            // add it for rendering
+            if (enabled && renderedbyCamera) {
+                this.addLayer(cameraComponent, layer, isTransparent, clearRenderTarget);
+                clearRenderTarget = false;
+            }
+
+            index++;
+
+            // stop at last requested layer
+            if (layer.id === lastLayerId && isTransparent === lastLayerIsTransparent) {
+                break;
+            }
+        }
+
+        return index;
     }
 
     updateDirectionalShadows() {
