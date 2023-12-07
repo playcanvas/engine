@@ -26,7 +26,6 @@ const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const staticFiles = [
     { src: './src/static', dest: 'dist/' },
-    { src: './src/examples/misc/scripts/', dest: 'dist/scripts' },
     { src: './src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
     { src: './src/example.css', dest: 'dist/iframe/example.css' },
     { src: './src/pathes.js', dest: 'dist/iframe/pathes.js' },
