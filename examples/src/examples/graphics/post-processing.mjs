@@ -403,7 +403,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         // Use a render pass camera, which is a render pass that implements typical rendering of a camera.
         // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pcx.RenderPassCamera(app, {
+        const renderPassCamera = new pcx.RenderPassCameraFrame(app, {
             camera: cameraEntity.camera,    // camera used to render those passes
             samples: 2,                     // number of samples for multi-sampling
             sceneColorMap: true             // true if the scene color should be captured

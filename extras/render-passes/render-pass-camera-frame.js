@@ -13,7 +13,7 @@ import {
 import { RenderPassBloom } from "./render-pass-bloom.js";
 import { RenderPassCompose } from "./render-pass-compose.js";
 
-class RenderPassCamera extends RenderPass {
+class RenderPassCameraFrame extends RenderPass {
     app;
 
     scenePass;
@@ -178,4 +178,4 @@ class RenderPassCamera extends RenderPass {
     }
 }
 
-export { RenderPassCamera };
+export { RenderPassCameraFrame };
