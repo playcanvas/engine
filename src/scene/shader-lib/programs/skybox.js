@@ -8,7 +8,7 @@ import { ShaderGenerator } from './shader-generator.js';
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
         return options.type === 'cubemap' ?
-            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.fixSeams}-${options.mip}` :
+            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.fixSeams}-${options.mip}-${options.projectionEnabled}` :
             `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}`;
     }
 
@@ -16,6 +16,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
         let fshader = '';
         if (options.type === 'cubemap') {
             const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
+            fshader += options.projectionEnabled ? '#define PROJECTED_SKYDOME\n' : '';
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
             fshader += options.useIntensity ? shaderChunks.envMultiplyPS : shaderChunks.envConstPS;
             fshader += shaderChunks.decodePS;

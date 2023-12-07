@@ -164,11 +164,51 @@ class Scene extends EventHandler {
     sky = null;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _skyboxProjectionEnabled = false;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    _skyboxProjectionCenter = new Vec3();
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _skyboxProjectionElevation = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _skyboxProjectionRadius = 100;
+
+    /**
      * Use physically based units for cameras and lights. When used, the exposure value is ignored.
      *
      * @type {boolean}
      */
     physicalUnits = false;
+
+    /**
+     * Environment lighting atlas
+     *
+     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @private
+     */
+    _envAtlas = null;
+
+    /**
+     * The skybox cubemap as set by user (gets used when skyboxMip === 0)
+     *
+     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @private
+     */
+    _skyboxCubeMap = null;
 
     /**
      * Create a new Scene instance.
@@ -197,28 +237,12 @@ class Scene extends EventHandler {
         this._toneMapping = 0;
 
         /**
-         * The skybox cubemap as set by user (gets used when skyboxMip === 0)
-         *
-         * @type {import('../platform/graphics/texture.js').Texture}
-         * @private
-         */
-        this._skyboxCubeMap = null;
-
-        /**
          * Array of 6 prefiltered lighting data cubemaps.
          *
          * @type {import('../platform/graphics/texture.js').Texture[]}
          * @private
          */
         this._prefilteredCubemaps = [];
-
-        /**
-         * Environment lighting atlas
-         *
-         * @type {import('../platform/graphics/texture.js').Texture}
-         * @private
-         */
-        this._envAtlas = null;
 
         // internally generated envAtlas owned by the scene
         this._internalEnvAtlas = null;
@@ -783,6 +807,98 @@ class Scene extends EventHandler {
                 this.prefilteredCubemaps = cubemaps.slice(1);
             }
         }
+    }
+
+    updateSkyboxProjection() {
+
+        if (this._skyboxProjectionEnabled) {
+            const scope = this.device.scope;
+
+            const center = this._skyboxProjectionCenter;
+            const radius = this._skyboxProjectionRadius;
+            const domeElevation = this._skyboxProjectionElevation;
+            scope.resolve('projectedSkydomeCenter').setValue([
+                center.x,
+                center.y * radius,
+                center.z,
+                1.0
+            ]);
+
+            scope.resolve('projectedSkydomeDome').setValue([
+                center.x,
+                center.y + radius * domeElevation,
+                center.z,
+                radius * radius
+            ]);
+
+            scope.resolve('projectedSkydomePlane').setValue([
+                0,
+                1,
+                0,
+                -center.y
+            ]);
+        }
+    }
+
+    /**
+     * When enabled, the skybox will be projected into a sphere dome and a ground plane. Otherwise
+     * the skybox will be projected onto an infinite cube. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    set skyboxProjectionEnabled(value) {
+        if (value !== this._skyboxProjectionEnabled) {
+            this._skyboxProjectionEnabled = value;
+            this.updateSkyboxProjection();
+            this.updateShaders = true;
+        }
+    }
+
+    get skyboxProjectionEnabled() {
+        return this._skyboxProjectionEnabled;
+    }
+
+    /**
+     * The center of the skybox projection. The y-component of the vector represents the height of
+     * the camera from the ground plane. Defaults to (0, 0, 0).
+     *
+     * @type {Vec3}
+     */
+    set skyboxProjectionCenter(value) {
+        this._skyboxProjectionCenter.copy(value);
+        this.updateSkyboxProjection();
+    }
+
+    get skyboxProjectionCenter() {
+        return this._skyboxProjectionCenter;
+    }
+
+    /**
+     * The elevation of the skybox projection - both the sphere and the plane parts. Defaults to 0.
+     *
+     * @type {number}
+     */
+    set skyboxProjectionElevation(value) {
+        this._skyboxProjectionElevation = value;
+        this.updateSkyboxProjection();
+    }
+
+    get skyboxProjectionElevation() {
+        return this._skyboxProjectionElevation;
+    }
+
+    /**
+     * The radius of the skybox projection sphere. Defaults to 100.
+     *
+     * @type {number}
+     */
+    set skyboxProjectionRadius(value) {
+        this._skyboxProjectionRadius = value;
+        this.updateSkyboxProjection();
+    }
+
+    get skyboxProjectionRadius() {
+        return this._skyboxProjectionRadius;
     }
 
     /**
