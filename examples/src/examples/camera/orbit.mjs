@@ -6,6 +6,12 @@ import * as pc from 'playcanvas';
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, assetPath, scriptsPath }) {
+
+    // We currently need to dynamically import the OrbitCamera script
+    const OrbitCamera = await import(`${scriptsPath}camera/orbit/orbit-camera.mjs`);
+    const OrbitCameraInputMouse = await import(`${scriptsPath}camera/orbit/orbit-camera-input-mouse.mjs`);
+    const OrbitCameraInputTouch = await import(`${scriptsPath}camera/orbit/orbit-camera-input-touch.mjs`);
+
     // Create the app and start the update loop
     const app = new pc.Application(canvas, {
         mouse: new pc.Mouse(document.body),
@@ -13,8 +19,7 @@ async function example({ canvas, assetPath, scriptsPath }) {
     });
 
     const assets = {
-        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-        script: new pc.Asset('script', 'script',    { url: scriptsPath + 'camera/orbit-camera.js' })
+        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
     };
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -51,14 +56,12 @@ async function example({ canvas, assetPath, scriptsPath }) {
     camera.addComponent("camera", {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
-        attributes: {
-            inertiaFactor: 0.2 // Override default of 0 (no inertia)
-        }
+    camera.addComponent("esmscript");
+    camera.esmscript.add(OrbitCamera, {
+        inertiaFactor: 0.2 // Override default of 0 (no inertia)
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.esmscript.add(OrbitCameraInputMouse);
+    camera.esmscript.add(OrbitCameraInputTouch);
     app.root.addChild(camera);
 
     // Create a directional light
