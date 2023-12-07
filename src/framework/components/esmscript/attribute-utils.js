@@ -21,20 +21,12 @@ import { Debug } from "../../../core/debug.js";
  */
 
 /**
- * @typedef {Object} ModuleInstance
- * @property {Function} [active] - A function called when the module becomes active
- * @property {Function} [inactive] - A function called when the module becomes inactive
- * @property {UpdateFunction} [update] - A function called on game tick if the module is enabled
- * @property {Function} [destroy] - A function called when the module should be destroyed
- */
-
-/**
  * This type represents a generic class constructor.
  * @typedef {Function} ModuleClass
  */
 
 /**
- * @typedef {Object|Map} AttributeDefinition
+ * @typedef {Object} AttributeDefinition
  * @property {'asset'|'boolean'|'curve'|'entity'|'json'|'number'|'rgb'|'rgba'|'string'|'vec2'|'vec3'|'vec4'} type - The attribute type
  */
 
@@ -42,7 +34,7 @@ import { Debug } from "../../../core/debug.js";
  * The expected output of an ESM Script file. It contains the class definition and the attributes it requires.
  * @typedef {Object} ModuleExport
  * @property {ModuleClass} default - The default export of a esm script that defines a class
- * @property {Object.<string, AttributeDefinition>} attributes - An object containing the names of attributes and their definitions;
+ * @property {Object<string, AttributeDefinition>} attributes - An object containing the names of attributes and their definitions;
  */
 
 /**
@@ -82,7 +74,7 @@ export const isValidAttributeDefinition = (attributeDefinition) => {
 /**
  * This function returns the value at a path from an object.
  * @param {Object} object - The object to get the value from
- * @param {Array.<string>} path - The path to the value as an array of strings
+ * @param {string[]} path - The path to the value as an array of strings
  * @returns {*} The value at the path or undefined if it doesn't exist
  */
 export const getValueAtPath = (object, path) => {
@@ -92,7 +84,7 @@ export const getValueAtPath = (object, path) => {
 /**
  * This function sets the value at a path on an object.
  * @param {Object} object - The object to set the value on
- * @param {Array.<string>} path - The path to the value as an array of strings
+ * @param {string[]} path - The path to the value as an array of strings
  * @param {*} value - The value to set
  * @returns {*} The value that was set
  */
@@ -110,7 +102,7 @@ export const setValueAtPath = (object, path, value) => {
  * This function iterates over an attribute definition dictionary and calls a callback for each valid definition.
  * @param {AttributeDefinitionDict} attributeDefDict - The attribute definition dictionary to iterate over.
  * @param {Function} callback - The callback to call for each valid attribute definition.
- * @param {Array.<string>} [path] - The path to begin iterating from attribute definition. If empty, it starts from the root.
+ * @param {string[]} [path] - The path to begin iterating from attribute definition. If empty, it starts from the root.
  */
 export const forEachAttributeDefinition = (attributeDefDict, callback, path = []) => {
 

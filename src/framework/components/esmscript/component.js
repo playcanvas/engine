@@ -10,12 +10,6 @@ import { populateWithAttributes } from './attribute-utils.js';
  */
 
 /**
- * @callback SwapFunction
- * @param {Object} newState - The new state to swap to.
- * @ignore
- */
-
-/**
  * @typedef {Object} ModuleInstance
  * @property {Function} [initialize] - A function called once when the module becomes initialized
  * @property {Function} [postInitialize] - A function called once after all modules become initialized
@@ -75,19 +69,19 @@ class EsmScriptComponent extends Component {
 
         /**
          * Holds all ESM instances of this component.
-         * @type {Set.<ModuleInstance>}
+         * @type {Set<ModuleInstance>}
          */
         this.modules = new Set();
 
         /**
          * Holds a map of modules class names to instances to enable shorthand lookup
-         * @type {Map.<string, ModuleInstance>}
+         * @type {Map<string, ModuleInstance>}
          */
         this.moduleNameInstanceMap = new Map();
 
         /**
          * Holds the attribute definitions for modules.
-         * @type {Map.<ModuleInstance, AttributeDefinition>}
+         * @type {Map<ModuleInstance, AttributeDefinition>}
          */
         this.attributeDefinitions = new Map();
 
