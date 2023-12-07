@@ -6,7 +6,7 @@ var sourceFiles;
 
 if (release) {
     console.log('Testing release build');
-    sourceFiles = [/*path.resolve('build/playcanvas.js')*/];
+    sourceFiles = [path.resolve('build/playcanvas.js')];
 } else {
     console.log('Testing unbuilt sources');
     sourceFiles = fs.readFileSync('build/dependencies.txt').toString().split('\n').map(function (value) {
@@ -33,14 +33,12 @@ module.exports = function (config) {
             'tests/setup.js',
 
             // test files - change this to a specific file in order to run a single suite
-            { pattern: 'tests/**/test_esm_*.js', type: 'module' },
-            // 'tests/**/test_*.js',
+            'tests/**/test_*.js',
 
             // resources - list any files here that need to be loaded by tests (i.e. via XHR), or
             // need to be pre-loaded in order to provide helper functions etc.
             { pattern: 'tests/test-assets/**/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'tests/helpers/**/*.js', included: true, served: true, watched: true, nocache: true },
-            { pattern: 'tests/framework/components/script/esm-*.js', type: 'module', included: false, served: true, watched: true, nocache: false },
             { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'tests/platform/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true },
