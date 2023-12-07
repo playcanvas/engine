@@ -8,7 +8,7 @@ import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.j
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
-import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE } from './method-util.mjs';
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY } from './method-util.mjs';
 import createOptions from './basic-app-options.mjs';
 
 // Can use import assertion, but eslint doesn't like it.
@@ -1212,6 +1212,41 @@ describe('EsmScriptComponent', function () {
 
     describe('Warnings and notifications', function () {
 
+
+        it('should warn when attempting to add an undefined script', function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+
+            const EsmScript = null;
+
+            expect(_ => e.esmscript.add(EsmScript)).to.throw;
+        });
+
+        it('should warn when attempting to add a script that has already been added', async function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            const EsmScript2 = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+
+            e.esmscript.add(EsmScript);
+
+            expect(_ => e.esmscript.add(EsmScript2)).to.throw;
+        });
+
+        it('should warn when attempting to add an anonymous ESM Script', function () {
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = class {};
+
+            expect(_ => e.esmscript.add(EsmScript)).to.throw;
+
+        });
+
         it('should warn when attempting to assign values that aren\'t present in the attribute definition', async function () {
 
             const e = new Entity();
@@ -1278,68 +1313,126 @@ describe('EsmScriptComponent', function () {
 
     });
 
-    // describe('cloning', function () {
+    describe('cloning', function () {
 
-    //     // it('should clone a script component with attributes', async function () {
-    //     //     expect(true).to.be.false;
-    //     // })
+        it('should clone an ESM Script component that contains an entity attribute and retain the correct attributes', async function () {
 
-    //     it('should clone an entity component that contains an ESM Script attribute and retain the correct attributes', async function () {
+            const a = app.root.findByName('EnabledEntity');
+            const b = app.root.findByName('ReferencedEntity');
 
-    //         const a = app.root.findByName('EnabledEntity');
-    //         const b = app.root.findByName('ReferencedEntity');
+            expect(a).to.exist;
+            expect(b).to.exist;
 
-    //         expect(a).to.exist;
-    //         expect(b).to.exist;
+            await waitForNextFrame();
 
-    //         await waitForNextFrame();
+            const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
 
-    //         const scriptWithAttributes = a.esmscript.get('ScriptWithAttributes');
+            // verify script attributes are initialized
+            expect(scriptWithAttributes).to.exist;
+            expect(scriptWithAttributes.attribute1).to.equal(b);
 
-    //         // verify script attributes are initialized
-    //         expect(scriptWithAttributes).to.exist;
-    //         expect(scriptWithAttributes.attribute1).to.equal(b);
+            const clone = a.clone();
+            app.root.addChild(clone);
 
-    //         const clone = a.clone();
-    //         app.root.addChild(clone);
+            // verify cloned script attributes are initialized
+            const clonedScriptWithAttributes = clone.esmscript.get('ScriptWithAttributes');
+            expect(clonedScriptWithAttributes).to.exist;
+            expect(clonedScriptWithAttributes.attribute1).to.equal(b);
 
-    //         // verify cloned script attributes are initialized
-    //         const clonedScriptWithAttributes = clone.esmscript.get('ScriptWithAttributes');
-    //         expect(clonedScriptWithAttributes).to.exist;
-    //         expect(clonedScriptWithAttributes.attribute1).to.equal(b)
+        });
 
-    //     })
+        it('should clone a script component that contains entity attributes', async function () {
 
-    //     it('should clone a script component that contains entity attributes', async function () {
+            const parent = new Entity('parent');
+            const child = new Entity('child');
+            parent.addChild(child);
+            app.root.addChild(parent);
 
-    //         const parent = new Entity('parent');
-    //         const child = new Entity('child');
-    //         parent.addChild(child);
-    //         app.root.addChild(parent);
+            parent.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptWithAttributes.mjs');
 
-    //         parent.addComponent('esmscript');
-    //         const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptWithAttributes.mjs');
+            parent.esmscript.add(EsmScript, {
+                attribute1: child,
+                folder: {
+                    entityAttribute: child
+                }
+            });
 
-    //         parent.esmscript.add(EsmScript, {
-    //             attribute1: child,
-    //             folder: {
-    //                 entityAttribute: child
-    //             }
-    //         });
+            const script = parent.esmscript.get('ScriptWithAttributes');
 
-    //         const script = parent.esmscript.get('ScriptWithAttributes');
+            expect(script.attribute1).to.equal(child);
+            expect(script.folder.entityAttribute).to.equal(child);
 
-    //         expect(script.attribute1).to.equal(child);
-    //         expect(script.folder.entityAttribute).to.equal(child);
+            const clone = parent.clone();
+            const clonedScript = clone.esmscript.get('ScriptWithAttributes');
 
-    //         const clone = parent.clone();
-    //         const clonedScript = clone.esmscript.get('ScriptWithAttributes');
+            expect(clonedScript.attribute1 !== child).to.be.true;
+            expect(clonedScript.folder.entityAttribute === child).to.be.false;
 
-    //         expect(clonedScript.attribute1 !== child).to.be.true
-    //         // expect(clonedScript.folder.entityAttribute === child).to.be.false
+        });
 
-    //     })
+    });
 
-    // })
+    describe('destroy', function () {
+
+        it('should destroy an ESM Script component', async function () {
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            e.esmscript.add(EsmScript);
+
+            const script = e.esmscript.get('ScriptA');
+
+            // The script should exist
+            expect(script).to.exist;
+
+            // Reset the calls
+            reset();
+
+            // destroy the entity
+            e.destroy();
+
+            // Destroy should have been called
+            expectCall(0, DESTROY(script));
+
+        });
+
+        it('should not call any more methods after a ESM Script is destroyed', async function () {
+
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            e.esmscript.add(EsmScript);
+
+            const script = e.esmscript.get('ScriptA');
+
+            // The script should exist
+            expect(script).to.exist;
+
+            // Reset the calls
+            reset();
+
+            // destroy the entity
+            e.destroy();
+
+            // Destroy should have been called
+            expectCall(0, DESTROY(script));
+
+            // Reset the calls
+            reset();
+
+            // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+            app.update(16.6);
+            app.update(16.6);
+            app.update(16.6);
+
+            expect(calls).to.have.lengthOf(0);
+
+        });
+
+    });
 
 });

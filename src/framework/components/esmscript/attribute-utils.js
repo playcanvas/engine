@@ -99,9 +99,17 @@ export const setValueAtPath = (object, path, value) => {
 };
 
 /**
+ * This callback is executed for each attribute definition.
+ *
+ * @callback forEachAttributeDefinitionCallback
+ * @param {AttributeDefinition} attributeDefinition - The current attribute definition.
+ * @param {string[]} path - The path to the current attribute definition.
+ */
+
+/**
  * This function iterates over an attribute definition dictionary and calls a callback for each valid definition.
  * @param {AttributeDefinitionDict} attributeDefDict - The attribute definition dictionary to iterate over.
- * @param {Function} callback - The callback to call for each valid attribute definition.
+ * @param {forEachAttributeDefinitionCallback} callback - The callback to call for each valid attribute definition.
  * @param {string[]} [path] - The path to begin iterating from attribute definition. If empty, it starts from the root.
  */
 export const forEachAttributeDefinition = (attributeDefDict, callback, path = []) => {

@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 import { Component } from '../component.js';
 import { classHasMethod } from '../../../core/class-utils.js';
-import { populateWithAttributes } from './attribute-utils.js';
+import { forEachAttributeDefinition, getValueAtPath, populateWithAttributes, setValueAtPath } from './attribute-utils.js';
 
 /**
  * @callback UpdateFunction
@@ -324,29 +324,32 @@ class EsmScriptComponent extends Component {
     resolveDuplicatedEntityReferenceProperties(oldScriptComponent, duplicatedIdsMap) {
 
         // for each module in the old component
-        // for (const esmscript of oldScriptComponent.modules) {
+        for (const esmscript of oldScriptComponent.modules) {
 
             // Get the attribute definition for the specified esm script
-            // const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
-            // const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
+            const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
+            const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
 
-            // let newMapping = {};
-            // reduceAttributeDefinition(attributeDefinitions, esmscript, (subRef, attributeName, attributeDefinition, value) => {
+            // for each attribute definition
+            forEachAttributeDefinition(attributeDefinitions, (def, path) => {
 
-            //     if (!!attributeDefinition) newMapping = newMapping[attributeName] = {};
+                // If the attribute is an entity
+                if (def.type === 'entity') {
 
-            //     // If the attribute is an 'entity', then this needs to be resolved
-            //     if (attributeDefinition?.type === 'entity') {
-            //         const guid = value?.getGuid();
-            //         // newMapping[attributeName] = guid;
-            //         if (guid && duplicatedIdsMap[guid]) {
-            //             newMapping[attributeName] = duplicatedIdsMap[guid];
-            //             // esmscript[attributeName] = rawToValue(oldScriptComponent.appEntity.app, attributeDefinition, duplicatedIdsMap[guid].getGuid());
-            //             console.log('set here', attributeName, guid, '==>', duplicatedIdsMap[guid].getGuid());
-            //         }
-            //     }
-            // });
-        // }
+                    // Get the value of the attribute
+                    const entity = getValueAtPath(esmscript, path);
+                    if (!entity) return;
+
+                    // Get the guid of the entity
+                    const guid = entity.getGuid();
+
+                    // If the guid is in the duplicatedIdsMap, then we need to update the value
+                    if (guid && duplicatedIdsMap[guid]) {
+                        setValueAtPath(newModule, path, duplicatedIdsMap[guid]);
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -410,7 +413,7 @@ class EsmScriptComponent extends Component {
             throw new Error(`The ESM Script is undefined`);
 
         if (!ModuleClass.name || ModuleClass.name === '')
-            throw new Error('Anonymous classes are not supported. Please use `class MyClass{}` as opposed to `const MyClass = class{}`');
+            throw new Error('Anonymous classes are not supported. Use `class MyClass{}` instead of `const MyClass = class{}`');
 
         if (this.moduleNameInstanceMap.has(ModuleClass.name))
             throw new Error(`An ESM Script called '${ModuleClass.name}' has already been added to this component.`);
