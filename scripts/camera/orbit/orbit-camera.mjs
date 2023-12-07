@@ -29,6 +29,77 @@ export const attributes = {
 };
 
 export default class OrbitCamera {
+    /**
+     * @type {pc.Entity} entity - The entity that has the camera component
+     */
+    entity;
+
+    /**
+     * @type {pc.AppBase} app - The app that the entity this script is attached to belongs to
+     */
+    app;
+
+    // Reapply the clamps if they are changed in the editor
+    set distanceMin(value) {
+        this._distanceMin = value;
+        this._distance = this._clampDistance(this._distance);
+    }
+
+    get distanceMin() {
+        return this._distanceMin;
+    }
+
+    set distanceMax(value) {
+        this._distanceMax = value;
+        this._distance = this._clampDistance(this._distance);
+    }
+
+    get distanceMax() {
+        return this._distanceMax;
+    }
+
+    set pitchAngleMin(value) {
+        this._pitchAngleMin = value;
+        this._pitch = this._clampPitchAngle(this._pitch);
+    }
+
+    get pitchAngleMin() {
+        return this._pitchAngleMin;
+    }
+
+    set pitchAngleMax(value) {
+        this._pitchAngleMax = value;
+        this._pitch = this._clampPitchAngle(this._pitch);
+    }
+
+    get pitchAngleMax() {
+        return this._pitchAngleMax;
+    }
+
+    set frameOnStart(value) {
+        this.frameOnStart = value;
+        if (value) {
+            this.focus(this.focusEntity || this.app.root);
+        }
+    }
+
+    get frameOnStart() {
+        return this.frameOnStart;
+    }
+
+    set focusEntity(value) {
+        this._focusEntity = value;
+        if (this.frameOnStart) {
+            this.focus(value || this.app.root);
+        } else {
+            this.resetAndLookAtEntity(this.entity.getPosition(), value || this.app.root);
+        }
+    }
+
+    get focusEntity() {
+        return this._focusEntity;
+    }
+
     static distanceBetween = new pc.Vec3();
 
     // Property to get and set the distance between the pivot point and camera
@@ -141,12 +212,8 @@ export default class OrbitCamera {
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     initialize() {
-        var self = this;
-        var onWindowResize = function () {
-            self._checkAspectRatio();
-        };
 
-        window.addEventListener('resize', onWindowResize, false);
+        window.addEventListener('resize', this._checkAspectRatio, false);
 
         this._checkAspectRatio();
 
@@ -169,6 +236,10 @@ export default class OrbitCamera {
         this.entity.setLocalEulerAngles(this._pitch, this._yaw, 0);
 
         this._distance = 0;
+        this._distanceMin = 0;
+        this._distanceMax = 0;
+        this._pitchAngleMin = -90;
+        this._pitchAngleMax = 90;
 
         this._targetYaw = this._yaw;
         this._targetPitch = this._pitch;
@@ -186,43 +257,11 @@ export default class OrbitCamera {
 
         this._targetDistance = this._distance;
 
-        // Reapply the clamps if they are changed in the editor
-        // this.on('attr:distanceMin', function (value, prev) {
-        //     this._distance = this._clampDistance(this._distance);
-        // });
-
-        // this.on('attr:distanceMax', function (value, prev) {
-        //     this._distance = this._clampDistance(this._distance);
-        // });
-
-        // this.on('attr:pitchAngleMin', function (value, prev) {
-        //     this._pitch = this._clampPitchAngle(this._pitch);
-        // });
-
-        // this.on('attr:pitchAngleMax', function (value, prev) {
-        //     this._pitch = this._clampPitchAngle(this._pitch);
-        // });
-
-        // // Focus on the entity if we change the focus entity
-        // this.on('attr:focusEntity', function (value, prev) {
-        //     if (this.frameOnStart) {
-        //         this.focus(value || this.app.root);
-        //     } else {
-        //         this.resetAndLookAtEntity(this.entity.getPosition(), value || this.app.root);
-        //     }
-        // });
-
-        // this.on('attr:frameOnStart', function (value, prev) {
-        //     if (value) {
-        //         this.focus(this.focusEntity || this.app.root);
-        //     }
-        // });
-
-        // this.on('destroy', function () {
-        //     window.removeEventListener('resize', onWindowResize, false);
-        // });
     }
 
+    destroy() {
+        window.removeEventListener('resize', this._checkAspectRatio, false);
+    }
 
     update(dt) {
         // Add inertia, if any
