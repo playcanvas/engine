@@ -8,7 +8,7 @@ import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.j
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
-import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY } from './method-util.mjs';
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY, INACTIVE } from './method-util.mjs';
 import createOptions from './basic-app-options.mjs';
 
 // Can use import assertion, but eslint doesn't like it.
@@ -1365,6 +1365,92 @@ describe('EsmScriptComponent', function () {
 
             expect(clonedScript.attribute1 !== child).to.be.true;
             expect(clonedScript.folder.entityAttribute === child).to.be.false;
+
+        });
+
+    });
+
+    describe('enabling', function () {
+
+        it('should not call any lifecycle methods if disabled', async function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            e.esmscript.add(EsmScript.default, null, false);
+
+            const script = e.esmscript.get('ScriptA');
+
+            // The script should exist
+            expect(script).to.exist;
+
+            // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+            app.update(16.6);
+
+            // Destroy should have been called
+            expect(calls).to.have.a.lengthOf(0);
+        });
+
+        it('should call all lifecycle methods after being enabled', async function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            e.esmscript.add(EsmScript.default, null, false);
+
+            const script = e.esmscript.get('ScriptA');
+
+            // The script should exist
+            expect(script).to.exist;
+
+            // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+            app.update(16.6);
+
+            e.esmscript.enableModule(script);
+
+            app.update(16.6);
+
+            // Destroy should have been called
+            expectCall(0, INITIALIZE(script));
+            expectCall(1, ACTIVE(script));
+            expectCall(2, UPDATE(script));
+            expectCall(3, POST_UPDATE(script));
+        });
+
+        it('should call all lifecycle methods after being enabled', async function () {
+            const e = new Entity();
+            app.root.addChild(e);
+            e.addComponent('esmscript');
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
+            e.esmscript.add(EsmScript.default, null, false);
+
+            const script = e.esmscript.get('ScriptA');
+
+            // The script should exist
+            expect(script).to.exist;
+
+            // Node doesn't have `requestAnimationFrame` so manually trigger a tick
+            app.update(16.6);
+
+            e.esmscript.enableModule(script);
+            app.update(16.6);
+
+            // Destroy should have been called
+            expectCall(0, INITIALIZE(script));
+            expectCall(1, ACTIVE(script));
+            expectCall(2, UPDATE(script));
+            expectCall(3, POST_UPDATE(script));
+
+            app.update(16.6);
+            reset();
+            e.esmscript.disableModule(script);
+
+            app.update(16.6);
+
+            expectCall(0, INACTIVE(script));
+
+            // only one call this frame
+            expect(calls).to.have.lengthOf(1);
 
         });
 
