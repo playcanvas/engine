@@ -1,4 +1,3 @@
-
 const CustomType = {
     internalNumberNoDefault: { type: 'number' },
     internalNumber: { type: 'number', default: 1 },
@@ -8,12 +7,9 @@ const CustomType = {
 
     internalColorNoDefault: { type: 'rgba' },
     internalColor: { type: 'rgba', default: [1, 1, 1, 1] },
-    // internalColor: { type: 'rgb', default: '#ff0000' },
 
     invalidAttribute: 'This is an invalid attribute',
     invalidAttributeType: { type: 'This is an invalid type' }
-
-    // fieldNumberArray: { type: 'number', default: 5 }
 };
 
 export const attributes = {
@@ -90,40 +86,6 @@ export const attributes = {
     folder: {
         entityAttribute: { type: 'entity' }
     }
-
-    // attribute4: {
-    //     title: 'asdqasw',
-    //     description: 'hello',
-    //     type: SomeType,
-    // },
-
-    // attribute5: {
-    //     title: 'asdqasw',
-    //     description: 'hello',
-    //     type: SomeType,
-    //     array: true
-    // }
-
-    // Any item with a 'type' property becomes editable in the editor,
-    // if it has 'array' boolean that's true, it will become an array of multiple values of 'type,
-    // if it's a plain object, it becomes a folder
-    // anything else is ignored
-
-    // what if it has a schema
-
-    // attribute5: {
-    //     type: schema,
-    //     default: {
-        // }
-        // schema: {sdff}
-        // array: true,
-        // default: []
-        // array: true
-        // default: {
-        //     fieldNumber: 10,
-        //     fieldEntity: 10
-        // }
-    // }
 };
 
 export default class ScriptWithAttributes {

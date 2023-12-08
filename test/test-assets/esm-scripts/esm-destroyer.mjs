@@ -1,4 +1,3 @@
-
 export default class Destroyer {
     // Default values for attributes
     static attributes = {

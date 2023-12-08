@@ -3,7 +3,6 @@ import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
 import { EsmScriptComponentData } from './data.js';
-import { populateWithAttributes } from './attribute-utils.js';
 
 /**
  * Allows scripts to be attached to an Entity and executed.
