@@ -163,8 +163,10 @@ class XrHitTestSource extends EventHandler {
             rotation.copy(pose.transform.orientation);
         }
 
-        this.fire('result', position, rotation, inputSource, candidateHitTestResult);
-        this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
+        if (candidateHitTestResult) {
+            this.fire('result', position, rotation, inputSource, candidateHitTestResult);
+            this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
+        }
 
         poolVec3.push(origin);
         poolVec3.push(position);
