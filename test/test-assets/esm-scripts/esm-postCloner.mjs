@@ -3,6 +3,8 @@ export const attributes = {
 };
 
 export default class PostCloner {
+    static attributes = attributes;
+
     postInitialize() {
         const clone = this.entityToClone.clone();
         this.app.root.addChild(clone);

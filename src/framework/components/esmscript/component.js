@@ -21,7 +21,9 @@ import { forEachAttributeDefinition, getValueAtPath, populateWithAttributes, set
 
 /**
  * This type represents a generic class constructor.
- * @typedef {Function} ModuleClass
+ * @typedef {Function} ModuleClass - The class constructor
+ * @property {string} name - The name of the class
+ * @property {AttributeDefinition} attributes - The attribute definitions for the class
  */
 
 /**
@@ -29,12 +31,6 @@ import { forEachAttributeDefinition, getValueAtPath, populateWithAttributes, set
  * @property {'asset'|'boolean'|'curve'|'entity'|'json'|'number'|'rgb'|'rgba'|'string'|'vec2'|'vec3'|'vec4'} type - The attribute type
  */
 
-/**
- * The expected output of an ESM Script file. It contains the class definition and the attributes it requires.
- * @typedef {Object} ModuleExport
- * @property {ModuleClass} default - The default export of a esm script that defines a class
- * @property {Object.<string, AttributeDefinition>} attributes - An object containing the names of attributes and their definitions;
- */
 
 const appEntityDefinition = {
     app: { type: 'app' },
@@ -399,15 +395,12 @@ class EsmScriptComponent extends Component {
      * Adds an ESM Script class to the component system and assigns its attributes based on the `attributeDefinition`
      * If the module is enabled, it will receive lifecycle updates.
      *
-     * @param {ModuleExport} moduleExport - The export of the ESM Script to add to the component
+     * @param {ModuleClass} ModuleClass - The ESM Script class to add to the component
      * @param {Object.<string, AttributeDefinition>} [attributeValues] - A set of attributes to be assigned to the Script Module instance
      * @param {boolean} [enabled] - Whether the script is enabled or not.
      * @returns {ModuleInstance|null} An instance of the module
      */
-    add(moduleExport, attributeValues = {}, enabled = true) {
-
-        // destructure the module export
-        const { default: ModuleClass, attributes: attributeDefinition = {} } = moduleExport;
+    add(ModuleClass, attributeValues = {}, enabled = true) {
 
         if (!ModuleClass || typeof ModuleClass !== 'function')
             throw new Error(`The ESM Script is undefined`);
@@ -418,6 +411,10 @@ class EsmScriptComponent extends Component {
         if (this.moduleNameInstanceMap.has(ModuleClass.name))
             throw new Error(`An ESM Script called '${ModuleClass.name}' has already been added to this component.`);
 
+        // @ts-ignore
+        const attributeDefinition = ModuleClass.attributes || {};
+
+        // @ts-ignore
         // Create the esm script instance
         const module = new ModuleClass();
 

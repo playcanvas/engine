@@ -1,10 +1,12 @@
 import { INITIALIZE, call } from '../../framework/components/esmscript/method-util.mjs';
 
-export const attributes = {
+const attributes = {
     entityToEnable: { type: 'entity' }
 };
 
 export default class Enabler {
+    static attributes = attributes;
+
     initialize() {
         call(INITIALIZE(this));
         this.entityToEnable.enabled = true;

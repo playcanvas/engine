@@ -1,7 +1,3 @@
-export const attributes = {
-    entityToClone: { type: 'entity' }
-};
-
 export default class Cloner {
     initialize() {
         window.initializeCalls.push(this.entity.getGuid() + ' initialize cloner');
@@ -14,3 +10,7 @@ export default class Cloner {
         window.initializeCalls.push(this.entity.getGuid() + ' postInitialize cloner');
     }
 }
+
+Cloner.attributes = {
+    entityToClone: { type: 'entity' }
+};

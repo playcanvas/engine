@@ -1,12 +1,14 @@
 import { INITIALIZE, POST_INITIALIZE, call } from '../../framework/components/esmscript/method-util.mjs';
 
-export const attributes = {
+const attributes = {
     disableEntity: { type: 'boolean' },
     disableScriptComponent: { type: 'boolean' },
     disableScriptInstance: { type: 'boolean' }
 };
 
 export default class Disabler {
+    static attributes = attributes;
+
     initialize() {
         call(INITIALIZE(this));
 

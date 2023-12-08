@@ -54,12 +54,12 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         // wait for them to resolve and retain the ordering
         const esmExports = await Promise.all(imports);
+        const esmScripts = esmExports.map(esmExport => esmExport.default);
 
         // add the modules to the components
         for (const i in modules) {
             const { attributes, enabled } = modules[i];
-            const esmModuleExport = esmExports[i];
-            component.add(esmModuleExport, attributes, enabled);
+            component.add(esmScripts[i], attributes, enabled);
         }
     }
 
@@ -73,12 +73,11 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         const clonedComponent = this.addComponent(clone, { enabled });
 
-        component.modules.forEach((module, key) => {
+        component.modules.forEach((module) => {
             const enabled = component.isModuleEnabled(module);
             const attributeDefinition = component.attributeDefinitions.get(module);
             const attributes = populateWithAttributes(this.app, attributeDefinition, module);
-            const EsmModuleExport = { attributes: attributeDefinition, default: module.constructor };
-            clonedComponent.add(EsmModuleExport, attributes, enabled);
+            clonedComponent.add(module.constructor, attributes, enabled);
         });
 
         return clonedComponent;

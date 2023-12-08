@@ -1,3 +1,4 @@
+
 const CustomType = {
     internalNumberNoDefault: { type: 'number' },
     internalNumber: { type: 'number', default: 1 },
@@ -126,5 +127,5 @@ export const attributes = {
 };
 
 export default class ScriptWithAttributes {
-
+    static attributes = attributes;
 }

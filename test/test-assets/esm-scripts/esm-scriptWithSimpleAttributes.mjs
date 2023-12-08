@@ -1,4 +1,4 @@
-export const attributes = {
+const attributes = {
 
     simpleAttributeNoDefault: {
         type: 'number'
@@ -16,5 +16,5 @@ export const attributes = {
 };
 
 export default class ScriptWithSimpleAttributes {
-
+    static attributes = attributes;
 }

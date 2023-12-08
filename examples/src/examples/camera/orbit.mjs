@@ -57,11 +57,11 @@ async function example({ canvas, assetPath, scriptsPath }) {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.addComponent("esmscript");
-    camera.esmscript.add(OrbitCamera, {
+    camera.esmscript.add(OrbitCamera.default, {
         inertiaFactor: 0.2 // Override default of 0 (no inertia)
     });
-    camera.esmscript.add(OrbitCameraInputMouse);
-    camera.esmscript.add(OrbitCameraInputTouch);
+    camera.esmscript.add(OrbitCameraInputMouse.default);
+    camera.esmscript.add(OrbitCameraInputTouch.default);
     app.root.addChild(camera);
 
     // Create a directional light

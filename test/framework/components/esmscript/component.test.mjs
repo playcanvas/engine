@@ -175,7 +175,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const ScriptA = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(ScriptA);
+            e.esmscript.add(ScriptA.default);
 
             const script = e.esmscript.get('ScriptA');
 
@@ -265,7 +265,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const Disabler = await import('../../../test-assets/esm-scripts/esm-disabler.mjs');
-            e.esmscript.add(Disabler);
+            e.esmscript.add(Disabler.default);
 
             const DisablerScript = e.esmscript.get('Disabler');
 
@@ -1231,9 +1231,9 @@ describe('EsmScriptComponent', function () {
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
             const EsmScript2 = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
 
-            e.esmscript.add(EsmScript);
+            e.esmscript.add(EsmScript.default);
 
-            expect(_ => e.esmscript.add(EsmScript2)).to.throw;
+            expect(_ => e.esmscript.add(EsmScript2.default)).to.throw;
         });
 
         it('should warn when attempting to add an anonymous ESM Script', function () {
@@ -1261,7 +1261,7 @@ describe('EsmScriptComponent', function () {
                 warnings.push(warning);
             };
 
-            e.esmscript.add(EsmScript, {
+            e.esmscript.add(EsmScript.default, {
                 attribute3: 'This should warn that it hasn\'t been defined',
                 attribute4: 'this too'
             });
@@ -1283,7 +1283,7 @@ describe('EsmScriptComponent', function () {
             const warnings = [];
             Debug.warn = warning => warnings.push(warning);
 
-            e.esmscript.add(EsmScript, {
+            e.esmscript.add(EsmScript.default, {
                 simpleAttribute: 'This should warn',
                 simpleAttributeNoDefault: 'Yep, another warning'
             });
@@ -1305,7 +1305,7 @@ describe('EsmScriptComponent', function () {
             const errors = [];
             console.error = (error, args) => errors.push(args);
 
-            e.esmscript.add(EsmScript);
+            e.esmscript.add(EsmScript.default);
 
             expect(errors[0]).to.equal('The attribute definition for \'invalidAttributeType\' is malformed with a type of \'An invalid attribute type\'.');
 
@@ -1351,7 +1351,7 @@ describe('EsmScriptComponent', function () {
             parent.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptWithAttributes.mjs');
 
-            parent.esmscript.add(EsmScript, {
+            parent.esmscript.add(EsmScript.default, {
                 attribute1: child,
                 folder: {
                     entityAttribute: child
@@ -1381,7 +1381,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(EsmScript);
+            e.esmscript.add(EsmScript.default);
 
             const script = e.esmscript.get('ScriptA');
 
@@ -1405,7 +1405,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(EsmScript);
+            e.esmscript.add(EsmScript.default);
 
             const script = e.esmscript.get('ScriptA');
 
@@ -1425,7 +1425,6 @@ describe('EsmScriptComponent', function () {
             reset();
 
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
-            app.update(16.6);
             app.update(16.6);
             app.update(16.6);
 

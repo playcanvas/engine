@@ -1,10 +1,12 @@
-export const attributes = {
+const attributes = {
     disableEntity: { type: 'boolean' },
     disableScriptComponent: { type: 'boolean' },
     disableScriptInstance: { type: 'boolean' }
 };
 
 export default class LoadedLater {
+    static attributes = attributes;
+
     initialize() {
         window.initializeCalls.push(this.entity.getGuid() + ' initialize loadedLater');
 

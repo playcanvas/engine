@@ -1,13 +1,13 @@
-// import { EsmScriptType } from "../../../../src/framework/script/esm-script-type";
-
-export const attributes = {
-    methodName: { type: 'string' },
-    destroyEntity: { type: 'boolean' },
-    destroyScriptComponent: { type: 'boolean' },
-    destroyScriptInstance: { type: 'boolean' }
-};
 
 export default class Destroyer {
+    // Default values for attributes
+    static attributes = {
+        methodName: { type: 'string' },
+        destroyEntity: { type: 'boolean' },
+        destroyScriptComponent: { type: 'boolean' },
+        destroyScriptInstance: { type: 'boolean' }
+    };
+
     initialize() {
         window.initializeCalls.push(this.entity.getGuid() + ' initialize destroyer');
 
