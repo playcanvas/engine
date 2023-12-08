@@ -874,7 +874,7 @@ class Scene extends EventHandler {
     }
 
     /**
-     * The elevation of the skybox projection - both the sphere and the plane parts. Defaults to 0.
+     * The vertical offset of the skydome.
      *
      * @type {number}
      */
