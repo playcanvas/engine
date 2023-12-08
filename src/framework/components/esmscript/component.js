@@ -75,12 +75,6 @@ class EsmScriptComponent extends Component {
          */
         this.moduleNameInstanceMap = new Map();
 
-        /**
-         * Holds the attribute definitions for modules.
-         * @type {Map<ModuleInstance, AttributeDefinition>}
-         */
-        this.attributeDefinitions = new Map();
-
         // Holds all modules with an `update` method
         this.modulesWithUpdate = new Set();
 
@@ -178,7 +172,6 @@ class EsmScriptComponent extends Component {
             // Remove from local data
             this.modules.delete(module);
             this.moduleNameInstanceMap.delete(ModuleClass.name);
-            this.attributeDefinitions.delete(ModuleClass);
         }
     }
 
@@ -323,8 +316,8 @@ class EsmScriptComponent extends Component {
         for (const esmscript of oldScriptComponent.modules) {
 
             // Get the attribute definition for the specified esm script
-            const attributeDefinitions = oldScriptComponent.attributeDefinitions.get(esmscript);
             const newModule = this.moduleNameInstanceMap.get(esmscript.constructor.name);
+            const attributeDefinitions = newModule.constructor.attributes || {};
 
             // for each attribute definition
             forEachAttributeDefinition(attributeDefinitions, (def, path) => {
@@ -386,7 +379,6 @@ class EsmScriptComponent extends Component {
         }
 
         this.disableModule(module);
-        this.attributeDefinitions.delete(module);
         this.modules.delete(module);
         this.moduleNameInstanceMap.delete(module.constructor.name);
     }
@@ -431,7 +423,6 @@ class EsmScriptComponent extends Component {
 
         this.modules.add(module);
         this.moduleNameInstanceMap.set(ModuleClass.name, module);
-        this.attributeDefinitions.set(module, attributeDefinition);
 
         // If the class has an initialize method ...
         if (classHasMethod(ModuleClass, 'initialize')) {

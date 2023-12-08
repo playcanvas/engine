@@ -1256,10 +1256,7 @@ describe('EsmScriptComponent', function () {
 
             // collect warnings
             const warnings = [];
-            Debug.warn = (warning) => {
-                console.error(warning);
-                warnings.push(warning);
-            };
+            Debug.warn = warning => warnings.push(warning);
 
             e.esmscript.add(EsmScript.default, {
                 attribute3: 'This should warn that it hasn\'t been defined',

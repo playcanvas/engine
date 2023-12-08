@@ -75,9 +75,9 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         component.modules.forEach((module) => {
             const enabled = component.isModuleEnabled(module);
-            const attributeDefinition = component.attributeDefinitions.get(module);
-            const attributes = populateWithAttributes(this.app, attributeDefinition, module);
-            clonedComponent.add(module.constructor, attributes, enabled);
+
+            // Use the previous module's attributes as the default values for the new module
+            clonedComponent.add(module.constructor, module, enabled);
         });
 
         return clonedComponent;
