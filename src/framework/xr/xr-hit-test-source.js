@@ -115,6 +115,10 @@ class XrHitTestSource extends EventHandler {
             const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
             for (let i = 0; i < transientResults.length; i++) {
                 const transientResult = transientResults[i];
+
+                if (!transientResult.results.length)
+                    continue;
+
                 let inputSource;
 
                 if (transientResult.inputSource)
@@ -123,7 +127,11 @@ class XrHitTestSource extends EventHandler {
                 this.updateHitResults(transientResult.results, inputSource);
             }
         } else {
-            this.updateHitResults(frame.getHitTestResults(this._xrHitTestSource));
+            const results = frame.getHitTestResults(this._xrHitTestSource);
+            if (results.length)
+                return;
+
+            this.updateHitResults(results);
         }
     }
 
@@ -163,10 +171,8 @@ class XrHitTestSource extends EventHandler {
             rotation.copy(pose.transform.orientation);
         }
 
-        if (candidateHitTestResult) {
-            this.fire('result', position, rotation, inputSource, candidateHitTestResult);
-            this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
-        }
+        this.fire('result', position, rotation, inputSource, candidateHitTestResult);
+        this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
 
         poolVec3.push(origin);
         poolVec3.push(position);
