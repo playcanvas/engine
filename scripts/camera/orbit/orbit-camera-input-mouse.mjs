@@ -2,7 +2,7 @@
 //                       Orbit Camera Mouse Input Script                      //
 ////////////////////////////////////////////////////////////////////////////////
 
-export const attributes = {
+const attributes = {
     orbitSensitivity: {
         type: 'number',
         default: 0.3,
@@ -18,6 +18,8 @@ export const attributes = {
 };
 
 export default class OrbitCameraInputMouse {
+    static attributes = attributes;
+
     // initialize code called once per entity
     initialize() {
         this.orbitCamera = this.entity.esmscript.get('OrbitCamera');
@@ -62,6 +64,7 @@ export default class OrbitCameraInputMouse {
 
 
     pan(screenPoint) {
+        debugger;
         var fromWorldPoint = OrbitCameraInputMouse.fromWorldPoint;
         var toWorldPoint = OrbitCameraInputMouse.toWorldPoint;
         var worldDiff = OrbitCameraInputMouse.worldDiff;

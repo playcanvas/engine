@@ -2,7 +2,7 @@
 //                       Orbit Camera Touch Input Script                      //
 ////////////////////////////////////////////////////////////////////////////////
 
-export const attributes = {
+const attributes = {
     orbitSensitivity: {
         type: 'number',
         default: 0.3,
@@ -18,7 +18,9 @@ export const attributes = {
 };
 
 export default class OrbitCameraInputTouch {
-    // iniialize code called once per entity
+    static attributes = attributes;
+
+    // initialize code called once per entity
     initialize() {
         this.orbitCamera = this.entity.esmscript.get('OrbitCamera');
 

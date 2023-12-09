@@ -29,6 +29,8 @@ export const attributes = {
 };
 
 export default class OrbitCamera {
+    static attributes = attributes;
+
     /**
      * @type {pc.Entity} entity - The entity that has the camera component
      */
@@ -77,14 +79,14 @@ export default class OrbitCamera {
     }
 
     set frameOnStart(value) {
-        this.frameOnStart = value;
-        if (value) {
+        this._frameOnStart = value;
+        if (value && this.app) {
             this.focus(this.focusEntity || this.app.root);
         }
     }
 
     get frameOnStart() {
-        return this.frameOnStart;
+        return this._frameOnStart;
     }
 
     set focusEntity(value) {
@@ -213,7 +215,9 @@ export default class OrbitCamera {
 
     initialize() {
 
-        window.addEventListener('resize', this._checkAspectRatio, false);
+        this.checkAspectRatioBound = _ => this._checkAspectRatio()
+
+        window.addEventListener('resize', this.checkAspectRatioBound, false);
 
         this._checkAspectRatio();
 
@@ -236,10 +240,6 @@ export default class OrbitCamera {
         this.entity.setLocalEulerAngles(this._pitch, this._yaw, 0);
 
         this._distance = 0;
-        this._distanceMin = 0;
-        this._distanceMax = 0;
-        this._pitchAngleMin = -90;
-        this._pitchAngleMax = 90;
 
         this._targetYaw = this._yaw;
         this._targetPitch = this._pitch;
@@ -260,7 +260,7 @@ export default class OrbitCamera {
     }
 
     destroy() {
-        window.removeEventListener('resize', this._checkAspectRatio, false);
+        window.removeEventListener('resize', this.checkAspectRatioBound, false);
     }
 
     update(dt) {
