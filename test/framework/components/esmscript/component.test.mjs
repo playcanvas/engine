@@ -3,13 +3,13 @@ import { Application } from '../../../../src/framework/application.js';
 import { Debug } from '../../../../src/core/debug.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Color } from '../../../../src/core/math/color.js';
-import { createGraphicsDevice } from '../../../../src/platform/graphics/graphics-device-create.js';
-import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
+// import { createGraphicsDevice } from '../../../../src/platform/graphics/graphics-device-create.js';
+// import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY, INACTIVE } from './method-util.mjs';
-import createOptions from './basic-app-options.mjs';
+// import createOptions from './basic-app-options.mjs';
 
 // Can use import assertion, but eslint doesn't like it.
 const sceneData = JSON.parse(readFileSync(new URL('../../../test-assets/esm-scripts/scene1.json', import.meta.url)));
@@ -18,7 +18,7 @@ describe('EsmScriptComponent', function () {
 
     let app;
 
-    beforeEach(async function () {
+    beforeEach(function (done) {
 
          // Override the debug to remove console noise
         Debug.warn = () => null;
@@ -31,13 +31,238 @@ describe('EsmScriptComponent', function () {
 
         const handler = app.loader.getHandler('scene');
 
-        const gfxOpts = { deviceTypes: [DEVICETYPE_WEBGL2] };
-        createOptions.graphicsDevice = await createGraphicsDevice(canvas, gfxOpts);
-        app.init(createOptions);
+        // const gfxOpts = { deviceTypes: [DEVICETYPE_WEBGL2] };
+        // createOptions.graphicsDevice = await createGraphicsDevice(canvas, gfxOpts);
+        // app.init(createOptions);
 
-        const scene = handler.open(null, sceneData);
-        app.root.addChild(scene.root);
-        app.start();
+        // const scene = handler.open(null, sceneData);
+        // app.root.addChild(scene.root);
+        // app.start();
+
+        app._parseAssets({
+            1: {
+                tags: [],
+                name: 'scriptA.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'scriptA.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs'
+                },
+                region: 'eu-west-1',
+                id: 1
+            },
+            2: {
+                tags: [],
+                name: 'scriptB.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'scriptB.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-scriptB.mjs'
+                },
+                region: 'eu-west-1',
+                id: 2
+            },
+            3: {
+                tags: [],
+                name: 'cloner.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-cloner.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'cloner.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-cloner.mjs'
+                },
+                region: 'eu-west-1',
+                id: 3
+            },
+            4: {
+                tags: [],
+                name: 'enabler.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'enabler.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-enabler.mjs'
+                },
+                region: 'eu-west-1',
+                id: 4
+            },
+            5: {
+                tags: [],
+                name: 'disabler.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-disabler.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'disabler.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-disabler.mjs'
+                },
+                region: 'eu-west-1',
+                id: 5
+            },
+            6: {
+                tags: [],
+                name: 'scriptWithAttributes.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: [{
+                    moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
+                    attributes: {
+                        attribute1: { type: 'entity' },
+                        attribute2: { type: 'number', default: 2 }
+                    }
+                }],
+                type: 'esmscript',
+                file: {
+                    filename: 'scriptWithAttributes.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs'
+                },
+                region: 'eu-west-1',
+                id: 6
+            },
+            7: {
+                tags: [],
+                name: 'loadedLater.mjs',
+                revision: 1,
+                preload: false,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-loadedLater.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'loadedLater.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-loadedLater.mjs'
+                },
+                region: 'eu-west-1',
+                id: 7
+            },
+            8: {
+                tags: [],
+                name: 'destroyer.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-destroyer.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'destroyer.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-destroyer.mjs'
+                },
+                region: 'eu-west-1',
+                id: 8
+            },
+            9: {
+                tags: [],
+                name: 'postCloner.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-postCloner.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'postCloner.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-postCloner.mjs'
+                },
+                region: 'eu-west-1',
+                id: 9
+            },
+            10: {
+                tags: [],
+                name: 'postInitializeReporter.mjs',
+                revision: 1,
+                preload: true,
+                meta: null,
+                data: {
+                    enabled: true,
+                    modules: [
+                        { moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs' }
+                    ]
+                },
+                type: 'esmscript',
+                file: {
+                    filename: 'postInitializeReporter.mjs',
+                    size: 1,
+                    url: '../../../test/test-assets/esm-scripts/esm-postInitializeReporter.mjs'
+                },
+                region: 'eu-west-1',
+                id: 10
+            }
+        });
+
+        app.preload(function (err) {
+            if (err) throw err;
+            // app.scenes.loadScene('../../../test/test-assets/esm-scripts/scene1.json', function (err) {
+                // if (err) throw err;
+            const scene = handler.open(null, sceneData);
+            app.root.addChild(scene.root);
+            app.start();
+            done();
+            // });
+        });
 
     });
 
@@ -50,8 +275,7 @@ describe('EsmScriptComponent', function () {
         it('expects `entity` and `app` to be set on a new ESM Script', async function () {
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            const component = await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -72,8 +296,7 @@ describe('EsmScriptComponent', function () {
         it('expects `initialize` to be called on a new ESM Script', async function () {
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -96,8 +319,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity();
             e.enabled = false;
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -119,8 +341,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects `initialize()` to be called on a component that is enabled later', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     enabled: true,
@@ -143,8 +364,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects `initialize` to be called on an ESM Script that is enabled later', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: false,
@@ -190,8 +410,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects `initialize`, `active`, `update` and `postUpdate` to be called on cloned enabled entity', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -279,8 +498,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity('entity to enable');
             e.enabled = false;
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -298,8 +516,7 @@ describe('EsmScriptComponent', function () {
             expect(calls).to.have.lengthOf(0);
 
             const enabler = new Entity('enabler');
-            const enablerComponent = enabler.addComponent('esmscript');
-            await enablerComponent.system.initializeComponentData(enablerComponent, {
+            await enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -345,8 +562,7 @@ describe('EsmScriptComponent', function () {
 
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -365,8 +581,7 @@ describe('EsmScriptComponent', function () {
 
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
-            const enablerComponent = enabler.addComponent('esmscript');
-            await enablerComponent.system.initializeComponentData(enablerComponent, {
+            await enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -406,8 +621,7 @@ describe('EsmScriptComponent', function () {
         it('expects `initialize` is called together for script instance that when during the initialize stage', async function () {
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -426,8 +640,7 @@ describe('EsmScriptComponent', function () {
 
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
-            const enablerComponent = enabler.addComponent('esmscript');
-            await enablerComponent.system.initializeComponentData(enablerComponent, {
+            await enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -464,8 +677,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects `initialize` is called for entity and all children before `active` and `update`', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -482,8 +694,7 @@ describe('EsmScriptComponent', function () {
             const eScriptB = e.esmscript.get('ScriptB');
 
             const c1 = new Entity('c1');
-            const child1component = c1.addComponent('esmscript');
-            await child1component.system.initializeComponentData(child1component, {
+            await c1.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -502,8 +713,7 @@ describe('EsmScriptComponent', function () {
             e.addChild(c1);
 
             const c2 = new Entity('c2');
-            const child2component = c2.addComponent('esmscript');
-            await child2component.system.initializeComponentData(child2component, {
+            await c2.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -522,8 +732,7 @@ describe('EsmScriptComponent', function () {
             e.addChild(c2);
 
             const c3 = new Entity('c3');
-            const child3component = c3.addComponent('esmscript');
-            await child3component.system.initializeComponentData(child3component, {
+            await c3.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -587,8 +796,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -614,8 +822,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity();
             e.enabled = false;
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -641,8 +848,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -668,8 +874,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -695,8 +900,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -732,8 +936,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity();
             e.enabled = false;
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -767,8 +970,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -802,8 +1004,7 @@ describe('EsmScriptComponent', function () {
             expect(e2).to.exist;
 
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -907,7 +1108,7 @@ describe('EsmScriptComponent', function () {
     //         expect(app.root.findByName(name)).to.not.exist;
     //     })
 
-    //     app.loadSceneHierarchy('base/tests/framework/components/script/scene1.json', function () {
+    //     app.loadSceneHierarchy('../../../test/test-assets/esm-scripts/esm-scene1.json', function () {
 
     //         // verify entities are loaded
     //         names.forEach(function (name) {
@@ -938,8 +1139,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects invalid or malformed script attributes to initialize correctly', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -975,8 +1175,7 @@ describe('EsmScriptComponent', function () {
 
         it('should initialize simple script attributes with their correct defaults', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1025,8 +1224,7 @@ describe('EsmScriptComponent', function () {
 
         it('should override simple script attributes with their correct values', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1092,8 +1290,7 @@ describe('EsmScriptComponent', function () {
 
         it('should initialize complex script attributes with their correct values', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1128,8 +1325,7 @@ describe('EsmScriptComponent', function () {
 
         it('should override complex script attributes with their correct defaults', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1183,8 +1379,7 @@ describe('EsmScriptComponent', function () {
 
         it('should initialize scripts with attributes with default values', async function () {
             const e = new Entity();
-            const component = e.addComponent('esmscript');
-            await component.system.initializeComponentData(component, {
+            await e.addComponent('esmscript', {
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
                     enabled: true,

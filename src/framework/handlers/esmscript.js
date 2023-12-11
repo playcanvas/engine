@@ -1,3 +1,21 @@
+export class ScriptCache {
+    static _scripts = new Map();
+
+    static register(path, script) {
+        const url = URL.canParse(path) ? new URL(path) : new URL(path, 'file://');
+        ScriptCache._scripts.set(url.pathname, script);
+    }
+
+    static get(path) {
+        const url = URL.canParse(path) ? new URL(path) : new URL(path, 'file://');
+        return ScriptCache._scripts.get(url.pathname);
+    }
+
+    static clear() {
+        ScriptCache._scripts.clear();
+    }
+}
+
 /**
  * This custom import statement for ES Modules conditionally
  * checks and resolves modules in bundled or non bundled modules
@@ -48,6 +66,7 @@ class EsmScriptHandler {
     }
 
     clearCache() {
+        ScriptCache.clear();
     }
 
     load(url, callback) {
@@ -60,6 +79,7 @@ class EsmScriptHandler {
         }
 
         DynamicImport(this._app, url.load).then(({ default: module }) => {
+            ScriptCache.register(url.load, module);
             callback(null, module, url);
         }).catch((err) => {
             callback(err);

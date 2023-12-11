@@ -1,4 +1,4 @@
-import { DynamicImport } from '../../../framework/handlers/esmscript.js';
+import { ScriptCache } from '../../../framework/handlers/esmscript.js';
 import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
@@ -40,7 +40,39 @@ class EsmScriptComponentSystem extends ComponentSystem {
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
-    async initializeComponentData(component, data) {
+    /**
+     * Create new {@link Component} and component data instances and attach them to the entity.
+     *
+     * @param {import('../../entity.js').Entity} entity - The Entity to attach this component to.
+     * @param {object} [data] - The source data with which to create the component.
+     * @returns {Promise<import('../component.js').Component>} Returns a Component of type defined by the
+     * component system.
+     * @example
+     * const entity = new pc.Entity(app);
+     * app.systems.model.addComponent(entity, { type: 'box' });
+     * // entity.model is now set to a pc.ModelComponent
+     * @ignore
+     */
+    addComponent(entity, data = {}) {
+        const component = new this.ComponentType(this, entity);
+        const componentData = new this.DataType();
+
+        this.store[entity.getGuid()] = {
+            entity: entity,
+            data: componentData
+        };
+
+        entity[this.id] = component;
+        entity.c[this.id] = component;
+
+        this.initializeComponentData(component, data);
+
+        this.fire('add', entity, component);
+
+        return component;
+    }
+
+    initializeComponentData(component, data) {
 
         this._components.add(component);
         this._componentDataMap.set(component, data);
@@ -49,16 +81,13 @@ class EsmScriptComponentSystem extends ComponentSystem {
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
         // Initiate the imports concurrently
-        const imports = modules.map(({ moduleSpecifier }) => DynamicImport(this.app, moduleSpecifier));
-
-        // wait for them to resolve and retain the ordering
-        const esmExports = await Promise.all(imports);
-        const esmScripts = esmExports.map(esmExport => esmExport.default);
+        const scripts = modules.map(({ moduleSpecifier }) => ScriptCache.get(moduleSpecifier));
 
         // add the modules to the components
         for (const i in modules) {
             const { attributes, enabled } = modules[i];
-            component.add(esmScripts[i], attributes, enabled);
+            const script = scripts[i];
+            if (script) component.add(scripts[i], attributes, enabled);
         }
     }
 
@@ -68,18 +97,19 @@ class EsmScriptComponentSystem extends ComponentSystem {
 
         Debug.assert(component, `The entity '${entity.name}' does not have an 'EsmScriptComponent' to clone`);
 
-        const { enabled = true } = this._componentDataMap.get(component);
+        // const { enabled } = this._componentDataMap.get(component);
 
-        const clonedComponent = this.addComponent(clone, { enabled });
+        const cloneComponent = this.addComponent(clone, { enabled: component.enabled });
 
         component.modules.forEach((module) => {
             const enabled = component.isModuleEnabled(module);
 
             // Use the previous module's attributes as the default values for the new module
-            clonedComponent.add(module.constructor, module, enabled);
+            cloneComponent.add(module.constructor, module, enabled);
         });
 
-        return clonedComponent;
+        return cloneComponent;
+
     }
 
     _onInitialize() {
