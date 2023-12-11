@@ -42,8 +42,6 @@ module.exports = function (config) {
             { pattern: 'tests/framework/components/script/*.*', included: false, served: true, watched: true, nocache: true },
             { pattern: 'tests/platform/input/simulate_event.js', included: true, served: true, watched: true, nocache: true },
             { pattern: 'examples/assets/**/*.*', included: false, served: true, watched: true, nocache: true },
-
-            { pattern: path.resolve('src') + '/**/*.*', included: false, served: true, watched: true, nocache: true },
         ]),
 
         // Serve .gz files with Content-Encoding: gzip

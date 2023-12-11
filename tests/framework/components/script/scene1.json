@@ -103,17 +103,6 @@
               }
             }
           }
-        },
-        "esmscript": {
-          "enabled": true,
-          "modules": [{
-            "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-            "enabled": true,
-            "attributes": {
-              "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
-              "attribute2": 2
-            }
-          }]
         }
       }
     },
@@ -178,17 +167,6 @@
               }
             }
           }
-        },
-        "esmscript": {
-          "enabled": true,
-          "modules": [{
-            "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-            "enabled": true,
-            "attributes": {
-              "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
-              "attribute2": 2
-            }
-          }]
         }
       }
     },
@@ -229,17 +207,6 @@
               }
             }
           }
-        },
-        "esmscript": {
-          "enabled": true,
-          "modules": [{
-            "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-            "enabled": true,
-            "attributes": {
-              "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
-              "attribute2": 2
-            }
-          }]
         }
       }
     },
@@ -280,17 +247,6 @@
               }
             }
           }
-        },
-        "esmscript": {
-          "enabled": true,
-          "modules": [{
-            "moduleSpecifier": "/base/tests/framework/components/script/esm-scriptWithAttributes.js",
-            "enabled": true,
-            "attributes": {
-              "attribute1": "f740db25-2f26-4b03-98b8-7527c6a96310",
-              "attribute2": 2
-            }
-          }]
         }
       }
     }

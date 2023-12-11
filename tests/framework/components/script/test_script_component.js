@@ -424,7 +424,6 @@ describe("pc.ScriptComponent", function () {
         expect(window.initializeCalls.length).to.equal(0);
 
         e.script.enabled = true;
-
         expect(window.initializeCalls.length).to.equal(2);
         checkInitCall(e, 0, 'initialize scriptA');
         checkInitCall(e, 1, 'postInitialize scriptA');
