@@ -132,7 +132,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
 
         // use the render pass to render the world and ui layers to the created texture
-        const renderPass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
+        const renderPass = new pc.RenderPassForward(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
 
         // this render pass resizes the texture to match the size of are on the scene we render to
         renderPass.init(rt, {
