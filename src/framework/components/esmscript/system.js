@@ -40,38 +40,6 @@ class EsmScriptComponentSystem extends ComponentSystem {
         this.app.systems.on('postUpdate', this._onPostUpdate, this);
     }
 
-    /**
-     * Create new {@link Component} and component data instances and attach them to the entity.
-     *
-     * @param {import('../../entity.js').Entity} entity - The Entity to attach this component to.
-     * @param {object} [data] - The source data with which to create the component.
-     * @returns {Promise<import('../component.js').Component>} Returns a Component of type defined by the
-     * component system.
-     * @example
-     * const entity = new pc.Entity(app);
-     * app.systems.model.addComponent(entity, { type: 'box' });
-     * // entity.model is now set to a pc.ModelComponent
-     * @ignore
-     */
-    addComponent(entity, data = {}) {
-        const component = new this.ComponentType(this, entity);
-        const componentData = new this.DataType();
-
-        this.store[entity.getGuid()] = {
-            entity: entity,
-            data: componentData
-        };
-
-        entity[this.id] = component;
-        entity.c[this.id] = component;
-
-        this.initializeComponentData(component, data);
-
-        this.fire('add', entity, component);
-
-        return component;
-    }
-
     initializeComponentData(component, data) {
 
         this._components.add(component);
