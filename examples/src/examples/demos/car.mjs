@@ -266,7 +266,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         // setup skydome
         app.scene.skyboxMip = 0;
-        app.scene.exposure = 0.7;
+        app.scene.exposure = 0.5;
 
         // convert hdri to skybox
         const hdriToSkybox = (source) => {
