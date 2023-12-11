@@ -64,7 +64,6 @@ export default class OrbitCameraInputMouse {
 
 
     pan(screenPoint) {
-        debugger;
         var fromWorldPoint = OrbitCameraInputMouse.fromWorldPoint;
         var toWorldPoint = OrbitCameraInputMouse.toWorldPoint;
         var worldDiff = OrbitCameraInputMouse.worldDiff;

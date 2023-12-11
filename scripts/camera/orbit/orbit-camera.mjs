@@ -215,7 +215,7 @@ export default class OrbitCamera {
 
     initialize() {
 
-        this.checkAspectRatioBound = _ => this._checkAspectRatio()
+        this.checkAspectRatioBound = _ => this._checkAspectRatio();
 
         window.addEventListener('resize', this.checkAspectRatioBound, false);
 
