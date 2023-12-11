@@ -12,7 +12,7 @@ const CustomType = {
     invalidAttributeType: { type: 'This is an invalid type' }
 };
 
-export const attributes = {
+const attributes = {
 
     invalidAttribute: 'Should Raise A Warning/Error',
     invalidAttributeType: { type: 'An invalid attribute type' },

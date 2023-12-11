@@ -1,4 +1,4 @@
-export const attributes = {
+const attributes = {
     entityToClone: { type: 'entity' }
 };
 

@@ -2,7 +2,7 @@
 //                             Orbit Camera Script                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-export const attributes = {
+const attributes = {
 
     distanceMax: { type: 'number', default: 0, title: 'Distance Max', description: 'Setting this at 0 will give an infinite distance limit' },
     distanceMin: { type: 'number', default: 0, title: 'Distance Min' },
