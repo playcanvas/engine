@@ -22,6 +22,25 @@ const debugLines = [
 ];
 const debugColor = new Color(1, 1, 0, 0.4);
 
+/**
+ * Defines the shape of a SplatTRS.
+ * @typedef {object} SplatTRS - Represents a splat object with position, rotation, and scale.
+ * @property {number} x - The x-coordinate of the position.
+ * @property {number} y - The y-coordinate of the position.
+ * @property {number} z - The z-coordinate of the position.
+ * @property {number} rx - The x-component of the quaternion rotation.
+ * @property {number} ry - The y-component of the quaternion rotation.
+ * @property {number} rz - The z-component of the quaternion rotation.
+ * @property {number} rw - The w-component of the quaternion rotation.
+ * @property {number} sx - The scale factor in the x-direction.
+ * @property {number} sy - The scale factor in the y-direction.
+ * @property {number} sz - The scale factor in the z-direction.
+ */
+
+/**
+ * @param {Mat4} result - Mat4 instance holding calculated rotation matrix.
+ * @param {SplatTRS} data - The splat TRS object.
+ */
 const calcSplatMat = (result, data) => {
     const px = data.x;
     const py = data.y;
@@ -54,10 +73,16 @@ const calcSplatMat = (result, data) => {
 };
 
 class SplatData {
+    /** @type {import('./ply-reader').PlyElement[]} */
     elements;
 
+    /** @type {import('./ply-reader').PlyElement} */
     vertexElement;
 
+    /**
+     * @param {import('./ply-reader').PlyElement[]} elements - The elements.
+     * @param {boolean} [performZScale] - Whether to perform z scaling.
+     */
     constructor(elements, performZScale = true) {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
@@ -72,6 +97,10 @@ class SplatData {
         return this.vertexElement.count;
     }
 
+    /**
+     * @param {BoundingBox} result - Bounding box instance holding calculated result.
+     * @param {SplatTRS} data - The splat TRS object.
+     */
     static calcSplatAabb(result, data) {
         calcSplatMat(mat4, data);
         aabb.center.set(0, 0, 0);
@@ -79,7 +108,11 @@ class SplatData {
         result.setFromTransformedAabb(aabb, mat4);
     }
 
-    // transform splat data by the given matrix
+    /**
+     * Transform splat data by the given matrix.
+     *
+     * @param {Mat4} mat - The matrix.
+     */
     transform(mat) {
         const x = this.getProp('x');
         const y = this.getProp('y');
@@ -175,6 +208,10 @@ class SplatData {
         return !first;
     }
 
+    /**
+     * @param {Vec3} result - The result.
+     * @param {Function} pred - Predicate given index for skipping.
+     */
     calcFocalPoint(result, pred) {
         const x = this.getProp('x');
         const y = this.getProp('y');
@@ -202,6 +239,10 @@ class SplatData {
         result.mulScalar(1 / sum);
     }
 
+    /**
+     * @param {import('playcanvas').AppBase} app - The application.
+     * @param {Mat4} worldMat - The world matrix.
+     */
     renderWireframeBounds(app, worldMat) {
         const x = this.getProp('x');
         const y = this.getProp('y');

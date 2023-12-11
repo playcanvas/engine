@@ -8,12 +8,19 @@ import { Splat } from './splat.js';
 import { SplatInstance } from './splat-instance.js';
 
 class SplatContainerResource extends ContainerResource {
+    /** @type {import('playcanvas').GraphicsDevice} */
     device;
 
+    /** @type {import('./splat-data.js').SplatData} */
     splatData;
 
+    /** @type {Splat} */
     splat;
 
+    /**
+     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
+     * @param {import('./splat-data.js').SplatData} splatData - The splat data.
+     */
     constructor(device, splatData) {
         super();
 
@@ -62,10 +69,18 @@ class SplatContainerResource extends ContainerResource {
         return this.splat;
     }
 
-    instantiateModelEntity(/* options: any */) {
+    /**
+     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @returns {null} Null.
+     */
+    instantiateModelEntity(options) {
         return null;
     }
 
+    /**
+     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @returns {Entity} The GS entity.
+     */
     instantiateRenderEntity(options = {}) {
 
         // shared splat between instances

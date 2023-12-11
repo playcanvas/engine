@@ -6,6 +6,9 @@ import { Ray } from '../../core/shape/ray.js';
 
 import { XrHand } from './xr-hand.js';
 
+import { now } from '../../core/time.js';
+
+const vec3A = new Vec3();
 const quat = new Quat();
 let ids = 0;
 
@@ -56,10 +59,22 @@ class XrInputSource extends EventHandler {
     _grip = false;
 
     /**
-     * @type {XrHand}
+     * @type {XrHand|null}
      * @private
      */
     _hand = null;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _velocitiesAvailable = false;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _velocitiesTimestamp = now();
 
     /**
      * @type {Mat4|null}
@@ -86,16 +101,28 @@ class XrInputSource extends EventHandler {
     _rotation = new Quat();
 
     /**
-     * @type {Mat4|null}
+     * @type {Vec3|null}
      * @private
      */
     _localPosition = null;
 
     /**
-     * @type {Mat4|null}
+     * @type {Vec3|null}
+     * @private
+     */
+    _localPositionLast = null;
+
+    /**
+     * @type {Quat|null}
      * @private
      */
     _localRotation = null;
+
+    /**
+     * @type {Vec3|null}
+     * @private
+     */
+    _linearVelocity = null;
 
     /**
      * @type {boolean}
@@ -431,8 +458,9 @@ class XrInputSource extends EventHandler {
             this._hand.update(frame);
         } else {
             // grip
-            if (this._xrInputSource.gripSpace) {
-                const gripPose = frame.getPose(this._xrInputSource.gripSpace, this._manager._referenceSpace);
+            const gripSpace = this._xrInputSource.gripSpace;
+            if (gripSpace) {
+                const gripPose = frame.getPose(gripSpace, this._manager._referenceSpace);
                 if (gripPose) {
                     if (!this._grip) {
                         this._grip = true;
@@ -440,12 +468,32 @@ class XrInputSource extends EventHandler {
                         this._localTransform = new Mat4();
                         this._worldTransform = new Mat4();
 
+                        this._localPositionLast = new Vec3();
                         this._localPosition = new Vec3();
                         this._localRotation = new Quat();
+
+                        this._linearVelocity = new Vec3();
                     }
+
+                    const timestamp = now();
+                    const dt = (timestamp - this._velocitiesTimestamp) / 1000;
+                    this._velocitiesTimestamp = timestamp;
+
                     this._dirtyLocal = true;
+
+                    this._localPositionLast.copy(this._localPosition);
                     this._localPosition.copy(gripPose.transform.position);
                     this._localRotation.copy(gripPose.transform.orientation);
+
+                    this._velocitiesAvailable = true;
+                    if (this._manager.input.velocitiesSupported && gripPose.linearVelocity) {
+                        this._linearVelocity.copy(gripPose.linearVelocity);
+                    } else if (dt > 0) {
+                        vec3A.sub2(this._localPosition, this._localPositionLast).divScalar(dt);
+                        this._linearVelocity.lerp(this._linearVelocity, vec3A, 0.15);
+                    }
+                } else {
+                    this._velocitiesAvailable = false;
                 }
             }
 
@@ -541,10 +589,23 @@ class XrInputSource extends EventHandler {
      * Get the local space rotation of input source if it is handheld ({@link XrInputSource#grip}
      * is true). Local space is relative to parent of the XR camera. Otherwise it will return null.
      *
-     * @returns {Vec3|null} The world space rotation of handheld input source.
+     * @returns {Quat|null} The world space rotation of handheld input source.
      */
     getLocalRotation() {
         return this._localRotation;
+    }
+
+    /**
+     * Get the linear velocity (units per second) of the input source if it is handheld
+     * ({@link XrInputSource#grip} is true). Otherwise it will return null.
+     *
+     * @returns {Vec3|null} The world space linear velocity of the handheld input source.
+     */
+    getLinearVelocity() {
+        if (!this._velocitiesAvailable)
+            return null;
+
+        return this._linearVelocity;
     }
 
     /**

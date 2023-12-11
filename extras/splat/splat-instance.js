@@ -16,22 +16,32 @@ const cameraDirection = new Vec3();
 const viewport = [0, 0];
 
 class SplatInstance {
+    /** @type {import('./splat.js').Splat} */
     splat;
 
+    /** @type {Mesh} */
     mesh;
 
+    /** @type {MeshInstance} */
     meshInstance;
 
+    /** @type {import('playcanvas').Material} */
     material;
 
+    /** @type {VertexBuffer} */
     vb;
 
+    /** @type {SplatSorter} */
     sorter;
 
     lastCameraPosition = new Vec3();
 
     lastCameraDirection = new Vec3();
 
+    /**
+     * @param {import('./splat.js').Splat} splat - The splat instance.
+     * @param {import('./splat-material.js').SplatMaterialOptions} options - The options.
+     */
     constructor(splat, options) {
         this.splat = splat;
 
@@ -115,6 +125,11 @@ class SplatInstance {
         this.material.setParameter('viewport', viewport);
     }
 
+    /**
+     * Sorts the GS vertices based on the given camera entity.
+     * @param {import('playcanvas').Entity} camera - The camera entity used for sorting.
+     * @returns {boolean} Returns true if the sorting was performed, otherwise false.
+     */
     sort(camera) {
 
         let sorted = false;

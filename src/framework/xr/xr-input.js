@@ -1,5 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
-
+import { platform } from '../../core/platform.js';
 import { XrInputSource } from './xr-input-source.js';
 
 /**
@@ -28,6 +28,12 @@ class XrInput extends EventHandler {
     _onInputSourcesChangeEvt;
 
     /**
+     * @type {boolean}
+     * @ignore
+     */
+    velocitiesSupported = false;
+
+    /**
      * Create a new XrInput instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -37,6 +43,7 @@ class XrInput extends EventHandler {
         super();
 
         this.manager = manager;
+        this.velocitiesSupported = !!(platform.browser && window.XRPose?.prototype?.hasOwnProperty('linearVelocity'));
 
         this._onInputSourcesChangeEvt = (evt) => {
             this._onInputSourcesChange(evt);
