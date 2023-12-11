@@ -107,5 +107,4 @@ function createGraphicsDevice(canvas, options = {}) {
         next();
     });
 }
-export default createGraphicsDevice;
 export { createGraphicsDevice };

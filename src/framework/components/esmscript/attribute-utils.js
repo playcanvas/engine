@@ -41,7 +41,7 @@ import { Debug } from "../../../core/debug.js";
  * A list of valid attribute types
  * @ignore
  */
-export const VALID_ATTR_TYPES = new Set([
+const VALID_ATTR_TYPES = new Set([
     "asset",
     "boolean",
     "curve",
