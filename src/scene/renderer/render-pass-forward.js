@@ -11,11 +11,11 @@ import { RenderAction } from "../composition/render-action.js";
 import { WorldClustersDebug } from "../lighting/world-clusters-debug.js";
 
 /**
- * A render pass used to render Render Actions (layers).
+ * A render pass used render a set of layers using a camera.
  *
  * @ignore
  */
-class RenderPassRenderActions extends RenderPass {
+class RenderPassForward extends RenderPass {
     /**
      * @type {import('../composition/layer-composition.js').LayerComposition}
      */
@@ -378,4 +378,4 @@ class RenderPassRenderActions extends RenderPass {
     // #endif
 }
 
-export { RenderPassRenderActions };
+export { RenderPassForward };
