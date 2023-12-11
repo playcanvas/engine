@@ -12,25 +12,32 @@ const dataTypeMap = new Map([
     ['double', Float64Array]
 ]);
 
-class PlyProperty {
-    type;
+/**
+ * @typedef {Int8Array|Uint8Array|Int16Array|Uint16Array|Int32Array|Uint32Array|Float32Array|Float64Array} DataType
+ */
 
-    name;
+/**
+ * @typedef {object} PlyProperty
+ * @property {string} type - E.g. 'float'.
+ * @property {string} name - E.g. 'x', 'y', 'z', 'f_dc_0' etc.
+ * @property {DataType} storage - Data type, e.g. instance of Float32Array.
+ * @property {number} byteSize - BYTES_PER_ELEMENT of given data type.
+ */
 
-    storage;
+/**
+ * @typedef {object} PlyElement
+ * @property {string} name - E.g. 'vertex'.
+ * @property {number} count - Given count.
+ * @property {PlyProperty[]} properties - The properties.
+ */
 
-    byteSize;
-}
-
-class PlyElement {
-    name;
-
-    count;
-
-    properties;
-}
-
-// asynchronously read a ply file data
+/**
+ * asynchronously read a ply file data
+ *
+ * @param {ReadableStreamDefaultReader<Uint8Array>} reader - The reader.
+ * @param {Function|null} propertyFilter - Function to filter properties with.
+ * @returns {Promise<PlyElement[]>} The ply file data.
+ */
 const readPly = async (reader, propertyFilter = null) => {
     const concat = (a, b) => {
         const c = new Uint8Array(a.byteLength + b.byteLength);
@@ -39,10 +46,18 @@ const readPly = async (reader, propertyFilter = null) => {
         return c;
     };
 
+    /**
+     * Searches for the first occurrence of a sequence within a buffer.
+     * @example
+     * find(new Uint8Array([1, 2, 3, 4]), new Uint8Array([3, 4])); // 2
+     * @param {Uint8Array} buf - The buffer in which to search.
+     * @param {Uint8Array} search - The sequence to search for.
+     * @returns {number} The index of the first occurrence of the search sequence in the buffer, or -1 if not found.
+     */
     const find = (buf, search) => {
         const endIndex = buf.length - search.length;
         let i, j;
-        for (i = 0; i < endIndex; ++i) {
+        for (i = 0; i <= endIndex; ++i) {
             for (j = 0; j < search.length; ++j) {
                 if (buf[i + j] !== search[j]) {
                     break;
@@ -55,6 +70,14 @@ const readPly = async (reader, propertyFilter = null) => {
         return -1;
     };
 
+    /**
+     * Checks if array 'a' starts with the same elements as array 'b'.
+     * @example
+     * startsWith(new Uint8Array([1, 2, 3, 4]), new Uint8Array([1, 2])); // true
+     * @param {Uint8Array} a - The array to check against.
+     * @param {Uint8Array} b - The array of elements to look for at the start of 'a'.
+     * @returns {boolean} - True if 'a' starts with all elements of 'b', otherwise false.
+     */
     const startsWith = (a, b) => {
         if (a.length < b.length) {
             return false;
@@ -69,7 +92,9 @@ const readPly = async (reader, propertyFilter = null) => {
         return true;
     };
 
+    /** @type {Uint8Array|undefined} */
     let buf;
+    /** @type {number} */
     let endHeaderIndex;
 
     while (true) {
@@ -213,4 +238,4 @@ const readPly = async (reader, propertyFilter = null) => {
     return elements;
 };
 
-export { readPly, PlyProperty, PlyElement };
+export { readPly };
