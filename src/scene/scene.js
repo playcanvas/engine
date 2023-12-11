@@ -179,7 +179,7 @@ class Scene extends EventHandler {
      * @type {number}
      * @private
      */
-    _skyboxProjectionElevation = 0;
+    _skyboxProjectionDomeOffset = 0;
 
     /**
      * @type {number}
@@ -816,7 +816,7 @@ class Scene extends EventHandler {
 
             const center = this._skyboxProjectionCenter;
             const radius = this._skyboxProjectionRadius;
-            const domeElevation = this._skyboxProjectionElevation;
+            const domeElevation = this._skyboxProjectionDomeOffset;
             scope.resolve('projectedSkydomeCenter').setValue([
                 center.x,
                 center.y * radius,
@@ -878,13 +878,13 @@ class Scene extends EventHandler {
      *
      * @type {number}
      */
-    set skyboxProjectionElevation(value) {
-        this._skyboxProjectionElevation = value;
+    set skyboxProjectionDomeOffset(value) {
+        this._skyboxProjectionDomeOffset = value;
         this.updateSkyboxProjection();
     }
 
-    get skyboxProjectionElevation() {
-        return this._skyboxProjectionElevation;
+    get skyboxProjectionDomeOffset() {
+        return this._skyboxProjectionDomeOffset;
     }
 
     /**

@@ -69,10 +69,10 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 0
                 })
             ),
-            jsx(LabelGroup, { text: 'Elevation' },
+            jsx(LabelGroup, { text: 'Dome Offset' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.elevation' },
+                    link: { observer, path: 'data.skybox.offset' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -206,7 +206,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                     data.get('data.skybox.tripodZ')
                 );
 
-                app.scene.skyboxProjectionElevation = data.get('data.skybox.elevation');
+                app.scene.skyboxProjectionDomeOffset = data.get('data.skybox.offset');
                 app.scene.skyboxProjectionRadius = data.get('data.skybox.radius');
             }
         });
@@ -219,7 +219,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 tripodY: 0.07,
                 tripodZ: 0,
                 radius: 100,
-                elevation: 0.09,
+                offset: 0.75,
                 exposure: 0.7,
                 projected: true
             }
