@@ -1,3 +1,5 @@
+import { AssetRegistry } from '../asset/asset-registry.js';
+
 export class ScriptCache {
     static _scripts = new Map();
 
@@ -30,12 +32,16 @@ export class ScriptCache {
  * @ignore
  */
 export const DynamicImport = (app, moduleSpecifier) => {
-    // eslint-disable-next-line multiline-comment-style
-    /* #if _ASSET_BASE_URL
-    const path = new URL(`${app.assets.prefix}.${moduleSpecifier}`, $_ASSET_BASE_URL).toString();
-    // #else */
-    const path = moduleSpecifier;
-    // #endif
+
+    // If the `AssetRegistry.assetBaseUrl` is defined, use it as the base URL for the import.
+    const baseUrl = AssetRegistry?.assetBaseUrl ?? import.meta.url;
+    const isFileProtocol = import.meta.resolve(moduleSpecifier).startsWith('file:');
+
+    // If we are loading a local file, we don't need to append the baseUrl.
+    const path = isFileProtocol ?
+        moduleSpecifier :
+        `${baseUrl}/${moduleSpecifier}`;
+
     return import(`${path}`);
 };
 
