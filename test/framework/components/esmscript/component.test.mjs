@@ -272,10 +272,10 @@ describe('EsmScriptComponent', function () {
 
     describe('#initialize', function () {
 
-        it('expects `entity` and `app` to be set on a new ESM Script', async function () {
+        it('expects `entity` and `app` to be set on a new ESM Script', function () {
 
             const e = new Entity();
-            const component = await e.addComponent('esmscript', {
+            const component = e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -293,10 +293,10 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize` to be called on a new ESM Script', async function () {
+        it('expects `initialize` to be called on a new ESM Script', function () {
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -315,11 +315,11 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize` to be called on an entity that is enabled later', async function () {
+        it('expects `initialize` to be called on an entity that is enabled later', function () {
 
             const e = new Entity();
             e.enabled = false;
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: true,
@@ -339,9 +339,9 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize()` to be called on a component that is enabled later', async function () {
+        it('expects `initialize()` to be called on a component that is enabled later', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     enabled: true,
@@ -362,9 +362,9 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize` to be called on an ESM Script that is enabled later', async function () {
+        it('expects `initialize` to be called on an ESM Script that is enabled later', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     enabled: false,
@@ -408,9 +408,9 @@ describe('EsmScriptComponent', function () {
             expectCall(3, POST_UPDATE(script));
         });
 
-        it('expects `initialize`, `active`, `update` and `postUpdate` to be called on cloned enabled entity', async function () {
+        it('expects `initialize`, `active`, `update` and `postUpdate` to be called on cloned enabled entity', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -494,11 +494,11 @@ describe('EsmScriptComponent', function () {
             expectCall(0, INITIALIZE(DisablerScript));
         });
 
-        it('expects that all `initialize` calls are before `update` calls when enabling entity from inside a separate `initialize` call', async function () {
+        it('expects that all `initialize` calls are before `update` calls when enabling entity from inside a separate `initialize` call', function () {
 
             const e = new Entity('entity to enable');
             e.enabled = false;
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -516,7 +516,7 @@ describe('EsmScriptComponent', function () {
             expect(calls).to.have.lengthOf(0);
 
             const enabler = new Entity('enabler');
-            await enabler.addComponent('esmscript', {
+            enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -558,11 +558,11 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects all `active` calls are called before `update` for an entity whose script component is enabled inside a separate `initialize` call', async function () {
+        it('expects all `active` calls are called before `update` for an entity whose script component is enabled inside a separate `initialize` call', function () {
 
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -581,7 +581,7 @@ describe('EsmScriptComponent', function () {
 
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
-            await enabler.addComponent('esmscript', {
+            enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -618,10 +618,10 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize` is called together for script instance that when during the initialize stage', async function () {
+        it('expects `initialize` is called together for script instance that when during the initialize stage', function () {
             // Create a disabled entity, awaiting to be enabled
             const e = new Entity('entity to enable');
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -640,7 +640,7 @@ describe('EsmScriptComponent', function () {
 
             // Create an entity/script that enables the previous entity
             const enabler = new Entity('enabler');
-            await enabler.addComponent('esmscript', {
+            enabler.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-enabler.mjs',
@@ -675,9 +675,9 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('expects `initialize` is called for entity and all children before `active` and `update`', async function () {
+        it('expects `initialize` is called for entity and all children before `active` and `update`', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -694,7 +694,7 @@ describe('EsmScriptComponent', function () {
             const eScriptB = e.esmscript.get('ScriptB');
 
             const c1 = new Entity('c1');
-            await c1.addComponent('esmscript', {
+            c1.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -713,7 +713,7 @@ describe('EsmScriptComponent', function () {
             e.addChild(c1);
 
             const c2 = new Entity('c2');
-            await c2.addComponent('esmscript', {
+            c2.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -732,7 +732,7 @@ describe('EsmScriptComponent', function () {
             e.addChild(c2);
 
             const c3 = new Entity('c3');
-            await c3.addComponent('esmscript', {
+            c3.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptA.mjs',
@@ -789,14 +789,14 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('should initialize script attributes for an enabled entity', async function () {
+        it('should initialize script attributes for an enabled entity', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -814,7 +814,7 @@ describe('EsmScriptComponent', function () {
             expect(script.attribute2).to.equal(2);
         });
 
-        it('should initialize a script with attributes on a disabled entity', async function () {
+        it('should initialize a script with attributes on a disabled entity', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
@@ -822,7 +822,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity();
             e.enabled = false;
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -841,14 +841,14 @@ describe('EsmScriptComponent', function () {
             expect(script.attribute2).to.equal(2);
         });
 
-        it('should initialize script with attributes on a disabled script component', async function () {
+        it('should initialize script with attributes on a disabled script component', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -867,14 +867,14 @@ describe('EsmScriptComponent', function () {
             expect(script.attribute2).to.equal(2);
         });
 
-        it('should initiailize a script with attributes on a disabled script instance', async function () {
+        it('should initiailize a script with attributes on a disabled script instance', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -893,14 +893,14 @@ describe('EsmScriptComponent', function () {
             expect(script.attribute2).to.equal(2);
         });
 
-        it('should initialize a script with attributes when cloning an enabled entity', async function () {
+        it('should initialize a script with attributes when cloning an enabled entity', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -928,7 +928,7 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('should initialize a script with attributes when cloning a disabled entity', async function () {
+        it('should initialize a script with attributes when cloning a disabled entity', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
@@ -936,7 +936,7 @@ describe('EsmScriptComponent', function () {
 
             const e = new Entity();
             e.enabled = false;
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -963,14 +963,14 @@ describe('EsmScriptComponent', function () {
             expect(clonedModule.attribute2).to.equal(2);
         });
 
-        it('should initialize a script with attributes when cloning a disabled script component', async function () {
+        it('should initialize a script with attributes when cloning a disabled script component', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: false,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -997,14 +997,14 @@ describe('EsmScriptComponent', function () {
             expect(clonedModule.attribute2).to.equal(2);
         });
 
-        it('should initialize a script with attributes when cloning a disabled script instance', async function () {
+        it('should initialize a script with attributes when cloning a disabled script instance', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
             expect(e2).to.exist;
 
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1139,7 +1139,7 @@ describe('EsmScriptComponent', function () {
 
         it('expects invalid or malformed script attributes to initialize correctly', async function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1173,9 +1173,9 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('should initialize simple script attributes with their correct defaults', async function () {
+        it('should initialize simple script attributes with their correct defaults', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1224,7 +1224,7 @@ describe('EsmScriptComponent', function () {
 
         it('should override simple script attributes with their correct values', async function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1290,7 +1290,7 @@ describe('EsmScriptComponent', function () {
 
         it('should initialize complex script attributes with their correct values', async function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1325,7 +1325,7 @@ describe('EsmScriptComponent', function () {
 
         it('should override complex script attributes with their correct defaults', async function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 enabled: true,
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
@@ -1377,9 +1377,9 @@ describe('EsmScriptComponent', function () {
 
         });
 
-        it('should initialize scripts with attributes with default values', async function () {
+        it('should initialize scripts with attributes with default values', function () {
             const e = new Entity();
-            await e.addComponent('esmscript', {
+            e.addComponent('esmscript', {
                 modules: [{
                     moduleSpecifier: '../../../test/test-assets/esm-scripts/esm-scriptWithAttributes.mjs',
                     enabled: true,
