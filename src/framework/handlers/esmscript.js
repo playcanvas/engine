@@ -1,6 +1,6 @@
 import { AssetRegistry } from '../asset/asset-registry.js';
 
-export class ScriptCache {
+class ScriptCache {
     _scripts = new Map();
 
     register(path, script) {

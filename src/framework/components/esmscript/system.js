@@ -1,4 +1,3 @@
-import { ScriptCache } from '../../../framework/handlers/esmscript.js';
 import { Debug } from '../../../core/debug.js';
 import { ComponentSystem } from '../system.js';
 import { EsmScriptComponent } from './component.js';
