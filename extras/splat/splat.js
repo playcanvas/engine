@@ -198,8 +198,9 @@ class Splat {
                 data[i * 4 + 2] = math.clamp((0.5 + SH_C0 * c2[i]) * 255, 0, 255);
             }
 
-            // opacity
-            data[i * 4 + 3] = opacity ? math.clamp(sigmoid(opacity[i]) * 255, 0, 255) : 255;
+            
+            // opacity (-inf..+inf, at 0.0 it returns 0.5)
+            data[i * 4 + 3] = (opacity !== undefined) ? sigmoid(opacity[i]) * 255 : 255;
         }
 
         texture.unlock();
