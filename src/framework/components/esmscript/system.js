@@ -49,7 +49,8 @@ class EsmScriptComponentSystem extends ComponentSystem {
         component.enabled = data.hasOwnProperty('enabled') ? !!data.enabled : true;
 
         // Initiate the imports concurrently
-        const scripts = modules.map(({ moduleSpecifier }) => ScriptCache.get(moduleSpecifier));
+        const esmScriptHandler = this.app.loader?.getHandler('esmscript');
+        const scripts = modules.map(({ moduleSpecifier }) => esmScriptHandler.cache.get(moduleSpecifier));
 
         // add the modules to the components
         for (const i in modules) {

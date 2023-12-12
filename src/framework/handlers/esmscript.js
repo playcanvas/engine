@@ -1,20 +1,20 @@
 import { AssetRegistry } from '../asset/asset-registry.js';
 
 export class ScriptCache {
-    static _scripts = new Map();
+    _scripts = new Map();
 
-    static register(path, script) {
+    register(path, script) {
         const url = URL.canParse(path) ? new URL(path) : new URL(path, 'file://');
-        ScriptCache._scripts.set(url.pathname, script);
+        this._scripts.set(url.pathname, script);
     }
 
-    static get(path) {
+    get(path) {
         const url = URL.canParse(path) ? new URL(path) : new URL(path, 'file://');
-        return ScriptCache._scripts.get(url.pathname);
+        return this._scripts.get(url.pathname);
     }
 
-    static clear() {
-        ScriptCache._scripts.clear();
+    clear() {
+        this._scripts.clear();
     }
 }
 
@@ -69,10 +69,11 @@ class EsmScriptHandler {
     constructor(app) {
         this._app = app;
         this._scripts = { };
+        this.cache = new ScriptCache();
     }
 
     clearCache() {
-        ScriptCache.clear();
+        this.cache.clear();
     }
 
     load(url, callback) {
@@ -85,7 +86,7 @@ class EsmScriptHandler {
         }
 
         DynamicImport(this._app, url.load).then(({ default: module }) => {
-            ScriptCache.register(url.load, module);
+            this.cache.register(url.load, module);
             callback(null, module, url);
         }).catch((err) => {
             callback(err);

@@ -2002,6 +2002,9 @@ class AppBase extends EventHandler {
         const scriptHandler = this.loader.getHandler('script');
         scriptHandler?.clearCache();
 
+        const esmscriptHandler = this.loader.getHandler('esmscript');
+        esmscriptHandler?.clearCache();
+
         this.loader.destroy();
         this.loader = null;
 
