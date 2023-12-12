@@ -59,7 +59,7 @@ class EsmScriptComponent extends Component {
         this.initialized = false;
 
         /**
-         * Object shorthand passed to scripts update and postUpdate
+         * Object shorthand passed to scripts update and postUpdate.
          */
         this.appEntity = { app: system.app, entity: entity };
 
@@ -70,15 +70,15 @@ class EsmScriptComponent extends Component {
         this.modules = new Set();
 
         /**
-         * Holds a map of modules class names to instances to enable shorthand lookup
+         * Holds a map of modules class names to instances to enable shorthand lookup.
          * @type {Map<string, ModuleInstance>}
          */
         this.moduleNameInstanceMap = new Map();
 
-        // Holds all modules with an `update` method
+        // Holds all modules with an `update` method.
         this.modulesWithUpdate = new Set();
 
-        // Holds all modules with a `postUpdate` method
+        // Holds all modules with a `postUpdate` method.
         this.modulesWithPostUpdate = new Set();
 
         // Contains all the enabled modules.
@@ -271,7 +271,7 @@ class EsmScriptComponent extends Component {
     }
 
     /**
-     * Enables a module, allowing it to receive lifecycle events
+     * Enables a module, allowing it to receive lifecycle events.
      * @param {ModuleInstance} module - The module to enable
      * @internal
      */

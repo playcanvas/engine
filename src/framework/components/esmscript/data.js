@@ -1,5 +1,5 @@
 /**
- * **The api is likely to change, use at your own discretion**
+ * **The api is likely to change, use at your own discretion.**
  *
  * @ignore
  */

@@ -67,7 +67,7 @@ const VALID_ATTR_TYPES = new Set([
  * isValidAttributeDefinition({ type: 'invalidType' }); // false
  * isValidAttributeDefinition({ x: 'y' }); // false
  */
-export const isValidAttributeDefinition = (attributeDefinition) => {
+const isValidAttributeDefinition = (attributeDefinition) => {
     return attributeDefinition && attributeDefinition.hasOwnProperty('type');
 };
 
@@ -244,7 +244,7 @@ const components = ['x', 'y', 'z', 'w'];
 const vecLookup = [undefined, undefined, Vec2, Vec3, Vec4];
 
 /**
- * Converts raw attribute data to actual values
+ * Converts raw attribute data to actual values.
  *
  * @param {import('../../app-base.js').AppBase} app - The app to use for asset lookup
  * @param {AttributeDefinition} attributeDefinition - The attribute definition
