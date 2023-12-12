@@ -17,6 +17,13 @@ import {
 } from "playcanvas";
 import { createSplatMaterial } from "./splat-material.js";
 
+/**
+ * @typedef {object} SplatTextureFormat
+ * @property {number} format - The pixel format of the texture.
+ * @property {number} numComponents - The number of components in the texture format.
+ * @property {boolean} isHalf - Indicates if the format uses half-precision floats.
+ */
+
 class Splat {
     device;
 
@@ -24,6 +31,7 @@ class Splat {
 
     vertexFormat;
 
+    /** @type {SplatTextureFormat} */
     format;
 
     colorTexture;
@@ -32,12 +40,20 @@ class Splat {
 
     rotationTexture;
 
+    /** @type {Texture} */
     centerTexture;
 
+    /** @type {Float32Array} */
     centers;
 
+    /** @type {import('playcanvas').BoundingBox} */
     aabb;
 
+    /**
+     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
+     * @param {number} numSplats - Number of splats.
+     * @param {import('playcanvas').BoundingBox} aabb - The bounding box.
+     */
     constructor(device, numSplats, aabb) {
         this.device = device;
         this.numSplats = numSplats;
@@ -63,6 +79,10 @@ class Splat {
         this.centerTexture.destroy();
     }
 
+    /**
+     * @param {import('./splat-material.js').SplatMaterialOptions} options - The options.
+     * @returns {import('playcanvas').Material} The created GS material.
+     */
     createMaterial(options) {
         const material = createSplatMaterial(this.device, options);
         const { width, height } = this.colorTexture;
@@ -76,12 +96,29 @@ class Splat {
         return material;
     }
 
+    /**
+     * Evaluates the texture size needed to store a given number of elements.
+     * The function calculates a width and height that is close to a square
+     * that can contain 'count' elements.
+     *
+     * @param {number} count - The number of elements to store in the texture.
+     * @returns {Vec2} An instance of Vec2 representing the width and height of the texture.
+     */
     evalTextureSize(count) {
         const width = Math.ceil(Math.sqrt(count));
         const height = Math.ceil(count / width);
         return new Vec2(width, height);
     }
 
+    /**
+     * Creates a new texture with the specified parameters.
+     *
+     * @param {import('playcanvas').GraphicsDevice} device - The graphics device to use for the texture creation.
+     * @param {string} name - The name of the texture to be created.
+     * @param {number} format - The pixel format of the texture.
+     * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
+     * @returns {Texture} The created texture instance.
+     */
     createTexture(device, name, format, size) {
         return new Texture(device, {
             name: name,
@@ -97,6 +134,13 @@ class Splat {
         });
     }
 
+    /**
+     * Gets the most suitable texture format based on device capabilities.
+     *
+     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
+     * @param {boolean} preferHighPrecision - True to prefer high precision when available.
+     * @returns {SplatTextureFormat} The texture format info or undefined if not available.
+     */
     getTextureFormat(device, preferHighPrecision) {
         const halfFormat = (device.extTextureHalfFloat && device.textureHalfFloatUpdatable) ? PIXELFORMAT_RGBA16F : undefined;
         const half = halfFormat ? {
@@ -115,11 +159,27 @@ class Splat {
         return preferHighPrecision ? (float ?? half) : (half ?? float);
     }
 
+    /**
+     * Updates pixel data of this.colorTexture based on the supplied color components and opacity.
+     * Assumes that the texture is using an RGBA format where RGB are color components influenced
+     * by SH spherical harmonics and A is opacity after a sigmoid transformation.
+     *
+     * @param {Float32Array} c0 - The first color component SH coefficients.
+     * @param {Float32Array} c1 - The second color component SH coefficients.
+     * @param {Float32Array} c2 - The third color component SH coefficients.
+     * @param {Float32Array} opacity - The opacity values to be transformed using a sigmoid function.
+     */
     updateColorData(c0, c1, c2, opacity) {
         const SH_C0 = 0.28209479177387814;
         const texture = this.colorTexture;
         const data = texture.lock();
 
+        /**
+         * Calculates the sigmoid of a given value.
+         *
+         * @param {number} v - The value for which to compute the sigmoid function.
+         * @returns {number} The result of the sigmoid function.
+         */
         const sigmoid = (v) => {
             if (v > 0) {
                 return 1 / (1 + Math.exp(-v));
@@ -145,6 +205,15 @@ class Splat {
         texture.unlock();
     }
 
+    /**
+     * Updates pixel data of this.scaleTexture based based on the supplied scale components.
+     * The scales are exponentiated before being stored in the texture, and if the texture
+     * format uses half precision, the scale values are converted accordingly.
+     *
+     * @param {Float32Array} scale0 - The first scale component associated with the x-dimension.
+     * @param {Float32Array} scale1 - The second scale component associated with the y-dimension.
+     * @param {Float32Array} scale2 - The third scale component associated with the z-dimension.
+     */
     updateScaleData(scale0, scale1, scale2) {
         const { numComponents, isHalf } = this.format;
         const texture = this.scaleTexture;
@@ -171,6 +240,16 @@ class Splat {
         texture.unlock();
     }
 
+    /**
+     * Updates pixel data of this.rotationTexture based on the supplied quaternion components.
+     * Quaternions are normalized and conjugated if the 'w' component is negative.
+     * The quaternion components are stored as either half or full precision floats depending on the texture format.
+     *
+     * @param {Float32Array} rot0 - The array containing the 'x' component of quaternion rotations.
+     * @param {Float32Array} rot1 - The array containing the 'y' component of quaternion rotations.
+     * @param {Float32Array} rot2 - The array containing the 'z' component of quaternion rotations.
+     * @param {Float32Array} rot3 - The array containing the 'w' component of quaternion rotations.
+     */
     updateRotationData(rot0, rot1, rot2, rot3) {
         const { numComponents, isHalf } = this.format;
         const quat = new Quat();
@@ -201,6 +280,14 @@ class Splat {
         texture.unlock();
     }
 
+    /**
+     * Updates pixel data of this.centerTexture based on the supplied center coordinates.
+     * The center coordinates are stored as either half or full precision floats depending on the texture format.
+     *
+     * @param {Float32Array} x - The array containing the 'x' component of the center points.
+     * @param {Float32Array} y - The array containing the 'y' component of the center points.
+     * @param {Float32Array} z - The array containing the 'z' component of the center points.
+     */
     updateCenterData(x, y, z) {
         const { numComponents, isHalf } = this.format;
 
