@@ -3,13 +3,10 @@ import { Application } from '../../../../src/framework/application.js';
 import { Debug } from '../../../../src/core/debug.js';
 import { Entity } from '../../../../src/framework/entity.js';
 import { Color } from '../../../../src/core/math/color.js';
-// import { createGraphicsDevice } from '../../../../src/platform/graphics/graphics-device-create.js';
-// import { DEVICETYPE_WEBGL2 } from '../../../../src/platform/graphics/constants.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
 import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY, INACTIVE } from './method-util.mjs';
-// import createOptions from './basic-app-options.mjs';
 
 // Can use import assertion, but eslint doesn't like it.
 const sceneData = JSON.parse(readFileSync(new URL('../../../test-assets/esm-scripts/scene1.json', import.meta.url)));
@@ -30,14 +27,6 @@ describe('EsmScriptComponent', function () {
         app = new Application(canvas);
 
         const handler = app.loader.getHandler('scene');
-
-        // const gfxOpts = { deviceTypes: [DEVICETYPE_WEBGL2] };
-        // createOptions.graphicsDevice = await createGraphicsDevice(canvas, gfxOpts);
-        // app.init(createOptions);
-
-        // const scene = handler.open(null, sceneData);
-        // app.root.addChild(scene.root);
-        // app.start();
 
         app._parseAssets({
             1: {
