@@ -20,11 +20,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     createOptions.lightmapper = pc.Lightmapper;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
 

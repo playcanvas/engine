@@ -51,18 +51,18 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
             [0, 0, 0], // Black
             [255, 255, 255] // White
         ];
-    
+
         const mipmapLevels = Math.log2(Math.max(width, height)) + 1;
         const levels = [];
         for (let i = 0; i < mipmapLevels; i++) {
             const levelWidth = width >> i;
             const levelHeight = height >> i;
-    
+
             const data = new Uint8Array(levelWidth * levelHeight * 4);
             levels.push(data);
-    
+
             const color = colors[i % colors.length];
-    
+
             for (let j = 0; j < levelWidth * levelHeight; j++) {
                 data[j * 4 + 0] = color[0];
                 data[j * 4 + 1] = color[1];
@@ -72,7 +72,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         }
         return levels;
     }
-    
+
     const assets = {
         rockyTrail: new pc.Asset("rockyTrail", "texture", { url: assetPath + "textures/rocky_trail_diff_1k.jpg" }),
         rockBoulder: new pc.Asset("rockBoulder", "texture", { url: assetPath + "textures/rock_boulder_cracked_diff_1k.jpg" }),
@@ -95,21 +95,22 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
-        pc.LightComponentSystem
+        pc.LightComponentSystem,
+        pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
         pc.TextureHandler,
         // @ts-ignore
-        pc.ContainerHandler
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.ScriptHandler
     ];
 
-    const app = new pc.Application(canvas, createOptions);
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -148,6 +149,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         });
 
         const textureArrayOptions = {
+            name: 'textureArrayImages',
             format: pc.PIXELFORMAT_R8_G8_B8_A8,
             width: 1024,
             height: 1024,
@@ -178,6 +180,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
             return textures;
         });
         textureArrayOptions.levels = levels;
+        textureArrayOptions.name = 'textureArrayData';
         const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
         // Create a new material with the new shader
@@ -229,7 +232,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         camera.lookAt(0, 0, 0);
 
         camera.addComponent("script");
-        const orbit = camera.script.create("orbitCamera", {
+        camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2, // Override default of 0 (no inertia),
                 distanceMax: 10.0
@@ -264,46 +267,48 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
 
 export class TextureArrayExample {
     static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = false;
+    static WEBGPU_ENABLED = true;
 
     static FILES = {
         'shader.vert': /* glsl */`
-attribute vec3 aPosition;
-attribute vec2 aUv0;
+            attribute vec3 aPosition;
+            attribute vec2 aUv0;
 
-uniform mat4 matrix_model;
-uniform mat4 matrix_viewProjection;
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
 
-varying vec2 vUv0;
+            varying vec2 vUv0;
 
-void main(void)
-{
-    vUv0 = aUv0;
-    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
-}`,
+            void main(void)
+            {
+                vUv0 = aUv0;
+                gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+            }`,
+
         'shader.frag': /* glsl */`
-precision mediump float;
+            precision mediump float;
 
-varying vec2 vUv0;
-uniform float uIndex;
+            varying vec2 vUv0;
+            uniform float uIndex;
 
-uniform mediump sampler2DArray uDiffuseMap;
+            uniform mediump sampler2DArray uDiffuseMap;
 
-void main(void)
-{
-    gl_FragColor = texture(uDiffuseMap, vec3(vUv0, uIndex));
-}`,
+            void main(void)
+            {
+                gl_FragColor = texture(uDiffuseMap, vec3(vUv0, uIndex));
+            }`,
+
         'ground.frag': /* glsl */`
-precision mediump float;
+            precision mediump float;
 
-varying vec2 vUv0;
+            varying vec2 vUv0;
 
-uniform mediump sampler2DArray uDiffuseMap;
+            uniform mediump sampler2DArray uDiffuseMap;
 
-void main(void)
-{
-    gl_FragColor = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
-}`
+            void main(void)
+            {
+                gl_FragColor = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
+            }`
     };
     static controls = controls;
     static example = example;

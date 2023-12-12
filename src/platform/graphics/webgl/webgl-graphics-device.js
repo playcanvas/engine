@@ -354,6 +354,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
+        // #5856 - turn off antialiasing on Windows Firefox
+        if (platform.browserName === 'firefox' && platform.name === 'windows') {
+            const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
+            const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
+            const firefoxVersion = match ? match[1] : null;
+            if (firefoxVersion) {
+                const version = parseFloat(firefoxVersion);
+                if (version >= 120 || version === 115) {
+                    options.antialias = false;
+                    Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: " + firefoxVersion);
+                }
+            }
+        }
+
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
@@ -839,14 +853,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     // #if _DEBUG
     pushMarker(name) {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             window.spector.setMarker(`${label} #`);
         }
     }
 
     popMarker() {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             if (label.length)
                 window.spector.setMarker(`${label} #`);
@@ -2376,37 +2390,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Toggles the polygon offset render state.
-     *
-     * @param {boolean} on - True to enable polygon offset and false to disable it.
-     * @ignore
-     */
-    setDepthBias(on) {
-        if (this.depthBiasEnabled === on) return;
-
-        this.depthBiasEnabled = on;
-
-        if (on) {
-            this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
-        } else {
-            this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
-        }
-    }
-
-    /**
-     * Specifies the scale factor and units to calculate depth values. The offset is added before
-     * the depth test is performed and before the value is written into the depth buffer.
-     *
-     * @param {number} constBias - The multiplier by which an implementation-specific value is
-     * multiplied with to create a constant depth offset.
-     * @param {number} slopeBias - The scale factor for the variable depth offset for each polygon.
-     * @ignore
-     */
-    setDepthBiasValues(constBias, slopeBias) {
-        this.gl.polygonOffset(slopeBias, constBias);
-    }
-
     setStencilTest(enable) {
         if (this.stencil !== enable) {
             const gl = this.gl;
@@ -2602,6 +2585,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
                     gl.enable(gl.DEPTH_TEST);
                 } else {
                     gl.disable(gl.DEPTH_TEST);
+                }
+            }
+
+            // depth bias
+            const { depthBias, depthBiasSlope } = depthState;
+            if (depthBias || depthBiasSlope) {
+
+                // enable bias
+                if (!this.depthBiasEnabled) {
+                    this.depthBiasEnabled = true;
+                    this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
+                }
+
+                // values
+                gl.polygonOffset(depthBiasSlope, depthBias);
+
+            } else {
+
+                // disable bias
+                if (this.depthBiasEnabled) {
+                    this.depthBiasEnabled = false;
+                    this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
                 }
             }
 

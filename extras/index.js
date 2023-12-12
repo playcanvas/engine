@@ -11,6 +11,7 @@ export { SplatData } from './splat/splat-data.js';
 export { SplatInstance } from './splat/splat-instance.js';
 
 // render passes
+export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
 export { RenderPassDownSample } from './render-passes/render-pass-downsample.js';
 export { RenderPassUpSample } from './render-passes/render-pass-upsample.js';

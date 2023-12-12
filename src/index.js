@@ -150,12 +150,13 @@ export { Skeleton } from './scene/animation/skeleton.js';
 // SCENE / GRAPHICS
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
+export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
 export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / RENDERER
-export { RenderPassRenderActions } from './scene/renderer/render-pass-render-actions.js';
+export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';

@@ -224,6 +224,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
+                depthStencil.depthBias = depthState.depthBias;
+                depthStencil.depthBiasSlopeScale = depthState.depthBiasSlope;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;

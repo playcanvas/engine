@@ -18,7 +18,7 @@ const fragmentShader = `
         uniform vec3 brightnessContrastSaturation;
 
         // for all parameters, 1.0 is the no-change value
-        vec3 ContrastSaturationBrightness(vec3 color, float brt, float sat, float con)
+        vec3 contrastSaturationBrightness(vec3 color, float brt, float sat, float con)
         {
             color = color * brt;
             float grey = dot(color, vec3(0.3, 0.59, 0.11));
@@ -28,9 +28,53 @@ const fragmentShader = `
     
     #endif
 
+    #ifdef VIGNETTE
+
+        uniform vec4 vignetterParams;
+
+        float vignette(vec2 uv) {
+
+            float inner = vignetterParams.x;
+            float outer = vignetterParams.y;
+            float curvature = vignetterParams.z;
+            float intensity = vignetterParams.w;
+
+            // edge curvature
+            vec2 curve = pow(abs(uv * 2.0 -1.0), vec2(1.0 / curvature));
+
+            // distance to edge
+            float edge = pow(length(curve), curvature);
+
+            // gradient and intensity
+            return 1.0 - intensity * smoothstep(inner, outer, edge);
+        }        
+
+    #endif
+
+    #ifdef FRINGING
+
+        uniform float fringingIntensity;
+
+        vec3 fringing(vec2 uv, vec3 color) {
+
+            // offset depends on the direction from the center, raised to power to make it stronger away from the center
+            vec2 centerDistance = uv0 - 0.5;
+            vec2 offset = fringingIntensity * pow(centerDistance, vec2(2.0, 2.0));
+
+            color.r = texture2D(sceneTexture, uv0 - offset).r;
+            color.b = texture2D(sceneTexture, uv0 + offset).b;
+            return color;
+        }
+
+    #endif
+
     void main() {
         vec4 scene = texture2D(sceneTexture, uv0);
         vec3 result = scene.rgb;
+
+        #ifdef FRINGING
+            result = fringing(uv0, result);
+        #endif
 
         #ifdef BLOOM
             vec3 bloom = texture2D(bloomTexture, uv0).rgb;
@@ -38,10 +82,15 @@ const fragmentShader = `
         #endif
 
         #ifdef GRADING
-            result = ContrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
+            result = contrastSaturationBrightness(result, brightnessContrastSaturation.x, brightnessContrastSaturation.z, brightnessContrastSaturation.y);
         #endif
 
         result = toneMap(result);
+
+        #ifdef VIGNETTE
+            result *= vignette(uv0);
+        #endif
+
         result = gammaCorrectOutput(result);
 
         gl_FragColor = vec4(result, scene.a);
@@ -67,6 +116,20 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     _shaderDirty = true;
 
+    _vignetteEnabled = false;
+
+    vignetteInner = 0.5;
+
+    vignetteOuter = 1.0;
+
+    vignetteCurvature = 0.5;
+
+    vignetteIntensity = 0.3;
+
+    _fringingEnabled = false;
+
+    fringingIntensity = 10;
+
     _key = '';
 
     constructor(graphicsDevice) {
@@ -76,6 +139,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
         this.bloomTextureId = graphicsDevice.scope.resolve('bloomTexture');
         this.bloomIntensityId = graphicsDevice.scope.resolve('bloomIntensity');
         this.bcsId = graphicsDevice.scope.resolve('brightnessContrastSaturation');
+        this.vignetterParamsId = graphicsDevice.scope.resolve('vignetterParams');
+        this.fringingIntensityId = graphicsDevice.scope.resolve('fringingIntensity');
     }
 
     set bloomTexture(value) {
@@ -98,6 +163,28 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get gradingEnabled() {
         return this._gradingEnabled;
+    }
+
+    set vignetteEnabled(value) {
+        if (this._vignetteEnabled !== value) {
+            this._vignetteEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get vignetteEnabled() {
+        return this._vignetteEnabled;
+    }
+
+    set fringingEnabled(value) {
+        if (this._fringingEnabled !== value) {
+            this._fringingEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get fringingEnabled() {
+        return this._fringingEnabled;
     }
 
     set toneMapping(value) {
@@ -136,14 +223,18 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
             const key = `${this.toneMapping}` +
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
-                `-${this.gradingEnabled ? 'grading' : 'nograding'}`;
+                `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
+                `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
+                `-${this.fringingEnabled ? 'fringing' : 'nofringing'}`;
 
             if (this._key !== key) {
                 this._key = key;
 
                 const defines =
                     (this.bloomTexture ? `#define BLOOM\n` : '') +
-                    (this.gradingEnabled ? `#define GRADING\n` : '');
+                    (this.gradingEnabled ? `#define GRADING\n` : '') +
+                    (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
+                    (this.fringingEnabled ? `#define FRINGING\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +
@@ -166,6 +257,14 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
         if (this._gradingEnabled) {
             this.bcsId.setValue([this.gradingBrightness, this.gradingContrast, this.gradingSaturation]);
+        }
+
+        if (this._vignetteEnabled) {
+            this.vignetterParamsId.setValue([this.vignetteInner, this.vignetteOuter, this.vignetteCurvature, this.vignetteIntensity]);
+        }
+
+        if (this._fringingEnabled) {
+            this.fringingIntensityId.setValue(this.fringingIntensity / this.sceneTexture.height);
         }
 
         super.execute();

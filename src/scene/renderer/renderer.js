@@ -312,31 +312,12 @@ class Renderer {
 
         let viewCount = 1;
         if (camera.xr && camera.xr.session) {
-            let transform;
-            const parent = camera._node.parent;
-            if (parent)
-                transform = parent.getWorldTransform();
-
+            const transform = camera._node?.parent?.getWorldTransform() || null;
             const views = camera.xr.views;
-            viewCount = views.length;
+            viewCount = views.list.length;
             for (let v = 0; v < viewCount; v++) {
-                const view = views[v];
-
-                if (parent) {
-                    view.viewInvOffMat.mul2(transform, view.viewInvMat);
-                    view.viewOffMat.copy(view.viewInvOffMat).invert();
-                } else {
-                    view.viewInvOffMat.copy(view.viewInvMat);
-                    view.viewOffMat.copy(view.viewMat);
-                }
-
-                view.viewMat3.setFromMat4(view.viewOffMat);
-                view.projViewOffMat.mul2(view.projMat, view.viewOffMat);
-
-                view.position[0] = view.viewInvOffMat.data[12];
-                view.position[1] = view.viewInvOffMat.data[13];
-                view.position[2] = view.viewInvOffMat.data[14];
-
+                const view = views.list[v];
+                view.updateTransforms(transform);
                 camera.frustum.setFromMat4(view.projViewOffMat);
             }
         } else {
@@ -514,9 +495,9 @@ class Renderer {
 
     updateCameraFrustum(camera) {
 
-        if (camera.xr && camera.xr.views.length) {
+        if (camera.xr && camera.xr.views.list.length) {
             // calculate frustum based on XR view
-            const view = camera.xr.views[0];
+            const view = camera.xr.views.list[0];
             viewProjMat.mul2(view.projMat, view.viewOffMat);
             camera.frustum.setFromMat4(viewProjMat);
             return;
@@ -1096,9 +1077,8 @@ class Renderer {
         for (let i = 0; i < numCameras; i++) {
             const camera = comp.cameras[i];
 
-            // update camera and frustum
-            camera.frameUpdate(camera.renderTarget);
-            this.updateCameraFrustum(camera.camera);
+            let currentRenderTarget;
+            let cameraChanged = true;
             this._camerasRendered++;
 
             // for all of its enabled layers
@@ -1106,6 +1086,17 @@ class Renderer {
             for (let j = 0; j < layerIds.length; j++) {
                 const layer = comp.getLayerById(layerIds[j]);
                 if (layer && layer.enabled) {
+
+                    // update camera and frustum when the render target changes
+                    // TODO: This is done here to handle the backwards compatibility with the deprecated Layer.renderTarget,
+                    // when this is no longer needed, this code can be moved up to execute once per camera.
+                    const renderTarget = camera.renderTarget ?? layer.renderTarget;
+                    if (cameraChanged || renderTarget !== currentRenderTarget) {
+                        cameraChanged = false;
+                        currentRenderTarget = renderTarget;
+                        camera.frameUpdate(renderTarget);
+                        this.updateCameraFrustum(camera.camera);
+                    }
 
                     // cull each layer's non-directional lights once with each camera
                     // lights aren't collected anywhere, but marked as visible
@@ -1234,10 +1225,6 @@ class Renderer {
         }
     }
 
-    /**
-     * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
-     * composition.
-     */
     updateLightTextureAtlas() {
         this.lightTextureAtlas.update(this.localLights, this.scene.lighting);
     }
