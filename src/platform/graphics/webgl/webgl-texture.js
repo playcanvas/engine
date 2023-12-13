@@ -518,7 +518,10 @@ class WebglTexture {
                     // Upload the image, canvas or video
                     device.setUnpackFlipY(texture._flipY);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                    if (this._glCreated && texture._width === w && texture._height === h) {
+
+                    // TEMP: disable fast path for video update s until
+                    // https://bugs.chromium.org/p/chromium/issues/detail?id=1511207 is resolved
+                    if (this._glCreated && texture._width === w && texture._height === h && !device._isImageVideoInterface(mipObject)) {
                         gl.texSubImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
