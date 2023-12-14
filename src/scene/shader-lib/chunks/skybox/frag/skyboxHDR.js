@@ -16,9 +16,8 @@ void main(void) {
     #ifdef SKYMESH
 
         // get vector from world space pos to tripod origin
-        vec3 env_dir = normalize(vWorldPos - projectedSkydomeCenter);
-
-        vec3 dir = env_dir * cubeMapRotationMatrix;
+        vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
+        vec3 dir = envDir * cubeMapRotationMatrix;
 
     #else
 
