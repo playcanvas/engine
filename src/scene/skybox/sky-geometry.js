@@ -17,7 +17,9 @@ class SkyGeometry {
     }
 
     static box(device) {
-        return createBox(device);
+        return createBox(device, {
+            yOffset: 0.5
+        });
     }
 
     static dome(device) {
@@ -28,7 +30,6 @@ class SkyGeometry {
         const curvatureRadius = 0.95;
 
         // derived values
-        const invBottomLimit = 1 - bottomLimit;
         const curvatureRadiusSq = curvatureRadius * curvatureRadius;
 
         const radius = 0.5;
@@ -52,6 +53,7 @@ class SkyGeometry {
                 let y = cosTheta;
                 const z = sinPhi * sinTheta;
 
+                // flatten the lower hemisphere
                 if (y < 0) {
 
                     // scale vertices on the bottom
@@ -63,7 +65,10 @@ class SkyGeometry {
                     }
                 }
 
-                positions.push(x * radius, (y - invBottomLimit) * radius, z * radius);
+                // adjust y to have the center at the flat bottom
+                y += bottomLimit;
+
+                positions.push(x * radius, y * radius, z * radius);
             }
         }
 

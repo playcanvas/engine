@@ -888,6 +888,8 @@ function createPlane(device, opts = {}) {
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box
  * (defaults to 1).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
+ * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
  * @returns {Mesh} A new box-shaped mesh.
  */
 function createBox(device, opts = {}) {
@@ -898,15 +900,19 @@ function createBox(device, opts = {}) {
     const hs = opts.heightSegments ?? 1;
     const calcTangents = opts.calculateTangents ?? false;
 
+    const yOffset = opts.yOffset ?? 0;
+    const minY = -he.y + yOffset;
+    const maxY = he.y + yOffset;
+
     const corners = [
-        new Vec3(-he.x, -he.y, he.z),
-        new Vec3(he.x, -he.y, he.z),
-        new Vec3(he.x, he.y, he.z),
-        new Vec3(-he.x, he.y, he.z),
-        new Vec3(he.x, -he.y, -he.z),
-        new Vec3(-he.x, -he.y, -he.z),
-        new Vec3(-he.x, he.y, -he.z),
-        new Vec3(he.x, he.y, -he.z)
+        new Vec3(-he.x, minY, he.z),
+        new Vec3(he.x, minY, he.z),
+        new Vec3(he.x, maxY, he.z),
+        new Vec3(-he.x, maxY, he.z),
+        new Vec3(he.x, minY, -he.z),
+        new Vec3(-he.x, minY, -he.z),
+        new Vec3(-he.x, maxY, -he.z),
+        new Vec3(he.x, maxY, -he.z)
     ];
 
     const faceAxes = [

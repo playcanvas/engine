@@ -86,31 +86,40 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 1
                 })
             ),
-            jsx(LabelGroup, { text: 'tripod X' },
+            jsx(LabelGroup, { text: 'Position X' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.tripodX' },
+                    link: { observer, path: 'data.skybox.positionX' },
                     min: -50,
                     max: 50,
-                    precision: 1
+                    precision: 0
                 })
             ),
-            jsx(LabelGroup, { text: 'tripod Y' },
+            jsx(LabelGroup, { text: 'Position Y' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.positionY' },
+                    min: -50,
+                    max: 50,
+                    precision: 0
+                })
+            ),
+            jsx(LabelGroup, { text: 'Position Z' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.positionZ' },
+                    min: -50,
+                    max: 50,
+                    precision: 0
+                })
+            ),
+            jsx(LabelGroup, { text: 'Tripod Y' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.skybox.tripodY' },
                     min: 0,
-                    max: 20,
-                    precision: 1
-                })
-            ),
-            jsx(LabelGroup, { text: 'tripod Z' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.tripodZ' },
-                    min: -50,
-                    max: 50,
-                    precision: 1
+                    max: 1,
+                    precision: 2
                 })
             )
         )
@@ -219,9 +228,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 scaleX: 200,
                 scaleY: 200,
                 scaleZ: 200,
-                tripodX: 0,
-                tripodY: 10,
-                tripodZ: 0,
+                positionX: 0,
+                positionY: 0,
+                positionZ: 0,
+                tripodY: 0.05,
                 exposure: 0.7,
                 rotation: 0
             }
@@ -235,9 +245,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 scaleX: 1,
                 scaleY: 1,
                 scaleZ: 1,
-                tripodX: 0,
+                positionX: 0,
+                positionY: 0,
+                positionZ: 0,
                 tripodY: 0,
-                tripodZ: 0,
                 exposure: 0.7,
                 rotation: 0
             }
@@ -251,9 +262,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 scaleX: 29.5,
                 scaleY: 16,
                 scaleZ: 18.5,
-                tripodX: 0,
-                tripodY: 10,
-                tripodZ: 0,
+                positionX: 0,
+                positionY: 0,
+                positionZ: 0,
+                tripodY: 0.6,
                 exposure: 0.7,
                 rotation: 50
             }
@@ -302,12 +314,15 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 const scaleX = data.get('data.skybox.scaleX') ?? 1;
                 const scaleY = data.get('data.skybox.scaleY') ?? 1;
                 const scaleZ = data.get('data.skybox.scaleZ') ?? 1;
-                app.scene.sky.scale = new pc.Vec3(scaleX, scaleY, scaleZ);
+                app.scene.sky.node.setLocalScale(scaleX, scaleY, scaleZ);
 
-                const centerX = data.get('data.skybox.tripodX') ?? 0;
+                const posX = data.get('data.skybox.positionX') ?? 0;
+                const posY = data.get('data.skybox.positionY') ?? 0;
+                const posZ = data.get('data.skybox.positionZ') ?? 0;
+                app.scene.sky.node.setLocalPosition(posX, posY, posZ);
+
                 const centerY = data.get('data.skybox.tripodY') ?? 0;
-                const centerZ = data.get('data.skybox.tripodZ') ?? 0;
-                app.scene.sky.center = new pc.Vec3(centerX, centerY, centerZ);
+                app.scene.sky.center = new pc.Vec3(0, centerY, 0);
 
                 const angle = data.get('data.skybox.rotation');
                 app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, angle, 0);

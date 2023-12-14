@@ -34,10 +34,11 @@ class Sky {
     skyMesh = null;
 
     /**
-     * A graph node with a transform used to render the sky mesh.
+     * A graph node with a transform used to render the sky mesh. Adjust the position, rotation and
+     * scale of this node to orient the sky mesh. Ignored for {@link SKYMESH_INFINITE}.
      *
      * @type {GraphNode}
-     * @private
+     * @readonly
      */
     node = new GraphNode('SkyMeshNode');
 
@@ -52,19 +53,10 @@ class Sky {
         this.scene = scene;
 
         // defaults
-        this.scale = new Vec3(100, 100, 100);
         this.center = new Vec3(0, 1, 0);
 
         this.centerArray = new Float32Array(3);
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
-    }
-
-    set type(value) {
-        if (this._type !== value) {
-            this._type = value;
-            this.scene.updateShaders = true;
-            this.updateSkyMesh();
-        }
     }
 
     /**
@@ -77,26 +69,16 @@ class Sky {
      *
      * @type {string}
      */
+    set type(value) {
+        if (this._type !== value) {
+            this._type = value;
+            this.scene.updateShaders = true;
+            this.updateSkyMesh();
+        }
+    }
+
     get type() {
         return this._type;
-    }
-
-    set scale(value) {
-        this.node.setLocalScale(value);
-        this.node.setLocalPosition(new Vec3(0, value.y * 0.5, 0));
-    }
-
-    /**
-     * The scale of the sky. Ignored for {@link SKYMESH_INFINITE}. Defaults to (100, 100, 100).
-     *
-     * @type {Vec3}
-     */
-    get scale() {
-        return this.node.getLocalScale();
-    }
-
-    set center(value) {
-        this._center.copy(value);
     }
 
     /**
@@ -105,6 +87,10 @@ class Sky {
      *
      * @type {Vec3}
      */
+    set center(value) {
+        this._center.copy(value);
+    }
+
     get center() {
         return this._center;
     }
@@ -128,9 +114,14 @@ class Sky {
         // uniforms
         if (this.type !== SKYMESH_INFINITE) {
             const { center, centerArray } = this;
-            centerArray[0] = center.x;
-            centerArray[1] = center.y;
-            centerArray[2] = center.z;
+
+            // tripod position is relative to the node, transform it to the world space
+            const temp = new Vec3();
+            this.node.getWorldTransform().transformPoint(center, temp);
+
+            centerArray[0] = temp.x;
+            centerArray[1] = temp.y;
+            centerArray[2] = temp.z;
             this.projectedSkydomeCenterId.setValue(centerArray);
         }
     }
