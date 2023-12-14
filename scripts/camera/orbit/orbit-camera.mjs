@@ -185,7 +185,7 @@ export default class OrbitCamera {
 
         this.pivotPoint.copy(lookAtPoint);
 
-        var cameraQuat = this.entity.getRotation();
+        const cameraQuat = this.entity.getRotation();
         this.yaw = this._calcYaw(cameraQuat);
         this.pitch = this._calcPitch(cameraQuat, this.yaw);
 
