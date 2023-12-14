@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, VectorInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Sky' },
             jsx(LabelGroup, { text: 'Preset' },
@@ -32,15 +32,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ]
                 })
             ),
-            jsx(LabelGroup, { text: 'Level' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.level' },
-                    min: 0,
-                    max: 5,
-                    precision: 0
-                })
-            ),
             jsx(LabelGroup, { text: 'Exposure' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -59,58 +50,20 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 0
                 })
             ),
-            jsx(LabelGroup, { text: 'Scale X' },
-                jsx(SliderInput, {
+            jsx(LabelGroup, { text: 'Scale' },
+                jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.scaleX' },
-                    min: 10,
-                    max: 200,
+                    link: { observer, path: 'data.skybox.scale' },
+                    value: [1, 1, 1],
                     precision: 1
                 })
             ),
-            jsx(LabelGroup, { text: 'Scale Y' },
-                jsx(SliderInput, {
+            jsx(LabelGroup, { text: 'Position' },
+                jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.scaleY' },
-                    min: 10,
-                    max: 200,
+                    link: { observer, path: 'data.skybox.position' },
+                    value: [0, 0, 0],
                     precision: 1
-                })
-            ),
-            jsx(LabelGroup, { text: 'Scale Z' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.scaleZ' },
-                    min: 10,
-                    max: 200,
-                    precision: 1
-                })
-            ),
-            jsx(LabelGroup, { text: 'Position X' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.positionX' },
-                    min: -50,
-                    max: 50,
-                    precision: 0
-                })
-            ),
-            jsx(LabelGroup, { text: 'Position Y' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.positionY' },
-                    min: -50,
-                    max: 50,
-                    precision: 0
-                })
-            ),
-            jsx(LabelGroup, { text: 'Position Z' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.positionZ' },
-                    min: -50,
-                    max: 50,
-                    precision: 0
                 })
             ),
             jsx(LabelGroup, { text: 'Tripod Y' },
@@ -218,13 +171,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             skybox: {
                 preset: 'Street Dome',
                 type: pc.SKYTYPE_DOME,
-                level: 0,
-                scaleX: 200,
-                scaleY: 200,
-                scaleZ: 200,
-                positionX: 0,
-                positionY: 0,
-                positionZ: 0,
+                scale: [200, 200, 200],
+                position: [0, 0, 0],
                 tripodY: 0.05,
                 exposure: 0.7,
                 rotation: 0
@@ -235,13 +183,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             skybox: {
                 preset: 'Street Infinite',
                 type: pc.SKYTYPE_INFINITE,
-                level: 0,
-                scaleX: 1,
-                scaleY: 1,
-                scaleZ: 1,
-                positionX: 0,
-                positionY: 0,
-                positionZ: 0,
+                scale: [1, 1, 1],
+                position: [0, 0, 0],
                 tripodY: 0,
                 exposure: 0.7,
                 rotation: 0
@@ -252,13 +195,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             skybox: {
                 preset: 'Room',
                 type: pc.SKYTYPE_BOX,
-                level: 0,
-                scaleX: 44,
-                scaleY: 24,
-                scaleZ: 28,
-                positionX: 0,
-                positionY: 0,
-                positionZ: 0,
+                scale: [44, 24, 28],
+                position: [0, 0, 0],
                 tripodY: 0.6,
                 exposure: 0.7,
                 rotation: 50
@@ -304,24 +242,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
                 // apply individual settings
                 app.scene.sky.type = data.get('data.skybox.type');
-
-                const scaleX = data.get('data.skybox.scaleX') ?? 1;
-                const scaleY = data.get('data.skybox.scaleY') ?? 1;
-                const scaleZ = data.get('data.skybox.scaleZ') ?? 1;
-                app.scene.sky.node.setLocalScale(scaleX, scaleY, scaleZ);
-
-                const posX = data.get('data.skybox.positionX') ?? 0;
-                const posY = data.get('data.skybox.positionY') ?? 0;
-                const posZ = data.get('data.skybox.positionZ') ?? 0;
-                app.scene.sky.node.setLocalPosition(posX, posY, posZ);
-
-                const centerY = data.get('data.skybox.tripodY') ?? 0;
-                app.scene.sky.center = new pc.Vec3(0, centerY, 0);
-
-                const angle = data.get('data.skybox.rotation');
-                app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, angle, 0);
-
-                app.scene.skyboxMip = data.get('data.skybox.level');
+                app.scene.sky.node.setLocalScale(new pc.Vec3(data.get('data.skybox.scale') ?? [1, 1, 1]));
+                app.scene.sky.node.setLocalPosition(new pc.Vec3(data.get('data.skybox.position') ?? [0, 0, 0]));
+                app.scene.sky.center = new pc.Vec3(0, data.get('data.skybox.tripodY') ?? 0, 0);
+                app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
                 app.scene.exposure = data.get('data.skybox.exposure');
             }
         });
