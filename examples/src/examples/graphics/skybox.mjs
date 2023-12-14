@@ -7,7 +7,31 @@ import * as pc from 'playcanvas';
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
-        jsx(Panel, { headerText: 'Skybox' },
+        jsx(Panel, { headerText: 'Sky' },
+            jsx(LabelGroup, { text: 'Preset' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.preset' },
+                    type: "string",
+                    options: [
+                        { v: 'Street Dome', t: 'Street Dome' },
+                        { v: 'Street Infinite', t: 'Street Infinite' },
+                        { v: 'Room', t: 'Room' }
+                    ]
+                })
+            ),
+            jsx(LabelGroup, { text: 'Type' },
+                jsx(SelectInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.type' },
+                    type: "string",
+                    options: [
+                        { v: pc.SKYMESH_INFINITE, t: 'Infinite' },
+                        { v: pc.SKYMESH_BOX, t: 'Box' },
+                        { v: pc.SKYMESH_DOME, t: 'Dome' }
+                    ]
+                })
+            ),
             jsx(LabelGroup, { text: 'Level' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -26,11 +50,40 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 2
                 })
             ),
-            jsx(LabelGroup, { text: 'Projected' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+            jsx(LabelGroup, { text: 'Rotation' },
+                jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.projected' }
+                    link: { observer, path: 'data.skybox.rotation' },
+                    min: 0,
+                    max: 360,
+                    precision: 0
+                })
+            ),
+            jsx(LabelGroup, { text: 'Scale X' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.scaleX' },
+                    min: 10,
+                    max: 200,
+                    precision: 1
+                })
+            ),
+            jsx(LabelGroup, { text: 'Scale Y' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.scaleY' },
+                    min: 10,
+                    max: 200,
+                    precision: 1
+                })
+            ),
+            jsx(LabelGroup, { text: 'Scale Z' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.skybox.scaleZ' },
+                    min: 10,
+                    max: 200,
+                    precision: 1
                 })
             ),
             jsx(LabelGroup, { text: 'tripod X' },
@@ -47,8 +100,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.skybox.tripodY' },
                     min: 0,
-                    max: 0.2,
-                    precision: 2
+                    max: 20,
+                    precision: 1
                 })
             ),
             jsx(LabelGroup, { text: 'tripod Z' },
@@ -58,24 +111,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: -50,
                     max: 50,
                     precision: 1
-                })
-            ),
-            jsx(LabelGroup, { text: 'Radius' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.radius' },
-                    min: 1,
-                    max: 200,
-                    precision: 0
-                })
-            ),
-            jsx(LabelGroup, { text: 'Dome Offset' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.offset' },
-                    min: 0,
-                    max: 1,
-                    precision: 2
                 })
             )
         )
@@ -91,7 +126,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     const assets = {
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
         statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-        hdri: new pc.Asset('hdri', 'texture', { url: assetPath + 'hdri/wide-street.hdr' }, { mipmaps: false })
+        hdri_street: new pc.Asset('hdri', 'texture', { url: assetPath + 'hdri/wide-street.hdr' }, { mipmaps: false }),
+        hdri_room: new pc.Asset('hdri', 'texture', { url: assetPath + 'hdri/empty-room.hdr' }, { mipmaps: false })
     };
 
     const gfxOptions = {
@@ -143,27 +179,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         app.start();
 
-        // convert hdri to skybox
-        const hdriToSkybox = (source) => {
-
-            // convert it to high resolution cubemap for the skybox
-            // this is optional in case you want a really high resolution skybox
-            const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
-            app.scene.skybox = skybox;
-
-            // generate env-atlas texture for the lighting
-            // this would be used as low resolution skybox if high resolution is not available
-            const lighting = pc.EnvLighting.generateLightingSource(source);
-            const envAtlas = pc.EnvLighting.generateAtlas(lighting);
-            lighting.destroy();
-            app.scene.envAtlas = envAtlas;
-        };
-
-        hdriToSkybox(assets.hdri.resource);
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // add an instance of the statue
-        const statueEntity = assets.statue.resource.instantiateRenderEntity({
-        });
+        const statueEntity = assets.statue.resource.instantiateRenderEntity();
         app.root.addChild(statueEntity);
 
         // Create an Entity with a camera component
@@ -179,7 +198,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             attributes: {
                 inertiaFactor: 0.2,
                 focusEntity: statueEntity,
-                distanceMax: 40,
+                distanceMax: 500,
                 frameOnStart: false
             }
         });
@@ -191,39 +210,115 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         cameraEntity.lookAt(0, 0, 1);
         app.root.addChild(cameraEntity);
 
+        // skydome presets
+        const presetStreetDome = {
+            skybox: {
+                preset: 'Street Dome',
+                type: pc.SKYMESH_DOME,
+                level: 0,
+                scaleX: 200,
+                scaleY: 200,
+                scaleZ: 200,
+                tripodX: 0,
+                tripodY: 10,
+                tripodZ: 0,
+                exposure: 0.7,
+                rotation: 0
+            }
+        };
+
+        const presetStreetInfinite = {
+            skybox: {
+                preset: 'Street Infinite',
+                type: pc.SKYMESH_INFINITE,
+                level: 0,
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                tripodX: 0,
+                tripodY: 0,
+                tripodZ: 0,
+                exposure: 0.7,
+                rotation: 0
+            }
+        };
+
+        const presetRoom = {
+            skybox: {
+                preset: 'Room',
+                type: pc.SKYMESH_BOX,
+                level: 0,
+                scaleX: 29.5,
+                scaleY: 16,
+                scaleZ: 18.5,
+                tripodX: 0,
+                tripodY: 10,
+                tripodZ: 0,
+                exposure: 0.7,
+                rotation: 50
+            }
+        };
+
+        // apply hdri texture
+        const applyHdri = (source) => {
+
+            // convert it to high resolution cubemap for the skybox
+            // this is optional in case you want a really high resolution skybox
+            const skybox = pc.EnvLighting.generateSkyboxCubemap(source);
+            app.scene.skybox = skybox;
+
+            // generate env-atlas texture for the lighting
+            // this would also be used as low resolution skybox if high resolution is not available
+            const lighting = pc.EnvLighting.generateLightingSource(source);
+            const envAtlas = pc.EnvLighting.generateAtlas(lighting);
+            lighting.destroy();
+            app.scene.envAtlas = envAtlas;
+        };
+
         // when UI value changes, update skybox data
         data.on('*:set', (/** @type {string} */ path, value) => {
 
-            app.scene.skyboxMip = data.get('data.skybox.level');
-            app.scene.exposure = data.get('data.skybox.exposure');
+            const pathArray = path.split('.');
 
-            app.scene.skyboxProjectionEnabled = data.get('data.skybox.projected');
+            if (pathArray[2] === 'preset' && pathArray.length === 3) {
 
-            if (app.scene.skyboxProjectionEnabled) {
-                app.scene.skyboxProjectionCenter = new pc.Vec3(
-                    data.get('data.skybox.tripodX'),
-                    data.get('data.skybox.tripodY'),
-                    data.get('data.skybox.tripodZ')
-                );
+                // apply preset
+                if (data.get('data.skybox.preset') === value) {
 
-                app.scene.skyboxProjectionDomeOffset = data.get('data.skybox.offset');
-                app.scene.skyboxProjectionRadius = data.get('data.skybox.radius');
+                    // apply preset data
+                    data.set('data', value === 'Room' ? presetRoom : (
+                        value === 'Street Dome' ? presetStreetDome : presetStreetInfinite
+                    ));
+
+                    // update hdri texture
+                    applyHdri(value === 'Room' ? assets.hdri_room.resource : assets.hdri_street.resource);
+                }
+
+            } else {
+
+                // apply individual settings
+                app.scene.sky.type = data.get('data.skybox.type');
+
+                const scaleX = data.get('data.skybox.scaleX') ?? 1;
+                const scaleY = data.get('data.skybox.scaleY') ?? 1;
+                const scaleZ = data.get('data.skybox.scaleZ') ?? 1;
+                app.scene.sky.scale = new pc.Vec3(scaleX, scaleY, scaleZ);
+
+                const centerX = data.get('data.skybox.tripodX') ?? 0;
+                const centerY = data.get('data.skybox.tripodY') ?? 0;
+                const centerZ = data.get('data.skybox.tripodZ') ?? 0;
+                app.scene.sky.center = new pc.Vec3(centerX, centerY, centerZ);
+
+                const angle = data.get('data.skybox.rotation');
+                app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, angle, 0);
+
+                app.scene.skyboxMip = data.get('data.skybox.level');
+                app.scene.exposure = data.get('data.skybox.exposure');
             }
         });
 
-        // UI initial values
-        data.set('data', {
-            skybox: {
-                level: 0,
-                tripodX: 0,
-                tripodY: 0.07,
-                tripodZ: 0,
-                radius: 100,
-                offset: 0.75,
-                exposure: 0.7,
-                projected: true
-            }
-        });
+        // apply initial preset
+        data.set('data.skybox.preset', 'Street Dome');
     });
 
     return app;
