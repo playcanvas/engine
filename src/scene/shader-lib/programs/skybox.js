@@ -4,7 +4,7 @@ import { ChunkUtils } from '../chunk-utils.js';
 
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
-import { SKYMESH_INFINITE } from '../../constants.js';
+import { SKYTYPE_INFINITE } from '../../constants.js';
 
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
@@ -13,7 +13,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
     }
 
     createShaderDefinition(device, options) {
-        const defines = options.skymesh === SKYMESH_INFINITE ? '' : '#define SKYMESH\n';
+        const defines = options.skymesh === SKYTYPE_INFINITE ? '' : '#define SKYMESH\n';
         const vshader = defines + shaderChunks.skyboxVS;
         let fshader = defines;
 

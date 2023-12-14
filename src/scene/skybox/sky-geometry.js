@@ -1,14 +1,14 @@
 import { Debug } from "../../core/debug.js";
-import { SKYMESH_BOX, SKYMESH_DOME, SKYMESH_INFINITE } from "../constants.js";
+import { SKYTYPE_BOX, SKYTYPE_DOME, SKYTYPE_INFINITE } from "../constants.js";
 import { createBox, createMesh } from "../procedural.js";
 
 class SkyGeometry {
     static create(device, type) {
         switch (type) {
-            case SKYMESH_BOX: return SkyGeometry.box(device);
-            case SKYMESH_DOME: return SkyGeometry.dome(device);
+            case SKYTYPE_BOX: return SkyGeometry.box(device);
+            case SKYTYPE_DOME: return SkyGeometry.dome(device);
         }
-        Debug.assert(type === SKYMESH_INFINITE, `Unsupported sky geometry type ${type}`);
+        Debug.assert(type === SKYTYPE_INFINITE, `Unsupported sky geometry type ${type}`);
         return SkyGeometry.infinite(device);
     }
 

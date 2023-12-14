@@ -874,18 +874,20 @@ export const ORIENTATION_VERTICAL = 1;
  *
  * @type {string}
  */
-export const SKYMESH_INFINITE = 'infinite';
+export const SKYTYPE_INFINITE = 'infinite';
 
 /**
- * A sky texture is rendered using a box projection. This is suitable for interior environments.
+ * A sky texture is rendered using a box projection. This is generally suitable for interior
+ * environments.
  *
  * @type {string}
  */
-export const SKYMESH_BOX = 'box';
+export const SKYTYPE_BOX = 'box';
 
 /**
- * A sky texture is rendered using a dome projection. This is suitable for exterior environments.
+ *  A sky texture is rendered using a dome projection. This is generally suitable for exterior
+ * environments.
  *
  * @type {string}
  */
-export const SKYMESH_DOME = 'dome';
+export const SKYTYPE_DOME = 'dome';

@@ -1,5 +1,5 @@
 import { Vec3 } from "../../core/math/vec3.js";
-import { SKYMESH_INFINITE } from "../constants.js";
+import { SKYTYPE_INFINITE } from "../constants.js";
 import { GraphNode } from "../graph-node.js";
 import { SkyMesh } from "./sky-mesh.js";
 
@@ -15,7 +15,7 @@ class Sky {
      * @type {string}
      * @private
      */
-    _type = SKYMESH_INFINITE;
+    _type = SKYTYPE_INFINITE;
 
     /**
      * The center of the sky.
@@ -35,7 +35,7 @@ class Sky {
 
     /**
      * A graph node with a transform used to render the sky mesh. Adjust the position, rotation and
-     * scale of this node to orient the sky mesh. Ignored for {@link SKYMESH_INFINITE}.
+     * scale of this node to orient the sky mesh. Ignored for {@link SKYTYPE_INFINITE}.
      *
      * @type {GraphNode}
      * @readonly
@@ -60,12 +60,12 @@ class Sky {
     }
 
     /**
-     * The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYMESH_INFINITE}.
+     * The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
      * Can be:
      *
-     * {@link SKYMESH_INFINITE}
-     * {@link SKYMESH_BOX}
-     * {@link SKYMESH_DOME}
+     * {@link SKYTYPE_INFINITE}
+     * {@link SKYTYPE_BOX}
+     * {@link SKYTYPE_DOME}
      *
      * @type {string}
      */
@@ -82,7 +82,7 @@ class Sky {
     }
 
     /**
-     * The center of the sky. Ignored for {@link SKYMESH_INFINITE}. Typically only the y-coordinate
+     * The center of the sky. Ignored for {@link SKYTYPE_INFINITE}. Typically only the y-coordinate
      * is used, representing the tripod height. Defaults to (0, 1, 0).
      *
      * @type {Vec3}
@@ -112,7 +112,7 @@ class Sky {
     update() {
 
         // uniforms
-        if (this.type !== SKYMESH_INFINITE) {
+        if (this.type !== SKYTYPE_INFINITE) {
             const { center, centerArray } = this;
 
             // tripod position is relative to the node, transform it to the world space

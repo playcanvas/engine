@@ -26,9 +26,9 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'data.skybox.type' },
                     type: "string",
                     options: [
-                        { v: pc.SKYMESH_INFINITE, t: 'Infinite' },
-                        { v: pc.SKYMESH_BOX, t: 'Box' },
-                        { v: pc.SKYMESH_DOME, t: 'Dome' }
+                        { v: pc.SKYTYPE_INFINITE, t: 'Infinite' },
+                        { v: pc.SKYTYPE_BOX, t: 'Box' },
+                        { v: pc.SKYTYPE_DOME, t: 'Dome' }
                     ]
                 })
             ),
@@ -223,7 +223,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const presetStreetDome = {
             skybox: {
                 preset: 'Street Dome',
-                type: pc.SKYMESH_DOME,
+                type: pc.SKYTYPE_DOME,
                 level: 0,
                 scaleX: 200,
                 scaleY: 200,
@@ -240,7 +240,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const presetStreetInfinite = {
             skybox: {
                 preset: 'Street Infinite',
-                type: pc.SKYMESH_INFINITE,
+                type: pc.SKYTYPE_INFINITE,
                 level: 0,
                 scaleX: 1,
                 scaleY: 1,
@@ -257,7 +257,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const presetRoom = {
             skybox: {
                 preset: 'Room',
-                type: pc.SKYMESH_BOX,
+                type: pc.SKYTYPE_BOX,
                 level: 0,
                 scaleX: 29.5,
                 scaleY: 16,
