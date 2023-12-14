@@ -250,7 +250,7 @@ export default class OrbitCamera {
         if (this.frameOnStart) {
             this.focus(this.focusEntity || this.app.root);
         } else {
-            var distanceBetween = new pc.Vec3();
+            const distanceBetween = new pc.Vec3();
             distanceBetween.sub2(this.entity.getPosition(), this._pivotPoint);
             this._distance = this._clampDistance(distanceBetween.length());
         }
