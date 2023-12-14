@@ -362,7 +362,7 @@ export default class OrbitCamera {
         yawOffset.setFromEulerAngles(0, -yaw, 0);
         quatWithoutYaw.mul2(yawOffset, quat);
 
-        var transformedForward = new pc.Vec3();
+        const transformedForward = new pc.Vec3();
 
         quatWithoutYaw.transformVector(pc.Vec3.FORWARD, transformedForward);
 
