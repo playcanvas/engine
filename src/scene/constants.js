@@ -868,3 +868,26 @@ export const ORIENTATION_HORIZONTAL = 0;
  * @type {number}
  */
 export const ORIENTATION_VERTICAL = 1;
+
+/**
+ * A sky texture is rendered using an infinite projection.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_INFINITE = 'infinite';
+
+/**
+ * A sky texture is rendered using a box projection. This is generally suitable for interior
+ * environments.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_BOX = 'box';
+
+/**
+ *  A sky texture is rendered using a dome projection. This is generally suitable for exterior
+ * environments.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_DOME = 'dome';

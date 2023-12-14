@@ -851,7 +851,7 @@ class ForwardRenderer extends Renderer {
         this.shadowRenderer.frameUpdate();
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSky(this.device);
+        this.scene._updateSkyMesh();
 
         // update layer composition
         this.updateLayerComposition(comp);
