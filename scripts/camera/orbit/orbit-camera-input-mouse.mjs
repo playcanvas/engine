@@ -70,8 +70,8 @@ export default class OrbitCameraInputMouse {
 
         // For panning to work at any zoom level, we use screen point to world projection
         // to work out how far we need to pan the pivotEntity in world space
-        var camera = this.entity.camera;
-        var distance = this.orbitCamera.distance;
+        const camera = this.entity.camera;
+        const distance = this.orbitCamera.distance;
 
         camera.screenToWorld(screenPoint.x, screenPoint.y, distance, fromWorldPoint);
         camera.screenToWorld(this.lastPoint.x, this.lastPoint.y, distance, toWorldPoint);
