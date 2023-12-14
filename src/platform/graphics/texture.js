@@ -753,15 +753,9 @@ class Texture {
      */
     lock(options = {}) {
         // Initialize options to some sensible defaults
-        if (options.level === undefined) {
-            options.level = 0;
-        }
-        if (options.face === undefined) {
-            options.face = 0;
-        }
-        if (options.mode === undefined) {
-            options.mode = TEXTURELOCK_WRITE;
-        }
+        options.level ??= 0;
+        options.face ??= 0;
+        options.mode ??= TEXTURELOCK_WRITE;
 
         this._lockedLevel = options.level;
 
