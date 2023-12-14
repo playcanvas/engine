@@ -185,13 +185,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
 
-    // set up and load draco module, as the glb we load is draco compressed
-    pc.WasmModule.setConfig('DracoDecoderModule', {
-        glueUrl: dracoPath + 'draco.wasm.js',
-        wasmUrl: dracoPath + 'draco.wasm.wasm',
-        fallbackUrl: dracoPath + 'draco.js'
-    });
-
     const assets = {
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
         car: new pc.Asset('car', 'container', { url: assetPath + 'models/lamborghini.glb' }),
@@ -264,10 +257,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         app.start();
 
-        // setup skydome
-        app.scene.skyboxMip = 0;
-        app.scene.exposure = 0.5;
-
         // convert hdri to skybox
         const hdriToSkybox = (source) => {
 
@@ -286,10 +275,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
         hdriToSkybox(assets.hdri.resource);
 
-        app.scene.skyboxProjectionEnabled = true;
-        app.scene.skyboxProjectionCenter = new pc.Vec3(0, 0.07, 0);
-        app.scene.skyboxProjectionDomeOffset = 0.7;
-        app.scene.skyboxProjectionRadius = 100;
+        // setup dome based sky
+        app.scene.exposure = 0.5;
+        app.scene.sky.type = pc.SKYTYPE_DOME;
+        app.scene.sky.node.setLocalScale(200, 200, 200);
+        app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
 
         // render in HDR mode
         app.scene.toneMapping = pc.TONEMAP_LINEAR;
@@ -332,7 +322,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         });
 
         const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
-
             const splat = resource.instantiateRenderEntity({
                 cameraEntity: cameraEntity,
                 debugRender: false,
