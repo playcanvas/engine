@@ -11,8 +11,8 @@ import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-acces
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
-import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
+import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
 
@@ -156,38 +156,6 @@ class Scene extends EventHandler {
     root = null;
 
     /**
-     * The sky of the scene.
-     *
-     * @type {Sky}
-     * @ignore
-     */
-    sky = null;
-
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _skyboxProjectionEnabled = false;
-
-    /**
-     * @type {Vec3}
-     * @private
-     */
-    _skyboxProjectionCenter = new Vec3();
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _skyboxProjectionDomeOffset = 0;
-
-    /**
-     * @type {number}
-     * @private
-     */
-    _skyboxProjectionRadius = 100;
-
-    /**
      * Use physically based units for cameras and lights. When used, the exposure value is ignored.
      *
      * @type {boolean}
@@ -268,6 +236,9 @@ class Scene extends EventHandler {
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
             this.updateShaders = true;
         });
+
+        // skybox
+        this._sky = new Sky(this);
 
         this._stats = {
             meshInstances: 0,
@@ -417,7 +388,7 @@ class Scene extends EventHandler {
                 this._internalEnvAtlas = null;
             }
 
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -482,6 +453,10 @@ class Scene extends EventHandler {
 
     get layers() {
         return this._layers;
+    }
+
+    get sky() {
+        return this._sky;
     }
 
     /**
@@ -552,7 +527,7 @@ class Scene extends EventHandler {
             }
 
             this._prefilteredCubemaps = value.slice();
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -568,7 +543,7 @@ class Scene extends EventHandler {
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
             this._skyboxCubeMap = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -584,7 +559,7 @@ class Scene extends EventHandler {
     set skyboxIntensity(value) {
         if (value !== this._skyboxIntensity) {
             this._skyboxIntensity = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -600,7 +575,7 @@ class Scene extends EventHandler {
     set skyboxLuminance(value) {
         if (value !== this._skyboxLuminance) {
             this._skyboxLuminance = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -617,7 +592,7 @@ class Scene extends EventHandler {
     set skyboxMip(value) {
         if (value !== this._skyboxMip) {
             this._skyboxMip = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -646,7 +621,7 @@ class Scene extends EventHandler {
             // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
             if (!this._skyboxRotationShaderInclude && !isIdentity) {
                 this._skyboxRotationShaderInclude = true;
-                this._resetSky();
+                this._resetSkyMesh();
             }
         }
     }
@@ -680,7 +655,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
-        this._resetSky();
+        this._resetSkyMesh();
         this.root = null;
         this.off();
     }
@@ -746,7 +721,7 @@ class Scene extends EventHandler {
             }
         });
 
-        this._resetSky();
+        this._resetSkyMesh();
     }
 
     // get the actual texture to use for skybox rendering
@@ -767,19 +742,15 @@ class Scene extends EventHandler {
         return this._skyboxCubeMap || cubemaps[0] || this._envAtlas;
     }
 
-    _updateSky(device) {
-        if (!this.sky) {
-            const texture = this._getSkyboxTex();
-            if (texture) {
-                this.sky = new Sky(device, this, texture);
-                this.fire('set:skybox', texture);
-            }
+    _updateSkyMesh() {
+        if (!this.sky.skyMesh) {
+            this.sky.updateSkyMesh();
         }
+        this.sky.update();
     }
 
-    _resetSky() {
-        this.sky?.destroy();
-        this.sky = null;
+    _resetSkyMesh() {
+        this.sky.resetSkyMesh();
         this.updateShaders = true;
     }
 
@@ -807,98 +778,6 @@ class Scene extends EventHandler {
                 this.prefilteredCubemaps = cubemaps.slice(1);
             }
         }
-    }
-
-    updateSkyboxProjection() {
-
-        if (this._skyboxProjectionEnabled) {
-            const scope = this.device.scope;
-
-            const center = this._skyboxProjectionCenter;
-            const radius = this._skyboxProjectionRadius;
-            const domeElevation = this._skyboxProjectionDomeOffset;
-            scope.resolve('projectedSkydomeCenter').setValue([
-                center.x,
-                center.y * radius,
-                center.z,
-                1.0
-            ]);
-
-            scope.resolve('projectedSkydomeDome').setValue([
-                center.x,
-                center.y + radius * domeElevation,
-                center.z,
-                radius * radius
-            ]);
-
-            scope.resolve('projectedSkydomePlane').setValue([
-                0,
-                1,
-                0,
-                -center.y
-            ]);
-        }
-    }
-
-    /**
-     * When enabled, the skybox will be projected into a sphere dome and a ground plane. Otherwise
-     * the skybox will be projected onto an infinite cube. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    set skyboxProjectionEnabled(value) {
-        if (value !== this._skyboxProjectionEnabled) {
-            this._skyboxProjectionEnabled = value;
-            this.updateSkyboxProjection();
-            this.updateShaders = true;
-        }
-    }
-
-    get skyboxProjectionEnabled() {
-        return this._skyboxProjectionEnabled;
-    }
-
-    /**
-     * The center of the skybox projection. The y-component of the vector represents the height of
-     * the camera from the ground plane. Defaults to (0, 0, 0).
-     *
-     * @type {Vec3}
-     */
-    set skyboxProjectionCenter(value) {
-        this._skyboxProjectionCenter.copy(value);
-        this.updateSkyboxProjection();
-    }
-
-    get skyboxProjectionCenter() {
-        return this._skyboxProjectionCenter;
-    }
-
-    /**
-     * The vertical offset of the skydome.
-     *
-     * @type {number}
-     */
-    set skyboxProjectionDomeOffset(value) {
-        this._skyboxProjectionDomeOffset = value;
-        this.updateSkyboxProjection();
-    }
-
-    get skyboxProjectionDomeOffset() {
-        return this._skyboxProjectionDomeOffset;
-    }
-
-    /**
-     * The radius of the skybox projection sphere. Defaults to 100.
-     *
-     * @type {number}
-     */
-    set skyboxProjectionRadius(value) {
-        this._skyboxProjectionRadius = value;
-        this.updateSkyboxProjection();
-    }
-
-    get skyboxProjectionRadius() {
-        return this._skyboxProjectionRadius;
     }
 
     /**
