@@ -132,8 +132,8 @@ export default class OrbitCamera {
         // Ensure that the yaw takes the shortest route by making sure that
         // the difference between the targetYaw and the actual is 180 degrees
         // in either direction
-        var diff = this._targetYaw - this._yaw;
-        var reminder = diff % 360;
+        const diff = this._targetYaw - this._yaw;
+        const reminder = diff % 360;
         if (reminder > 180) {
             this._targetYaw = this._yaw - (360 - reminder);
         } else if (reminder < -180) {
