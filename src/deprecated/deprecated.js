@@ -58,7 +58,7 @@ import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-acces
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -121,6 +121,9 @@ import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
+export const LINEBATCH_WORLD = 0;
+export const LINEBATCH_OVERLAY = 1;
+export const LINEBATCH_GIZMO = 2;
 
 export const log = {
     write: function (text) {
