@@ -56,7 +56,7 @@ export * from "./shader-toon.mjs";
 export * from "./shader-wobble.mjs";
 export * from "./shadow-cascades.mjs";
 export * from "./shapes.mjs";
-export * from "./skybox.mjs";
+export * from "./sky.mjs";
 export * from "./texture-array.mjs";
 export * from "./texture-basis.mjs";
 export * from "./transform-feedback.mjs";

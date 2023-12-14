@@ -253,9 +253,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
                 preset: 'Room',
                 type: pc.SKYTYPE_BOX,
                 level: 0,
-                scaleX: 29.5,
-                scaleY: 16,
-                scaleZ: 18.5,
+                scaleX: 44,
+                scaleY: 24,
+                scaleZ: 28,
                 positionX: 0,
                 positionY: 0,
                 positionZ: 0,
@@ -333,7 +333,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     return app;
 }
 
-export class SkyboxExample {
+export class SkyExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static controls = controls;
