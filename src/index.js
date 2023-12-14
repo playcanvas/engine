@@ -156,7 +156,7 @@ export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / RENDERER
-export { RenderPassRenderActions } from './scene/renderer/render-pass-render-actions.js';
+export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';

@@ -6,7 +6,7 @@ import {
     FILTER_LINEAR,
     RenderPass,
     RenderPassColorGrab,
-    RenderPassRenderActions,
+    RenderPassForward,
     RenderTarget,
     Texture
 } from "playcanvas";
@@ -118,7 +118,7 @@ class RenderPassCameraFrame extends RenderPass {
         // render pass that renders the scene to the render target. Render target size automatically
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
-        this.scenePass = new RenderPassRenderActions(device, composition, scene, renderer);
+        this.scenePass = new RenderPassForward(device, composition, scene, renderer);
         this.scenePass.init(rt, {
             resizeSource: targetRenderTarget,
             scaleX: this.renderTargetScale,
@@ -143,7 +143,7 @@ class RenderPassCameraFrame extends RenderPass {
             colorGrabPass.source = rt;
 
             // if grab pass is used, render the layers after it (otherwise they were already rendered)
-            scenePassTransparent = new RenderPassRenderActions(device, composition, scene, renderer);
+            scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
             scenePassTransparent.init(rt);
             lastAddedIndex = scenePassTransparent.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
         }
@@ -166,7 +166,7 @@ class RenderPassCameraFrame extends RenderPass {
         // ------ AFTER COMPOSITION RENDERING ------
 
         // final pass renders directly to the target renderTarget on top of the bloomed scene, and it renders a transparent UI layer
-        const afterPass = new RenderPassRenderActions(device, composition, scene, renderer);
+        const afterPass = new RenderPassForward(device, composition, scene, renderer);
         afterPass.init(targetRenderTarget);
 
         // add all remaining layers the camera renders
