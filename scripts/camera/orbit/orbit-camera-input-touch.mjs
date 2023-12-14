@@ -92,8 +92,8 @@ export default class OrbitCameraInputTouch {
 
         // For panning to work at any zoom level, we use screen point to world projection
         // to work out how far we need to pan the pivotEntity in world space
-        var camera = this.entity.camera;
-        var distance = this.orbitCamera.distance;
+        const camera = this.entity.camera;
+        const distance = this.orbitCamera.distance;
 
         camera.screenToWorld(midPoint.x, midPoint.y, distance, fromWorldPoint);
         camera.screenToWorld(this.lastPinchMidPoint.x, this.lastPinchMidPoint.y, distance, toWorldPoint);
