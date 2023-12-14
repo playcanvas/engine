@@ -25,7 +25,7 @@ class SkyGeometry {
         const bottomLimit = 0.1;
 
         // normalized distance from the center that is completely flat
-        const curvatureRadius = 0.95
+        const curvatureRadius = 0.95;
 
         // derived values
         const invBottomLimit = 1 - bottomLimit;

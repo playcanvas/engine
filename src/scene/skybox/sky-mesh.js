@@ -1,9 +1,7 @@
-import { CULLFACE_FRONT, CULLFACE_NONE } from '../../platform/graphics/constants.js';
+import { CULLFACE_FRONT } from '../../platform/graphics/constants.js';
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
 
 import { GAMMA_NONE, GAMMA_SRGBHDR, LAYERID_SKYBOX, SHADER_FORWARDHDR, TONEMAP_LINEAR } from '../constants.js';
-import { createBox, createPlane, createSphere } from '../procedural.js';
-import { GraphNode } from '../graph-node.js';
 import { Material } from '../materials/material.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { getProgramLibrary } from '../shader-lib/get-program-library.js';
@@ -19,9 +17,9 @@ class SkyMesh {
     /**
      * Mesh instance representing the visuals of the sky.
      *
-     * @type {MeshInstance}
+     * @type {MeshInstance|null}
      */
-    meshInstance;
+    meshInstance = null;
 
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
@@ -68,20 +66,12 @@ class SkyMesh {
         }
 
         material.cull = CULLFACE_FRONT;
-        //material.cull = CULLFACE_NONE;
         material.depthWrite = false;
 
         const skyLayer = scene.layers.getLayerById(LAYERID_SKYBOX);
         if (skyLayer) {
 
-
-
-
-
-
             const mesh = SkyGeometry.create(device, type);
-
-
             const meshInstance = new MeshInstance(mesh, material, node);
             this.meshInstance = meshInstance;
 
@@ -90,12 +80,6 @@ class SkyMesh {
 
             // disable picker, the material has custom update shader and does not handle picker variant
             meshInstance.pick = false;
-
-
-
-
-
-
 
             skyLayer.addMeshInstances([meshInstance]);
 
