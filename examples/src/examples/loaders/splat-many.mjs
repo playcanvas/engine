@@ -65,6 +65,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.start();
 
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
         // get the instance of the gallery and set up with render component
         const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
         app.root.addChild(galleryEntity);
