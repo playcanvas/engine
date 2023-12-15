@@ -128,7 +128,7 @@ class XrHitTestSource extends EventHandler {
             }
         } else {
             const results = frame.getHitTestResults(this._xrHitTestSource);
-            if (results.length)
+            if (!results.length)
                 return;
 
             this.updateHitResults(results);
