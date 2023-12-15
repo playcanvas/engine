@@ -84,7 +84,7 @@ class Splat {
      * @returns {import('playcanvas').Material} The created GS material.
      */
     createMaterial(options) {
-        const material = createSplatMaterial(this.device, options);
+        const material = createSplatMaterial(options);
         const { width, height } = this.colorTexture;
 
         material.setParameter('splatColor', this.colorTexture);

@@ -63,6 +63,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.start();
 
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
