@@ -293,8 +293,8 @@ export default class OrbitCamera {
     }
 
     _checkAspectRatio() {
-        var height = this.app.graphicsDevice.height;
-        var width = this.app.graphicsDevice.width;
+        const height = this.app.graphicsDevice.height;
+        const width = this.app.graphicsDevice.width;
 
         // Match the axis of FOV to match the aspect ratio of the canvas so
         // the focused entities is always in frame
