@@ -55,7 +55,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
         for (const i in modules) {
             const { attributes, enabled } = modules[i];
             const script = scripts[i];
-            if (script) 
+            if (script)
                 component.add(scripts[i], attributes, enabled);
         }
     }
