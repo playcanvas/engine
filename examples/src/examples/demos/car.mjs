@@ -276,7 +276,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         hdriToSkybox(assets.hdri.resource);
 
         // setup dome based sky
-        app.scene.exposure = 0.5;
+        app.scene.exposure = 0.7;
         app.scene.sky.type = pc.SKYTYPE_DOME;
         app.scene.sky.node.setLocalScale(200, 200, 200);
         app.scene.sky.center = new pc.Vec3(0, 0.05, 0);
