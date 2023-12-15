@@ -14,7 +14,7 @@ import {
 
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
-import { RenderPassRenderActions } from './render-pass-render-actions.js';
+import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
 
 const _drawCallList = {
@@ -830,7 +830,7 @@ class ForwardRenderer extends Renderer {
      */
     addMainRenderPass(frameGraph, layerComposition, renderTarget, startIndex, endIndex) {
 
-        const renderPass = new RenderPassRenderActions(this.device, layerComposition, this.scene, this);
+        const renderPass = new RenderPassForward(this.device, layerComposition, this.scene, this);
         renderPass.init(renderTarget);
 
         const renderActions = layerComposition._renderActions;
@@ -851,7 +851,7 @@ class ForwardRenderer extends Renderer {
         this.shadowRenderer.frameUpdate();
 
         // update the skybox, since this might change _meshInstances
-        this.scene._updateSky(this.device);
+        this.scene._updateSkyMesh();
 
         // update layer composition
         this.updateLayerComposition(comp);
