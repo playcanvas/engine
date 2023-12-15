@@ -23,23 +23,11 @@ const splatMainVS = `
 `;
 
 const splatMainFS = `
-
     void main(void)
     {
         gl_FragColor = evalSplat();
     }
 `;
-
-// extracted from engine, hash.js
-const hashCode = (str) => {
-    let hash = 0;
-    for (let i = 0, len = str.length; i < len; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        // Convert to 32bit integer
-        hash |= 0;
-    }
-    return hash;
-};
 
 /**
  * @typedef {object} SplatMaterialOptions - The options.
