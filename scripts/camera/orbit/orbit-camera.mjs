@@ -304,9 +304,9 @@ export default class OrbitCamera {
     _buildAabb(entity) {
         var i, m, meshInstances = [];
 
-        var renders = entity.findComponents("render");
+        const renders = entity.findComponents("render");
         for (i = 0; i < renders.length; i++) {
-            var render = renders[i];
+            const render = renders[i];
             for (m = 0; m < render.meshInstances.length; m++) {
                 meshInstances.push(render.meshInstances[m]);
             }
