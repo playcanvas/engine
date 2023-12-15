@@ -179,7 +179,7 @@ export default class OrbitCamera {
 
         this.entity.lookAt(lookAtPoint);
 
-        var distance = OrbitCamera.distanceBetween;
+        const distance = OrbitCamera.distanceBetween;
         distance.sub2(lookAtPoint, resetPoint);
         this.distance = distance.length();
 
