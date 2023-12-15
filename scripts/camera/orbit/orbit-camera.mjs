@@ -312,9 +312,9 @@ export default class OrbitCamera {
             }
         }
 
-        var models = entity.findComponents("model");
+        const models = entity.findComponents("model");
         for (i = 0; i < models.length; i++) {
-            var model = models[i];
+            const model = models[i];
             for (m = 0; m < model.meshInstances.length; m++) {
                 meshInstances.push(model.meshInstances[m]);
             }
