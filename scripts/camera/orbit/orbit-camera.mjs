@@ -356,8 +356,8 @@ export default class OrbitCamera {
     static yawOffset = new pc.Quat();
 
     _calcPitch(quat, yaw) {
-        var quatWithoutYaw = OrbitCamera.quatWithoutYaw;
-        var yawOffset = OrbitCamera.yawOffset;
+        const quatWithoutYaw = OrbitCamera.quatWithoutYaw;
+        const yawOffset = OrbitCamera.yawOffset;
 
         yawOffset.setFromEulerAngles(0, -yaw, 0);
         quatWithoutYaw.mul2(yawOffset, quat);
