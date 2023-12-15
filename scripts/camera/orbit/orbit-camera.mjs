@@ -232,7 +232,7 @@ export default class OrbitCamera {
 
         // Calculate the camera euler angle rotation around x and y axes
         // This allows us to place the camera at a particular rotation to begin with in the scene
-        var cameraQuat = this.entity.getRotation();
+        const cameraQuat = this.entity.getRotation();
 
         // Preset the camera
         this._yaw = this._calcYaw(cameraQuat);
