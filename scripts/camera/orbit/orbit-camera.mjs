@@ -279,7 +279,7 @@ export default class OrbitCamera {
         this.entity.setLocalPosition(0, 0, 0);
         this.entity.setLocalEulerAngles(this._pitch, this._yaw, 0);
 
-        var position = this.entity.getPosition();
+        const position = this.entity.getPosition();
         position.copy(this.entity.forward);
         position.mulScalar(-this._distance);
         position.add(this.pivotPoint);
