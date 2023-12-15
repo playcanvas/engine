@@ -330,7 +330,7 @@ export default class OrbitCamera {
     }
 
     _calcYaw(quat) {
-        var transformedForward = new pc.Vec3();
+        const transformedForward = new pc.Vec3();
         quat.transformVector(pc.Vec3.FORWARD, transformedForward);
 
         return Math.atan2(-transformedForward.x, -transformedForward.z) * pc.math.RAD_TO_DEG;
