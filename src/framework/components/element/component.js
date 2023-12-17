@@ -1059,8 +1059,8 @@ class ElementComponent extends Component {
      * Patched method for setting the local position.
      *
      * @param {number|Vec3} x - The x coordinate or Vec3
-     * @param {number} y - The y coordinate
-     * @param {number} z - The z coordinate
+     * @param {number} [y] - The y coordinate
+     * @param {number} [z] - The z coordinate
      * @private
      */
     _setLocalPosition(x, y, z) {
