@@ -61,9 +61,9 @@ class Sky {
 
 
     applySettings(render) {
-        this.node.setLocalPosition(new Vec3(render.skyPosition ?? [0, 0, 0]));
-        this.node.setLocalEulerAngles(new Vec3(render.skyRotation ?? [0, 0, 0]));
-        this.node.setLocalScale(new Vec3(render.skyScale ?? [1, 1, 1]));
+        this.node.setLocalPosition(new Vec3(render.skyMeshPosition ?? [0, 0, 0]));
+        this.node.setLocalEulerAngles(new Vec3(render.skyMeshRotation ?? [0, 0, 0]));
+        this.node.setLocalScale(new Vec3(render.skyMeshScale ?? [1, 1, 1]));
         if (render.skyCenter) {
             this._center = new Vec3(render.skyCenter);
         }
