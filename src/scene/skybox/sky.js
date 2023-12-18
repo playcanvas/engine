@@ -26,6 +26,22 @@ class Sky {
     _center = new Vec3(0, 1, 0);
 
     /**
+     * The position of the sky.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    position = new Vec3(0, 0, 0);
+
+    /**
+     * The scale of the sky.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    scale = new Vec3(1, 1, 1);
+
+    /**
      * The sky mesh of the scene.
      *
      * @type {SkyMesh|null}
@@ -57,6 +73,19 @@ class Sky {
 
         this.centerArray = new Float32Array(3);
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
+    }
+
+
+    applySettings(render) {
+        if (render.skyPosition) {
+            this.position = new Vec3(render.skyPosition[0], render.skyPosition[1], render.skyPosition[2]);
+        }
+        if (render.skyScale) {
+            this.scale = new Vec3(render.skyScale[0], render.skyScale[1], render.skyScale[2]);
+        }
+        if (render.skyTripod) {
+            this.center = new Vec3(render.skyTripod[0], render.skyTripod[1], render.skyTripod[2]);
+        }
     }
 
     /**
