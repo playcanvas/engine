@@ -219,12 +219,12 @@ class Scene extends EventHandler {
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
-        this._skyboxScale = new Vec3(1, 1, 1);
         this._skyboxPosition = new Vec3();
         this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
         this._skyboxRotationMat3 = new Mat3();
         this._skyboxRotationMat4 = new Mat4();
+        this._skyboxScale = new Vec3(1, 1, 1);
 
         this._skyboxTripod = new Vec3();
 
@@ -618,21 +618,6 @@ class Scene extends EventHandler {
     }
 
     /**
-     * The scale of the skybox to be displayed. Defaults to {@link Vec3.ONE}.
-     *
-     * @type {Vec3}
-     */
-    set skyboxScale(value) {
-        if (!this._skyboxScale.equals(value)) {
-            this._skyboxScale.copy(value);
-        }
-    }
-
-    get skyboxScale() {
-        return this._skyboxScale;
-    }
-
-    /**
      * The position of the skybox to be displayed. Defaults to {@link Vec3.ZERO}.
      *
      * @type {Vec3}
@@ -675,6 +660,21 @@ class Scene extends EventHandler {
 
     get skyboxRotation() {
         return this._skyboxRotation;
+    }
+
+    /**
+     * The scale of the skybox to be displayed. Defaults to {@link Vec3.ONE}.
+     *
+     * @type {Vec3}
+     */
+    set skyboxScale(value) {
+        if (!this._skyboxScale.equals(value)) {
+            this._skyboxScale.copy(value);
+        }
+    }
+
+    get skyboxScale() {
+        return this._skyboxScale;
     }
 
     /**
