@@ -10,7 +10,7 @@ import { Mat4 } from '../core/math/mat4.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE, SKYTYPE_INFINITE } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
@@ -556,19 +556,6 @@ class Scene extends EventHandler {
     }
 
     /**
-     * Type of sky. Defaults to {@link SKYTYPE_INFINITE}.
-     *
-     * @type {number}
-     */
-    set skyType(value) {
-        this._sky.type = value;
-    }
-
-    get skyType() {
-        return this._sky.type;
-    }
-
-    /**
      * Multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
      *
      * @type {number}
@@ -756,7 +743,6 @@ class Scene extends EventHandler {
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
-        this.skyType = render.skyType ?? SKYTYPE_INFINITE;
         this._skyboxIntensity = render.skyboxIntensity ?? 1;
         this._skyboxLuminance = render.skyboxLuminance ?? 20000;
         this._skyboxMip = render.skyboxMip ?? 0;
