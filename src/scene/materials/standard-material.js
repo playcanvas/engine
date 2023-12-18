@@ -375,6 +375,8 @@ let _params = new Set();
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
  * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
  * {@link Material#alphaFade} to fade out materials.
+ * @property {boolean} opacityDither Used to specify whether opacity is dithered, which allows
+ * transparency without alpha blending. Defaults is false.
  * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
@@ -1228,6 +1230,7 @@ function _defineMaterialProps() {
     _defineFlag('glossInvert', false);
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
+    _defineFlag('ditherOpacity', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

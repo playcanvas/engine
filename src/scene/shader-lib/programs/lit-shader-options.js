@@ -173,6 +173,13 @@ class LitShaderOptions {
     opacityFadesSpecular = false;
 
     /**
+     * Enable opacity dithering. See {@link StandardMaterial#opacityDither}.
+     *
+     * @type {boolean}
+     */
+    opacityDither = false;
+
+    /**
      * The value of {@link StandardMaterial#cubeMapProjection}.
      *
      * @type {number}

@@ -150,7 +150,7 @@ class StandardMaterialOptionsBuilder {
             options[vname] = false;
             options[vcname] = '';
 
-            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage && !stdMat.opacityDither) {
                 return;
             }
 
@@ -214,7 +214,7 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
-        options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE) ? 1 : 0;
+        options.opacityTint = (stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither)) ? 1 : 0;
         options.ambientTint = stdMat.ambientTint;
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
@@ -272,6 +272,7 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.alphaToCoverage = stdMat.alphaToCoverage;
         options.litOptions.opacityFadesSpecular = stdMat.opacityFadesSpecular;
+        options.litOptions.opacityDither = stdMat.opacityDither;
 
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 

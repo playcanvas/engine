@@ -460,6 +460,7 @@ const standardMaterialProps = [
     ['occludeSpecularIntensity', 'number'],
     ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
+    ['opacityDither', 'boolean'],
     ['opacityFadesSpecular', 'boolean'],
     ['opacityMap', 'Texture|null'],
     ['opacityMapChannel', 'string'],

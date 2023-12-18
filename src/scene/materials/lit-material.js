@@ -53,6 +53,8 @@ class LitMaterial extends Material {
 
     opacityFadesSpecular = true;
 
+    opacityDither = false;
+
     conserveEnergy = true;
 
     ggxSpecular = false;

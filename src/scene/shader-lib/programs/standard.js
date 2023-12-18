@@ -292,7 +292,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
             // opacity
-            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage) {
+            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither) {
                 decl.append("float dAlpha;");
                 code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
                 func.append("getOpacity();");
@@ -300,6 +300,11 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 if (options.litOptions.alphaTest) {
                     code.append(litShader.chunks.alphaTestPS);
                     func.append("alphaTest(dAlpha);");
+                }
+                if (options.litOptions.opacityDither) {
+                    decl.append(litShader.chunks.bayerPS);
+                    decl.append(litShader.chunks.opacityDitherPS);
+                    func.append("opacityDither(dAlpha);");
                 }
             } else {
                 decl.append("float dAlpha = 1.0;");
