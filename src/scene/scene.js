@@ -10,7 +10,7 @@ import { Mat4 } from '../core/math/mat4.js';
 import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
-import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
+import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE, SKYTYPE_INFINITE } from './constants.js';
 import { LightingParams } from './lighting/lighting-params.js';
 import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
@@ -219,10 +219,14 @@ class Scene extends EventHandler {
         this._skyboxLuminance = 0;
         this._skyboxMip = 0;
 
+        this._skyboxScale = new Vec3(1, 1, 1);
+        this._skyboxPosition = new Vec3();
         this._skyboxRotationShaderInclude = false;
         this._skyboxRotation = new Quat();
         this._skyboxRotationMat3 = new Mat3();
         this._skyboxRotationMat4 = new Mat4();
+
+        this._skyboxTripod = new Vec3();
 
         // ambient light lightmapping properties
         this._ambientBakeNumSamples = 1;
@@ -552,6 +556,19 @@ class Scene extends EventHandler {
     }
 
     /**
+     * Type of sky. Defaults to {@link SKYTYPE_INFINITE}.
+     *
+     * @type {number}
+     */
+    set skyType(value) {
+        this._sky.type = value;
+    }
+
+    get skyType() {
+        return this._sky.type;
+    }
+
+    /**
      * Multiplier for skybox intensity. Defaults to 1. Unused if physical units are used.
      *
      * @type {number}
@@ -601,6 +618,36 @@ class Scene extends EventHandler {
     }
 
     /**
+     * The scale of the skybox to be displayed. Defaults to {@link Vec3.ONE}.
+     *
+     * @type {Vec3}
+     */
+    set skyboxScale(value) {
+        if (!this._skyboxScale.equals(value)) {
+            this._skyboxScale.copy(value);
+        }
+    }
+
+    get skyboxScale() {
+        return this._skyboxScale;
+    }
+
+    /**
+     * The position of the skybox to be displayed. Defaults to {@link Vec3.ZERO}.
+     *
+     * @type {Vec3}
+     */
+    set skyboxPosition(value) {
+        if (!this._skyboxPosition.equals(value)) {
+            this._skyboxPosition.copy(value);
+        }
+    }
+
+    get skyboxPosition() {
+        return this._skyboxPosition;
+    }
+
+    /**
      * The rotation of the skybox to be displayed. Defaults to {@link Quat.IDENTITY}.
      *
      * @type {Quat}
@@ -628,6 +675,21 @@ class Scene extends EventHandler {
 
     get skyboxRotation() {
         return this._skyboxRotation;
+    }
+
+    /**
+     * The tripod position of the skybox to be displayed. Defaults to {@link Vec3.ZERO}.
+     *
+     * @type {Vec3}
+     */
+    set skyboxTripod(value) {
+        if (!this._skyboxTripod.equals(value)) {
+            this._skyboxTripod.copy(value);
+        }
+    }
+
+    get skyboxTripod() {
+        return this._skyboxTripod;
     }
 
     /**
@@ -694,12 +756,25 @@ class Scene extends EventHandler {
         this.lightmapMaxResolution = render.lightmapMaxResolution;
         this.lightmapMode = render.lightmapMode;
         this.exposure = render.exposure;
+        this.skyType = render.skyType ?? SKYTYPE_INFINITE;
         this._skyboxIntensity = render.skyboxIntensity ?? 1;
         this._skyboxLuminance = render.skyboxLuminance ?? 20000;
         this._skyboxMip = render.skyboxMip ?? 0;
 
+        if (render.skyboxScale) {
+            this.skyboxScale = new Vec3(render.skyboxScale[0], render.skyboxScale[1], render.skyboxScale[2]);
+        }
+
+        if (render.skyboxPosition) {
+            this.skyboxPosition = new Vec3(render.skyboxPosition[0], render.skyboxPosition[1], render.skyboxPosition[2]);
+        }
+
         if (render.skyboxRotation) {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
+        }
+
+        if (render.skyboxTripod) {
+            this.skyboxTripod = new Vec3(render.skyboxTripod[0], render.skyboxTripod[1], render.skyboxTripod[2]);
         }
 
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
