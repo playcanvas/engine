@@ -377,6 +377,8 @@ let _params = new Set();
  * {@link Material#alphaFade} to fade out materials.
  * @property {boolean} opacityDither Used to specify whether opacity is dithered, which allows
  * transparency without alpha blending. Defaults is false.
+ * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
+ * allows shadow transparency without alpha blending. Defaults is false.
  * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main

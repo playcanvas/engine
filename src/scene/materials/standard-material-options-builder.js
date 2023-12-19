@@ -188,7 +188,8 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat) {
-        options.opacityTint = stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE;
+        options.opacityTint = stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither);
+        options.litOptions.opacityShadowDither = stdMat.opacityShadowDither;
         options.litOptions.lights = [];
     }
 

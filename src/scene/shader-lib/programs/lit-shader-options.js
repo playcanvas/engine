@@ -180,6 +180,13 @@ class LitShaderOptions {
     opacityDither = false;
 
     /**
+     * Enable opacity shadow dithering. See {@link StandardMaterial#opacityShadowDither}.
+     *
+     * @type {boolean}
+     */
+    opacityShadowDither = false;
+
+    /**
      * The value of {@link StandardMaterial#cubeMapProjection}.
      *
      * @type {number}

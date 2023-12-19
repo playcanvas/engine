@@ -1,0 +1,5 @@
+The glass-table model has been obtained from this address:
+https://sketchfab.com/3d-models/low-poly-glass-table-6acac6d9201e448b92dff859b6f63aad#download
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/
