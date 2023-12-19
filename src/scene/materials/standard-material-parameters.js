@@ -95,6 +95,8 @@ const standardMaterialParameterTypes = {
     opacity: 'number',
     ..._textureParameter('opacity'),
     opacityFadesSpecular: 'boolean',
+    opacityDither: 'boolean',
+    opacityShadowDither: 'boolean',
 
     reflectivity: 'number',
     refraction: 'number',

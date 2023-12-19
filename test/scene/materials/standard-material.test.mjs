@@ -221,6 +221,8 @@ describe('StandardMaterial', function () {
 
         expect(material.opacity).to.equal(1);
         expect(material.opacityFadesSpecular).to.equal(true);
+        expect(material.opacityDither).to.equal(false);
+        expect(material.opacityShadowDither).to.equal(false);
         expect(material.opacityMap).to.be.null;
         expect(material.opacityMapChannel).to.equal('a');
         expect(material.opacityMapOffset).to.be.an.instanceof(Vec2);

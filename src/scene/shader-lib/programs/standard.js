@@ -292,14 +292,21 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
             // opacity
-            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage) {
+            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither) {
                 decl.append("float dAlpha;");
                 code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
                 func.append("getOpacity();");
                 args.append("litArgs_opacity = dAlpha;");
+
                 if (options.litOptions.alphaTest) {
                     code.append(litShader.chunks.alphaTestPS);
                     func.append("alphaTest(dAlpha);");
+                }
+
+                if (options.litOptions.opacityDither) {
+                    decl.append(litShader.chunks.bayerPS);
+                    decl.append(litShader.chunks.opacityDitherPS);
+                    func.append("opacityDither(dAlpha);");
                 }
             } else {
                 decl.append("float dAlpha = 1.0;");
@@ -482,13 +489,20 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
         } else {
             // all other passes require only opacity
-            if (options.litOptions.alphaTest) {
+            if (options.litOptions.alphaTest || options.litOptions.opacityShadowDither) {
                 decl.append("float dAlpha;");
                 code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
-                code.append(litShader.chunks.alphaTestPS);
                 func.append("getOpacity();");
-                func.append("alphaTest(dAlpha);");
                 args.append("litArgs_opacity = dAlpha;");
+                if (options.litOptions.alphaTest) {
+                    code.append(litShader.chunks.alphaTestPS);
+                    func.append("alphaTest(dAlpha);");
+                }
+                if (options.litOptions.opacityShadowDither) {
+                    decl.append(litShader.chunks.bayerPS);
+                    decl.append(litShader.chunks.opacityDitherPS);
+                    func.append("opacityDither(dAlpha);");
+                }
             }
         }
 

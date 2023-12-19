@@ -8,6 +8,7 @@ export * from "./clustered-lighting.mjs";
 export * from "./clustered-omni-shadows.mjs";
 export * from "./clustered-spot-shadows.mjs";
 export * from "./contact-hardening-shadows.mjs";
+export * from "./dithered-transparency.mjs";
 export * from "./lit-material.mjs";
 export * from "./grab-pass.mjs";
 export * from "./ground-fog.mjs";
