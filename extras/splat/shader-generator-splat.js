@@ -260,6 +260,10 @@ const splatCoreFS = /* glsl_ */ `
             diffuse = toneMap(diffuse);
             diffuse = gammaCorrectOutput(diffuse);
 
+            #ifdef DITHER
+                opacityDither(B);
+            #endif
+
             return vec4(diffuse, B);
 
         #endif
@@ -270,15 +274,19 @@ class ShaderGeneratorSplat {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
-        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.debugRender}`;
+        return `splat-${options.pass}-${options.gamma}-${options.toneMapping}-${vsHash}-${fsHash}-${options.debugRender}-${options.dither}}`;
     }
 
     createShaderDefinition(device, options) {
 
-        const defines = (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
-            (device.isWebGL1 ? '' : '#define INT_INDICES\n');
+        const defines =
+            (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
+            (device.isWebGL1 ? '' : '#define INT_INDICES\n') +
+            (options.dither ? '#define DITHER\n' : '');
+
         const vs = defines + splatCoreVS + options.vertex;
         const fs = defines + shaderChunks.decodePS +
+            (options.dither ? shaderChunks.bayerPS + shaderChunks.opacityDitherPS : '') +
             ShaderGenerator.tonemapCode(options.toneMapping) +
             ShaderGenerator.gammaCode(options.gamma) +
             splatCoreFS + options.fragment;

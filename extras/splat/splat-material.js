@@ -1,5 +1,5 @@
 import {
-    BLEND_NORMAL,
+    BLEND_NORMAL, BLEND_NONE,
     ShaderProcessorOptions,
     getProgramLibrary,
     CULLFACE_BACK,
@@ -34,6 +34,7 @@ const splatMainFS = `
  * @property {boolean} [debugRender] - Adds #define DEBUG_RENDER for shader.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
+ * @property {boolean} [dither] - True if opacity dithering should be used instead of opacity.
  */
 
 /**
@@ -44,13 +45,13 @@ const splatMainFS = `
  */
 const createSplatMaterial = (options = {}) => {
 
-    const debugRender = options.debugRender;
+    const { debugRender, dither } = options;
 
     const material = new Material();
     material.name = 'splatMaterial';
     material.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
-    material.blendType = BLEND_NORMAL;
-    material.depthWrite = false;
+    material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
+    material.depthWrite = dither;
 
     material.getShaderVariant = function (device, scene, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
@@ -60,7 +61,8 @@ const createSplatMaterial = (options = {}) => {
             toneMapping: (pass === SHADER_FORWARDHDR ? TONEMAP_LINEAR : scene.toneMapping),
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
-            debugRender: debugRender
+            debugRender: debugRender,
+            dither: !!dither
         };
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
