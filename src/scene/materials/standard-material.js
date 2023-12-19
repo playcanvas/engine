@@ -1233,6 +1233,7 @@ function _defineMaterialProps() {
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
     _defineFlag('ditherOpacity', false);
+    _defineFlag('ditherShadowOpacity', false);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');
