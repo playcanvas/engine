@@ -59,6 +59,16 @@ class Sky {
         this.projectedSkydomeCenterId = this.device.scope.resolve('projectedSkydomeCenter');
     }
 
+
+    applySettings(render) {
+        this.node.setLocalPosition(new Vec3(render.skyMeshPosition ?? [0, 0, 0]));
+        this.node.setLocalEulerAngles(new Vec3(render.skyMeshRotation ?? [0, 0, 0]));
+        this.node.setLocalScale(new Vec3(render.skyMeshScale ?? [1, 1, 1]));
+        if (render.skyCenter) {
+            this._center = new Vec3(render.skyCenter);
+        }
+    }
+
     /**
      * The type of the sky. One of the SKYMESH_* constants. Defaults to {@link SKYTYPE_INFINITE}.
      * Can be:
