@@ -96,15 +96,17 @@ class SplatInstance {
         // clone centers to allow multiple instancing of sorter
         this.centers = new Float32Array(splat.centers);
 
-        this.sorter = new SplatSorter();
-        this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
+        if (!options.dither) {
+            this.sorter = new SplatSorter();
+            this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
 
-        // if camera entity is provided, automatically use it to sort splats
-        const cameraEntity = options.cameraEntity;
-        if (cameraEntity) {
-            this.callbackHandle = cameraEntity._app.on('prerender', () => {
-                this.sort(cameraEntity);
-            });
+            // if camera entity is provided, automatically use it to sort splats
+            const cameraEntity = options.cameraEntity;
+            if (cameraEntity) {
+                this.callbackHandle = cameraEntity._app.on('prerender', () => {
+                    this.sort(cameraEntity);
+                });
+            }
         }
 
         this.updateViewport();
@@ -114,7 +116,7 @@ class SplatInstance {
         this.material.destroy();
         this.vb.destroy();
         this.meshInstance.destroy();
-        this.sorter.destroy();
+        this.sorter?.destroy();
         this.callbackHandle?.off();
     }
 
