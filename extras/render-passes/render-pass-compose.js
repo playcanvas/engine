@@ -264,7 +264,7 @@ class RenderPassCompose extends RenderPassShaderQuad {
         }
 
         if (this._fringingEnabled) {
-            // relative fo a fixed texture resolution to preserve size regardless of the resolution
+            // relative to a fixed texture resolution to preserve size regardless of the resolution
             this.fringingIntensityId.setValue(this.fringingIntensity / 1024);
         }
 
