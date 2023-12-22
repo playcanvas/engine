@@ -4,6 +4,7 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
+import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
@@ -496,6 +497,8 @@ class GraphicsDevice extends EventHandler {
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+
+        this.blendColor = new Color(0, 0, 0, 0);
     }
 
     /**

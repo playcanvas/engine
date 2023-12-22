@@ -12,6 +12,7 @@ import {
 } from "playcanvas";
 import { RenderPassBloom } from "./render-pass-bloom.js";
 import { RenderPassCompose } from "./render-pass-compose.js";
+import { RenderPassTAA } from "./render-pass-taa.js";
 
 class RenderPassCameraFrame extends RenderPass {
     app;
@@ -26,12 +27,31 @@ class RenderPassCameraFrame extends RenderPass {
 
     _renderTargetScale = 1;
 
+    /**
+     * @type {RenderTarget}
+     * @private
+     */
+    _rt = null;
+
     constructor(app, options = {}) {
         super(app.graphicsDevice);
         this.app = app;
         this.options = this.sanitizeOptions(options);
 
         this.setupRenderPasses(this.options);
+    }
+
+    destroy() {
+
+        if (this._rt) {
+            this._rt.destroyTextureBuffers();
+            this._rt.destroy();
+            this._rt = null;
+        }
+
+        // destroy all passes we created
+        this.beforePasses.forEach(pass => pass.destroy());
+        this.beforePasses = null;
     }
 
     sanitizeOptions(options) {
@@ -47,7 +67,10 @@ class RenderPassCameraFrame extends RenderPass {
 
             // immediate layer is the last layer rendered before the post-processing
             lastSceneLayerId: LAYERID_IMMEDIATE,
-            lastSceneLayerIsTransparent: true
+            lastSceneLayerIsTransparent: true,
+
+            // TAA
+            taaEnabled: false
         };
 
         return Object.assign({}, defaults, options);
@@ -112,6 +135,7 @@ class RenderPassCameraFrame extends RenderPass {
             depth: true,
             samples: options.samples
         });
+        this._rt = rt;
 
         // ------ SCENE RENDERING WITH OPTIONAL GRAB PASS ------
 
@@ -148,16 +172,25 @@ class RenderPassCameraFrame extends RenderPass {
             lastAddedIndex = scenePassTransparent.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
         }
 
+        // ------ TAA ------
+
+        let taaPass;
+        let sceneTextureWithTaa = sceneTexture;
+        if (options.taaEnabled) {
+            taaPass = new RenderPassTAA(device, sceneTexture);
+            sceneTextureWithTaa = taaPass.accumulationTexture;
+        }
+
         // ------ BLOOM GENERATION ------
 
         // create a bloom pass, which generates bloom texture based on the just rendered scene texture
-        this.bloomPass = new RenderPassBloom(app.graphicsDevice, sceneTexture, format);
+        this.bloomPass = new RenderPassBloom(app.graphicsDevice, sceneTextureWithTaa, format);
 
         // ------ COMPOSITION ------
 
         // create a compose pass, which combines the scene texture with the bloom texture
         this.composePass = new RenderPassCompose(app.graphicsDevice);
-        this.composePass.sceneTexture = sceneTexture;
+        this.composePass.sceneTexture = sceneTextureWithTaa;
         this.composePass.bloomTexture = this.bloomPass.bloomTexture;
 
         // compose pass renders directly to target renderTarget
@@ -173,7 +206,7 @@ class RenderPassCameraFrame extends RenderPass {
         afterPass.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget);
 
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.scenePass, colorGrabPass, scenePassTransparent, this.bloomPass, this.composePass, afterPass];
+        const allPasses = [this.scenePass, colorGrabPass, scenePassTransparent, taaPass, this.bloomPass, this.composePass, afterPass];
         this.beforePasses = allPasses.filter(element => element !== undefined);
     }
 }
