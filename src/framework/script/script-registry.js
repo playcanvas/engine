@@ -41,6 +41,9 @@ class ScriptRegistry extends EventHandler {
      * console.log(app.scripts.has('playerController')); // outputs true
      */
     add(script) {
+        if (script.__name === null)
+            script.__name = script.name;
+
         const scriptName = script.__name;
 
         if (this._scripts.hasOwnProperty(scriptName)) {

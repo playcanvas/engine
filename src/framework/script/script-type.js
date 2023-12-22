@@ -320,7 +320,7 @@ class ScriptType extends EventHandler {
             } else if (!this.__attributes.hasOwnProperty(key)) {
                 if (this.__scriptType.attributes.index[key].hasOwnProperty('default')) {
                     this[key] = this.__scriptType.attributes.index[key].default;
-                } else {
+                } else if (!this.hasOwnProperty(key)) {
                     this[key] = null;
                 }
             }

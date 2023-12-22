@@ -640,6 +640,8 @@ class ScriptComponent extends Component {
         if (typeof scriptType === 'string') {
             scriptType = this.system.app.scripts.get(scriptType);
         } else if (scriptType) {
+            if (scriptType.__name === null)
+                scriptType.__name = scriptType.name;
             scriptName = scriptType.__name;
         }
 
