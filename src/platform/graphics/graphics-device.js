@@ -524,6 +524,20 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Sets the constant blend color and alpha values used with {@link BLENDMODE_CONSTANT} and
+     * {@link BLENDMODE_ONE_MINUS_CONSTANT} factors specified in {@link BlendState}. Defaults to
+     * [0, 0, 0, 0].
+     *
+     * @param {number} r - The value for red.
+     * @param {number} g - The value for green.
+     * @param {number} b - The value for blue.
+     * @param {number} a - The value for alpha.
+     */
+    setBlendColor(r, g, b, a) {
+        Debug.assert(false);
+    }
+
+    /**
      * Sets the specified depth state.
      *
      * @param {DepthState} depthState - New depth state.
