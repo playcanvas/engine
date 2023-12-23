@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
@@ -56,10 +57,32 @@ const _fixProjRangeMat = new Mat4().set([
     0, 0, 0.5, 1
 ]);
 
+// helton sequence of 2d offsets for jittering
+const _haltonSequence = [
+    new Vec2(0.5, 0.333333),
+    new Vec2(0.25, 0.666667),
+    new Vec2(0.75, 0.111111),
+    new Vec2(0.125, 0.444444),
+    new Vec2(0.625, 0.777778),
+    new Vec2(0.375, 0.222222),
+    new Vec2(0.875, 0.555556),
+    new Vec2(0.0625, 0.888889),
+    new Vec2(0.5625, 0.037037),
+    new Vec2(0.3125, 0.370370),
+    new Vec2(0.8125, 0.703704),
+    new Vec2(0.1875, 0.148148),
+    new Vec2(0.6875, 0.481481),
+    new Vec2(0.4375, 0.814815),
+    new Vec2(0.9375, 0.259259),
+    new Vec2(0.03125, 0.592593)
+];
+
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat2 = new Mat4();
 const _tempProjMat3 = new Mat4();
+const _tempProjMat4 = new Mat4();
+const _tempProjMat5 = new Mat4();
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -339,6 +362,30 @@ class Renderer {
             if (this.device.isWebGPU) {
                 projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
                 projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
+            }
+
+            // camera jitter
+            const { jitter } = camera;
+            if (jitter > 0) {
+
+                // render target size
+                const targetWidth = target ? target.width : this.device.width;
+                const targetHeight = target ? target.height : this.device.height;
+
+                // offsets
+                const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
+                const offsetX = jitter * (offset.x * 2 - 1) / targetWidth;
+                const offsetY = jitter * (offset.y * 2 - 1) / targetHeight;
+
+                // apply offset to projection matrix
+                projMat = _tempProjMat4.copy(projMat);
+                projMat.data[8] = offsetX;
+                projMat.data[9] = offsetY;
+
+                // apply offset to skybox projection matrix
+                projMatSkybox = _tempProjMat5.copy(projMatSkybox);
+                projMatSkybox.data[8] = offsetX;
+                projMatSkybox.data[9] = offsetY;
             }
 
             this.projId.setValue(projMat.data);
