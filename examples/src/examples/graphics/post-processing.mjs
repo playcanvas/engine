@@ -175,6 +175,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 0
                 })
             )
+        ),
+        jsx(Panel, { headerText: 'TAA (Work in Progress)' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.taa.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'jitter' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.taa.jitter' },
+                    min: 0,
+                    max: 5,
+                    precision: 2
+                })
+            )
         )
     );
 }
@@ -395,96 +413,97 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         // ------ Custom render passes set up ------
 
-        // Use a render pass camera, which is a render pass that implements typical rendering of a camera.
-        // Internally this sets up additional passes it needs, based on the options passed to it.
-        const renderPassCamera = new pcx.RenderPassCameraFrame(app, {
+        const currentOptions = {
             camera: cameraEntity.camera,    // camera used to render those passes
-            samples: 2,                     // number of samples for multi-sampling
-            sceneColorMap: true             // true if the scene color should be captured
-        });
+            samples: 0,                     // number of samples for multi-sampling
+            sceneColorMap: true,            // true if the scene color should be captured
 
-        // and set up these rendering passes to be used by the camera, instead of its default rendering
-        cameraEntity.camera.renderPasses = [renderPassCamera];
+            // disabled by default as this is WIP
+            taaEnabled: false               // true if temporal anti-aliasing should be used
+        };
+
+        const setupRenderPass = () => {
+
+            // destroy existing pass if any
+            if (cameraEntity.camera.renderPasses.length > 0) {
+                cameraEntity.camera.renderPasses[0].destroy();
+            }
+
+            // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
+            // Internally this sets up additional passes it needs, based on the options passed to it.
+            const renderPassCamera = new pcx.RenderPassCameraFrame(app, currentOptions);
+
+            // and set up these rendering passes to be used by the camera, instead of its default rendering
+            cameraEntity.camera.renderPasses = [renderPassCamera];
+        };
 
         // ------
 
-        // access compose pass to change its settings - this is the pass that combines the scene
-        // with the post-processing effects
-        const { composePass } = renderPassCamera;
+        const applySettings = () => {
 
-        data.on('*:set', (/** @type {string} */ path, value) => {
-            const pathArray = path.split('.');
-            if (pathArray[1] === 'scene') {
-                if (pathArray[2] === 'scale') {
-                    renderPassCamera.renderTargetScale = value;
-                }
-                if (pathArray[2] === 'tonemapping') {
-                    composePass.toneMapping = value;
-                    composePass._shaderDirty = true;
-                }
-                if (pathArray[2] === 'background') {
-                    cameraEntity.camera.clearColor = new pc.Color(lightColor.r * value, lightColor.g * value, lightColor.b * value);
-                    light.light.intensity = value;
-                }
-                if (pathArray[2] === 'emissive') {
-                    emissiveMaterials.forEach((material) => {
-                        material.emissiveIntensity = value;
-                        material.update();
-                    });
-                }
+            // if settings require render passes to be re-created
+            const noPasses = cameraEntity.camera.renderPasses.length === 0;
+            const taaEnabled = data.get('data.taa.enabled');
+            if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+                currentOptions.taaEnabled = taaEnabled;
+
+                // create new pass
+                setupRenderPass();
             }
-            if (pathArray[1] === 'bloom') {
-                if (pathArray[2] === 'intensity') {
-                    composePass.bloomIntensity = pc.math.lerp(0, 0.1, value / 100);
-                }
-                if (pathArray[2] === 'lastMipLevel') {
-                    renderPassCamera.lastMipLevel = value;
-                }
-                if (pathArray[2] === 'enabled') {
-                    renderPassCamera.bloomEnabled = value;
-                }
-            }
-            if (pathArray[1] === 'grading') {
-                if (pathArray[2] === 'saturation') {
-                    composePass.gradingSaturation = value;
-                }
-                if (pathArray[2] === 'brightness') {
-                    composePass.gradingBrightness = value;
-                }
-                if (pathArray[2] === 'contrast') {
-                    composePass.gradingContrast = value;
-                }
-                if (pathArray[2] === 'enabled') {
-                    composePass.gradingEnabled = value;
-                }
-            }
-            if (pathArray[1] === 'vignette') {
-                if (pathArray[2] === 'enabled') {
-                    composePass.vignetteEnabled = value;
-                }
-                if (pathArray[2] === 'inner') {
-                    composePass.vignetteInner = value;
-                }
-                if (pathArray[2] === 'outer') {
-                    composePass.vignetteOuter = value;
-                }
-                if (pathArray[2] === 'curvature') {
-                    composePass.vignetteCurvature = value;
-                }
-                if (pathArray[2] === 'intensity') {
-                    composePass.vignetteIntensity = value;
-                }
-            }
-            if (pathArray[1] === 'fringing') {
-                if (pathArray[2] === 'enabled') {
-                    composePass.fringingEnabled = value;
-                }
-                if (pathArray[2] === 'intensity') {
-                    composePass.fringingIntensity = value;
-                }
-            }
+
+            const renderPassCamera = cameraEntity.camera.renderPasses[0];
+            const composePass = renderPassCamera.composePass;
+
+            // apply all runtime settings
+
+            // SCENE
+            composePass.toneMapping = data.get('data.scene.tonemapping');
+            renderPassCamera.renderTargetScale = data.get('data.scene.scale');
+
+            const background = data.get('data.scene.background');
+            cameraEntity.camera.clearColor = new pc.Color(lightColor.r * background, lightColor.g * background, lightColor.b * background);
+            light.light.intensity = background;
+
+            const emissive = data.get('data.scene.emissive');
+            emissiveMaterials.forEach((material) => {
+                material.emissiveIntensity = emissive;
+                material.update();
+            });
+
+            // taa - enable camera jitter if taa is enabled
+            cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+
+            // bloom
+            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+            renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+
+            // grading
+            composePass.gradingSaturation = data.get('data.grading.saturation');
+            composePass.gradingBrightness = data.get('data.grading.brightness');
+            composePass.gradingContrast = data.get('data.grading.contrast');
+            composePass.gradingEnabled = data.get('data.grading.enabled');
+
+            // vignette
+            composePass.vignetteEnabled = data.get('data.vignette.enabled');
+            composePass.vignetteInner = data.get('data.vignette.inner');
+            composePass.vignetteOuter = data.get('data.vignette.outer');
+            composePass.vignetteCurvature = data.get('data.vignette.curvature');
+            composePass.vignetteIntensity = data.get('data.vignette.intensity');
+
+            // fringing
+            composePass.fringingEnabled = data.get('data.fringing.enabled');
+            composePass.fringingIntensity = data.get('data.fringing.intensity');
+        };
+
+        // apply UI changes
+        let initialValuesSetup = false;
+        data.on('*:set', () => {
+            if (initialValuesSetup)
+                applySettings();
         });
 
+        // set initial values
         data.set('data', {
             scene: {
                 scale: 1.8,
@@ -513,8 +532,16 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             fringing: {
                 enabled: false,
                 intensity: 50
+            },
+            taa: {
+                enabled: currentOptions.taaEnabled,
+                jitter: 1
             }
         });
+
+        // apply initial settings after all values are set
+        initialValuesSetup = true;
+        applySettings();
 
         // update things every frame
         let angle = 0;
