@@ -8,6 +8,9 @@ import {
 } from 'playcanvas'
 
 class Gizmo {
+    gizmo;
+
+
     constructor(app, camera, nodes) {
         this.app = app;
         this.camera = camera;
@@ -16,19 +19,18 @@ class Gizmo {
         this._createLayer();
         this._createGizmo();
 
-        const self = this;
         window.addEventListener('pointermove', (e) => {
-            const start = self.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
-            const end = self.camera.camera.screenToWorld(e.clientX, e.clientY, self.camera.camera.farClip);
+            const start = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
+            const end = this.camera.camera.screenToWorld(e.clientX, e.clientY, this.camera.camera.farClip);
             const dir = end.clone().sub(start).normalize();
 
             const xstart = new Vec3();
             const xdir = new Vec3();
 
             const selection = [];
-            const renderComponents = self.app.root.findComponents('render');
-            for (let i = 0; i < renderComponents.length; i++) {
-                const meshInstances = renderComponents[i].meshInstances;
+            const renders = this.gizmo.findComponents('render');
+            for (let i = 0; i < renders.length; i++) {
+                const meshInstances = renders[i].meshInstances;
                 for (let j = 0; j < meshInstances.length; j++) {
                     const meshInstance = meshInstances[j];
                     const mesh = meshInstance.mesh;
@@ -48,6 +50,7 @@ class Gizmo {
                     const v2 = new Vec3();
                     const v3 = new Vec3();
                     const out = new Vec3();
+
                     for (let k = 0; k < idx.length; k += 3) {
                         const i1 = idx[k];
                         const i2 = idx[k + 1];
@@ -57,14 +60,15 @@ class Gizmo {
                         v2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
                         v3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
 
-                        if (self._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, out)) {
+                        if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, out)) {
                             selection.push(meshInstance);
-                            return;
                         }
                     }
+
                 }
             }
-            console.log('SELECTION', selection);
+
+            console.log("SELECTION", selection);
 
         }, { passive: false });
     }
@@ -84,14 +88,14 @@ class Gizmo {
         const material = new StandardMaterial();
         material.diffuse = new Color(1, 0.3, 0.3);
 
-        const root = new Entity('gizmo');
+        this.gizmo = new Entity('gizmo');
 
         // lighting
         const light = new Entity('light');
         light.addComponent('light', {
             layers: [this.layerGizmo.id]
         });
-        root.addChild(light);
+        this.gizmo.addChild(light);
         light.setEulerAngles(45, -20, 0);
 
         // center
@@ -103,9 +107,9 @@ class Gizmo {
         });
         center.setEulerAngles(0, 45, 0);
         center.setLocalScale(0.1, 0.1, 0.1);
-        root.addChild(center);
+        this.gizmo.addChild(center);
 
-        this.app.root.addChild(root);
+        this.app.root.addChild(this.gizmo);
     }
 
     _rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
@@ -121,23 +125,23 @@ class Gizmo {
         h.cross(dir, e2);
         const a = e1.dot(h);
         if (a > -EPSILON && a < EPSILON) {
-            return false; // ray is parallel to triangle
+            return false;
         }
 
-        const f = 1.0 / a;
+        const f = 1 / a;
         s.sub2(origin, v0);
         const u = f * s.dot(h);
-        if (u < 0.0 || u > 1.0) {
+        if (u < 0 || u > 1) {
             return false;
         }
 
         q.cross(s, e1);
         const v = f * dir.dot(q);
-        if (v < 0.0 || u + v > 1.0) {
+        if (v < 0 || u + v > 1) {
             return false;
         }
 
-        const t = f * e1.dot(q);
+        const t = f * e2.dot(q);
         if (t > EPSILON) {
             out.copy(dir).scale(t).add(origin);
             return true;
