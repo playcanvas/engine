@@ -10,7 +10,6 @@ import {
 class Gizmo {
     gizmo;
 
-
     constructor(app, camera, nodes) {
         this.app = app;
         this.camera = camera;
@@ -68,7 +67,10 @@ class Gizmo {
                 }
             }
 
-            console.log("SELECTION", selection);
+            const hover = selection[0] ?? null;
+            if (hover) {
+                console.log(hover);
+            }
 
         }, { passive: false });
     }
@@ -84,26 +86,34 @@ class Gizmo {
         this.camera.camera.layers = this.camera.camera.layers.concat(this.layerGizmo.id);
     }
 
-    _createGizmo() {
+    _createMaterial(r, g, b) {
         const material = new StandardMaterial();
-        material.diffuse = new Color(1, 0.3, 0.3);
+        material.diffuse = new Color(r, g, b);
+        return material;
+    }
 
-        this.gizmo = new Entity('gizmo');
-
-        // lighting
+    _createLight(x, y, z) {
         const light = new Entity('light');
         light.addComponent('light', {
             layers: [this.layerGizmo.id]
         });
+        light.setEulerAngles(x, y, z);
+        return light;
+    }
+
+    _createGizmo() {
+        this.gizmo = new Entity('gizmo');
+
+        // lighting
+        const light = this._createLight(45, -20, 0);
         this.gizmo.addChild(light);
-        light.setEulerAngles(45, -20, 0);
 
         // center
         const center = new Entity('center');
         center.addComponent('render', {
             type: 'box',
             layers: [this.layerGizmo.id],
-            material: material
+            material: this._createMaterial(1, 0.3, 0.3)
         });
         center.setEulerAngles(0, 45, 0);
         center.setLocalScale(0.1, 0.1, 0.1);
