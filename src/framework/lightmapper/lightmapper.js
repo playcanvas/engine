@@ -522,7 +522,7 @@ class Lightmapper {
         const startTime = now();
 
         // update skybox
-        this.scene._updateSky(device);
+        this.scene._updateSkyMesh();
 
         // #if _PROFILER
         device.fire('lightmapper:start', {

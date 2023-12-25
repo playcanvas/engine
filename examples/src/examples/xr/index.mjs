@@ -4,6 +4,7 @@ export * from "./ar-camera-depth.mjs";
 export * from "./ar-hit-test.mjs";
 export * from "./ar-hit-test-anchors.mjs";
 export * from "./ar-anchors-persistence.mjs";
+export * from "./ar-mesh-detection.mjs";
 export * from "./ar-plane-detection.mjs";
 export * from "./vr-basic.mjs";
 export * from './vr-controllers.mjs';

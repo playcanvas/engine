@@ -105,7 +105,8 @@ class WebgpuMipmapRenderer {
         });
         DebugHelper.setLabel(pipeline, 'RenderPipeline-MipmapRenderer');
 
-        const numFaces = webgpuTexture.texture.cubemap ? 6 : 1;
+        const texture = webgpuTexture.texture;
+        const numFaces = texture.cubemap ? 6 : (texture.array ? texture.arrayLength : 1);
 
         const srcViews = [];
         for (let face = 0; face < numFaces; face++) {

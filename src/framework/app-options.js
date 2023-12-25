@@ -93,7 +93,7 @@ class AppOptions {
     /**
      * The component systems the app requires.
      *
-     * @type {import('./components/system.js').ComponentSystem[]}
+     * @type {typeof import('./components/system.js').ComponentSystem[]}
      */
     componentSystems = [];
 

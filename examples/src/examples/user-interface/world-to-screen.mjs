@@ -25,17 +25,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ButtonComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [

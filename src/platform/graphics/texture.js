@@ -162,7 +162,8 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels] - Array of Uint8Array or other supported browser interface; or a two-dimensional array
+     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
      * of Uint8Array if options.arrayLength is defined and greater than zero.
      * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
      * a compute shader. Defaults to false.
@@ -752,15 +753,9 @@ class Texture {
      */
     lock(options = {}) {
         // Initialize options to some sensible defaults
-        if (options.level === undefined) {
-            options.level = 0;
-        }
-        if (options.face === undefined) {
-            options.face = 0;
-        }
-        if (options.mode === undefined) {
-            options.mode = TEXTURELOCK_WRITE;
-        }
+        options.level ??= 0;
+        options.face ??= 0;
+        options.mode ??= TEXTURELOCK_WRITE;
 
         this._lockedLevel = options.level;
 

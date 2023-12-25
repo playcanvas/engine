@@ -149,11 +149,18 @@ class Material {
     stencilBack = null;
 
     /**
-     * Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
+     * Offsets the output depth buffer value. Useful for decals to prevent z-fighting. Typically
+     * a small negative value (-0.1) is used to render the mesh slightly closer to the camera.
      *
      * @type {number}
      */
-    depthBias = 0;
+    set depthBias(value) {
+        this._depthState.depthBias = value;
+    }
+
+    get depthBias() {
+        return this._depthState.depthBias;
+    }
 
     /**
      * Same as {@link Material#depthBias}, but also depends on the slope of the triangle relative
@@ -161,7 +168,13 @@ class Material {
      *
      * @type {number}
      */
-    slopeDepthBias = 0;
+    set slopeDepthBias(value) {
+        this._depthState.depthBiasSlope = value;
+    }
+
+    get slopeDepthBias() {
+        return this._depthState.depthBiasSlope;
+    }
 
     _shaderVersion = 0;
 
@@ -419,9 +432,6 @@ class Material {
         this._depthState.copy(source._depthState);
 
         this.cull = source.cull;
-
-        this.depthBias = source.depthBias;
-        this.slopeDepthBias = source.slopeDepthBias;
 
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {

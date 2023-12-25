@@ -4,6 +4,7 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
+import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
@@ -62,6 +63,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
+     *
+     * @type {boolean}
      */
     backBufferAntialias = false;
 
@@ -494,6 +497,8 @@ class GraphicsDevice extends EventHandler {
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+
+        this.blendColor = new Color(0, 0, 0, 0);
     }
 
     /**
@@ -515,6 +520,20 @@ class GraphicsDevice extends EventHandler {
      * @param {BlendState} blendState - New blend state.
      */
     setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the constant blend color and alpha values used with {@link BLENDMODE_CONSTANT} and
+     * {@link BLENDMODE_ONE_MINUS_CONSTANT} factors specified in {@link BlendState}. Defaults to
+     * [0, 0, 0, 0].
+     *
+     * @param {number} r - The value for red.
+     * @param {number} g - The value for green.
+     * @param {number} b - The value for blue.
+     * @param {number} a - The value for alpha.
+     */
+    setBlendColor(r, g, b, a) {
         Debug.assert(false);
     }
 
