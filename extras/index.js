@@ -20,3 +20,4 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // gizmo
 export { Gizmo } from "./gizmo/gizmo.js";
+export { GizmoTransform } from "./gizmo/gizmo-transform.js";

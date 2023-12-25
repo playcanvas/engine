@@ -1,8 +1,6 @@
 import {
     SORTMODE_NONE,
     Layer,
-    Color,
-    StandardMaterial,
     Entity,
     Vec3
 } from 'playcanvas'
@@ -18,7 +16,7 @@ class Gizmo {
         this._createLayer();
         this._createGizmo();
 
-        window.addEventListener('pointermove', (e) => {
+        const onPointerMove = (e) => {
             const start = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
             const end = this.camera.camera.screenToWorld(e.clientX, e.clientY, this.camera.camera.farClip);
             const dir = end.clone().sub(start).normalize();
@@ -67,12 +65,14 @@ class Gizmo {
                 }
             }
 
-            const hover = selection[0] ?? null;
-            if (hover) {
-                console.log(hover);
-            }
+            this._handleHover(selection[0] ?? null);
 
-        }, { passive: false });
+        };
+
+        window.addEventListener('pointermove', onPointerMove);
+        app.on('destroy', () => {
+            window.removeEventListener('pointermove', onPointerMove);
+        });
     }
 
     _createLayer() {
@@ -86,40 +86,13 @@ class Gizmo {
         this.camera.camera.layers = this.camera.camera.layers.concat(this.layerGizmo.id);
     }
 
-    _createMaterial(r, g, b) {
-        const material = new StandardMaterial();
-        material.diffuse = new Color(r, g, b);
-        return material;
-    }
-
-    _createLight(x, y, z) {
-        const light = new Entity('light');
-        light.addComponent('light', {
-            layers: [this.layerGizmo.id]
-        });
-        light.setEulerAngles(x, y, z);
-        return light;
-    }
-
     _createGizmo() {
         this.gizmo = new Entity('gizmo');
-
-        // lighting
-        const light = this._createLight(45, -20, 0);
-        this.gizmo.addChild(light);
-
-        // center
-        const center = new Entity('center');
-        center.addComponent('render', {
-            type: 'box',
-            layers: [this.layerGizmo.id],
-            material: this._createMaterial(1, 0.3, 0.3)
-        });
-        center.setEulerAngles(0, 45, 0);
-        center.setLocalScale(0.1, 0.1, 0.1);
-        this.gizmo.addChild(center);
-
         this.app.root.addChild(this.gizmo);
+    }
+
+    _handleHover(selection) {
+        // override in child class
     }
 
     _rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {

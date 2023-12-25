@@ -1,10 +1,53 @@
 import * as pc from 'playcanvas';
 
 /**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput } = ReactPCUI;
+    return fragment(
+        jsx(Panel, { headerText: 'Gizmo Transform' },
+            jsx(LabelGroup, { text: 'Axis Gap' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisGap' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Line Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisLineThickness' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Line Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisLineLength' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisArrowThickness' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisArrowLength' }
+                })
+            )
+        )
+    );
+}
+
+
+/**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -67,7 +110,18 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     light.setEulerAngles(45, -20, 0);
 
     // create gizmo
-    const gizmo = new pcx.Gizmo(app, camera, [box]);
+    const gizmo = new pcx.GizmoTransform(app, camera, []);
+    data.set('settings', {
+        axisGap: gizmo.axisGap,
+        axisLineThickness: gizmo.axisLineThickness,
+        axisLineLength: gizmo.axisLineLength,
+        axisArrowThickness: gizmo.axisArrowThickness,
+        axisArrowLength: gizmo.axisArrowLength
+    });
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
+        gizmo[pathArray[1]] = value;
+    });
 
     return app;
 }
@@ -75,6 +129,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 class GizmosExample {
     static CATEGORY = 'Misc';
     static WEBGPU_ENABLED = true;
+    static controls = controls;
     static example = example;
 }
 
