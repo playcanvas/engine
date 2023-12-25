@@ -122,9 +122,10 @@ class XrView extends EventHandler {
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
      * object that is created by WebXR API.
+     * @param {number} viewsCount - Number of views available for the session.
      * @hideconstructor
      */
-    constructor(manager, xrView) {
+    constructor(manager, xrView, viewsCount) {
         super();
 
         this._manager = manager;
@@ -148,13 +149,13 @@ class XrView extends EventHandler {
                     height: this._xrCamera.height,
                     name: `XrView-${this._xrView.eye}-Color`
                 });
-
             }
         }
 
         if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
             this._textureDepth = new Texture(device, {
                 format: this._manager.views.depthPixelFormat,
+                arrayLength: (viewsCount === 1) ? 0 : viewsCount,
                 mipmaps: false,
                 addressU: ADDRESS_CLAMP_TO_EDGE,
                 addressV: ADDRESS_CLAMP_TO_EDGE,
@@ -164,6 +165,10 @@ class XrView extends EventHandler {
                 height: 4,
                 name: `XrView-${this._xrView.eye}-Depth`
             });
+
+            for (let i = 0; i < this._textureDepth._levels.length; i++) {
+                this._textureDepth._levels[i] = this._emptyDepthBuffer;
+            }
         }
 
         if (this._textureColor || this._textureDepth)
@@ -472,7 +477,9 @@ class XrView extends EventHandler {
         if (this._depthInfo) {
             if (gpu) {
                 // gpu
-                // TODO
+                if (this._depthInfo.texture) {
+                    this._textureDepth.impl._glTexture = this._depthInfo.texture;
+                }
             } else {
                 // cpu
                 this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);

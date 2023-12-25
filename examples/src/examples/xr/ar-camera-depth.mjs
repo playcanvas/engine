@@ -50,68 +50,118 @@ async function example({ canvas }) {
     app.start();
 
     // create camera
-    const c = new pc.Entity();
-    c.addComponent('camera', {
+    const camera = new pc.Entity();
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0, 0, 0, 0),
         farClip: 10000
     });
-    app.root.addChild(c);
+    app.root.addChild(camera);
 
-    const l = new pc.Entity();
-    l.addComponent("light", {
-        type: "spot",
-        range: 30
-    });
-    l.translate(0, 10, 0);
-    app.root.addChild(l);
+    let shaderUpdated = false;
+    let shaderDepthArray = null;
+    let shaderDepthFloat = null;
 
-    const material = new pc.StandardMaterial();
+    const vertShader = /* glsl */ `
+    attribute vec3 aPosition;
+    attribute vec2 aUv0;
+    uniform mat4 matrix_model;
+    uniform mat4 matrix_viewProjection;
+    varying vec2 vUv0;
+    void main(void)
+    {
+        vec4 screenPosition = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+        gl_Position = screenPosition;
+        vUv0 = screenPosition.xy;
+    }
+    `;
 
-    const materialDepth = new pc.Material();
-    materialDepth.cull = pc.CULLFACE_NONE;
-    materialDepth.shader = app.scene.immediate.getShader('textureDepthSensing', /* glsl */ `
-    varying vec2 uv0;
-    uniform sampler2D colorMap;
+    const fragShader = /* glsl */ `
+    varying vec2 vUv0;
+    uniform vec4 uScreenSize;
     uniform mat4 matrix_depth_uv;
     uniform float depth_raw_to_meters;
 
+    #ifdef XRDEPTH_ARRAY
+        uniform int view_index;
+        uniform highp sampler2DArray depthMap;
+    #else
+        uniform sampler2D depthMap;
+    #endif
+
     void main (void) {
-        vec2 texCoord = (matrix_depth_uv * vec4(uv0.xy, 0.0, 1.0)).xy;
-        vec2 packedDepth = texture2D(colorMap, texCoord).ra;
-        float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)) * depth_raw_to_meters; // m
-        depth = 1.0 - min(depth / 8.0, 1.0); // 0..1 = 0m..8m
+        vec2 uvScreen = gl_FragCoord.xy * uScreenSize.zw;
+
+        // use texture array for multi-view 
+        #ifdef XRDEPTH_ARRAY
+            uvScreen = uvScreen * vec2(2.0, 1.0) - vec2(view_index, 0.0);
+            vec3 uv = vec3((matrix_depth_uv * vec4(uvScreen.xy, 0.0, 1.0)).xy, view_index);
+        #else
+            vec2 uv = (matrix_depth_uv * vec4(uvScreen.x, 1.0 - uvScreen.y, 0.0, 1.0)).xy;
+        #endif
+
+        #ifdef XRDEPTH_FLOAT
+            float depth = texture2D(depthMap, uv).r;
+        #else
+            // unpack from AlphaLuminance
+            vec2 packedDepth = texture2D(depthMap, uv).ra;
+            float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0));
+        #endif
+
+        depth *= depth_raw_to_meters;
+
+        // depth = 1.0 - min(depth / 2.0, 1.0); // 0..1 = 0m..4m
         gl_FragColor = vec4(depth, depth, depth, 1.0);
-    }`);
-    materialDepth.update();
+    }`;
+
+    const materialDepth = new pc.Material();
 
     /**
-     * @param {number} x - The x coordinate.
-     * @param {number} y - The y coordinate.
-     * @param {number} z - The z coordinate.
+     * @param {boolean} array - If the depth information uses array texture.
+     * @param {boolean} float - If the depth information uses F32R texture.
      */
-    const createCube = function (x, y, z) {
-        const cube = new pc.Entity();
-        cube.addComponent("render", {
-            type: "box"
-        });
-        cube.render.material = material;
-        cube.setLocalScale(0.5, 0.5, 0.5);
-        cube.translate(x * 0.5, y, z * 0.5);
-        app.root.addChild(cube);
+    const updateShader = (array, float) => {
+        if (shaderDepthArray === array && shaderDepthFloat === float)
+            return;
+
+        shaderDepthArray = array;
+        shaderDepthFloat = float;
+
+        const key = 'textureDepthSensing_' + array + float;
+        let frag = fragShader;
+
+        if (shaderDepthArray)
+            frag = '#define XRDEPTH_ARRAY\n' + frag;
+
+        if (shaderDepthArray)
+            frag = '#define XRDEPTH_FLOAT\n' + frag;
+
+        materialDepth.shader = pc.createShaderFromCode(app.graphicsDevice,
+            vertShader,
+            frag,
+            key, {
+                aPosition: pc.SEMANTIC_POSITION,
+                aUv0: pc.SEMANTIC_TEXCOORD0
+            });
+        materialDepth.clearVariants();
+        materialDepth.update();
     };
 
-    // create a grid of cubes
-    const SIZE = 4;
-    for (let x = 0; x < SIZE; x++) {
-        for (let y = 0; y < SIZE; y++) {
-            createCube(2 * x - SIZE, 0.25, 2 * y - SIZE);
-        }
-    }
+    updateShader(false, false);
+    
+    const plane = new pc.Entity();
+    plane.addComponent('render', {
+        type: 'plane'
+    });
+    plane.render.material = materialDepth;
+    plane.render.meshInstances[0].cull = false;
+    plane.setLocalPosition(0, 0, -1);
+    plane.setLocalEulerAngles(90, 0, 0);
+    camera.addChild(plane);
 
     if (app.xr.supported) {
         const activate = function () {
             if (app.xr.isAvailable(pc.XRTYPE_AR)) {
-                c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+                camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                     depthSensing: { // request access to camera depth
                         usagePreference: pc.XRDEPTHSENSINGUSAGE_GPU,
                         dataFormatPreference: pc.XRDEPTHSENSINGFORMAT_F32
@@ -137,7 +187,7 @@ async function example({ canvas }) {
                     activate();
                 } else {
                     // otherwise reset camera
-                    c.camera.endXr();
+                    camera.camera.endXr();
                 }
 
                 evt.event.preventDefault();
@@ -158,6 +208,7 @@ async function example({ canvas }) {
             console.log('depth texture format', app.xr.views.depthPixelFormat);
         });
         app.xr.on('end', function () {
+            shaderUpdated = false;
             message("Immersive AR session has ended");
         });
         app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
@@ -175,28 +226,21 @@ async function example({ canvas }) {
         app.on('update', () => {
             // if camera depth is available
             if (app.xr.views.availableDepth) {
+                if (!shaderUpdated && app.xr.active) {
+                    shaderUpdated = true;
+                    updateShader(app.xr.views.list.length > 1, app.xr.views.depthPixelFormat === pc.PIXELFORMAT_R32F);
+                }
+
                 for(let i = 0; i < app.xr.views.list.length; i++) {
                     const view = app.xr.views.list[i];
                     if (!view.textureDepth) // check if depth texture is available
                         continue;
 
-                    materialDepth.setParameter('colorMap', view.textureDepth);
+                    materialDepth.setParameter('depthMap', view.textureDepth);
                     materialDepth.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
                     materialDepth.setParameter('depth_raw_to_meters', view.depthValueToMeters);
-
-                    // debug draw camera depth texture on the screen
-                    app.drawTexture(0.5, -0.5, 1, 1, view.textureDepth, materialDepth);
                 }
             }
-        });
-
-        app.xr.on('end', () => {
-            if (!material.diffuseMap)
-                return;
-
-            // clear camera depth texture when XR session ends
-            material.diffuseMap = null;
-            material.update();
         });
 
         if (!app.xr.isAvailable(pc.XRTYPE_AR)) {

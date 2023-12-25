@@ -217,7 +217,7 @@ class XrViews extends EventHandler {
 
             if (!view) {
                 // add new view
-                view = new XrView(this._manager, xrView);
+                view = new XrView(this._manager, xrView, xrViews.length);
                 this._index.set(eye, view);
                 this._list.push(view);
                 view.update(frame, xrView);
