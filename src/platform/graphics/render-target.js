@@ -198,11 +198,6 @@ class RenderTarget {
             }
         });
 
-        // mark color buffer textures as render target
-        this._colorBuffers?.forEach((colorBuffer) => {
-            colorBuffer._isRenderTarget = true;
-        });
-
         const { maxSamples } = this._device;
         this._samples = Math.min(options.samples ?? 1, maxSamples);
 
