@@ -5,13 +5,33 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, scriptsPath }) {
+async function example({ canvas, deviceType, glslangPath, twgslPath, scriptsPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
 
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {
-        mouse: new pc.Mouse(canvas),
-        keyboard: new pc.Keyboard(window)
-    });
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+    createOptions.mouse = new pc.Mouse(document.body);
+    createOptions.keyboard = new pc.Keyboard(window);
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ScriptComponentSystem
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.ScriptHandler
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
+
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -128,6 +148,7 @@ async function example({ canvas, scriptsPath }) {
 
 class FlyExample {
     static CATEGORY = 'Camera';
+    static WEBGPU_ENABLED = true;
     static example = example;
 }
 
