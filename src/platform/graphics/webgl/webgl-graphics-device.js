@@ -1097,7 +1097,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureS3TC = this.getExtension('WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc');
         this.extCompressedTextureATC = this.getExtension('WEBGL_compressed_texture_atc');
         this.extCompressedTextureASTC = this.getExtension('WEBGL_compressed_texture_astc');
-        this.extParallelShaderCompile = this.getExtension('KHR_parallel_shader_compile');
 
         // iOS exposes this for half precision render targets on both Webgl1 and 2 from iOS v 14.5beta
         this.extColorBufferHalfFloat = this.getExtension("EXT_color_buffer_half_float");

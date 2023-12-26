@@ -58,9 +58,11 @@ class WebglShader {
     constructor(shader) {
         this.init();
 
-        // kick off vertex and fragment shader compilation, but not linking here, as that would
-        // make it blocking.
+        // kick off vertex and fragment shader compilation.
         this.compile(shader.device, shader);
+
+        // link the shader right away, this is not blocking
+        this.link(shader.device, shader);
 
         // add the shader to recently created list
         WebglShader.getBatchShaders(shader.device).push(shader);
@@ -305,6 +307,7 @@ class WebglShader {
             linkStartTime = now();
         });
 
+        // check the link status of a shader is a blocking operation
         const linkStatus = gl.getProgramParameter(glProgram, gl.LINK_STATUS);
         if (!linkStatus) {
 
