@@ -1911,7 +1911,7 @@ class AppBase extends EventHandler {
         material.shader = this.scene.immediate.getDepthTextureShader();
         material.update();
 
-        this.drawTexture(x, y, width, height, null, material, layer);
+        this.drawTexture(x, y, width, this.graphicsDevice?.isWebGPU ? -height : height, null, material, layer);
     }
 
     /**
