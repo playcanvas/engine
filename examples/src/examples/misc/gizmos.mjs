@@ -86,13 +86,18 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         window.removeEventListener('resize', resize);
     });
 
-    // create box entity
-    const box = new pc.Entity('cube');
-    box.addComponent('render', {
+    // create box entities
+    const boxA = new pc.Entity('cubeA');
+    boxA.addComponent('render', {
         type: 'box'
     });
-    app.root.addChild(box);
-    box.setEulerAngles(0, 45, 0);
+    app.root.addChild(boxA);
+    // const boxB = new pc.Entity('cubeB');
+    // boxB.addComponent('render', {
+    //     type: 'box'
+    // });
+    // boxB.setPosition(1, 0, 0);
+    // app.root.addChild(boxB);
 
     // create camera entity
     const camera = new pc.Entity('camera');
@@ -100,17 +105,18 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         clearColor: new pc.Color(0.5, 0.6, 0.9)
     });
     app.root.addChild(camera);
-    camera.translate(0, 3, 7);
+    camera.translate(5, 3, 5);
     camera.lookAt(0, 0, 0);
 
     // create directional light entity
     const light = new pc.Entity('light');
     light.addComponent('light');
     app.root.addChild(light);
-    light.setEulerAngles(45, -20, 0);
+    light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const gizmo = new pcx.GizmoTransform(app, camera, []);
+    const gizmo = new pcx.GizmoTransform(app, camera);
+    gizmo.attach([boxA]);
     data.set('settings', {
         axisGap: gizmo.axisGap,
         axisLineThickness: gizmo.axisLineThickness,

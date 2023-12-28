@@ -8,24 +8,79 @@ import {
 
 import { Gizmo } from "./gizmo.js";
 
-class Axis {
+// temporary variables
+const position = new Vec3();
+
+class TransformElement {
+    _position;
+
+    _rotation;
+
+    _scale;
+
+    _defaultColor;
+
+    _hoverColor;
+
+    name;
+
     entity;
 
     meshInstances = [];
 
-    constructor(options = {}) {
+    constructor(options) {
+        this.name = options.name ?? 'INVALID';
         this._position = options.position ?? new Vec3();
         this._rotation = options.rotation ?? new Vec3();
         this._scale = options.scale ?? new Vec3(1, 1, 1);
 
         this._defaultColor = options.defaultColor ?? Color.BLACK;
         this._hoverColor = options.hoverColor ?? Color.WHITE;
+    }
 
-        this._gap = 0;
-        this._lineThickness = 0.04;
-        this._lineLength = 0.5;
-        this._arrowThickness = 0.15;
-        this._arrowLength = 0.2;
+    hover(state) {
+        const material = state ? this._hoverColor : this._defaultColor;
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            this.meshInstances[i].material = material;
+        }
+    }
+}
+
+class Plane extends TransformElement {
+    constructor(options) {
+        super(options);
+
+        this._createPlane(options.layers ?? []);
+    }
+
+    _createPlane(layers) {
+        this.entity = new Entity('plane');
+        this.entity.addComponent('render', {
+            type: 'plane',
+            layers: layers,
+            material: this._defaultColor,
+            castShadows: false
+        });
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+        this.meshInstances.push(...this.entity.render.meshInstances);
+    }
+}
+
+class Axis extends TransformElement {
+    _gap = 0;
+
+    _lineThickness = 0.04;
+
+    _lineLength = 0.5;
+
+    _arrowThickness = 0.15;
+
+    _arrowLength = 0.2;
+
+    constructor(options = {}) {
+        super(options);
 
         this._createAxis(options.layers ?? []);
     }
@@ -82,6 +137,7 @@ class Axis {
         this.entity = new Entity('axis');
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
 
         this._line = new Entity('line');
         this._line.addComponent('render', {
@@ -115,18 +171,19 @@ class Axis {
         this._arrow.setLocalPosition(new Vec3(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0));
         this._arrow.setLocalScale(new Vec3(this._arrowThickness, this._arrowLength, this._arrowThickness));
     }
-
-    hover(state) {
-        const material = state ? this._hoverColor : this._defaultColor;
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i].material = material;
-        }
-    }
 }
 
 class GizmoTransform extends Gizmo {
-    constructor(app, camera, nodes) {
-        super(app, camera, nodes);
+    materials;
+
+    elements;
+
+    elementMap = new Map();
+
+    _dirtyElement;
+
+    constructor(app, camera) {
+        super(app, camera);
 
         this.materials = {
             opaque: {
@@ -141,29 +198,102 @@ class GizmoTransform extends Gizmo {
             }
         };
 
-        this.axes = {
+        this.elements = {
             x: new Axis({
+                name: 'x',
                 layers: [this.layerGizmo.id],
-                rotation: new Vec3(0, 0, 90),
+                rotation: new Vec3(0, 0, -90),
                 defaultColor: this.materials.semi.red,
                 hoverColor: this.materials.opaque.red
             }),
             y: new Axis({
+                name: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
                 defaultColor: this.materials.semi.green,
                 hoverColor: this.materials.opaque.green
             }),
             z: new Axis({
+                name: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this.materials.semi.blue,
                 hoverColor: this.materials.opaque.blue
+            }),
+            yz: new Plane({
+                name: 'yz',
+                layers: [this.layerGizmo.id],
+                position: new Vec3(0, 0.1, 0.1),
+                rotation: new Vec3(0, 0, -90),
+                scale: new Vec3(0.2, 0.2, 0.2),
+                defaultColor: this.materials.semi.red,
+                hoverColor: this.materials.opaque.red
+            }),
+            xz: new Plane({
+                name: 'xz',
+                layers: [this.layerGizmo.id],
+                position: new Vec3(0.1, 0, 0.1),
+                rotation: new Vec3(0, 0, 0),
+                scale: new Vec3(0.2, 0.2, 0.2),
+                defaultColor: this.materials.semi.green,
+                hoverColor: this.materials.opaque.green
+            }),
+            xy: new Plane({
+                name: 'xy',
+                layers: [this.layerGizmo.id],
+                position: new Vec3(0.1, 0.1, 0),
+                rotation: new Vec3(90, 0, 0),
+                scale: new Vec3(0.2, 0.2, 0.2),
+                defaultColor: this.materials.semi.blue,
+                hoverColor: this.materials.opaque.blue
             })
         };
-        this.axisMap = new Map();
 
         this._createTransform();
+
+        this.on('gizmo:hover', (meshInstance) => {
+            const element = this.elementMap.get(meshInstance);
+            if (element === this._dirtyElement) {
+                return;
+            }
+            if (this._dirtyElement) {
+                this._dirtyElement.hover(false);
+                this._dirtyElement = null;
+            }
+            if (element) {
+                element.hover(true);
+                this._dirtyElement = element;
+            }
+        });
+
+        this.on('gizmo:hold', (meshInstance, target) => {
+            const element = this.elementMap.get(meshInstance);
+            position.copy(this.gizmo.getPosition());
+            switch (element.name) {
+                case 'x':
+                    position.x = target.x;
+                    break;
+                case 'y':
+                    position.y = target.y;
+                    break;
+                case 'z':
+                    position.z = target.z;
+                    break;
+                case 'yz':
+                    position.y = target.y;
+                    position.z = target.z;
+                    break;
+                case 'xz':
+                    position.x = target.x;
+                    position.z = target.z;
+                    break;
+                case 'xy':
+                    position.x = target.x;
+                    position.y = target.y;
+                    break;
+            }
+            this.gizmo.setPosition(position);
+        });
     }
 
     set axisGap(value) {
@@ -171,7 +301,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisGap() {
-        return this.axes.x.gap;
+        return this.elements.x.gap;
     }
 
     set axisLineThickness(value) {
@@ -179,7 +309,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisLineThickness() {
-        return this.axes.x.lineThickness;
+        return this.elements.x.lineThickness;
     }
 
     set axisLineLength(value) {
@@ -187,7 +317,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisLineLength() {
-        return this.axes.x.lineLength;
+        return this.elements.x.lineLength;
     }
 
     set axisArrowThickness(value) {
@@ -195,7 +325,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisArrowThickness() {
-        return this.axes.x.arrowThickness;
+        return this.elements.x.arrowThickness;
     }
 
     set axisArrowLength(value) {
@@ -204,7 +334,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisArrowLength() {
-        return this.axes.x.arrowLength;
+        return this.elements.x.arrowLength;
     }
 
     _createMaterial(color) {
@@ -228,43 +358,27 @@ class GizmoTransform extends Gizmo {
 
     _createTransform() {
         // lighting
-        const light = this._createLight(new Vec3(45, -20, 0));
+        const light = this._createLight(new Vec3(45, 0, -45));
         this.gizmo.addChild(light);
 
         // center
         const center = new Entity('center');
-        center.setEulerAngles(0, 45, 0);
         this.gizmo.addChild(center);
 
-        // axes
-        for (const key in this.axes) {
-            const axis = this.axes[key];
-            center.addChild(axis.entity);
-            for (let i = 0; i < axis.meshInstances.length; i++) {
-                this.axisMap.set(axis.meshInstances[i], axis);
+        // elements
+        for (const key in this.elements) {
+            const element = this.elements[key];
+            center.addChild(element.entity);
+            for (let i = 0; i < element.meshInstances.length; i++) {
+                this.elementMap.set(element.meshInstances[i], element);
             }
         }
     }
 
     _updateAxisProp(propName, value) {
-        this.axes.x[propName] = value;
-        this.axes.y[propName] = value;
-        this.axes.z[propName] = value;
-    }
-
-    _handleHover(selection) {
-        const axis = this.axisMap.get(selection);
-        if (axis === this._dirtyAxis) {
-            return;
-        }
-        if (this._dirtyAxis) {
-            this._dirtyAxis.hover(false);
-            this._dirtyAxis = null;
-        }
-        if (axis) {
-            axis.hover(true);
-            this._dirtyAxis = axis;
-        }
+        this.elements.x[propName] = value;
+        this.elements.y[propName] = value;
+        this.elements.z[propName] = value;
     }
 }
 
