@@ -246,7 +246,7 @@ class MiniStatsExample {
     static CATEGORY = 'Misc';
     static WEBGPU_ENABLED = true;
     static ENGINE = 'PERFORMANCE';
-    static MINISTATS = true;
+    static NO_MINISTATS = true;
     static example = example;
 }
 

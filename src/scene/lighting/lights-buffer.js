@@ -127,6 +127,7 @@ class LightsBuffer {
 
     // executes when the app starts
     static init(device) {
+        if (device.isNull) return;
 
         // precision for texture storage
         // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
@@ -249,7 +250,7 @@ class LightsBuffer {
         // textures
         this._lightsTexture8Id.setValue(this.lightsTexture8);
 
-        if (LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT) {
+        if (LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT && this._lightsTextureFloatId) {
             this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
         }
 
