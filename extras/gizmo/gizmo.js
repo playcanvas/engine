@@ -3,7 +3,6 @@ import {
     EventHandler,
     Layer,
     Entity,
-    Vec2,
     Vec3
 } from 'playcanvas'
 
@@ -14,8 +13,6 @@ const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
 const intersect = new Vec3();
-const worldIntersect = new Vec3();
-const gizmoTarget = new Vec3();
 
 class Gizmo extends EventHandler {
     _nodeParents = new Map();
@@ -37,47 +34,25 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        const pointerInfo = {
-            down: false,
-            meshInstance: null,
-            localPosition: new Vec3()
-        };
-
         const onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            this.fire('gizmo:hover', selection[0]?.meshInstance);
-
-            if (pointerInfo.down) {
-                const cameraDist = this._distanceFromCamera();
-                const screenPoint = this.camera.camera.screenToWorld(e.clientX, e.clientY, cameraDist);
-                gizmoTarget.sub2(screenPoint, pointerInfo.localPosition);
-                this.fire('gizmo:hold', pointerInfo.meshInstance, gizmoTarget);
-            }
+            this.fire('pointermove', e, selection[0]);
         };
         const onPointerDown = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            const first = selection[0];
-            if (first) {
-                const meshInstance = first.meshInstance;
-                const wtm = meshInstance.node.getWorldTransform();
-                wtm.transformPoint(first.intersect, worldIntersect);
-
-                pointerInfo.down = true;
-                pointerInfo.meshInstance = meshInstance;
-                pointerInfo.localPosition.sub2(worldIntersect, this.gizmo.getPosition());
-            }
+            this.fire('pointerdown', e, selection[0]);
         };
         const onPointerUp = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
-            pointerInfo.down = false;
+            this.fire('pointerup', e);
         };
 
         window.addEventListener('pointermove', onPointerMove);
@@ -101,22 +76,9 @@ class Gizmo extends EventHandler {
         }
         center.divScalar(this.nodes.length);
         this.gizmo.setPosition(center);
-
-        // add nodes to held entity
-        for (let i = 0; i < this.nodes.length; i++) {
-            this._nodeParents.set(this.nodes[i], this.nodes[i].parent);
-            this.held.addChild(this.nodes[i]);
-        }
     }
 
     detach() {
-        // fetch parents and reattach
-        for (let i = 0; i < this.nodes.length; i++) {
-            const parent = this._nodeParents.get(this.nodes[i]);
-            parent.addChild(this.nodes[i]);
-        }
-
-        this._nodeParents.clear();
         this.nodes = [];
         this.gizmo.enabled = false;
     }
@@ -137,10 +99,6 @@ class Gizmo extends EventHandler {
         this.gizmo = new Entity('gizmo');
         this.app.root.addChild(this.gizmo);
         this.gizmo.enabled = false;
-
-        // entity for holding nodes
-        this.held = new Entity('held');
-        this.gizmo.addChild(this.held);
     }
 
     _distanceFromCamera(dist = new Vec3()) {

@@ -1,5 +1,7 @@
 import {
     BLEND_NORMAL,
+    Ray,
+    Plane,
     Color,
     StandardMaterial,
     Entity,
@@ -9,7 +11,7 @@ import {
 import { Gizmo } from "./gizmo.js";
 
 // temporary variables
-const position = new Vec3();
+const worldIntersect = new Vec3();
 
 class TransformElement {
     _position;
@@ -46,7 +48,7 @@ class TransformElement {
     }
 }
 
-class Plane extends TransformElement {
+class PlaneElement extends TransformElement {
     constructor(options) {
         super(options);
 
@@ -68,7 +70,7 @@ class Plane extends TransformElement {
     }
 }
 
-class Axis extends TransformElement {
+class AxisElement extends TransformElement {
     _gap = 0;
 
     _lineThickness = 0.04;
@@ -199,28 +201,28 @@ class GizmoTransform extends Gizmo {
         };
 
         this.elements = {
-            x: new Axis({
+            x: new AxisElement({
                 name: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
                 defaultColor: this.materials.semi.red,
                 hoverColor: this.materials.opaque.red
             }),
-            y: new Axis({
+            y: new AxisElement({
                 name: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
                 defaultColor: this.materials.semi.green,
                 hoverColor: this.materials.opaque.green
             }),
-            z: new Axis({
+            z: new AxisElement({
                 name: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this.materials.semi.blue,
                 hoverColor: this.materials.opaque.blue
             }),
-            yz: new Plane({
+            yz: new PlaneElement({
                 name: 'yz',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0, 0.1, 0.1),
@@ -229,7 +231,7 @@ class GizmoTransform extends Gizmo {
                 defaultColor: this.materials.semi.red,
                 hoverColor: this.materials.opaque.red
             }),
-            xz: new Plane({
+            xz: new PlaneElement({
                 name: 'xz',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0.1, 0, 0.1),
@@ -238,7 +240,7 @@ class GizmoTransform extends Gizmo {
                 defaultColor: this.materials.semi.green,
                 hoverColor: this.materials.opaque.green
             }),
-            xy: new Plane({
+            xy: new PlaneElement({
                 name: 'xy',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0.1, 0.1, 0),
@@ -251,49 +253,105 @@ class GizmoTransform extends Gizmo {
 
         this._createTransform();
 
-        this.on('gizmo:hover', (meshInstance) => {
-            const element = this.elementMap.get(meshInstance);
-            if (element === this._dirtyElement) {
-                return;
-            }
-            if (this._dirtyElement) {
-                this._dirtyElement.hover(false);
-                this._dirtyElement = null;
-            }
-            if (element) {
-                element.hover(true);
-                this._dirtyElement = element;
-            }
+        this.dragging = false;
+        this._pointStart = new Vec3();
+        this._pointEnd = new Vec3();
+        this._offset = new Vec3();
+
+        const plane = new Plane();
+
+        this.on('pointermove', (e, selected) => {
+            this._hover(selected?.meshInstance);
+
+            // if (this.dragging) {
+            //     const mouseWPos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
+            //     const rayOrigin = this.camera.getPosition();
+            //     const rayDir = new Vec3();
+            //     rayDir.sub(mouseWPos, rayOrigin).normalize();
+            //     const ray = new Ray(rayOrigin, rayDir);
+            //     plane.intersectsRay(ray, this._pointEnd);
+            //     this._offset.sub2(this._pointStart, this._pointEnd);
+
+            //     const position = this.gizmo.getPosition();
+            //     position.add(this._offset);
+            //     this.gizmo.setPosition(position);
+
+
+            // }
+            // if (selected && this.dragging) {
+            //     const meshInstance = selected.meshInstance;
+            //     const wtm = meshInstance.node.getWorldTransform();
+            //     wtm.transformPoint(selected.intersect, worldIntersect);
+
+            //     this._pointEnd.sub2(worldIntersect, this.gizmo.getPosition());
+
+            //     this._offset.sub2(this._pointEnd, this._pointStart);
+
+            //     const element = this.elementMap.get(meshInstance);
+            //     const position = this.gizmo.getPosition();
+            //     if (element.name.indexOf('x') === -1) {
+            //         this._offset.x = 0;
+            //     }
+            //     if (element.name.indexOf('y') === -1) {
+            //         this._offset.y = 0;
+            //     }
+            //     if (element.name.indexOf('z') === -1) {
+            //         this._offset.z = 0;
+            //     }
+            //     position.add(this._offset);
+            //     this.gizmo.setPosition(position);
+            // }
         });
 
-        this.on('gizmo:hold', (meshInstance, target) => {
-            const element = this.elementMap.get(meshInstance);
-            position.copy(this.gizmo.getPosition());
-            switch (element.name) {
-                case 'x':
-                    position.x = target.x;
-                    break;
-                case 'y':
-                    position.y = target.y;
-                    break;
-                case 'z':
-                    position.z = target.z;
-                    break;
-                case 'yz':
-                    position.y = target.y;
-                    position.z = target.z;
-                    break;
-                case 'xz':
-                    position.x = target.x;
-                    position.z = target.z;
-                    break;
-                case 'xy':
-                    position.x = target.x;
-                    position.y = target.y;
-                    break;
+        this.on('pointerdown', (e, selected) => {
+            if (this.dragging) {
+                return;
             }
-            this.gizmo.setPosition(position);
+            if (selected) {
+                const meshInstance = selected.meshInstance;
+                const rot = meshInstance.node.getRotation().clone();
+                rot.transformVector(Vec3.UP, plane.normal);
+
+                const mouseWPos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
+                const rayOrigin = this.camera.getPosition();
+                const rayDir = new Vec3();
+                rayDir.sub(mouseWPos, rayOrigin).normalize();
+                const ray = new Ray(rayOrigin, rayDir);
+                const hit = plane.intersectsRay(ray, this._pointStart);
+                console.log(this._pointStart);
+
+                // const mousePos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
+                // this.gizmo.setPosition(mousePos);
+                // const meshInstance = selected.meshInstance;
+                // const wtm = meshInstance.node.getWorldTransform();
+                // wtm.transformPoint(selected.intersect, worldIntersect);
+                // this._pointStart.sub2(worldIntersect, this.gizmo.getPosition());
+            }
+            this.dragging = true;
         });
+
+        this.on('pointerup', (e) => {
+            this.dragging = false;
+        });
+    }
+
+    _hover(selected) {
+        const element = this.elementMap.get(selected);
+        if (element === this._dirtyElement) {
+            return;
+        }
+        if (this._dirtyElement) {
+            this._dirtyElement.hover(false);
+            this._dirtyElement = null;
+        }
+        if (element) {
+            element.hover(true);
+            this._dirtyElement = element;
+        }
+    }
+
+    _pickPlane(selected) {
+
     }
 
     set axisGap(value) {
