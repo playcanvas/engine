@@ -40,8 +40,7 @@ class Gizmo extends EventHandler {
         const pointerInfo = {
             down: false,
             meshInstance: null,
-            localPosition: new Vec3(),
-            cameraDist: 1
+            localPosition: new Vec3()
         };
 
         const onPointerMove = (e) => {
@@ -52,7 +51,8 @@ class Gizmo extends EventHandler {
             this.fire('gizmo:hover', selection[0]?.meshInstance);
 
             if (pointerInfo.down) {
-                const screenPoint = this.camera.camera.screenToWorld(e.clientX, e.clientY, pointerInfo.cameraDist);
+                const cameraDist = this._distanceFromCamera();
+                const screenPoint = this.camera.camera.screenToWorld(e.clientX, e.clientY, cameraDist);
                 gizmoTarget.sub2(screenPoint, pointerInfo.localPosition);
                 this.fire('gizmo:hold', pointerInfo.meshInstance, gizmoTarget);
             }
@@ -71,8 +71,6 @@ class Gizmo extends EventHandler {
                 pointerInfo.down = true;
                 pointerInfo.meshInstance = meshInstance;
                 pointerInfo.localPosition.sub2(worldIntersect, this.gizmo.getPosition());
-                pointerInfo.cameraDist = this._distanceFromCamera(worldIntersect);
-
             }
         };
         const onPointerUp = (e) => {
@@ -145,8 +143,8 @@ class Gizmo extends EventHandler {
         this.gizmo.addChild(this.held);
     }
 
-    _distanceFromCamera(position, dist = new Vec3()) {
-        return dist.sub2(this.camera.getPosition(), position).length();
+    _distanceFromCamera(dist = new Vec3()) {
+        return dist.sub2(this.camera.getPosition(), this.gizmo.getPosition()).length();
     }
 
     _getSelection(x, y) {
