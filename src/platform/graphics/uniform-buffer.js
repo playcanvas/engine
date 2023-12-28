@@ -1,69 +1,33 @@
 import { Debug } from '../../core/debug.js';
 import {
     uniformTypeToName,
-    UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
+    UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_BOOL, UNIFORMTYPE_VEC2,
+    UNIFORMTYPE_VEC3, UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4,
     UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
-    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
+    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_UVEC2, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_VEC4ARRAY, UNIFORMTYPE_BVEC2, UNIFORMTYPE_BVEC4, UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_BVEC4ARRAY
 } from './constants.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
+
+function updateSingleElement(uniformBuffer, value, offset, numComponents) {
+    const dst = uniformBuffer.getStorageForType(value.type);
+    for (let i = 0; i < numComponents; i++) {
+        dst[offset + i] = value[i];
+    }
+}
+
+function updateArray(uniformBuffer, value, offset, numComponents, count) {
+    const dst = uniformBuffer.getStorageForType(value.type);
+    for (let i = 0; i < count; i++) {
+        for (let j = 0; j < numComponents; j++) {
+            dst[offset + i * numComponents + j] = value[i * numComponents + j];
+        }
+    }
+}
 
 // Uniform buffer set functions - only implemented for types for which the default
 // array to buffer copy does not work, or could be slower.
 const _updateFunctions = [];
-
-_updateFunctions[UNIFORMTYPE_FLOAT] = function (uniformBuffer, value, offset) {
-    const dst = uniformBuffer.storageFloat32;
-    dst[offset] = value;
-};
-
-_updateFunctions[UNIFORMTYPE_VEC2] = (uniformBuffer, value, offset) => {
-    const dst = uniformBuffer.storageFloat32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-};
-
-_updateFunctions[UNIFORMTYPE_VEC3] = (uniformBuffer, value, offset) => {
-    const dst = uniformBuffer.storageFloat32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-    dst[offset + 2] = value[2];
-};
-
-_updateFunctions[UNIFORMTYPE_VEC4] = (uniformBuffer, value, offset) => {
-    const dst = uniformBuffer.storageFloat32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-    dst[offset + 2] = value[2];
-    dst[offset + 3] = value[3];
-};
-
-_updateFunctions[UNIFORMTYPE_INT] = function (uniformBuffer, value, offset) {
-    const dst = uniformBuffer.storageInt32;
-    dst[offset] = value;
-};
-
-_updateFunctions[UNIFORMTYPE_IVEC2] = function (uniformBuffer, value, offset) {
-    const dst = uniformBuffer.storageInt32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-};
-
-_updateFunctions[UNIFORMTYPE_IVEC3] = function (uniformBuffer, value, offset) {
-    const dst = uniformBuffer.storageInt32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-    dst[offset + 2] = value[2];
-};
-
-_updateFunctions[UNIFORMTYPE_IVEC4] = function (uniformBuffer, value, offset) {
-    const dst = uniformBuffer.storageInt32;
-    dst[offset] = value[0];
-    dst[offset + 1] = value[1];
-    dst[offset + 2] = value[2];
-    dst[offset + 3] = value[3];
-};
-
 // convert from continuous array to vec2[3] with padding to vec4[2]
 _updateFunctions[UNIFORMTYPE_MAT2] = (uniformBuffer, value, offset) => {
     const dst = uniformBuffer.storageFloat32;
@@ -93,29 +57,6 @@ _updateFunctions[UNIFORMTYPE_MAT3] = (uniformBuffer, value, offset) => {
     dst[offset + 10] = value[8];
 };
 
-_updateFunctions[UNIFORMTYPE_FLOATARRAY] = function (uniformBuffer, value, offset, count) {
-    const dst = uniformBuffer.storageFloat32;
-    for (let i = 0; i < count; i++) {
-        dst[offset + i * 4] = value[i];
-    }
-};
-
-_updateFunctions[UNIFORMTYPE_VEC2ARRAY] = (uniformBuffer, value, offset, count) => {
-    const dst = uniformBuffer.storageFloat32;
-    for (let i = 0; i < count; i++) {
-        dst[offset + i * 4] = value[i * 2];
-        dst[offset + i * 4 + 1] = value[i * 2 + 1];
-    }
-};
-
-_updateFunctions[UNIFORMTYPE_VEC3ARRAY] = (uniformBuffer, value, offset, count) => {
-    const dst = uniformBuffer.storageFloat32;
-    for (let i = 0; i < count; i++) {
-        dst[offset + i * 4] = value[i * 3];
-        dst[offset + i * 4 + 1] = value[i * 3 + 1];
-        dst[offset + i * 4 + 2] = value[i * 3 + 2];
-    }
-};
 
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
@@ -136,6 +77,9 @@ class UniformBuffer {
 
     /** @type {Int32Array} */
     storageInt32;
+
+    /** @type {Uint32Array} */
+    storageUint32;
 
     /**
      * A render version used to track the last time the properties requiring bind group to be
@@ -204,6 +148,7 @@ class UniformBuffer {
      */
     assignStorage(storage) {
         this.storageInt32 = storage;
+        this.storageUint32 = new Uint32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
         this.storageFloat32 = new Float32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
     }
 
@@ -232,9 +177,13 @@ class UniformBuffer {
 
             const updateFunction = _updateFunctions[uniformFormat.updateType];
             if (updateFunction) {
-                updateFunction(this, value, offset, uniformFormat.count);
+                updateFunction(this, value, offset, uniformFormat.numComponents, uniformFormat.count);
             } else {
-                this.storageFloat32.set(value, offset);
+                if (uniformFormat.isArrayType) {
+                    updateArray(this, value, offset, uniformFormat.numComponents, uniformFormat.count);
+                } else {
+                    updateSingleElement(this, value, offset, uniformFormat.numComponents);
+                }
             }
         } else {
             Debug.warnOnce(`Value was not set when assigning to uniform [${uniformFormat.name}]` +
@@ -284,6 +233,46 @@ class UniformBuffer {
         } else {
             this.storageFloat32 = null;
             this.storageInt32 = null;
+            this.storageUint32 = null;
+        }
+    }
+
+    getStorageForType(type) {
+        switch (type) {
+            case UNIFORMTYPE_INT:
+            case UNIFORMTYPE_BOOL:
+            case UNIFORMTYPE_IVEC2:
+            case UNIFORMTYPE_IVEC3:
+            case UNIFORMTYPE_IVEC4:
+            case UNIFORMTYPE_BVEC2:
+            case UNIFORMTYPE_BVEC3:
+            case UNIFORMTYPE_BVEC4:
+            case UNIFORMTYPE_IVEC2ARRAY:
+            case UNIFORMTYPE_IVEC3ARRAY:
+            case UNIFORMTYPE_IVEC4ARRAY:
+            case UNIFORMTYPE_BVEC2ARRAY:
+            case UNIFORMTYPE_BVEC3ARRAY:
+            case UNIFORMTYPE_BVEC4ARRAY:
+                return this.storageInt32;
+            case UNIFORMTYPE_UINT:
+            case UNIFORMTYPE_UVEC2:
+            case UNIFORMTYPE_UVEC3:
+            case UNIFORMTYPE_UVEC4:
+            case UNIFORMTYPE_UVEC2ARRAY:
+            case UNIFORMTYPE_UVEC3ARRAY:
+            case UNIFORMTYPE_UVEC4ARRAY:
+                return this.storageUint32;
+            case UNIFORMTYPE_FLOAT:
+            case UNIFORMTYPE_VEC2:
+            case UNIFORMTYPE_VEC3:
+            case UNIFORMTYPE_VEC4:
+            case UNIFORMTYPE_MAT2:
+            case UNIFORMTYPE_MAT3:
+            case UNIFORMTYPE_FLOATARRAY:
+            case UNIFORMTYPE_VEC2ARRAY:
+            case UNIFORMTYPE_VEC3ARRAY:
+            case UNIFORMTYPE_VEC4ARRAY:
+                return this.storageFloat32;
         }
     }
 }

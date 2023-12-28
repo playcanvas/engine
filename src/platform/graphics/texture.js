@@ -15,7 +15,8 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
+    isIntegerPixelFormat, FILTER_NEAREST
 } from './constants.js';
 
 let id = 0;
@@ -201,6 +202,12 @@ class Texture {
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
+        this._integerFormat = isIntegerPixelFormat(this._format);
+        if (this._integerFormat) {
+            options.mipmaps = false;
+            options.minFilter = FILTER_NEAREST;
+            options.magFilter = FILTER_NEAREST;
+        }
 
         if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
@@ -721,7 +728,8 @@ class Texture {
                 return (this.format === PIXELFORMAT_RGB16F ||
                         this.format === PIXELFORMAT_RGB32F ||
                         this.format === PIXELFORMAT_RGBA16F ||
-                        this.format === PIXELFORMAT_RGBA32F) ? 'linear' : 'srgb';
+                        this.format === PIXELFORMAT_RGBA32F ||
+                        isIntegerPixelFormat(this.format)) ? 'linear' : 'srgb';
         }
     }
 
