@@ -296,6 +296,7 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
 class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
     static WEBGPU_ENABLED = true;
+    static DESCRIPTION = 'This example demonstrates how to use the Anim Component to animate the properties of other Components.';
     static controls = controls;
     static example = example;
 }

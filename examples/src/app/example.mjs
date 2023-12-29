@@ -36,6 +36,7 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
  * @property {Function} controls - Controls function from example.
  * @property {'code' | 'parameters'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
+ * @property {string} description - Description of example.
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -50,7 +51,8 @@ class Example extends TypedComponent {
         //controls: () => jsx('pre', null, 'Status: initial'),
         controls: () => undefined,
         show: 'code',
-        files: {'example.mjs': '// loading'}
+        files: {'example.mjs': '// loading'},
+        description: '',
     };
 
     /**
@@ -79,7 +81,7 @@ class Example extends TypedComponent {
 
     onExampleLoad(event) {
         /** @type {Record<string, string>} */
-        const files = event.files;
+        const { files, description } = event;
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
             let controls;
@@ -92,6 +94,7 @@ class Example extends TypedComponent {
                 exampleLoaded: true,
                 controls,
                 files,
+                description,
             });
             // console.log("controlsSrc", controlsSrc);
         } else {
@@ -100,6 +103,7 @@ class Example extends TypedComponent {
                 exampleLoaded: true,
                 controls: null,
                 files,
+                description,
             });
         }
     }
@@ -192,6 +196,26 @@ class Example extends TypedComponent {
         );
     }
 
+    renderDescription() {
+        const { exampleLoaded, description, orientation } = this.state;
+        const ready = exampleLoaded && iframeReady();
+        if (!ready) {
+            return;
+        }
+        return jsx(
+            Container,
+            {
+                id: 'descriptionPanel',
+                class: orientation === 'portrait' ? 'mobile' : null,
+            },
+            jsx('span', {
+                dangerouslySetInnerHTML: {
+                    __html: description,
+                },
+            })
+        );
+    }
+
     /**
      * Not the nicest way to fetch UI state from a CSS class, but we are
      * lacking a onHeaderClick panel callback which could hand us the state.
@@ -218,67 +242,76 @@ class Example extends TypedComponent {
     }
 
     renderPortrait() {
-        const { collapsed, controls, show, files } = this.state;
-        return jsx(Panel,
-            {
-                id: 'controlPanel',
-                class: ['mobile'],
-                resizable: 'top',
-                headerText: 'CODE & CONTROLS',
-                collapsible: true,
-                collapsed,
-                //header: jsx('h1', null, "data header"),
-                //onClick: this.toggleCollapse.bind(this),
-                //onExpand: this.toggleCollapse.bind(this),  
-            },
-            // jsx('button', null, "Example#renderPortrait()"),
-            this.renderDeviceSelector(),
-            //this.renderControls(),
-            jsx(
-                Container,
+        const { collapsed, controls, show, files, description } = this.state;
+        return fragment(
+            jsx(Panel,
                 {
-                    id: 'controls-wrapper',
-                    class: controls ? 'has-controls' : null
+                    id: 'controlPanel',
+                    class: ['mobile'],
+                    resizable: 'top',
+                    headerText: 'CODE & CONTROLS',
+                    collapsible: true,
+                    collapsed,
+                    //header: jsx('h1', null, "data header"),
+                    //onClick: this.toggleCollapse.bind(this),
+                    //onExpand: this.toggleCollapse.bind(this),  
                 },
+                // jsx('button', null, "Example#renderPortrait()"),
+                this.renderDeviceSelector(),
+                //this.renderControls(),
                 jsx(
                     Container,
                     {
-                        id: 'controlPanel-tabs',
-                        class: 'tabs-container'
+                        id: 'controls-wrapper',
+                        class: controls ? 'has-controls' : null
                     },
-                    jsx(Button, {
-                        text: 'CODE',
-                        id: 'codeButton',
-                        class: show === 'code' ? 'selected' : null,
-                        onClick: () => this.mergeState({ show: 'code' })
-                    }),
-                    jsx(Button, {
-                        text: 'PARAMETERS',
-                        class: show === 'parameters' ? 'selected' : null,
-                        id: 'paramButton',
-                        onClick: () => this.mergeState({ show: 'parameters' })
-                    }),
-                ),
-                // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderPortrait"),
-                show === 'parameters' && jsx(
-                    Container,
-                    {
-                        id: 'controlPanel-controls'
-                    },
-                    this.renderControls(),
-                ),
-                show === 'code' && jsx(
-                    MonacoEditor,
-                    {
-                        options: {
-                            readOnly: true,
-                            theme: 'vs-dark',
+                    jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-tabs',
+                            class: 'tabs-container'
                         },
-                        defaultLanguage: "javascript",
-                        value: files['example.mjs'],
-                    }
-                )
-            )
+                        jsx(Button, {
+                            text: 'CODE',
+                            id: 'codeButton',
+                            class: show === 'code' ? 'selected' : null,
+                            onClick: () => this.mergeState({ show: 'code' })
+                        }),
+                        jsx(Button, {
+                            text: 'PARAMETERS',
+                            class: show === 'parameters' ? 'selected' : null,
+                            id: 'paramButton',
+                            onClick: () => this.mergeState({ show: 'parameters' })
+                        }),
+                        description ? jsx(Button, {
+                            text: 'DESCRIPTION',
+                            class: show === 'description' ? 'selected' : null,
+                            id: 'descButton',
+                            onClick: () => this.mergeState({ show: 'description' })
+                        }) : null,
+                    ),
+                    // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderPortrait"),
+                    show === 'parameters' && jsx(
+                        Container,
+                        {
+                            id: 'controlPanel-controls'
+                        },
+                        this.renderControls(),
+                    ),
+                    show === 'code' && jsx(
+                        MonacoEditor,
+                        {
+                            options: {
+                                readOnly: true,
+                                theme: 'vs-dark',
+                            },
+                            defaultLanguage: "javascript",
+                            value: files['example.mjs'],
+                        }
+                    ),
+                ),
+            ),
+            this.renderDescription(),
         );
     }
 
@@ -297,7 +330,8 @@ class Example extends TypedComponent {
                 // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderLandscape"),
                 this.renderDeviceSelector(),
                 this.renderControls(),
-            )
+            ),
+            this.renderDescription(),
         );
     }
 
