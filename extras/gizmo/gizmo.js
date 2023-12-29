@@ -101,10 +101,6 @@ class Gizmo extends EventHandler {
         this.gizmo.enabled = false;
     }
 
-    _distanceFromCamera(dist = new Vec3()) {
-        return dist.sub2(this.camera.getPosition(), this.gizmo.getPosition()).length();
-    }
-
     _getSelection(x, y) {
         const start = this.camera.camera.screenToWorld(x, y, 1);
         const end = this.camera.camera.screenToWorld(x, y, this.camera.camera.farClip);
