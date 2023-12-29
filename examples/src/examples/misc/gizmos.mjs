@@ -37,6 +37,12 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'settings.axisArrowLength' }
                 })
+            ),
+            jsx(LabelGroup, { text: 'Axis Plane Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisPlaneSize' }
+                })
             )
         )
     );
@@ -122,7 +128,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisLineThickness: gizmo.axisLineThickness,
         axisLineLength: gizmo.axisLineLength,
         axisArrowThickness: gizmo.axisArrowThickness,
-        axisArrowLength: gizmo.axisArrowLength
+        axisArrowLength: gizmo.axisArrowLength,
+        axisPlaneSize: gizmo.axisPlaneSize
     });
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
