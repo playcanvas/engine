@@ -382,11 +382,11 @@ class GizmoTransform extends Gizmo {
     }
 
     _drawGuideLine(pos, axis) {
-        const startDir = new Vec3();
-        startDir[axis] = 1;
-        startDir.scale(GUIDELINE_SIZE);
-        const endDir = startDir.clone().scale(-1);
-        this.app.drawLine(startDir.add(pos), endDir.add(pos), this._guideLineColor, true, this.layerGizmo);
+        tmpV.set(0, 0, 0);
+        tmpV[axis] = 1;
+        tmpV.scale(GUIDELINE_SIZE);
+        const tmpV2 = tmpV.clone().scale(-1);
+        this.app.drawLine(tmpV.add(pos), tmpV2.add(pos), this._guideLineColor, true, this.layerGizmo);
     }
 
     set axisGap(value) {
