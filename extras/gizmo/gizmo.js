@@ -23,6 +23,8 @@ class Gizmo extends EventHandler {
 
     nodes = [];
 
+    nodesStart = new Map();
+
     gizmo;
 
     constructor(app, camera) {
@@ -69,18 +71,29 @@ class Gizmo extends EventHandler {
         this.nodes = nodes;
         this.gizmo.enabled = true;
 
-        // calculate center
-        const center = new Vec3();
+        // set nodes starting positions
         for (let i = 0; i < this.nodes.length; i++) {
-            center.add(this.nodes[i].getPosition());
+            const node = this.nodes[i];
+            this.nodesStart.set(node, node.getPosition());
         }
-        center.divScalar(this.nodes.length);
-        this.gizmo.setPosition(center);
+
+        this.gizmo.setPosition(this.getGizmoPosition());
     }
 
     detach() {
         this.nodes = [];
+        this.nodesStart.clear();
         this.gizmo.enabled = false;
+    }
+
+    getGizmoPosition() {
+        const center = new Vec3();
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            const nodePos = node.getPosition();
+            center.add(nodePos);
+        }
+        return center.scale(1.0 / this.nodes.length);
     }
 
     _createLayer() {
