@@ -1,17 +1,18 @@
 import {
+    PROJECTION_PERSPECTIVE,
     BLEND_NORMAL,
-    Ray,
-    Plane,
     Color,
     StandardMaterial,
     Entity,
-    Vec3
+    Vec3,
+    Quat,
 } from 'playcanvas'
 
 import { Gizmo } from "./gizmo.js";
 
 // temporary variables
-const worldIntersect = new Vec3();
+const tmpV = new Vec3();
+const tmpQ = new Quat();
 
 class TransformElement {
     _position;
@@ -56,7 +57,7 @@ class PlaneElement extends TransformElement {
     }
 
     _createPlane(layers) {
-        this.entity = new Entity('plane');
+        this.entity = new Entity('plane_' + this.name);
         this.entity.addComponent('render', {
             type: 'plane',
             layers: layers,
@@ -136,12 +137,12 @@ class AxisElement extends TransformElement {
     }
 
     _createAxis(layers) {
-        this.entity = new Entity('axis');
+        this.entity = new Entity('axis_' + this.name);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
 
-        this._line = new Entity('line');
+        this._line = new Entity('line_' + this.name);
         this._line.addComponent('render', {
             type: 'cylinder',
             layers: layers,
@@ -152,7 +153,7 @@ class AxisElement extends TransformElement {
         this.entity.addChild(this._line);
         this.meshInstances.push(...this._line.render.meshInstances);
 
-        this._arrow = new Entity('arrow');
+        this._arrow = new Entity('arrow_' + this.name);
         this._arrow.addComponent('render', {
             type: 'cone',
             layers: layers,
@@ -198,6 +199,12 @@ class GizmoTransform extends Gizmo {
                 green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
                 blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5))
             }
+        };
+
+        this._planeAxis = {
+            xz: 'y',
+            xy: 'z',
+            yz: 'x'
         };
 
         this.elements = {
@@ -254,53 +261,20 @@ class GizmoTransform extends Gizmo {
         this._createTransform();
 
         this.dragging = false;
+        this._axisName = '';
+        this._isPlane = false;
         this._pointStart = new Vec3();
-        this._pointEnd = new Vec3();
         this._offset = new Vec3();
-
-        const plane = new Plane();
+        this._gizmoStart = new Vec3();
 
         this.on('pointermove', (e, selected) => {
             this._hover(selected?.meshInstance);
 
-            // if (this.dragging) {
-            //     const mouseWPos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
-            //     const rayOrigin = this.camera.getPosition();
-            //     const rayDir = new Vec3();
-            //     rayDir.sub(mouseWPos, rayOrigin).normalize();
-            //     const ray = new Ray(rayOrigin, rayDir);
-            //     plane.intersectsRay(ray, this._pointEnd);
-            //     this._offset.sub2(this._pointStart, this._pointEnd);
-
-            //     const position = this.gizmo.getPosition();
-            //     position.add(this._offset);
-            //     this.gizmo.setPosition(position);
-
-
-            // }
-            // if (selected && this.dragging) {
-            //     const meshInstance = selected.meshInstance;
-            //     const wtm = meshInstance.node.getWorldTransform();
-            //     wtm.transformPoint(selected.intersect, worldIntersect);
-
-            //     this._pointEnd.sub2(worldIntersect, this.gizmo.getPosition());
-
-            //     this._offset.sub2(this._pointEnd, this._pointStart);
-
-            //     const element = this.elementMap.get(meshInstance);
-            //     const position = this.gizmo.getPosition();
-            //     if (element.name.indexOf('x') === -1) {
-            //         this._offset.x = 0;
-            //     }
-            //     if (element.name.indexOf('y') === -1) {
-            //         this._offset.y = 0;
-            //     }
-            //     if (element.name.indexOf('z') === -1) {
-            //         this._offset.z = 0;
-            //     }
-            //     position.add(this._offset);
-            //     this.gizmo.setPosition(position);
-            // }
+            if (this.dragging) {
+                this._offset.copy(this._pickPlane(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._offset.sub(this._pointStart);
+                this.gizmo.setPosition(this._gizmoStart.clone().add(this._offset));
+            }
         });
 
         this.on('pointerdown', (e, selected) => {
@@ -309,23 +283,11 @@ class GizmoTransform extends Gizmo {
             }
             if (selected) {
                 const meshInstance = selected.meshInstance;
-                const rot = meshInstance.node.getRotation().clone();
-                rot.transformVector(Vec3.UP, plane.normal);
-
-                const mouseWPos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
-                const rayOrigin = this.camera.getPosition();
-                const rayDir = new Vec3();
-                rayDir.sub(mouseWPos, rayOrigin).normalize();
-                const ray = new Ray(rayOrigin, rayDir);
-                const hit = plane.intersectsRay(ray, this._pointStart);
-                console.log(this._pointStart);
-
-                // const mousePos = this.camera.camera.screenToWorld(e.clientX, e.clientY, 1);
-                // this.gizmo.setPosition(mousePos);
-                // const meshInstance = selected.meshInstance;
-                // const wtm = meshInstance.node.getWorldTransform();
-                // wtm.transformPoint(selected.intersect, worldIntersect);
-                // this._pointStart.sub2(worldIntersect, this.gizmo.getPosition());
+                const axisName = meshInstance.node.name.split("_")[1];
+                this._isPlane = axisName.length === 2;
+                this._currAxis = this._planeAxis[axisName] ?? axisName;
+                this._pointStart.copy(this._pickPlane(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._gizmoStart.copy(this.gizmo.getPosition());
             }
             this.dragging = true;
         });
@@ -350,8 +312,48 @@ class GizmoTransform extends Gizmo {
         }
     }
 
-    _pickPlane(selected) {
+    _pickPlane(x, y, axis, isPlane) {
+        const gizmoPos = this.gizmo.getPosition();
+        const mouseWPos = this.camera.camera.screenToWorld(x, y, 1);
+        const rayOrigin = this.camera.getPosition();
+        const rayDir = new Vec3();
+        const planeNormal = new Vec3();
+        planeNormal[axis] = 1;
 
+        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+            rayDir.copy(mouseWPos).sub(rayOrigin).normalize();
+        } else {
+            rayOrigin.add(mouseWPos);
+            this.camera.getWorldTransform().transformVector(tmpV.set(0, 0, -1), rayDir);
+        }
+
+        tmpQ.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
+
+        if (!isPlane) {
+            tmpV.copy(rayOrigin).sub(gizmoPos).normalize();
+            planeNormal.copy(tmpV.sub(planeNormal.scale(planeNormal.dot(tmpV))).normalize());
+        }
+        const rayPlaneDot = planeNormal.dot(rayDir);
+        const planeDist = gizmoPos.dot(planeNormal);
+        const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
+        const pickedPos = rayDir.scale(-pointPlaneDist).add(rayOrigin);
+
+        if (!isPlane) {
+            planeNormal.set(0, 0, 0);
+            planeNormal[axis] = 1;
+            tmpQ.transformVector(planeNormal, planeNormal);
+            pickedPos.copy(planeNormal.scale(planeNormal.dot(pickedPos)));
+        }
+
+        tmpQ.invert().transformVector(pickedPos, pickedPos);
+
+        if (!isPlane) {
+            var v = pickedPos[axis];
+            pickedPos.set(0, 0, 0);
+            pickedPos[axis] = v;
+        }
+
+        return pickedPos;
     }
 
     set axisGap(value) {
