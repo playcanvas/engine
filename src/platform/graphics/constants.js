@@ -807,7 +807,7 @@ export const pixelFormatInfo = new Map([
 
 // update this function when exposing additional compressed pixel formats
 export const isCompressedPixelFormat = (format) => {
-    return pixelFormatInfo.get(format).blockSize !== undefined;
+    return pixelFormatInfo.get(format)?.blockSize !== undefined;
 };
 
 export const isIntegerPixelFormat = (format) => {
