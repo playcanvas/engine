@@ -201,6 +201,8 @@ class GizmoTransform extends Gizmo {
             }
         };
 
+        this._guideLineColor = new Color(1, 1, 1, 0.5);
+
         this.elements = {
             x: new AxisArrow({
                 axis: 'x',
@@ -255,11 +257,28 @@ class GizmoTransform extends Gizmo {
         this._createTransform();
 
         this.dragging = false;
-        this._axisName = '';
+        this._currAxis = '';
         this._isPlane = false;
         this._pointStart = new Vec3();
         this._offset = new Vec3();
         this._gizmoStart = new Vec3();
+
+        const guildAxes = ['x', 'y', 'z'];
+        this.app.on('update', () => {
+            const gizmoPos = this.gizmo.getPosition();
+            for (let i = 0; i < guildAxes.length; i++) {
+                const axis = guildAxes[i];
+                if (this._isPlane) {
+                    if (axis !== this._currAxis) {
+                        this._drawGuideLine(gizmoPos, axis);
+                    }
+                } else {
+                    if (axis === this._currAxis) {
+                        this._drawGuideLine(gizmoPos, axis);
+                    }
+                }
+            }
+        });
 
         this.on('pointermove', (e, selected) => {
             this._hover(selected?.meshInstance);
@@ -281,12 +300,14 @@ class GizmoTransform extends Gizmo {
                 this._isPlane = meshInstance.node.name.indexOf('plane') !== -1;
                 this._pointStart.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
                 this._gizmoStart.copy(this.gizmo.getPosition());
+                this.dragging = true;
             }
-            this.dragging = true;
         });
 
         this.on('pointerup', (e) => {
             this.dragging = false;
+            this._currAxis = '';
+            this._isPlane = false;
         });
     }
 
@@ -356,6 +377,14 @@ class GizmoTransform extends Gizmo {
         }
 
         return point;
+    }
+
+    _drawGuideLine(pos, axis) {
+        const startDir = new Vec3();
+        startDir[axis] = 1;
+        startDir.scale(1000);
+        const endDir = startDir.clone().scale(-1);
+        this.app.drawLine(startDir.add(pos), endDir.add(pos), this._guideLineColor, true, this.layerGizmo);
     }
 
     set axisGap(value) {
