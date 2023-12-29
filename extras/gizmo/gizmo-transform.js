@@ -16,6 +16,7 @@ const tmpQ = new Quat();
 
 // constants
 const GUIDELINE_SIZE = 1e3;
+const GUILDLINE_AXES = ['x', 'y', 'z'];
 
 class AxisShape {
     _position;
@@ -265,11 +266,10 @@ class GizmoTransform extends Gizmo {
         this._pointStart = new Vec3();
         this._offset = new Vec3();
 
-        const guildAxes = ['x', 'y', 'z'];
         this.app.on('update', () => {
             const gizmoPos = this.gizmo.getPosition();
-            for (let i = 0; i < guildAxes.length; i++) {
-                const axis = guildAxes[i];
+            for (let i = 0; i < GUILDLINE_AXES.length; i++) {
+                const axis = GUILDLINE_AXES[i];
                 if (this._isPlane) {
                     if (axis !== this._currAxis) {
                         this._drawGuideLine(gizmoPos, axis);
