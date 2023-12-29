@@ -96,7 +96,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     // boxB.addComponent('render', {
     //     type: 'box'
     // });
-    // boxB.setPosition(1, 0, 0);
+    // boxB.setPosition(1, 0, 1);
     // app.root.addChild(boxB);
 
     // create camera entity
