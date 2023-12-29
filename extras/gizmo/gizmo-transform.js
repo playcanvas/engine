@@ -14,6 +14,9 @@ import { Gizmo } from "./gizmo.js";
 const tmpV = new Vec3();
 const tmpQ = new Quat();
 
+// constants
+const GUIDELINE_SIZE = 1e3;
+
 class AxisShape {
     _position;
 
@@ -188,7 +191,7 @@ class GizmoTransform extends Gizmo {
     constructor(app, camera) {
         super(app, camera);
 
-        this.materials = {
+        this._materials = {
             opaque: {
                 red: this._createMaterial(new Color(1, 0.3, 0.3)),
                 green: this._createMaterial(new Color(0.3, 1, 0.3)),
@@ -203,27 +206,27 @@ class GizmoTransform extends Gizmo {
 
         this._guideLineColor = new Color(1, 1, 1, 0.5);
 
-        this.elements = {
+        this._axisShapes = {
             x: new AxisArrow({
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this.materials.semi.red,
-                hoverColor: this.materials.opaque.red
+                defaultColor: this._materials.semi.red,
+                hoverColor: this._materials.opaque.red
             }),
             y: new AxisArrow({
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this.materials.semi.green,
-                hoverColor: this.materials.opaque.green
+                defaultColor: this._materials.semi.green,
+                hoverColor: this._materials.opaque.green
             }),
             z: new AxisArrow({
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this.materials.semi.blue,
-                hoverColor: this.materials.opaque.blue
+                defaultColor: this._materials.semi.blue,
+                hoverColor: this._materials.opaque.blue
             }),
             yz: new AxisPlane({
                 axis: 'x',
@@ -231,8 +234,8 @@ class GizmoTransform extends Gizmo {
                 position: new Vec3(0, 0.1, 0.1),
                 rotation: new Vec3(0, 0, -90),
                 scale: new Vec3(0.2, 0.2, 0.2),
-                defaultColor: this.materials.semi.red,
-                hoverColor: this.materials.opaque.red
+                defaultColor: this._materials.semi.red,
+                hoverColor: this._materials.opaque.red
             }),
             xz: new AxisPlane({
                 axis: 'y',
@@ -240,8 +243,8 @@ class GizmoTransform extends Gizmo {
                 position: new Vec3(0.1, 0, 0.1),
                 rotation: new Vec3(0, 0, 0),
                 scale: new Vec3(0.2, 0.2, 0.2),
-                defaultColor: this.materials.semi.green,
-                hoverColor: this.materials.opaque.green
+                defaultColor: this._materials.semi.green,
+                hoverColor: this._materials.opaque.green
             }),
             xy: new AxisPlane({
                 axis: 'z',
@@ -249,8 +252,8 @@ class GizmoTransform extends Gizmo {
                 position: new Vec3(0.1, 0.1, 0),
                 rotation: new Vec3(90, 0, 0),
                 scale: new Vec3(0.2, 0.2, 0.2),
-                defaultColor: this.materials.semi.blue,
-                hoverColor: this.materials.opaque.blue
+                defaultColor: this._materials.semi.blue,
+                hoverColor: this._materials.opaque.blue
             })
         };
 
@@ -261,7 +264,6 @@ class GizmoTransform extends Gizmo {
         this._isPlane = false;
         this._pointStart = new Vec3();
         this._offset = new Vec3();
-        this._gizmoStart = new Vec3();
 
         const guildAxes = ['x', 'y', 'z'];
         this.app.on('update', () => {
@@ -286,7 +288,7 @@ class GizmoTransform extends Gizmo {
             if (this.dragging) {
                 this._offset.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
                 this._offset.sub(this._pointStart);
-                this.gizmo.setPosition(this._gizmoStart.clone().add(this._offset));
+                this.updateNodePositions(this._offset);
             }
         });
 
@@ -299,7 +301,7 @@ class GizmoTransform extends Gizmo {
                 this._currAxis = meshInstance.node.name.split("_")[1];
                 this._isPlane = meshInstance.node.name.indexOf('plane') !== -1;
                 this._pointStart.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
-                this._gizmoStart.copy(this.gizmo.getPosition());
+                this.storeNodePositions();
                 this.dragging = true;
             }
         });
@@ -312,17 +314,17 @@ class GizmoTransform extends Gizmo {
     }
 
     _hover(selected) {
-        const element = this.elementMap.get(selected);
-        if (element === this._dirtyElement) {
+        const shape = this.elementMap.get(selected);
+        if (shape === this._dirtyElement) {
             return;
         }
         if (this._dirtyElement) {
             this._dirtyElement.hover(false);
             this._dirtyElement = null;
         }
-        if (element) {
-            element.hover(true);
-            this._dirtyElement = element;
+        if (shape) {
+            shape.hover(true);
+            this._dirtyElement = shape;
         }
     }
 
@@ -382,7 +384,7 @@ class GizmoTransform extends Gizmo {
     _drawGuideLine(pos, axis) {
         const startDir = new Vec3();
         startDir[axis] = 1;
-        startDir.scale(1000);
+        startDir.scale(GUIDELINE_SIZE);
         const endDir = startDir.clone().scale(-1);
         this.app.drawLine(startDir.add(pos), endDir.add(pos), this._guideLineColor, true, this.layerGizmo);
     }
@@ -392,7 +394,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisGap() {
-        return this.elements.x.gap;
+        return this._axisShapes.x.gap;
     }
 
     set axisLineThickness(value) {
@@ -400,7 +402,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisLineThickness() {
-        return this.elements.x.lineThickness;
+        return this._axisShapes.x.lineThickness;
     }
 
     set axisLineLength(value) {
@@ -408,7 +410,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisLineLength() {
-        return this.elements.x.lineLength;
+        return this._axisShapes.x.lineLength;
     }
 
     set axisArrowThickness(value) {
@@ -416,7 +418,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisArrowThickness() {
-        return this.elements.x.arrowThickness;
+        return this._axisShapes.x.arrowThickness;
     }
 
     set axisArrowLength(value) {
@@ -425,7 +427,7 @@ class GizmoTransform extends Gizmo {
     }
 
     get axisArrowLength() {
-        return this.elements.x.arrowLength;
+        return this._axisShapes.x.arrowLength;
     }
 
     _createMaterial(color) {
@@ -457,19 +459,19 @@ class GizmoTransform extends Gizmo {
         this.gizmo.addChild(center);
 
         // elements
-        for (const key in this.elements) {
-            const element = this.elements[key];
-            center.addChild(element.entity);
-            for (let i = 0; i < element.meshInstances.length; i++) {
-                this.elementMap.set(element.meshInstances[i], element);
+        for (const key in this._axisShapes) {
+            const shape = this._axisShapes[key];
+            center.addChild(shape.entity);
+            for (let i = 0; i < shape.meshInstances.length; i++) {
+                this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
     }
 
     _updateAxisProp(propName, value) {
-        this.elements.x[propName] = value;
-        this.elements.y[propName] = value;
-        this.elements.z[propName] = value;
+        this._axisShapes.x[propName] = value;
+        this._axisShapes.y[propName] = value;
+        this._axisShapes.z[propName] = value;
     }
 }
 

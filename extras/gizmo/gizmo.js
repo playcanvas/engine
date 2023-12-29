@@ -23,7 +23,7 @@ class Gizmo extends EventHandler {
 
     nodes = [];
 
-    nodesStart = new Map();
+    nodePositions = new Map();
 
     gizmo;
 
@@ -70,30 +70,39 @@ class Gizmo extends EventHandler {
     attach(nodes) {
         this.nodes = nodes;
         this.gizmo.enabled = true;
-
-        // set nodes starting positions
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            this.nodesStart.set(node, node.getPosition());
-        }
-
         this.gizmo.setPosition(this.getGizmoPosition());
     }
 
     detach() {
         this.nodes = [];
-        this.nodesStart.clear();
+        this.nodePositions.clear();
         this.gizmo.enabled = false;
+    }
+
+    storeNodePositions() {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            const pos = node.getPosition();
+            this.nodePositions.set(node, pos.clone());
+        }
+    }
+
+    updateNodePositions(point) {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            const pos = this.nodePositions.get(node);
+            node.setPosition(pos.clone().add(point));
+        }
+        this.gizmo.setPosition(this.getGizmoPosition());
     }
 
     getGizmoPosition() {
         const center = new Vec3();
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const nodePos = node.getPosition();
-            center.add(nodePos);
+            center.add(node.getPosition());
         }
-        return center.scale(1.0 / this.nodes.length);
+        return center.scale(1.0 / this.nodes.length).clone();
     }
 
     _createLayer() {
