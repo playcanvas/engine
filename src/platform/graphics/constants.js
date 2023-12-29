@@ -793,7 +793,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_R32UI,       { name: 'R32UI', size: 4, channelSize: 4 }],
     [PIXELFORMAT_RG8I,       { name: 'RG8I', size: 2, channelSize: 1 }],
     [PIXELFORMAT_RG8UI,       { name: 'RG8UI', size: 2, channelSize: 1 }],
-    [PIXELFORMAT_RG16I,       { name: 'RG8I', size: 4, channelSize: 2 }],
+    [PIXELFORMAT_RG16I,       { name: 'RG16I', size: 4, channelSize: 2 }],
     [PIXELFORMAT_RG16UI,       { name: 'RG16UI', size: 4, channelSize: 2 }],
     [PIXELFORMAT_RG32I,       { name: 'RG32I', size: 8, channelSize: 4 }],
     [PIXELFORMAT_RG32UI,       { name: 'RG32UI', size: 8, channelSize: 4 }],
