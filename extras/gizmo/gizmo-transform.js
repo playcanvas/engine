@@ -14,7 +14,7 @@ import { Gizmo } from "./gizmo.js";
 const tmpV = new Vec3();
 const tmpQ = new Quat();
 
-class TransformElement {
+class AxisShape {
     _position;
 
     _rotation;
@@ -25,14 +25,14 @@ class TransformElement {
 
     _hoverColor;
 
-    name;
+    axis;
 
     entity;
 
     meshInstances = [];
 
     constructor(options) {
-        this.name = options.name ?? 'INVALID';
+        this.axis = options.axis ?? 'x';
         this._position = options.position ?? new Vec3();
         this._rotation = options.rotation ?? new Vec3();
         this._scale = options.scale ?? new Vec3(1, 1, 1);
@@ -49,7 +49,7 @@ class TransformElement {
     }
 }
 
-class PlaneElement extends TransformElement {
+class AxisPlane extends AxisShape {
     constructor(options) {
         super(options);
 
@@ -57,7 +57,7 @@ class PlaneElement extends TransformElement {
     }
 
     _createPlane(layers) {
-        this.entity = new Entity('plane_' + this.name);
+        this.entity = new Entity('plane_' + this.axis);
         this.entity.addComponent('render', {
             type: 'plane',
             layers: layers,
@@ -71,7 +71,7 @@ class PlaneElement extends TransformElement {
     }
 }
 
-class AxisElement extends TransformElement {
+class AxisArrow extends AxisShape {
     _gap = 0;
 
     _lineThickness = 0.04;
@@ -85,7 +85,7 @@ class AxisElement extends TransformElement {
     constructor(options = {}) {
         super(options);
 
-        this._createAxis(options.layers ?? []);
+        this._createArrow(options.layers ?? []);
     }
 
     set gap(value) {
@@ -136,13 +136,13 @@ class AxisElement extends TransformElement {
         return this._arrowLength;
     }
 
-    _createAxis(layers) {
-        this.entity = new Entity('axis_' + this.name);
+    _createArrow(layers) {
+        this.entity = new Entity('axis_' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
 
-        this._line = new Entity('line_' + this.name);
+        this._line = new Entity('line_' + this.axis);
         this._line.addComponent('render', {
             type: 'cylinder',
             layers: layers,
@@ -153,7 +153,7 @@ class AxisElement extends TransformElement {
         this.entity.addChild(this._line);
         this.meshInstances.push(...this._line.render.meshInstances);
 
-        this._arrow = new Entity('arrow_' + this.name);
+        this._arrow = new Entity('arrow_' + this.axis);
         this._arrow.addComponent('render', {
             type: 'cone',
             layers: layers,
@@ -201,36 +201,30 @@ class GizmoTransform extends Gizmo {
             }
         };
 
-        this._planeAxis = {
-            xz: 'y',
-            xy: 'z',
-            yz: 'x'
-        };
-
         this.elements = {
-            x: new AxisElement({
-                name: 'x',
+            x: new AxisArrow({
+                axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
                 defaultColor: this.materials.semi.red,
                 hoverColor: this.materials.opaque.red
             }),
-            y: new AxisElement({
-                name: 'y',
+            y: new AxisArrow({
+                axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
                 defaultColor: this.materials.semi.green,
                 hoverColor: this.materials.opaque.green
             }),
-            z: new AxisElement({
-                name: 'z',
+            z: new AxisArrow({
+                axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this.materials.semi.blue,
                 hoverColor: this.materials.opaque.blue
             }),
-            yz: new PlaneElement({
-                name: 'yz',
+            yz: new AxisPlane({
+                axis: 'x',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0, 0.1, 0.1),
                 rotation: new Vec3(0, 0, -90),
@@ -238,8 +232,8 @@ class GizmoTransform extends Gizmo {
                 defaultColor: this.materials.semi.red,
                 hoverColor: this.materials.opaque.red
             }),
-            xz: new PlaneElement({
-                name: 'xz',
+            xz: new AxisPlane({
+                axis: 'y',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0.1, 0, 0.1),
                 rotation: new Vec3(0, 0, 0),
@@ -247,8 +241,8 @@ class GizmoTransform extends Gizmo {
                 defaultColor: this.materials.semi.green,
                 hoverColor: this.materials.opaque.green
             }),
-            xy: new PlaneElement({
-                name: 'xy',
+            xy: new AxisPlane({
+                axis: 'z',
                 layers: [this.layerGizmo.id],
                 position: new Vec3(0.1, 0.1, 0),
                 rotation: new Vec3(90, 0, 0),
@@ -283,9 +277,8 @@ class GizmoTransform extends Gizmo {
             }
             if (selected) {
                 const meshInstance = selected.meshInstance;
-                const axisName = meshInstance.node.name.split("_")[1];
-                this._isPlane = axisName.length === 2;
-                this._currAxis = this._planeAxis[axisName] ?? axisName;
+                this._currAxis = meshInstance.node.name.split("_")[1];
+                this._isPlane = meshInstance.node.name.indexOf('plane') !== -1;
                 this._pointStart.copy(this._pickPlane(e.clientX, e.clientY, this._currAxis, this._isPlane));
                 this._gizmoStart.copy(this.gizmo.getPosition());
             }
