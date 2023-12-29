@@ -265,7 +265,7 @@ class GizmoTransform extends Gizmo {
             this._hover(selected?.meshInstance);
 
             if (this.dragging) {
-                this._offset.copy(this._pickPlane(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._offset.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
                 this._offset.sub(this._pointStart);
                 this.gizmo.setPosition(this._gizmoStart.clone().add(this._offset));
             }
@@ -279,7 +279,7 @@ class GizmoTransform extends Gizmo {
                 const meshInstance = selected.meshInstance;
                 this._currAxis = meshInstance.node.name.split("_")[1];
                 this._isPlane = meshInstance.node.name.indexOf('plane') !== -1;
-                this._pointStart.copy(this._pickPlane(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._pointStart.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
                 this._gizmoStart.copy(this.gizmo.getPosition());
             }
             this.dragging = true;
@@ -305,14 +305,17 @@ class GizmoTransform extends Gizmo {
         }
     }
 
-    _pickPlane(x, y, axis, isPlane) {
+    _calcPoint(x, y, axis, isPlane) {
         const gizmoPos = this.gizmo.getPosition();
         const mouseWPos = this.camera.camera.screenToWorld(x, y, 1);
         const rayOrigin = this.camera.getPosition();
         const rayDir = new Vec3();
+
+        // set plane normal based on axis
         const planeNormal = new Vec3();
         planeNormal[axis] = 1;
 
+        // calculate ray direction from mouse position
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
             rayDir.copy(mouseWPos).sub(rayOrigin).normalize();
         } else {
@@ -320,33 +323,39 @@ class GizmoTransform extends Gizmo {
             this.camera.getWorldTransform().transformVector(tmpV.set(0, 0, -1), rayDir);
         }
 
+        // rotate plane normal by gizmo rotation
         tmpQ.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
 
         if (!isPlane) {
             tmpV.copy(rayOrigin).sub(gizmoPos).normalize();
             planeNormal.copy(tmpV.sub(planeNormal.scale(planeNormal.dot(tmpV))).normalize());
         }
+
+        // ray intersection with plane
         const rayPlaneDot = planeNormal.dot(rayDir);
         const planeDist = gizmoPos.dot(planeNormal);
         const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
-        const pickedPos = rayDir.scale(-pointPlaneDist).add(rayOrigin);
+        const point = rayDir.scale(-pointPlaneDist).add(rayOrigin);
 
         if (!isPlane) {
+            // reset normal based on axis and project position from plane onto normal
             planeNormal.set(0, 0, 0);
             planeNormal[axis] = 1;
             tmpQ.transformVector(planeNormal, planeNormal);
-            pickedPos.copy(planeNormal.scale(planeNormal.dot(pickedPos)));
+            point.copy(planeNormal.scale(planeNormal.dot(point)));
         }
 
-        tmpQ.invert().transformVector(pickedPos, pickedPos);
+        // rotate point back to world coords
+        tmpQ.invert().transformVector(point, point);
 
         if (!isPlane) {
-            var v = pickedPos[axis];
-            pickedPos.set(0, 0, 0);
-            pickedPos[axis] = v;
+            // set other axes to zero if not plane point
+            const v = point[axis];
+            point.set(0, 0, 0);
+            point[axis] = v;
         }
 
-        return pickedPos;
+        return point;
     }
 
     set axisGap(value) {
