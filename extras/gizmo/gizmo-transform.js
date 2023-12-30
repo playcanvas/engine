@@ -5,7 +5,7 @@ import {
     StandardMaterial,
     Entity,
     Vec3,
-    Quat,
+    Quat
 } from 'playcanvas'
 
 import { Gizmo } from "./gizmo.js";
