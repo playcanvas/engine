@@ -41,20 +41,20 @@ class Gizmo extends EventHandler {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            this.fire('pointermove', e, selection[0]);
+            this.fire('pointermove', e.clientX, e.clientY, selection[0]);
         };
         const onPointerDown = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            this.fire('pointerdown', e, selection[0]);
+            this.fire('pointerdown', e.clientX, e.clientY, selection[0]);
         };
         const onPointerUp = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
-            this.fire('pointerup', e);
+            this.fire('pointerup');
         };
 
         window.addEventListener('pointermove', onPointerMove);
@@ -117,7 +117,6 @@ class Gizmo extends EventHandler {
     }
 
     _createGizmo() {
-        // gizmo root entity
         this.gizmo = new Entity('gizmo');
         this.app.root.addChild(this.gizmo);
         this.gizmo.enabled = false;

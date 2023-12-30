@@ -300,17 +300,17 @@ class GizmoTransform extends Gizmo {
             }
         });
 
-        this.on('pointermove', (e, selected) => {
+        this.on('pointermove', (x, y, selected) => {
             this._hover(selected?.meshInstance);
 
             if (this.dragging) {
-                this._offset.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._offset.copy(this._calcPoint(x, y, this._currAxis, this._isPlane));
                 this._offset.sub(this._pointStart);
                 this.updateNodePositions(this._offset);
             }
         });
 
-        this.on('pointerdown', (e, selected) => {
+        this.on('pointerdown', (x, y, selected) => {
             if (this.dragging) {
                 return;
             }
@@ -318,13 +318,13 @@ class GizmoTransform extends Gizmo {
                 const meshInstance = selected.meshInstance;
                 this._currAxis = meshInstance.node.name.split("_")[1];
                 this._isPlane = meshInstance.node.name.indexOf('plane') !== -1;
-                this._pointStart.copy(this._calcPoint(e.clientX, e.clientY, this._currAxis, this._isPlane));
+                this._pointStart.copy(this._calcPoint(x, y, this._currAxis, this._isPlane));
                 this.storeNodePositions();
                 this.dragging = true;
             }
         });
 
-        this.on('pointerup', (e) => {
+        this.on('pointerup', () => {
             this.dragging = false;
             this._currAxis = '';
             this._isPlane = false;
