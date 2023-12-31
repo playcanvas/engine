@@ -213,10 +213,11 @@ const targets = [
             timestamp()
         ]
     },
-    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js'),
-    process.env.RTI ? buildTargetRTI('es5', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH') : undefined
+    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
 ];
-
+if (process.env.RTI) {
+    targets.push(buildTargetRTI('es5', '../src/index.rti.js', 'dist/iframe/ENGINE_PATH'));
+}
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.
 // In that case we have a watcher which copies all necessary files.
 if (ENGINE_PATH === '') {
