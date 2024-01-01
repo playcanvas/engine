@@ -115,6 +115,15 @@ class RenderPassBloom extends RenderPass {
         }
     }
 
+    onDisable() {
+        // resize down the persistent render target
+        this.renderTargets[0]?.resize(1, 1);
+
+        // release the rest
+        this.destroyRenderPasses();
+        this.destroyRenderTargets(1);
+    }
+
     frameUpdate() {
         super.frameUpdate();
 

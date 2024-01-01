@@ -26,27 +26,23 @@ class FrameGraph {
         Debug.assert(renderPass);
         renderPass.frameUpdate();
 
-        const passes = this.renderPasses;
-
         const beforePasses = renderPass.beforePasses;
         for (let i = 0; i < beforePasses.length; i++) {
             const pass = beforePasses[i];
             if (pass.enabled) {
-                pass.frameUpdate();
-                passes.push(pass);
+                this.addRenderPass(pass);
             }
         }
 
         if (renderPass.enabled) {
-            passes.push(renderPass);
+            this.renderPasses.push(renderPass);
         }
 
         const afterPasses = renderPass.afterPasses;
         for (let i = 0; i < afterPasses.length; i++) {
             const pass = afterPasses[i];
             if (pass.enabled) {
-                pass.frameUpdate();
-                passes.push(pass);
+                this.addRenderPass(pass);
             }
         }
     }

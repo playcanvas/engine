@@ -14,6 +14,7 @@ import baseVS from './lit/vert/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
+import bayerPS from './common/frag/bayer.js';
 import biasConstPS from './lit/frag/biasConst.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
@@ -91,6 +92,7 @@ import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
+import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
@@ -223,6 +225,7 @@ const shaderChunks = {
     baseNineSlicedPS,
     baseNineSlicedVS,
     baseNineSlicedTiledPS,
+    bayerPS,
     biasConstPS,
     blurVSMPS,
     clearCoatPS,
@@ -300,6 +303,7 @@ const shaderChunks = {
     normalXYPS,
     normalXYZPS,
     opacityPS,
+    opacityDitherPS,
     outputPS,
     outputAlphaPS,
     outputAlphaOpaquePS,

@@ -175,6 +175,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     precision: 0
                 })
             )
+        ),
+        jsx(Panel, { headerText: 'TAA (Work in Progress)' },
+            jsx(LabelGroup, { text: 'enabled' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.taa.enabled' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'jitter' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.taa.jitter' },
+                    min: 0,
+                    max: 5,
+                    precision: 2
+                })
+            )
         )
     );
 }
@@ -183,7 +201,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
+async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -218,17 +236,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -265,6 +277,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         app.scene.envAtlas = assets.helipad.resource;
         app.scene.skyboxMip = 2;
         app.scene.exposure = 0.3;
+
+        // disable skydome rendering itself, we don't need it as we use camera clear color
+        app.scene.layers.getLayerByName('Skybox').enabled = false;
 
         // render in HDR mode
         app.scene.toneMapping = pc.TONEMAP_LINEAR;
@@ -396,158 +411,99 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
         addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
-        // render passes
-        let scenePass;
-        let composePass;
-        let bloomPass;
-        let colorGrabPass;
+        // ------ Custom render passes set up ------
 
-        // helper function to create a render passes for the camera
-        const setupRenderPasses = () => {
+        const currentOptions = {
+            camera: cameraEntity.camera,    // camera used to render those passes
+            samples: 0,                     // number of samples for multi-sampling
+            sceneColorMap: true,            // true if the scene color should be captured
 
-            // create a multi-sampled HDR render target to render the scene into
-            const format = app.graphicsDevice.getRenderableHdrFormat() || pc.PIXELFORMAT_RGBA8;
-            const sceneTexture = new pc.Texture(device, {
-                name: 'SceneTexture',
-                width: 4,
-                height: 4,
-                format: format,
-                mipmaps: false,
-                minFilter: pc.FILTER_LINEAR,
-                magFilter: pc.FILTER_LINEAR,
-                addressU: pc.ADDRESS_CLAMP_TO_EDGE,
-                addressV: pc.ADDRESS_CLAMP_TO_EDGE
-            });
-
-            const rt = new pc.RenderTarget({
-                colorBuffer: sceneTexture,
-                depth: true,
-                samples: 4
-            });
-
-            // grab pass allowing us to copy the render scene into a texture and use for refraction
-            // the source for the copy is the texture we render the scene to
-            colorGrabPass = new pc.RenderPassColorGrab(app.graphicsDevice);
-            colorGrabPass.source = rt;
-
-            // render pass that renders the opaque scene to the render target. Render target size
-            // automatically matches the back-buffer size with the optional scale. Note that the scale
-            // parameters allow us to render the 3d scene at lower resolution, improving performance.
-            scenePass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            scenePass.init(rt, {
-                resizeSource: null,
-                scaleX: 1,
-                scaleY: 1
-            });
-
-            // this pass render opaquemeshes on the world layer
-            let clearRenderTarget = true;
-            scenePass.addLayer(cameraEntity.camera, worldLayer, false, clearRenderTarget);
-
-            // similar pass that renders transparent meshes from the world layer to the same render target
-            clearRenderTarget = false;
-            const scenePassTransparent = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            scenePassTransparent.init(rt);
-            scenePassTransparent.addLayer(cameraEntity.camera, worldLayer, true, clearRenderTarget);
-
-            // create a bloom pass, which generates bloom texture based on the just rendered scene texture
-            bloomPass = new pcx.RenderPassBloom(app.graphicsDevice, sceneTexture, format);
-
-            // create a compose pass, which combines the scene texture with the bloom texture
-            composePass = new pcx.RenderPassCompose(app.graphicsDevice);
-            composePass.sceneTexture = sceneTexture;
-            composePass.bloomTexture = bloomPass.bloomTexture;
-
-            // compose pass renders directly to a back-buffer
-            composePass.init(null);
-
-            // final pass renders directly to the back-buffer on top of the bloomed scene, and it renders a transparent UI layer
-            const afterPass = new pc.RenderPassRenderActions(app.graphicsDevice, app.scene.layers, app.scene, app.renderer);
-            afterPass.init(null);
-            afterPass.addLayer(cameraEntity.camera, uiLayer, true, clearRenderTarget);
-
-            // return these prepared render passes in the order they should be executed
-            return [scenePass, colorGrabPass, scenePassTransparent, bloomPass, composePass, afterPass];
+            // disabled by default as this is WIP
+            taaEnabled: false               // true if temporal anti-aliasing should be used
         };
 
-        // set up render passes on the camera, to use those instead of the default camera rendering
-        const renderPasses = setupRenderPasses();
-        cameraEntity.camera.renderPasses = renderPasses;
+        const setupRenderPass = () => {
 
-        data.on('*:set', (/** @type {string} */ path, value) => {
-            const pathArray = path.split('.');
-            if (pathArray[1] === 'scene') {
-                if (pathArray[2] === 'scale') {
-                    scenePass.options.scaleX = value;
-                    scenePass.options.scaleY = value;
-                }
-                if (pathArray[2] === 'tonemapping') {
-                    composePass.toneMapping = value;
-                    composePass._shaderDirty = true;
-                }
-                if (pathArray[2] === 'background') {
-                    cameraEntity.camera.clearColor = new pc.Color(lightColor.r * value, lightColor.g * value, lightColor.b * value);
-                    light.light.intensity = value;
-                }
-                if (pathArray[2] === 'emissive') {
-                    emissiveMaterials.forEach((material) => {
-                        material.emissiveIntensity = value;
-                        material.update();
-                    });
-                }
+            // destroy existing pass if any
+            if (cameraEntity.camera.renderPasses.length > 0) {
+                cameraEntity.camera.renderPasses[0].destroy();
             }
-            if (pathArray[1] === 'bloom') {
-                if (pathArray[2] === 'intensity') {
-                    composePass.bloomIntensity = pc.math.lerp(0, 0.1, value / 100);
-                }
-                if (pathArray[2] === 'lastMipLevel') {
-                    bloomPass.lastMipLevel = value;
-                }
-                if (pathArray[2] === 'enabled') {
-                    composePass.bloomTexture = value ? bloomPass.bloomTexture : null;
-                }
+
+            // Use a render pass camera frame, which is a render pass that implements typical rendering of a camera.
+            // Internally this sets up additional passes it needs, based on the options passed to it.
+            const renderPassCamera = new pcx.RenderPassCameraFrame(app, currentOptions);
+
+            // and set up these rendering passes to be used by the camera, instead of its default rendering
+            cameraEntity.camera.renderPasses = [renderPassCamera];
+        };
+
+        // ------
+
+        const applySettings = () => {
+
+            // if settings require render passes to be re-created
+            const noPasses = cameraEntity.camera.renderPasses.length === 0;
+            const taaEnabled = data.get('data.taa.enabled');
+            if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
+                currentOptions.taaEnabled = taaEnabled;
+
+                // create new pass
+                setupRenderPass();
             }
-            if (pathArray[1] === 'grading') {
-                if (pathArray[2] === 'saturation') {
-                    composePass.gradingSaturation = value;
-                }
-                if (pathArray[2] === 'brightness') {
-                    composePass.gradingBrightness = value;
-                }
-                if (pathArray[2] === 'contrast') {
-                    composePass.gradingContrast = value;
-                }
-                if (pathArray[2] === 'enabled') {
-                    composePass.gradingEnabled = value;
-                }
-            }
-            if (pathArray[1] === 'vignette') {
-                if (pathArray[2] === 'enabled') {
-                    composePass.vignetteEnabled = value;
-                }
-                if (pathArray[2] === 'inner') {
-                    composePass.vignetteInner = value;
-                }
-                if (pathArray[2] === 'outer') {
-                    composePass.vignetteOuter = value;
-                }
-                if (pathArray[2] === 'curvature') {
-                    composePass.vignetteCurvature = value;
-                }
-                if (pathArray[2] === 'intensity') {
-                    composePass.vignetteIntensity = value;
-                }
-            }
-            if (pathArray[1] === 'fringing') {
-                if (pathArray[2] === 'enabled') {
-                    composePass.fringingEnabled = value;
-                }
-                if (pathArray[2] === 'intensity') {
-                    composePass.fringingIntensity = value;
-                }
-            }
+
+            const renderPassCamera = cameraEntity.camera.renderPasses[0];
+            const composePass = renderPassCamera.composePass;
+
+            // apply all runtime settings
+
+            // SCENE
+            composePass.toneMapping = data.get('data.scene.tonemapping');
+            renderPassCamera.renderTargetScale = data.get('data.scene.scale');
+
+            const background = data.get('data.scene.background');
+            cameraEntity.camera.clearColor = new pc.Color(lightColor.r * background, lightColor.g * background, lightColor.b * background);
+            light.light.intensity = background;
+
+            const emissive = data.get('data.scene.emissive');
+            emissiveMaterials.forEach((material) => {
+                material.emissiveIntensity = emissive;
+                material.update();
+            });
+
+            // taa - enable camera jitter if taa is enabled
+            cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
+
+            // bloom
+            composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+            renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+            renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
+
+            // grading
+            composePass.gradingSaturation = data.get('data.grading.saturation');
+            composePass.gradingBrightness = data.get('data.grading.brightness');
+            composePass.gradingContrast = data.get('data.grading.contrast');
+            composePass.gradingEnabled = data.get('data.grading.enabled');
+
+            // vignette
+            composePass.vignetteEnabled = data.get('data.vignette.enabled');
+            composePass.vignetteInner = data.get('data.vignette.inner');
+            composePass.vignetteOuter = data.get('data.vignette.outer');
+            composePass.vignetteCurvature = data.get('data.vignette.curvature');
+            composePass.vignetteIntensity = data.get('data.vignette.intensity');
+
+            // fringing
+            composePass.fringingEnabled = data.get('data.fringing.enabled');
+            composePass.fringingIntensity = data.get('data.fringing.intensity');
+        };
+
+        // apply UI changes
+        let initialValuesSetup = false;
+        data.on('*:set', () => {
+            if (initialValuesSetup)
+                applySettings();
         });
 
+        // set initial values
         data.set('data', {
             scene: {
                 scale: 1.8,
@@ -576,8 +532,16 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             fringing: {
                 enabled: false,
                 intensity: 50
+            },
+            taa: {
+                enabled: currentOptions.taaEnabled,
+                jitter: 1
             }
         });
+
+        // apply initial settings after all values are set
+        initialValuesSetup = true;
+        applySettings();
 
         // update things every frame
         let angle = 0;

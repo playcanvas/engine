@@ -10,7 +10,10 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        twgslUrl: twgslPath + 'twgsl.js',
+
+        // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+        antialias: false
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -20,13 +23,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -65,6 +64,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     assetListLoader.load(() => {
 
         app.start();
+
+        app.scene.toneMapping = pc.TONEMAP_ACES;
 
         // get the instance of the gallery and set up with render component
         const galleryEntity = assets.gallery.resource.instantiateRenderEntity();

@@ -10,7 +10,10 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        twgslUrl: twgslPath + 'twgsl.js',
+
+        // disable antialiasing as gaussian splats do not benefit from it and it's expensive
+        antialias: false
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -20,13 +23,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -64,6 +63,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.start();
 
+        app.scene.toneMapping = pc.TONEMAP_ACES;
+
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
@@ -77,7 +78,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
                 cameraEntity: camera,
                 debugRender: false,
                 fragment: fragment,
-                vertex: vertex
+                vertex: vertex,
+                dither: false
             });
             splat.setLocalPosition(px, py, pz);
             splat.setLocalScale(scale, scale, scale);

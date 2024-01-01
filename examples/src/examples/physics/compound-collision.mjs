@@ -25,19 +25,12 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -70,8 +63,8 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
     /**
-     * @param {pc.Color} color 
-     * @returns {pc.StandardMaterial}
+     * @param {pc.Color} color - The diffuse color.
+     * @returns {pc.StandardMaterial} The standard material.
      */
     function createMaterial(color) {
         const material = new pc.StandardMaterial();

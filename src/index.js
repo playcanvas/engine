@@ -69,6 +69,8 @@ export { RenderPass } from './platform/graphics/render-pass.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
+export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';   // used by splats in extras
+export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by splats in extras
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
@@ -123,7 +125,6 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance } from './scene/mesh-instance.js';
@@ -156,14 +157,17 @@ export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
 // SCENE / RENDERER
-export { RenderPassRenderActions } from './scene/renderer/render-pass-render-actions.js';
+export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
 
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { getProgramLibrary } from './scene/shader-lib/get-program-library.js';      // used by splats in extras
+export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
 // FRAMEWORK
 export * from './framework/constants.js';

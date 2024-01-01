@@ -153,7 +153,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
- */    
+ */
 async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
 
     const assets = {
@@ -178,13 +178,9 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     createOptions.lightmapper = pc.Lightmapper;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [

@@ -11,8 +11,8 @@ import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-acces
 import { PIXELFORMAT_RGBA8, ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR } from '../platform/graphics/constants.js';
 
 import { BAKE_COLORDIR, FOG_NONE, GAMMA_SRGB, LAYERID_IMMEDIATE } from './constants.js';
-import { Sky } from './sky.js';
 import { LightingParams } from './lighting/lighting-params.js';
+import { Sky } from './skybox/sky.js';
 import { Immediate } from './immediate/immediate.js';
 import { EnvLighting } from './graphics/env-lighting.js';
 
@@ -156,19 +156,27 @@ class Scene extends EventHandler {
     root = null;
 
     /**
-     * The sky of the scene.
-     *
-     * @type {Sky}
-     * @ignore
-     */
-    sky = null;
-
-    /**
      * Use physically based units for cameras and lights. When used, the exposure value is ignored.
      *
      * @type {boolean}
      */
     physicalUnits = false;
+
+    /**
+     * Environment lighting atlas
+     *
+     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @private
+     */
+    _envAtlas = null;
+
+    /**
+     * The skybox cubemap as set by user (gets used when skyboxMip === 0)
+     *
+     * @type {import('../platform/graphics/texture.js').Texture|null}
+     * @private
+     */
+    _skyboxCubeMap = null;
 
     /**
      * Create a new Scene instance.
@@ -197,28 +205,12 @@ class Scene extends EventHandler {
         this._toneMapping = 0;
 
         /**
-         * The skybox cubemap as set by user (gets used when skyboxMip === 0)
-         *
-         * @type {import('../platform/graphics/texture.js').Texture}
-         * @private
-         */
-        this._skyboxCubeMap = null;
-
-        /**
          * Array of 6 prefiltered lighting data cubemaps.
          *
          * @type {import('../platform/graphics/texture.js').Texture[]}
          * @private
          */
         this._prefilteredCubemaps = [];
-
-        /**
-         * Environment lighting atlas
-         *
-         * @type {import('../platform/graphics/texture.js').Texture}
-         * @private
-         */
-        this._envAtlas = null;
 
         // internally generated envAtlas owned by the scene
         this._internalEnvAtlas = null;
@@ -244,6 +236,9 @@ class Scene extends EventHandler {
         this._lightingParams = new LightingParams(this.device.supportsAreaLights, this.device.maxTextureSize, () => {
             this.updateShaders = true;
         });
+
+        // skybox
+        this._sky = new Sky(this);
 
         this._stats = {
             meshInstances: 0,
@@ -393,7 +388,7 @@ class Scene extends EventHandler {
                 this._internalEnvAtlas = null;
             }
 
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -458,6 +453,10 @@ class Scene extends EventHandler {
 
     get layers() {
         return this._layers;
+    }
+
+    get sky() {
+        return this._sky;
     }
 
     /**
@@ -528,7 +527,7 @@ class Scene extends EventHandler {
             }
 
             this._prefilteredCubemaps = value.slice();
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -544,7 +543,7 @@ class Scene extends EventHandler {
     set skybox(value) {
         if (value !== this._skyboxCubeMap) {
             this._skyboxCubeMap = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -560,7 +559,7 @@ class Scene extends EventHandler {
     set skyboxIntensity(value) {
         if (value !== this._skyboxIntensity) {
             this._skyboxIntensity = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -576,7 +575,7 @@ class Scene extends EventHandler {
     set skyboxLuminance(value) {
         if (value !== this._skyboxLuminance) {
             this._skyboxLuminance = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -593,7 +592,7 @@ class Scene extends EventHandler {
     set skyboxMip(value) {
         if (value !== this._skyboxMip) {
             this._skyboxMip = value;
-            this._resetSky();
+            this._resetSkyMesh();
         }
     }
 
@@ -622,7 +621,7 @@ class Scene extends EventHandler {
             // only reset sky / rebuild scene shaders if rotation changed away from identity for the first time
             if (!this._skyboxRotationShaderInclude && !isIdentity) {
                 this._skyboxRotationShaderInclude = true;
-                this._resetSky();
+                this._resetSkyMesh();
             }
         }
     }
@@ -656,7 +655,7 @@ class Scene extends EventHandler {
     }
 
     destroy() {
-        this._resetSky();
+        this._resetSkyMesh();
         this.root = null;
         this.off();
     }
@@ -703,6 +702,8 @@ class Scene extends EventHandler {
             this.skyboxRotation = (new Quat()).setFromEulerAngles(render.skyboxRotation[0], render.skyboxRotation[1], render.skyboxRotation[2]);
         }
 
+        this.sky.applySettings(render);
+
         this.clusteredLightingEnabled = render.clusteredLightingEnabled ?? false;
         this.lighting.applySettings(render);
 
@@ -722,7 +723,7 @@ class Scene extends EventHandler {
             }
         });
 
-        this._resetSky();
+        this._resetSkyMesh();
     }
 
     // get the actual texture to use for skybox rendering
@@ -743,19 +744,15 @@ class Scene extends EventHandler {
         return this._skyboxCubeMap || cubemaps[0] || this._envAtlas;
     }
 
-    _updateSky(device) {
-        if (!this.sky) {
-            const texture = this._getSkyboxTex();
-            if (texture) {
-                this.sky = new Sky(device, this, texture);
-                this.fire('set:skybox', texture);
-            }
+    _updateSkyMesh() {
+        if (!this.sky.skyMesh) {
+            this.sky.updateSkyMesh();
         }
+        this.sky.update();
     }
 
-    _resetSky() {
-        this.sky?.destroy();
-        this.sky = null;
+    _resetSkyMesh() {
+        this.sky.resetSkyMesh();
         this.updateShaders = true;
     }
 

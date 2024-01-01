@@ -492,6 +492,22 @@ class CameraComponent extends Component {
     }
 
     /**
+     * A jitter intensity applied in the projection matrix. Used for jittered sampling by TAA.
+     * A value of 1 represents a jitter in the range of [-1 to 1] of a pixel. Smaller values result
+     * in a crisper yet more aliased outcome, whereas increased values produce smoother but blurred
+     * result. Defaults to 0, representing no jitter.
+     *
+     * @type {number}
+     */
+    set jitter(value) {
+        this._camera.jitter = value;
+    }
+
+    get jitter() {
+        return this._camera.jitter;
+    }
+
+    /**
      * The distance from the camera before which no rendering will take place. Defaults to 0.1.
      *
      * @type {number}
