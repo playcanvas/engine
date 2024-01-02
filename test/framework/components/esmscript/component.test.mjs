@@ -1511,16 +1511,16 @@ describe('EsmScriptComponent', function () {
 
             await waitForNextFrame();
 
-
             const script = e.esmscript.get('ScriptWithSimpleAttributes');
             const clonedScript = clone.esmscript.get('ScriptWithSimpleAttributes');
-
 
             expect(e.esmscript).to.exist;
             console.log(script);
             expect(script).to.exist;
-            expect(script.colorAttribute).to.equal(colorAttribute);
+            expect(script.colorAttribute).to.not.equal(colorAttribute);
+            expect(script.colorAttribute).to.deep.equal(colorAttribute);
             expect(clonedScript.colorAttribute).to.not.equal(script.colorAttribute);
+            expect(clonedScript.colorAttribute).to.deep.equal(script.colorAttribute);
 
         });
 
