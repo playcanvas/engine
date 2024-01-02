@@ -41,25 +41,25 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'settings.axisBoxSize' }
                 })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisArrowThickness' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisArrowLength' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Plane Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.axisPlaneSize' }
+                })
             )
-            // jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
-            //     jsx(SliderInput, {
-            //         binding: new BindingTwoWay(),
-            //         link: { observer, path: 'settings.axisArrowThickness' }
-            //     })
-            // ),
-            // jsx(LabelGroup, { text: 'Axis Arrow Length' },
-            //     jsx(SliderInput, {
-            //         binding: new BindingTwoWay(),
-            //         link: { observer, path: 'settings.axisArrowLength' }
-            //     })
-            // ),
-            // jsx(LabelGroup, { text: 'Axis Plane Size' },
-            //     jsx(SliderInput, {
-            //         binding: new BindingTwoWay(),
-            //         link: { observer, path: 'settings.axisPlaneSize' }
-            //     })
-            // )
         )
     );
 }
