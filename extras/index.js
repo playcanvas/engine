@@ -21,3 +21,5 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 // gizmo
 export { Gizmo } from "./gizmo/gizmo.js";
 export { GizmoTransform } from "./gizmo/gizmo-transform.js";
+export { GizmoTranslate } from "./gizmo/gizmo-translate.js";
+export { GizmoScale } from "./gizmo/gizmo-scale.js";

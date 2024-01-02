@@ -8,7 +8,8 @@ import {
 } from 'playcanvas'
 
 // temp variables
-const tmpV = new Vec3();
+const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 const tmpQ = new Quat();
 
 class Gizmo extends EventHandler {
@@ -21,6 +22,8 @@ class Gizmo extends EventHandler {
     nodeLocalPositions = new Map();
 
     nodePositions = new Map();
+
+    nodeScale = new Map();
 
     gizmo;
 
@@ -40,20 +43,20 @@ class Gizmo extends EventHandler {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            this.fire('pointermove', e.clientX, e.clientY, selection[0]);
+            this.fire('pointer:move', e.clientX, e.clientY, selection[0]);
         };
         const onPointerDown = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
-            this.fire('pointerdown', e.clientX, e.clientY, selection[0]);
+            this.fire('pointer:down', e.clientX, e.clientY, selection[0]);
         };
         const onPointerUp = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
-            this.fire('pointerup');
+            this.fire('pointer:up');
         };
 
         window.addEventListener('pointermove', onPointerMove);
@@ -102,9 +105,14 @@ class Gizmo extends EventHandler {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             if (this._coordSpace === 'local') {
-                tmpV.copy(point);
-                tmpQ.copy(node.getLocalRotation()).transformVector(tmpV, tmpV);
-                node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV));
+                tmpV1.copy(point);
+                node.parent.getWorldTransform().getScale(tmpV2);
+                tmpV2.x = 1 / tmpV2.x;
+                tmpV2.y = 1 / tmpV2.y;
+                tmpV2.z = 1 / tmpV2.z;
+                tmpQ.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
+                tmpV1.mul(tmpV2);
+                node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV1));
             } else {
                 node.setPosition(this.nodePositions.get(node).clone().add(point));
             }
@@ -113,23 +121,37 @@ class Gizmo extends EventHandler {
         this.setGizmoPosition();
     }
 
-    setGizmoPosition() {
-        tmpV.set(0, 0, 0);
+    storeNodeScale() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            tmpV.add(node.getPosition());
+            this.nodeScale.set(node, node.getLocalScale().clone());
         }
-        this.gizmo.setPosition(tmpV.scale(1.0 / this.nodes.length));
+    }
+
+    updateNodeScale(scale) {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            node.setLocalScale(this.nodeScale.get(node).clone().add(scale));
+        }
+    }
+
+    setGizmoPosition() {
+        tmpV1.set(0, 0, 0);
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            tmpV1.add(node.getPosition());
+        }
+        this.gizmo.setPosition(tmpV1.scale(1.0 / this.nodes.length));
     }
 
     setGizmoRotation() {
         if (this._coordSpace === 'local') {
-            tmpV.set(0, 0, 0);
+            tmpV1.set(0, 0, 0);
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
-                tmpV.add(node.getEulerAngles());
+                tmpV1.add(node.getEulerAngles());
             }
-            this.gizmo.setEulerAngles(tmpV.scale(1.0 / this.nodes.length));
+            this.gizmo.setEulerAngles(tmpV1.scale(1.0 / this.nodes.length));
         } else {
             this.gizmo.setEulerAngles(0, 0, 0);
         }
@@ -191,7 +213,7 @@ class Gizmo extends EventHandler {
                     v2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
                     v3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
 
-                    if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, tmpV)) {
+                    if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, tmpV1)) {
                         selection.push(meshInstance);
                     }
                 }

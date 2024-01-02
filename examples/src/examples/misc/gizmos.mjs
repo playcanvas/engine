@@ -36,24 +36,30 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'settings.axisLineLength' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+            jsx(LabelGroup, { text: 'Axis Box Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisArrowThickness' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Arrow Length' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisArrowLength' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Plane Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisPlaneSize' }
+                    link: { observer, path: 'settings.axisBoxSize' }
                 })
             )
+            // jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+            //     jsx(SliderInput, {
+            //         binding: new BindingTwoWay(),
+            //         link: { observer, path: 'settings.axisArrowThickness' }
+            //     })
+            // ),
+            // jsx(LabelGroup, { text: 'Axis Arrow Length' },
+            //     jsx(SliderInput, {
+            //         binding: new BindingTwoWay(),
+            //         link: { observer, path: 'settings.axisArrowLength' }
+            //     })
+            // ),
+            // jsx(LabelGroup, { text: 'Axis Plane Size' },
+            //     jsx(SliderInput, {
+            //         binding: new BindingTwoWay(),
+            //         link: { observer, path: 'settings.axisPlaneSize' }
+            //     })
+            // )
         )
     );
 }
@@ -107,7 +113,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     boxA.addComponent('render', {
         type: 'box'
     });
-    boxA.rotate(0, 45, 0);
+    // boxA.rotate(0, 45, 0);
     app.root.addChild(boxA);
     // const boxB = new pc.Entity('cubeB');
     // boxB.addComponent('render', {
@@ -132,7 +138,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const gizmo = new pcx.GizmoTransform(app, camera);
+    const gizmo = new pcx.GizmoScale(app, camera);
     gizmo.attach([boxA]);
     data.set('settings', {
         coordSpace: gizmo.coordSpace,
@@ -141,6 +147,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisLineLength: gizmo.axisLineLength,
         axisArrowThickness: gizmo.axisArrowThickness,
         axisArrowLength: gizmo.axisArrowLength,
+        axisBoxSize: gizmo.axisBoxSize,
         axisPlaneSize: gizmo.axisPlaneSize
     });
     data.on('*:set', (/** @type {string} */ path, value) => {
