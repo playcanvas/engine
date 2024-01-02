@@ -1,3 +1,5 @@
+import { Color } from '../../../src/core/math/color.js';
+
 const attributes = {
 
     simpleAttributeNoDefault: {
@@ -12,6 +14,11 @@ const attributes = {
     simpleAttribute: {
         type: 'number',
         default: 10
+    },
+
+    colorAttribute: {
+        type: 'rgba',
+        default: new Color(1, 1, 1, 1)
     }
 };
 

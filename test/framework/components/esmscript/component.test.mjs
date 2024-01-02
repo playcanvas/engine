@@ -856,7 +856,7 @@ describe('EsmScriptComponent', function () {
             expect(script.attribute2).to.equal(2);
         });
 
-        it('should initiailize a script with attributes on a disabled script instance', function () {
+        it('should initialize a script with attributes on a disabled script instance', function () {
             const e2 = new Entity();
             app.root.addChild(e2);
 
@@ -1495,6 +1495,34 @@ describe('EsmScriptComponent', function () {
     });
 
     describe('cloning', function () {
+
+        it('should clone an ESM Script component and retain the correct attributes as copies', async function () {
+
+            const colorAttribute = new Color(1, 0, 0, 1);
+
+            const e = new Entity();
+            const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptWithSimpleAttributes.mjs');
+            const component = e.addComponent('esmscript');
+            component.add(EsmScript.default, { colorAttribute });
+            app.root.addChild(e);
+
+            const clone = e.clone();
+            app.root.addChild(clone);
+
+            await waitForNextFrame();
+
+
+            const script = e.esmscript.get('ScriptWithSimpleAttributes');
+            const clonedScript = clone.esmscript.get('ScriptWithSimpleAttributes');
+
+
+            expect(e.esmscript).to.exist;
+            console.log(script);
+            expect(script).to.exist;
+            expect(script.colorAttribute).to.equal(colorAttribute);
+            expect(clonedScript.colorAttribute).to.not.equal(script.colorAttribute);
+
+        });
 
         it('should clone an ESM Script component that contains an entity attribute and retain the correct attributes', async function () {
 
