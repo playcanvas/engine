@@ -3,6 +3,7 @@ import {
     EventHandler,
     Layer,
     Entity,
+    Quat,
     Vec3
 } from 'playcanvas'
 
@@ -13,6 +14,8 @@ const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
 const intersect = new Vec3();
+const tmpV = new Vec3();
+const tmpQ = new Quat();
 
 class Gizmo extends EventHandler {
     _nodeParents = new Map();
@@ -23,9 +26,13 @@ class Gizmo extends EventHandler {
 
     nodes = [];
 
+    nodeLocalPositions = new Map();
+
     nodePositions = new Map();
 
     gizmo;
+
+    mode = 'local';
 
     constructor(app, camera) {
         super();
@@ -71,10 +78,18 @@ class Gizmo extends EventHandler {
         this.nodes = nodes;
         this.gizmo.enabled = true;
         this.gizmo.setPosition(this.getGizmoPosition());
+
+        // TODO: fix temporary hack for gizmo rotation
+        if (this.mode === 'local') {
+            this.gizmo.setEulerAngles(this.getGizmoRotation());
+        } else {
+            this.gizmo.setEulerAngles(0, 0, 0);
+        }
     }
 
     detach() {
         this.nodes = [];
+        this.nodeLocalPositions.clear();
         this.nodePositions.clear();
         this.gizmo.enabled = false;
     }
@@ -82,16 +97,21 @@ class Gizmo extends EventHandler {
     storeNodePositions() {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const pos = node.getPosition();
-            this.nodePositions.set(node, pos.clone());
+            this.nodeLocalPositions.set(node, node.getLocalPosition().clone());
+            this.nodePositions.set(node, node.getPosition().clone());
         }
     }
 
     updateNodePositions(point) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            const pos = this.nodePositions.get(node);
-            node.setPosition(pos.clone().add(point));
+            if (this.mode === 'local') {
+                tmpV.copy(point);
+                tmpQ.copy(node.getLocalRotation()).transformVector(tmpV, tmpV);
+                node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV));
+            } else {
+                node.setPosition(this.nodePositions.get(node).clone().add(point));
+            }
         }
         this.gizmo.setPosition(this.getGizmoPosition());
     }
@@ -103,6 +123,15 @@ class Gizmo extends EventHandler {
             center.add(node.getPosition());
         }
         return center.scale(1.0 / this.nodes.length).clone();
+    }
+
+    getGizmoRotation() {
+        const rot = new Vec3();
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            rot.add(node.getEulerAngles());
+        }
+        return rot.scale(1.0 / this.nodes.length).clone();
     }
 
     _createLayer() {

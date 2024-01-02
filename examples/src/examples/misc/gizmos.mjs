@@ -97,6 +97,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     boxA.addComponent('render', {
         type: 'box'
     });
+    boxA.rotate(0, 45, 0);
     app.root.addChild(boxA);
     // const boxB = new pc.Entity('cubeB');
     // boxB.addComponent('render', {
