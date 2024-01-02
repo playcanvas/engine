@@ -12,8 +12,6 @@ const tmpV = new Vec3();
 const tmpQ = new Quat();
 
 class Gizmo extends EventHandler {
-    _nodeParents = new Map();
-
     app;
 
     camera;
@@ -26,7 +24,7 @@ class Gizmo extends EventHandler {
 
     gizmo;
 
-    mode = 'local';
+    _mode = 'local';
 
     constructor(app, camera) {
         super();
@@ -68,16 +66,21 @@ class Gizmo extends EventHandler {
         });
     }
 
+    set mode(value) {
+        this._mode = value ?? 'world';
+        this.setGizmoRotation();
+    }
+
+    get mode() {
+        return this._mode;
+    }
+
     attach(nodes) {
         this.nodes = nodes;
         this.gizmo.enabled = true;
 
-        this.gizmo.setPosition(this.getGizmoPosition());
-        if (this.mode === 'local') {
-            this.gizmo.setEulerAngles(this.getGizmoRotation());
-        } else {
-            this.gizmo.setEulerAngles(0, 0, 0);
-        }
+        this.setGizmoPosition();
+        this.setGizmoRotation();
     }
 
     detach() {
@@ -106,25 +109,30 @@ class Gizmo extends EventHandler {
                 node.setPosition(this.nodePositions.get(node).clone().add(point));
             }
         }
-        this.gizmo.setPosition(this.getGizmoPosition());
+
+        this.setGizmoPosition();
     }
 
-    getGizmoPosition() {
+    setGizmoPosition() {
         tmpV.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             tmpV.add(node.getPosition());
         }
-        return tmpV.scale(1.0 / this.nodes.length).clone();
+        this.gizmo.setPosition(tmpV.scale(1.0 / this.nodes.length));
     }
 
-    getGizmoRotation() {
-        tmpV.set(0, 0, 0);
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            tmpV.add(node.getEulerAngles());
+    setGizmoRotation() {
+        if (this._mode === 'local') {
+            tmpV.set(0, 0, 0);
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                tmpV.add(node.getEulerAngles());
+            }
+            this.gizmo.setEulerAngles(tmpV.scale(1.0 / this.nodes.length));
+        } else {
+            this.gizmo.setEulerAngles(0, 0, 0);
         }
-        return tmpV.scale(1.0 / this.nodes.length).clone();
     }
 
     _createLayer() {
