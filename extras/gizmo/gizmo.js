@@ -24,7 +24,7 @@ class Gizmo extends EventHandler {
 
     gizmo;
 
-    _mode = 'local';
+    _coordSpace = 'world';
 
     constructor(app, camera) {
         super();
@@ -66,13 +66,13 @@ class Gizmo extends EventHandler {
         });
     }
 
-    set mode(value) {
-        this._mode = value ?? 'world';
+    set coordSpace(value) {
+        this._coordSpace = value ?? 'world';
         this.setGizmoRotation();
     }
 
-    get mode() {
-        return this._mode;
+    get coordSpace() {
+        return this._coordSpace;
     }
 
     attach(nodes) {
@@ -101,7 +101,7 @@ class Gizmo extends EventHandler {
     updateNodePositions(point) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (this.mode === 'local') {
+            if (this._coordSpace === 'local') {
                 tmpV.copy(point);
                 tmpQ.copy(node.getLocalRotation()).transformVector(tmpV, tmpV);
                 node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV));
@@ -123,7 +123,7 @@ class Gizmo extends EventHandler {
     }
 
     setGizmoRotation() {
-        if (this._mode === 'local') {
+        if (this._coordSpace === 'local') {
             tmpV.set(0, 0, 0);
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];

@@ -5,9 +5,19 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Gizmo Transform' },
+            jsx(LabelGroup, { text: 'Coord Space' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'world', t: 'World' },
+                        { v: 'local', t: 'Local' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.coordSpace' }
+                })
+            ),
             jsx(LabelGroup, { text: 'Axis Gap' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -125,6 +135,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     const gizmo = new pcx.GizmoTransform(app, camera);
     gizmo.attach([boxA]);
     data.set('settings', {
+        coordSpace: gizmo.coordSpace,
         axisGap: gizmo.axisGap,
         axisLineThickness: gizmo.axisLineThickness,
         axisLineLength: gizmo.axisLineLength,
