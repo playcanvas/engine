@@ -1,5 +1,4 @@
 import {
-    math,
     PROJECTION_PERSPECTIVE,
     BLEND_NORMAL,
     Color,
