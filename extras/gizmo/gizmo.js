@@ -13,7 +13,6 @@ const xdir = new Vec3();
 const v1 = new Vec3();
 const v2 = new Vec3();
 const v3 = new Vec3();
-const intersect = new Vec3();
 const tmpV = new Vec3();
 const tmpQ = new Quat();
 
@@ -77,9 +76,8 @@ class Gizmo extends EventHandler {
     attach(nodes) {
         this.nodes = nodes;
         this.gizmo.enabled = true;
-        this.gizmo.setPosition(this.getGizmoPosition());
 
-        // TODO: fix temporary hack for gizmo rotation
+        this.gizmo.setPosition(this.getGizmoPosition());
         if (this.mode === 'local') {
             this.gizmo.setEulerAngles(this.getGizmoRotation());
         } else {
@@ -117,21 +115,21 @@ class Gizmo extends EventHandler {
     }
 
     getGizmoPosition() {
-        const center = new Vec3();
+        tmpV.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            center.add(node.getPosition());
+            tmpV.add(node.getPosition());
         }
-        return center.scale(1.0 / this.nodes.length).clone();
+        return tmpV.scale(1.0 / this.nodes.length).clone();
     }
 
     getGizmoRotation() {
-        const rot = new Vec3();
+        tmpV.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            rot.add(node.getEulerAngles());
+            tmpV.add(node.getEulerAngles());
         }
-        return rot.scale(1.0 / this.nodes.length).clone();
+        return tmpV.scale(1.0 / this.nodes.length).clone();
     }
 
     _createLayer() {
@@ -159,9 +157,6 @@ class Gizmo extends EventHandler {
         const selection = [];
         const renders = this.gizmo.findComponents('render');
         for (let i = 0; i < renders.length; i++) {
-            if (renders[i].entity.parent === this.held) {
-                continue;
-            }
             const meshInstances = renders[i].meshInstances;
             for (let j = 0; j < meshInstances.length; j++) {
                 const meshInstance = meshInstances[j];
@@ -187,8 +182,8 @@ class Gizmo extends EventHandler {
                     v2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
                     v3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
 
-                    if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, intersect)) {
-                        selection.push({ meshInstance, intersect });
+                    if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, tmpV)) {
+                        selection.push(meshInstance);
                     }
                 }
 
