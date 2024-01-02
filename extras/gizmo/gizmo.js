@@ -1,4 +1,6 @@
 import {
+    math,
+    PROJECTION_PERSPECTIVE,
     SORTMODE_NONE,
     EventHandler,
     Layer,
@@ -11,6 +13,10 @@ import {
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ = new Quat();
+
+// constants
+const MIN_GIZMO_SCALE = 1e-4;
+const EPSILON = 1e-6;
 
 class Gizmo extends EventHandler {
     app;
@@ -27,6 +33,8 @@ class Gizmo extends EventHandler {
 
     gizmo;
 
+    _startProjFrustWidth;
+
     _coordSpace = 'world';
 
     constructor(app, camera) {
@@ -37,6 +45,8 @@ class Gizmo extends EventHandler {
 
         this._createLayer();
         this._createGizmo();
+
+        this._startProjFrustWidth = this._getProjFrustumWidth();
 
         const onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -62,6 +72,7 @@ class Gizmo extends EventHandler {
         window.addEventListener('pointermove', onPointerMove);
         window.addEventListener('pointerdown', onPointerDown);
         window.addEventListener('pointerup', onPointerUp);
+
         app.on('destroy', () => {
             window.removeEventListener('pointermove', onPointerMove);
             window.removeEventListener('pointerdown', onPointerDown);
@@ -141,7 +152,8 @@ class Gizmo extends EventHandler {
             const node = this.nodes[i];
             tmpV1.add(node.getPosition());
         }
-        this.gizmo.setPosition(tmpV1.scale(1.0 / this.nodes.length));
+        tmpV1.scale(1.0 / this.nodes.length);
+        this.gizmo.setPosition(tmpV1);
     }
 
     setGizmoRotation() {
@@ -155,6 +167,26 @@ class Gizmo extends EventHandler {
         } else {
             this.gizmo.setEulerAngles(0, 0, 0);
         }
+    }
+
+    updateGizmoScale() {
+        // scale to screen space
+        let scale = 1;
+        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+            scale = this._getProjFrustumWidth() / this._startProjFrustWidth;
+        } else {
+            scale = this.camera.camera.orthoHeight / 3;
+        }
+        // scale *= this.size;
+        scale = Math.max(scale, MIN_GIZMO_SCALE);
+        this.gizmo.setLocalScale(scale, scale, scale);
+    }
+
+    _getProjFrustumWidth() {
+        const gizmoPos = this.gizmo.getPosition();
+        const cameraPos = this.camera.getPosition();
+        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this.camera.forward);
+        return dist * Math.tan(this.camera.camera.fov * math.DEG_TO_RAD / 2);
     }
 
     _createLayer() {
@@ -224,7 +256,6 @@ class Gizmo extends EventHandler {
     }
 
     _rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
-        const EPSILON = 1e-6;
         const e1 = new Vec3();
         const e2 = new Vec3();
         const h = new Vec3();

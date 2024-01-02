@@ -7,6 +7,24 @@ import * as pc from 'playcanvas';
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
+        jsx(Panel, { headerText: 'Camera Transform' },
+            jsx(LabelGroup, { text: 'Distance' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'camera.dist' },
+                    min: 1,
+                    max: 10
+                })
+            ),
+            jsx(LabelGroup, { text: 'FOV' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'camera.fov' },
+                    min: 30,
+                    max: 100
+                })
+            )
+        ),
         jsx(Panel, { headerText: 'Gizmo Transform' },
             jsx(LabelGroup, { text: 'Coord Space' },
                 jsx(SelectInput, {
@@ -128,7 +146,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         clearColor: new pc.Color(0.5, 0.6, 0.9)
     });
     app.root.addChild(camera);
-    camera.translate(5, 3, 5);
+    camera.setPosition(5, 3, 5);
     camera.lookAt(0, 0, 0);
 
     // create directional light entity
@@ -150,8 +168,24 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisBoxSize: gizmo.axisBoxSize,
         axisPlaneSize: gizmo.axisPlaneSize
     });
+    data.set('camera', {
+        dist: 1,
+        fov: 45
+    });
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
+        if (pathArray[0] === 'camera') {
+            switch (pathArray[1]) {
+                case "dist":
+                    camera.setPosition(5 * value, 3 * value, 5 * value);
+                    break;
+                case 'fov':
+                    camera.camera.fov = value;
+                    break;
+            }
+            gizmo.updateGizmoScale();
+            return;
+        }
         gizmo[pathArray[1]] = value;
     });
 
