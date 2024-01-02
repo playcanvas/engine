@@ -8,11 +8,6 @@ import {
 } from 'playcanvas'
 
 // temp variables
-const xstart = new Vec3();
-const xdir = new Vec3();
-const v1 = new Vec3();
-const v2 = new Vec3();
-const v3 = new Vec3();
 const tmpV = new Vec3();
 const tmpQ = new Quat();
 
@@ -153,6 +148,12 @@ class Gizmo extends EventHandler {
         const start = this.camera.camera.screenToWorld(x, y, 1);
         const end = this.camera.camera.screenToWorld(x, y, this.camera.camera.farClip);
         const dir = end.clone().sub(start).normalize();
+
+        const xstart = new Vec3();
+        const xdir = new Vec3();
+        const v1 = new Vec3();
+        const v2 = new Vec3();
+        const v3 = new Vec3();
 
         const selection = [];
         const renders = this.gizmo.findComponents('render');
