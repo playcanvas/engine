@@ -128,10 +128,10 @@ class Gizmo extends EventHandler {
         }
     }
 
-    updateNodeScale(scale) {
+    updateNodeScale(point) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            node.setLocalScale(this.nodeScale.get(node).clone().add(scale));
+            node.setLocalScale(this.nodeScale.get(node).clone().mul(point));
         }
     }
 

@@ -1,19 +1,15 @@
 import {
     Entity,
-    Vec3,
-    Quat
+    Vec3
 } from 'playcanvas'
 
 import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const GUIDELINE_SIZE = 1e3;
 
 class AxisPlane extends AxisShape {
     _size = 0.2;
@@ -31,7 +27,7 @@ class AxisPlane extends AxisShape {
             if (axis === this.axis) {
                 continue;
             }
-            position[axis] = this._size / 2;
+            position[axis] = this._size * 2;
         }
         return position;
     }
@@ -155,6 +151,39 @@ class AxisBoxLine extends AxisShape {
     }
 }
 
+class AxisCenter extends AxisShape {
+    _size = 0.2;
+
+    constructor(options = {}) {
+        super(options);
+
+        this._createCenter(options.layers ?? []);
+    }
+
+    _createCenter(layers) {
+        this.entity = new Entity('center_' + this.axis);
+        this.entity.addComponent('render', {
+            type: 'box',
+            layers: layers,
+            material: this._defaultColor,
+            castShadows: false
+        });
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._size, this._size, this._size);
+        this.meshInstances.push(...this.entity.render.meshInstances);
+    }
+
+    set size(value) {
+        this._size = value ?? 1;
+        this.entity.setLocalScale(this._size, this._size, this._size);
+    }
+
+    get size() {
+        return this._size;
+    }
+}
+
 class GizmoScale extends GizmoTransform {
     materials;
 
@@ -166,6 +195,8 @@ class GizmoScale extends GizmoTransform {
 
     constructor(app, camera) {
         super(app, camera);
+
+        this._coordSpace = 'local';
 
         this._axisShapes = {
             x: new AxisBoxLine({
@@ -209,6 +240,12 @@ class GizmoScale extends GizmoTransform {
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this._materials.semi.blue,
                 hoverColor: this._materials.opaque.blue
+            }),
+            xyz: new AxisCenter({
+                axis: 'xyz',
+                layers: [this.layerGizmo.id],
+                defaultColor: this._materials.semi.yellow,
+                hoverColor: this._materials.opaque.yellow
             })
         };
 
@@ -222,7 +259,8 @@ class GizmoScale extends GizmoTransform {
         this._pointStart = new Vec3();
         this._offset = new Vec3();
 
-        this.on('transform:start', () => {
+        this.on('transform:start', (start) => {
+            start.sub(Vec3.ONE);
             this.storeNodeScale();
         });
 
@@ -231,14 +269,12 @@ class GizmoScale extends GizmoTransform {
         });
     }
 
-    _drawGuideLine(pos, axis) {
-        tmpV1.set(0, 0, 0);
-        tmpV1[axis] = 1;
-        tmpV1.scale(GUIDELINE_SIZE);
-        tmpV2.copy(tmpV1).scale(-1);
-        tmpQ.transformVector(tmpV1, tmpV1);
-        tmpQ.transformVector(tmpV2, tmpV2);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true, this.layerGizmo);
+    set coordSpace(value) {
+        // disallow changing coordSpace for scale
+    }
+
+    get coordSpace() {
+        return this._coordSpace;
     }
 
     set axisGap(value) {

@@ -1,19 +1,15 @@
 import {
     Entity,
-    Vec3,
-    Quat
+    Vec3
 } from 'playcanvas'
 
 import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const GUIDELINE_SIZE = 1e3;
 
 class AxisPlane extends AxisShape {
     _size = 0.2;
@@ -240,16 +236,6 @@ class GizmoTranslate extends GizmoTransform {
         this.on('transform:move', (offset) => {
             this.updateNodePositions(offset);
         });
-    }
-
-    _drawGuideLine(pos, axis) {
-        tmpV1.set(0, 0, 0);
-        tmpV1[axis] = 1;
-        tmpV1.scale(GUIDELINE_SIZE);
-        tmpV2.copy(tmpV1).scale(-1);
-        tmpQ.transformVector(tmpV1, tmpV1);
-        tmpQ.transformVector(tmpV2, tmpV2);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true, this.layerGizmo);
     }
 
     set axisGap(value) {
