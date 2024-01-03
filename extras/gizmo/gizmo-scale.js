@@ -14,6 +14,8 @@ const VEC3_AXES = Object.keys(tmpV1);
 class AxisPlane extends AxisShape {
     _size = 0.2;
 
+    _gap = 0.2;
+
     constructor(options) {
         super(options);
 
@@ -27,7 +29,7 @@ class AxisPlane extends AxisShape {
             if (axis === this.axis) {
                 continue;
             }
-            position[axis] = this._size * 2;
+            position[axis] = this._size / 2 + this._gap;
         }
         return position;
     }
@@ -54,6 +56,15 @@ class AxisPlane extends AxisShape {
 
     get size() {
         return this._size;
+    }
+
+    set gap(value) {
+        this._gap = value ?? 0;
+        this.entity.setLocalPosition(this._getPosition());
+    }
+
+    get gap() {
+        return this._gap;
     }
 }
 
@@ -278,7 +289,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisGap(value) {
-        this._updateArrowProp('gap', value ?? 0);
+        this._updateArrowProp('gap');
     }
 
     get axisGap() {
@@ -286,7 +297,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineThickness(value) {
-        this._updateArrowProp('lineThickness', value ?? 1);
+        this._updateArrowProp('lineThickness');
     }
 
     get axisLineThickness() {
@@ -294,7 +305,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineLength(value) {
-        this._updateArrowProp('lineLength', value ?? 1);
+        this._updateArrowProp('lineLength');
     }
 
     get axisLineLength() {
@@ -302,7 +313,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisBoxSize(value) {
-        this._updateArrowProp('boxSize', value ?? 1);
+        this._updateArrowProp('boxSize');
     }
 
     get axisBoxSize() {
@@ -310,12 +321,19 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisPlaneSize(value) {
-        this._axisPlaneSize = value ?? 1;
-        this._updatePlaneProp('size', this._axisPlaneSize);
+        this._updatePlaneProp('size', value);
     }
 
     get axisPlaneSize() {
         return this._axisShapes.yz.size;
+    }
+
+    set axisPlaneGap(value) {
+        this._updatePlaneProp('gap', value);
+    }
+
+    get axisPlaneGap() {
+        return this._axisShapes.x.gap;
     }
 
     _createTransform() {

@@ -77,6 +77,12 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.axisPlaneSize' }
                 })
+            ),
+            jsx(LabelGroup, { text: 'Axis Plane Gap' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisPlaneGap' }
+                })
             )
         ),
         jsx(Panel, { headerText: 'Camera' },
@@ -214,7 +220,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisArrowThickness: gizmo.axisArrowThickness,
         axisArrowLength: gizmo.axisArrowLength,
         axisBoxSize: gizmo.axisBoxSize,
-        axisPlaneSize: gizmo.axisPlaneSize
+        axisPlaneSize: gizmo.axisPlaneSize,
+        aaxisPlaneGap: gizmo.axisPlaneGap
     });
 
     data.on('*:set', (/** @type {string} */ path, value) => {
