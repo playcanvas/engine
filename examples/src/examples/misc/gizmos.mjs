@@ -8,16 +8,17 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Gizmo' },
-            // jsx(LabelGroup, { text: 'Type' },
-            //     jsx(SelectInput, {
-            //         options: [
-            //             { v: 'translate', t: 'Translate' },
-            //             { v: 'scale', t: 'Scale' }
-            //         ],
-            //         binding: new BindingTwoWay(),
-            //         link: { observer, path: 'gizmo.type' }
-            //     })
-            // ),
+            jsx(LabelGroup, { text: 'Type' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'translate', t: 'Translate' },
+                        { v: 'rotate', t: 'Rotate' },
+                        { v: 'scale', t: 'Scale' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.type' }
+                })
+            ),
             jsx(LabelGroup, { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -130,13 +131,11 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     );
 }
 
-
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
-
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
@@ -210,21 +209,49 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const gizmo = new pcx.GizmoRotate(app, camera);
-    gizmo.attach([boxA]);
-    data.set('gizmo', {
-        size: gizmo.size,
-        coordSpace: gizmo.coordSpace,
-        axisGap: gizmo.axisGap,
-        axisLineThickness: gizmo.axisLineThickness,
-        axisLineLength: gizmo.axisLineLength,
-        axisArrowThickness: gizmo.axisArrowThickness,
-        axisArrowLength: gizmo.axisArrowLength,
-        axisBoxSize: gizmo.axisBoxSize,
-        axisPlaneSize: gizmo.axisPlaneSize,
-        axisPlaneGap: gizmo.axisPlaneGap,
-        axisCenterSize: gizmo.axisCenterSize
-    });
+    class GizmoHandler {
+        _type = 'translate';
+
+        constructor(app, camera) {
+            this.gizmos = {
+                translate: new pcx.GizmoTranslate(app, camera),
+                rotate: new pcx.GizmoRotate(app, camera),
+                scale: new pcx.GizmoScale(app, camera)
+            };
+        }
+
+        get gizmo() {
+            return this.gizmos[this._type];
+        }
+
+        switch(type, nodes, data) {
+            this.gizmo.detach();
+            this._type = type;
+            const gizmo = this.gizmo;
+            gizmo.attach(nodes);
+
+            // TODO: fix controls updating
+            if (data) {
+                data.set('gizmo', {
+                    type: type,
+                    size: gizmo.size,
+                    coordSpace: gizmo.coordSpace,
+                    axisGap: gizmo.axisGap,
+                    axisLineThickness: gizmo.axisLineThickness,
+                    axisLineLength: gizmo.axisLineLength,
+                    axisArrowThickness: gizmo.axisArrowThickness,
+                    axisArrowLength: gizmo.axisArrowLength,
+                    axisBoxSize: gizmo.axisBoxSize,
+                    axisPlaneSize: gizmo.axisPlaneSize,
+                    axisPlaneGap: gizmo.axisPlaneGap,
+                    axisCenterSize: gizmo.axisCenterSize
+                });
+            }
+        }
+    }
+
+    const gizmoHandler = new GizmoHandler(app, camera);
+    gizmoHandler.switch('translate', [boxA], data);
 
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
@@ -245,17 +272,15 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                     camera.camera.orthoHeight = value;
                     break;
             }
-            gizmo.updateGizmoScale();
+            gizmoHandler.gizmo.updateGizmoScale();
             return;
         }
 
         // gizmo
         if (pathArray[1] === 'type') {
-            // gizmo.detach();
-            // gizmo = GIZMOS[value];
-            // gizmo.attach([boxA]);
+            gizmoHandler.switch(value, [boxA]);
         } else {
-            gizmo[pathArray[1]] = value;
+            gizmoHandler.gizmo[pathArray[1]] = value;
         }
 
     });
