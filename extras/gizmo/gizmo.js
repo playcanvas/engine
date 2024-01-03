@@ -48,6 +48,8 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
+        this.updateGizmoScale();
+
         const onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
                 return;

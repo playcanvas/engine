@@ -17,7 +17,7 @@ const tmpQ = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const GUIDELINE_SIZE = 1e3;
+const GUIDELINE_SIZE = 1e6;
 
 class AxisShape {
     _position;
@@ -162,13 +162,16 @@ class GizmoTransform extends Gizmo {
     }
 
     _hover(meshInstance) {
+        if (this.dragging) {
+            return;
+        }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane =  this._getIsPlane(meshInstance);
         const shape = this.elementMap.get(meshInstance);
         if (shape === this._dirtyElement) {
             return;
         }
-        if (this._dirtyElement && !this.dragging) {
+        if (this._dirtyElement) {
             this._dirtyElement.hover(false);
             this._dirtyElement = null;
         }
