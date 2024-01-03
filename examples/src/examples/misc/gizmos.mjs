@@ -8,6 +8,16 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Camera Transform' },
+            jsx(LabelGroup, { text: 'Projection' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: pc.PROJECTION_PERSPECTIVE + 1, t: 'Perspective' },
+                        { v: pc.PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'camera.proj' }
+                })
+            ),
             jsx(LabelGroup, { text: 'Distance' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -23,9 +33,25 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 30,
                     max: 100
                 })
+            ),
+            jsx(LabelGroup, { text: 'Ortho Height' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'camera.orthoHeight' },
+                    min: 1,
+                    max: 20
+                })
             )
         ),
         jsx(Panel, { headerText: 'Gizmo Transform' },
+            jsx(LabelGroup, { text: 'Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'settings.size' },
+                    min: 0.1,
+                    max: 2.0
+                })
+            ),
             jsx(LabelGroup, { text: 'Coord Space' },
                 jsx(SelectInput, {
                     options: [
@@ -159,6 +185,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     const gizmo = new pcx.GizmoScale(app, camera);
     gizmo.attach([boxA]);
     data.set('settings', {
+        size: gizmo.size,
         coordSpace: gizmo.coordSpace,
         axisGap: gizmo.axisGap,
         axisLineThickness: gizmo.axisLineThickness,
@@ -169,18 +196,27 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisPlaneSize: gizmo.axisPlaneSize
     });
     data.set('camera', {
+        proj: pc.PROJECTION_PERSPECTIVE + 1,
         dist: 1,
-        fov: 45
+        fov: 45,
+        orthoHeight: 10
     });
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
+        // camera properties
         if (pathArray[0] === 'camera') {
             switch (pathArray[1]) {
-                case "dist":
+                case 'proj':
+                    camera.camera.projection = value - 1;
+                    break;
+                case 'dist':
                     camera.setPosition(5 * value, 3 * value, 5 * value);
                     break;
                 case 'fov':
                     camera.camera.fov = value;
+                    break;
+                case 'orthoHeight':
+                    camera.camera.orthoHeight = value;
                     break;
             }
             gizmo.updateGizmoScale();

@@ -17,8 +17,14 @@ const tmpQ = new Quat();
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const EPSILON = 1e-6;
+const PERS_SCALE_RATIO = 0.3;
+const ORTHO_SCALE_RATIO = 0.32;
 
 class Gizmo extends EventHandler {
+    _size = 1;
+
+    _coordSpace = 'world';
+
     app;
 
     camera;
@@ -33,10 +39,6 @@ class Gizmo extends EventHandler {
 
     gizmo;
 
-    _startProjFrustWidth;
-
-    _coordSpace = 'world';
-
     constructor(app, camera) {
         super();
 
@@ -45,8 +47,6 @@ class Gizmo extends EventHandler {
 
         this._createLayer();
         this._createGizmo();
-
-        this._startProjFrustWidth = this._getProjFrustumWidth();
 
         const onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -87,6 +87,15 @@ class Gizmo extends EventHandler {
 
     get coordSpace() {
         return this._coordSpace;
+    }
+
+    set size(value) {
+        this._size = value;
+        this.updateGizmoScale();
+    }
+
+    get size() {
+        return this._size;
     }
 
     attach(nodes) {
@@ -170,15 +179,13 @@ class Gizmo extends EventHandler {
     }
 
     updateGizmoScale() {
-        // scale to screen space
         let scale = 1;
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
-            scale = this._getProjFrustumWidth() / this._startProjFrustWidth;
+            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
         } else {
-            scale = this.camera.camera.orthoHeight / 3;
+            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
-        // scale *= this.size;
-        scale = Math.max(scale, MIN_GIZMO_SCALE);
+        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
         this.gizmo.setLocalScale(scale, scale, scale);
     }
 
