@@ -69,7 +69,7 @@ class AxisPlane extends AxisShape {
 }
 
 class AxisArrow extends AxisShape {
-    _gap = 0;
+    _gap = 0.2;
 
     _lineThickness = 0.04;
 
@@ -174,14 +174,6 @@ class AxisArrow extends AxisShape {
 }
 
 class GizmoTranslate extends GizmoTransform {
-    materials;
-
-    elements;
-
-    elementMap = new Map();
-
-    _dirtyElement;
-
     constructor(app, camera) {
         super(app, camera);
 
@@ -232,19 +224,11 @@ class GizmoTranslate extends GizmoTransform {
 
         this._createTransform();
 
-        this.dragging = false;
-        this._hoverAxis = '';
-        this._hoverIsPlane = false;
-        this._currAxis = '';
-        this._currIsPlane = false;
-        this._pointStart = new Vec3();
-        this._offset = new Vec3();
-
         this.on('transform:start', () => {
             this.storeNodePositions();
         });
 
-        this.on('transform:move', (offset) => {
+        this.on('transform:move', (axis, offset) => {
             this.updateNodePositions(offset);
         });
     }

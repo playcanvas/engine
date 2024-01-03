@@ -8,16 +8,16 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Gizmo' },
-            jsx(LabelGroup, { text: 'Type' },
-                jsx(SelectInput, {
-                    options: [
-                        { v: 'translate', t: 'Translate' },
-                        { v: 'scale', t: 'Scale' }
-                    ],
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.type' }
-                })
-            ),
+            // jsx(LabelGroup, { text: 'Type' },
+            //     jsx(SelectInput, {
+            //         options: [
+            //             { v: 'translate', t: 'Translate' },
+            //             { v: 'scale', t: 'Scale' }
+            //         ],
+            //         binding: new BindingTwoWay(),
+            //         link: { observer, path: 'gizmo.type' }
+            //     })
+            // ),
             jsx(LabelGroup, { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -82,6 +82,12 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.axisPlaneGap' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Center Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisCenterSize' }
                 })
             )
         ),
@@ -204,14 +210,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const GIZMOS = {
-        translate: new pcx.GizmoTranslate(app, camera),
-        scale: new pcx.GizmoScale(app, camera)
-    };
-    let gizmo = GIZMOS.translate;
+    const gizmo = new pcx.GizmoRotate(app, camera);
     gizmo.attach([boxA]);
     data.set('gizmo', {
-        type: 'translate',
         size: gizmo.size,
         coordSpace: gizmo.coordSpace,
         axisGap: gizmo.axisGap,
@@ -221,7 +222,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisArrowLength: gizmo.axisArrowLength,
         axisBoxSize: gizmo.axisBoxSize,
         axisPlaneSize: gizmo.axisPlaneSize,
-        aaxisPlaneGap: gizmo.axisPlaneGap
+        axisPlaneGap: gizmo.axisPlaneGap,
+        axisCenterSize: gizmo.axisCenterSize
     });
 
     data.on('*:set', (/** @type {string} */ path, value) => {
@@ -249,9 +251,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
 
         // gizmo
         if (pathArray[1] === 'type') {
-            gizmo.detach();
-            gizmo = GIZMOS[value];
-            gizmo.attach([boxA]);
+            // gizmo.detach();
+            // gizmo = GIZMOS[value];
+            // gizmo.attach([boxA]);
         } else {
             gizmo[pathArray[1]] = value;
         }

@@ -12,7 +12,9 @@ import {
 // temp variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpQ = new Quat();
+const tmpQ1 = new Quat();
+const tmpQ2 = new Quat();
+
 
 // constants
 const GIZMO_LAYER_ID = 1e5;
@@ -36,7 +38,13 @@ class Gizmo extends EventHandler {
 
     nodePositions = new Map();
 
+    nodeLocalRotations = new Map();
+
+    nodeRotations = new Map();
+
     nodeScale = new Map();
+
+    nodeOffset = new Map();
 
     gizmo;
 
@@ -135,7 +143,7 @@ class Gizmo extends EventHandler {
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
                 tmpV2.z = 1 / tmpV2.z;
-                tmpQ.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
+                tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
                 tmpV1.mul(tmpV2);
                 node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV1));
             } else {
@@ -144,6 +152,43 @@ class Gizmo extends EventHandler {
         }
 
         this.setGizmoPosition();
+    }
+
+    storeNodeRotations() {
+        const gizmoPos = this.gizmo.getPosition();
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            this.nodeLocalRotations.set(node, node.getLocalRotation().clone());
+            this.nodeRotations.set(node, node.getRotation().clone());
+            this.nodeOffset.set(node, node.getPosition().clone().sub(gizmoPos));
+        }
+    }
+
+    updateNodeRotations(axis, angle) {
+        const gizmoPos = this.gizmo.getPosition();
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+
+            tmpV1.set(0, 0, 0);
+            tmpV1[axis] = 1;
+
+            tmpQ1.setFromAxisAngle(tmpV1, angle);
+
+            if (this._coordSpace === 'local') {
+                tmpQ2.copy(this.nodeLocalRotations.get(node)).mul(tmpQ1);
+                node.setLocalRotation(tmpQ2);
+            } else {
+                tmpV1.copy(this.nodeOffset.get(node));
+                tmpQ1.transformVector(tmpV1, tmpV1);
+                tmpQ2.copy(tmpQ1).mul(this.nodeRotations.get(node));
+                node.setRotation(tmpQ2);
+                node.setPosition(tmpV1.add(gizmoPos));
+            }
+        }
+
+        if (this._coordSpace === 'local') {
+            this.setGizmoRotation();
+        }
     }
 
     storeNodeScale() {

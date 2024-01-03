@@ -69,7 +69,7 @@ class AxisPlane extends AxisShape {
 }
 
 class AxisBoxLine extends AxisShape {
-    _gap = 0;
+    _gap = 0.1;
 
     _lineThickness = 0.04;
 
@@ -162,7 +162,7 @@ class AxisBoxLine extends AxisShape {
     }
 }
 
-class AxisCenter extends AxisShape {
+class AxisBoxCenter extends AxisShape {
     _size = 0.2;
 
     constructor(options = {}) {
@@ -196,14 +196,6 @@ class AxisCenter extends AxisShape {
 }
 
 class GizmoScale extends GizmoTransform {
-    materials;
-
-    elements;
-
-    elementMap = new Map();
-
-    _dirtyElement;
-
     constructor(app, camera) {
         super(app, camera);
 
@@ -252,7 +244,7 @@ class GizmoScale extends GizmoTransform {
                 defaultColor: this._materials.semi.blue,
                 hoverColor: this._materials.opaque.blue
             }),
-            xyz: new AxisCenter({
+            xyz: new AxisBoxCenter({
                 axis: 'xyz',
                 layers: [this.layerGizmo.id],
                 defaultColor: this._materials.semi.yellow,
@@ -262,20 +254,12 @@ class GizmoScale extends GizmoTransform {
 
         this._createTransform();
 
-        this.dragging = false;
-        this._hoverAxis = '';
-        this._hoverIsPlane = false;
-        this._currAxis = '';
-        this._currIsPlane = false;
-        this._pointStart = new Vec3();
-        this._offset = new Vec3();
-
         this.on('transform:start', (start) => {
             start.sub(Vec3.ONE);
             this.storeNodeScale();
         });
 
-        this.on('transform:move', (offset) => {
+        this.on('transform:move', (axis, offset) => {
             this.updateNodeScale(offset);
         });
     }
@@ -289,7 +273,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisGap(value) {
-        this._updateArrowProp('gap');
+        this._updateArrowProp('gap', value);
     }
 
     get axisGap() {
@@ -297,7 +281,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineThickness(value) {
-        this._updateArrowProp('lineThickness');
+        this._updateArrowProp('lineThickness', value);
     }
 
     get axisLineThickness() {
@@ -305,7 +289,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineLength(value) {
-        this._updateArrowProp('lineLength');
+        this._updateArrowProp('lineLength', value);
     }
 
     get axisLineLength() {
@@ -313,7 +297,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisBoxSize(value) {
-        this._updateArrowProp('boxSize');
+        this._updateArrowProp('boxSize', value);
     }
 
     get axisBoxSize() {
@@ -334,6 +318,14 @@ class GizmoScale extends GizmoTransform {
 
     get axisPlaneGap() {
         return this._axisShapes.x.gap;
+    }
+
+    set axisCenterSize(value) {
+        this._axisShapes.xyz.size = value;
+    }
+
+    get axisCenterSize() {
+        return this._axisShapes.xyz.size;
     }
 
     _createTransform() {

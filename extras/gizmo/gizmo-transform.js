@@ -55,13 +55,33 @@ class AxisShape {
 }
 
 class GizmoTransform extends Gizmo {
-    materials;
+    _rotation = false;
+
+    _materials;
+
+    _guideLineColor = new Color(1, 1, 1, 0.5);
+
+    _hoverAxis = '';
+
+    _hoverIsPlane = false;
+
+    _currAxis = '';
+
+    _currIsPlane = false;
+
+    _pointStart = new Vec3();
+
+    _angleStart = 0;
+
+    _offset = new Vec3();
+
+    _dirtyElement;
+
+    dragging = false;
 
     elements;
 
     elementMap = new Map();
-
-    _dirtyElement;
 
     constructor(app, camera) {
         super(app, camera);
@@ -71,25 +91,17 @@ class GizmoTransform extends Gizmo {
                 red: this._createMaterial(new Color(1, 0.3, 0.3)),
                 green: this._createMaterial(new Color(0.3, 1, 0.3)),
                 blue: this._createMaterial(new Color(0.3, 0.3, 1)),
-                yellow: this._createMaterial(new Color(1, 1, 0.3, 1))
+                yellow: this._createMaterial(new Color(1, 1, 0.3)),
+                white: this._createMaterial(new Color(1, 1, 1))
             },
             semi: {
                 red: this._createMaterial(new Color(1, 0.3, 0.3, 0.5)),
                 green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
                 blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5)),
-                yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5))
+                yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
+                white: this._createMaterial(new Color(1, 1, 1, 0.25))
             }
         };
-
-        this._guideLineColor = new Color(1, 1, 1, 0.5);
-
-        this.dragging = false;
-        this._hoverAxis = '';
-        this._hoverIsPlane = false;
-        this._currAxis = '';
-        this._currIsPlane = false;
-        this._pointStart = new Vec3();
-        this._offset = new Vec3();
 
         this.app.on('update', () => {
             if (!this.gizmo.enabled) {
@@ -121,9 +133,10 @@ class GizmoTransform extends Gizmo {
             this._hover(meshInstance);
 
             if (this.dragging) {
-                this._offset.copy(this._calcPoint(x, y, this._currAxis, this._currIsPlane));
+                const pointInfo = this._calcPoint(x, y);
+                this._offset.copy(pointInfo.point);
                 this._offset.sub(this._pointStart);
-                this.fire('transform:move', this._offset);
+                this.fire('transform:move', this._currAxis, this._offset, pointInfo.angle - this._angleStart);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }
@@ -136,9 +149,10 @@ class GizmoTransform extends Gizmo {
             if (meshInstance) {
                 this._currAxis = this._getAxis(meshInstance);
                 this._currIsPlane =  this._getIsPlane(meshInstance);
-                this._pointStart.copy(this._calcPoint(x, y, this._currAxis, this._currIsPlane));
+                const pointInfo = this._calcPoint(x, y);
+                this._pointStart.copy(pointInfo.point);
+                this._angleStart = pointInfo.angle;
                 this.fire('transform:start', this._pointStart);
-                this.storeNodePositions();
                 this.dragging = true;
             }
         });
@@ -184,12 +198,15 @@ class GizmoTransform extends Gizmo {
         }
     }
 
-    _calcPoint(x, y, axis, isPlane) {
+    _calcPoint(x, y) {
         const gizmoPos = this.gizmo.getPosition();
         const mouseWPos = this.camera.camera.screenToWorld(x, y, 1);
         const rayOrigin = this.camera.getPosition();
         const rayDir = new Vec3();
         const planeNormal = new Vec3();
+        const axis = this._currAxis;
+        const isPlane = this._currIsPlane;
+        const isRotation = this._rotation;
         const isCenter = axis === 'xyz';
 
         // calculate ray direction from mouse position
@@ -210,7 +227,7 @@ class GizmoTransform extends Gizmo {
             // rotate plane normal by gizmo rotation
             tmpQ.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
 
-            if (!isPlane) {
+            if (!isPlane && !isRotation) {
                 tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
                 planeNormal.copy(tmpV1.sub(planeNormal.scale(planeNormal.dot(tmpV1))).normalize());
             }
@@ -229,7 +246,7 @@ class GizmoTransform extends Gizmo {
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
         } else {
-            if (!isPlane) {
+            if (!isPlane && !isRotation) {
                 // reset normal based on axis and project position from plane onto normal
                 planeNormal.set(0, 0, 0);
                 planeNormal[axis] = 1;
@@ -240,7 +257,7 @@ class GizmoTransform extends Gizmo {
             // rotate point back to world coords
             tmpQ.invert().transformVector(point, point);
 
-            if (!isPlane) {
+            if (!isPlane && !isRotation) {
                 // set other axes to zero if not plane point
                 const v = point[axis];
                 point.set(0, 0, 0);
@@ -248,7 +265,22 @@ class GizmoTransform extends Gizmo {
             }
         }
 
-        return point;
+        let angle = 0;
+        if (isRotation) {
+            switch (axis) {
+                case 'x':
+                    angle = Math.atan2(point.z, point.y) / (Math.PI / 180);
+                    break;
+                case 'y':
+                    angle = Math.atan2(point.x, point.z) / (Math.PI / 180);
+                    break;
+                case 'z':
+                    angle = Math.atan2(point.y, point.x) / (Math.PI / 180);
+                    break;
+            }
+        }
+
+        return { point, angle };
     }
 
     _drawGuideLine(pos, axis) {
