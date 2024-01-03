@@ -7,7 +7,79 @@ import * as pc from 'playcanvas';
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
-        jsx(Panel, { headerText: 'Camera Transform' },
+        jsx(Panel, { headerText: 'Gizmo' },
+            jsx(LabelGroup, { text: 'Type' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'translate', t: 'Translate' },
+                        { v: 'scale', t: 'Scale' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.type' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.size' },
+                    min: 0.1,
+                    max: 2.0
+                })
+            ),
+            jsx(LabelGroup, { text: 'Coord Space' },
+                jsx(SelectInput, {
+                    options: [
+                        { v: 'world', t: 'World' },
+                        { v: 'local', t: 'Local' }
+                    ],
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.coordSpace' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Gap' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisGap' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Line Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisLineThickness' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Line Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisLineLength' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Box Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisBoxSize' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisArrowThickness' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Arrow Length' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisArrowLength' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Plane Size' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisPlaneSize' }
+                })
+            )
+        ),
+        jsx(Panel, { headerText: 'Camera' },
             jsx(LabelGroup, { text: 'Projection' },
                 jsx(SelectInput, {
                     options: [
@@ -40,68 +112,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'camera.orthoHeight' },
                     min: 1,
                     max: 20
-                })
-            )
-        ),
-        jsx(Panel, { headerText: 'Gizmo Transform' },
-            jsx(LabelGroup, { text: 'Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.size' },
-                    min: 0.1,
-                    max: 2.0
-                })
-            ),
-            jsx(LabelGroup, { text: 'Coord Space' },
-                jsx(SelectInput, {
-                    options: [
-                        { v: 'world', t: 'World' },
-                        { v: 'local', t: 'Local' }
-                    ],
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.coordSpace' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Gap' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisGap' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Line Thickness' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisLineThickness' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Line Length' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisLineLength' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Box Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisBoxSize' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisArrowThickness' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Arrow Length' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisArrowLength' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Plane Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'settings.axisPlaneSize' }
                 })
             )
         )
@@ -167,6 +177,12 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     // app.root.addChild(boxB);
 
     // create camera entity
+    data.set('camera', {
+        proj: pc.PROJECTION_PERSPECTIVE + 1,
+        dist: 1,
+        fov: 45,
+        orthoHeight: 10
+    });
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.5, 0.6, 0.9)
@@ -182,9 +198,14 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const gizmo = new pcx.GizmoScale(app, camera);
+    const GIZMOS = {
+        translate: new pcx.GizmoTranslate(app, camera),
+        scale: new pcx.GizmoScale(app, camera)
+    };
+    let gizmo = GIZMOS.translate;
     gizmo.attach([boxA]);
-    data.set('settings', {
+    data.set('gizmo', {
+        type: 'translate',
         size: gizmo.size,
         coordSpace: gizmo.coordSpace,
         axisGap: gizmo.axisGap,
@@ -195,15 +216,11 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         axisBoxSize: gizmo.axisBoxSize,
         axisPlaneSize: gizmo.axisPlaneSize
     });
-    data.set('camera', {
-        proj: pc.PROJECTION_PERSPECTIVE + 1,
-        dist: 1,
-        fov: 45,
-        orthoHeight: 10
-    });
+
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
-        // camera properties
+
+        // camera
         if (pathArray[0] === 'camera') {
             switch (pathArray[1]) {
                 case 'proj':
@@ -222,7 +239,16 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             gizmo.updateGizmoScale();
             return;
         }
-        gizmo[pathArray[1]] = value;
+
+        // gizmo
+        if (pathArray[1] === 'type') {
+            gizmo.detach();
+            gizmo = GIZMOS[value];
+            gizmo.attach([boxA]);
+        } else {
+            gizmo[pathArray[1]] = value;
+        }
+
     });
 
     return app;

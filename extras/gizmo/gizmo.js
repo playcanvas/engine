@@ -15,6 +15,7 @@ const tmpV2 = new Vec3();
 const tmpQ = new Quat();
 
 // constants
+const GIZMO_LAYER_ID = 1e5;
 const MIN_GIZMO_SCALE = 1e-4;
 const EPSILON = 1e-6;
 const PERS_SCALE_RATIO = 0.3;
@@ -50,36 +51,28 @@ class Gizmo extends EventHandler {
 
         this.updateGizmoScale();
 
-        const onPointerMove = (e) => {
+        this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
             this.fire('pointer:move', e.clientX, e.clientY, selection[0]);
         };
-        const onPointerDown = (e) => {
+        this._onPointerDown = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
             this.fire('pointer:down', e.clientX, e.clientY, selection[0]);
         };
-        const onPointerUp = (e) => {
+        this._onPointerUp = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
             this.fire('pointer:up');
         };
 
-        window.addEventListener('pointermove', onPointerMove);
-        window.addEventListener('pointerdown', onPointerDown);
-        window.addEventListener('pointerup', onPointerUp);
-
-        app.on('destroy', () => {
-            window.removeEventListener('pointermove', onPointerMove);
-            window.removeEventListener('pointerdown', onPointerDown);
-            window.removeEventListener('pointerup', onPointerUp);
-        });
+        app.on('destroy', () => this.detach());
     }
 
     set coordSpace(value) {
@@ -102,17 +95,27 @@ class Gizmo extends EventHandler {
 
     attach(nodes) {
         this.nodes = nodes;
-        this.gizmo.enabled = true;
-
         this.setGizmoPosition();
         this.setGizmoRotation();
+
+        window.addEventListener('pointermove', this._onPointerMove);
+        window.addEventListener('pointerdown', this._onPointerDown);
+        window.addEventListener('pointerup', this._onPointerUp);
+
+        this.gizmo.enabled = true;
     }
 
     detach() {
+        this.gizmo.enabled = false;
+
         this.nodes = [];
         this.nodeLocalPositions.clear();
         this.nodePositions.clear();
-        this.gizmo.enabled = false;
+        this.nodeScale.clear();
+
+        window.removeEventListener('pointermove', this._onPointerMove);
+        window.removeEventListener('pointerdown', this._onPointerDown);
+        window.removeEventListener('pointerup', this._onPointerUp);
     }
 
     storeNodePositions() {
@@ -199,14 +202,22 @@ class Gizmo extends EventHandler {
     }
 
     _createLayer() {
-        this.layerGizmo = new Layer({
-            name: 'Gizmo',
-            clearDepthBuffer: true,
-            opaqueSortMode: SORTMODE_NONE,
-            transparentSortMode: SORTMODE_NONE
-        });
-        this.app.scene.layers.push(this.layerGizmo);
-        this.camera.camera.layers = this.camera.camera.layers.concat(this.layerGizmo.id);
+        const layerMap = this.app.scene.layers.layerIdMap;
+        if (layerMap.has(GIZMO_LAYER_ID)) {
+            this.layerGizmo = layerMap.get(GIZMO_LAYER_ID);
+        } else {
+            this.layerGizmo = new Layer({
+                id: GIZMO_LAYER_ID,
+                name: 'Gizmo',
+                clearDepthBuffer: true,
+                opaqueSortMode: SORTMODE_NONE,
+                transparentSortMode: SORTMODE_NONE
+            });
+            this.app.scene.layers.push(this.layerGizmo);
+        }
+        if (this.camera.camera.layers.indexOf(this.layerGizmo.id) === -1) {
+            this.camera.camera.layers = this.camera.camera.layers.concat(this.layerGizmo.id);
+        }
     }
 
     _createGizmo() {

@@ -92,6 +92,9 @@ class GizmoTransform extends Gizmo {
         this._offset = new Vec3();
 
         this.app.on('update', () => {
+            if (!this.gizmo.enabled) {
+                return;
+            }
             const gizmoPos = this.gizmo.getPosition();
             tmpQ.copy(this.gizmo.getRotation());
             const checkAxis = this._hoverAxis || this._currAxis;
