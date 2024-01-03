@@ -178,14 +178,14 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     boxA.addComponent('render', {
         type: 'box'
     });
-    // boxA.rotate(0, 45, 0);
+    boxA.setPosition(0.5, 0, -0.5);
     app.root.addChild(boxA);
-    // const boxB = new pc.Entity('cubeB');
-    // boxB.addComponent('render', {
-    //     type: 'box'
-    // });
-    // boxB.setPosition(1, 0, 1);
-    // app.root.addChild(boxB);
+    const boxB = new pc.Entity('cubeB');
+    boxB.addComponent('render', {
+        type: 'box'
+    });
+    boxB.setPosition(-0.5, 0, 0.5);
+    app.root.addChild(boxB);
 
     // create camera entity
     data.set('camera', {
@@ -251,7 +251,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     }
 
     const gizmoHandler = new GizmoHandler(app, camera);
-    gizmoHandler.switch('translate', [boxA], data);
+    gizmoHandler.switch('translate', [boxA, boxB], data);
 
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
@@ -278,7 +278,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
 
         // gizmo
         if (pathArray[1] === 'type') {
-            gizmoHandler.switch(value, [boxA]);
+            gizmoHandler.switch(value, [boxA, boxB]);
         } else {
             gizmoHandler.gizmo[pathArray[1]] = value;
         }
