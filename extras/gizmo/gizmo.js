@@ -5,15 +5,11 @@ import {
     EventHandler,
     Layer,
     Entity,
-    Quat,
     Vec3
 } from 'playcanvas'
 
-// temp variables
+// temporary variables
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
-const tmpQ2 = new Quat();
 
 // constants
 const GIZMO_LAYER_ID = 1e5;
@@ -33,18 +29,6 @@ class Gizmo extends EventHandler {
 
     nodes = [];
 
-    nodeLocalPositions = new Map();
-
-    nodePositions = new Map();
-
-    nodeLocalRotations = new Map();
-
-    nodeRotations = new Map();
-
-    nodeScale = new Map();
-
-    nodeOffset = new Map();
-
     gizmo;
 
     constructor(app, camera) {
@@ -56,7 +40,7 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        this.setGizmoScale();
+        this.updateGizmoScale();
 
         this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -84,7 +68,7 @@ class Gizmo extends EventHandler {
 
     set coordSpace(value) {
         this._coordSpace = value ?? 'world';
-        this.setGizmoRotation();
+        this.updateGizmoRotation();
     }
 
     get coordSpace() {
@@ -93,7 +77,7 @@ class Gizmo extends EventHandler {
 
     set size(value) {
         this._size = value;
-        this.setGizmoScale();
+        this.updateGizmoScale();
     }
 
     get size() {
@@ -102,8 +86,8 @@ class Gizmo extends EventHandler {
 
     attach(nodes) {
         this.nodes = nodes;
-        this.setGizmoPosition();
-        this.setGizmoRotation();
+        this.updateGizmoPosition();
+        this.updateGizmoRotation();
 
         window.addEventListener('pointermove', this._onPointerMove);
         window.addEventListener('pointerdown', this._onPointerDown);
@@ -116,101 +100,13 @@ class Gizmo extends EventHandler {
         this.gizmo.enabled = false;
 
         this.nodes = [];
-        this.nodeLocalPositions.clear();
-        this.nodePositions.clear();
-        this.nodeScale.clear();
 
         window.removeEventListener('pointermove', this._onPointerMove);
         window.removeEventListener('pointerdown', this._onPointerDown);
         window.removeEventListener('pointerup', this._onPointerUp);
     }
 
-    storeNodePositions() {
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            this.nodeLocalPositions.set(node, node.getLocalPosition().clone());
-            this.nodePositions.set(node, node.getPosition().clone());
-        }
-    }
-
-    updateNodePositions(point) {
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            if (this._coordSpace === 'local') {
-                tmpV1.copy(point);
-                node.parent.getWorldTransform().getScale(tmpV2);
-                tmpV2.x = 1 / tmpV2.x;
-                tmpV2.y = 1 / tmpV2.y;
-                tmpV2.z = 1 / tmpV2.z;
-                tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
-                tmpV1.mul(tmpV2);
-                node.setLocalPosition(this.nodeLocalPositions.get(node).clone().add(tmpV1));
-            } else {
-                node.setPosition(this.nodePositions.get(node).clone().add(point));
-            }
-        }
-
-        this.setGizmoPosition();
-    }
-
-    storeNodeRotations() {
-        const gizmoPos = this.gizmo.getPosition();
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            this.nodeLocalRotations.set(node, node.getLocalRotation().clone());
-            this.nodeRotations.set(node, node.getRotation().clone());
-            this.nodeOffset.set(node, node.getPosition().clone().sub(gizmoPos));
-        }
-    }
-
-    updateNodeRotations(axis, angle) {
-        const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.getPosition();
-        const isFacing = axis === 'face';
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-
-            if (isFacing) {
-                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
-            } else {
-                tmpV1.set(0, 0, 0);
-                tmpV1[axis] = 1;
-            }
-
-            tmpQ1.setFromAxisAngle(tmpV1, angle);
-
-            if (!isFacing && this._coordSpace === 'local') {
-                tmpQ2.copy(this.nodeLocalRotations.get(node)).mul(tmpQ1);
-                node.setLocalRotation(tmpQ2);
-            } else {
-                tmpV1.copy(this.nodeOffset.get(node));
-                tmpQ1.transformVector(tmpV1, tmpV1);
-                tmpQ2.copy(tmpQ1).mul(this.nodeRotations.get(node));
-                node.setRotation(tmpQ2);
-                node.setPosition(tmpV1.add(gizmoPos));
-            }
-        }
-
-        if (this._coordSpace === 'local') {
-            this.setGizmoRotation();
-        }
-    }
-
-    storeNodeScale() {
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            this.nodeScale.set(node, node.getLocalScale().clone());
-        }
-    }
-
-    updateNodeScale(point) {
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            node.setLocalScale(this.nodeScale.get(node).clone().mul(point));
-        }
-    }
-
-    setGizmoPosition() {
+    updateGizmoPosition() {
         tmpV1.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -220,7 +116,7 @@ class Gizmo extends EventHandler {
         this.gizmo.setPosition(tmpV1);
     }
 
-    setGizmoRotation() {
+    updateGizmoRotation() {
         if (this._coordSpace === 'local') {
             tmpV1.set(0, 0, 0);
             for (let i = 0; i < this.nodes.length; i++) {
@@ -233,7 +129,7 @@ class Gizmo extends EventHandler {
         }
     }
 
-    setGizmoScale() {
+    updateGizmoScale() {
         let scale = 1;
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
             scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;

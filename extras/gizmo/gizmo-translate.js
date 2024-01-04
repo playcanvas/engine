@@ -1,5 +1,6 @@
 import {
     Entity,
+    Quat,
     Vec3
 } from 'playcanvas'
 
@@ -7,6 +8,8 @@ import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+const tmpQ1 = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
@@ -174,6 +177,10 @@ class AxisArrow extends AxisShape {
 }
 
 class GizmoTranslate extends GizmoTransform {
+    _nodeLocalPositions = new Map();
+
+    _nodePositions = new Map();
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -225,11 +232,11 @@ class GizmoTranslate extends GizmoTransform {
         this._createTransform();
 
         this.on('transform:start', () => {
-            this.storeNodePositions();
+            this._storeNodePositions();
         });
 
         this.on('transform:move', (axis, offset) => {
-            this.updateNodePositions(offset);
+            this._setNodePositions(offset);
         });
     }
 
@@ -312,6 +319,41 @@ class GizmoTranslate extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
+    }
+
+    _storeNodePositions() {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            this._nodeLocalPositions.set(node, node.getLocalPosition().clone());
+            this._nodePositions.set(node, node.getPosition().clone());
+        }
+    }
+
+    _setNodePositions(point) {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            if (this._coordSpace === 'local') {
+                tmpV1.copy(point);
+                node.parent.getWorldTransform().getScale(tmpV2);
+                tmpV2.x = 1 / tmpV2.x;
+                tmpV2.y = 1 / tmpV2.y;
+                tmpV2.z = 1 / tmpV2.z;
+                tmpQ1.copy(node.getLocalRotation()).transformVector(tmpV1, tmpV1);
+                tmpV1.mul(tmpV2);
+                node.setLocalPosition(this._nodeLocalPositions.get(node).clone().add(tmpV1));
+            } else {
+                node.setPosition(this._nodePositions.get(node).clone().add(point));
+            }
+        }
+
+        this.updateGizmoPosition();
+    }
+
+    detach() {
+        super.detach();
+
+        this._nodeLocalPositions.clear();
+        this._nodePositions.clear();
     }
 }
 

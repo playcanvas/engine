@@ -2,10 +2,16 @@ import {
     createTorus,
     MeshInstance,
     Entity,
+    Quat,
     Vec3
 } from 'playcanvas'
 
 import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
+
+// temporary variables
+const tmpV1 = new Vec3();
+const tmpQ1 = new Quat();
+const tmpQ2 = new Quat();
 
 class AxisDisk extends AxisShape {
     _device;
@@ -71,6 +77,12 @@ class GizmoRotate extends GizmoTransform {
 
     _ring;
 
+    _nodeLocalRotations = new Map();
+
+    _nodeRotations = new Map();
+
+    _nodeOffsets = new Map();
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -114,12 +126,12 @@ class GizmoRotate extends GizmoTransform {
 
         this.on('transform:start', () => {
             this._setFacingDisks();
-            this.storeNodeRotations();
+            this._storeNodeRotations();
         });
 
         this.on('transform:move', (axis, offset, angle) => {
             this._setFacingDisks();
-            this.updateNodeRotations(axis, angle);
+            this._setNodeRotations(axis, angle);
         });
     }
 
@@ -174,6 +186,57 @@ class GizmoRotate extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
+    }
+
+    _storeNodeRotations() {
+        const gizmoPos = this.gizmo.getPosition();
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            this._nodeLocalRotations.set(node, node.getLocalRotation().clone());
+            this._nodeRotations.set(node, node.getRotation().clone());
+            this._nodeOffsets.set(node, node.getPosition().clone().sub(gizmoPos));
+        }
+    }
+
+    _setNodeRotations(axis, angle) {
+        const gizmoPos = this.gizmo.getPosition();
+        const cameraPos = this.camera.getPosition();
+        const isFacing = axis === 'face';
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+
+            if (isFacing) {
+                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
+            } else {
+                tmpV1.set(0, 0, 0);
+                tmpV1[axis] = 1;
+            }
+
+            tmpQ1.setFromAxisAngle(tmpV1, angle);
+
+            if (!isFacing && this._coordSpace === 'local') {
+                tmpQ2.copy(this._nodeLocalRotations.get(node)).mul(tmpQ1);
+                node.setLocalRotation(tmpQ2);
+            } else {
+                tmpV1.copy(this._nodeOffsets.get(node));
+                tmpQ1.transformVector(tmpV1, tmpV1);
+                tmpQ2.copy(tmpQ1).mul(this._nodeRotations.get(node));
+                node.setRotation(tmpQ2);
+                node.setPosition(tmpV1.add(gizmoPos));
+            }
+        }
+
+        if (this._coordSpace === 'local') {
+            this.updateGizmoRotation();
+        }
+    }
+
+    detach() {
+        super.detach();
+
+        this._nodeLocalRotations.clear();
+        this._nodeRotations.clear();
+        this._nodeOffsets.clear();
     }
 }
 

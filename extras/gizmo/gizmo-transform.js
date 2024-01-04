@@ -14,7 +14,7 @@ import { Gizmo } from "./gizmo.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpQ = new Quat();
+const tmpQ1 = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
@@ -109,7 +109,7 @@ class GizmoTransform extends Gizmo {
                 return;
             }
             const gizmoPos = this.gizmo.getPosition();
-            tmpQ.copy(this.gizmo.getRotation());
+            tmpQ1.copy(this.gizmo.getRotation());
             const checkAxis = this._hoverAxis || this._currAxis;
             const checkIsPlane = this._hoverIsPlane || this._currIsPlane;
             for (let i = 0; i < VEC3_AXES.length; i++) {
@@ -227,7 +227,7 @@ class GizmoTransform extends Gizmo {
             planeNormal[axis] = 1;
 
             // rotate plane normal by gizmo rotation
-            tmpQ.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
+            tmpQ1.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
 
             if (!isPlane && !isRotation) {
                 tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
@@ -253,12 +253,12 @@ class GizmoTransform extends Gizmo {
                 // reset normal based on axis and project position from plane onto normal
                 planeNormal.set(0, 0, 0);
                 planeNormal[axis] = 1;
-                tmpQ.transformVector(planeNormal, planeNormal);
+                tmpQ1.transformVector(planeNormal, planeNormal);
                 point.copy(planeNormal.scale(planeNormal.dot(point)));
             }
 
             // rotate point back to world coords
-            tmpQ.invert().transformVector(point, point);
+            tmpQ1.invert().transformVector(point, point);
 
             if (!isPlane && !isRotation) {
                 // set other axes to zero if not plane point
@@ -291,8 +291,8 @@ class GizmoTransform extends Gizmo {
         tmpV1[axis] = 1;
         tmpV1.scale(GUIDELINE_SIZE);
         tmpV2.copy(tmpV1).scale(-1);
-        tmpQ.transformVector(tmpV1, tmpV1);
-        tmpQ.transformVector(tmpV2, tmpV2);
+        tmpQ1.transformVector(tmpV1, tmpV1);
+        tmpQ1.transformVector(tmpV2, tmpV2);
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true, this.layerGizmo);
     }
 

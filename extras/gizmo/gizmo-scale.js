@@ -196,6 +196,8 @@ class AxisBoxCenter extends AxisShape {
 }
 
 class GizmoScale extends GizmoTransform {
+    _nodeScales = new Map();
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -256,11 +258,11 @@ class GizmoScale extends GizmoTransform {
 
         this.on('transform:start', (start) => {
             start.sub(Vec3.ONE);
-            this.storeNodeScale();
+            this._storeNodeScales();
         });
 
         this.on('transform:move', (axis, offset) => {
-            this.updateNodeScale(offset);
+            this._setNodeScales(offset);
         });
     }
 
@@ -351,6 +353,26 @@ class GizmoScale extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
+    }
+
+    _storeNodeScales() {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            this._nodeScales.set(node, node.getLocalScale().clone());
+        }
+    }
+
+    _setNodeScales(point) {
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            node.setLocalScale(this._nodeScales.get(node).clone().mul(point));
+        }
+    }
+
+    detach() {
+        super.detach();
+
+        this._nodeScales.clear();
     }
 }
 
