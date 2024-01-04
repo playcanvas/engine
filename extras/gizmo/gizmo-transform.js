@@ -18,7 +18,7 @@ const tmpQ1 = new Quat();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const GUIDELINE_SIZE = 1e6;
+const GUIDELINE_SIZE = 1e3;
 
 class AxisShape {
     _position;
@@ -58,7 +58,7 @@ class AxisShape {
 class GizmoTransform extends Gizmo {
     _materials;
 
-    _guideLineColor = new Color(1, 1, 1, 0.5);
+    _guideLineColor = new Color(1, 1, 1, 0.8);
 
     _hoverAxis = '';
 

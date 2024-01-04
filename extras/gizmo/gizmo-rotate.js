@@ -244,6 +244,16 @@ class GizmoRotate extends GizmoTransform {
         super.detach();
 
     }
+
+    set coordSpace(value) {
+        this._coordSpace = value ?? 'world';
+        this.updateGizmoRotation();
+        this._setFacingDisks();
+    }
+
+    get coordSpace() {
+        return this._coordSpace;
+    }
 }
 
 export { GizmoRotate };
