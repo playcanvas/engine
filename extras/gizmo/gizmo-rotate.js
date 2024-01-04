@@ -11,6 +11,8 @@ import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 const tmpV1 = new Vec3();
 
 class AxisDisk extends AxisShape {
+    _device;
+
     _tubeRadius = 0.02;
 
     _ringRadius = 0.55;
@@ -18,11 +20,12 @@ class AxisDisk extends AxisShape {
     constructor(options = {}) {
         super(options);
 
-        this._createDisk(options.app, options.layers ?? []);
+        this._device = options.device;
+        this._createDisk(options.layers ?? []);
     }
 
-    _createDisk(app, layers) {
-        const mesh = createTorus(app.graphicsDevice, {
+    _createDisk(layers) {
+        const mesh = createTorus(this._device, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius
         });
@@ -39,6 +42,30 @@ class AxisDisk extends AxisShape {
         this.entity.setLocalScale(this._scale);
         this.meshInstances.push(meshInstance);
     }
+
+    set tubeRadius(value) {
+        this._tubeRadius = value;
+        this.meshInstances[0].mesh = createTorus(this._device, {
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius
+        });
+    }
+
+    get tubeRadius() {
+        return this._tubeRadius;
+    }
+
+    set ringRadius(value) {
+        this._ringRadius = value;
+        this.meshInstances[0].mesh = createTorus(this._device, {
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius
+        });
+    }
+
+    get ringRadius() {
+        return this._ringRadius;
+    }
 }
 
 class GizmoRotate extends GizmoTransform {
@@ -49,7 +76,7 @@ class GizmoRotate extends GizmoTransform {
 
         this._axisShapes = {
             x: new AxisDisk({
-                app: app,
+                device: app.graphicsDevice,
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
@@ -57,7 +84,7 @@ class GizmoRotate extends GizmoTransform {
                 hoverColor: this._materials.opaque.red
             }),
             y: new AxisDisk({
-                app: app,
+                device: app.graphicsDevice,
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
@@ -65,7 +92,7 @@ class GizmoRotate extends GizmoTransform {
                 hoverColor: this._materials.opaque.green
             }),
             z: new AxisDisk({
-                app: app,
+                device: app.graphicsDevice,
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
@@ -108,16 +135,26 @@ class GizmoRotate extends GizmoTransform {
         }
     }
 
-    _updateArrowProp(propName, value) {
+    set tubeRadius(value) {
+        this._updateDiskProp('tubeRadius', value);
+    }
+
+    get tubeRadius() {
+        return this._axisShapes.x.tubeRadius;
+    }
+
+    set ringRadius(value) {
+        this._updateDiskProp('ringRadius', value);
+    }
+
+    get ringRadius() {
+        return this._axisShapes.x.ringRadius;
+    }
+
+    _updateDiskProp(propName, value) {
         this._axisShapes.x[propName] = value;
         this._axisShapes.y[propName] = value;
         this._axisShapes.z[propName] = value;
-    }
-
-    _updatePlaneProp(propName, value) {
-        this._axisShapes.yz[propName] = value;
-        this._axisShapes.xz[propName] = value;
-        this._axisShapes.xy[propName] = value;
     }
 }
 

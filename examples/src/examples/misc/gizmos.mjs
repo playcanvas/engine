@@ -6,6 +6,9 @@ import * as pc from 'playcanvas';
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+
+    const [type, setType] = React.useState('translate');
+
     return fragment(
         jsx(Panel, { headerText: 'Gizmo' },
             jsx(LabelGroup, { text: 'Type' },
@@ -16,15 +19,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         { v: 'scale', t: 'Scale' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.type' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.size' },
-                    min: 0.1,
-                    max: 2.0
+                    link: { observer, path: 'gizmo.type' },
+                    onSelect: value => setType(value)
                 })
             ),
             jsx(LabelGroup, { text: 'Coord Space' },
@@ -37,60 +33,91 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'gizmo.coordSpace' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Axis Gap' },
+            jsx(LabelGroup, { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisGap' }
+                    link: { observer, path: 'gizmo.size' },
+                    min: 0.1,
+                    max: 2.0
                 })
             ),
-            jsx(LabelGroup, { text: 'Axis Line Thickness' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisLineThickness' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Line Length' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisLineLength' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Box Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisBoxSize' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisArrowThickness' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Arrow Length' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisArrowLength' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Plane Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisPlaneSize' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Plane Gap' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisPlaneGap' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Axis Center Size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisCenterSize' }
-                })
-            )
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Axis Gap' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisGap' }
+                    })
+                ),
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Axis Line Thickness' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisLineThickness' }
+                    })
+                ),
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Axis Line Length' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisLineLength' }
+                    })
+                ),
+            type === 'scale' &&
+                jsx(LabelGroup, { text: 'Axis Box Size' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisBoxSize' }
+                    })
+                ),
+            type === 'translate' &&
+                jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisArrowThickness' }
+                    })
+                ),
+            type === 'translate' &&
+                jsx(LabelGroup, { text: 'Axis Arrow Length' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisArrowLength' }
+                    })
+                ),
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Axis Plane Size' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisPlaneSize' }
+                    })
+                ),
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Axis Plane Gap' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisPlaneGap' }
+                    })
+                ),
+            type === 'scale' &&
+                jsx(LabelGroup, { text: 'Axis Center Size' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisCenterSize' }
+                    })
+                ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Tube Radius' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.tubeRadius' }
+                    })
+                ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Ring Radius' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.ringRadius' }
+                    })
+                )
         ),
         jsx(Panel, { headerText: 'Camera' },
             jsx(LabelGroup, { text: 'Projection' },
@@ -247,7 +274,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisBoxSize: gizmo.axisBoxSize,
                 axisPlaneSize: gizmo.axisPlaneSize,
                 axisPlaneGap: gizmo.axisPlaneGap,
-                axisCenterSize: gizmo.axisCenterSize
+                axisCenterSize: gizmo.axisCenterSize,
+                tubeRadius: gizmo.tubeRadius,
+                ringRadius: gizmo.ringRadius
             });
             this.skipSetFire = false;
         }
