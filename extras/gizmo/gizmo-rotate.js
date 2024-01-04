@@ -122,7 +122,6 @@ class GizmoRotate extends GizmoTransform {
         };
 
         this._createTransform();
-        this._setFacingDisks();
 
         this.on('transform:start', () => {
             this._setFacingDisks();
@@ -231,12 +230,19 @@ class GizmoRotate extends GizmoTransform {
         }
     }
 
-    detach() {
-        super.detach();
+    attach(nodes) {
+        super.attach(nodes);
 
+        this._setFacingDisks();
+    }
+
+    detach() {
         this._nodeLocalRotations.clear();
         this._nodeRotations.clear();
         this._nodeOffsets.clear();
+
+        super.detach();
+
     }
 }
 

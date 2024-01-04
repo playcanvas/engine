@@ -370,9 +370,9 @@ class GizmoScale extends GizmoTransform {
     }
 
     detach() {
-        super.detach();
-
         this._nodeScales.clear();
+
+        super.detach();
     }
 }
 

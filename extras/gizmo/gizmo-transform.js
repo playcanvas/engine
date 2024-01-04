@@ -56,8 +56,6 @@ class AxisShape {
 }
 
 class GizmoTransform extends Gizmo {
-    _rotation = false;
-
     _materials;
 
     _guideLineColor = new Color(1, 1, 1, 0.5);
@@ -77,6 +75,8 @@ class GizmoTransform extends Gizmo {
     _offset = new Vec3();
 
     _dirtyElement;
+
+    _rotation = false;
 
     dragging = false;
 
@@ -135,8 +135,7 @@ class GizmoTransform extends Gizmo {
 
             if (this.dragging) {
                 const pointInfo = this._calcPoint(x, y);
-                this._offset.copy(pointInfo.point);
-                this._offset.sub(this._pointStart);
+                this._offset.copy(pointInfo.point).sub(this._pointStart);
                 this.fire('transform:move', this._currAxis, this._offset, pointInfo.angle - this._angleStart);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;

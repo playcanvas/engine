@@ -350,10 +350,10 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     detach() {
-        super.detach();
-
         this._nodeLocalPositions.clear();
         this._nodePositions.clear();
+
+        super.detach();
     }
 }
 
