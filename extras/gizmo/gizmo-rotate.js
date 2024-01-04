@@ -18,6 +18,7 @@ class AxisDisk extends AxisShape {
         super(options);
 
         this._device = options.device;
+        this._ringRadius = options.ringRadius ?? this._ringRadius;
         this._createDisk(options.layers ?? []);
     }
 
@@ -41,7 +42,7 @@ class AxisDisk extends AxisShape {
     }
 
     set tubeRadius(value) {
-        this._tubeRadius = value;
+        this._tubeRadius = value ?? 0.1;
         this.meshInstances[0].mesh = createTorus(this._device, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius
@@ -53,7 +54,7 @@ class AxisDisk extends AxisShape {
     }
 
     set ringRadius(value) {
-        this._ringRadius = value;
+        this._ringRadius = value ?? 0.1;
         this.meshInstances[0].mesh = createTorus(this._device, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius
@@ -68,6 +69,8 @@ class AxisDisk extends AxisShape {
 class GizmoRotate extends GizmoTransform {
     _rotation = true;
 
+    _ring;
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -77,50 +80,59 @@ class GizmoRotate extends GizmoTransform {
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.semi.red,
-                hoverColor: this._materials.opaque.red
+                defaultColor: this._materials.opaque.red,
+                hoverColor: this._materials.opaque.yellow
             }),
             y: new AxisDisk({
                 device: app.graphicsDevice,
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.semi.green,
-                hoverColor: this._materials.opaque.green
+                defaultColor: this._materials.opaque.green,
+                hoverColor: this._materials.opaque.yellow
             }),
             z: new AxisDisk({
                 device: app.graphicsDevice,
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.semi.blue,
-                hoverColor: this._materials.opaque.blue
+                defaultColor: this._materials.opaque.blue,
+                hoverColor: this._materials.opaque.yellow
             }),
-            // xyz: new AxisDisk({
-            //     app: app,
-            //     axis: 'xyz',
-            //     layers: [this.layerGizmo.id],
-            //     defaultColor: this._materials.semi.white,
-            //     hoverColor: this._materials.semi.white
-            // })
+            face: new AxisDisk({
+                app: app,
+                axis: 'face',
+                layers: [this.layerGizmo.id],
+                defaultColor: this._materials.semi.yellow,
+                hoverColor: this._materials.opaque.yellow,
+                ringRadius: 0.8
+            })
         };
 
-        // this._axisShapes.xyz.entity.lookAt(this.camera.getPosition());
-        // this._axisShapes.xyz.entity.rotateLocal(90, 0, 0);
-
         this._createTransform();
+        this._setFacingDisks();
 
         this.on('transform:start', () => {
+            this._setFacingDisks();
             this.storeNodeRotations();
         });
 
         this.on('transform:move', (axis, offset, angle) => {
+            this._setFacingDisks();
             this.updateNodeRotations(axis, angle);
         });
     }
 
     _createTransform() {
         super._createTransform();
+
+        // guide ring
+        this._ring = new AxisDisk({
+            app: this.app,
+            layers: [this.layerGizmo.id],
+            defaultColor: this._materials.semi.white
+        });
+        this._center.addChild(this._ring.entity);
 
         // elements
         for (const key in this._axisShapes) {
@@ -152,6 +164,16 @@ class GizmoRotate extends GizmoTransform {
         this._axisShapes.x[propName] = value;
         this._axisShapes.y[propName] = value;
         this._axisShapes.z[propName] = value;
+    }
+
+    _setFacingDisks() {
+        this._faceDiskToCamera(this._ring.entity);
+        this._faceDiskToCamera(this._axisShapes.face.entity);
+    }
+
+    _faceDiskToCamera(entity) {
+        entity.lookAt(this.camera.getPosition());
+        entity.rotateLocal(90, 0, 0);
     }
 }
 

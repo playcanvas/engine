@@ -1,4 +1,5 @@
 import {
+    math,
     PROJECTION_PERSPECTIVE,
     BLEND_NORMAL,
     Color,
@@ -99,7 +100,7 @@ class GizmoTransform extends Gizmo {
                 green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
                 blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5)),
                 yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
-                white: this._createMaterial(new Color(1, 1, 1, 0.25))
+                white: this._createMaterial(new Color(1, 1, 1, 0.5))
             }
         };
 
@@ -207,7 +208,8 @@ class GizmoTransform extends Gizmo {
         const axis = this._currAxis;
         const isPlane = this._currIsPlane;
         const isRotation = this._rotation;
-        const isCenter = axis === 'xyz';
+        const isAllAxes = axis === 'xyz';
+        const isFacing = axis === 'face';
 
         // calculate ray direction from mouse position
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
@@ -217,7 +219,7 @@ class GizmoTransform extends Gizmo {
             this.camera.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
         }
 
-        if (isCenter) {
+        if (isAllAxes || isFacing) {
             // all axes so set normal to plane facing camera
             planeNormal.copy(rayOrigin).sub(gizmoPos).normalize();
         } else {
@@ -239,13 +241,14 @@ class GizmoTransform extends Gizmo {
         const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
         const point = rayDir.scale(-pointPlaneDist).add(rayOrigin);
 
-        if (isCenter) {
+        if (isAllAxes) {
+            // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
             tmpV2.copy(this.camera.up).add(this.camera.right).normalize();
 
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
-        } else {
+        } else if (!isFacing) {
             if (!isPlane && !isRotation) {
                 // reset normal based on axis and project position from plane onto normal
                 planeNormal.set(0, 0, 0);
@@ -269,17 +272,17 @@ class GizmoTransform extends Gizmo {
         if (isRotation) {
             switch (axis) {
                 case 'x':
-                    angle = Math.atan2(point.z, point.y) / (Math.PI / 180);
+                    angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
                     break;
                 case 'y':
-                    angle = Math.atan2(point.x, point.z) / (Math.PI / 180);
+                    angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
                     break;
                 case 'z':
-                    angle = Math.atan2(point.y, point.x) / (Math.PI / 180);
+                case 'face':
+                    angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
                     break;
             }
         }
-
         return { point, angle };
     }
 
@@ -295,7 +298,7 @@ class GizmoTransform extends Gizmo {
 
     _createMaterial(color) {
         const material = new StandardMaterial();
-        material.diffuse = color;
+        material.emissive = color;
         if (color.a !== 1) {
             material.opacity = color.a;
             material.blendType = BLEND_NORMAL;
@@ -303,19 +306,19 @@ class GizmoTransform extends Gizmo {
         return material;
     }
 
-    _createLight(angles) {
-        const light = new Entity('light');
-        light.addComponent('light', {
-            layers: [this.layerGizmo.id]
-        });
-        light.setEulerAngles(angles);
-        return light;
-    }
+    // _createLight(angles) {
+    //     const light = new Entity('light');
+    //     light.addComponent('light', {
+    //         layers: [this.layerGizmo.id]
+    //     });
+    //     light.setEulerAngles(angles);
+    //     return light;
+    // }
 
     _createTransform() {
         // lighting
-        const light = this._createLight(new Vec3(45, 0, -45));
-        this.gizmo.addChild(light);
+        // const light = this._createLight(new Vec3(45, 0, -45));
+        // this.gizmo.addChild(light);
 
         // center
         this._center = new Entity('center');

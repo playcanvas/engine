@@ -165,15 +165,21 @@ class Gizmo extends EventHandler {
 
     updateNodeRotations(axis, angle) {
         const gizmoPos = this.gizmo.getPosition();
+        const cameraPos = this.camera.getPosition();
+        const isFacing = axis === 'face';
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
 
-            tmpV1.set(0, 0, 0);
-            tmpV1[axis] = 1;
+            if (isFacing) {
+                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
+            } else {
+                tmpV1.set(0, 0, 0);
+                tmpV1[axis] = 1;
+            }
 
             tmpQ1.setFromAxisAngle(tmpV1, angle);
 
-            if (this._coordSpace === 'local') {
+            if (!isFacing && this._coordSpace === 'local') {
                 tmpQ2.copy(this.nodeLocalRotations.get(node)).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {

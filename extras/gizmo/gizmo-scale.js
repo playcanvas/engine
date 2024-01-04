@@ -14,7 +14,7 @@ const VEC3_AXES = Object.keys(tmpV1);
 class AxisPlane extends AxisShape {
     _size = 0.2;
 
-    _gap = 0.2;
+    _gap = 0.1;
 
     constructor(options) {
         super(options);
@@ -69,13 +69,13 @@ class AxisPlane extends AxisShape {
 }
 
 class AxisBoxLine extends AxisShape {
-    _gap = 0.1;
+    _gap = 0;
 
     _lineThickness = 0.04;
 
     _lineLength = 0.5;
 
-    _boxSize = 0.15;
+    _boxSize = 0.14;
 
     constructor(options = {}) {
         super(options);
@@ -163,7 +163,7 @@ class AxisBoxLine extends AxisShape {
 }
 
 class AxisBoxCenter extends AxisShape {
-    _size = 0.2;
+    _size = 0.14;
 
     constructor(options = {}) {
         super(options);
@@ -202,52 +202,52 @@ class GizmoScale extends GizmoTransform {
         this._coordSpace = 'local';
 
         this._axisShapes = {
+            xyz: new AxisBoxCenter({
+                axis: 'xyz',
+                layers: [this.layerGizmo.id],
+                defaultColor: this._materials.semi.white,
+                hoverColor: this._materials.opaque.yellow
+            }),
             x: new AxisBoxLine({
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.semi.red,
-                hoverColor: this._materials.opaque.red
+                defaultColor: this._materials.opaque.red,
+                hoverColor: this._materials.opaque.yellow
             }),
             y: new AxisBoxLine({
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.semi.green,
-                hoverColor: this._materials.opaque.green
+                defaultColor: this._materials.opaque.green,
+                hoverColor: this._materials.opaque.yellow
             }),
             z: new AxisBoxLine({
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.semi.blue,
-                hoverColor: this._materials.opaque.blue
+                defaultColor: this._materials.opaque.blue,
+                hoverColor: this._materials.opaque.yellow
             }),
             yz: new AxisPlane({
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.semi.red,
-                hoverColor: this._materials.opaque.red
+                defaultColor: this._materials.opaque.red,
+                hoverColor: this._materials.opaque.yellow
             }),
             xz: new AxisPlane({
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.semi.green,
-                hoverColor: this._materials.opaque.green
+                defaultColor: this._materials.opaque.green,
+                hoverColor: this._materials.opaque.yellow
             }),
             xy: new AxisPlane({
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.semi.blue,
-                hoverColor: this._materials.opaque.blue
-            }),
-            xyz: new AxisBoxCenter({
-                axis: 'xyz',
-                layers: [this.layerGizmo.id],
-                defaultColor: this._materials.semi.yellow,
+                defaultColor: this._materials.opaque.blue,
                 hoverColor: this._materials.opaque.yellow
             })
         };
