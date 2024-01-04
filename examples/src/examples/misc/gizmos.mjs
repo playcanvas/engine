@@ -210,9 +210,14 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
 
     // create gizmo
     class GizmoHandler {
+        data;
+
         _type = 'translate';
 
-        constructor(app, camera) {
+        skipSetFire = false;
+
+        constructor(app, camera, data) {
+            this.data = data;
             this.gizmos = {
                 translate: new pcx.GizmoTranslate(app, camera),
                 rotate: new pcx.GizmoRotate(app, camera),
@@ -224,65 +229,67 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             return this.gizmos[this._type];
         }
 
-        switch(type, nodes, data) {
+        switch(type, nodes) {
             this.gizmo.detach();
             this._type = type;
             const gizmo = this.gizmo;
             gizmo.attach(nodes);
-
-            // TODO: fix controls updating
-            if (data) {
-                data.set('gizmo', {
-                    type: type,
-                    size: gizmo.size,
-                    coordSpace: gizmo.coordSpace,
-                    axisGap: gizmo.axisGap,
-                    axisLineThickness: gizmo.axisLineThickness,
-                    axisLineLength: gizmo.axisLineLength,
-                    axisArrowThickness: gizmo.axisArrowThickness,
-                    axisArrowLength: gizmo.axisArrowLength,
-                    axisBoxSize: gizmo.axisBoxSize,
-                    axisPlaneSize: gizmo.axisPlaneSize,
-                    axisPlaneGap: gizmo.axisPlaneGap,
-                    axisCenterSize: gizmo.axisCenterSize
-                });
-            }
+            this.skipSetFire = true;
+            this.data.set('gizmo', {
+                type: type,
+                size: gizmo.size,
+                coordSpace: gizmo.coordSpace,
+                axisGap: gizmo.axisGap,
+                axisLineThickness: gizmo.axisLineThickness,
+                axisLineLength: gizmo.axisLineLength,
+                axisArrowThickness: gizmo.axisArrowThickness,
+                axisArrowLength: gizmo.axisArrowLength,
+                axisBoxSize: gizmo.axisBoxSize,
+                axisPlaneSize: gizmo.axisPlaneSize,
+                axisPlaneGap: gizmo.axisPlaneGap,
+                axisCenterSize: gizmo.axisCenterSize
+            });
+            this.skipSetFire = false;
         }
     }
-
-    const gizmoHandler = new GizmoHandler(app, camera);
-    gizmoHandler.switch('translate', [boxA, boxB], data);
+    const gizmoHandler = new GizmoHandler(app, camera, data);
+    gizmoHandler.switch('translate', [boxA, boxB]);
 
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
 
-        // camera
-        if (pathArray[0] === 'camera') {
-            switch (pathArray[1]) {
-                case 'proj':
-                    camera.camera.projection = value - 1;
-                    break;
-                case 'dist':
-                    camera.setPosition(5 * value, 3 * value, 5 * value);
-                    break;
-                case 'fov':
-                    camera.camera.fov = value;
-                    break;
-                case 'orthoHeight':
-                    camera.camera.orthoHeight = value;
-                    break;
-            }
-            gizmoHandler.gizmo.updateGizmoScale();
-            return;
+        switch (pathArray[0]) {
+            case 'camera':
+                switch (pathArray[1]) {
+                    case 'proj':
+                        camera.camera.projection = value - 1;
+                        break;
+                    case 'dist':
+                        camera.setPosition(5 * value, 3 * value, 5 * value);
+                        break;
+                    case 'fov':
+                        camera.camera.fov = value;
+                        break;
+                    case 'orthoHeight':
+                        camera.camera.orthoHeight = value;
+                        break;
+                }
+                gizmoHandler.gizmo.updateGizmoScale();
+                return;
+            case 'gizmo':
+                if (gizmoHandler.skipSetFire) {
+                    return;
+                }
+                switch (pathArray[1]) {
+                    case 'type':
+                        gizmoHandler.switch(value, [boxA, boxB]);
+                        break;
+                    default:
+                        gizmoHandler.gizmo[pathArray[1]] = value;
+                        break;
+                }
+                break;
         }
-
-        // gizmo
-        if (pathArray[1] === 'type') {
-            gizmoHandler.switch(value, [boxA, boxB]);
-        } else {
-            gizmoHandler.gizmo[pathArray[1]] = value;
-        }
-
     });
 
     return app;
