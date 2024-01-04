@@ -181,6 +181,8 @@ class GizmoTranslate extends GizmoTransform {
 
     _nodePositions = new Map();
 
+    snapIncrement = 1;
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -236,6 +238,11 @@ class GizmoTranslate extends GizmoTransform {
         });
 
         this.on('transform:move', (axis, offset) => {
+            if (this.snap) {
+                offset.scale(1 / this.snapIncrement);
+                offset.round();
+                offset.scale(this.snapIncrement);
+            }
             this._setNodePositions(offset);
         });
     }

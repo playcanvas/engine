@@ -84,6 +84,8 @@ class GizmoTransform extends Gizmo {
 
     elementMap = new Map();
 
+    snapIncrement = 1;
+
     constructor(app, camera) {
         super(app, camera);
 

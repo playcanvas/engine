@@ -83,6 +83,8 @@ class GizmoRotate extends GizmoTransform {
 
     _nodeOffsets = new Map();
 
+    snapIncrement = 5;
+
     constructor(app, camera) {
         super(app, camera);
 
@@ -129,6 +131,9 @@ class GizmoRotate extends GizmoTransform {
         });
 
         this.on('transform:move', (axis, offset, angle) => {
+            if (this.snap) {
+                angle = Math.round(angle / this.snapIncrement) * this.snapIncrement;
+            }
             this._setFacingDisks();
             this._setNodeRotations(axis, angle);
         });

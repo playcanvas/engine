@@ -31,6 +31,8 @@ class Gizmo extends EventHandler {
 
     gizmo;
 
+    snap = false;
+
     constructor(app, camera) {
         super();
 
@@ -62,6 +64,12 @@ class Gizmo extends EventHandler {
             }
             this.fire('pointer:up');
         };
+        this._onKeyDown = (e) => {
+            this.snap = e.shiftKey;
+        };
+        this._onKeyUp = (e) => {
+            this.snap = false;
+        };
 
         app.on('destroy', () => this.detach());
     }
@@ -92,6 +100,8 @@ class Gizmo extends EventHandler {
         window.addEventListener('pointermove', this._onPointerMove);
         window.addEventListener('pointerdown', this._onPointerDown);
         window.addEventListener('pointerup', this._onPointerUp);
+        window.addEventListener('keydown', this._onKeyDown);
+        window.addEventListener('keyup', this._onKeyUp);
 
         this.gizmo.enabled = true;
     }
@@ -104,6 +114,8 @@ class Gizmo extends EventHandler {
         window.removeEventListener('pointermove', this._onPointerMove);
         window.removeEventListener('pointerdown', this._onPointerDown);
         window.removeEventListener('pointerup', this._onPointerUp);
+        window.removeEventListener('keydown', this._onKeyDown);
+        window.removeEventListener('keyup', this._onKeyUp);
     }
 
     updateGizmoPosition() {
