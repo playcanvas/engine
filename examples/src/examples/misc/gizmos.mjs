@@ -321,6 +321,21 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         }
     });
 
+    // gizmo type switching keybinds
+    window.addEventListener('keypress', (e) => {
+        switch (e.key) {
+            case '1':
+                data.set('gizmo.type', 'translate');
+                break;
+            case '2':
+                data.set('gizmo.type', 'rotate');
+                break;
+            case '3':
+                data.set('gizmo.type', 'scale');
+                break;
+        }
+    });
+
     return app;
 }
 
