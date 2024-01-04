@@ -15,7 +15,6 @@ const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
-
 // constants
 const GIZMO_LAYER_ID = 1e5;
 const MIN_GIZMO_SCALE = 1e-4;

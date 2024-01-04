@@ -7,9 +7,6 @@ import {
 
 import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 
-// temporary variables
-const tmpV1 = new Vec3();
-
 class AxisDisk extends AxisShape {
     _device;
 
