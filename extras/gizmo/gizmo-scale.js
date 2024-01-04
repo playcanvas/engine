@@ -273,7 +273,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisGap(value) {
-        this._updateArrowProp('gap', value);
+        this._setArrowProp('gap', value);
     }
 
     get axisGap() {
@@ -281,7 +281,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineThickness(value) {
-        this._updateArrowProp('lineThickness', value);
+        this._setArrowProp('lineThickness', value);
     }
 
     get axisLineThickness() {
@@ -289,7 +289,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisLineLength(value) {
-        this._updateArrowProp('lineLength', value);
+        this._setArrowProp('lineLength', value);
     }
 
     get axisLineLength() {
@@ -297,7 +297,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisBoxSize(value) {
-        this._updateArrowProp('boxSize', value);
+        this._setArrowProp('boxSize', value);
     }
 
     get axisBoxSize() {
@@ -305,7 +305,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisPlaneSize(value) {
-        this._updatePlaneProp('size', value);
+        this._setPlaneProp('size', value);
     }
 
     get axisPlaneSize() {
@@ -313,7 +313,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     set axisPlaneGap(value) {
-        this._updatePlaneProp('gap', value);
+        this._setPlaneProp('gap', value);
     }
 
     get axisPlaneGap() {
@@ -328,6 +328,18 @@ class GizmoScale extends GizmoTransform {
         return this._axisShapes.xyz.size;
     }
 
+    _setArrowProp(propName, value) {
+        this._axisShapes.x[propName] = value;
+        this._axisShapes.y[propName] = value;
+        this._axisShapes.z[propName] = value;
+    }
+
+    _setPlaneProp(propName, value) {
+        this._axisShapes.yz[propName] = value;
+        this._axisShapes.xz[propName] = value;
+        this._axisShapes.xy[propName] = value;
+    }
+
     _createTransform() {
         super._createTransform();
 
@@ -339,18 +351,6 @@ class GizmoScale extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
-    }
-
-    _updateArrowProp(propName, value) {
-        this._axisShapes.x[propName] = value;
-        this._axisShapes.y[propName] = value;
-        this._axisShapes.z[propName] = value;
-    }
-
-    _updatePlaneProp(propName, value) {
-        this._axisShapes.yz[propName] = value;
-        this._axisShapes.xz[propName] = value;
-        this._axisShapes.xy[propName] = value;
     }
 }
 

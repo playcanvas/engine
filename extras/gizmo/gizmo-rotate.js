@@ -123,6 +123,38 @@ class GizmoRotate extends GizmoTransform {
         });
     }
 
+    set tubeRadius(value) {
+        this._setDiskProp('tubeRadius', value);
+    }
+
+    get tubeRadius() {
+        return this._axisShapes.x.tubeRadius;
+    }
+
+    set ringRadius(value) {
+        this._setDiskProp('ringRadius', value);
+    }
+
+    get ringRadius() {
+        return this._axisShapes.x.ringRadius;
+    }
+
+    _setDiskProp(propName, value) {
+        this._axisShapes.x[propName] = value;
+        this._axisShapes.y[propName] = value;
+        this._axisShapes.z[propName] = value;
+    }
+
+    _setFacingDisks() {
+        this._faceDiskToCamera(this._ring.entity);
+        this._faceDiskToCamera(this._axisShapes.face.entity);
+    }
+
+    _faceDiskToCamera(entity) {
+        entity.lookAt(this.camera.getPosition());
+        entity.rotateLocal(90, 0, 0);
+    }
+
     _createTransform() {
         super._createTransform();
 
@@ -142,38 +174,6 @@ class GizmoRotate extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
-    }
-
-    set tubeRadius(value) {
-        this._updateDiskProp('tubeRadius', value);
-    }
-
-    get tubeRadius() {
-        return this._axisShapes.x.tubeRadius;
-    }
-
-    set ringRadius(value) {
-        this._updateDiskProp('ringRadius', value);
-    }
-
-    get ringRadius() {
-        return this._axisShapes.x.ringRadius;
-    }
-
-    _updateDiskProp(propName, value) {
-        this._axisShapes.x[propName] = value;
-        this._axisShapes.y[propName] = value;
-        this._axisShapes.z[propName] = value;
-    }
-
-    _setFacingDisks() {
-        this._faceDiskToCamera(this._ring.entity);
-        this._faceDiskToCamera(this._axisShapes.face.entity);
-    }
-
-    _faceDiskToCamera(entity) {
-        entity.lookAt(this.camera.getPosition());
-        entity.rotateLocal(90, 0, 0);
     }
 }
 

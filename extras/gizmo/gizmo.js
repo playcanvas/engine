@@ -56,7 +56,7 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        this.updateGizmoScale();
+        this.setGizmoScale();
 
         this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -93,7 +93,7 @@ class Gizmo extends EventHandler {
 
     set size(value) {
         this._size = value;
-        this.updateGizmoScale();
+        this.setGizmoScale();
     }
 
     get size() {
@@ -233,7 +233,7 @@ class Gizmo extends EventHandler {
         }
     }
 
-    updateGizmoScale() {
+    setGizmoScale() {
         let scale = 1;
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
             scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
