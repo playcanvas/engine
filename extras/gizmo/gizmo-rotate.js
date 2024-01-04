@@ -169,14 +169,6 @@ class GizmoRotate extends GizmoTransform {
     _createTransform() {
         super._createTransform();
 
-        // guide ring
-        this._ring = new AxisDisk({
-            app: this.app,
-            layers: [this.layerGizmo.id],
-            defaultColor: this._materials.semi.white
-        });
-        this._center.addChild(this._ring.entity);
-
         // elements
         for (const key in this._axisShapes) {
             const shape = this._axisShapes[key];
@@ -185,6 +177,14 @@ class GizmoRotate extends GizmoTransform {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
         }
+
+        // guide ring
+        this._ring = new AxisDisk({
+            app: this.app,
+            layers: [this.layerGizmo.id],
+            defaultColor: this._materials.semi.white
+        });
+        this._center.addChild(this._ring.entity);
     }
 
     _storeNodeRotations() {

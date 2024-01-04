@@ -240,6 +240,11 @@ class GizmoTransform extends Gizmo {
         const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
         const point = rayDir.scale(-pointPlaneDist).add(rayOrigin);
 
+        if (isRotation) {
+            // point needs to be relative to gizmo for angle calculation
+            point.sub(gizmoPos);
+        }
+
         if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
