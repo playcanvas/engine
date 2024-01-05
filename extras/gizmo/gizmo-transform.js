@@ -56,7 +56,22 @@ class AxisShape {
 }
 
 class GizmoTransform extends Gizmo {
-    _materials;
+    _materials = {
+        opaque: {
+            red: this._createMaterial(new Color(1, 0.3, 0.3)),
+            green: this._createMaterial(new Color(0.3, 1, 0.3)),
+            blue: this._createMaterial(new Color(0.3, 0.3, 1)),
+            yellow: this._createMaterial(new Color(1, 1, 0.3)),
+            white: this._createMaterial(new Color(1, 1, 1))
+        },
+        semi: {
+            red: this._createMaterial(new Color(1, 0.3, 0.3, 0.5)),
+            green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
+            blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5)),
+            yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
+            white: this._createMaterial(new Color(1, 1, 1, 0.5))
+        }
+    };
 
     _guideLineColor = new Color(1, 1, 1, 0.8);
 
@@ -74,7 +89,7 @@ class GizmoTransform extends Gizmo {
 
     _offset = new Vec3();
 
-    _dirtyElement;
+    _hoverElement;
 
     _rotation = false;
 
@@ -88,23 +103,6 @@ class GizmoTransform extends Gizmo {
 
     constructor(app, camera) {
         super(app, camera);
-
-        this._materials = {
-            opaque: {
-                red: this._createMaterial(new Color(1, 0.3, 0.3)),
-                green: this._createMaterial(new Color(0.3, 1, 0.3)),
-                blue: this._createMaterial(new Color(0.3, 0.3, 1)),
-                yellow: this._createMaterial(new Color(1, 1, 0.3)),
-                white: this._createMaterial(new Color(1, 1, 1))
-            },
-            semi: {
-                red: this._createMaterial(new Color(1, 0.3, 0.3, 0.5)),
-                green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
-                blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5)),
-                yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
-                white: this._createMaterial(new Color(1, 1, 1, 0.5))
-            }
-        };
 
         this.app.on('update', () => {
             if (!this.gizmo.enabled) {
@@ -189,16 +187,16 @@ class GizmoTransform extends Gizmo {
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane =  this._getIsPlane(meshInstance);
         const shape = this.elementMap.get(meshInstance);
-        if (shape === this._dirtyElement) {
+        if (shape === this._hoverElement) {
             return;
         }
-        if (this._dirtyElement) {
-            this._dirtyElement.hover(false);
-            this._dirtyElement = null;
+        if (this._hoverElement) {
+            this._hoverElement.hover(false);
+            this._hoverElement = null;
         }
         if (shape) {
             shape.hover(true);
-            this._dirtyElement = shape;
+            this._hoverElement = shape;
         }
     }
 
