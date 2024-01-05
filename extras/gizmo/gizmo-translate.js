@@ -334,7 +334,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisPlaneGap() {
-        return this._axisShapes.x.gap;
+        return this._axisShapes.yz.gap;
     }
 
     _setArrowProp(propName, value) {

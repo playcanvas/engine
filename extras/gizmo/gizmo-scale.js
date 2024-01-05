@@ -359,7 +359,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisPlaneGap() {
-        return this._axisShapes.x.gap;
+        return this._axisShapes.yz.gap;
     }
 
     set axisCenterSize(value) {
