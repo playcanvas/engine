@@ -89,6 +89,14 @@ class GizmoRotate extends GizmoTransform {
         super(app, camera);
 
         this._axisShapes = {
+            z: new AxisDisk({
+                device: app.graphicsDevice,
+                axis: 'z',
+                layers: [this.layerGizmo.id],
+                rotation: new Vec3(90, 0, 0),
+                defaultColor: this._materials.opaque.blue,
+                hoverColor: this._materials.opaque.yellow
+            }),
             x: new AxisDisk({
                 device: app.graphicsDevice,
                 axis: 'x',
@@ -103,14 +111,6 @@ class GizmoRotate extends GizmoTransform {
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
                 defaultColor: this._materials.opaque.green,
-                hoverColor: this._materials.opaque.yellow
-            }),
-            z: new AxisDisk({
-                device: app.graphicsDevice,
-                axis: 'z',
-                layers: [this.layerGizmo.id],
-                rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.opaque.blue,
                 hoverColor: this._materials.opaque.yellow
             }),
             face: new AxisDisk({
@@ -136,6 +136,10 @@ class GizmoRotate extends GizmoTransform {
             }
             this._setFacingDisks();
             this._setNodeRotations(axis, angle);
+        });
+
+        this.on('coordSpace:set', () => {
+            this._setFacingDisks();
         });
     }
 
@@ -247,17 +251,6 @@ class GizmoRotate extends GizmoTransform {
         this._nodeOffsets.clear();
 
         super.detach();
-
-    }
-
-    set coordSpace(value) {
-        this._coordSpace = value ?? 'world';
-        this.updateGizmoRotation();
-        this._setFacingDisks();
-    }
-
-    get coordSpace() {
-        return this._coordSpace;
     }
 }
 

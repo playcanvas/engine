@@ -77,6 +77,7 @@ class Gizmo extends EventHandler {
     set coordSpace(value) {
         this._coordSpace = value ?? 'world';
         this.updateGizmoRotation();
+        this.fire('coordSpace:set', this._coordSpace);
     }
 
     get coordSpace() {

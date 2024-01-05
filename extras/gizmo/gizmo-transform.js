@@ -110,6 +110,8 @@ class GizmoTransform extends Gizmo {
             if (!this.gizmo.enabled) {
                 return;
             }
+
+            // draw guidelines
             const gizmoPos = this.gizmo.getPosition();
             tmpQ1.copy(this.gizmo.getRotation());
             const checkAxis = this._hoverAxis || this._currAxis;

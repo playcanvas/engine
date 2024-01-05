@@ -9,6 +9,7 @@ import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 // constants
@@ -19,8 +20,12 @@ class AxisPlane extends AxisShape {
 
     _gap = 0.1;
 
+    flip = false;
+
     constructor(options) {
         super(options);
+
+        this._flipAxis = options.flipAxis ?? 'x';
 
         this._createPlane(options.layers ?? []);
     }
@@ -68,6 +73,18 @@ class AxisPlane extends AxisShape {
 
     get gap() {
         return this._gap;
+    }
+
+    checkForFlip(screenDir) {
+        tmpV2.set(0, 1, 0);
+        tmpQ1.copy(this.entity.getRotation()).transformVector(tmpV2, tmpV2);
+        const dot = screenDir.dot(tmpV2);
+        if (dot > 0) {
+            return;
+        }
+        tmpV3.copy(this.entity.getLocalEulerAngles());
+        tmpV3[this._flipAxis] = 180 - tmpV3[this._flipAxis];
+        this.entity.setLocalEulerAngles(tmpV3);
     }
 }
 
@@ -187,6 +204,30 @@ class GizmoTranslate extends GizmoTransform {
         super(app, camera);
 
         this._axisShapes = {
+            yz: new AxisPlane({
+                axis: 'x',
+                flipAxis: 'y',
+                layers: [this.layerGizmo.id],
+                rotation: new Vec3(0, 0, -90),
+                defaultColor: this._materials.opaque.red,
+                hoverColor: this._materials.opaque.yellow
+            }),
+            xz: new AxisPlane({
+                axis: 'y',
+                flipAxis: 'z',
+                layers: [this.layerGizmo.id],
+                rotation: new Vec3(0, 0, 0),
+                defaultColor: this._materials.opaque.green,
+                hoverColor: this._materials.opaque.yellow
+            }),
+            xy: new AxisPlane({
+                axis: 'z',
+                flipAxis: 'x',
+                layers: [this.layerGizmo.id],
+                rotation: new Vec3(90, 0, 0),
+                defaultColor: this._materials.opaque.blue,
+                hoverColor: this._materials.opaque.yellow
+            }),
             x: new AxisArrow({
                 axis: 'x',
                 layers: [this.layerGizmo.id],
@@ -207,34 +248,23 @@ class GizmoTranslate extends GizmoTransform {
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this._materials.opaque.blue,
                 hoverColor: this._materials.opaque.yellow
-            }),
-            yz: new AxisPlane({
-                axis: 'x',
-                layers: [this.layerGizmo.id],
-                rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.opaque.red,
-                hoverColor: this._materials.opaque.yellow
-            }),
-            xz: new AxisPlane({
-                axis: 'y',
-                layers: [this.layerGizmo.id],
-                rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.opaque.green,
-                hoverColor: this._materials.opaque.yellow
-            }),
-            xy: new AxisPlane({
-                axis: 'z',
-                layers: [this.layerGizmo.id],
-                rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.opaque.blue,
-                hoverColor: this._materials.opaque.yellow
             })
         };
+
+        this._planes = [];
+        for (const key in this._axisShapes) {
+            const shape = this._axisShapes[key];
+            if (!(shape instanceof AxisPlane)) {
+                continue;
+            }
+            this._planes.push(shape);
+        }
 
         this._createTransform();
 
         this.on('transform:start', () => {
             this._storeNodePositions();
+            this._checkForPlaneFlip();
         });
 
         this.on('transform:move', (axis, offset) => {
@@ -244,6 +274,11 @@ class GizmoTranslate extends GizmoTransform {
                 offset.scale(this.snapIncrement);
             }
             this._setNodePositions(offset);
+            this._checkForPlaneFlip();
+        });
+
+        this.on('coordSpace:set', () => {
+            this._checkForPlaneFlip();
         });
     }
 
@@ -325,6 +360,16 @@ class GizmoTranslate extends GizmoTransform {
             for (let i = 0; i < shape.meshInstances.length; i++) {
                 this.elementMap.set(shape.meshInstances[i], shape);
             }
+        }
+    }
+
+    _checkForPlaneFlip() {
+        const gizmoPos = this.gizmo.getPosition();
+        const cameraPos = this.camera.getPosition();
+        tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
+
+        for (let i = 0; i < this._planes.length; i++) {
+            this._planes[i].checkForFlip(tmpV1);
         }
     }
 
