@@ -277,6 +277,8 @@ class GizmoScale extends GizmoTransform {
             })
         };
 
+        this._createTransform();
+
         this._planes = [];
         for (const key in this._axisShapes) {
             const shape = this._axisShapes[key];
@@ -285,8 +287,7 @@ class GizmoScale extends GizmoTransform {
             }
             this._planes.push(shape);
         }
-
-        this._createTransform();
+        this._checkForPlaneFlip();
 
         this.on('transform:start', (start) => {
             start.sub(Vec3.ONE);
