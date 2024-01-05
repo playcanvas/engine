@@ -6,7 +6,7 @@ import {
     Layer,
     Entity,
     Vec3
-} from 'playcanvas'
+} from 'playcanvas';
 
 // temporary variables
 const tmpV1 = new Vec3();

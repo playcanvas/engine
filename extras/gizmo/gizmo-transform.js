@@ -7,7 +7,7 @@ import {
     Entity,
     Vec3,
     Quat
-} from 'playcanvas'
+} from 'playcanvas';
 
 import { Gizmo } from "./gizmo.js";
 

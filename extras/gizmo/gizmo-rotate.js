@@ -4,7 +4,7 @@ import {
     Entity,
     Quat,
     Vec3
-} from 'playcanvas'
+} from 'playcanvas';
 
 import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
 
