@@ -419,6 +419,12 @@ class GizmoScale extends GizmoTransform {
         }
     }
 
+    attach(nodes) {
+        super.attach(nodes);
+
+        this._checkForPlaneFlip();
+    }
+
     detach() {
         this._nodeScales.clear();
 

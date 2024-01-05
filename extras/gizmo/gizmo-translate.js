@@ -400,6 +400,12 @@ class GizmoTranslate extends GizmoTransform {
         this.updateGizmoPosition();
     }
 
+    attach(nodes) {
+        super.attach(nodes);
+
+        this._checkForPlaneFlip();
+    }
+
     detach() {
         this._nodeLocalPositions.clear();
         this._nodePositions.clear();
