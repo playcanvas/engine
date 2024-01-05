@@ -207,45 +207,45 @@ class GizmoTranslate extends GizmoTransform {
                 flipAxis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.opaque.red,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.x,
+                hoverColor: this._materials.hover
             }),
             xz: new AxisPlane({
                 axis: 'y',
                 flipAxis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.opaque.green,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.y,
+                hoverColor: this._materials.hover
             }),
             xy: new AxisPlane({
                 axis: 'z',
                 flipAxis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.opaque.blue,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.z,
+                hoverColor: this._materials.hover
             }),
             x: new AxisArrow({
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.opaque.red,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.x,
+                hoverColor: this._materials.hover
             }),
             y: new AxisArrow({
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.opaque.green,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.y,
+                hoverColor: this._materials.hover
             }),
             z: new AxisArrow({
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.opaque.blue,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.z,
+                hoverColor: this._materials.hover
             })
         };
 

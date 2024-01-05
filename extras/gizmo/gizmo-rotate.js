@@ -85,8 +85,8 @@ class GizmoRotate extends GizmoTransform {
 
     snapIncrement = 5;
 
-    constructor(...args) {
-        super(...args);
+    constructor(app, ...args) {
+        super(app, ...args);
 
         this._axisShapes = {
             z: new AxisDisk({
@@ -94,31 +94,31 @@ class GizmoRotate extends GizmoTransform {
                 axis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
-                defaultColor: this._materials.opaque.blue,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.z,
+                hoverColor: this._materials.hover
             }),
             x: new AxisDisk({
                 device: app.graphicsDevice,
                 axis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
-                defaultColor: this._materials.opaque.red,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.x,
+                hoverColor: this._materials.hover
             }),
             y: new AxisDisk({
                 device: app.graphicsDevice,
                 axis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
-                defaultColor: this._materials.opaque.green,
-                hoverColor: this._materials.opaque.yellow
+                defaultColor: this._materials.axis.y,
+                hoverColor: this._materials.hover
             }),
             face: new AxisDisk({
                 app: app,
                 axis: 'face',
                 layers: [this.layerGizmo.id],
                 defaultColor: this._materials.semi.yellow,
-                hoverColor: this._materials.opaque.yellow,
+                hoverColor: this._materials.hover,
                 ringRadius: 0.8
             })
         };

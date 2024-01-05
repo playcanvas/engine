@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
 
@@ -39,6 +39,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'gizmo.size' },
                     min: 0.1,
                     max: 2.0
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis X Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisXColor' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Y Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisYColor' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Axis Z Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.axisZColor' }
                 })
             ),
             (type === 'translate' || type === 'scale') &&
@@ -189,6 +207,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
+                axisXColor: gizmo.axisXColor,
+                axisYColor: gizmo.axisYColor,
+                axisZColor: gizmo.axisZColor,
                 coordSpace: gizmo.coordSpace,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,

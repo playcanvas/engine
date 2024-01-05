@@ -15,6 +15,7 @@ import { Gizmo } from "./gizmo.js";
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
+const tmpC1 = new Color();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
@@ -57,17 +58,15 @@ class AxisShape {
 
 class GizmoTransform extends Gizmo {
     _materials = {
-        opaque: {
-            red: this._createMaterial(new Color(1, 0.3, 0.3)),
-            green: this._createMaterial(new Color(0.3, 1, 0.3)),
-            blue: this._createMaterial(new Color(0.3, 0.3, 1)),
-            yellow: this._createMaterial(new Color(1, 1, 0.3)),
-            white: this._createMaterial(new Color(1, 1, 1))
+        axis: {
+            x: this._createMaterial(new Color(1, 0.3, 0.3)),
+            y: this._createMaterial(new Color(0.3, 1, 0.3)),
+            z: this._createMaterial(new Color(0.3, 0.3, 1)),
+            face: this._createMaterial(new Color(1, 1, 0.3, 0.5))
         },
+        center: this._createMaterial(new Color(1, 1, 1, 0.5)),
+        hover: this._createMaterial(new Color(1, 1, 0.3)),
         semi: {
-            red: this._createMaterial(new Color(1, 0.3, 0.3, 0.5)),
-            green: this._createMaterial(new Color(0.3, 1, 0.3, 0.5)),
-            blue: this._createMaterial(new Color(0.3, 0.3, 1, 0.5)),
             yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
             white: this._createMaterial(new Color(1, 1, 1, 0.5))
         }
@@ -329,6 +328,36 @@ class GizmoTransform extends Gizmo {
         // center
         this._center = new Entity('center');
         this.gizmo.addChild(this._center);
+    }
+
+    set axisXColor(value) {
+        tmpC1.set(...value);
+        this._materials.axis.x.emissive = tmpC1;
+        this._materials.axis.x.update();
+    }
+
+    get axisXColor() {
+        return Object.values(this._materials.axis.x.emissive);
+    }
+
+    set axisYColor(value) {
+        tmpC1.set(...value);
+        this._materials.axis.y.emissive = tmpC1;
+        this._materials.axis.y.update();
+    }
+
+    get axisYColor() {
+        return Object.values(this._materials.axis.y.emissive);
+    }
+
+    set axisZColor(value) {
+        tmpC1.set(...value);
+        this._materials.axis.z.emissive = tmpC1;
+        this._materials.axis.z.update();
+    }
+
+    get axisZColor() {
+        return Object.values(this._materials.axis.z.emissive);
     }
 }
 
