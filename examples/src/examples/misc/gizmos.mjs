@@ -163,6 +163,50 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
+    class GizmoHandler {
+        _type = 'translate';
+
+        skipSetFire = false;
+
+        constructor(app, camera) {
+            this.gizmos = {
+                translate: new pcx.GizmoTranslate(app, camera),
+                rotate: new pcx.GizmoRotate(app, camera),
+                scale: new pcx.GizmoScale(app, camera)
+            };
+        }
+
+        get gizmo() {
+            return this.gizmos[this._type];
+        }
+
+        switch(type, nodes) {
+            this.gizmo.detach();
+            this._type = type ?? 'translate';
+            const gizmo = this.gizmo;
+            gizmo.attach(nodes);
+            this.skipSetFire = true;
+            data.set('gizmo', {
+                type: type,
+                size: gizmo.size,
+                coordSpace: gizmo.coordSpace,
+                axisGap: gizmo.axisGap,
+                axisLineThickness: gizmo.axisLineThickness,
+                axisLineLength: gizmo.axisLineLength,
+                axisArrowThickness: gizmo.axisArrowThickness,
+                axisArrowLength: gizmo.axisArrowLength,
+                axisBoxSize: gizmo.axisBoxSize,
+                axisPlaneSize: gizmo.axisPlaneSize,
+                axisPlaneGap: gizmo.axisPlaneGap,
+                axisCenterSize: gizmo.axisCenterSize,
+                tubeRadius: gizmo.tubeRadius,
+                ringRadius: gizmo.ringRadius
+            });
+            this.skipSetFire = false;
+        }
+    }
+
+
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
@@ -187,7 +231,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
-    app.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -199,6 +242,26 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     app.on('destroy', () => {
         window.removeEventListener('resize', resize);
     });
+
+    // control keybinds
+    window.addEventListener('keypress', (e) => {
+        switch (e.key) {
+            case 'x':
+                data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
+                break;
+            case '1':
+                data.set('gizmo.type', 'translate');
+                break;
+            case '2':
+                data.set('gizmo.type', 'rotate');
+                break;
+            case '3':
+                data.set('gizmo.type', 'scale');
+                break;
+        }
+    });
+
+    app.start();
 
     // create box entities
     const boxA = new pc.Entity('cubeA');
@@ -236,52 +299,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    class GizmoHandler {
-        data;
-
-        _type = 'translate';
-
-        skipSetFire = false;
-
-        constructor(app, camera, data) {
-            this.data = data;
-            this.gizmos = {
-                translate: new pcx.GizmoTranslate(app, camera),
-                rotate: new pcx.GizmoRotate(app, camera),
-                scale: new pcx.GizmoScale(app, camera)
-            };
-        }
-
-        get gizmo() {
-            return this.gizmos[this._type];
-        }
-
-        switch(type, nodes) {
-            this.gizmo.detach();
-            this._type = type;
-            const gizmo = this.gizmo;
-            gizmo.attach(nodes);
-            this.skipSetFire = true;
-            this.data.set('gizmo', {
-                type: type,
-                size: gizmo.size,
-                coordSpace: gizmo.coordSpace,
-                axisGap: gizmo.axisGap,
-                axisLineThickness: gizmo.axisLineThickness,
-                axisLineLength: gizmo.axisLineLength,
-                axisArrowThickness: gizmo.axisArrowThickness,
-                axisArrowLength: gizmo.axisArrowLength,
-                axisBoxSize: gizmo.axisBoxSize,
-                axisPlaneSize: gizmo.axisPlaneSize,
-                axisPlaneGap: gizmo.axisPlaneGap,
-                axisCenterSize: gizmo.axisCenterSize,
-                tubeRadius: gizmo.tubeRadius,
-                ringRadius: gizmo.ringRadius
-            });
-            this.skipSetFire = false;
-        }
-    }
-    const gizmoHandler = new GizmoHandler(app, camera, data);
+    const gizmoHandler = new GizmoHandler(app, camera);
     gizmoHandler.switch('translate', [boxA, boxB]);
 
     data.on('*:set', (/** @type {string} */ path, value) => {
@@ -317,24 +335,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                         gizmoHandler.gizmo[pathArray[1]] = value;
                         break;
                 }
-                break;
-        }
-    });
-
-    // control keybinds
-    window.addEventListener('keypress', (e) => {
-        switch (e.key) {
-            case 'x':
-                data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
-                break;
-            case '1':
-                data.set('gizmo.type', 'translate');
-                break;
-            case '2':
-                data.set('gizmo.type', 'rotate');
-                break;
-            case '3':
-                data.set('gizmo.type', 'scale');
                 break;
         }
     });

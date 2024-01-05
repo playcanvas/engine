@@ -198,8 +198,8 @@ class GizmoTranslate extends GizmoTransform {
 
     snapIncrement = 1;
 
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(...args) {
+        super(...args);
 
         this._axisShapes = {
             yz: new AxisPlane({

@@ -85,8 +85,8 @@ class GizmoRotate extends GizmoTransform {
 
     snapIncrement = 5;
 
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(...args) {
+        super(...args);
 
         this._axisShapes = {
             z: new AxisDisk({

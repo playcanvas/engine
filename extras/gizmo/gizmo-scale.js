@@ -218,8 +218,8 @@ class GizmoScale extends GizmoTransform {
 
     snapIncrement = 1;
 
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(...args) {
+        super(...args);
 
         this._coordSpace = 'local';
 

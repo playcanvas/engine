@@ -101,8 +101,8 @@ class GizmoTransform extends Gizmo {
 
     snapIncrement = 1;
 
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(...args) {
+        super(...args);
 
         this.app.on('update', () => {
             if (!this.gizmo.enabled) {
