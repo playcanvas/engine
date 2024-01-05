@@ -20,8 +20,6 @@ class AxisPlane extends AxisShape {
 
     _gap = 0.1;
 
-    flip = false;
-
     constructor(options) {
         super(options);
 

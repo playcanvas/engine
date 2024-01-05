@@ -20,8 +20,6 @@ class AxisPlane extends AxisShape {
 
     _gap = 0.1;
 
-    flip = false;
-
     constructor(options) {
         super(options);
 
@@ -234,6 +232,7 @@ class GizmoScale extends GizmoTransform {
             }),
             yz: new AxisPlane({
                 axis: 'x',
+                flipAxis: 'y',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, -90),
                 defaultColor: this._materials.opaque.red,
@@ -241,6 +240,7 @@ class GizmoScale extends GizmoTransform {
             }),
             xz: new AxisPlane({
                 axis: 'y',
+                flipAxis: 'z',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(0, 0, 0),
                 defaultColor: this._materials.opaque.green,
@@ -248,6 +248,7 @@ class GizmoScale extends GizmoTransform {
             }),
             xy: new AxisPlane({
                 axis: 'z',
+                flipAxis: 'x',
                 layers: [this.layerGizmo.id],
                 rotation: new Vec3(90, 0, 0),
                 defaultColor: this._materials.opaque.blue,
