@@ -10,6 +10,18 @@ import {
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
+const tmpV4 = new Vec3();
+
+const xstart = new Vec3();
+const xdir = new Vec3();
+
+const e1 = new Vec3();
+const e2 = new Vec3();
+const h = new Vec3();
+const s = new Vec3();
+const q = new Vec3();
 
 // constants
 const GIZMO_LAYER_ID = 1e5;
@@ -190,12 +202,6 @@ class Gizmo extends EventHandler {
         const end = this.camera.camera.screenToWorld(x, y, this.camera.camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
-        const xstart = new Vec3();
-        const xdir = new Vec3();
-        const v1 = new Vec3();
-        const v2 = new Vec3();
-        const v3 = new Vec3();
-
         const selection = [];
         const renders = this.gizmo.findComponents('render');
         for (let i = 0; i < renders.length; i++) {
@@ -220,11 +226,11 @@ class Gizmo extends EventHandler {
                     const i2 = idx[k + 1];
                     const i3 = idx[k + 2];
 
-                    v1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-                    v2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-                    v3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+                    tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
+                    tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
+                    tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
 
-                    if (this._rayIntersectsTriangle(xstart, xdir, v1, v2, v3, tmpV1)) {
+                    if (this._rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
                         selection.push(meshInstance);
                     }
                 }
@@ -235,12 +241,6 @@ class Gizmo extends EventHandler {
     }
 
     _rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
-        const e1 = new Vec3();
-        const e2 = new Vec3();
-        const h = new Vec3();
-        const s = new Vec3();
-        const q = new Vec3();
-
         e1.sub2(v1, v0);
         e2.sub2(v2, v0);
         h.cross(dir, e2);
