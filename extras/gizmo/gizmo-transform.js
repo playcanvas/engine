@@ -311,20 +311,7 @@ class GizmoTransform extends Gizmo {
         return material;
     }
 
-    // _createLight(angles) {
-    //     const light = new Entity('light');
-    //     light.addComponent('light', {
-    //         layers: [this.layerGizmo.id]
-    //     });
-    //     light.setEulerAngles(angles);
-    //     return light;
-    // }
-
     _createTransform() {
-        // lighting
-        // const light = this._createLight(new Vec3(45, 0, -45));
-        // this.gizmo.addChild(light);
-
         // center
         this._center = new Entity('center');
         this.gizmo.addChild(this._center);
