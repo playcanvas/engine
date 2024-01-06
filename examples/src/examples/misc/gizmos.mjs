@@ -207,9 +207,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
-                axisXColor: gizmo.axisXColor,
-                axisYColor: gizmo.axisYColor,
-                axisZColor: gizmo.axisZColor,
+                axisXColor: Object.values(gizmo.axisXColor),
+                axisYColor: Object.values(gizmo.axisYColor),
+                axisZColor: Object.values(gizmo.axisZColor),
                 coordSpace: gizmo.coordSpace,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,
@@ -323,6 +323,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     const gizmoHandler = new GizmoHandler(app, camera);
     gizmoHandler.switch('translate', [boxA, boxB]);
 
+    const tmpC = new pc.Color();
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
 
@@ -351,6 +352,12 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 switch (pathArray[1]) {
                     case 'type':
                         gizmoHandler.switch(value, [boxA, boxB]);
+                        break;
+                    case 'axisXColor':
+                    case 'axisYColor':
+                    case 'axisZColor':
+                        tmpC.set(...value);
+                        gizmoHandler.gizmo[pathArray[1]] = tmpC;
                         break;
                     default:
                         gizmoHandler.gizmo[pathArray[1]] = value;

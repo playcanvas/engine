@@ -15,7 +15,6 @@ import { Gizmo } from "./gizmo.js";
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
-const tmpC1 = new Color();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
@@ -318,33 +317,30 @@ class GizmoTransform extends Gizmo {
     }
 
     set axisXColor(value) {
-        tmpC1.set(...value);
-        this._materials.axis.x.emissive = tmpC1;
+        this._materials.axis.x.emissive.copy(value);
         this._materials.axis.x.update();
     }
 
     get axisXColor() {
-        return Object.values(this._materials.axis.x.emissive);
+        return this._materials.axis.x.emissive;
     }
 
     set axisYColor(value) {
-        tmpC1.set(...value);
-        this._materials.axis.y.emissive = tmpC1;
+        this._materials.axis.y.emissive.copy(value);
         this._materials.axis.y.update();
     }
 
     get axisYColor() {
-        return Object.values(this._materials.axis.y.emissive);
+        return this._materials.axis.y.emissive;
     }
 
     set axisZColor(value) {
-        tmpC1.set(...value);
-        this._materials.axis.z.emissive = tmpC1;
+        this._materials.axis.z.emissive.copy(value);
         this._materials.axis.z.update();
     }
 
     get axisZColor() {
-        return Object.values(this._materials.axis.z.emissive);
+        return this._materials.axis.z.emissive;
     }
 }
 
