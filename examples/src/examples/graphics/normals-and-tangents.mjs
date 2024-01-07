@@ -37,9 +37,9 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
     app.init(createOptions);
 
     const assets = {
-        statue:  new pc.Asset('statue',            'container', { url: assetPath + 'models/NormalTangentTest.glb' }),
+        statue:  new pc.Asset('statue',            'container', { url: assetPath   + 'models/NormalTangentTest.glb' }),
         script:  new pc.Asset('script',            'script',    { url: scriptsPath + 'camera/orbit-camera.js' }),
-        helipad: new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: true }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
     };
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
