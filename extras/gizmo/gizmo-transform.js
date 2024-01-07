@@ -62,6 +62,8 @@ class GizmoTransform extends Gizmo {
 
     dragging = false;
 
+    snap = false;
+
     snapIncrement = 1;
 
     constructor(...args) {
@@ -126,6 +128,14 @@ class GizmoTransform extends Gizmo {
             this.dragging = false;
             this._currAxis = '';
             this._currIsPlane = false;
+        });
+
+        this.on('key:down', (key, shiftKey) => {
+            this.snap = shiftKey;
+        });
+
+        this.on('key:up', () => {
+            this.snap = false;
         });
     }
 

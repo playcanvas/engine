@@ -31,20 +31,59 @@ const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 
 class Gizmo extends EventHandler {
+    /**
+     * Internal version of the gizmo size.
+     *
+     * @type {number}
+     * @private
+     */
     _size = 1;
 
+    /**
+     * Internal version of coordinate space.
+     *
+     * @type {string}
+     * @private
+     */
     _coordSpace = 'world';
 
+    /**
+     * The application instance containing the gizmo.
+     *
+     * @type {import('playcanvas').AppBase}
+     */
     app;
 
+    /**
+     * The camera entity that displays the gizmo.
+     *
+     * @type {Entity}
+     */
     camera;
 
+    /**
+     * The graph nodes attached to the gizmo.
+     *
+     * @type {import('playcanvas').GraphNode}
+     */
     nodes = [];
 
+    /**
+     * The root gizmo entity.
+     *
+     * @type {import('playcanvas').Entity}
+     */
     gizmo;
 
-    snap = false;
 
+    /**
+     * Creates a new Gizmo object.
+     *
+     * @param {import('playcanvas').AppBase} app - The application instance.
+     * @param {Entity} camera - The camera entity.
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera);
+     */
     constructor(app, camera) {
         super();
 
@@ -54,7 +93,7 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        this.updateScale();
+        this._updateScale();
 
         this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -80,13 +119,13 @@ class Gizmo extends EventHandler {
             if (!this.gizmo.enabled) {
                 return;
             }
-            this.snap = e.shiftKey;
+            this.fire('key:down', e.key, e.shiftKey, e.metaKey);
         };
         this._onKeyUp = (e) => {
             if (!this.gizmo.enabled) {
                 return;
             }
-            this.snap = false;
+            this.fire('key:up');
         };
 
         app.on('destroy', () => this.detach());
@@ -94,7 +133,7 @@ class Gizmo extends EventHandler {
 
     set coordSpace(value) {
         this._coordSpace = value ?? 'world';
-        this.updateRotation();
+        this._updateRotation();
         this.fire('coordSpace:set', this._coordSpace);
     }
 
@@ -104,7 +143,7 @@ class Gizmo extends EventHandler {
 
     set size(value) {
         this._size = value;
-        this.updateScale();
+        this._updateScale();
         this.fire('size:set', this._size);
     }
 
@@ -142,6 +181,50 @@ class Gizmo extends EventHandler {
         this.gizmo = new Entity('gizmo');
         this.app.root.addChild(this.gizmo);
         this.gizmo.enabled = false;
+    }
+
+    _updatePosition() {
+        tmpV1.set(0, 0, 0);
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            tmpV1.add(node.getPosition());
+        }
+        tmpV1.scale(1.0 / this.nodes.length);
+        this.gizmo.setPosition(tmpV1);
+
+        this.fire('position:set', tmpV1);
+    }
+
+    _updateRotation() {
+        if (this._coordSpace === 'local') {
+            tmpV1.set(0, 0, 0);
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                tmpV1.add(node.getEulerAngles());
+            }
+            tmpV1.scale(1.0 / this.nodes.length);
+            this.gizmo.setEulerAngles(tmpV1);
+        } else {
+            tmpV1.set(0, 0, 0);
+            this.gizmo.setEulerAngles(tmpV1);
+        }
+
+        this.fire('eulerAngles:set', tmpV1);
+    }
+
+    _updateScale() {
+        let scale = 1;
+        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
+        } else {
+            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
+        }
+        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
+        tmpV1.set(scale, scale, scale);
+        this.gizmo.setLocalScale(tmpV1);
+
+        this.fire('scale:set', tmpV1);
+
     }
 
     _getSelection(x, y) {
@@ -218,10 +301,18 @@ class Gizmo extends EventHandler {
         return false;
     }
 
-    attach(nodes) {
+    /**
+     * Attach an array of graph nodes to the gizmo.
+     *
+     * @param {import('playcanvas').GraphNode} [nodes] - The graph nodes. Defaults to [].
+     * @example
+     * const gizmo = new pcx.Gizmo();
+     * gizmo.attach([boxA, boxB]);
+     */
+    attach(nodes = []) {
         this.nodes = nodes;
-        this.updatePosition();
-        this.updateRotation();
+        this._updatePosition();
+        this._updateRotation();
 
         window.addEventListener('pointermove', this._onPointerMove);
         window.addEventListener('pointerdown', this._onPointerDown);
@@ -234,6 +325,14 @@ class Gizmo extends EventHandler {
         this.gizmo.enabled = true;
     }
 
+    /**
+     * Detaches all graph nodes from the gizmo.
+     *
+     * @example
+     * const gizmo = new pcx.Gizmo();
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.detach();
+     */
     detach() {
         this.gizmo.enabled = false;
 
@@ -246,50 +345,6 @@ class Gizmo extends EventHandler {
         window.removeEventListener('pointerup', this._onPointerUp);
         window.removeEventListener('keydown', this._onKeyDown);
         window.removeEventListener('keyup', this._onKeyUp);
-    }
-
-    updatePosition() {
-        tmpV1.set(0, 0, 0);
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            tmpV1.add(node.getPosition());
-        }
-        tmpV1.scale(1.0 / this.nodes.length);
-        this.gizmo.setPosition(tmpV1);
-
-        this.fire('position:set', tmpV1);
-    }
-
-    updateRotation() {
-        if (this._coordSpace === 'local') {
-            tmpV1.set(0, 0, 0);
-            for (let i = 0; i < this.nodes.length; i++) {
-                const node = this.nodes[i];
-                tmpV1.add(node.getEulerAngles());
-            }
-            tmpV1.scale(1.0 / this.nodes.length);
-            this.gizmo.setEulerAngles(tmpV1);
-        } else {
-            tmpV1.set(0, 0, 0);
-            this.gizmo.setEulerAngles(tmpV1);
-        }
-
-        this.fire('eulerAngles:set', tmpV1);
-    }
-
-    updateScale() {
-        let scale = 1;
-        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
-            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
-        } else {
-            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
-        }
-        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
-        tmpV1.set(scale, scale, scale);
-        this.gizmo.setLocalScale(tmpV1);
-
-        this.fire('scale:set', tmpV1);
-
     }
 }
 

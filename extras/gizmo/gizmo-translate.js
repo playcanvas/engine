@@ -226,7 +226,7 @@ class GizmoTranslate extends GizmoTransform {
             }
         }
 
-        this.updatePosition();
+        this._updatePosition();
     }
 }
 
