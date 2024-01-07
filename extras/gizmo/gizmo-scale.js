@@ -304,6 +304,14 @@ class GizmoScale extends GizmoTransform {
             this._setNodeScales(offset);
             this._checkForPlaneFlip();
         });
+
+        this.on('nodes:attach', () => {
+            this._checkForPlaneFlip();
+        });
+
+        this.on('nodes:detach', () => {
+            this._nodeScales.clear();
+        });
     }
 
     set coordSpace(value) {
@@ -417,18 +425,6 @@ class GizmoScale extends GizmoTransform {
             const node = this.nodes[i];
             node.setLocalScale(this._nodeScales.get(node).clone().mul(point));
         }
-    }
-
-    attach(nodes) {
-        super.attach(nodes);
-
-        this._checkForPlaneFlip();
-    }
-
-    detach() {
-        this._nodeScales.clear();
-
-        super.detach();
     }
 }
 

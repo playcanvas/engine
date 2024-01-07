@@ -279,6 +279,15 @@ class GizmoTranslate extends GizmoTransform {
         this.on('coordSpace:set', () => {
             this._checkForPlaneFlip();
         });
+
+        this.on('nodes:attach', () => {
+            this._checkForPlaneFlip();
+        });
+
+        this.on('nodes:detach', () => {
+            this._nodeLocalPositions.clear();
+            this._nodePositions.clear();
+        });
     }
 
     set axisGap(value) {
@@ -398,19 +407,6 @@ class GizmoTranslate extends GizmoTransform {
         }
 
         this.updateGizmoPosition();
-    }
-
-    attach(nodes) {
-        super.attach(nodes);
-
-        this._checkForPlaneFlip();
-    }
-
-    detach() {
-        this._nodeLocalPositions.clear();
-        this._nodePositions.clear();
-
-        super.detach();
     }
 }
 

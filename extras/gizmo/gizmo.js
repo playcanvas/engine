@@ -99,6 +99,7 @@ class Gizmo extends EventHandler {
     set size(value) {
         this._size = value;
         this.updateGizmoScale();
+        this.fire('size:set', this._size);
     }
 
     get size() {
@@ -116,11 +117,15 @@ class Gizmo extends EventHandler {
         window.addEventListener('keydown', this._onKeyDown);
         window.addEventListener('keyup', this._onKeyUp);
 
+        this.fire('nodes:attach');
+
         this.gizmo.enabled = true;
     }
 
     detach() {
         this.gizmo.enabled = false;
+
+        this.fire('nodes:detach');
 
         this.nodes = [];
 

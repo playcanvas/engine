@@ -91,6 +91,8 @@ class GizmoTransform extends Gizmo {
 
     _rotation = false;
 
+    _center;
+
     dragging = false;
 
     elements;

@@ -141,6 +141,16 @@ class GizmoRotate extends GizmoTransform {
         this.on('coordSpace:set', () => {
             this._setFacingDisks();
         });
+
+        this.on('nodes:attach', () => {
+            this._setFacingDisks();
+        });
+
+        this.on('nodes:detach', () => {
+            this._nodeLocalRotations.clear();
+            this._nodeRotations.clear();
+            this._nodeOffsets.clear();
+        });
     }
 
     set tubeRadius(value) {
@@ -237,20 +247,6 @@ class GizmoRotate extends GizmoTransform {
         if (this._coordSpace === 'local') {
             this.updateGizmoRotation();
         }
-    }
-
-    attach(nodes) {
-        super.attach(nodes);
-
-        this._setFacingDisks();
-    }
-
-    detach() {
-        this._nodeLocalRotations.clear();
-        this._nodeRotations.clear();
-        this._nodeOffsets.clear();
-
-        super.detach();
     }
 }
 
