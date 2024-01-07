@@ -73,6 +73,10 @@ class GizmoTransform extends Gizmo {
 
     _guideLineColor = new Color(1, 1, 1, 0.8);
 
+    _shapeMap = new Map();
+
+    _hoverShape;
+
     _hoverAxis = '';
 
     _hoverIsPlane = false;
@@ -87,11 +91,7 @@ class GizmoTransform extends Gizmo {
 
     _offset = new Vec3();
 
-    _shapeMap = new Map();
-
-    _hoverShape;
-
-    _rotation = false;
+    _isRotation = false;
 
     _center;
 
@@ -206,7 +206,7 @@ class GizmoTransform extends Gizmo {
         const planeNormal = new Vec3();
         const axis = this._currAxis;
         const isPlane = this._currIsPlane;
-        const isRotation = this._rotation;
+        const isRotation = this._isRotation;
         const isAllAxes = axis === 'xyz';
         const isFacing = axis === 'face';
 
@@ -272,6 +272,7 @@ class GizmoTransform extends Gizmo {
             }
         }
 
+        // calculate angle based on axis
         let angle = 0;
         if (isRotation) {
             switch (axis) {
