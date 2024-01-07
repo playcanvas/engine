@@ -1,76 +1,15 @@
 import {
-    createTorus,
-    MeshInstance,
-    Entity,
     Quat,
     Vec3
 } from 'playcanvas';
 
-import { AxisShape, GizmoTransform } from "./gizmo-transform.js";
+import { AxisDisk } from './axis-shapes.js';
+import { GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
-
-class AxisDisk extends AxisShape {
-    _device;
-
-    _tubeRadius = 0.02;
-
-    _ringRadius = 0.55;
-
-    constructor(options = {}) {
-        super(options);
-
-        this._device = options.device;
-        this._ringRadius = options.ringRadius ?? this._ringRadius;
-        this._createDisk(options.layers ?? []);
-    }
-
-    _createDisk(layers) {
-        const mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
-        const meshInstance = new MeshInstance(mesh, this._defaultColor);
-
-        this.entity = new Entity('disk_' + this.axis);
-        this.entity.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: layers,
-            castShadows: false
-        });
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
-        this.meshInstances.push(meshInstance);
-    }
-
-    set tubeRadius(value) {
-        this._tubeRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
-    }
-
-    get tubeRadius() {
-        return this._tubeRadius;
-    }
-
-    set ringRadius(value) {
-        this._ringRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
-    }
-
-    get ringRadius() {
-        return this._ringRadius;
-    }
-}
 
 class GizmoRotate extends GizmoTransform {
     _axisShapes = {
@@ -120,8 +59,8 @@ class GizmoRotate extends GizmoTransform {
 
     snapIncrement = 5;
 
-    constructor(...args) {
-        super(...args);
+    constructor(app, ...args) {
+        super(app, ...args);
 
         this._createTransform();
 
@@ -199,7 +138,7 @@ class GizmoRotate extends GizmoTransform {
 
         // guide ring
         this._ring = new AxisDisk({
-            app: this.app,
+            device: this.app.graphicsDevice,
             layers: [this.layerGizmo.id],
             defaultColor: this._materials.semi.white
         });

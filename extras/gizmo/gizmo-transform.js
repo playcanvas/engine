@@ -20,41 +20,6 @@ const tmpQ1 = new Quat();
 const VEC3_AXES = Object.keys(tmpV1);
 const GUIDELINE_SIZE = 1e3;
 
-class AxisShape {
-    _position;
-
-    _rotation;
-
-    _scale;
-
-    _defaultColor;
-
-    _hoverColor;
-
-    axis;
-
-    entity;
-
-    meshInstances = [];
-
-    constructor(options) {
-        this.axis = options.axis ?? 'x';
-        this._position = options.position ?? new Vec3();
-        this._rotation = options.rotation ?? new Vec3();
-        this._scale = options.scale ?? new Vec3(1, 1, 1);
-
-        this._defaultColor = options.defaultColor ?? Color.BLACK;
-        this._hoverColor = options.hoverColor ?? Color.WHITE;
-    }
-
-    hover(state) {
-        const material = state ? this._hoverColor : this._defaultColor;
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i].material = material;
-        }
-    }
-}
-
 class GizmoTransform extends Gizmo {
     _materials = {
         axis: {
@@ -345,4 +310,4 @@ class GizmoTransform extends Gizmo {
     }
 }
 
-export { AxisShape, GizmoTransform };
+export { GizmoTransform };
