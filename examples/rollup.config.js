@@ -64,7 +64,8 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-let { NODE_ENV = '', ENGINE_PATH = '' } = process.env;
+const { NODE_ENV = '' } = process.env;
+let { ENGINE_PATH = '' } = process.env;
 
 // If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
 // requires no additional build shells.

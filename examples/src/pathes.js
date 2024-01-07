@@ -6,7 +6,7 @@ const href = location.href;
  * const assetPath = getAssetPath(); // 'http://127.0.0.1/playcanvas-engine/examples/assets/'
  * // Test output for href:
  * // http://127.0.0.1/playcanvas-engine/examples/src/examples/animation/test-examples.html
- * @returns {string}
+ * @returns {string} The path to assets.
  */
 function getAssetPath() {
     const i = href.indexOf("/examples/");
@@ -15,12 +15,12 @@ function getAssetPath() {
     }
     return href.substring(0, i) + "/examples/assets/";
 }
-var assetPath = getAssetPath();
+const assetPath = getAssetPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * http://127.0.0.1/playcanvas-engine/examples/../build/playcanvas.d.ts
- * @returns {string}
+ * @returns {string} The path to playcanvas.d.ts.
  */
 function getPlayCanvasTypes() {
     const i = href.indexOf("/examples/");
@@ -29,13 +29,13 @@ function getPlayCanvasTypes() {
     }
     return href.substring(0, i) + "/build/playcanvas.d.ts";
 }
-var pcTypes = getPlayCanvasTypes();
+const pcTypes = getPlayCanvasTypes(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getScriptsPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/scripts/'
- * @returns {string}
+ * @returns {string} The path to scripts.
  */
 function getScriptsPath() {
     const i = href.indexOf("/examples/");
@@ -44,28 +44,28 @@ function getScriptsPath() {
     }
     return href.substring(0, i) + "/scripts/";
 }
-var scriptsPath = getScriptsPath();
+const scriptsPath = getScriptsPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getIframePath());
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
- * @returns {string}
+ * @returns {string} The path to iframe.
  */
 function getIframePath() {
-    const i = href.indexOf("/examples/")
+    const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/iframe/';
     }
     return href.substring(0, i) + "/examples/src/iframe/";
 }
-var iframePath = getIframePath();
+const iframePath = getIframePath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getAmmoPath());
  * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/ammo/";
- * @returns {string}
+ * @returns {string} The path to ammo.
  */
 function getAmmoPath() {
     const i = href.indexOf("/examples/");
@@ -74,13 +74,13 @@ function getAmmoPath() {
     }
     return href.substring(0, i) + "/examples/src/lib/ammo/";
 }
-var ammoPath = getAmmoPath();
+const ammoPath = getAmmoPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getBasisPath());
  * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/basis/";
- * @returns {string}
+ * @returns {string} The path to basis.
  */
 function getBasisPath() {
     const i = href.indexOf("/examples/");
@@ -89,13 +89,13 @@ function getBasisPath() {
     }
     return href.substring(0, i) + "/examples/src/lib/basis/";
 }
-var basisPath = getBasisPath();
+const basisPath = getBasisPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/draco/'
- * @returns {string}
+ * @returns {string} The path to draco.
  */
 function getDracoPath() {
     const i = href.indexOf("/examples/");
@@ -104,13 +104,13 @@ function getDracoPath() {
     }
     return href.substring(0, i) + "/examples/src/lib/draco/";
 }
-var dracoPath = getDracoPath();
+const dracoPath = getDracoPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/glslang/'
- * @returns {string}
+ * @returns {string} The path to glslang.
  */
 function getGlslangPath() {
     const i = href.indexOf("/examples/");
@@ -119,13 +119,13 @@ function getGlslangPath() {
     }
     return href.substring(0, i) + "/examples/src/lib/glslang/";
 }
-var glslangPath = getGlslangPath();
+const glslangPath = getGlslangPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/twgsl/'
- * @returns {string}
+ * @returns {string} The path to twgsl.
  */
 function getTwgslPath() {
     const i = href.indexOf("/examples/");
@@ -134,13 +134,13 @@ function getTwgslPath() {
     }
     return href.substring(0, i) + "/examples/src/lib/twgsl/";
 }
-var twgslPath = getTwgslPath();
+const twgslPath = getTwgslPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /**
  * @example
  * console.log(getIframePath());
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
- * @returns {string}
+ * @returns {string} The path to iframe.
  */
 function getThumbnailPath() {
     const i = href.indexOf("/examples/");
@@ -149,4 +149,4 @@ function getThumbnailPath() {
     }
     return href.substring(0, i) + "/examples/dist/thumbnails/";
 }
-var thumbnailPath = getThumbnailPath();
+const thumbnailPath = getThumbnailPath(); // eslint-disable-line @typescript-eslint/no-unused-vars
