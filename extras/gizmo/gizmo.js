@@ -161,19 +161,19 @@ class Gizmo extends EventHandler {
     _createLayer() {
         const layerMap = this.app.scene.layers.layerIdMap;
         if (layerMap.has(GIZMO_LAYER_ID)) {
-            this.layerGizmo = layerMap.get(GIZMO_LAYER_ID);
+            this.layer = layerMap.get(GIZMO_LAYER_ID);
         } else {
-            this.layerGizmo = new Layer({
+            this.layer = new Layer({
                 id: GIZMO_LAYER_ID,
                 name: 'Gizmo',
                 clearDepthBuffer: true,
                 opaqueSortMode: SORTMODE_NONE,
                 transparentSortMode: SORTMODE_NONE
             });
-            this.app.scene.layers.push(this.layerGizmo);
+            this.app.scene.layers.push(this.layer);
         }
-        if (this.camera.camera.layers.indexOf(this.layerGizmo.id) === -1) {
-            this.camera.camera.layers = this.camera.camera.layers.concat(this.layerGizmo.id);
+        if (this.camera.camera.layers.indexOf(this.layer.id) === -1) {
+            this.camera.camera.layers = this.camera.camera.layers.concat(this.layer.id);
         }
     }
 

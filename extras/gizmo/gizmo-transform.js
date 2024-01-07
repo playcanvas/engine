@@ -273,7 +273,7 @@ class GizmoTransform extends Gizmo {
         tmpV2.copy(tmpV1).scale(-1);
         tmpQ1.transformVector(tmpV1, tmpV1);
         tmpQ1.transformVector(tmpV2, tmpV2);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true, this.layerGizmo);
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true);
     }
 
     _createMaterial(color) {

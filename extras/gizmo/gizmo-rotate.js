@@ -16,7 +16,7 @@ class GizmoRotate extends GizmoTransform {
         z: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'z',
-            layers: [this.layerGizmo.id],
+            layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z,
             hoverColor: this._materials.hover
@@ -24,7 +24,7 @@ class GizmoRotate extends GizmoTransform {
         x: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'x',
-            layers: [this.layerGizmo.id],
+            layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x,
             hoverColor: this._materials.hover
@@ -32,7 +32,7 @@ class GizmoRotate extends GizmoTransform {
         y: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'y',
-            layers: [this.layerGizmo.id],
+            layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y,
             hoverColor: this._materials.hover
@@ -40,7 +40,7 @@ class GizmoRotate extends GizmoTransform {
         face: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'face',
-            layers: [this.layerGizmo.id],
+            layers: [this.layer.id],
             defaultColor: this._materials.semi.yellow,
             hoverColor: this._materials.hover,
             ringRadius: 0.8
@@ -139,7 +139,7 @@ class GizmoRotate extends GizmoTransform {
         // guide ring
         this._ring = new AxisDisk({
             device: this.app.graphicsDevice,
-            layers: [this.layerGizmo.id],
+            layers: [this.layer.id],
             defaultColor: this._materials.semi.white
         });
         this._center.addChild(this._ring.entity);
