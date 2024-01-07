@@ -184,7 +184,7 @@ class GizmoRotate extends GizmoTransform {
         }
 
         if (this._coordSpace === 'local') {
-            this.updateGizmoRotation();
+            this.updateRotation();
         }
     }
 }

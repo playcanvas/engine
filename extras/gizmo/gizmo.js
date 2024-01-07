@@ -54,7 +54,7 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        this.updateGizmoScale();
+        this.updateScale();
 
         this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -94,7 +94,7 @@ class Gizmo extends EventHandler {
 
     set coordSpace(value) {
         this._coordSpace = value ?? 'world';
-        this.updateGizmoRotation();
+        this.updateRotation();
         this.fire('coordSpace:set', this._coordSpace);
     }
 
@@ -104,7 +104,7 @@ class Gizmo extends EventHandler {
 
     set size(value) {
         this._size = value;
-        this.updateGizmoScale();
+        this.updateScale();
         this.fire('size:set', this._size);
     }
 
@@ -220,8 +220,8 @@ class Gizmo extends EventHandler {
 
     attach(nodes) {
         this.nodes = nodes;
-        this.updateGizmoPosition();
-        this.updateGizmoRotation();
+        this.updatePosition();
+        this.updateRotation();
 
         window.addEventListener('pointermove', this._onPointerMove);
         window.addEventListener('pointerdown', this._onPointerDown);
@@ -248,7 +248,7 @@ class Gizmo extends EventHandler {
         window.removeEventListener('keyup', this._onKeyUp);
     }
 
-    updateGizmoPosition() {
+    updatePosition() {
         tmpV1.set(0, 0, 0);
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -256,22 +256,28 @@ class Gizmo extends EventHandler {
         }
         tmpV1.scale(1.0 / this.nodes.length);
         this.gizmo.setPosition(tmpV1);
+
+        this.fire('position:set', tmpV1);
     }
 
-    updateGizmoRotation() {
+    updateRotation() {
         if (this._coordSpace === 'local') {
             tmpV1.set(0, 0, 0);
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
                 tmpV1.add(node.getEulerAngles());
             }
-            this.gizmo.setEulerAngles(tmpV1.scale(1.0 / this.nodes.length));
+            tmpV1.scale(1.0 / this.nodes.length);
+            this.gizmo.setEulerAngles(tmpV1);
         } else {
-            this.gizmo.setEulerAngles(0, 0, 0);
+            tmpV1.set(0, 0, 0);
+            this.gizmo.setEulerAngles(tmpV1);
         }
+
+        this.fire('eulerAngles:set', tmpV1);
     }
 
-    updateGizmoScale() {
+    updateScale() {
         let scale = 1;
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
             scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
@@ -279,7 +285,11 @@ class Gizmo extends EventHandler {
             scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
-        this.gizmo.setLocalScale(scale, scale, scale);
+        tmpV1.set(scale, scale, scale);
+        this.gizmo.setLocalScale(tmpV1);
+
+        this.fire('scale:set', tmpV1);
+
     }
 }
 
