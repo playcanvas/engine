@@ -106,70 +106,6 @@ class Gizmo extends EventHandler {
         return this._size;
     }
 
-    attach(nodes) {
-        this.nodes = nodes;
-        this.updateGizmoPosition();
-        this.updateGizmoRotation();
-
-        window.addEventListener('pointermove', this._onPointerMove);
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointerup', this._onPointerUp);
-        window.addEventListener('keydown', this._onKeyDown);
-        window.addEventListener('keyup', this._onKeyUp);
-
-        this.fire('nodes:attach');
-
-        this.gizmo.enabled = true;
-    }
-
-    detach() {
-        this.gizmo.enabled = false;
-
-        this.fire('nodes:detach');
-
-        this.nodes = [];
-
-        window.removeEventListener('pointermove', this._onPointerMove);
-        window.removeEventListener('pointerdown', this._onPointerDown);
-        window.removeEventListener('pointerup', this._onPointerUp);
-        window.removeEventListener('keydown', this._onKeyDown);
-        window.removeEventListener('keyup', this._onKeyUp);
-    }
-
-    updateGizmoPosition() {
-        tmpV1.set(0, 0, 0);
-        for (let i = 0; i < this.nodes.length; i++) {
-            const node = this.nodes[i];
-            tmpV1.add(node.getPosition());
-        }
-        tmpV1.scale(1.0 / this.nodes.length);
-        this.gizmo.setPosition(tmpV1);
-    }
-
-    updateGizmoRotation() {
-        if (this._coordSpace === 'local') {
-            tmpV1.set(0, 0, 0);
-            for (let i = 0; i < this.nodes.length; i++) {
-                const node = this.nodes[i];
-                tmpV1.add(node.getEulerAngles());
-            }
-            this.gizmo.setEulerAngles(tmpV1.scale(1.0 / this.nodes.length));
-        } else {
-            this.gizmo.setEulerAngles(0, 0, 0);
-        }
-    }
-
-    updateGizmoScale() {
-        let scale = 1;
-        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
-            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
-        } else {
-            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
-        }
-        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
-        this.gizmo.setLocalScale(scale, scale, scale);
-    }
-
     _getProjFrustumWidth() {
         const gizmoPos = this.gizmo.getPosition();
         const cameraPos = this.camera.getPosition();
@@ -274,6 +210,70 @@ class Gizmo extends EventHandler {
         }
 
         return false;
+    }
+
+    attach(nodes) {
+        this.nodes = nodes;
+        this.updateGizmoPosition();
+        this.updateGizmoRotation();
+
+        window.addEventListener('pointermove', this._onPointerMove);
+        window.addEventListener('pointerdown', this._onPointerDown);
+        window.addEventListener('pointerup', this._onPointerUp);
+        window.addEventListener('keydown', this._onKeyDown);
+        window.addEventListener('keyup', this._onKeyUp);
+
+        this.fire('nodes:attach');
+
+        this.gizmo.enabled = true;
+    }
+
+    detach() {
+        this.gizmo.enabled = false;
+
+        this.fire('nodes:detach');
+
+        this.nodes = [];
+
+        window.removeEventListener('pointermove', this._onPointerMove);
+        window.removeEventListener('pointerdown', this._onPointerDown);
+        window.removeEventListener('pointerup', this._onPointerUp);
+        window.removeEventListener('keydown', this._onKeyDown);
+        window.removeEventListener('keyup', this._onKeyUp);
+    }
+
+    updateGizmoPosition() {
+        tmpV1.set(0, 0, 0);
+        for (let i = 0; i < this.nodes.length; i++) {
+            const node = this.nodes[i];
+            tmpV1.add(node.getPosition());
+        }
+        tmpV1.scale(1.0 / this.nodes.length);
+        this.gizmo.setPosition(tmpV1);
+    }
+
+    updateGizmoRotation() {
+        if (this._coordSpace === 'local') {
+            tmpV1.set(0, 0, 0);
+            for (let i = 0; i < this.nodes.length; i++) {
+                const node = this.nodes[i];
+                tmpV1.add(node.getEulerAngles());
+            }
+            this.gizmo.setEulerAngles(tmpV1.scale(1.0 / this.nodes.length));
+        } else {
+            this.gizmo.setEulerAngles(0, 0, 0);
+        }
+    }
+
+    updateGizmoScale() {
+        let scale = 1;
+        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
+        } else {
+            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
+        }
+        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
+        this.gizmo.setLocalScale(scale, scale, scale);
     }
 }
 
