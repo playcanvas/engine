@@ -87,17 +87,15 @@ class GizmoTransform extends Gizmo {
 
     _offset = new Vec3();
 
-    _hoverElement;
+    _shapeMap = new Map();
+
+    _hoverShape;
 
     _rotation = false;
 
     _center;
 
     dragging = false;
-
-    elements;
-
-    elementMap = new Map();
 
     snapIncrement = 1;
 
@@ -186,17 +184,17 @@ class GizmoTransform extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane =  this._getIsPlane(meshInstance);
-        const shape = this.elementMap.get(meshInstance);
-        if (shape === this._hoverElement) {
+        const shape = this._shapeMap.get(meshInstance);
+        if (shape === this._hoverShape) {
             return;
         }
-        if (this._hoverElement) {
-            this._hoverElement.hover(false);
-            this._hoverElement = null;
+        if (this._hoverShape) {
+            this._hoverShape.hover(false);
+            this._hoverShape = null;
         }
         if (shape) {
             shape.hover(true);
-            this._hoverElement = shape;
+            this._hoverShape = shape;
         }
     }
 

@@ -188,12 +188,12 @@ class GizmoRotate extends GizmoTransform {
     _createTransform() {
         super._createTransform();
 
-        // elements
+        // shapes
         for (const key in this._axisShapes) {
             const shape = this._axisShapes[key];
             this._center.addChild(shape.entity);
             for (let i = 0; i < shape.meshInstances.length; i++) {
-                this.elementMap.set(shape.meshInstances[i], shape);
+                this._shapeMap.set(shape.meshInstances[i], shape);
             }
         }
 
