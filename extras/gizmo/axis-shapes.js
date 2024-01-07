@@ -10,11 +10,7 @@ import {
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
-
-// constants
-const VEC3_AXES = Object.keys(tmpV1);
 
 class AxisShape {
     _position;
@@ -356,14 +352,9 @@ class AxisPlane extends AxisShape {
     }
 
     _getPosition() {
-        const position = new Vec3();
-        for (let i = 0; i < VEC3_AXES.length; i++) {
-            const axis = VEC3_AXES[i];
-            if (axis === this.axis) {
-                continue;
-            }
-            position[axis] = this._size / 2 + this._gap;
-        }
+        const offset = this._size / 2 + this._gap;
+        const position = new Vec3(offset, offset, offset);
+        position[this.axis] = 0;
         return position;
     }
 
@@ -401,15 +392,15 @@ class AxisPlane extends AxisShape {
     }
 
     checkForFlip(screenDir) {
-        tmpV2.set(0, 1, 0);
-        tmpQ1.copy(this.entity.getRotation()).transformVector(tmpV2, tmpV2);
-        const dot = screenDir.dot(tmpV2);
+        tmpV1.set(0, 1, 0);
+        tmpQ1.copy(this.entity.getRotation()).transformVector(tmpV1, tmpV1);
+        const dot = screenDir.dot(tmpV1);
         if (dot > 0) {
             return;
         }
-        tmpV3.copy(this.entity.getLocalEulerAngles());
-        tmpV3[this._flipAxis] = 180 - tmpV3[this._flipAxis];
-        this.entity.setLocalEulerAngles(tmpV3);
+        tmpV2.copy(this.entity.getLocalEulerAngles());
+        tmpV2[this._flipAxis] = 180 - tmpV2[this._flipAxis];
+        this.entity.setLocalEulerAngles(tmpV2);
     }
 }
 
