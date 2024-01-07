@@ -43,7 +43,7 @@ class Gizmo extends EventHandler {
      * Internal version of coordinate space.
      *
      * @type {string}
-     * @private
+     * @protected
      */
     _coordSpace = 'world';
 
