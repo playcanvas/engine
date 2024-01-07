@@ -77,9 +77,15 @@ class Gizmo extends EventHandler {
             this.fire('pointer:up');
         };
         this._onKeyDown = (e) => {
+            if (!this.gizmo.enabled) {
+                return;
+            }
             this.snap = e.shiftKey;
         };
         this._onKeyUp = (e) => {
+            if (!this.gizmo.enabled) {
+                return;
+            }
             this.snap = false;
         };
 
