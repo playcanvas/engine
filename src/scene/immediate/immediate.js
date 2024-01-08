@@ -128,7 +128,7 @@ class Immediate {
             ${shaderChunks.screenDepthPS}
             varying vec2 uv0;
             void main() {
-                float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                float depth = getLinearScreenDepth(getImageEffectUV(uv0)) * camera_params.x;
                 gl_FragColor = vec4(vec3(depth), 1.0);
             }
         `);
