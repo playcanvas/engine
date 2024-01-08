@@ -167,12 +167,6 @@ class XrInputSource extends EventHandler {
     _hitTestSources = [];
 
     /**
-     * @type {Set<import('./xr-hit-test-source.js').XrHitTestSource>}
-     * @ignore
-     */
-    hitTestSourcesSet = new Set();
-
-    /**
      * Create a new XrInputSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -660,6 +654,7 @@ class XrInputSource extends EventHandler {
      * });
      */
     hitTestStart(options = {}) {
+        options.inputSource = this;
         options.profile = this._xrInputSource.profiles[0];
 
         const callback = options.callback;
@@ -677,21 +672,20 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceAdd(hitTestSource) {
-        this.hitTestSourcesSet.add(hitTestSource);
         this._hitTestSources.push(hitTestSource);
 
         this.fire('hittest:add', hitTestSource);
 
-        hitTestSource.on('result', function (position, rotation, inputSource) {
+        hitTestSource.on('result', (position, rotation, inputSource) => {
             if (inputSource !== this)
                 return;
 
             this.fire('hittest:result', hitTestSource, position, rotation);
-        }, this);
-        hitTestSource.once('remove', function () {
+        });
+        hitTestSource.once('remove', () => {
             this.onHitTestSourceRemove(hitTestSource);
             this.fire('hittest:remove', hitTestSource);
-        }, this);
+        });
     }
 
     /**
@@ -700,7 +694,6 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceRemove(hitTestSource) {
-        this.hitTestSourcesSet.delete(hitTestSource);
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }
