@@ -14,6 +14,14 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, files }) {
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+
+    // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
+    // size and those are very small otherwise. This is not a proper solution, and only a temporary
+    // workaround specifically for this example use case.
+    if (device.isWebGPU) {
+        device.maxPixelRatio = 0.2;
+    }
+
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
 
