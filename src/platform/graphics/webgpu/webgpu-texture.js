@@ -384,6 +384,14 @@ class WebgpuTexture {
             if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
+
+            // update vram stats
+            if (texture._gpuSize) {
+                texture.adjustVramSizeTracking(device._vram, -texture._gpuSize);
+            }
+
+            texture._gpuSize = texture.gpuSize;
+            texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
         }
     }
 
