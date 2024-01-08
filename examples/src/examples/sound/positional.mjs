@@ -4,10 +4,47 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
+async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
 
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+    createOptions.soundManager = new pc.SoundManager();
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.SoundComponentSystem,
+        pc.AnimationComponentSystem,
+        pc.AnimComponentSystem,
+        pc.ModelComponentSystem,
+        pc.AudioListenerComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+        // @ts-ignore
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.AudioHandler,
+        // @ts-ignore
+        pc.JsonHandler,
+        // @ts-ignore
+        pc.AnimationHandler,
+        // @ts-ignore
+        pc.ModelHandler,
+        // @ts-ignore
+        pc.MaterialHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -117,6 +154,7 @@ async function example({ canvas, assetPath }) {
 
 class PositionalExample {
     static CATEGORY = 'Sound';
+    static WEBGPU_ENABLED = false; // Failed to transpile webgl fragment shader.
     static example = example;
 }
 

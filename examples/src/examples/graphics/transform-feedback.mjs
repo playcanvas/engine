@@ -6,9 +6,31 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files, assetPath }) {
-    // Create the app and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, files, assetPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+        // @ts-ignore
+        pc.ContainerHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assets = {
         'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
@@ -162,6 +184,7 @@ async function example({ canvas, files, assetPath }) {
 
 export class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
+    static WEBGPU_ENABLED = false; // No errors, but screen is completely black.
     static FILES = {
         'shaderFeedback.vert': /* glsl */`
 // vertex shader used to move particles during transform-feedback simulation step
