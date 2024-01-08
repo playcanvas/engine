@@ -136,6 +136,50 @@ class GizmoTransform extends Gizmo {
         });
     }
 
+    set axisXColor(value) {
+        this._materials.axis.x.emissive.copy(value);
+        this._materials.axis.x.update();
+    }
+
+    get axisXColor() {
+        return this._materials.axis.x.emissive;
+    }
+
+    set axisYColor(value) {
+        this._materials.axis.y.emissive.copy(value);
+        this._materials.axis.y.update();
+    }
+
+    get axisYColor() {
+        return this._materials.axis.y.emissive;
+    }
+
+    set axisZColor(value) {
+        this._materials.axis.z.emissive.copy(value);
+        this._materials.axis.z.update();
+    }
+
+    get axisZColor() {
+        return this._materials.axis.z.emissive;
+    }
+
+    set hoverColor(value) {
+        this._materials.hover.emissive.copy(value);
+        this._materials.hover.update();
+    }
+
+    get hoverColor() {
+        return this._materials.hover.emissive;
+    }
+
+    set guideLineColor(value) {
+        this._guideLineColor.copy(value);
+    }
+
+    get guideLineColor() {
+        return this._guideLineColor;
+    }
+
     _getAxis(meshInstance) {
         if (!meshInstance) {
             return '';
@@ -287,50 +331,6 @@ class GizmoTransform extends Gizmo {
         // center
         this._center = new Entity('center');
         this.gizmo.addChild(this._center);
-    }
-
-    set axisXColor(value) {
-        this._materials.axis.x.emissive.copy(value);
-        this._materials.axis.x.update();
-    }
-
-    get axisXColor() {
-        return this._materials.axis.x.emissive;
-    }
-
-    set axisYColor(value) {
-        this._materials.axis.y.emissive.copy(value);
-        this._materials.axis.y.update();
-    }
-
-    get axisYColor() {
-        return this._materials.axis.y.emissive;
-    }
-
-    set axisZColor(value) {
-        this._materials.axis.z.emissive.copy(value);
-        this._materials.axis.z.update();
-    }
-
-    get axisZColor() {
-        return this._materials.axis.z.emissive;
-    }
-
-    set hoverColor(value) {
-        this._materials.hover.emissive.copy(value);
-        this._materials.hover.update();
-    }
-
-    get hoverColor() {
-        return this._materials.hover.emissive;
-    }
-
-    set guideLineColor(value) {
-        this._guideLineColor.copy(value);
-    }
-
-    get guideLineColor() {
-        return this._guideLineColor;
     }
 }
 
