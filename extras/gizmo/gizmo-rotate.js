@@ -59,8 +59,8 @@ class GizmoRotate extends GizmoTransform {
 
     snapIncrement = 5;
 
-    constructor(app, ...args) {
-        super(app, ...args);
+    constructor(...args) {
+        super(...args);
 
         this._createTransform();
 
