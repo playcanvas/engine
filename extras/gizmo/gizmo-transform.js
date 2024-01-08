@@ -30,10 +30,7 @@ class GizmoTransform extends Gizmo {
         },
         center: this._createMaterial(new Color(1, 1, 1, 0.5)),
         hover: this._createMaterial(new Color(1, 1, 0.3)),
-        semi: {
-            yellow: this._createMaterial(new Color(1, 1, 0.3, 0.5)),
-            white: this._createMaterial(new Color(1, 1, 1, 0.5))
-        }
+        guide: this._createMaterial(new Color(1, 1, 1, 0.5))
     };
 
     _guideLineColor = new Color(1, 1, 1, 0.8);
@@ -317,6 +314,23 @@ class GizmoTransform extends Gizmo {
 
     get axisZColor() {
         return this._materials.axis.z.emissive;
+    }
+
+    set hoverColor(value) {
+        this._materials.hover.emissive.copy(value);
+        this._materials.hover.update();
+    }
+
+    get hoverColor() {
+        return this._materials.hover.emissive;
+    }
+
+    set guideLineColor(value) {
+        this._guideLineColor.copy(value);
+    }
+
+    get guideLineColor() {
+        return this._guideLineColor;
     }
 }
 

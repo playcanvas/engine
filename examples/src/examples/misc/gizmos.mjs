@@ -61,6 +61,18 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'gizmo.axisZColor' }
                 })
             ),
+            jsx(LabelGroup, { text: 'Hover Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.hoverColor' }
+                })
+            ),
+            jsx(LabelGroup, { text: 'Guide Line Color' },
+                jsx(ColorPicker, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.guideLineColor' }
+                })
+            ),
             (type === 'translate' || type === 'scale') &&
                 jsx(LabelGroup, { text: 'Axis Gap' },
                     jsx(SliderInput, {
@@ -227,6 +239,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisXColor: Object.values(gizmo.axisXColor),
                 axisYColor: Object.values(gizmo.axisYColor),
                 axisZColor: Object.values(gizmo.axisZColor),
+                hoverColor: Object.values(gizmo.hoverColor),
+                guideLineColor: Object.values(gizmo.guideLineColor),
                 coordSpace: gizmo.coordSpace,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,
@@ -379,6 +393,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                     case 'axisXColor':
                     case 'axisYColor':
                     case 'axisZColor':
+                    case 'hoverColor':
+                    case 'guideLineColor':
                         tmpC.set(...value);
                         gizmoHandler.gizmo[pathArray[1]] = tmpC;
                         break;

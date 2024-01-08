@@ -41,7 +41,7 @@ class GizmoRotate extends GizmoTransform {
             device: this.app.graphicsDevice,
             axis: 'face',
             layers: [this.layer.id],
-            defaultColor: this._materials.semi.yellow,
+            defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover,
             ringRadius: 0.8
         })
@@ -157,7 +157,7 @@ class GizmoRotate extends GizmoTransform {
         this._ring = new AxisDisk({
             device: this.app.graphicsDevice,
             layers: [this.layer.id],
-            defaultColor: this._materials.semi.white
+            defaultColor: this._materials.guide
         });
         this._center.addChild(this._ring.entity);
     }
