@@ -96,7 +96,7 @@ class Gizmo extends EventHandler {
         this._createLayer();
         this._createGizmo();
 
-        this._updateScale();
+        this.updateScale();
 
         this._onPointerMove = (e) => {
             if (!this.gizmo.enabled) {
@@ -146,7 +146,7 @@ class Gizmo extends EventHandler {
 
     set size(value) {
         this._size = value;
-        this._updateScale();
+        this.updateScale();
         this.fire('size:set', this._size);
     }
 
@@ -215,7 +215,15 @@ class Gizmo extends EventHandler {
         this.fire('eulerAngles:set', tmpV1);
     }
 
-    _updateScale() {
+    /**
+     * Updates the scale of the gizmo based on projection
+     * and the distance from the camera.
+     *
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera);
+     * gizmo.updateScale();
+     */
+    updateScale() {
         let scale = 1;
         if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
             scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;

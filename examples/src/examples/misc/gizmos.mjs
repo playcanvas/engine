@@ -402,7 +402,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                         camera.camera.orthoHeight = value;
                         break;
                 }
-                gizmoHandler.gizmo.updateGizmoScale();
+                gizmoHandler.gizmo.updateScale();
                 return;
             case 'gizmo':
                 if (gizmoHandler.skipSetFire) {
