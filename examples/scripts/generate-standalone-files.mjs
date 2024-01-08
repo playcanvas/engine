@@ -316,6 +316,7 @@ ${exampleClass.example.toString()}
                 constructor(deviceType) {
                     super("exampleLoad");
                     this.files = files;
+                    this.description = ${JSON.stringify(exampleClass.DESCRIPTION || '')};
                 }
             }
             const finalFunc = () => {
