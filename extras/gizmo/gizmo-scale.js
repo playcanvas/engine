@@ -8,6 +8,11 @@ import { GizmoTransform } from "./gizmo-transform.js";
 // temporary variables
 const tmpV1 = new Vec3();
 
+/**
+ * Scaling gizmo.
+ *
+ * @augments GizmoTransform
+ */
 class GizmoScale extends GizmoTransform {
     _axisShapes = {
         xyz: new AxisBoxCenter({
@@ -65,16 +70,25 @@ class GizmoScale extends GizmoTransform {
 
     _coordSpace = 'local';
 
+    _planes = [];
+
     _nodeScales = new Map();
 
     snapIncrement = 1;
 
-    constructor(...args) {
-        super(...args);
+    /**
+     * Creates a new GizmoScale object.
+     *
+     * @param {import('playcanvas').AppBase} app - The application instance.
+     * @param {import('playcanvas').Entity} camera - The camera entity.
+     * @example
+     * const gizmo = new pcx.GizmoScale(app, camera);
+     */
+    constructor(app, camera) {
+        super(app, camera);
 
         this._createTransform();
 
-        this._planes = [];
         for (const key in this._axisShapes) {
             const shape = this._axisShapes[key];
             if (!(shape instanceof AxisPlane)) {
@@ -183,19 +197,6 @@ class GizmoScale extends GizmoTransform {
         this._axisShapes.yz[propName] = value;
         this._axisShapes.xz[propName] = value;
         this._axisShapes.xy[propName] = value;
-    }
-
-    _createTransform() {
-        super._createTransform();
-
-        // shapes
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
-            this._center.addChild(shape.entity);
-            for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._shapeMap.set(shape.meshInstances[i], shape);
-            }
-        }
     }
 
     _checkForPlaneFlip() {

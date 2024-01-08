@@ -11,6 +11,11 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+/**
+ * Translation gizmo.
+ *
+ * @augments GizmoTransform
+ */
 class GizmoTranslate extends GizmoTransform {
     _axisShapes = {
         yz: new AxisPlane({
@@ -66,8 +71,16 @@ class GizmoTranslate extends GizmoTransform {
 
     snapIncrement = 1;
 
-    constructor(...args) {
-        super(...args);
+    /**
+     * Creates a new GizmoTranslate object.
+     *
+     * @param {import('playcanvas').AppBase} app - The application instance.
+     * @param {import('playcanvas').Entity} camera - The camera entity.
+     * @example
+     * const gizmo = new pcx.GizmoTranslate(app, camera);
+     */
+    constructor(app, camera) {
+        super(app, camera);
 
         this._createTransform();
 
@@ -176,19 +189,6 @@ class GizmoTranslate extends GizmoTransform {
         this._axisShapes.yz[propName] = value;
         this._axisShapes.xz[propName] = value;
         this._axisShapes.xy[propName] = value;
-    }
-
-    _createTransform() {
-        super._createTransform();
-
-        // shapes
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
-            this._center.addChild(shape.entity);
-            for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._shapeMap.set(shape.meshInstances[i], shape);
-            }
-        }
     }
 
     _checkForPlaneFlip() {

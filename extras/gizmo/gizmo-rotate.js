@@ -11,6 +11,11 @@ const tmpV1 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
+/**
+ * Rotation gizmo.
+ *
+ * @augments GizmoTransform
+ */
 class GizmoRotate extends GizmoTransform {
     _axisShapes = {
         z: new AxisDisk({
@@ -59,8 +64,16 @@ class GizmoRotate extends GizmoTransform {
 
     snapIncrement = 5;
 
-    constructor(...args) {
-        super(...args);
+    /**
+     * Creates a new GizmoRotate object.
+     *
+     * @param {import('playcanvas').AppBase} app - The application instance.
+     * @param {import('playcanvas').Entity} camera - The camera entity.
+     * @example
+     * const gizmo = new pcx.GizmoRotate(app, camera);
+     */
+    constructor(app, camera) {
+        super(app, camera);
 
         this._createTransform();
 
@@ -144,22 +157,13 @@ class GizmoRotate extends GizmoTransform {
     _createTransform() {
         super._createTransform();
 
-        // shapes
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
-            this._center.addChild(shape.entity);
-            for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._shapeMap.set(shape.meshInstances[i], shape);
-            }
-        }
-
         // guide ring
         this._ring = new AxisDisk({
             device: this.app.graphicsDevice,
             layers: [this.layer.id],
             defaultColor: this._materials.guide
         });
-        this._center.addChild(this._ring.entity);
+        this._meshRoot.addChild(this._ring.entity);
     }
 
     _storeNodeRotations() {

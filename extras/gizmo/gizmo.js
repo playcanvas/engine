@@ -30,6 +30,9 @@ const EPSILON = 1e-6;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 
+/**
+ * The base class for all gizmos.
+ */
 class Gizmo extends EventHandler {
     /**
      * Internal version of the gizmo size.
