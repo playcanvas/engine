@@ -24,7 +24,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
         pc.AnimationComponentSystem,
         pc.AnimComponentSystem,
         pc.ModelComponentSystem,
-        pc.AudioListenerComponentSystem,
+        pc.AudioListenerComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
@@ -40,7 +40,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
         // @ts-ignore
         pc.ModelHandler,
         // @ts-ignore
-        pc.MaterialHandler,
+        pc.MaterialHandler
     ];
 
     const app = new pc.AppBase(canvas);
@@ -154,7 +154,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
 
 class PositionalExample {
     static CATEGORY = 'Sound';
-    static WEBGPU_ENABLED = false; // Failed to transpile webgl fragment shader.
+    static WEBGPU_ENABLED = true;
     static example = example;
 }
 
