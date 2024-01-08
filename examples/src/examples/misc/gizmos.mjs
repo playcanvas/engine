@@ -42,6 +42,15 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 0.1,
                     max: 2.0
                 })
+            ),
+            jsx(LabelGroup, { text: 'Snap Increment' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.snapIncrement' },
+                    min: 1,
+                    max: 10,
+                    precision: 0
+                })
             )
         ),
         jsx(Panel, { headerText: 'Color' },
@@ -247,6 +256,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
+                snapIncrement: gizmo.snapIncrement,
                 xAxisColor: Object.values(gizmo.xAxisColor),
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
