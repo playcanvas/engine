@@ -137,11 +137,11 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.face.ringRadius;
     }
 
-    _setDiskProp(propName, value) {
-        this._shapes.x[propName] = value;
-        this._shapes.y[propName] = value;
-        this._shapes.z[propName] = value;
-        this._ring[propName] = value;
+    _setDiskProp(prop, value) {
+        this._shapes.x[prop] = value;
+        this._shapes.y[prop] = value;
+        this._shapes.z[prop] = value;
+        this._ring[prop] = value;
     }
 
     _setFacingDisks() {

@@ -65,6 +65,8 @@ class GizmoTranslate extends GizmoTransform {
         })
     };
 
+    _planes = [];
+
     _nodeLocalPositions = new Map();
 
     _nodePositions = new Map();
@@ -84,7 +86,6 @@ class GizmoTranslate extends GizmoTransform {
 
         this._createTransform();
 
-        this._planes = [];
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             if (!(shape instanceof AxisPlane)) {
@@ -179,16 +180,16 @@ class GizmoTranslate extends GizmoTransform {
         return this._shapes.yz.gap;
     }
 
-    _setArrowProp(propName, value) {
-        this._shapes.x[propName] = value;
-        this._shapes.y[propName] = value;
-        this._shapes.z[propName] = value;
+    _setArrowProp(prop, value) {
+        this._shapes.x[prop] = value;
+        this._shapes.y[prop] = value;
+        this._shapes.z[prop] = value;
     }
 
-    _setPlaneProp(propName, value) {
-        this._shapes.yz[propName] = value;
-        this._shapes.xz[propName] = value;
-        this._shapes.xy[propName] = value;
+    _setPlaneProp(prop, value) {
+        this._shapes.yz[prop] = value;
+        this._shapes.xz[prop] = value;
+        this._shapes.xy[prop] = value;
     }
 
     _checkForPlaneFlip() {

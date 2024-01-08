@@ -187,16 +187,16 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.xyz.size;
     }
 
-    _setArrowProp(propName, value) {
-        this._shapes.x[propName] = value;
-        this._shapes.y[propName] = value;
-        this._shapes.z[propName] = value;
+    _setArrowProp(prop, value) {
+        this._shapes.x[prop] = value;
+        this._shapes.y[prop] = value;
+        this._shapes.z[prop] = value;
     }
 
-    _setPlaneProp(propName, value) {
-        this._shapes.yz[propName] = value;
-        this._shapes.xz[propName] = value;
-        this._shapes.xy[propName] = value;
+    _setPlaneProp(prop, value) {
+        this._shapes.yz[prop] = value;
+        this._shapes.xz[prop] = value;
+        this._shapes.xy[prop] = value;
     }
 
     _checkForPlaneFlip() {
