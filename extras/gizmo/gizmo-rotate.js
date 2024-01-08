@@ -92,28 +92,20 @@ class GizmoRotate extends GizmoTransform {
         });
     }
 
-    set tubeRadius(value) {
+    set axisTubeRadius(value) {
         this._setDiskProp('tubeRadius', value);
     }
 
-    get tubeRadius() {
+    get axisTubeRadius() {
         return this._axisShapes.x.tubeRadius;
     }
 
-    set ringRadius(value) {
+    set axisRingRadius(value) {
         this._setDiskProp('ringRadius', value);
     }
 
-    get ringRadius() {
+    get axisRingRadius() {
         return this._axisShapes.x.ringRadius;
-    }
-
-    set tubeRadiusSideRatio(value) {
-        this._setDiskProp('tubeRadiusSideRatio', value, true);
-    }
-
-    get tubeRadiusSideRatio() {
-        return this._axisShapes.x.tubeRadiusSideRatio;
     }
 
     set ringRadiusSegmentRatio(value) {

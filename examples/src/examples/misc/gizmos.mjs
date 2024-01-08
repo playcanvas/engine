@@ -125,26 +125,17 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Tube Radius' },
+                jsx(LabelGroup, { text: 'Axis Tube Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.tubeRadius' }
+                        link: { observer, path: 'gizmo.axisTubeRadius' }
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Ring Radius' },
+                jsx(LabelGroup, { text: 'Axis Ring Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.ringRadius' }
-                    })
-                ),
-            type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Tube Radius Side Ratio' },
-                    jsx(SliderInput, {
-                        binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.tubeRadiusSideRatio' },
-                        min: 100,
-                        max: 2000
+                        link: { observer, path: 'gizmo.axisRingRadius' }
                     })
                 ),
             type === 'rotate' &&
@@ -240,9 +231,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisPlaneSize: gizmo.axisPlaneSize,
                 axisPlaneGap: gizmo.axisPlaneGap,
                 axisCenterSize: gizmo.axisCenterSize,
-                tubeRadius: gizmo.tubeRadius,
-                ringRadius: gizmo.ringRadius,
-                tubeRadiusSideRatio: gizmo.tubeRadiusSideRatio,
+                axisTubeRadius: gizmo.axisTubeRadius,
+                axisRingRadius: gizmo.axisRingRadius,
                 ringRadiusSegmentRatio: gizmo.ringRadiusSegmentRatio
             });
             this.skipSetFire = false;
