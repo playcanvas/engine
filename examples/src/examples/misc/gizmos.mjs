@@ -9,6 +9,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
     const [type, setType] = React.useState('translate');
 
+    this.setType = (value) => setType(value);
+
     return fragment(
         jsx(Panel, { headerText: 'Gizmo' },
             jsx(LabelGroup, { text: 'Type' },
@@ -20,7 +22,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.type' },
-                    onSelect: value => setType(value)
+                    onSelect: this.setType
                 })
             ),
             jsx(LabelGroup, { text: 'Coord Space' },
@@ -285,19 +287,23 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     });
 
     // control keybinds
+    const setType = (value) => {
+        data.set('gizmo.type', value);
+        this.top.setType(value);
+    };
     window.addEventListener('keypress', (e) => {
         switch (e.key) {
             case 'x':
                 data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
                 break;
             case '1':
-                data.set('gizmo.type', 'translate');
+                setType('translate');
                 break;
             case '2':
-                data.set('gizmo.type', 'rotate');
+                setType('rotate');
                 break;
             case '3':
-                data.set('gizmo.type', 'scale');
+                setType('scale');
                 break;
         }
     });
