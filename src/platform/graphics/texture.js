@@ -34,7 +34,7 @@ class Texture {
      */
     name;
 
-    /** @protected */
+    /** @ignore */
     _gpuSize = 0;
 
     /** @protected */
