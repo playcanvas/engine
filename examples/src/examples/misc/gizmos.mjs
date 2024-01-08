@@ -379,7 +379,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     light.setEulerAngles(45, 20, 0);
 
     // create gizmo
-    const gizmoHandler = new GizmoHandler(app, camera);
+    const gizmoHandler = new GizmoHandler(app, camera.camera);
     gizmoHandler.switch('translate', [boxA, boxB]);
 
     const tmpC = new pc.Color();

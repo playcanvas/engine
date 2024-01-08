@@ -83,7 +83,7 @@ class Gizmo extends EventHandler {
      * Creates a new Gizmo object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {Entity} camera - The camera entity.
+     * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @example
      * const gizmo = new pcx.Gizmo(app, camera);
      */
@@ -156,9 +156,9 @@ class Gizmo extends EventHandler {
 
     _getProjFrustumWidth() {
         const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.getPosition();
-        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this.camera.forward);
-        return dist * Math.tan(this.camera.camera.fov * math.DEG_TO_RAD / 2);
+        const cameraPos = this.camera.entity.getPosition();
+        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this.camera.entity.forward);
+        return dist * Math.tan(this.camera.fov * math.DEG_TO_RAD / 2);
     }
 
     _createLayer() {
@@ -175,8 +175,8 @@ class Gizmo extends EventHandler {
             });
             this.app.scene.layers.push(this.layer);
         }
-        if (this.camera.camera.layers.indexOf(this.layer.id) === -1) {
-            this.camera.camera.layers = this.camera.camera.layers.concat(this.layer.id);
+        if (this.camera.layers.indexOf(this.layer.id) === -1) {
+            this.camera.layers = this.camera.layers.concat(this.layer.id);
         }
     }
 
@@ -225,10 +225,10 @@ class Gizmo extends EventHandler {
      */
     updateScale() {
         let scale = 1;
-        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+        if (this.camera.projection === PROJECTION_PERSPECTIVE) {
             scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
         } else {
-            scale = this.camera.camera.orthoHeight * ORTHO_SCALE_RATIO;
+            scale = this.camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
         tmpV1.set(scale, scale, scale);
@@ -239,8 +239,8 @@ class Gizmo extends EventHandler {
     }
 
     _getSelection(x, y) {
-        const start = this.camera.camera.screenToWorld(x, y, 1);
-        const end = this.camera.camera.screenToWorld(x, y, this.camera.camera.farClip);
+        const start = this.camera.screenToWorld(x, y, 1);
+        const end = this.camera.screenToWorld(x, y, this.camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];

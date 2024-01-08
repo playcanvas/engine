@@ -92,7 +92,7 @@ class GizmoRotate extends GizmoTransform {
      * Creates a new GizmoRotate object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').Entity} camera - The camera entity.
+     * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @example
      * const gizmo = new pcx.GizmoRotate(app, camera);
      */
@@ -174,7 +174,7 @@ class GizmoRotate extends GizmoTransform {
     }
 
     _faceDiskToCamera(entity) {
-        entity.lookAt(this.camera.getPosition());
+        entity.lookAt(this.camera.entity.getPosition());
         entity.rotateLocal(90, 0, 0);
     }
 
@@ -202,7 +202,7 @@ class GizmoRotate extends GizmoTransform {
 
     _setNodeRotations(axis, angle) {
         const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.getPosition();
+        const cameraPos = this.camera.entity.getPosition();
         const isFacing = axis === 'face';
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];

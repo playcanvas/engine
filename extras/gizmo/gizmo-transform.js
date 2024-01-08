@@ -179,7 +179,7 @@ class GizmoTransform extends Gizmo {
      * Creates a new GizmoTransform object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {Entity} camera - The camera entity.
+     * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @example
      * const gizmo = new pcx.GizmoTransform(app, camera);
      */
@@ -346,8 +346,8 @@ class GizmoTransform extends Gizmo {
 
     _calcPoint(x, y) {
         const gizmoPos = this.gizmo.getPosition();
-        const mouseWPos = this.camera.camera.screenToWorld(x, y, 1);
-        const rayOrigin = this.camera.getPosition();
+        const mouseWPos = this.camera.screenToWorld(x, y, 1);
+        const rayOrigin = this.camera.entity.getPosition();
         const rayDir = new Vec3();
         const planeNormal = new Vec3();
         const axis = this._selectedAxis;
@@ -357,11 +357,11 @@ class GizmoTransform extends Gizmo {
         const isFacing = axis === 'face';
 
         // calculate ray direction from mouse position
-        if (this.camera.camera.projection === PROJECTION_PERSPECTIVE) {
+        if (this.camera.projection === PROJECTION_PERSPECTIVE) {
             rayDir.copy(mouseWPos).sub(rayOrigin).normalize();
         } else {
             rayOrigin.add(mouseWPos);
-            this.camera.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
+            this.camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
         }
 
         if (isAllAxes || isFacing) {
@@ -394,7 +394,7 @@ class GizmoTransform extends Gizmo {
         if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
-            tmpV2.copy(this.camera.up).add(this.camera.right).normalize();
+            tmpV2.copy(this.camera.entity.up).add(this.camera.entity.right).normalize();
 
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);

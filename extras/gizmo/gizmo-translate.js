@@ -95,7 +95,7 @@ class GizmoTranslate extends GizmoTransform {
      * Creates a new GizmoTranslate object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
-     * @param {import('playcanvas').Entity} camera - The camera entity.
+     * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @example
      * const gizmo = new pcx.GizmoTranslate(app, camera);
      */
@@ -212,7 +212,7 @@ class GizmoTranslate extends GizmoTransform {
 
     _checkForPlaneFlip() {
         const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.getPosition();
+        const cameraPos = this.camera.entity.getPosition();
         tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
 
         for (let i = 0; i < this._planes.length; i++) {
