@@ -192,7 +192,7 @@ class Gizmo extends EventHandler {
             const node = this.nodes[i];
             tmpV1.add(node.getPosition());
         }
-        tmpV1.scale(1.0 / this.nodes.length);
+        tmpV1.scale(1.0 / (this.nodes.length || 1));
         this.gizmo.setPosition(tmpV1);
 
         this.fire('position:set', tmpV1);
@@ -205,7 +205,7 @@ class Gizmo extends EventHandler {
                 const node = this.nodes[i];
                 tmpV1.add(node.getEulerAngles());
             }
-            tmpV1.scale(1.0 / this.nodes.length);
+            tmpV1.scale(1.0 / (this.nodes.length || 1));
             this.gizmo.setEulerAngles(tmpV1);
         } else {
             tmpV1.set(0, 0, 0);
