@@ -286,9 +286,9 @@ class AxisDisk extends AxisShape {
 
     _ringRadius = 0.55;
 
-    _segments = 30;
+    _tubeRadiusSideRatio = 20 / 0.02;
 
-    _sides = 20;
+    _ringRadiusSegmentRatio = 30 / 0.55;
 
     constructor(options = {}) {
         super(options);
@@ -297,8 +297,6 @@ class AxisDisk extends AxisShape {
 
         this._tubeRadius = options.tubeRadius ?? this._tubeRadius;
         this._ringRadius = options.ringRadius ?? this._ringRadius;
-        this._segments = options.segments ?? this._segments;
-        this._sides = options.sides ?? this._sides;
 
         this._createDisk(options.layers ?? []);
     }
@@ -322,8 +320,8 @@ class AxisDisk extends AxisShape {
         return createTorus(this._device, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
-            segments: this._segments,
-            sides: this._sides
+            segments: Math.floor(this._ringRadius * this._ringRadiusSegmentRatio),
+            sides: Math.floor(this._tubeRadius * this._tubeRadiusSideRatio)
         });
     }
 
@@ -345,22 +343,22 @@ class AxisDisk extends AxisShape {
         return this._ringRadius;
     }
 
-    set segments(value) {
-        this._segments = value ?? 30;
+    set tubeRadiusSideRatio(value) {
+        this._tubeRadiusSideRatio = value;
         this.meshInstances[0].mesh = this._createTorusMesh();
     }
 
-    get segments() {
-        return this._segments;
+    get tubeRadiusSideRatio() {
+        return this._tubeRadiusSideRatio;
     }
 
-    set sides(value) {
-        this._sides = value ?? 20;
+    set ringRadiusSegmentRatio(value) {
+        this._ringRadiusSegmentRatio = value;
         this.meshInstances[0].mesh = this._createTorusMesh();
     }
 
-    get sides() {
-        return this._sides;
+    get ringRadiusSegmentRatio() {
+        return this._ringRadiusSegmentRatio;
     }
 }
 

@@ -137,25 +137,21 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Segments' },
+                jsx(LabelGroup, { text: 'Tube Radius Side Ratio' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.segments' },
-                        min: 1,
-                        max: 100,
-                        precision: 0,
-                        step: 1
+                        link: { observer, path: 'gizmo.tubeRadiusSideRatio' },
+                        min: 100,
+                        max: 2000
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Sides' },
+                jsx(LabelGroup, { text: 'Ring Radius Segment Ratio' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.sides' },
+                        link: { observer, path: 'gizmo.ringRadiusSegmentRatio' },
                         min: 1,
-                        max: 100,
-                        precision: 0,
-                        step: 1
+                        max: 100
                     })
                 )
         ),
@@ -244,8 +240,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisCenterSize: gizmo.axisCenterSize,
                 tubeRadius: gizmo.tubeRadius,
                 ringRadius: gizmo.ringRadius,
-                segments: gizmo.segments,
-                sides: gizmo.sides
+                tubeRadiusSideRatio: gizmo.tubeRadiusSideRatio,
+                ringRadiusSegmentRatio: gizmo.ringRadiusSegmentRatio
             });
             this.skipSetFire = false;
         }
