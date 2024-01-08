@@ -12,7 +12,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     this.setType = (value) => setType(value);
 
     return fragment(
-        jsx(Panel, { headerText: 'Gizmo' },
+        jsx(Panel, { headerText: 'Transform' },
             jsx(LabelGroup, { text: 'Type' },
                 jsx(SelectInput, {
                     options: [
@@ -42,95 +42,106 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     min: 0.1,
                     max: 2.0
                 })
-            ),
-            jsx(LabelGroup, { text: 'Axis X Color' },
+            )
+        ),
+        jsx(Panel, { headerText: 'Color' },
+            jsx(LabelGroup, { text: 'X Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisXColor' }
+                    link: { observer, path: 'gizmo.xAxisColor' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Axis Y Color' },
+            jsx(LabelGroup, { text: 'Y Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisYColor' }
+                    link: { observer, path: 'gizmo.yAxisColor' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Axis Z Color' },
+            jsx(LabelGroup, { text: 'Z Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.axisZColor' }
+                    link: { observer, path: 'gizmo.zAxisColor' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Hover Color' },
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Face Axis' },
+                    jsx(ColorPicker, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.faceAxisColor' }
+                    })
+                ),
+            jsx(LabelGroup, { text: 'Hover' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.hoverColor' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Guide Line Color' },
+            jsx(LabelGroup, { text: 'Guide Line' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.guideLineColor' }
                 })
-            ),
+            )
+        ),
+        jsx(Panel, { headerText: 'Mesh' },
             (type === 'translate' || type === 'scale') &&
-                jsx(LabelGroup, { text: 'Axis Gap' },
+                jsx(LabelGroup, { text: 'Gap' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisGap' }
                     })
                 ),
             (type === 'translate' || type === 'scale') &&
-                jsx(LabelGroup, { text: 'Axis Line Thickness' },
+                jsx(LabelGroup, { text: 'Line Thickness' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisLineThickness' }
                     })
                 ),
             (type === 'translate' || type === 'scale') &&
-                jsx(LabelGroup, { text: 'Axis Line Length' },
+                jsx(LabelGroup, { text: 'Line Length' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisLineLength' }
                     })
                 ),
             type === 'scale' &&
-                jsx(LabelGroup, { text: 'Axis Box Size' },
+                jsx(LabelGroup, { text: 'Box Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisBoxSize' }
                     })
                 ),
             type === 'translate' &&
-                jsx(LabelGroup, { text: 'Axis Arrow Thickness' },
+                jsx(LabelGroup, { text: 'Arrow Thickness' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisArrowThickness' }
                     })
                 ),
             type === 'translate' &&
-                jsx(LabelGroup, { text: 'Axis Arrow Length' },
+                jsx(LabelGroup, { text: 'Arrow Length' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisArrowLength' }
                     })
                 ),
             (type === 'translate' || type === 'scale') &&
-                jsx(LabelGroup, { text: 'Axis Plane Size' },
+                jsx(LabelGroup, { text: 'Plane Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisPlaneSize' }
                     })
                 ),
             (type === 'translate' || type === 'scale') &&
-                jsx(LabelGroup, { text: 'Axis Plane Gap' },
+                jsx(LabelGroup, { text: 'Plane Gap' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisPlaneGap' }
                     })
                 ),
             type === 'scale' &&
-                jsx(LabelGroup, { text: 'Axis Center Size' },
+                jsx(LabelGroup, { text: 'Center Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.axisCenterSize' }
@@ -236,9 +247,10 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
-                axisXColor: Object.values(gizmo.axisXColor),
-                axisYColor: Object.values(gizmo.axisYColor),
-                axisZColor: Object.values(gizmo.axisZColor),
+                xAxisColor: Object.values(gizmo.xAxisColor),
+                yAxisColor: Object.values(gizmo.yAxisColor),
+                zAxisColor: Object.values(gizmo.zAxisColor),
+                faceAxisColor: Object.values(gizmo.faceAxisColor),
                 hoverColor: Object.values(gizmo.hoverColor),
                 guideLineColor: Object.values(gizmo.guideLineColor),
                 coordSpace: gizmo.coordSpace,
@@ -390,9 +402,10 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                     case 'type':
                         gizmoHandler.switch(value, [boxA, boxB]);
                         break;
-                    case 'axisXColor':
-                    case 'axisYColor':
-                    case 'axisZColor':
+                    case 'xAxisColor':
+                    case 'yAxisColor':
+                    case 'zAxisColor':
+                    case 'faceAxisColor':
                     case 'hoverColor':
                     case 'guideLineColor':
                         tmpC.set(...value);

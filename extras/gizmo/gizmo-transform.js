@@ -136,31 +136,40 @@ class GizmoTransform extends Gizmo {
         });
     }
 
-    set axisXColor(value) {
+    set xAxisColor(value) {
         this._materials.axis.x.emissive.copy(value);
         this._materials.axis.x.update();
     }
 
-    get axisXColor() {
+    get xAxisColor() {
         return this._materials.axis.x.emissive;
     }
 
-    set axisYColor(value) {
+    set yAxisColor(value) {
         this._materials.axis.y.emissive.copy(value);
         this._materials.axis.y.update();
     }
 
-    get axisYColor() {
+    get yAxisColor() {
         return this._materials.axis.y.emissive;
     }
 
-    set axisZColor(value) {
+    set zAxisColor(value) {
         this._materials.axis.z.emissive.copy(value);
         this._materials.axis.z.update();
     }
 
-    get axisZColor() {
+    get zAxisColor() {
         return this._materials.axis.z.emissive;
+    }
+
+    set faceAxisColor(value) {
+        this._materials.axis.face.emissive.copy(value);
+        this._materials.axis.face.update();
+    }
+
+    get faceAxisColor() {
+        return this._materials.axis.face.emissive;
     }
 
     set hoverColor(value) {
