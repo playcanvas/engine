@@ -70,8 +70,20 @@ class GizmoScale extends GizmoTransform {
 
     _coordSpace = 'local';
 
+    /**
+     * Internal object containing the axis planes to flip.
+     *
+     * @type {import('./axis-shapes.js').AxisPlane[]}
+     * @private
+     */
     _planes = [];
 
+    /**
+     * Internal mapping from each attached node to their starting scale.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodeScales = new Map();
 
     snapIncrement = 1;

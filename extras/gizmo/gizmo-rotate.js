@@ -54,12 +54,36 @@ class GizmoRotate extends GizmoTransform {
 
     _isRotation = true;
 
-    _ring;
+    /**
+     * Internal axis shape for guide ring.
+     *
+     * @type {AxisDisk}
+     * @private
+     */
+    _guideRingShape;
 
+    /**
+     * Internal mapping from each attached node to their starting rotation (euler angles) in local space.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodeLocalRotations = new Map();
 
+    /**
+     * Internal mapping from each attached node to their starting rotation (euler angles) in world space.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodeRotations = new Map();
 
+    /**
+     * Internal mapping from each attached node to their offset position from the gizmo.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodeOffsets = new Map();
 
     snapIncrement = 5;
@@ -141,11 +165,11 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
-        this._ring[prop] = value;
+        this._guideRingShape[prop] = value;
     }
 
     _setFacingDisks() {
-        this._faceDiskToCamera(this._ring.entity);
+        this._faceDiskToCamera(this._guideRingShape.entity);
         this._faceDiskToCamera(this._shapes.face.entity);
     }
 
@@ -158,12 +182,12 @@ class GizmoRotate extends GizmoTransform {
         super._createTransform();
 
         // guide ring
-        this._ring = new AxisDisk({
+        this._guideRingShape = new AxisDisk({
             device: this.app.graphicsDevice,
             layers: [this.layer.id],
             defaultColor: this._materials.guide
         });
-        this._meshRoot.addChild(this._ring.entity);
+        this._meshRoot.addChild(this._guideRingShape.entity);
     }
 
     _storeNodeRotations() {

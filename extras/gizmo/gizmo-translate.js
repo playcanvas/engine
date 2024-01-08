@@ -65,10 +65,28 @@ class GizmoTranslate extends GizmoTransform {
         })
     };
 
+    /**
+     * Internal object containing the axis planes to flip.
+     *
+     * @type {import('./axis-shapes.js').AxisPlane[]}
+     * @private
+     */
     _planes = [];
 
+    /**
+     * Internal mapping from each attached node to their starting position in local space.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodeLocalPositions = new Map();
 
+    /**
+     * Internal mapping from each attached node to their starting position in world space.
+     *
+     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @private
+     */
     _nodePositions = new Map();
 
     snapIncrement = 1;
