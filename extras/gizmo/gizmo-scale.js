@@ -14,7 +14,7 @@ const tmpV1 = new Vec3();
  * @augments GizmoTransform
  */
 class GizmoScale extends GizmoTransform {
-    _axisShapes = {
+    _shapes = {
         xyz: new AxisBoxCenter({
             axis: 'xyz',
             layers: [this.layer.id],
@@ -89,8 +89,8 @@ class GizmoScale extends GizmoTransform {
 
         this._createTransform();
 
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
+        for (const key in this._shapes) {
+            const shape = this._shapes[key];
             if (!(shape instanceof AxisPlane)) {
                 continue;
             }
@@ -136,7 +136,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisGap() {
-        return this._axisShapes.x.gap;
+        return this._shapes.x.gap;
     }
 
     set axisLineThickness(value) {
@@ -144,7 +144,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisLineThickness() {
-        return this._axisShapes.x.lineThickness;
+        return this._shapes.x.lineThickness;
     }
 
     set axisLineLength(value) {
@@ -152,7 +152,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisLineLength() {
-        return this._axisShapes.x.lineLength;
+        return this._shapes.x.lineLength;
     }
 
     set axisBoxSize(value) {
@@ -160,7 +160,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisBoxSize() {
-        return this._axisShapes.x.boxSize;
+        return this._shapes.x.boxSize;
     }
 
     set axisPlaneSize(value) {
@@ -168,7 +168,7 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisPlaneSize() {
-        return this._axisShapes.yz.size;
+        return this._shapes.yz.size;
     }
 
     set axisPlaneGap(value) {
@@ -176,27 +176,27 @@ class GizmoScale extends GizmoTransform {
     }
 
     get axisPlaneGap() {
-        return this._axisShapes.yz.gap;
+        return this._shapes.yz.gap;
     }
 
     set axisCenterSize(value) {
-        this._axisShapes.xyz.size = value;
+        this._shapes.xyz.size = value;
     }
 
     get axisCenterSize() {
-        return this._axisShapes.xyz.size;
+        return this._shapes.xyz.size;
     }
 
     _setArrowProp(propName, value) {
-        this._axisShapes.x[propName] = value;
-        this._axisShapes.y[propName] = value;
-        this._axisShapes.z[propName] = value;
+        this._shapes.x[propName] = value;
+        this._shapes.y[propName] = value;
+        this._shapes.z[propName] = value;
     }
 
     _setPlaneProp(propName, value) {
-        this._axisShapes.yz[propName] = value;
-        this._axisShapes.xz[propName] = value;
-        this._axisShapes.xy[propName] = value;
+        this._shapes.yz[propName] = value;
+        this._shapes.xz[propName] = value;
+        this._shapes.xy[propName] = value;
     }
 
     _checkForPlaneFlip() {

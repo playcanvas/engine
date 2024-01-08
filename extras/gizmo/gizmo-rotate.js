@@ -17,7 +17,7 @@ const tmpQ2 = new Quat();
  * @augments GizmoTransform
  */
 class GizmoRotate extends GizmoTransform {
-    _axisShapes = {
+    _shapes = {
         z: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'z',
@@ -110,7 +110,7 @@ class GizmoRotate extends GizmoTransform {
     }
 
     get xyzTubeRadius() {
-        return this._axisShapes.x.tubeRadius;
+        return this._shapes.x.tubeRadius;
     }
 
     set xyzRingRadius(value) {
@@ -118,35 +118,35 @@ class GizmoRotate extends GizmoTransform {
     }
 
     get xyzRingRadius() {
-        return this._axisShapes.x.ringRadius;
+        return this._shapes.x.ringRadius;
     }
 
     set faceTubeRadius(value) {
-        this._axisShapes.face.tubeRadius = value;
+        this._shapes.face.tubeRadius = value;
     }
 
     get faceTubeRadius() {
-        return this._axisShapes.face.tubeRadius;
+        return this._shapes.face.tubeRadius;
     }
 
     set faceRingRadius(value) {
-        this._axisShapes.face.ringRadius = value;
+        this._shapes.face.ringRadius = value;
     }
 
     get faceRingRadius() {
-        return this._axisShapes.face.ringRadius;
+        return this._shapes.face.ringRadius;
     }
 
     _setDiskProp(propName, value) {
-        this._axisShapes.x[propName] = value;
-        this._axisShapes.y[propName] = value;
-        this._axisShapes.z[propName] = value;
+        this._shapes.x[propName] = value;
+        this._shapes.y[propName] = value;
+        this._shapes.z[propName] = value;
         this._ring[propName] = value;
     }
 
     _setFacingDisks() {
         this._faceDiskToCamera(this._ring.entity);
-        this._faceDiskToCamera(this._axisShapes.face.entity);
+        this._faceDiskToCamera(this._shapes.face.entity);
     }
 
     _faceDiskToCamera(entity) {

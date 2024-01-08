@@ -71,7 +71,7 @@ class GizmoTransform extends Gizmo {
      * @type {Object.<string, import('./axis-shapes.js').AxisShape>}
      * @protected
      */
-    _axisShapes = {};
+    _shapes = {};
 
     /**
      * Internal mapping of mesh instances to axis shapes.
@@ -79,7 +79,7 @@ class GizmoTransform extends Gizmo {
      * @type {Map<import('playcanvas').MeshInstance, import('./axis-shapes.js').AxisShape>}
      * @private
      */
-    _axisShapeMap = new Map();
+    _shapeMap = new Map();
 
     /**
      * Internal currently hovered shape.
@@ -330,7 +330,7 @@ class GizmoTransform extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane =  this._getIsPlane(meshInstance);
-        const shape = this._axisShapeMap.get(meshInstance);
+        const shape = this._shapeMap.get(meshInstance);
         if (shape === this._hoverShape) {
             return;
         }
@@ -463,11 +463,11 @@ class GizmoTransform extends Gizmo {
         this.gizmo.addChild(this._meshRoot);
 
         // shapes
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
+        for (const key in this._shapes) {
+            const shape = this._shapes[key];
             this._meshRoot.addChild(shape.entity);
             for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._axisShapeMap.set(shape.meshInstances[i], shape);
+                this._shapeMap.set(shape.meshInstances[i], shape);
             }
         }
     }

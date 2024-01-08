@@ -17,7 +17,7 @@ const tmpQ1 = new Quat();
  * @augments GizmoTransform
  */
 class GizmoTranslate extends GizmoTransform {
-    _axisShapes = {
+    _shapes = {
         yz: new AxisPlane({
             axis: 'x',
             flipAxis: 'y',
@@ -85,8 +85,8 @@ class GizmoTranslate extends GizmoTransform {
         this._createTransform();
 
         this._planes = [];
-        for (const key in this._axisShapes) {
-            const shape = this._axisShapes[key];
+        for (const key in this._shapes) {
+            const shape = this._shapes[key];
             if (!(shape instanceof AxisPlane)) {
                 continue;
             }
@@ -128,7 +128,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisGap() {
-        return this._axisShapes.x.gap;
+        return this._shapes.x.gap;
     }
 
     set axisLineThickness(value) {
@@ -136,7 +136,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisLineThickness() {
-        return this._axisShapes.x.lineThickness;
+        return this._shapes.x.lineThickness;
     }
 
     set axisLineLength(value) {
@@ -144,7 +144,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisLineLength() {
-        return this._axisShapes.x.lineLength;
+        return this._shapes.x.lineLength;
     }
 
     set axisArrowThickness(value) {
@@ -152,7 +152,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisArrowThickness() {
-        return this._axisShapes.x.arrowThickness;
+        return this._shapes.x.arrowThickness;
     }
 
     set axisArrowLength(value) {
@@ -160,7 +160,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisArrowLength() {
-        return this._axisShapes.x.arrowLength;
+        return this._shapes.x.arrowLength;
     }
 
     set axisPlaneSize(value) {
@@ -168,7 +168,7 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisPlaneSize() {
-        return this._axisShapes.yz.size;
+        return this._shapes.yz.size;
     }
 
     set axisPlaneGap(value) {
@@ -176,19 +176,19 @@ class GizmoTranslate extends GizmoTransform {
     }
 
     get axisPlaneGap() {
-        return this._axisShapes.yz.gap;
+        return this._shapes.yz.gap;
     }
 
     _setArrowProp(propName, value) {
-        this._axisShapes.x[propName] = value;
-        this._axisShapes.y[propName] = value;
-        this._axisShapes.z[propName] = value;
+        this._shapes.x[propName] = value;
+        this._shapes.y[propName] = value;
+        this._shapes.z[propName] = value;
     }
 
     _setPlaneProp(propName, value) {
-        this._axisShapes.yz[propName] = value;
-        this._axisShapes.xz[propName] = value;
-        this._axisShapes.xy[propName] = value;
+        this._shapes.yz[propName] = value;
+        this._shapes.xz[propName] = value;
+        this._shapes.xy[propName] = value;
     }
 
     _checkForPlaneFlip() {
