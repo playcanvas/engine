@@ -12,6 +12,9 @@ const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
+// constants
+const TORUS_SEGMENTS = 80;
+
 class AxisShape {
     _position;
 
@@ -286,8 +289,6 @@ class AxisDisk extends AxisShape {
 
     _ringRadius = 0.55;
 
-    _ringRadiusSegmentRatio = 30 / 0.55;
-
     constructor(options = {}) {
         super(options);
 
@@ -318,7 +319,7 @@ class AxisDisk extends AxisShape {
         return createTorus(this._device, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
-            segments: Math.floor(this._ringRadius * this._ringRadiusSegmentRatio)
+            segments: TORUS_SEGMENTS
         });
     }
 
@@ -338,15 +339,6 @@ class AxisDisk extends AxisShape {
 
     get ringRadius() {
         return this._ringRadius;
-    }
-
-    set ringRadiusSegmentRatio(value) {
-        this._ringRadiusSegmentRatio = value;
-        this.meshInstances[0].mesh = this._createTorusMesh();
-    }
-
-    get ringRadiusSegmentRatio() {
-        return this._ringRadiusSegmentRatio;
     }
 }
 

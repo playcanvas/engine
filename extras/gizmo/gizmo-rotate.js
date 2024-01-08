@@ -108,22 +108,27 @@ class GizmoRotate extends GizmoTransform {
         return this._axisShapes.x.ringRadius;
     }
 
-    set ringRadiusSegmentRatio(value) {
-        this._setDiskProp('ringRadiusSegmentRatio', value, true);
+    set faceTubeRadius(value) {
+        this._axisShapes.face.tubeRadius = value;
     }
 
-    get ringRadiusSegmentRatio() {
-        return this._axisShapes.x.ringRadiusSegmentRatio;
+    get faceTubeRadius() {
+        return this._axisShapes.face.tubeRadius;
     }
 
-    _setDiskProp(propName, value, all = false) {
+    set faceRingRadius(value) {
+        this._axisShapes.face.ringRadius = value;
+    }
+
+    get faceRingRadius() {
+        return this._axisShapes.face.ringRadius;
+    }
+
+    _setDiskProp(propName, value) {
         this._axisShapes.x[propName] = value;
         this._axisShapes.y[propName] = value;
         this._axisShapes.z[propName] = value;
-        if (all) {
-            this._axisShapes.face[propName] = value;
-            this._ring[propName] = value;
-        }
+        this._ring[propName] = value;
     }
 
     _setFacingDisks() {
