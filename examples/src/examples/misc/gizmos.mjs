@@ -137,17 +137,17 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Axis Tube Radius' },
+                jsx(LabelGroup, { text: 'XYZ Tube Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.axisTubeRadius' }
+                        link: { observer, path: 'gizmo.xyzTubeRadius' }
                     })
                 ),
             type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Axis Ring Radius' },
+                jsx(LabelGroup, { text: 'XYZ Ring Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.axisRingRadius' }
+                        link: { observer, path: 'gizmo.xyzRingRadius' }
                     })
                 ),
             type === 'rotate' &&
@@ -251,8 +251,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisPlaneSize: gizmo.axisPlaneSize,
                 axisPlaneGap: gizmo.axisPlaneGap,
                 axisCenterSize: gizmo.axisCenterSize,
-                axisTubeRadius: gizmo.axisTubeRadius,
-                axisRingRadius: gizmo.axisRingRadius,
+                xyzTubeRadius: gizmo.xyzTubeRadius,
+                xyzRingRadius: gizmo.xyzRingRadius,
                 faceTubeRadius: gizmo.faceTubeRadius,
                 faceRingRadius: gizmo.faceRingRadius
             });
