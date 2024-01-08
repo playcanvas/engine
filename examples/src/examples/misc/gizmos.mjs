@@ -135,6 +135,28 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         binding: new BindingTwoWay(),
                         link: { observer, path: 'gizmo.ringRadius' }
                     })
+                ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Segments' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.segments' },
+                        min: 1,
+                        max: 100,
+                        precision: 0,
+                        step: 1
+                    })
+                ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Sides' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.sides' },
+                        min: 1,
+                        max: 100,
+                        precision: 0,
+                        step: 1
+                    })
                 )
         ),
         jsx(Panel, { headerText: 'Camera' },
@@ -221,7 +243,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                 axisPlaneGap: gizmo.axisPlaneGap,
                 axisCenterSize: gizmo.axisCenterSize,
                 tubeRadius: gizmo.tubeRadius,
-                ringRadius: gizmo.ringRadius
+                ringRadius: gizmo.ringRadius,
+                segments: gizmo.segments,
+                sides: gizmo.sides
             });
             this.skipSetFire = false;
         }

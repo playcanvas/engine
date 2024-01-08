@@ -286,20 +286,25 @@ class AxisDisk extends AxisShape {
 
     _ringRadius = 0.55;
 
+    _segments = 30;
+
+    _sides = 20;
+
     constructor(options = {}) {
         super(options);
 
         this._device = options.device;
+
+        this._tubeRadius = options.tubeRadius ?? this._tubeRadius;
         this._ringRadius = options.ringRadius ?? this._ringRadius;
+        this._segments = options.segments ?? this._segments;
+        this._sides = options.sides ?? this._sides;
+
         this._createDisk(options.layers ?? []);
     }
 
     _createDisk(layers) {
-        const mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
-        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        const meshInstance = new MeshInstance(this._createTorusMesh(), this._defaultColor);
 
         this.entity = new Entity('disk_' + this.axis);
         this.entity.addComponent('render', {
@@ -313,12 +318,18 @@ class AxisDisk extends AxisShape {
         this.meshInstances.push(meshInstance);
     }
 
+    _createTorusMesh() {
+        return createTorus(this._device, {
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius,
+            segments: this._segments,
+            sides: this._sides
+        });
+    }
+
     set tubeRadius(value) {
         this._tubeRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
+        this.meshInstances[0].mesh = this._createTorusMesh();
     }
 
     get tubeRadius() {
@@ -327,14 +338,29 @@ class AxisDisk extends AxisShape {
 
     set ringRadius(value) {
         this._ringRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = createTorus(this._device, {
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius
-        });
+        this.meshInstances[0].mesh = this._createTorusMesh();
     }
 
     get ringRadius() {
         return this._ringRadius;
+    }
+
+    set segments(value) {
+        this._segments = value ?? 30;
+        this.meshInstances[0].mesh = this._createTorusMesh();
+    }
+
+    get segments() {
+        return this._segments;
+    }
+
+    set sides(value) {
+        this._sides = value ?? 20;
+        this.meshInstances[0].mesh = this._createTorusMesh();
+    }
+
+    get sides() {
+        return this._sides;
     }
 }
 

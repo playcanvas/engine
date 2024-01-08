@@ -108,6 +108,22 @@ class GizmoRotate extends GizmoTransform {
         return this._axisShapes.x.ringRadius;
     }
 
+    set segments(value) {
+        this._setDiskProp('segments', value);
+    }
+
+    get segments() {
+        return this._axisShapes.x.segments;
+    }
+
+    set sides(value) {
+        this._setDiskProp('sides', value);
+    }
+
+    get sides() {
+        return this._axisShapes.x.sides;
+    }
+
     _setDiskProp(propName, value) {
         this._axisShapes.x[propName] = value;
         this._axisShapes.y[propName] = value;
