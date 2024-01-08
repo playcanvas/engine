@@ -23,7 +23,7 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x,
+            defaultColor: this._materials.axis.x.noCull,
             hoverColor: this._materials.hover
         }),
         xz: new AxisPlane({
@@ -31,7 +31,7 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y,
+            defaultColor: this._materials.axis.y.noCull,
             hoverColor: this._materials.hover
         }),
         xy: new AxisPlane({
@@ -39,39 +39,31 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z,
+            defaultColor: this._materials.axis.z.noCull,
             hoverColor: this._materials.hover
         }),
         x: new AxisArrow({
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x,
+            defaultColor: this._materials.axis.x.culled,
             hoverColor: this._materials.hover
         }),
         y: new AxisArrow({
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y,
+            defaultColor: this._materials.axis.y.culled,
             hoverColor: this._materials.hover
         }),
         z: new AxisArrow({
             axis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z,
+            defaultColor: this._materials.axis.z.culled,
             hoverColor: this._materials.hover
         })
     };
-
-    /**
-     * Internal object containing the axis planes to flip.
-     *
-     * @type {import('./axis-shapes.js').AxisPlane[]}
-     * @private
-     */
-    _planes = [];
 
     /**
      * Internal mapping from each attached node to their starting position in local space.
@@ -104,18 +96,8 @@ class GizmoTranslate extends GizmoTransform {
 
         this._createTransform();
 
-        for (const key in this._shapes) {
-            const shape = this._shapes[key];
-            if (!(shape instanceof AxisPlane)) {
-                continue;
-            }
-            this._planes.push(shape);
-        }
-        this._checkForPlaneFlip();
-
         this.on('transform:start', () => {
             this._storeNodePositions();
-            this._checkForPlaneFlip();
         });
 
         this.on('transform:move', (axis, offset) => {
@@ -125,15 +107,6 @@ class GizmoTranslate extends GizmoTransform {
                 offset.scale(this.snapIncrement);
             }
             this._setNodePositions(offset);
-            this._checkForPlaneFlip();
-        });
-
-        this.on('coordSpace:set', () => {
-            this._checkForPlaneFlip();
-        });
-
-        this.on('nodes:attach', () => {
-            this._checkForPlaneFlip();
         });
 
         this.on('nodes:detach', () => {
@@ -208,16 +181,6 @@ class GizmoTranslate extends GizmoTransform {
         this._shapes.yz[prop] = value;
         this._shapes.xz[prop] = value;
         this._shapes.xy[prop] = value;
-    }
-
-    _checkForPlaneFlip() {
-        const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.entity.getPosition();
-        tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
-
-        for (let i = 0; i < this._planes.length; i++) {
-            this._planes[i].checkForFlip(tmpV1);
-        }
     }
 
     _storeNodePositions() {

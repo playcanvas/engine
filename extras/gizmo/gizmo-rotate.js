@@ -23,7 +23,7 @@ class GizmoRotate extends GizmoTransform {
             axis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z,
+            defaultColor: this._materials.axis.z.culled,
             hoverColor: this._materials.hover
         }),
         x: new AxisDisk({
@@ -31,7 +31,7 @@ class GizmoRotate extends GizmoTransform {
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x,
+            defaultColor: this._materials.axis.x.culled,
             hoverColor: this._materials.hover
         }),
         y: new AxisDisk({
@@ -39,7 +39,7 @@ class GizmoRotate extends GizmoTransform {
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y,
+            defaultColor: this._materials.axis.y.culled,
             hoverColor: this._materials.hover
         }),
         face: new AxisDisk({

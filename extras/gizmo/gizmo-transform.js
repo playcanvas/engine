@@ -1,5 +1,6 @@
 import {
     math,
+    CULLFACE_NONE,
     PROJECTION_PERSPECTIVE,
     BLEND_NORMAL,
     Color,
@@ -21,6 +22,12 @@ const pointDelta = new Vec3();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const GUIDELINE_SIZE = 1e3;
+const RED_COLOR = new Color(1, 0.3, 0.3);
+const BLUE_COLOR = new Color(0.3, 1, 0.3);
+const GREEN_COLOR = new Color(0.3, 0.3, 1);
+const YELLOW_COLOR = new Color(1, 1, 0.3);
+const SEMI_YELLOW_COLOR = new Color(1, 1, 0.3, 0.5);
+const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.5);
 
 /**
  * The base class for all transform gizmos.
@@ -33,9 +40,15 @@ class GizmoTransform extends Gizmo {
      *
      * @typedef MaterialsObject
      * @property {Object} axis - The object containing axis materials.
-     * @property {StandardMaterial} axis.x - The X axis material.
-     * @property {StandardMaterial} axis.y - The Y axis material.
-     * @property {StandardMaterial} axis.z - The Z axis material.
+     * @property {Object} axis.x - The object containing the X axis materials.
+     * @property {StandardMaterial} axis.x.culled - The X axis material with culling.
+     * @property {StandardMaterial} axis.x.noCull - The X axis material without culling.
+     * @property {Object} axis.y - The object containing the Y axis materials.
+     * @property {StandardMaterial} axis.y.culled - The Y axis material with culling.
+     * @property {StandardMaterial} axis.y.noCull - The Y axis material without culling.
+     * @property {Object} axis.z - The object containing the Z axis materials.
+     * @property {StandardMaterial} axis.z.culled - The Z axis material with culling.
+     * @property {StandardMaterial} axis.z.noCull - The Z axis material without culling.
      * @property {StandardMaterial} axis.face - The camera facing (face) axis material. Only for rotate
      * @property {StandardMaterial} hover - The hover material.
      * @property {StandardMaterial} center - The center shape material. Only for scale.
@@ -47,14 +60,23 @@ class GizmoTransform extends Gizmo {
      */
     _materials = {
         axis: {
-            x: this._createMaterial(new Color(1, 0.3, 0.3)),
-            y: this._createMaterial(new Color(0.3, 1, 0.3)),
-            z: this._createMaterial(new Color(0.3, 0.3, 1)),
-            face: this._createMaterial(new Color(1, 1, 0.3, 0.5))
+            x: {
+                culled: this._createMaterial(RED_COLOR),
+                noCull: this._createMaterial(RED_COLOR, true)
+            },
+            y: {
+                culled: this._createMaterial(GREEN_COLOR),
+                noCull: this._createMaterial(GREEN_COLOR, true)
+            },
+            z: {
+                culled: this._createMaterial(BLUE_COLOR),
+                noCull: this._createMaterial(BLUE_COLOR, true)
+            },
+            face: this._createMaterial(SEMI_YELLOW_COLOR)
         },
-        hover: this._createMaterial(new Color(1, 1, 0.3)),
-        center: this._createMaterial(new Color(1, 1, 1, 0.5)),
-        guide: this._createMaterial(new Color(1, 1, 1, 0.5))
+        hover: this._createMaterial(YELLOW_COLOR),
+        center: this._createMaterial(SEMI_WHITE_COLOR),
+        guide: this._createMaterial(SEMI_WHITE_COLOR)
     };
 
     /**
@@ -258,30 +280,36 @@ class GizmoTransform extends Gizmo {
     }
 
     set xAxisColor(value) {
-        this._materials.axis.x.emissive.copy(value);
-        this._materials.axis.x.update();
+        this._materials.axis.x.culled.emissive.copy(value);
+        this._materials.axis.x.noCull.emissive.copy(value);
+        this._materials.axis.x.culled.update();
+        this._materials.axis.x.noCull.update();
     }
 
     get xAxisColor() {
-        return this._materials.axis.x.emissive;
+        return this._materials.axis.x.culled.emissive;
     }
 
     set yAxisColor(value) {
-        this._materials.axis.y.emissive.copy(value);
-        this._materials.axis.y.update();
+        this._materials.axis.y.culled.emissive.copy(value);
+        this._materials.axis.y.noCull.emissive.copy(value);
+        this._materials.axis.y.culled.update();
+        this._materials.axis.y.noCull.update();
     }
 
     get yAxisColor() {
-        return this._materials.axis.y.emissive;
+        return this._materials.axis.y.culled.emissive;
     }
 
     set zAxisColor(value) {
-        this._materials.axis.z.emissive.copy(value);
-        this._materials.axis.z.update();
+        this._materials.axis.z.culled.emissive.copy(value);
+        this._materials.axis.z.noCull.emissive.copy(value);
+        this._materials.axis.z.culled.update();
+        this._materials.axis.z.noCull.update();
     }
 
     get zAxisColor() {
-        return this._materials.axis.z.emissive;
+        return this._materials.axis.z.culled.emissive;
     }
 
     set faceAxisColor(value) {
@@ -447,9 +475,12 @@ class GizmoTransform extends Gizmo {
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true);
     }
 
-    _createMaterial(color) {
+    _createMaterial(color, disableCulling = false) {
         const material = new StandardMaterial();
         material.emissive = color;
+        if (disableCulling) {
+            material.cull = CULLFACE_NONE;
+        }
         if (color.a !== 1) {
             material.opacity = color.a;
             material.blendType = BLEND_NORMAL;

@@ -3,14 +3,8 @@ import {
     Color,
     MeshInstance,
     Entity,
-    Vec3,
-    Quat
+    Vec3
 } from 'playcanvas';
-
-// temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpQ1 = new Quat();
 
 // constants
 const TORUS_SEGMENTS = 80;
@@ -393,18 +387,6 @@ class AxisPlane extends AxisShape {
 
     get gap() {
         return this._gap;
-    }
-
-    checkForFlip(screenDir) {
-        tmpV1.set(0, 1, 0);
-        tmpQ1.copy(this.entity.getRotation()).transformVector(tmpV1, tmpV1);
-        const dot = screenDir.dot(tmpV1);
-        if (dot > 0) {
-            return;
-        }
-        tmpV2.copy(this.entity.getLocalEulerAngles());
-        tmpV2[this._flipAxis] = 180 - tmpV2[this._flipAxis];
-        this.entity.setLocalEulerAngles(tmpV2);
     }
 }
 
