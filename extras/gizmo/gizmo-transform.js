@@ -459,7 +459,7 @@ class GizmoTransform extends Gizmo {
 
     _createTransform() {
         // mesh root
-        this._meshRoot = new Entity('center');
+        this._meshRoot = new Entity('meshRoot');
         this.gizmo.addChild(this._meshRoot);
 
         // shapes
