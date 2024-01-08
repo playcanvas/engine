@@ -219,22 +219,25 @@ const targets = [
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.
 // In that case we have a watcher which copies all necessary files.
 if (ENGINE_PATH === '') {
-    /** @type {RollupOptions|undefined} */
-    let target;
+    /** @type {buildTarget} */
+    const pushTarget = (...args) => {
+        targets.push(buildTarget(...args));
+    };
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.js
-        target = buildTarget('release', 'es5', '../src/index.js', 'dist/iframe');
+        pushTarget('release', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.js
+        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.js
+        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'development') {
         // Outputs: dist/iframe/playcanvas.dbg.js
-        target = buildTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'profiler') {
         // Outputs: dist/iframe/playcanvas.prf.js
-        target = buildTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
     } else {
         console.warn("NODE_ENV is neither production, development nor profiler.");
-    }
-    if (target) {
-        targets.push(target);
     }
 }
 
