@@ -142,13 +142,13 @@ class AxisArrow extends AxisShape {
     }
 
     _updateLine() {
-        this._line.setLocalPosition(new Vec3(0, this._gap + this._lineLength * 0.5, 0));
-        this._line.setLocalScale(new Vec3(this._lineThickness, this._lineLength, this._lineThickness));
+        this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
+        this._line.setLocalScale(this._lineThickness, this._lineLength, this._lineThickness);
     }
 
     _updateArrow() {
-        this._arrow.setLocalPosition(new Vec3(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0));
-        this._arrow.setLocalScale(new Vec3(this._arrowThickness, this._arrowLength, this._arrowThickness));
+        this._arrow.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
+        this._arrow.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
     }
 }
 
