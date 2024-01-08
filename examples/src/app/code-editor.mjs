@@ -26,8 +26,6 @@ const FILE_TYPE_LANGUAGES = {
     'mjs': 'javascript',
 };
 
-let monacoEditor;
-
 /**
  * @typedef {object} Props
  */
@@ -50,6 +48,12 @@ class CodeEditor extends TypedComponent {
         showMinimap: getShowMinimap()
     };
 
+    /** @type {import('monaco-editor').editor.IStandaloneCodeEditor|undefined} */
+    editor;
+
+    /** @type {string[]} */
+    decorators = [];
+
     /**
      * @param {Partial<State>} state - New partial state.
      */
@@ -61,18 +65,29 @@ class CodeEditor extends TypedComponent {
 
     componentDidMount() {
         this.handleExampleLoad = this.handleExampleLoad.bind(this);
+        this.handleExampleError = this.handleExampleError.bind(this);
         this.handleExampleLoading = this.handleExampleLoading.bind(this);
+        this.handleExampleHotReload = this.handleExampleHotReload.bind(this);
         this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
         window.addEventListener('exampleLoad', this.handleExampleLoad);
+        window.addEventListener('exampleError', this.handleExampleError);
         window.addEventListener('exampleLoading', this.handleExampleLoading);
+        window.addEventListener('exampleHotReload', this.handleExampleHotReload);
         window.addEventListener("requestedFiles", this.handleRequestedFiles);
         iframeRequestFiles();
     }
 
     componentWillUnmount() {
         window.removeEventListener("exampleLoad", this.handleExampleLoad);
+        window.removeEventListener("exampleError", this.handleExampleError);
         window.removeEventListener("exampleLoading", this.handleExampleLoading);
+        window.removeEventListener("exampleHotReload", this.handleExampleHotReload);
         window.removeEventListener("requestedFiles", this.handleRequestedFiles);
+    }
+
+    handleExampleHotReload() {
+        this.clearDecorations();
+        // console.log("handleExampleHotReload> clear decorations");
     }
 
     handleExampleLoad(event) {
@@ -80,6 +95,42 @@ class CodeEditor extends TypedComponent {
         /** @type {Record<string, string>} */
         const files = event.files;
         this.mergeState({ files, selectedFile: 'example.mjs' });
+    }
+
+    /**
+     * @param {CustomEvent} event - Custom event containing error thrown in iframe.
+     */
+    handleExampleError(event) {
+        const { editor } = this;
+        if (!editor) {
+            return;
+        }
+        // error can be an actual error or e.g. only a string in case of throw "oh ohhh"
+        const { lineno, colno, filename, error, message } = event.detail;
+        const stack = error.stack || 'missing';
+        const messageMarkdown = `**Error**\n${message}\n\n**Stack**\n${stack}\n\n**Filename**${filename}\n`;
+        const realLineNumber = lineno - 2;
+        // console.log("handleExampleError", { messageMarkdown, realLineNumber });
+        if (lineno < 1 || lineno > editor.getModel().getLineCount()) {
+            return;
+        }
+        const lineText = editor.getModel().getLineContent(realLineNumber);
+        const newDecorator = {
+            range: new monaco.Range(realLineNumber, 0, realLineNumber, lineText.length),
+            options: {
+                className: 'squiggly-error',
+                hoverMessage: {
+                    value: messageMarkdown
+                }
+            }
+        };
+        this.decorators = editor.deltaDecorations(this.decorators, [newDecorator]);
+    }
+
+    clearDecorations() {
+        if (this.editor) {
+            this.decorators = this.editor.deltaDecorations(this.decorators, []);
+        }
     }
 
     handleExampleLoading(event) {
@@ -112,11 +163,11 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor
+     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The Monaco editor.
      */
     editorDidMount(editor) {
+        this.editor = editor;
         window.editor = editor;
-        monacoEditor = editor;
         // Hot reload code via Shift + Enter
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
         const codePane = document.getElementById('codePane');
@@ -175,7 +226,7 @@ class CodeEditor extends TypedComponent {
      */
     selectFile(selectedFile) {
         this.mergeState({ selectedFile });
-        monacoEditor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
+        this.editor?.setScrollPosition({ scrollTop: 0, scrollLeft: 0 });
     }
 
     renderTabs() {
