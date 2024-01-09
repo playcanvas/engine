@@ -466,12 +466,6 @@ class GizmoTransform extends Gizmo {
             }
         }
 
-        if (isFacing) {
-            // translate the point to the same orientation as the camera
-            tmpQ1.copy(this.camera.entity.getRotation());
-            tmpQ1.invert().transformVector(point, point);
-        }
-
         // calculate angle based on axis
         let angle = 0;
         if (isRotation) {
@@ -483,8 +477,11 @@ class GizmoTransform extends Gizmo {
                     angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
                     break;
                 case 'z':
-                case 'face':
                     angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
+                    break;
+                case 'face':
+                    this.camera.entity.getRotation().invert().transformVector(point, tmpV1);
+                    angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
                     break;
             }
         }

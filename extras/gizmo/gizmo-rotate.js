@@ -97,12 +97,12 @@ class GizmoRotate extends GizmoTransform {
 
         const guideAngleLine = new Vec3();
         this.on('transform:start', () => {
-            guideAngleLine.copy(this._selectionStartPoint).normalize().scale(this.xyzRingRadius);
+            guideAngleLine.copy(this._selectionStartPoint).normalize().scale(this._getGuideAngleScale());
             this._storeNodeRotations();
         });
 
         this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
-            guideAngleLine.copy(pointLast).normalize().scale(this.xyzRingRadius);
+            guideAngleLine.copy(pointLast).normalize().scale(this._getGuideAngleScale());
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
@@ -159,6 +159,10 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
+    }
+
+    _getGuideAngleScale() {
+        return this._selectedAxis === 'face' ? this.faceRingRadius : this.xyzRingRadius;
     }
 
     _drawGuideAngleLine(point) {
