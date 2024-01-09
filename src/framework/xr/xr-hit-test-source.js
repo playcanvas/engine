@@ -41,19 +41,27 @@ class XrHitTestSource extends EventHandler {
     _transient;
 
     /**
+     * @type {null|import('./xr-input-source.js').XrInputSource}
+     * @private
+     */
+    _inputSource;
+
+    /**
      * Create a new XrHitTestSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
+     * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input Source for which hit test is created for, or null.
      * @hideconstructor
      */
-    constructor(manager, xrHitTestSource, transient) {
+    constructor(manager, xrHitTestSource, transient, inputSource = null) {
         super();
 
         this.manager = manager;
         this._xrHitTestSource = xrHitTestSource;
         this._transient = transient;
+        this._inputSource = inputSource;
     }
 
     /**
@@ -115,6 +123,10 @@ class XrHitTestSource extends EventHandler {
             const transientResults = frame.getHitTestResultsForTransientInput(this._xrHitTestSource);
             for (let i = 0; i < transientResults.length; i++) {
                 const transientResult = transientResults[i];
+
+                if (!transientResult.results.length)
+                    continue;
+
                 let inputSource;
 
                 if (transientResult.inputSource)
@@ -123,17 +135,21 @@ class XrHitTestSource extends EventHandler {
                 this.updateHitResults(transientResult.results, inputSource);
             }
         } else {
-            this.updateHitResults(frame.getHitTestResults(this._xrHitTestSource));
+            const results = frame.getHitTestResults(this._xrHitTestSource);
+            if (!results.length)
+                return;
+
+            this.updateHitResults(results);
         }
     }
 
     /**
      * @param {XRTransientInputHitTestResult[]} results - Hit test results.
-     * @param {XRHitTestSource} inputSource - Input source.
+     * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input source.
      * @private
      */
     updateHitResults(results, inputSource) {
-        if (inputSource && !inputSource.hitTestSourcesSet.has(this))
+        if (this._inputSource && this._inputSource !== inputSource)
             return;
 
         const origin = poolVec3.pop() ?? new Vec3();
@@ -163,8 +179,8 @@ class XrHitTestSource extends EventHandler {
             rotation.copy(pose.transform.orientation);
         }
 
-        this.fire('result', position, rotation, inputSource, candidateHitTestResult);
-        this.manager.hitTest.fire('result', this, position, rotation, inputSource, candidateHitTestResult);
+        this.fire('result', position, rotation, inputSource || this._inputSource, candidateHitTestResult);
+        this.manager.hitTest.fire('result', this, position, rotation, inputSource || this._inputSource, candidateHitTestResult);
 
         poolVec3.push(origin);
         poolVec3.push(position);

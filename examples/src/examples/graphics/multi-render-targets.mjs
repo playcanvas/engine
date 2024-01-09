@@ -177,15 +177,18 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
             textureCamera.setLocalPosition(110 * Math.sin(angle * 0.2), 45, 110 * Math.cos(angle * 0.2));
             textureCamera.lookAt(pc.Vec3.ZERO);
 
+            const gd = app.graphicsDevice;
+            const ratio = gd.width / gd.height;
+
             // debug draw the texture on the screen in the world layer of the main camera
             // @ts-ignore engine-tsd
-            app.drawTexture(0, 0.4, 1, 1, texture0, null, worldLayer);
+            app.drawTexture(0, 0.4, 1, ratio, texture0, null, worldLayer);
 
             // @ts-ignore engine-tsd
-            app.drawTexture(-0.5, -0.5, 0.7, 0.7, texture1, null, worldLayer);
+            app.drawTexture(-0.5, -0.5, 0.9, 0.9 * ratio, texture1, null, worldLayer);
 
             // @ts-ignore engine-tsd
-            app.drawTexture(0.5, -0.5, 0.7, 0.7, texture2, null, worldLayer);
+            app.drawTexture(0.5, -0.5, 0.9, 0.9 * ratio, texture2, null, worldLayer);
         });
     });
     return app;

@@ -99,8 +99,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -138,6 +136,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
+        this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
+        this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
@@ -288,6 +288,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     postInit() {
         super.postInit();
+
+        this.initializeRenderState();
+        this.setupPassEncoderDefaults();
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
@@ -513,8 +516,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendColor(r, g, b, a) {
-        // TODO: this should use passEncoder.setBlendConstant(color)
-        // similar implementation to this.stencilRef
+        const c = this.blendColor;
+        if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
+            c.set(r, g, b, a);
+            this.passEncoder.setBlendConstant(c);
+        }
     }
 
     setCullMode(cullMode) {
@@ -532,7 +538,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Set up default values for the render pass encoder.
      */
     setupPassEncoderDefaults() {
+        this.pipeline = null;
         this.stencilRef = 0;
+        this.blendColor.set(0, 0, 0, 0);
     }
 
     _uploadDirtyTextures() {
@@ -577,9 +585,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
-
-        // clear cached encoder state
-        this.pipeline = null;
 
         const renderPassDesc = wrt.renderPassDescriptor;
 

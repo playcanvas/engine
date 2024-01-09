@@ -78,7 +78,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
                 cameraEntity: camera,
                 debugRender: false,
                 fragment: fragment,
-                vertex: vertex
+                vertex: vertex,
+                dither: false
             });
             splat.setLocalPosition(px, py, pz);
             splat.setLocalScale(scale, scale, scale);

@@ -258,6 +258,10 @@ class ShadowRenderer {
         }
     }
 
+    /**
+     * @param {import('../light.js').Light} light - The light.
+     * @returns {number} Index of shadow pass info.
+     */
     getShadowPass(light) {
 
         // get shader pass from cache for this light type and shadow type

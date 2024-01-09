@@ -1110,7 +1110,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendEquation(gl.FUNC_ADD);
         gl.colorMask(true, true, true, true);
 
-        this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
 
         gl.enable(gl.CULL_FACE);

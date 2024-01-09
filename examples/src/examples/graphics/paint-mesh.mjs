@@ -31,7 +31,9 @@ async function example({ canvas, files, deviceType, assetPath, glslangPath, twgs
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
+        // @ts-ignore
         pc.TextureHandler,
+        // @ts-ignore
         pc.CubemapHandler
     ];
 
@@ -215,7 +217,7 @@ async function example({ canvas, files, deviceType, assetPath, glslangPath, twgs
 
 export class PaintMeshExample {
     static CATEGORY = 'Graphics';
-
+    static WEBGPU_ENABLED = true;
     static FILES = {
         'shader.vert': /* glsl */`
             // Attributes per vertex: position and uv
