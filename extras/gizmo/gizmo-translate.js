@@ -23,7 +23,7 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.noCull,
+            defaultColor: this._materials.axis.x.cullNone,
             hoverColor: this._materials.hover
         }),
         xz: new AxisPlane({
@@ -31,7 +31,7 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.noCull,
+            defaultColor: this._materials.axis.y.cullNone,
             hoverColor: this._materials.hover
         }),
         xy: new AxisPlane({
@@ -39,28 +39,28 @@ class GizmoTranslate extends GizmoTransform {
             flipAxis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.noCull,
+            defaultColor: this._materials.axis.z.cullNone,
             hoverColor: this._materials.hover
         }),
         x: new AxisArrow({
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.culled,
+            defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover
         }),
         y: new AxisArrow({
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.culled,
+            defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover
         }),
         z: new AxisArrow({
             axis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.culled,
+            defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover
         })
     };

@@ -41,14 +41,14 @@ class GizmoTransform extends Gizmo {
      * @typedef MaterialsObject
      * @property {Object} axis - The object containing axis materials.
      * @property {Object} axis.x - The object containing the X axis materials.
-     * @property {StandardMaterial} axis.x.culled - The X axis material with culling.
-     * @property {StandardMaterial} axis.x.noCull - The X axis material without culling.
+     * @property {StandardMaterial} axis.x.cullBack - The X axis material with front culling.
+     * @property {StandardMaterial} axis.x.cullNone - The X axis material without culling.
      * @property {Object} axis.y - The object containing the Y axis materials.
-     * @property {StandardMaterial} axis.y.culled - The Y axis material with culling.
-     * @property {StandardMaterial} axis.y.noCull - The Y axis material without culling.
+     * @property {StandardMaterial} axis.y.cullBack - The Y axis material with front culling.
+     * @property {StandardMaterial} axis.y.cullNone - The Y axis material without culling.
      * @property {Object} axis.z - The object containing the Z axis materials.
-     * @property {StandardMaterial} axis.z.culled - The Z axis material with culling.
-     * @property {StandardMaterial} axis.z.noCull - The Z axis material without culling.
+     * @property {StandardMaterial} axis.z.cullBack - The Z axis material with front culling.
+     * @property {StandardMaterial} axis.z.cullNone - The Z axis material without culling.
      * @property {StandardMaterial} axis.face - The camera facing (face) axis material. Only for rotate
      * @property {StandardMaterial} hover - The hover material.
      * @property {StandardMaterial} center - The center shape material. Only for scale.
@@ -61,16 +61,16 @@ class GizmoTransform extends Gizmo {
     _materials = {
         axis: {
             x: {
-                culled: this._createMaterial(RED_COLOR),
-                noCull: this._createMaterial(RED_COLOR, true)
+                cullBack: this._createMaterial(RED_COLOR),
+                cullNone: this._createMaterial(RED_COLOR, true)
             },
             y: {
-                culled: this._createMaterial(GREEN_COLOR),
-                noCull: this._createMaterial(GREEN_COLOR, true)
+                cullBack: this._createMaterial(GREEN_COLOR),
+                cullNone: this._createMaterial(GREEN_COLOR, true)
             },
             z: {
-                culled: this._createMaterial(BLUE_COLOR),
-                noCull: this._createMaterial(BLUE_COLOR, true)
+                cullBack: this._createMaterial(BLUE_COLOR),
+                cullNone: this._createMaterial(BLUE_COLOR, true)
             },
             face: this._createMaterial(SEMI_YELLOW_COLOR)
         },
@@ -280,36 +280,36 @@ class GizmoTransform extends Gizmo {
     }
 
     set xAxisColor(value) {
-        this._materials.axis.x.culled.emissive.copy(value);
-        this._materials.axis.x.noCull.emissive.copy(value);
-        this._materials.axis.x.culled.update();
-        this._materials.axis.x.noCull.update();
+        this._materials.axis.x.cullBack.emissive.copy(value);
+        this._materials.axis.x.cullNone.emissive.copy(value);
+        this._materials.axis.x.cullBack.update();
+        this._materials.axis.x.cullNone.update();
     }
 
     get xAxisColor() {
-        return this._materials.axis.x.culled.emissive;
+        return this._materials.axis.x.cullBack.emissive;
     }
 
     set yAxisColor(value) {
-        this._materials.axis.y.culled.emissive.copy(value);
-        this._materials.axis.y.noCull.emissive.copy(value);
-        this._materials.axis.y.culled.update();
-        this._materials.axis.y.noCull.update();
+        this._materials.axis.y.cullBack.emissive.copy(value);
+        this._materials.axis.y.cullNone.emissive.copy(value);
+        this._materials.axis.y.cullBack.update();
+        this._materials.axis.y.cullNone.update();
     }
 
     get yAxisColor() {
-        return this._materials.axis.y.culled.emissive;
+        return this._materials.axis.y.cullBack.emissive;
     }
 
     set zAxisColor(value) {
-        this._materials.axis.z.culled.emissive.copy(value);
-        this._materials.axis.z.noCull.emissive.copy(value);
-        this._materials.axis.z.culled.update();
-        this._materials.axis.z.noCull.update();
+        this._materials.axis.z.cullBack.emissive.copy(value);
+        this._materials.axis.z.cullNone.emissive.copy(value);
+        this._materials.axis.z.cullBack.update();
+        this._materials.axis.z.cullNone.update();
     }
 
     get zAxisColor() {
-        return this._materials.axis.z.culled.emissive;
+        return this._materials.axis.z.cullBack.emissive;
     }
 
     set faceAxisColor(value) {
