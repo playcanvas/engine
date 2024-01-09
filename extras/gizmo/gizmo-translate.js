@@ -100,13 +100,13 @@ class GizmoTranslate extends GizmoTransform {
             this._storeNodePositions();
         });
 
-        this.on('transform:move', (axis, isPlane, offset) => {
+        this.on('transform:move', (axis, isPlane, pointDelta) => {
             if (this.snap) {
-                offset.scale(1 / this.snapIncrement);
-                offset.round();
-                offset.scale(this.snapIncrement);
+                pointDelta.scale(1 / this.snapIncrement);
+                pointDelta.round();
+                pointDelta.scale(this.snapIncrement);
             }
-            this._setNodePositions(offset);
+            this._setNodePositions(pointDelta);
         });
 
         this.on('nodes:detach', () => {
@@ -191,11 +191,11 @@ class GizmoTranslate extends GizmoTransform {
         }
     }
 
-    _setNodePositions(point) {
+    _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             if (this._coordSpace === 'local') {
-                tmpV1.copy(point);
+                tmpV1.copy(pointDelta);
                 node.parent.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
                 tmpV2.y = 1 / tmpV2.y;
@@ -204,7 +204,7 @@ class GizmoTranslate extends GizmoTransform {
                 tmpV1.mul(tmpV2);
                 node.setLocalPosition(this._nodeLocalPositions.get(node).clone().add(tmpV1));
             } else {
-                node.setPosition(this._nodePositions.get(node).clone().add(point));
+                node.setPosition(this._nodePositions.get(node).clone().add(pointDelta));
             }
         }
 

@@ -100,12 +100,12 @@ class GizmoRotate extends GizmoTransform {
             this._storeNodeRotations();
         });
 
-        this.on('transform:move', (axis, isPlane, offset, angle, point) => {
+        this.on('transform:move', (axis, isPlane, pointDelta, angleDelta, point) => {
             guideAngleLine.copy(point).normalize().scale(this.xyzRingRadius);
             if (this.snap) {
-                angle = Math.round(angle / this.snapIncrement) * this.snapIncrement;
+                angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
-            this._setNodeRotations(axis, angle);
+            this._setNodeRotations(axis, angleDelta);
         });
 
         this.on('nodes:detach', () => {
@@ -182,7 +182,7 @@ class GizmoRotate extends GizmoTransform {
         }
     }
 
-    _setNodeRotations(axis, angle) {
+    _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.gizmo.getPosition();
         const cameraPos = this.camera.entity.getPosition();
         const isFacing = axis === 'face';
@@ -196,7 +196,7 @@ class GizmoRotate extends GizmoTransform {
                 tmpV1[axis] = 1;
             }
 
-            tmpQ1.setFromAxisAngle(tmpV1, angle);
+            tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
             if (!isFacing && this._coordSpace === 'local') {
                 tmpQ2.copy(this._nodeLocalRotations.get(node)).mul(tmpQ1);

@@ -113,21 +113,21 @@ class GizmoScale extends GizmoTransform {
             this._storeNodeScales();
         });
 
-        this.on('transform:move', (axis, isPlane, offset) => {
+        this.on('transform:move', (axis, isPlane, pointDelta) => {
             if (this.snap) {
-                offset.scale(1 / this.snapIncrement);
-                offset.round();
-                offset.scale(this.snapIncrement);
+                pointDelta.scale(1 / this.snapIncrement);
+                pointDelta.round();
+                pointDelta.scale(this.snapIncrement);
             }
             if (this.uniform && isPlane) {
-                tmpV1.set(Math.abs(offset.x), Math.abs(offset.y), Math.abs(offset.z));
+                tmpV1.set(Math.abs(pointDelta.x), Math.abs(pointDelta.y), Math.abs(pointDelta.z));
                 tmpV1[axis] = 0;
                 const v = tmpV1.length();
-                tmpV1.set(v * Math.sign(offset.x), v * Math.sign(offset.y), v * Math.sign(offset.z));
+                tmpV1.set(v * Math.sign(pointDelta.x), v * Math.sign(pointDelta.y), v * Math.sign(pointDelta.z));
                 tmpV1[axis] = 1;
-                offset.copy(tmpV1);
+                pointDelta.copy(tmpV1);
             }
-            this._setNodeScales(offset);
+            this._setNodeScales(pointDelta);
         });
 
         this.on('nodes:detach', () => {
@@ -218,10 +218,10 @@ class GizmoScale extends GizmoTransform {
         }
     }
 
-    _setNodeScales(point) {
+    _setNodeScales(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            node.setLocalScale(this._nodeScales.get(node).clone().mul(point));
+            node.setLocalScale(this._nodeScales.get(node).clone().mul(pointDelta));
         }
     }
 }
