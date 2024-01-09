@@ -5,9 +5,6 @@ import {
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GizmoTransform } from "./gizmo-transform.js";
 
-// temporary variables
-const tmpV1 = new Vec3();
-
 /**
  * Scaling gizmo.
  *
