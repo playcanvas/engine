@@ -1,6 +1,7 @@
 import {
     math,
     CULLFACE_NONE,
+    CULLFACE_BACK,
     PROJECTION_PERSPECTIVE,
     BLEND_NORMAL,
     Color,
@@ -62,19 +63,22 @@ class GizmoTransform extends Gizmo {
         axis: {
             x: {
                 cullBack: this._createMaterial(RED_COLOR),
-                cullNone: this._createMaterial(RED_COLOR, true)
+                cullNone: this._createMaterial(RED_COLOR, CULLFACE_NONE)
             },
             y: {
                 cullBack: this._createMaterial(GREEN_COLOR),
-                cullNone: this._createMaterial(GREEN_COLOR, true)
+                cullNone: this._createMaterial(GREEN_COLOR, CULLFACE_NONE)
             },
             z: {
                 cullBack: this._createMaterial(BLUE_COLOR),
-                cullNone: this._createMaterial(BLUE_COLOR, true)
+                cullNone: this._createMaterial(BLUE_COLOR, CULLFACE_NONE)
             },
             face: this._createMaterial(SEMI_YELLOW_COLOR)
         },
-        hover: this._createMaterial(YELLOW_COLOR),
+        hover: {
+            cullBack: this._createMaterial(YELLOW_COLOR),
+            cullNone: this._createMaterial(YELLOW_COLOR, CULLFACE_NONE)
+        },
         center: this._createMaterial(SEMI_WHITE_COLOR),
         guide: this._createMaterial(SEMI_WHITE_COLOR)
     };
@@ -322,12 +326,12 @@ class GizmoTransform extends Gizmo {
     }
 
     set hoverColor(value) {
-        this._materials.hover.emissive.copy(value);
-        this._materials.hover.update();
+        this._materials.hover.cullBack.emissive.copy(value);
+        this._materials.hover.cullBack.update();
     }
 
     get hoverColor() {
-        return this._materials.hover.emissive;
+        return this._materials.hover.cullBack.emissive;
     }
 
     set guideLineColor(value) {
@@ -475,12 +479,10 @@ class GizmoTransform extends Gizmo {
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true);
     }
 
-    _createMaterial(color, disableCulling = false) {
+    _createMaterial(color, cull = CULLFACE_BACK) {
         const material = new StandardMaterial();
         material.emissive = color;
-        if (disableCulling) {
-            material.cull = CULLFACE_NONE;
-        }
+        material.cull = cull;
         if (color.a !== 1) {
             material.opacity = color.a;
             material.blendType = BLEND_NORMAL;

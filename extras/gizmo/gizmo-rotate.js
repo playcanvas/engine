@@ -24,7 +24,7 @@ class GizmoRotate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover
+            hoverColor: this._materials.hover.cullBack
         }),
         x: new AxisDisk({
             device: this.app.graphicsDevice,
@@ -32,7 +32,7 @@ class GizmoRotate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover
+            hoverColor: this._materials.hover.cullBack
         }),
         y: new AxisDisk({
             device: this.app.graphicsDevice,
@@ -40,14 +40,14 @@ class GizmoRotate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover
+            hoverColor: this._materials.hover.cullBack
         }),
         face: new AxisDisk({
             device: this.app.graphicsDevice,
             axis: 'face',
             layers: [this.layer.id],
             defaultColor: this._materials.axis.face,
-            hoverColor: this._materials.hover,
+            hoverColor: this._materials.hover.cullBack,
             ringRadius: 0.8
         })
     };
