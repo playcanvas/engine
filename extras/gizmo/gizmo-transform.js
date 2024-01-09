@@ -143,7 +143,7 @@ class GizmoTransform extends Gizmo {
      * Internal currently selected axis.
      *
      * @type {string}
-     * @private
+     * @protected
      */
     _selectedAxis = '';
 
@@ -151,7 +151,7 @@ class GizmoTransform extends Gizmo {
      * Internal state of if currently selected shape is a plane.
      *
      * @type {boolean}
-     * @private
+     * @protected
      */
     _selectedIsPlane = false;
 
@@ -159,7 +159,7 @@ class GizmoTransform extends Gizmo {
      * Internal selection starting coordinates in world space.
      *
      * @type {Vec3}
-     * @private
+     * @protected
      */
     _selectionStartPoint = new Vec3();
 
@@ -167,7 +167,7 @@ class GizmoTransform extends Gizmo {
      * Internal selection starting angle in world space.
      *
      * @type {number}
-     * @private
+     * @protected
      */
     _selectionStartAngle = 0;
 
@@ -255,7 +255,7 @@ class GizmoTransform extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
                 const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire('transform:move', this._selectedAxis, this._selectedIsPlane, pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
+                this.fire('transform:move', pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }
@@ -272,7 +272,7 @@ class GizmoTransform extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 this._selectionStartPoint.copy(pointInfo.point);
                 this._selectionStartAngle = pointInfo.angle;
-                this.fire('transform:start', this._selectionStartPoint, this._selectionStartAngle);
+                this.fire('transform:start');
                 this._dragging = true;
             }
         });

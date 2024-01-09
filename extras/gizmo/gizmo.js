@@ -153,7 +153,6 @@ class Gizmo extends EventHandler {
     set coordSpace(value) {
         this._coordSpace = value ?? 'world';
         this._updateRotation();
-        this.fire('coordSpace:set', this._coordSpace);
     }
 
     get coordSpace() {
@@ -163,7 +162,6 @@ class Gizmo extends EventHandler {
     set size(value) {
         this._size = value;
         this._updateScale();
-        this.fire('size:set', this._size);
     }
 
     get size() {
@@ -215,18 +213,15 @@ class Gizmo extends EventHandler {
     }
 
     _updateRotation() {
+        tmpV1.set(0, 0, 0);
         if (this._coordSpace === 'local') {
-            tmpV1.set(0, 0, 0);
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
                 tmpV1.add(node.getEulerAngles());
             }
             tmpV1.scale(1.0 / (this.nodes.length || 1));
-            this.gizmo.setEulerAngles(tmpV1);
-        } else {
-            tmpV1.set(0, 0, 0);
-            this.gizmo.setEulerAngles(tmpV1);
         }
+        this.gizmo.setEulerAngles(tmpV1);
 
         this.fire('eulerAngles:set', tmpV1);
     }
@@ -238,10 +233,9 @@ class Gizmo extends EventHandler {
             this._scale = this.camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
-        tmpV1.set(this._scale, this._scale, this._scale);
-        this.gizmo.setLocalScale(tmpV1);
+        this.gizmo.setLocalScale(this._scale, this._scale, this._scale);
 
-        this.fire('scale:set', tmpV1);
+        this.fire('scale:set', this._scale);
     }
 
     _getSelection(x, y) {

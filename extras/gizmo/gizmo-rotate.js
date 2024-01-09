@@ -95,17 +95,17 @@ class GizmoRotate extends GizmoTransform {
         this._createTransform();
 
         const guideAngleLine = new Vec3();
-        this.on('transform:start', (point) => {
-            guideAngleLine.copy(point).normalize().scale(this.xyzRingRadius);
+        this.on('transform:start', () => {
+            guideAngleLine.copy(this._selectionStartPoint).normalize().scale(this.xyzRingRadius);
             this._storeNodeRotations();
         });
 
-        this.on('transform:move', (axis, isPlane, pointDelta, angleDelta, point) => {
-            guideAngleLine.copy(point).normalize().scale(this.xyzRingRadius);
+        this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
+            guideAngleLine.copy(pointLast).normalize().scale(this.xyzRingRadius);
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
-            this._setNodeRotations(axis, angleDelta);
+            this._setNodeRotations(this._selectedAxis, angleDelta);
         });
 
         this.on('nodes:detach', () => {
@@ -161,10 +161,11 @@ class GizmoRotate extends GizmoTransform {
     }
 
     _drawGuideAngleLine(point) {
+        const axis = this._selectedAxis;
         const gizmoPos = this.gizmo.getPosition();
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).scale(this._scale);
-        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), this.guideLineColor, false, this.layer);
+        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), this._materials.axis[axis].cullBack.emissive, false, this.layer);
     }
 
     _faceDiskToCamera(entity) {

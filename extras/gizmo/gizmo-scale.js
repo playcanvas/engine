@@ -108,12 +108,14 @@ class GizmoScale extends GizmoTransform {
             this.uniform = true;
         });
 
-        this.on('transform:start', (start) => {
-            start.sub(Vec3.ONE);
+        this.on('transform:start', () => {
+            this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
-        this.on('transform:move', (axis, isPlane, pointDelta) => {
+        this.on('transform:move', (pointDelta) => {
+            const axis = this._selectedAxis;
+            const isPlane = this._selectedIsPlane;
             if (this.snap) {
                 pointDelta.scale(1 / this.snapIncrement);
                 pointDelta.round();
