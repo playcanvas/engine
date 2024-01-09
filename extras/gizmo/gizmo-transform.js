@@ -108,6 +108,14 @@ class GizmoTransform extends Gizmo {
     _shapeMap = new Map();
 
     /**
+     * Internal gizmo starting rotation in world space.
+     *
+     * @type {Quat}
+     * @private
+     */
+    _gizmoRotationStart = new Quat();
+
+    /**
      * Internal currently hovered shape.
      *
      * @type {import('./axis-shapes.js').AxisShape}
@@ -260,6 +268,7 @@ class GizmoTransform extends Gizmo {
             if (meshInstance) {
                 this._selectedAxis = this._getAxis(meshInstance);
                 this._selectedIsPlane =  this._getIsPlane(meshInstance);
+                this._gizmoRotationStart.copy(this.gizmo.getRotation());
                 const pointInfo = this._calcPoint(x, y);
                 this._pointStart.copy(pointInfo.point);
                 this._angleStart = pointInfo.angle;
@@ -404,7 +413,7 @@ class GizmoTransform extends Gizmo {
             planeNormal[axis] = 1;
 
             // rotate plane normal by gizmo rotation
-            tmpQ1.copy(this.gizmo.getRotation()).transformVector(planeNormal, planeNormal);
+            tmpQ1.copy(this._gizmoRotationStart).transformVector(planeNormal, planeNormal);
 
             if (!isPlane && !isRotation) {
                 tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
@@ -466,6 +475,7 @@ class GizmoTransform extends Gizmo {
                     break;
             }
         }
+
         return { point, angle };
     }
 
