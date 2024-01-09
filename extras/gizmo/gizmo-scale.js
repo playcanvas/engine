@@ -122,7 +122,7 @@ class GizmoScale extends GizmoTransform {
             if (this.uniform && isPlane) {
                 tmpV1.set(Math.abs(offset.x), Math.abs(offset.y), Math.abs(offset.z));
                 tmpV1[axis] = 0;
-                const v = Math.max(tmpV1.x, tmpV1.y, tmpV1.z);
+                const v = tmpV1.length();
                 tmpV1.set(v * Math.sign(offset.x), v * Math.sign(offset.y), v * Math.sign(offset.z));
                 tmpV1[axis] = 1;
                 offset.copy(tmpV1);
