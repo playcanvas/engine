@@ -395,7 +395,7 @@ class GizmoTransform extends Gizmo {
     _calcPoint(x, y) {
         const gizmoPos = this.gizmo.getPosition();
         const mouseWPos = this.camera.screenToWorld(x, y, 1);
-        const cameraRot = this.camera.getRotation();
+        const cameraRot = this.camera.entity.getRotation();
         const rayOrigin = this.camera.entity.getPosition();
         const rayDir = new Vec3();
         const planeNormal = new Vec3();
