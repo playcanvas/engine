@@ -229,7 +229,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
     class GizmoHandler {
         _type = 'translate';
 
@@ -282,7 +282,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         }
     }
 
-
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
@@ -292,17 +291,22 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
+    createOptions.mouse = new pc.Mouse(document.body);
+    createOptions.keyboard = new pc.Keyboard(window);
 
     createOptions.componentSystems = [
         pc.RenderComponentSystem,
         pc.CameraComponentSystem,
-        pc.LightComponentSystem
+        pc.LightComponentSystem,
+        pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
         pc.TextureHandler,
         // @ts-ignore
-        pc.ContainerHandler
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.ScriptHandler
     ];
 
     const app = new pc.AppBase(canvas);
@@ -341,6 +345,24 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
         }
     });
 
+    // assets
+    const assets = {
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/fly-camera.js' })
+    };
+
+    /**
+     * @param {pc.Asset[] | number[]} assetList - The asset list.
+     * @param {pc.AssetRegistry} assetRegistry - The asset registry.
+     * @returns {Promise<void>} The promise.
+     */
+    function loadAssets(assetList, assetRegistry) {
+        return new Promise((resolve) => {
+            const assetListLoader = new pc.AssetListLoader(assetList, assetRegistry);
+            assetListLoader.load(resolve);
+        });
+    }
+    await loadAssets(Object.values(assets), app.assets);
+
     app.start();
 
     // create box entities
@@ -368,9 +390,11 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
     camera.addComponent('camera', {
         clearColor: new pc.Color(0.5, 0.6, 0.9)
     });
-    app.root.addChild(camera);
+    camera.addComponent("script");
+    camera.script.create("flyCamera");
     camera.setPosition(5, 3, 5);
     camera.lookAt(0, 0, 0);
+    app.root.addChild(camera);
 
     // create directional light entity
     const light = new pc.Entity('light');
@@ -402,7 +426,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath }) {
                         camera.camera.orthoHeight = value;
                         break;
                 }
-                gizmoHandler.gizmo.updateScale();
                 return;
             case 'gizmo':
                 if (gizmoHandler.skipSetFire) {
