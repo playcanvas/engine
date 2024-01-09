@@ -87,7 +87,7 @@ class GizmoTransform extends Gizmo {
      * Internal version of the guide line color.
      *
      * @type {Color}
-     * @private
+     * @protected
      */
     _guideLineColor = new Color(1, 1, 1, 0.8);
 
@@ -161,7 +161,7 @@ class GizmoTransform extends Gizmo {
      * @type {Vec3}
      * @private
      */
-    _selectionStartPosition = new Vec3();
+    _selectionStartPoint = new Vec3();
 
     /**
      * Internal selection starting angle in world space.
@@ -191,7 +191,7 @@ class GizmoTransform extends Gizmo {
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
-     * @private
+     * @protected
      */
     _dragging = false;
 
@@ -253,9 +253,9 @@ class GizmoTransform extends Gizmo {
 
             if (this._dragging) {
                 const pointInfo = this._calcPoint(x, y);
-                pointDelta.copy(pointInfo.point).sub(this._selectionStartPosition);
+                pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
                 const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire('transform:move', this._selectedAxis, this._selectedIsPlane, pointDelta, angleDelta);
+                this.fire('transform:move', this._selectedAxis, this._selectedIsPlane, pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }
@@ -270,9 +270,9 @@ class GizmoTransform extends Gizmo {
                 this._selectedIsPlane =  this._getIsPlane(meshInstance);
                 this._gizmoRotationStart.copy(this.gizmo.getRotation());
                 const pointInfo = this._calcPoint(x, y);
-                this._selectionStartPosition.copy(pointInfo.point);
+                this._selectionStartPoint.copy(pointInfo.point);
                 this._selectionStartAngle = pointInfo.angle;
-                this.fire('transform:start', this._selectionStartPosition);
+                this.fire('transform:start', this._selectionStartPoint, this._selectionStartAngle);
                 this._dragging = true;
             }
         });
@@ -289,6 +289,13 @@ class GizmoTransform extends Gizmo {
 
         this.on('key:up', () => {
             this.snap = false;
+        });
+
+        this.on('nodes:detach', () => {
+            this._hoverAxis = '';
+            this._hoverIsPlane = false;
+            this._hover(null);
+            this.fire('pointer:up');
         });
     }
 

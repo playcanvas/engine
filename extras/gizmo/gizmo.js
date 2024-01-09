@@ -43,6 +43,14 @@ class Gizmo extends EventHandler {
     _size = 1;
 
     /**
+     * Internal version of the gizmo scale.
+     *
+     * @type {number}
+     * @protected
+     */
+    _scale = 1;
+
+    /**
      * Internal version of coordinate space.
      *
      * @type {string}
@@ -224,14 +232,13 @@ class Gizmo extends EventHandler {
     }
 
     _updateScale() {
-        let scale = 1;
         if (this.camera.projection === PROJECTION_PERSPECTIVE) {
-            scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
+            this._scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
         } else {
-            scale = this.camera.orthoHeight * ORTHO_SCALE_RATIO;
+            this._scale = this.camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
-        scale = Math.max(scale * this._size, MIN_GIZMO_SCALE);
-        tmpV1.set(scale, scale, scale);
+        this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
+        tmpV1.set(this._scale, this._scale, this._scale);
         this.gizmo.setLocalScale(tmpV1);
 
         this.fire('scale:set', tmpV1);

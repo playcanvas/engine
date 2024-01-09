@@ -8,6 +8,7 @@ import { GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
@@ -93,11 +94,14 @@ class GizmoRotate extends GizmoTransform {
 
         this._createTransform();
 
-        this.on('transform:start', () => {
+        const guideAngleLine = new Vec3();
+        this.on('transform:start', (point) => {
+            guideAngleLine.copy(point).normalize().scale(this.xyzRingRadius);
             this._storeNodeRotations();
         });
 
-        this.on('transform:move', (axis, isPlane, offset, angle) => {
+        this.on('transform:move', (axis, isPlane, offset, angle, point) => {
+            guideAngleLine.copy(point).normalize().scale(this.xyzRingRadius);
             if (this.snap) {
                 angle = Math.round(angle / this.snapIncrement) * this.snapIncrement;
             }
@@ -112,6 +116,9 @@ class GizmoRotate extends GizmoTransform {
 
         this.app.on('update', () => {
             this._faceDiskToCamera(this._shapes.face.entity);
+            if (this._dragging) {
+                this._drawGuideAngleLine(guideAngleLine);
+            }
         });
     }
 
@@ -151,6 +158,13 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
+    }
+
+    _drawGuideAngleLine(point) {
+        const gizmoPos = this.gizmo.getPosition();
+        tmpV1.set(0, 0, 0);
+        tmpV2.copy(point).scale(this._scale);
+        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), this.guideLineColor, false, this.layer);
     }
 
     _faceDiskToCamera(entity) {
