@@ -106,7 +106,7 @@ class GizmoRotate extends GizmoTransform {
             this._storeNodeRotations();
         });
 
-        this.on('transform:move', (axis, offset, angle) => {
+        this.on('transform:move', (axis, isPlane, offset, angle) => {
             if (this.snap) {
                 angle = Math.round(angle / this.snapIncrement) * this.snapIncrement;
             }

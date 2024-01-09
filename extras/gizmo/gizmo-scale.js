@@ -5,6 +5,9 @@ import {
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GizmoTransform } from "./gizmo-transform.js";
 
+// temporary variables
+const tmpV1 = new Vec3();
+
 /**
  * Scaling gizmo.
  *
@@ -75,6 +78,13 @@ class GizmoScale extends GizmoTransform {
      */
     _nodeScales = new Map();
 
+    /**
+     * State for if uniform scaling is enabled for planes. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    uniform = true;
+
     snapIncrement = 1;
 
     /**
@@ -90,16 +100,32 @@ class GizmoScale extends GizmoTransform {
 
         this._createTransform();
 
+        this.on('key:down', (key, shiftKey, ctrlKey) => {
+            this.uniform = !ctrlKey;
+        });
+
+        this.on('key:up', () => {
+            this.uniform = true;
+        });
+
         this.on('transform:start', (start) => {
             start.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
-        this.on('transform:move', (axis, offset) => {
+        this.on('transform:move', (axis, isPlane, offset) => {
             if (this.snap) {
                 offset.scale(1 / this.snapIncrement);
                 offset.round();
                 offset.scale(this.snapIncrement);
+            }
+            if (this.uniform && isPlane) {
+                tmpV1.set(Math.abs(offset.x), Math.abs(offset.y), Math.abs(offset.z));
+                tmpV1[axis] = 0;
+                const v = Math.max(tmpV1.x, tmpV1.y, tmpV1.z);
+                tmpV1.set(v * Math.sign(offset.x), v * Math.sign(offset.y), v * Math.sign(offset.z));
+                tmpV1[axis] = 1;
+                offset.copy(tmpV1);
             }
             this._setNodeScales(offset);
         });

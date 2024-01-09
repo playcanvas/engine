@@ -184,14 +184,14 @@ class GizmoTransform extends Gizmo {
     _dragging = false;
 
     /**
-     * State for if snapping is enabled. Defaults to false
+     * State for if snapping is enabled. Defaults to false.
      *
      * @type {boolean}
      */
     snap = false;
 
     /**
-     * Snapping increment. Defaults to 1
+     * Snapping increment. Defaults to 1.
      *
      * @type {number}
      */
@@ -243,7 +243,7 @@ class GizmoTransform extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 pointDelta.copy(pointInfo.point).sub(this._pointStart);
                 const angleDelta = pointInfo.angle - this._angleStart;
-                this.fire('transform:move', this._selectedAxis, pointDelta, angleDelta);
+                this.fire('transform:move', this._selectedAxis, this._selectedIsPlane, pointDelta, angleDelta);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }

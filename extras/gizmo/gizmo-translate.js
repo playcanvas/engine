@@ -100,7 +100,7 @@ class GizmoTranslate extends GizmoTransform {
             this._storeNodePositions();
         });
 
-        this.on('transform:move', (axis, offset) => {
+        this.on('transform:move', (axis, isPlane, offset) => {
             if (this.snap) {
                 offset.scale(1 / this.snapIncrement);
                 offset.round();

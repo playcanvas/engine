@@ -122,7 +122,7 @@ class Gizmo extends EventHandler {
             if (!this.gizmo.enabled) {
                 return;
             }
-            this.fire('key:down', e.key, e.shiftKey, e.metaKey);
+            this.fire('key:down', e.key, e.shiftKey, e.ctrlKey, e.metaKey);
         };
         this._onKeyUp = (e) => {
             if (!this.gizmo.enabled) {
