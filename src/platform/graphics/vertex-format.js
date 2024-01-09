@@ -8,9 +8,13 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
+import { DeviceCache } from './device-cache.js';
 
 const stringIds = new StringIds();
 const webgpuValidElementSizes = [2, 4, 8, 12, 16];
+
+// device cache storing the default instancing format per device
+const deviceCache = new DeviceCache();
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
@@ -207,12 +211,6 @@ class VertexFormat {
     }
 
     /**
-     * @type {VertexFormat}
-     * @private
-     */
-    static _defaultInstancingFormat = null;
-
-    /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
@@ -222,16 +220,15 @@ class VertexFormat {
      */
     static getDefaultInstancingFormat(graphicsDevice) {
 
-        if (!VertexFormat._defaultInstancingFormat) {
-            VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, [
+        // get it from the device cache, or create a new one if not cached yet
+        return deviceCache.get(graphicsDevice, () => {
+            return new VertexFormat(graphicsDevice, [
                 { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
             ]);
-        }
-
-        return VertexFormat._defaultInstancingFormat;
+        });
     }
 
     static isElementValid(graphicsDevice, elementDesc) {

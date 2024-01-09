@@ -967,7 +967,7 @@ class LitShader {
             if (options.clusteredLightingAreaLightsEnabled)
                 decl.append("#define CLUSTER_AREALIGHTS");
 
-            decl.append(LightsBuffer.shaderDefines);
+            decl.append(LightsBuffer.getShaderDefines(device));
 
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 func.append(chunks.clusteredLightShadowsPS);
