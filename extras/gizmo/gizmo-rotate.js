@@ -1,4 +1,5 @@
 import {
+    Color,
     Quat,
     Vec3
 } from 'playcanvas';
@@ -161,12 +162,10 @@ class GizmoRotate extends GizmoTransform {
     }
 
     _drawGuideAngleLine(point) {
-        const axis = this._selectedAxis;
         const gizmoPos = this.gizmo.getPosition();
-        const color = axis === 'face' ? this._materials.hover.cullBack.emissive : this._materials.axis[axis].cullBack.emissive;
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).scale(this._scale);
-        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), color, false, this.layer);
+        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), Color.BLACK, false, this.layer);
     }
 
     _faceDiskToCamera(entity) {
