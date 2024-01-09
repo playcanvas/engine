@@ -161,7 +161,7 @@ class GizmoTransform extends Gizmo {
      * @type {Vec3}
      * @private
      */
-    _pointStart = new Vec3();
+    _selectionStartPosition = new Vec3();
 
     /**
      * Internal selection starting angle in world space.
@@ -169,7 +169,7 @@ class GizmoTransform extends Gizmo {
      * @type {number}
      * @private
      */
-    _angleStart = 0;
+    _selectionStartAngle = 0;
 
     /**
      * Internal state if transform is a rotation.
@@ -253,8 +253,8 @@ class GizmoTransform extends Gizmo {
 
             if (this._dragging) {
                 const pointInfo = this._calcPoint(x, y);
-                pointDelta.copy(pointInfo.point).sub(this._pointStart);
-                const angleDelta = pointInfo.angle - this._angleStart;
+                pointDelta.copy(pointInfo.point).sub(this._selectionStartPosition);
+                const angleDelta = pointInfo.angle - this._selectionStartAngle;
                 this.fire('transform:move', this._selectedAxis, this._selectedIsPlane, pointDelta, angleDelta);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
@@ -270,9 +270,9 @@ class GizmoTransform extends Gizmo {
                 this._selectedIsPlane =  this._getIsPlane(meshInstance);
                 this._gizmoRotationStart.copy(this.gizmo.getRotation());
                 const pointInfo = this._calcPoint(x, y);
-                this._pointStart.copy(pointInfo.point);
-                this._angleStart = pointInfo.angle;
-                this.fire('transform:start', this._pointStart);
+                this._selectionStartPosition.copy(pointInfo.point);
+                this._selectionStartAngle = pointInfo.angle;
+                this.fire('transform:start', this._selectionStartPosition);
                 this._dragging = true;
             }
         });
@@ -457,6 +457,12 @@ class GizmoTransform extends Gizmo {
                 point.set(0, 0, 0);
                 point[axis] = v;
             }
+        }
+
+        if (isFacing) {
+            // translate the point to the same orientation as the camera
+            tmpQ1.copy(this.camera.entity.getRotation());
+            tmpQ1.invert().transformVector(point, point);
         }
 
         // calculate angle based on axis
