@@ -55,14 +55,6 @@ class GizmoRotate extends GizmoTransform {
     _isRotation = true;
 
     /**
-     * Internal axis shape for guide ring.
-     *
-     * @type {AxisDisk}
-     * @private
-     */
-    _guideRingShape;
-
-    /**
      * Internal mapping from each attached node to their starting rotation (euler angles) in local space.
      *
      * @type {Map<import('playcanvas').GraphNode, Vec3>}
@@ -102,7 +94,6 @@ class GizmoRotate extends GizmoTransform {
         this._createTransform();
 
         this.on('transform:start', () => {
-            this._setFacingDisks();
             this._storeNodeRotations();
         });
 
@@ -110,22 +101,17 @@ class GizmoRotate extends GizmoTransform {
             if (this.snap) {
                 angle = Math.round(angle / this.snapIncrement) * this.snapIncrement;
             }
-            this._setFacingDisks();
             this._setNodeRotations(axis, angle);
-        });
-
-        this.on('coordSpace:set', () => {
-            this._setFacingDisks();
-        });
-
-        this.on('nodes:attach', () => {
-            this._setFacingDisks();
         });
 
         this.on('nodes:detach', () => {
             this._nodeLocalRotations.clear();
             this._nodeRotations.clear();
             this._nodeOffsets.clear();
+        });
+
+        this.app.on('update', () => {
+            this._faceDiskToCamera(this._shapes.face.entity);
         });
     }
 
@@ -165,29 +151,11 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
-        this._guideRingShape[prop] = value;
-    }
-
-    _setFacingDisks() {
-        this._faceDiskToCamera(this._guideRingShape.entity);
-        this._faceDiskToCamera(this._shapes.face.entity);
     }
 
     _faceDiskToCamera(entity) {
         entity.lookAt(this.camera.entity.getPosition());
         entity.rotateLocal(90, 0, 0);
-    }
-
-    _createTransform() {
-        super._createTransform();
-
-        // guide ring
-        this._guideRingShape = new AxisDisk({
-            device: this.app.graphicsDevice,
-            layers: [this.layer.id],
-            defaultColor: this._materials.guide
-        });
-        this._meshRoot.addChild(this._guideRingShape.entity);
     }
 
     _storeNodeRotations() {
