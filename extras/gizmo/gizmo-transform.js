@@ -395,6 +395,7 @@ class GizmoTransform extends Gizmo {
     _calcPoint(x, y) {
         const gizmoPos = this.gizmo.getPosition();
         const mouseWPos = this.camera.screenToWorld(x, y, 1);
+        const cameraRot = this.camera.getRotation();
         const rayOrigin = this.camera.entity.getPosition();
         const rayDir = new Vec3();
         const planeNormal = new Vec3();
@@ -480,7 +481,7 @@ class GizmoTransform extends Gizmo {
                     angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
                     break;
                 case 'face':
-                    this.camera.entity.getRotation().invert().transformVector(point, tmpV1);
+                    cameraRot.invert().transformVector(point, tmpV1);
                     angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
                     break;
             }
