@@ -291,8 +291,6 @@ class AppBase extends EventHandler {
          */
         this.loader = new ResourceLoader(this);
 
-        LightsBuffer.init(device);
-
         /**
          * Stores all entities that have been created for this app by guid.
          *
