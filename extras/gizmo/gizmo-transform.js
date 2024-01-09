@@ -41,13 +41,13 @@ class GizmoTransform extends Gizmo {
      * @typedef MaterialsObject
      * @property {Object} axis - The object containing axis materials.
      * @property {Object} axis.x - The object containing the X axis materials.
-     * @property {StandardMaterial} axis.x.cullBack - The X axis material with front culling.
+     * @property {StandardMaterial} axis.x.cullBack - The X axis material with back culling.
      * @property {StandardMaterial} axis.x.cullNone - The X axis material without culling.
      * @property {Object} axis.y - The object containing the Y axis materials.
-     * @property {StandardMaterial} axis.y.cullBack - The Y axis material with front culling.
+     * @property {StandardMaterial} axis.y.cullBack - The Y axis material with back culling.
      * @property {StandardMaterial} axis.y.cullNone - The Y axis material without culling.
      * @property {Object} axis.z - The object containing the Z axis materials.
-     * @property {StandardMaterial} axis.z.cullBack - The Z axis material with front culling.
+     * @property {StandardMaterial} axis.z.cullBack - The Z axis material with back culling.
      * @property {StandardMaterial} axis.z.cullNone - The Z axis material without culling.
      * @property {StandardMaterial} axis.face - The camera facing (face) axis material. Only for rotate
      * @property {StandardMaterial} hover - The hover material.
