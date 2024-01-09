@@ -265,7 +265,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, pcx }) {
 class MiniStatsExample {
     static CATEGORY = 'Misc';
     static ENGINE = 'PERFORMANCE';
-    static MINISTATS = true;
+    static NO_MINISTATS = true;
     static example = example;
 }
 

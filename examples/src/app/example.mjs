@@ -50,6 +50,7 @@ class Example extends TypedComponent {
         exampleLoaded: false,
         //controls: () => jsx('pre', null, 'Status: initial'),
         controls: () => undefined,
+        showDeviceSelector: true,
         show: 'code',
         files: {'example.mjs': '// loading'},
         description: '',
@@ -71,11 +72,12 @@ class Example extends TypedComponent {
         this.mergeState({ orientation: getOrientation() });
     }
 
-    onExampleLoading() {
+    onExampleLoading(event) {
         this.mergeState({
             exampleLoaded: false,
             //controls: () => jsx('h1', null, 'state: reload'),
             controls: null,
+            showDeviceSelector: event.detail.showDeviceSelector,
         });
     }
 
@@ -171,6 +173,12 @@ class Example extends TypedComponent {
     }
 
     renderDeviceSelector() {
+        const { showDeviceSelector } = this.state;
+
+        if (!showDeviceSelector) {
+            return null;
+        }
+
         return jsx(DeviceSelector, {
             onSelect: iframeReload, // reload the iframe after updating the device
         });
