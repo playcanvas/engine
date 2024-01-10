@@ -32,7 +32,7 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
         throw new Error('Invalid primitive type.');
     }
 
-    const meshT = createTemplate(device, templateOpts);
+    const mesh = createTemplate(device, templateOpts);
 
     const options = {
         positions: [],
@@ -42,20 +42,18 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
         colors: []
     };
 
-    meshT.getPositions(options.positions);
-    meshT.getNormals(options.normals);
-    meshT.getIndices(options.indices);
-    meshT.getUvs(0, options.uvs);
+    mesh.getPositions(options.positions);
+    mesh.getNormals(options.normals);
+    mesh.getIndices(options.indices);
+    mesh.getUvs(0, options.uvs);
 
     const wtm = entity.getWorldTransform().clone().invert();
     wtm.transformVector(templateOpts.lightDir ?? LIGHT_DIR, tmpV1);
     tmpV1.normalize();
-    const numVertices = meshT.vertexBuffer.numVertices;
+    const numVertices = mesh.vertexBuffer.numVertices;
     calculateShadowColors(tmpV1, numVertices, options.normals, options.colors);
 
-    const mesh = createMesh(device, options.positions, options);
-
-    return mesh;
+    return createMesh(device, options.positions, options);
 }
 
 function calculateShadowColors(lightDir, numVertices, normals, colors = []) {
