@@ -185,7 +185,8 @@ class AxisArrow extends AxisShape {
         this.entity.setLocalScale(this._scale);
 
         this._line = new Entity('line_' + this.axis);
-        let mesh = createShadowMesh(this.device, this.entity, 'cylinder');
+        this.entity.addChild(this._line);
+        let mesh = createShadowMesh(this.device, this._line, 'cylinder');
         let meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._line.addComponent('render', {
             meshInstances: [meshInstance],
@@ -193,11 +194,11 @@ class AxisArrow extends AxisShape {
             castShadows: false
         });
         this._updateLine();
-        this.entity.addChild(this._line);
         this.meshInstances.push(meshInstance);
 
         this._arrow = new Entity('arrow_' + this.axis);
-        mesh = createShadowMesh(this.device, this.entity, 'cone');
+        this.entity.addChild(this._arrow);
+        mesh = createShadowMesh(this.device, this._arrow, 'cone');
         meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._arrow.addComponent('render', {
             meshInstances: [meshInstance],
@@ -205,7 +206,6 @@ class AxisArrow extends AxisShape {
             castShadows: false
         });
         this._updateArrow();
-        this.entity.addChild(this._arrow);
         this.meshInstances.push(meshInstance);
 
     }
@@ -316,7 +316,8 @@ class AxisBoxLine extends AxisShape {
         this.entity.setLocalScale(this._scale);
 
         this._line = new Entity('line_' + this.axis);
-        let mesh = createShadowMesh(this.device, this.entity, 'cylinder');
+        this.entity.addChild(this._line);
+        let mesh = createShadowMesh(this.device, this._line, 'cylinder');
         let meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._line.addComponent('render', {
             meshInstances: [meshInstance],
@@ -324,11 +325,11 @@ class AxisBoxLine extends AxisShape {
             castShadows: false
         });
         this._updateLine();
-        this.entity.addChild(this._line);
         this.meshInstances.push(meshInstance);
 
         this._box = new Entity('box_' + this.axis);
-        mesh = createShadowMesh(this.device, this.entity, 'box');
+        this.entity.addChild(this._box);
+        mesh = createShadowMesh(this.device, this._box, 'box');
         meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._box.addComponent('render', {
             meshInstances: [meshInstance],
@@ -336,7 +337,6 @@ class AxisBoxLine extends AxisShape {
             castShadows: false
         });
         this._updateBox();
-        this.entity.addChild(this._box);
         this.meshInstances.push(meshInstance);
     }
 
