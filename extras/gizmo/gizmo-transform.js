@@ -23,9 +23,9 @@ const pointDelta = new Vec3();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const GUIDELINE_SIZE = 1e3;
-const RED_COLOR = new Color(1, 0.3, 0.3, 0.75);
-const GREEN_COLOR = new Color(0.3, 1, 0.3, 0.75);
-const BLUE_COLOR = new Color(0.3, 0.3, 1, 0.75);
+const SEMI_RED_COLOR = new Color(1, 0.3, 0.3, 0.75);
+const SEMI_GREEN_COLOR = new Color(0.3, 1, 0.3, 0.75);
+const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.75);
 const YELLOW_COLOR = new Color(1, 1, 0.3);
 const SEMI_YELLOW_COLOR = new Color(1, 1, 0.3, 0.5);
 const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.5);
@@ -62,16 +62,16 @@ class GizmoTransform extends Gizmo {
     _materials = {
         axis: {
             x: {
-                cullBack: this._createMaterial(RED_COLOR),
-                cullNone: this._createMaterial(RED_COLOR, CULLFACE_NONE)
+                cullBack: this._createMaterial(SEMI_RED_COLOR),
+                cullNone: this._createMaterial(SEMI_RED_COLOR, CULLFACE_NONE)
             },
             y: {
-                cullBack: this._createMaterial(GREEN_COLOR),
-                cullNone: this._createMaterial(GREEN_COLOR, CULLFACE_NONE)
+                cullBack: this._createMaterial(SEMI_GREEN_COLOR),
+                cullNone: this._createMaterial(SEMI_GREEN_COLOR, CULLFACE_NONE)
             },
             z: {
-                cullBack: this._createMaterial(BLUE_COLOR),
-                cullNone: this._createMaterial(BLUE_COLOR, CULLFACE_NONE)
+                cullBack: this._createMaterial(SEMI_BLUE_COLOR),
+                cullNone: this._createMaterial(SEMI_BLUE_COLOR, CULLFACE_NONE)
             },
             face: this._createMaterial(SEMI_YELLOW_COLOR)
         },
