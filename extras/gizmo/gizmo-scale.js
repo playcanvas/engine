@@ -15,13 +15,13 @@ const tmpV1 = new Vec3();
  */
 class GizmoScale extends GizmoTransform {
     _shapes = {
-        xyz: new AxisBoxCenter({
+        xyz: new AxisBoxCenter(this.app.graphicsDevice, {
             axis: 'xyz',
             layers: [this.layer.id],
             defaultColor: this._materials.center,
             hoverColor: this._materials.hover.cullBack
         }),
-        yz: new AxisPlane({
+        yz: new AxisPlane(this.app.graphicsDevice, {
             axis: 'x',
             flipAxis: 'y',
             layers: [this.layer.id],
@@ -29,7 +29,7 @@ class GizmoScale extends GizmoTransform {
             defaultColor: this._materials.axis.x.cullNone,
             hoverColor: this._materials.hover.cullNone
         }),
-        xz: new AxisPlane({
+        xz: new AxisPlane(this.app.graphicsDevice, {
             axis: 'y',
             flipAxis: 'z',
             layers: [this.layer.id],
@@ -37,7 +37,7 @@ class GizmoScale extends GizmoTransform {
             defaultColor: this._materials.axis.y.cullNone,
             hoverColor: this._materials.hover.cullNone
         }),
-        xy: new AxisPlane({
+        xy: new AxisPlane(this.app.graphicsDevice, {
             axis: 'z',
             flipAxis: 'x',
             layers: [this.layer.id],
@@ -45,21 +45,21 @@ class GizmoScale extends GizmoTransform {
             defaultColor: this._materials.axis.z.cullNone,
             hoverColor: this._materials.hover.cullNone
         }),
-        x: new AxisBoxLine({
+        x: new AxisBoxLine(this.app.graphicsDevice, {
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.cullBack
         }),
-        y: new AxisBoxLine({
+        y: new AxisBoxLine(this.app.graphicsDevice, {
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.cullBack
         }),
-        z: new AxisBoxLine({
+        z: new AxisBoxLine(this.app.graphicsDevice, {
             axis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),

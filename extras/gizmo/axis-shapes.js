@@ -1,5 +1,10 @@
 import {
+    createBox,
+    createCone,
+    createCylinder,
+    createPlane,
     createTorus,
+    createMesh,
     Color,
     MeshInstance,
     Entity,
@@ -8,6 +13,65 @@ import {
 
 // constants
 const TORUS_SEGMENTS = 80;
+const LIGHT_DIR = new Vec3(1, 2, 3);
+const MESH_TEMPLATES = {
+    box: createBox,
+    cone: createCone,
+    cylinder: createCylinder,
+    plane: createPlane,
+    torus: createTorus
+};
+
+// temporary variables
+const tmpV1 = new Vec3();
+const tmpV2 = new Vec3();
+
+function createShadowMesh(device, entity, type, templateOpts = {}) {
+    const createTemplate = MESH_TEMPLATES[type];
+    if (!createTemplate) {
+        throw new Error('Invalid primitive type.');
+    }
+
+    const meshT = createTemplate(device, templateOpts);
+
+    const options = {
+        positions: [],
+        normals: [],
+        uvs: [],
+        indices: [],
+        colors: []
+    };
+
+    meshT.getPositions(options.positions);
+    meshT.getNormals(options.normals);
+    meshT.getIndices(options.indices);
+    meshT.getUvs(0, options.uvs);
+
+    const wtm = entity.getWorldTransform().clone().invert();
+    wtm.transformVector(templateOpts.lightDir ?? LIGHT_DIR, tmpV1);
+    tmpV1.normalize();
+    const numVertices = meshT.vertexBuffer.numVertices;
+    calculateShadowColors(tmpV1, numVertices, options.normals, options.colors);
+
+    const mesh = createMesh(device, options.positions, options);
+
+    return mesh;
+}
+
+function calculateShadowColors(lightDir, numVertices, normals, colors = []) {
+    for (let i = 0; i < numVertices; i++) {
+        const x = normals[i * 3];
+        const y = normals[i * 3 + 1];
+        const z = normals[i * 3 + 2];
+        tmpV2.set(x, y, z);
+
+        const dot = lightDir.dot(tmpV2);
+        const shadow = dot * 0.25 + 0.75;
+        colors.push(shadow * 255, shadow * 255, shadow * 255, 1);
+    }
+
+    return colors;
+}
 
 class AxisShape {
     _position;
@@ -16,9 +80,13 @@ class AxisShape {
 
     _scale;
 
+    _layers = [];
+
     _defaultColor;
 
     _hoverColor;
+
+    device;
 
     axis;
 
@@ -26,11 +94,14 @@ class AxisShape {
 
     meshInstances = [];
 
-    constructor(options) {
+    constructor(device, options) {
+        this.device = device;
         this.axis = options.axis ?? 'x';
         this._position = options.position ?? new Vec3();
         this._rotation = options.rotation ?? new Vec3();
         this._scale = options.scale ?? new Vec3(1, 1, 1);
+
+        this._layers = options.layers ?? this._layers;
 
         this._defaultColor = options.defaultColor ?? Color.BLACK;
         this._hoverColor = options.hoverColor ?? Color.WHITE;
@@ -55,10 +126,10 @@ class AxisArrow extends AxisShape {
 
     _arrowLength = 0.2;
 
-    constructor(options = {}) {
-        super(options);
+    constructor(device, options = {}) {
+        super(device, options);
 
-        this._createArrow(options.layers ?? []);
+        this._createArrow();
     }
 
     set gap(value) {
@@ -109,33 +180,36 @@ class AxisArrow extends AxisShape {
         return this._arrowLength;
     }
 
-    _createArrow(layers) {
+    _createArrow() {
         this.entity = new Entity('axis_' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
 
         this._line = new Entity('line_' + this.axis);
+        let mesh = createShadowMesh(this.device, this.entity, 'cylinder');
+        let meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._line.addComponent('render', {
-            type: 'cylinder',
-            layers: layers,
-            material: this._defaultColor,
+            meshInstances: [meshInstance],
+            layers: this._layers,
             castShadows: false
         });
         this._updateLine();
         this.entity.addChild(this._line);
-        this.meshInstances.push(...this._line.render.meshInstances);
+        this.meshInstances.push(meshInstance);
 
         this._arrow = new Entity('arrow_' + this.axis);
+        mesh = createShadowMesh(this.device, this.entity, 'cone');
+        meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._arrow.addComponent('render', {
-            type: 'cone',
-            layers: layers,
-            material: this._defaultColor,
+            meshInstances: [meshInstance],
+            layers: this._layers,
             castShadows: false
         });
         this._updateArrow();
         this.entity.addChild(this._arrow);
-        this.meshInstances.push(...this._arrow.render.meshInstances);
+        this.meshInstances.push(meshInstance);
+
     }
 
     _updateLine() {
@@ -152,24 +226,25 @@ class AxisArrow extends AxisShape {
 class AxisBoxCenter extends AxisShape {
     _size = 0.14;
 
-    constructor(options = {}) {
-        super(options);
+    constructor(device, options = {}) {
+        super(device, options);
 
-        this._createCenter(options.layers ?? []);
+        this._createCenter();
     }
 
-    _createCenter(layers) {
+    _createCenter() {
         this.entity = new Entity('center_' + this.axis);
-        this.entity.addComponent('render', {
-            type: 'box',
-            layers: layers,
-            material: this._defaultColor,
-            castShadows: false
-        });
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
-        this.meshInstances.push(...this.entity.render.meshInstances);
+        const mesh = createShadowMesh(this.device, this.entity, 'box');
+        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        this.entity.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: this._layers,
+            castShadows: false
+        });
+        this.meshInstances.push(meshInstance);
     }
 
     set size(value) {
@@ -191,10 +266,10 @@ class AxisBoxLine extends AxisShape {
 
     _boxSize = 0.14;
 
-    constructor(options = {}) {
-        super(options);
+    constructor(device, options = {}) {
+        super(device, options);
 
-        this._createBoxLine(options.layers ?? []);
+        this._createBoxLine();
     }
 
     set gap(value) {
@@ -236,33 +311,35 @@ class AxisBoxLine extends AxisShape {
         return this._boxSize;
     }
 
-    _createBoxLine(layers) {
+    _createBoxLine() {
         this.entity = new Entity('axis_' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
 
         this._line = new Entity('line_' + this.axis);
+        let mesh = createShadowMesh(this.device, this.entity, 'cylinder');
+        let meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._line.addComponent('render', {
-            type: 'cylinder',
-            layers: layers,
-            material: this._defaultColor,
+            meshInstances: [meshInstance],
+            layers: this._layers,
             castShadows: false
         });
         this._updateLine();
         this.entity.addChild(this._line);
-        this.meshInstances.push(...this._line.render.meshInstances);
+        this.meshInstances.push(meshInstance);
 
         this._box = new Entity('box_' + this.axis);
+        mesh = createShadowMesh(this.device, this.entity, 'box');
+        meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._box.addComponent('render', {
-            type: 'box',
-            layers: layers,
-            material: this._defaultColor,
+            meshInstances: [meshInstance],
+            layers: this._layers,
             castShadows: false
         });
         this._updateBox();
         this.entity.addChild(this._box);
-        this.meshInstances.push(...this._box.render.meshInstances);
+        this.meshInstances.push(meshInstance);
     }
 
     _updateLine() {
@@ -277,40 +354,39 @@ class AxisBoxLine extends AxisShape {
 }
 
 class AxisDisk extends AxisShape {
-    _device;
-
     _tubeRadius = 0.02;
 
     _ringRadius = 0.55;
 
-    constructor(options = {}) {
-        super(options);
+    _lightDir = LIGHT_DIR;
 
-        this._device = options.device;
+    constructor(device, options = {}) {
+        super(device, options);
 
         this._tubeRadius = options.tubeRadius ?? this._tubeRadius;
         this._ringRadius = options.ringRadius ?? this._ringRadius;
+        this._lightDir = options.lightDir ?? this._lightDir;
 
-        this._createDisk(options.layers ?? []);
+        this._createDisk();
     }
 
-    _createDisk(layers) {
-        const meshInstance = new MeshInstance(this._createTorusMesh(), this._defaultColor);
-
+    _createDisk() {
         this.entity = new Entity('disk_' + this.axis);
-        this.entity.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: layers,
-            castShadows: false
-        });
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
+        const meshInstance = new MeshInstance(this._createTorusMesh(), this._defaultColor);
+        this.entity.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: this._layers,
+            castShadows: false
+        });
         this.meshInstances.push(meshInstance);
     }
 
     _createTorusMesh() {
-        return createTorus(this._device, {
+        return createShadowMesh(this.device, this.entity, 'torus', {
+            lightDir: this._lightDir,
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             segments: TORUS_SEGMENTS
@@ -341,12 +417,10 @@ class AxisPlane extends AxisShape {
 
     _gap = 0.1;
 
-    constructor(options) {
-        super(options);
+    constructor(device, options = {}) {
+        super(device, options);
 
-        this._flipAxis = options.flipAxis ?? 'x';
-
-        this._createPlane(options.layers ?? []);
+        this._createPlane();
     }
 
     _getPosition() {
@@ -356,18 +430,19 @@ class AxisPlane extends AxisShape {
         return position;
     }
 
-    _createPlane(layers) {
+    _createPlane() {
         this.entity = new Entity('plane_' + this.axis);
-        this.entity.addComponent('render', {
-            type: 'plane',
-            layers: layers,
-            material: this._defaultColor,
-            castShadows: false
-        });
         this.entity.setLocalPosition(this._getPosition());
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
-        this.meshInstances.push(...this.entity.render.meshInstances);
+        const mesh = createShadowMesh(this.device, this.entity, 'plane');
+        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        this.entity.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: this._layers,
+            castShadows: false
+        });
+        this.meshInstances.push(meshInstance);
     }
 
     set size(value) {

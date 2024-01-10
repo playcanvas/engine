@@ -30,6 +30,37 @@ const EPSILON = 1e-6;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 
+function rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
+    e1.sub2(v1, v0);
+    e2.sub2(v2, v0);
+    h.cross(dir, e2);
+    const a = e1.dot(h);
+    if (a > -EPSILON && a < EPSILON) {
+        return false;
+    }
+
+    const f = 1 / a;
+    s.sub2(origin, v0);
+    const u = f * s.dot(h);
+    if (u < 0 || u > 1) {
+        return false;
+    }
+
+    q.cross(s, e1);
+    const v = f * dir.dot(q);
+    if (v < 0 || u + v > 1) {
+        return false;
+    }
+
+    const t = f * e2.dot(q);
+    if (t > EPSILON) {
+        out.copy(dir).scale(t).add(origin);
+        return true;
+    }
+
+    return false;
+}
+
 /**
  * The base class for all gizmos.
  */
@@ -250,8 +281,7 @@ class Gizmo extends EventHandler {
             for (let j = 0; j < meshInstances.length; j++) {
                 const meshInstance = meshInstances[j];
                 const mesh = meshInstance.mesh;
-                const wtm = meshInstance.node.getWorldTransform().clone();
-                wtm.invert();
+                const wtm = meshInstance.node.getWorldTransform().clone().invert();
 
                 wtm.transformPoint(start, xstart);
                 wtm.transformVector(dir, xdir);
@@ -271,7 +301,7 @@ class Gizmo extends EventHandler {
                     tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
                     tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
 
-                    if (this._rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
+                    if (rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
                         selection.push(meshInstance);
                     }
                 }
@@ -279,37 +309,6 @@ class Gizmo extends EventHandler {
             }
         }
         return selection;
-    }
-
-    _rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
-        e1.sub2(v1, v0);
-        e2.sub2(v2, v0);
-        h.cross(dir, e2);
-        const a = e1.dot(h);
-        if (a > -EPSILON && a < EPSILON) {
-            return false;
-        }
-
-        const f = 1 / a;
-        s.sub2(origin, v0);
-        const u = f * s.dot(h);
-        if (u < 0 || u > 1) {
-            return false;
-        }
-
-        q.cross(s, e1);
-        const v = f * dir.dot(q);
-        if (v < 0 || u + v > 1) {
-            return false;
-        }
-
-        const t = f * e2.dot(q);
-        if (t > EPSILON) {
-            out.copy(dir).scale(t).add(origin);
-            return true;
-        }
-
-        return false;
     }
 
     /**

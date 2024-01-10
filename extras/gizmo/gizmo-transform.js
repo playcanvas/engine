@@ -503,6 +503,7 @@ class GizmoTransform extends Gizmo {
     _createMaterial(color, cull = CULLFACE_BACK) {
         const material = new StandardMaterial();
         material.emissive = color;
+        material.emissiveVertexColor = true;
         material.cull = cull;
         if (color.a !== 1) {
             material.opacity = color.a;
