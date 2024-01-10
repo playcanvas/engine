@@ -16,12 +16,12 @@ export default class Enabler {
         const scriptB = this.entityToEnable.esmscript.get('ScriptB');
 
         if (scriptA) {
-            this.entityToEnable.esmscript.enableModule(scriptA);
-            // this.entityToEnable.script.scriptA.enabled = true;
+            // this.entityToEnable.esmscript.enableModule(scriptA);
+            scriptA.enabled = true;
         }
         if (scriptB) {
-            this.entityToEnable.esmscript.enableModule(scriptB);
-            // this.entityToEnable.script.scriptB.enabled = true;
+            // this.entityToEnable.esmscript.enableModule(scriptB);
+            scriptB.enabled = true;
         }
     }
 }

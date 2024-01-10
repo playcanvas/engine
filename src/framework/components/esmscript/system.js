@@ -56,7 +56,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
             const { attributes, enabled } = modules[i];
             const script = scripts[i];
             if (script)
-                component.add(scripts[i], attributes, enabled);
+                component.add(scripts[i], { ...attributes, enabled });
         }
     }
 
@@ -69,7 +69,7 @@ class EsmScriptComponentSystem extends ComponentSystem {
         const cloneComponent = this.addComponent(clone, { enabled: component.enabled });
 
         component.modules.forEach((module) => {
-            const enabled = component.isModuleEnabled(module);
+            const enabled = module.enabled;
 
             // Use the previous module's attributes as the default values for the new module
             cloneComponent.add(module.constructor, module, enabled);
@@ -99,12 +99,6 @@ class EsmScriptComponentSystem extends ComponentSystem {
                 component.flushUninitializedModules();
         }
 
-        // Call `active()` on any scripts that have become active/enabled during the current game step
-        for (const component of this._components) {
-            if (component.enabled)
-                component.flushActiveModules();
-        }
-
         for (const component of this._components) {
             if (component.enabled)
                 component._onUpdate(dt);
@@ -115,11 +109,6 @@ class EsmScriptComponentSystem extends ComponentSystem {
         for (const component of this._components) {
             if (component.enabled)
                 component._onPostUpdate(dt);
-        }
-
-        // Call `inactive()` on any scripts that have become inactive/disabled during the current game step
-        for (const component of this._components) {
-            component.flushInactiveModules();
         }
     }
 

@@ -6,7 +6,7 @@ import { Color } from '../../../../src/core/math/color.js';
 
 import { HTMLCanvasElement } from '@playcanvas/canvas-mock';
 import { expect } from 'chai';
-import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, ACTIVE, UPDATE, POST_UPDATE, DESTROY, INACTIVE } from './method-util.mjs';
+import { reset, calls, expectCall, INITIALIZE, waitForNextFrame, UPDATE, POST_UPDATE, DESTROY } from './method-util.mjs';
 
 // Can use import assertion, but eslint doesn't like it.
 const sceneData = JSON.parse(readFileSync(new URL('../../../test-assets/esm-scripts/scene1.json', import.meta.url)));
@@ -368,16 +368,15 @@ describe('EsmScriptComponent', function () {
 
             const script = e.esmscript.get('ScriptA');
 
-            e.esmscript.enableModule(script);
+            script.enabled = true;
 
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            expect(e.esmscript.isModuleEnabled(script)).to.be.true;
+            expect(script.enabled).to.be.true;
             expectCall(0, INITIALIZE(script));
-            expectCall(1, ACTIVE(script));
-            expectCall(2, UPDATE(script));
-            expectCall(3, POST_UPDATE(script));
+            expectCall(1, UPDATE(script));
+            expectCall(2, POST_UPDATE(script));
         });
         it('expects `initialize`, `active`, `update` and `postUpdate` to be called on a script instance that is created later', async function () {
             const e = new Entity();
@@ -392,9 +391,8 @@ describe('EsmScriptComponent', function () {
             app.update(16.6);
 
             expectCall(0, INITIALIZE(script));
-            expectCall(1, ACTIVE(script));
-            expectCall(2, UPDATE(script));
-            expectCall(3, POST_UPDATE(script));
+            expectCall(1, UPDATE(script));
+            expectCall(2, POST_UPDATE(script));
         });
 
         it('expects `initialize`, `active`, `update` and `postUpdate` to be called on cloned enabled entity', function () {
@@ -424,9 +422,6 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            expectCall(n++, ACTIVE(ScriptA));
-            expectCall(n++, ACTIVE(ScriptB));
-
             expectCall(n++, UPDATE(ScriptA));
             expectCall(n++, UPDATE(ScriptB));
 
@@ -449,10 +444,6 @@ describe('EsmScriptComponent', function () {
 
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
-
-            // The clone becomes active in the next game step
-            expectCall(n++, ACTIVE(cloneScriptA));
-            expectCall(n++, ACTIVE(cloneScriptB));
 
             // existing scripts then clones updated
             expectCall(n++, UPDATE(ScriptA));
@@ -532,14 +523,12 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            expect(calls).to.have.lengthOf(9);
+            expect(calls).to.have.lengthOf(7);
 
             let n = 0;
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
             expectCall(n++, INITIALIZE(scriptB)); // 'initialize scriptB');
-            expectCall(n++, ACTIVE(scriptA)); // 'active scriptA');
-            expectCall(n++, ACTIVE(scriptB)); // 'active scriptB');
             expectCall(n++, UPDATE(scriptA)); // 'update scriptA');
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
@@ -592,14 +581,12 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            expect(calls).to.have.lengthOf(9);
+            expect(calls).to.have.lengthOf(7);
 
             let n = 0;
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
             expectCall(n++, INITIALIZE(scriptB)); // 'initialize scriptB');
-            expectCall(n++, ACTIVE(scriptA)); // 'active scriptA');
-            expectCall(n++, ACTIVE(scriptB)); // 'active scriptB');
             expectCall(n++, UPDATE(scriptA)); // 'update scriptA');
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
@@ -642,8 +629,6 @@ describe('EsmScriptComponent', function () {
 
             app.root.addChild(enabler);
 
-            expect(calls).to.have.lengthOf(1);
-
             const enablerScript = enabler.esmscript.get('Enabler');
             const scriptA = e.esmscript.get('ScriptA');
             const scriptB = e.esmscript.get('ScriptB');
@@ -655,8 +640,6 @@ describe('EsmScriptComponent', function () {
             expectCall(n++, INITIALIZE(enablerScript)); // 'initialize enabler');
             expectCall(n++, INITIALIZE(scriptA)); // 'initialize scriptA');
             expectCall(n++, INITIALIZE(scriptB)); // 'initialize scriptB');
-            expectCall(n++, ACTIVE(scriptA)); // 'active scriptA');
-            expectCall(n++, ACTIVE(scriptB)); // 'active scriptB');
             expectCall(n++, UPDATE(scriptA)); // 'update scriptA');
             expectCall(n++, UPDATE(scriptB)); // 'update scriptB');
             expectCall(n++, POST_UPDATE(scriptA)); // 'post-update scriptA');
@@ -745,36 +728,33 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            expect(calls).to.have.lengthOf(32);
-            // expect(initializeCalls.length).to.equal(32);
-
             let idx = -1;
             expectCall(++idx, INITIALIZE(eScriptA));
             expectCall(++idx, INITIALIZE(eScriptB));
-            expectCall(++idx, INITIALIZE(c1ScriptA)); // , ++idx, 'initialize scriptA');
-            expectCall(++idx, INITIALIZE(c1ScriptB)); // , ++idx, 'initialize scriptB');
-            expectCall(++idx, INITIALIZE(c3ScriptA)); // , ++idx, 'initialize scriptA');
-            expectCall(++idx, INITIALIZE(c3ScriptB)); // , ++idx, 'initialize scriptB');
-            expectCall(++idx, INITIALIZE(c2ScriptA)); // , ++idx, 'initialize scriptA');
-            expectCall(++idx, INITIALIZE(c2ScriptB)); // , ++idx, 'initialize scriptB');
+            expectCall(++idx, INITIALIZE(c1ScriptA));
+            expectCall(++idx, INITIALIZE(c1ScriptB));
+            expectCall(++idx, INITIALIZE(c3ScriptA));
+            expectCall(++idx, INITIALIZE(c3ScriptB));
+            expectCall(++idx, INITIALIZE(c2ScriptA));
+            expectCall(++idx, INITIALIZE(c2ScriptB));
 
-            expectCall(++idx, ACTIVE(eScriptA)); //  ++idx, 'active scriptA');
-            expectCall(++idx, ACTIVE(eScriptB)); //  ++idx, 'active scriptB');
-            expectCall(++idx, ACTIVE(c1ScriptA)); // , ++idx, 'active scriptA');
-            expectCall(++idx, ACTIVE(c1ScriptB)); // , ++idx, 'active scriptB');
-            expectCall(++idx, ACTIVE(c2ScriptA)); // , ++idx, 'active scriptA');
-            expectCall(++idx, ACTIVE(c2ScriptB)); // , ++idx, 'active scriptB');
-            expectCall(++idx, ACTIVE(c3ScriptA)); // , ++idx, 'active scriptA');
-            expectCall(++idx, ACTIVE(c3ScriptB)); // , ++idx, 'active scriptB');
+            expectCall(++idx, UPDATE(eScriptA));
+            expectCall(++idx, UPDATE(eScriptB));
+            expectCall(++idx, UPDATE(c1ScriptA));
+            expectCall(++idx, UPDATE(c1ScriptB));
+            expectCall(++idx, UPDATE(c2ScriptA));
+            expectCall(++idx, UPDATE(c2ScriptB));
+            expectCall(++idx, UPDATE(c3ScriptA));
+            expectCall(++idx, UPDATE(c3ScriptB));
 
-            expectCall(++idx, UPDATE(eScriptA)); //  ++idx, 'update scriptA');
-            expectCall(++idx, UPDATE(eScriptB)); //  ++idx, 'update scriptB');
-            expectCall(++idx, UPDATE(c1ScriptA)); // , ++idx, 'update scriptA');
-            expectCall(++idx, UPDATE(c1ScriptB)); // , ++idx, 'update scriptB');
-            expectCall(++idx, UPDATE(c2ScriptA)); // , ++idx, 'update scriptA');
-            expectCall(++idx, UPDATE(c2ScriptB)); // , ++idx, 'update scriptB');
-            expectCall(++idx, UPDATE(c3ScriptA)); // , ++idx, 'update scriptA');
-            expectCall(++idx, UPDATE(c3ScriptB)); // , ++idx, 'update scriptB');
+            expectCall(++idx, POST_UPDATE(eScriptA));
+            expectCall(++idx, POST_UPDATE(eScriptB));
+            expectCall(++idx, POST_UPDATE(c1ScriptA));
+            expectCall(++idx, POST_UPDATE(c1ScriptB));
+            expectCall(++idx, POST_UPDATE(c2ScriptA));
+            expectCall(++idx, POST_UPDATE(c2ScriptB));
+            expectCall(++idx, POST_UPDATE(c3ScriptA));
+            expectCall(++idx, POST_UPDATE(c3ScriptB));
 
         });
 
@@ -1589,7 +1569,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(EsmScript.default, null, false);
+            e.esmscript.add(EsmScript.default, { enabled: false });
 
             const script = e.esmscript.get('ScriptA');
 
@@ -1608,7 +1588,7 @@ describe('EsmScriptComponent', function () {
             app.root.addChild(e);
             e.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(EsmScript.default, null, false);
+            e.esmscript.add(EsmScript.default);
 
             const script = e.esmscript.get('ScriptA');
 
@@ -1618,23 +1598,22 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            e.esmscript.enableModule(script);
+            script.enabled = true;
 
             app.update(16.6);
 
             // Destroy should have been called
             expectCall(0, INITIALIZE(script));
-            expectCall(1, ACTIVE(script));
-            expectCall(2, UPDATE(script));
-            expectCall(3, POST_UPDATE(script));
+            expectCall(1, UPDATE(script));
+            expectCall(2, POST_UPDATE(script));
         });
 
-        it('should call all lifecycle methods after being enabled', async function () {
+        it('should not call any lifecycle methods after being disabled', async function () {
             const e = new Entity();
             app.root.addChild(e);
             e.addComponent('esmscript');
             const EsmScript = await import('../../../test-assets/esm-scripts/esm-scriptA.mjs');
-            e.esmscript.add(EsmScript.default, null, false);
+            e.esmscript.add(EsmScript.default);
 
             const script = e.esmscript.get('ScriptA');
 
@@ -1644,25 +1623,23 @@ describe('EsmScriptComponent', function () {
             // Node doesn't have `requestAnimationFrame` so manually trigger a tick
             app.update(16.6);
 
-            e.esmscript.enableModule(script);
+            script.enabled = true;
+
             app.update(16.6);
 
             // Destroy should have been called
             expectCall(0, INITIALIZE(script));
-            expectCall(1, ACTIVE(script));
-            expectCall(2, UPDATE(script));
-            expectCall(3, POST_UPDATE(script));
+            expectCall(1, UPDATE(script));
+            expectCall(2, POST_UPDATE(script));
 
             app.update(16.6);
             reset();
-            e.esmscript.disableModule(script);
+            script.enabled = false;
 
             app.update(16.6);
 
-            expectCall(0, INACTIVE(script));
-
             // only one call this frame
-            expect(calls).to.have.lengthOf(1);
+            expect(calls).to.have.lengthOf(0);
 
         });
 

@@ -11,6 +11,7 @@ import { forEachAttributeDefinition, getValueAtPath, populateWithAttributes, set
 
 /**
  * @typedef {Object} ModuleInstance
+ * @property {boolean} enabled - Whether the module is enabled or not
  * @property {Function} [initialize] - A function called once when the module becomes initialized
  * @property {Function} [postInitialize] - A function called once after all modules become initialized
  * @property {Function} [active] - A function called when the module becomes active
@@ -32,9 +33,10 @@ import { forEachAttributeDefinition, getValueAtPath, populateWithAttributes, set
  */
 
 
-const appEntityDefinition = {
+const defaultScriptDefinition = {
     app: { type: 'app' },
-    entity: { type: 'entity' }
+    entity: { type: 'entity' },
+    enabled: { type: 'boolean', default: true }
 };
 
 /**
@@ -81,14 +83,9 @@ class EsmScriptComponent extends Component {
         // Holds all modules with a `postUpdate` method.
         this.modulesWithPostUpdate = new Set();
 
-        // Contains all the enabled modules.
-        this.enabledModules = new Set();
-
         // Contains all the uninitialized modules.
         this.uninitializedModules = new Set();
 
-        // Contains all the modules awaiting to be enabled.
-        this.awaitingToBeEnabledModules = new Set();
     }
 
     /**
@@ -164,7 +161,7 @@ class EsmScriptComponent extends Component {
             const ModuleClass = module.constructor;
 
             // disables the module
-            this.disableModule(module);
+            module.enabled = false;
 
             // Call modules destroy if present
             module.destroy?.();
@@ -188,36 +185,10 @@ class EsmScriptComponent extends Component {
         return this.enabled && this.entity.enabled;
     }
 
-    flushActiveModules() {
-
-        // ensure app-entity refs are up-to-date
-        this.appEntity.entity = this.entity;
-        this.appEntity.system = this.system;
-
-        for (const module of this.awaitingToBeEnabledModules) {
-            if (!this.isActive) break;
-            if (this.uninitializedModules.has(module)) continue;
-            this.awaitingToBeEnabledModules.delete(module);
-            this.enabledModules.add(module);
-            if (classHasMethod(module.constructor, 'update')) this.modulesWithUpdate.add(module);
-            if (classHasMethod(module.constructor, 'postUpdate')) this.modulesWithPostUpdate.add(module);
-            module.active?.(this.appEntity);
-        }
-    }
-
-    flushInactiveModules() {
-        for (const module of this.modules) {
-            if (!this.isActive) break;
-            if (this.enabledModules.has(module)) continue;
-            if (this.uninitializedModules.has(module)) continue;
-            module.inactive?.();
-        }
-    }
-
     flushUninitializedModules() {
         for (const module of this.uninitializedModules) {
             if (!this.isActive) break;
-            if (!this.isModuleEnabled(module) && !this.awaitingToBeEnabledModules.has(module)) continue;
+            if (!module.enabled/* && !this.awaitingToBeEnabledModules.has(module)*/) continue;
             module.initialize();
             this.uninitializedModules.delete(module);
         }
@@ -235,66 +206,22 @@ class EsmScriptComponent extends Component {
     _onPostInitialize() {
         for (const module of this.modules) {
             if (!this.isActive) break;
-            if (!this.enabledModules.has(module)) module.postInitialize?.();
+            if (!module.enabled) module.postInitialize?.();
         }
     }
 
     _onUpdate(dt) {
         for (const module of this.modulesWithUpdate) {
             if (!this.isActive) break;
-            module.update(dt);
+            if (module.enabled) module.update(dt);
         }
     }
 
     _onPostUpdate(dt) {
         for (const module of this.modulesWithPostUpdate) {
             if (!this.isActive) break;
-            module.postUpdate(dt);
+            if (module.enabled) module.postUpdate(dt);
         }
-    }
-
-    /**
-     * Disables a module and prevents it receiving lifecycle events
-     * @param {ModuleInstance} module - The module to disable
-     */
-    disableModule(module) {
-
-        if (!this.modules.has(module)) {
-            Debug.error(`The ESM Script '${module?.constructor?.name}' has not been added to this component.`);
-            return;
-        }
-
-        this.enabledModules.delete(module);
-        this.awaitingToBeEnabledModules.delete(module);
-        this.modulesWithUpdate.delete(module);
-        this.modulesWithPostUpdate.delete(module);
-    }
-
-    /**
-     * Enables a module, allowing it to receive lifecycle events.
-     * @param {ModuleInstance} module - The module to enable
-     * @internal
-     */
-    enableModule(module) {
-
-        if (!this.modules.has(module)) {
-            Debug.error(`The ESM Script '${module?.constructor?.name}' has not been added to this component.`);
-            return;
-        }
-
-        if (this.enabledModules.has(module))
-            return;
-
-        this.awaitingToBeEnabledModules.add(module);
-    }
-
-    /**
-     * @param {ModuleInstance} module - The module to check
-     * @returns {boolean} if the module will receive lifecycle updates
-     * @internal
-     */
-    isModuleEnabled(module) {
-        return this.enabledModules.has(module);
     }
 
     /**
@@ -378,7 +305,7 @@ class EsmScriptComponent extends Component {
             return;
         }
 
-        this.disableModule(module);
+        // this.disableModule(module);
         this.modules.delete(module);
         this.moduleNameInstanceMap.delete(module.constructor.name);
     }
@@ -389,10 +316,9 @@ class EsmScriptComponent extends Component {
      *
      * @param {ModuleClass} ModuleClass - The ESM Script class to add to the component
      * @param {Object.<string, AttributeDefinition>} [attributeValues] - A set of attributes to be assigned to the Script Module instance
-     * @param {boolean} [enabled] - Whether the script is enabled or not.
      * @returns {ModuleInstance|null} An instance of the module
      */
-    add(ModuleClass, attributeValues = {}, enabled = true) {
+    add(ModuleClass, attributeValues = {}) {
 
         if (!ModuleClass || typeof ModuleClass !== 'function')
             throw new Error(`The ESM Script is undefined`);
@@ -411,7 +337,7 @@ class EsmScriptComponent extends Component {
         const module = new ModuleClass();
 
         // Create an attribute definition and values with { app, entity }
-        const attributeDefinitionWithAppEntity = { ...attributeDefinition, ...appEntityDefinition };
+        const attributeDefinitionWithAppEntity = { ...attributeDefinition, ...defaultScriptDefinition };
         const attributeValueWithAppEntity = { ...attributeValues, ...this.appEntity };
 
         // Assign any provided attributes
@@ -428,14 +354,14 @@ class EsmScriptComponent extends Component {
         if (classHasMethod(ModuleClass, 'initialize')) {
 
             // If the component and hierarchy are currently active, initialize now.
-            if (this.isActive && enabled) module.initialize();
+            if (this.isActive && module.enabled) module.initialize();
 
             // otherwise mark to initialize later
             else this.uninitializedModules.add(module);
         }
 
-        // Enable the module, so that it receives lifecycle hooks
-        if (enabled) this.enableModule(module);
+        if (classHasMethod(ModuleClass, 'update')) this.modulesWithUpdate.add(module);
+        if (classHasMethod(ModuleClass, 'postUpdate')) this.modulesWithPostUpdate.add(module);
 
         this.fire('create', module);
 

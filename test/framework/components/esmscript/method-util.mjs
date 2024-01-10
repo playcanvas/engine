@@ -15,8 +15,6 @@ export const expectCall = (index, text) => expect(calls[index]).to.equal(text);
 
 export const INITIALIZE = script => `initialize ${script.constructor.name} ${script.entity.getGuid()}`;
 export const POST_INITIALIZE = script => `postInitialize ${script.constructor.name} ${script.entity.getGuid()}`;
-export const ACTIVE = script => `active ${script.constructor.name} ${script.entity.getGuid()}`;
-export const INACTIVE = script => `inactive ${script.constructor.name} ${script.entity.getGuid()}`;
 export const UPDATE = script => `update ${script.constructor.name} ${script.entity.getGuid()}`;
 export const POST_UPDATE = script => `postUpdate ${script.constructor.name} ${script.entity.getGuid()}`;
 export const DESTROY = script => `destroy ${script.constructor.name} ${script.entity.getGuid()}`;

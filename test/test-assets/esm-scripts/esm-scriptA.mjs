@@ -1,4 +1,4 @@
-import { ACTIVE, DESTROY, INACTIVE, INITIALIZE, POST_INITIALIZE, POST_UPDATE, UPDATE, call } from '../../framework/components/esmscript/method-util.mjs';
+import { DESTROY, INITIALIZE, POST_INITIALIZE, POST_UPDATE, UPDATE, call } from '../../framework/components/esmscript/method-util.mjs';
 
 export default class ScriptA {
     initialize() {
@@ -7,14 +7,6 @@ export default class ScriptA {
 
     postInitialize() {
         call(POST_INITIALIZE(this));
-    }
-
-    active() {
-        call(ACTIVE(this));
-    }
-
-    inactive() {
-        call(INACTIVE(this));
     }
 
     update(dt) {
