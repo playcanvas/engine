@@ -23,9 +23,9 @@ const pointDelta = new Vec3();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const GUIDELINE_SIZE = 1e3;
-const RED_COLOR = new Color(1, 0.3, 0.3);
-const GREEN_COLOR = new Color(0.3, 1, 0.3);
-const BLUE_COLOR = new Color(0.3, 0.3, 1);
+const RED_COLOR = new Color(1, 0.3, 0.3, 0.75);
+const GREEN_COLOR = new Color(0.3, 1, 0.3, 0.75);
+const BLUE_COLOR = new Color(0.3, 0.3, 1, 0.75);
 const YELLOW_COLOR = new Color(1, 1, 0.3);
 const SEMI_YELLOW_COLOR = new Color(1, 1, 0.3, 0.5);
 const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.5);
