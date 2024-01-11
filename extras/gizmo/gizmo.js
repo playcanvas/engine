@@ -117,6 +117,12 @@ class Gizmo extends EventHandler {
      */
     gizmo;
 
+    /**
+     * The mesh instances to check for intersections
+     *
+     * @type {import('playcanvas').MeshInstance[]}
+     */
+    intersectMeshInstances = [];
 
     /**
      * Creates a new Gizmo object.
@@ -275,41 +281,34 @@ class Gizmo extends EventHandler {
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];
-        const renders = this.gizmo.findComponents('render');
-        for (let i = 0; i < renders.length; i++) {
-            const meshInstances = renders[i].meshInstances;
-            for (let j = 0; j < meshInstances.length; j++) {
-                const meshInstance = meshInstances[j];
-                if (!meshInstance.visible) {
-                    continue;
+        for (let j = 0; j < this.intersectMeshInstances.length; j++) {
+            const meshInstance = this.intersectMeshInstances[j];
+            const mesh = meshInstance.mesh;
+            const wtm = meshInstance.node.getWorldTransform().clone().invert();
+
+            wtm.transformPoint(start, xstart);
+            wtm.transformVector(dir, xdir);
+            xdir.normalize();
+
+            const pos = [];
+            const idx = [];
+            mesh.getPositions(pos);
+            mesh.getIndices(idx);
+
+            for (let k = 0; k < idx.length; k += 3) {
+                const i1 = idx[k];
+                const i2 = idx[k + 1];
+                const i3 = idx[k + 2];
+
+                tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
+                tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
+                tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+
+                if (rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
+                    selection.push(meshInstance);
                 }
-                const mesh = meshInstance.mesh;
-                const wtm = meshInstance.node.getWorldTransform().clone().invert();
-
-                wtm.transformPoint(start, xstart);
-                wtm.transformVector(dir, xdir);
-                xdir.normalize();
-
-                const pos = [];
-                const idx = [];
-                mesh.getPositions(pos);
-                mesh.getIndices(idx);
-
-                for (let k = 0; k < idx.length; k += 3) {
-                    const i1 = idx[k];
-                    const i2 = idx[k + 1];
-                    const i3 = idx[k + 2];
-
-                    tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-                    tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-                    tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
-
-                    if (rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
-                        selection.push(meshInstance);
-                    }
-                }
-
             }
+
         }
         return selection;
     }

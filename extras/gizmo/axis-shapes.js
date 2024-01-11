@@ -11,7 +11,8 @@ import {
 } from 'playcanvas';
 
 // constants
-const TORUS_SEGMENTS = 80;
+const TORUS_RENDER_SEGMENTS = 80;
+const TORUS_INTERSECT_SEGMENTS = 20;
 const LIGHT_DIR = new Vec3(1, 2, 3);
 const MESH_TEMPLATES = {
     box: createBox,
@@ -142,7 +143,7 @@ class AxisShape {
 
     entity;
 
-    meshInstances = [];
+    miData = [];
 
     constructor(device, options) {
         this.device = device;
@@ -159,8 +160,8 @@ class AxisShape {
 
     hover(state) {
         const material = state ? this._hoverColor : this._defaultColor;
-        for (let i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i].material = material;
+        for (let i = 0; i < this.miData.length; i++) {
+            this.miData[i].meshInstance.material = material;
         }
     }
 }
@@ -175,6 +176,8 @@ class AxisArrow extends AxisShape {
     _arrowThickness = 0.15;
 
     _arrowLength = 0.2;
+
+    _intersectTolerance = 0.1;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -230,46 +233,67 @@ class AxisArrow extends AxisShape {
         return this._arrowLength;
     }
 
-    _createArrow() {
-        this.entity = new Entity('axis_' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
-
-        this._line = new Entity('line_' + this.axis);
-        this.entity.addChild(this._line);
-        let mesh = createShadowMesh(this.device, this._line, 'cylinder');
+    _createLine() {
+        this._lineRender = new Entity('lineRender:' + this.axis);
+        this.entity.addChild(this._lineRender);
+        let mesh = createShadowMesh(this.device, this._lineRender, 'cylinder');
         let meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._line.addComponent('render', {
+        this._lineRender.addComponent('render', {
             meshInstances: [meshInstance],
             layers: this._layers,
             castShadows: false
         });
-        this._updateLine();
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: false });
 
-        this._arrow = new Entity('arrow_' + this.axis);
-        this.entity.addChild(this._arrow);
-        mesh = createShadowMesh(this.device, this._arrow, 'cone');
+        this._lineIntersect = new Entity('lineIntersect:' + this.axis);
+        this.entity.addChild(this._lineIntersect);
+        mesh = createCylinder(this.device);
         meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._arrow.addComponent('render', {
+        meshInstance.visible = false;
+        this._lineIntersect.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: [],
+            castShadows: false
+        });
+        this.miData.push({ meshInstance, intersect: true });
+
+        this._updateLine();
+    }
+
+    _createHead() {
+        this._head = new Entity('head:' + this.axis);
+        this.entity.addChild(this._head);
+        const mesh = createShadowMesh(this.device, this._head, 'cone');
+        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        this._head.addComponent('render', {
             meshInstances: [meshInstance],
             layers: this._layers,
             castShadows: false
         });
         this._updateArrow();
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: true });
+    }
 
+    _createArrow() {
+        this.entity = new Entity('arrow:' + this.axis);
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+
+        this._createLine();
+        this._createHead();
     }
 
     _updateLine() {
-        this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
-        this._line.setLocalScale(this._lineThickness, this._lineLength, this._lineThickness);
+        this._lineRender.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
+        this._lineRender.setLocalScale(this._lineThickness, this._lineLength, this._lineThickness);
+        this._lineIntersect.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
+        this._lineIntersect.setLocalScale(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
     }
 
     _updateArrow() {
-        this._arrow.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
-        this._arrow.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
+        this._head.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
+        this._head.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
     }
 }
 
@@ -283,7 +307,7 @@ class AxisBoxCenter extends AxisShape {
     }
 
     _createCenter() {
-        this.entity = new Entity('center_' + this.axis);
+        this.entity = new Entity('center:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
@@ -294,7 +318,7 @@ class AxisBoxCenter extends AxisShape {
             layers: this._layers,
             castShadows: false
         });
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: true });
     }
 
     set size(value) {
@@ -315,6 +339,8 @@ class AxisBoxLine extends AxisShape {
     _lineLength = 0.5;
 
     _boxSize = 0.14;
+
+    _intersectTolerance = 0.1;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -361,40 +387,62 @@ class AxisBoxLine extends AxisShape {
         return this._boxSize;
     }
 
-    _createBoxLine() {
-        this.entity = new Entity('axis_' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
-
-        this._line = new Entity('line_' + this.axis);
-        this.entity.addChild(this._line);
-        let mesh = createShadowMesh(this.device, this._line, 'cylinder');
+    _createLine() {
+        this._lineRender = new Entity('lineRender:' + this.axis);
+        this.entity.addChild(this._lineRender);
+        let mesh = createShadowMesh(this.device, this._lineRender, 'cylinder');
         let meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._line.addComponent('render', {
+        this._lineRender.addComponent('render', {
             meshInstances: [meshInstance],
             layers: this._layers,
             castShadows: false
         });
-        this._updateLine();
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: false });
 
-        this._box = new Entity('box_' + this.axis);
-        this.entity.addChild(this._box);
-        mesh = createShadowMesh(this.device, this._box, 'box');
+        this._lineIntersect = new Entity('lineIntersect:' + this.axis);
+        this.entity.addChild(this._lineIntersect);
+        mesh = createCylinder(this.device);
         meshInstance = new MeshInstance(mesh, this._defaultColor);
+        meshInstance.visible = false;
+        this._lineIntersect.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: [],
+            castShadows: false
+        });
+        this.miData.push({ meshInstance, intersect: true });
+
+        this._updateLine();
+    }
+
+    _createBox() {
+        this._box = new Entity('box:' + this.axis);
+        this.entity.addChild(this._box);
+        const mesh = createShadowMesh(this.device, this._box, 'box');
+        const meshInstance = new MeshInstance(mesh, this._defaultColor);
         this._box.addComponent('render', {
             meshInstances: [meshInstance],
             layers: this._layers,
             castShadows: false
         });
         this._updateBox();
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: true });
+    }
+
+    _createBoxLine() {
+        this.entity = new Entity('axis:' + this.axis);
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+
+        this._createLine();
+        this._createBox();
     }
 
     _updateLine() {
-        this._line.setLocalPosition(new Vec3(0, this._gap + this._lineLength * 0.5, 0));
-        this._line.setLocalScale(new Vec3(this._lineThickness, this._lineLength, this._lineThickness));
+        this._lineRender.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
+        this._lineRender.setLocalScale(this._lineThickness, this._lineLength, this._lineThickness);
+        this._lineIntersect.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
+        this._lineIntersect.setLocalScale(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
     }
 
     _updateBox() {
@@ -412,6 +460,8 @@ class AxisDisk extends AxisShape {
 
     _lightDir;
 
+    _intersectTolerance = 0.1;
+
     constructor(device, options = {}) {
         super(device, options);
 
@@ -424,36 +474,59 @@ class AxisDisk extends AxisShape {
     }
 
     _createDisk() {
-        this.entity = new Entity('disk_' + this.axis);
+        this.entity = new Entity('diskRoot:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
-        const meshInstances = [
-            new MeshInstance(this._createTorusMesh(this.entity, this._sectorAngle), this._defaultColor),
-            new MeshInstance(this._createTorusMesh(this.entity, 2 * Math.PI), this._defaultColor)
-        ];
-        meshInstances[1].visible = false;
-        this.entity.addComponent('render', {
-            meshInstances: meshInstances,
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(...meshInstances);
-    }
 
-    _createTorusMesh(entity, sectorAngle) {
-        return createShadowMesh(this.device, entity, 'torus', {
+        this._diskRender = new Entity('diskRender:' + this.axis);
+        this.entity.addChild(this._diskRender);
+        const arcMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
             lightDir: this._lightDir,
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
-            sectorAngle: sectorAngle,
-            segments: TORUS_SEGMENTS
+            sectorAngle: this._sectorAngle,
+            segments: TORUS_RENDER_SEGMENTS
         });
+        const circleMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
+            lightDir: this._lightDir,
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius,
+            sectorAngle: 2 * Math.PI,
+            segments: TORUS_RENDER_SEGMENTS
+        });
+        const arcMeshInstance = new MeshInstance(arcMesh, this._defaultColor);
+        const circleMeshInstance = new MeshInstance(circleMesh, this._defaultColor);
+        circleMeshInstance.visible = false;
+        this._diskRender.addComponent('render', {
+            meshInstances: [arcMeshInstance, circleMeshInstance],
+            layers: this._layers,
+            castShadows: false
+        });
+        this.miData.push({ meshInstance: arcMeshInstance, intersect: false });
+        this.miData.push({ meshInstance: circleMeshInstance, intersect: false });
+
+        this._diskIntersect = new Entity('diskIntersect:' + this.axis);
+        this.entity.addChild(this._diskIntersect);
+        const mesh = createTorus(this.device, {
+            tubeRadius: this._tubeRadius + this._intersectTolerance,
+            ringRadius: this._ringRadius,
+            sectorAngle: this._sectorAngle,
+            segments: TORUS_INTERSECT_SEGMENTS
+        });
+        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        meshInstance.visible = false;
+        this._diskIntersect.addComponent('render', {
+            meshInstances: [meshInstance],
+            layers: [],
+            castShadows: false
+        });
+        this.miData.push({ meshInstance, intersect: true });
     }
 
     set tubeRadius(value) {
         this._tubeRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = this._createTorusMesh();
+        this._updateDisk();
     }
 
     get tubeRadius() {
@@ -462,22 +535,48 @@ class AxisDisk extends AxisShape {
 
     set ringRadius(value) {
         this._ringRadius = value ?? 0.1;
-        this.meshInstances[0].mesh = this._createTorusMesh();
+        this._updateDisk();
     }
 
     get ringRadius() {
         return this._ringRadius;
     }
 
+    _updateDisk() {
+        const arcMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
+            lightDir: this._lightDir,
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius,
+            sectorAngle: this._sectorAngle,
+            segments: TORUS_RENDER_SEGMENTS
+        });
+        const circleMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
+            lightDir: this._lightDir,
+            tubeRadius: this._tubeRadius,
+            ringRadius: this._ringRadius,
+            sectorAngle: 2 * Math.PI,
+            segments: TORUS_RENDER_SEGMENTS
+        });
+        const mesh = createTorus(this.device, {
+            tubeRadius: this._tubeRadius + this._intersectTolerance,
+            ringRadius: this._ringRadius,
+            sectorAngle: this._sectorAngle,
+            segments: TORUS_INTERSECT_SEGMENTS
+        });
+        this.miData[0].meshInstance.mesh = arcMesh;
+        this.miData[1].meshInstance.mesh = circleMesh;
+        this.miData[2].meshInstance.mesh = mesh;
+    }
+
     drag(state) {
-        this.meshInstances[0].visible = !state;
-        this.meshInstances[1].visible = state;
+        this.miData[0].meshInstance.visible = !state;
+        this.miData[1].meshInstance.visible = state;
     }
 
     hide(state) {
         if (state) {
-            this.meshInstances[0].visible = false;
-            this.meshInstances[1].visible = false;
+            this.miData[0].meshInstance.visible = false;
+            this.miData[1].meshInstance.visible = false;
             return;
         }
 
@@ -504,7 +603,7 @@ class AxisPlane extends AxisShape {
     }
 
     _createPlane() {
-        this.entity = new Entity('plane_' + this.axis);
+        this.entity = new Entity('plane:' + this.axis);
         this.entity.setLocalPosition(this._getPosition());
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
@@ -515,7 +614,7 @@ class AxisPlane extends AxisShape {
             layers: this._layers,
             castShadows: false
         });
-        this.meshInstances.push(meshInstance);
+        this.miData.push({ meshInstance, intersect: true });
     }
 
     set size(value) {

@@ -320,7 +320,7 @@ class GizmoTransform extends Gizmo {
         if (!meshInstance) {
             return '';
         }
-        return meshInstance.node.name.split("_")[1];
+        return meshInstance.node.name.split(":")[1];
     }
 
     _getIsPlane(meshInstance) {
@@ -501,8 +501,12 @@ class GizmoTransform extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this._meshRoot.addChild(shape.entity);
-            for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._hoverShapeMap.set(shape.meshInstances[i], shape);
+            for (let i = 0; i < shape.miData.length; i++) {
+                const { meshInstance, intersect } = shape.miData[i];
+                this._hoverShapeMap.set(meshInstance, shape);
+                if (intersect) {
+                    this.intersectMeshInstances.push(meshInstance);
+                }
             }
         }
     }
