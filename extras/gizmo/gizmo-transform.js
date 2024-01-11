@@ -33,7 +33,6 @@ const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.6);
 const WHITE_COLOR = new Color(1, 1, 1);
 const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
 
-
 /**
  * The base class for all transform gizmos.
  *
@@ -445,35 +444,35 @@ class GizmoTransform extends Gizmo {
 
     _drawGuideLines() {
         const gizmoPos = this.gizmo.getPosition();
-        tmpQ1.copy(this.gizmo.getRotation());
+        const gizmoRot = tmpQ1.copy(this.gizmo.getRotation());
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
             const color = this._materials.axis[axis].cullBack.emissive;
             if (checkAxis === 'xyz') {
-                this._drawSpanLine(gizmoPos, axis, color);
+                this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
                 continue;
             }
             if (checkIsPlane) {
                 if (axis !== checkAxis) {
-                    this._drawSpanLine(gizmoPos, axis, color);
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
                 }
             } else {
                 if (axis === checkAxis) {
-                    this._drawSpanLine(gizmoPos, axis, color);
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
                 }
             }
         }
     }
 
-    _drawSpanLine(pos, axis, color) {
+    _drawSpanLine(pos, rot, axis, color) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
         tmpV1.scale(SPANLINE_SIZE);
         tmpV2.copy(tmpV1).scale(-1);
-        tmpQ1.transformVector(tmpV1, tmpV1);
-        tmpQ1.transformVector(tmpV2, tmpV2);
+        rot.transformVector(tmpV1, tmpV1);
+        rot.transformVector(tmpV2, tmpV2);
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
     }
 
