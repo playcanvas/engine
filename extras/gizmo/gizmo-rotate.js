@@ -50,7 +50,7 @@ class GizmoRotate extends GizmoTransform {
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.cullBack,
             lightDir: this.camera.entity.forward,
-            ringRadius: 0.65
+            ringRadius: 0.63
         })
     };
 
