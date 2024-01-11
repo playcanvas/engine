@@ -24,7 +24,7 @@ class GizmoTranslate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullNone,
-            hoverColor: this._materials.hover.cullNone
+            hoverColor: this._materials.hover.x.cullNone
         }),
         xz: new AxisPlane(this.app.graphicsDevice, {
             axis: 'y',
@@ -32,7 +32,7 @@ class GizmoTranslate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullNone,
-            hoverColor: this._materials.hover.cullNone
+            hoverColor: this._materials.hover.y.cullNone
         }),
         xy: new AxisPlane(this.app.graphicsDevice, {
             axis: 'z',
@@ -40,28 +40,28 @@ class GizmoTranslate extends GizmoTransform {
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullNone,
-            hoverColor: this._materials.hover.cullNone
+            hoverColor: this._materials.hover.z.cullNone
         }),
         x: new AxisArrow(this.app.graphicsDevice, {
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.x.cullBack
         }),
         y: new AxisArrow(this.app.graphicsDevice, {
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.y.cullBack
         }),
         z: new AxisArrow(this.app.graphicsDevice, {
             axis: 'z',
             layers: [this.layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.z.cullBack
         })
     };
 

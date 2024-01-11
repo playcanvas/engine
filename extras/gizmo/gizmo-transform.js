@@ -22,13 +22,17 @@ const pointDelta = new Vec3();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
-const GUIDELINE_SIZE = 1e3;
-const SEMI_RED_COLOR = new Color(1, 0.3, 0.3, 0.75);
-const SEMI_GREEN_COLOR = new Color(0.3, 1, 0.3, 0.75);
-const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.75);
-const YELLOW_COLOR = new Color(1, 1, 0.3);
-const SEMI_YELLOW_COLOR = new Color(1, 1, 0.3, 0.5);
-const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.5);
+const SPANLINE_SIZE = 1e3;
+
+const RED_COLOR = new Color(1, 0.3, 0.3);
+const SEMI_RED_COLOR = new Color(1, 0.3, 0.3, 0.6);
+const GREEN_COLOR = new Color(0.3, 1, 0.3);
+const SEMI_GREEN_COLOR = new Color(0.3, 1, 0.3, 0.6);
+const BLUE_COLOR = new Color(0.3, 0.3, 1);
+const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.6);
+const WHITE_COLOR = new Color(1, 1, 1);
+const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
+
 
 /**
  * The base class for all transform gizmos.
@@ -39,24 +43,7 @@ class GizmoTransform extends Gizmo {
     /**
      * Internal material objects for mesh instances.
      *
-     * @typedef MaterialsObject
-     * @property {Object} axis - The object containing axis materials.
-     * @property {Object} axis.x - The object containing the X axis materials.
-     * @property {StandardMaterial} axis.x.cullBack - The X axis material with back culling.
-     * @property {StandardMaterial} axis.x.cullNone - The X axis material without culling.
-     * @property {Object} axis.y - The object containing the Y axis materials.
-     * @property {StandardMaterial} axis.y.cullBack - The Y axis material with back culling.
-     * @property {StandardMaterial} axis.y.cullNone - The Y axis material without culling.
-     * @property {Object} axis.z - The object containing the Z axis materials.
-     * @property {StandardMaterial} axis.z.cullBack - The Z axis material with back culling.
-     * @property {StandardMaterial} axis.z.cullNone - The Z axis material without culling.
-     * @property {StandardMaterial} axis.face - The camera facing (face) axis material. Only for rotate
-     * @property {StandardMaterial} hover - The hover material.
-     * @property {StandardMaterial} center - The center shape material. Only for scale.
-     * @property {StandardMaterial} guide - The guide ring axis material. Only for rotate.
-     */
-    /**
-     * @type {MaterialsObject}
+     * @type {Object}
      * @protected
      */
     _materials = {
@@ -73,14 +60,25 @@ class GizmoTransform extends Gizmo {
                 cullBack: this._createMaterial(SEMI_BLUE_COLOR),
                 cullNone: this._createMaterial(SEMI_BLUE_COLOR, CULLFACE_NONE)
             },
-            face: this._createMaterial(SEMI_WHITE_COLOR)
+            face: this._createMaterial(SEMI_WHITE_COLOR),
+            xyz: this._createMaterial(SEMI_WHITE_COLOR)
         },
         hover: {
-            cullBack: this._createMaterial(YELLOW_COLOR),
-            cullNone: this._createMaterial(YELLOW_COLOR, CULLFACE_NONE)
-        },
-        center: this._createMaterial(SEMI_WHITE_COLOR),
-        guide: this._createMaterial(SEMI_WHITE_COLOR)
+            x: {
+                cullBack: this._createMaterial(RED_COLOR),
+                cullNone: this._createMaterial(RED_COLOR, CULLFACE_NONE)
+            },
+            y: {
+                cullBack: this._createMaterial(GREEN_COLOR),
+                cullNone: this._createMaterial(GREEN_COLOR, CULLFACE_NONE)
+            },
+            z: {
+                cullBack: this._createMaterial(BLUE_COLOR),
+                cullNone: this._createMaterial(BLUE_COLOR, CULLFACE_NONE)
+            },
+            face: this._createMaterial(WHITE_COLOR),
+            xyz: this._createMaterial(WHITE_COLOR)
+        }
     };
 
     /**
@@ -224,28 +222,7 @@ class GizmoTransform extends Gizmo {
             if (!this.gizmo.enabled) {
                 return;
             }
-
-            // draw guidelines
-            const gizmoPos = this.gizmo.getPosition();
-            tmpQ1.copy(this.gizmo.getRotation());
-            const checkAxis = this._hoverAxis || this._selectedAxis;
-            const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
-            for (let i = 0; i < VEC3_AXES.length; i++) {
-                const axis = VEC3_AXES[i];
-                if (checkAxis === 'xyz') {
-                    this._drawGuideLine(gizmoPos, axis);
-                    continue;
-                }
-                if (checkIsPlane) {
-                    if (axis !== checkAxis) {
-                        this._drawGuideLine(gizmoPos, axis);
-                    }
-                } else {
-                    if (axis === checkAxis) {
-                        this._drawGuideLine(gizmoPos, axis);
-                    }
-                }
-            }
+            this._drawGuideLines();
         });
 
         this.on('pointer:move', (x, y, meshInstance) => {
@@ -333,32 +310,6 @@ class GizmoTransform extends Gizmo {
 
     get zAxisColor() {
         return this._materials.axis.z.cullBack.emissive;
-    }
-
-    set faceAxisColor(value) {
-        this._materials.axis.face.emissive.copy(value);
-        this._materials.axis.face.update();
-    }
-
-    get faceAxisColor() {
-        return this._materials.axis.face.emissive;
-    }
-
-    set hoverColor(value) {
-        this._materials.hover.cullBack.emissive.copy(value);
-        this._materials.hover.cullBack.update();
-    }
-
-    get hoverColor() {
-        return this._materials.hover.cullBack.emissive;
-    }
-
-    set guideLineColor(value) {
-        this._guideLineColor.copy(value);
-    }
-
-    get guideLineColor() {
-        return this._guideLineColor;
     }
 
     _getAxis(meshInstance) {
@@ -492,14 +443,38 @@ class GizmoTransform extends Gizmo {
         return { point, angle };
     }
 
-    _drawGuideLine(pos, axis) {
+    _drawGuideLines() {
+        const gizmoPos = this.gizmo.getPosition();
+        tmpQ1.copy(this.gizmo.getRotation());
+        const checkAxis = this._hoverAxis || this._selectedAxis;
+        const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
+        for (let i = 0; i < VEC3_AXES.length; i++) {
+            const axis = VEC3_AXES[i];
+            const color = this._materials.axis[axis].cullBack.emissive;
+            if (checkAxis === 'xyz') {
+                this._drawSpanLine(gizmoPos, axis, color);
+                continue;
+            }
+            if (checkIsPlane) {
+                if (axis !== checkAxis) {
+                    this._drawSpanLine(gizmoPos, axis, color);
+                }
+            } else {
+                if (axis === checkAxis) {
+                    this._drawSpanLine(gizmoPos, axis, color);
+                }
+            }
+        }
+    }
+
+    _drawSpanLine(pos, axis, color) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
-        tmpV1.scale(GUIDELINE_SIZE);
+        tmpV1.scale(SPANLINE_SIZE);
         tmpV2.copy(tmpV1).scale(-1);
         tmpQ1.transformVector(tmpV1, tmpV1);
         tmpQ1.transformVector(tmpV2, tmpV2);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideLineColor, true);
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
     }
 
     _createMaterial(color, cull = CULLFACE_BACK) {

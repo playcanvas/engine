@@ -71,25 +71,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.zAxisColor' }
                 })
-            ),
-            type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Face Axis' },
-                    jsx(ColorPicker, {
-                        binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.faceAxisColor' }
-                    })
-                ),
-            jsx(LabelGroup, { text: 'Hover' },
-                jsx(ColorPicker, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.hoverColor' }
-                })
-            ),
-            jsx(LabelGroup, { text: 'Guide Line' },
-                jsx(ColorPicker, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.guideLineColor' }
-                })
             )
         ),
         jsx(Panel, { headerText: 'Mesh' },
@@ -260,9 +241,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 xAxisColor: Object.values(gizmo.xAxisColor),
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
-                faceAxisColor: Object.values(gizmo.faceAxisColor),
-                hoverColor: Object.values(gizmo.hoverColor),
-                guideLineColor: Object.values(gizmo.guideLineColor),
                 coordSpace: gizmo.coordSpace,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,
@@ -438,9 +416,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                     case 'xAxisColor':
                     case 'yAxisColor':
                     case 'zAxisColor':
-                    case 'faceAxisColor':
-                    case 'hoverColor':
-                    case 'guideLineColor':
                         tmpC.set(...value);
                         gizmoHandler.gizmo[pathArray[1]] = tmpC;
                         break;
