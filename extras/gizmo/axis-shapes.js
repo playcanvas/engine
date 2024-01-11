@@ -4,6 +4,7 @@ import {
     createCylinder,
     createPlane,
     createMesh,
+    Material,
     Color,
     MeshInstance,
     Entity,
@@ -25,6 +26,7 @@ const MESH_TEMPLATES = {
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpMat = new Material();
 
 function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -248,7 +250,7 @@ class AxisArrow extends AxisShape {
         this._lineIntersect = new Entity('lineIntersect:' + this.axis);
         this.entity.addChild(this._lineIntersect);
         mesh = createCylinder(this.device);
-        meshInstance = new MeshInstance(mesh, this._defaultColor);
+        meshInstance = new MeshInstance(mesh, tmpMat);
         meshInstance.visible = false;
         this._lineIntersect.addComponent('render', {
             meshInstances: [meshInstance],
@@ -402,7 +404,7 @@ class AxisBoxLine extends AxisShape {
         this._lineIntersect = new Entity('lineIntersect:' + this.axis);
         this.entity.addChild(this._lineIntersect);
         mesh = createCylinder(this.device);
-        meshInstance = new MeshInstance(mesh, this._defaultColor);
+        meshInstance = new MeshInstance(mesh, tmpMat);
         meshInstance.visible = false;
         this._lineIntersect.addComponent('render', {
             meshInstances: [meshInstance],
@@ -514,7 +516,7 @@ class AxisDisk extends AxisShape {
             sectorAngle: this._sectorAngle,
             segments: TORUS_INTERSECT_SEGMENTS
         });
-        const meshInstance = new MeshInstance(mesh, this._defaultColor);
+        const meshInstance = new MeshInstance(mesh, tmpMat);
         meshInstance.visible = false;
         this._diskIntersect.addComponent('render', {
             meshInstances: [meshInstance],
