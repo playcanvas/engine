@@ -1412,7 +1412,6 @@ export const UNIFORMTYPE_TEXTURE2D_ARRAY = 47;
 export const UNIFORMTYPE_ITEXTURE2D_ARRAY = 48;
 export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
 
-
 export const uniformTypeToName = [
     // Uniforms
     'float',
@@ -1483,6 +1482,30 @@ export const uniformTypeToName = [
     'sampler2DArray',
     'isampler2DArray',
     'usampler2DArray'
+];
+
+// Map used in uniform-buffer.js to convert uniform type to storage type
+// Defaults to TYPE_FLOAT32 for unknown types
+export const uniformTypeToStorage = [
+    TYPE_FLOAT32,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_INT32,
+
+    TYPE_FLOAT32,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_INT32,
+
+    TYPE_FLOAT32,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_INT32,
+
+    TYPE_FLOAT32,
+    TYPE_INT32,
+    TYPE_UINT32,
+    TYPE_INT32
 ];
 
 /**
