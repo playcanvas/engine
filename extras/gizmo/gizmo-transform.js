@@ -111,7 +111,7 @@ class GizmoTransform extends Gizmo {
      * Internal gizmo starting rotation in world space.
      *
      * @type {Quat}
-     * @private
+     * @protected
      */
     _gizmoRotationStart = new Quat();
 

@@ -99,6 +99,7 @@ class GizmoRotate extends GizmoTransform {
         this.on('transform:start', () => {
             guideAngleLine.copy(this._selectionStartPoint).normalize();
             guideAngleLine.scale(this._getGuideAngleScale());
+            this._gizmoRotationStart.transformVector(guideAngleLine, guideAngleLine);
             this._storeNodeRotations();
             this._drag(true);
         });
@@ -106,6 +107,7 @@ class GizmoRotate extends GizmoTransform {
         this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
             guideAngleLine.copy(pointLast).normalize();
             guideAngleLine.scale(this._getGuideAngleScale());
+            this._gizmoRotationStart.transformVector(guideAngleLine, guideAngleLine);
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
