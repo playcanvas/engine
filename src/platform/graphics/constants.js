@@ -784,7 +784,7 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
     [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }],
 
-    // uncompressed integer formats (WebGL2 Only)
+    // uncompressed integer formats (Not supported on WebGL1)
     [PIXELFORMAT_R8I,       { name: 'R8I', size: 1, channelSize: 1 }],
     [PIXELFORMAT_R8UI,       { name: 'R8UI', size: 1, channelSize: 1 }],
     [PIXELFORMAT_R16I,       { name: 'R16I', size: 2, channelSize: 2 }],
