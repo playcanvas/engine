@@ -1,4 +1,5 @@
 import {
+    math,
     Quat,
     Vec3
 } from 'playcanvas';
@@ -22,23 +23,26 @@ class GizmoRotate extends GizmoTransform {
         z: new AxisDisk(this.app.graphicsDevice, {
             axis: 'z',
             layers: [this.layer.id],
-            rotation: new Vec3(90, 0, 0),
+            rotation: new Vec3(90, 0, 90),
             defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.cullBack,
+            sectorAngle: Math.PI
         }),
         x: new AxisDisk(this.app.graphicsDevice, {
             axis: 'x',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.cullBack,
+            sectorAngle: Math.PI
         }),
         y: new AxisDisk(this.app.graphicsDevice, {
             axis: 'y',
             layers: [this.layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.cullBack
+            hoverColor: this._materials.hover.cullBack,
+            sectorAngle: Math.PI
         }),
         face: new AxisDisk(this.app.graphicsDevice, {
             axis: 'face',
@@ -46,7 +50,7 @@ class GizmoRotate extends GizmoTransform {
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.cullBack,
             lightDir: this.camera.entity.forward,
-            ringRadius: 0.8
+            ringRadius: 0.65
         })
     };
 
@@ -113,6 +117,8 @@ class GizmoRotate extends GizmoTransform {
 
         this.app.on('update', () => {
             this._faceDiskToCamera(this._shapes.face.entity);
+            this._faceRingsToCamera();
+
             if (this._dragging) {
                 this._drawGuideAngleLine(guideAngleLine);
             }
@@ -171,6 +177,17 @@ class GizmoRotate extends GizmoTransform {
     _faceDiskToCamera(entity) {
         entity.lookAt(this.camera.entity.getPosition());
         entity.rotateLocal(90, 0, 0);
+    }
+
+    _faceRingsToCamera() {
+        tmpV1.copy(this.camera.entity.getPosition()).sub(this.gizmo.getPosition());
+        tmpQ1.copy(this.gizmo.getRotation()).invert().transformVector(tmpV1, tmpV1);
+        let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
+        this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
+        angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
+        this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
+        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+        this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
     }
 
     _storeNodeRotations() {

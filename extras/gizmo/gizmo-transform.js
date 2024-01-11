@@ -73,7 +73,7 @@ class GizmoTransform extends Gizmo {
                 cullBack: this._createMaterial(SEMI_BLUE_COLOR),
                 cullNone: this._createMaterial(SEMI_BLUE_COLOR, CULLFACE_NONE)
             },
-            face: this._createMaterial(SEMI_YELLOW_COLOR)
+            face: this._createMaterial(SEMI_WHITE_COLOR)
         },
         hover: {
             cullBack: this._createMaterial(YELLOW_COLOR),
