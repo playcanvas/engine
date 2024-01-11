@@ -169,7 +169,7 @@ export const BUFFER_STREAM = 2;
 
 /**
  * The data store contents will be modified repeatedly on the GPU and used many times. Optimal for
- * transform feedback usage (WebGL2 only).
+ * transform feedback usage (not supported by WebGL1).
  *
  * @type {number}
  */
@@ -619,126 +619,126 @@ export const PIXELFORMAT_ATC_RGBA = 30;
 export const PIXELFORMAT_BGRA8 = 31;
 
 /**
- * 8-bit signed integer single-channel (R) format (WebGL2 only).
+ * 8-bit signed integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R8I = 32;
 
 /**
- * 8-bit unsigned integer single-channel (R) format (WebGL2 only).
+ * 8-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R8UI = 33;
 
 /**
- * 16-bit signed integer single-channel (R) format (WebGL2 only).
+ * 16-bit signed integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R16I = 34;
 
 /**
- * 16-bit unsigned integer single-channel (R) format (WebGL2 only).
+ * 16-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R16UI = 35;
 
 /**
- * 32-bit signed integer single-channel (R) format (WebGL2 only).
+ * 32-bit signed integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R32I = 36;
 
 /**
- * 32-bit unsigned integer single-channel (R) format (WebGL2 only).
+ * 32-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_R32UI = 37;
 
 /**
- * 8-bit per-channel signed integer (RG) format (WebGL2 only).
+ * 8-bit per-channel signed integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG8I = 38;
 
 /**
- * 8-bit per-channel unsigned integer (RG) format (WebGL2 only).
+ * 8-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG8UI = 39;
 
 /**
- * 16-bit per-channel signed integer (RG) format (WebGL2 only).
+ * 16-bit per-channel signed integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG16I = 40;
 
 /**
- * 16-bit per-channel unsigned integer (RG) format (WebGL2 only).
+ * 16-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG16UI = 41;
 
 /**
- * 32-bit per-channel signed integer (RG) format (WebGL2 only).
+ * 32-bit per-channel signed integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG32I = 42;
 
 /**
- * 32-bit per-channel unsigned integer (RG) format (WebGL2 only).
+ * 32-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RG32UI = 43;
 
 /**
- * 8-bit per-channel signed integer (RGBA) format (WebGL2 only).
+ * 8-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RGBA8I = 44;
 
 /**
- * 8-bit per-channel unsigned integer (RGBA) format (WebGL2 only).
+ * 8-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RGBA8UI = 45;
 
 /**
- * 16-bit per-channel signed integer (RGBA) format (WebGL2 only).
+ * 16-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RGBA16I = 46;
 
 /**
- * 16-bit per-channel unsigned integer (RGBA) format (WebGL2 only).
+ * 16-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RGBA16UI = 47;
 
 /**
- * 32-bit per-channel signed integer (RGBA) format (WebGL2 only).
+ * 32-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
 export const PIXELFORMAT_RGBA32I = 48;
 
 /**
- * 32-bit per-channel unsigned integer (RGBA) format (WebGL2 only).
+ * 32-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
  *
  * @type {number}
  */
