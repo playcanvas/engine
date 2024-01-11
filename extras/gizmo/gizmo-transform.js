@@ -89,6 +89,14 @@ class GizmoTransform extends Gizmo {
     _guideLineColor = new Color(1, 1, 1, 0.8);
 
     /**
+     * Internal gizmo starting rotation in world space.
+     *
+     * @type {Quat}
+     * @protected
+     */
+    _gizmoRotationStart = new Quat();
+
+    /**
      * Internal object containing the axis shapes to render.
      *
      * @type {Object.<string, import('./axis-shapes.js').AxisShape>}
@@ -97,20 +105,12 @@ class GizmoTransform extends Gizmo {
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to axis shapes.
+     * Internal mapping of mesh instances to axis shapes for hovering.
      *
      * @type {Map<import('playcanvas').MeshInstance, import('./axis-shapes.js').AxisShape>}
      * @private
      */
-    _shapeMap = new Map();
-
-    /**
-     * Internal gizmo starting rotation in world space.
-     *
-     * @type {Quat}
-     * @protected
-     */
-    _gizmoRotationStart = new Quat();
+    _hoverShapeMap = new Map();
 
     /**
      * Internal currently hovered shape.
@@ -224,19 +224,6 @@ class GizmoTransform extends Gizmo {
             this._drawGuideLines();
         });
 
-        this.on('pointer:move', (x, y, meshInstance) => {
-            this._hover(meshInstance);
-
-            if (this._dragging) {
-                const pointInfo = this._calcPoint(x, y);
-                pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-                const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire('transform:move', pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
-                this._hoverAxis = '';
-                this._hoverIsPlane = false;
-            }
-        });
-
         this.on('pointer:down', (x, y, meshInstance) => {
             if (this._dragging) {
                 return;
@@ -251,6 +238,19 @@ class GizmoTransform extends Gizmo {
                 this._selectionStartAngle = pointInfo.angle;
                 this._dragging = true;
                 this.fire('transform:start');
+            }
+        });
+
+        this.on('pointer:move', (x, y, meshInstance) => {
+            this._hover(meshInstance);
+
+            if (this._dragging) {
+                const pointInfo = this._calcPoint(x, y);
+                pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
+                const angleDelta = pointInfo.angle - this._selectionStartAngle;
+                this.fire('transform:move', pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
+                this._hoverAxis = '';
+                this._hoverIsPlane = false;
             }
         });
 
@@ -330,7 +330,7 @@ class GizmoTransform extends Gizmo {
             return;
         }
         this._hoverAxis = this._getAxis(meshInstance);
-        const shape = this._shapeMap.get(meshInstance);
+        const shape = this._hoverShapeMap.get(meshInstance);
         if (shape === this._hoverShape) {
             return;
         }
@@ -449,30 +449,30 @@ class GizmoTransform extends Gizmo {
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
             const axis = VEC3_AXES[i];
-            const color = this._materials.axis[axis].cullBack.emissive;
             if (checkAxis === 'xyz') {
-                this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
+                this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 continue;
             }
             if (checkIsPlane) {
                 if (axis !== checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 }
             } else {
                 if (axis === checkAxis) {
-                    this._drawSpanLine(gizmoPos, gizmoRot, axis, color);
+                    this._drawSpanLine(gizmoPos, gizmoRot, axis);
                 }
             }
         }
     }
 
-    _drawSpanLine(pos, rot, axis, color) {
+    _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
         tmpV1.scale(SPANLINE_SIZE);
         tmpV2.copy(tmpV1).scale(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
+        const color = this._materials.hover[axis].cullBack.emissive;
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
     }
 
@@ -498,7 +498,7 @@ class GizmoTransform extends Gizmo {
             const shape = this._shapes[key];
             this._meshRoot.addChild(shape.entity);
             for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._shapeMap.set(shape.meshInstances[i], shape);
+                this._hoverShapeMap.set(shape.meshInstances[i], shape);
             }
         }
     }

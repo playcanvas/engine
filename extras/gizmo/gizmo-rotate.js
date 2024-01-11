@@ -80,6 +80,14 @@ class GizmoRotate extends GizmoTransform {
      */
     _nodeOffsets = new Map();
 
+    /**
+     * Internal vector for the end point of the guide line angle.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _guideAngleEnd = new Vec3();
+
     snapIncrement = 5;
 
     /**
@@ -95,23 +103,18 @@ class GizmoRotate extends GizmoTransform {
 
         this._createTransform();
 
-        const guideAngleLine = new Vec3();
         this.on('transform:start', () => {
-            guideAngleLine.copy(this._selectionStartPoint).normalize();
-            guideAngleLine.scale(this._getGuideAngleScale());
-            this._gizmoRotationStart.transformVector(guideAngleLine, guideAngleLine);
             this._storeNodeRotations();
+            this._updateGuideAngleEnd(this._selectionStartPoint);
             this._drag(true);
         });
 
         this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
-            guideAngleLine.copy(pointLast).normalize();
-            guideAngleLine.scale(this._getGuideAngleScale());
-            this._gizmoRotationStart.transformVector(guideAngleLine, guideAngleLine);
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
             this._setNodeRotations(this._selectedAxis, angleDelta);
+            this._updateGuideAngleEnd(pointLast);
         });
 
         this.on('transform:end', () => {
@@ -130,7 +133,8 @@ class GizmoRotate extends GizmoTransform {
             this._xyzAxisLookAt(cameraPos);
 
             if (this._dragging) {
-                this._drawGuideAngleLine(guideAngleLine);
+                const gizmoPos = this.gizmo.getPosition();
+                this._drawGuideAngleLine(gizmoPos, this._selectedAxis);
             }
         });
     }
@@ -173,15 +177,20 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.z[prop] = value;
     }
 
-    _getGuideAngleScale() {
-        return this._selectedAxis === 'face' ? this.faceRingRadius : this.xyzRingRadius;
+    _updateGuideAngleEnd(point) {
+        const axis = this._selectedAxis;
+        const scale = axis === 'face' ? this.faceRingRadius : this.xyzRingRadius;
+        this._guideAngleEnd.copy(point).normalize();
+        this._guideAngleEnd.scale(scale);
+        this._gizmoRotationStart.transformVector(this._guideAngleEnd, this._guideAngleEnd);
     }
 
-    _drawGuideAngleLine(point) {
-        const gizmoPos = this.gizmo.getPosition();
+    _drawGuideAngleLine(pos, axis) {
         tmpV1.set(0, 0, 0);
-        tmpV2.copy(point).scale(this._scale);
-        this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), this.hoverColor, false, this.layer);
+        tmpV2.copy(this._guideAngleEnd).scale(this._scale);
+        const color = axis === 'face' ? this._materials.hover.face.emissive :
+            this._materials.hover[axis].cullBack.emissive;
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this.layer);
     }
 
     _faceAxisLookAt(position) {
