@@ -35,10 +35,7 @@ class Texture {
      */
     name;
 
-    /** @protected */
-    _isRenderTarget = false;
-
-    /** @protected */
+    /** @ignore */
     _gpuSize = 0;
 
     /** @protected */

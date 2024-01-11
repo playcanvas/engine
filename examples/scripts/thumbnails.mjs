@@ -79,7 +79,8 @@ async function main() {
     // npx serve dist --config ../serve.json
     // Reason: https://github.com/vercel/serve/issues/732
     // (who *ever* thought that stripping .html was a good idea in the first place...)
-    const server = spawn('serve', ['dist', '-l', port, '--no-request-logging', '--config', '../serve.json']);
+    const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+    const server = spawn(cmd, ['serve', 'dist', '-l', port, '--no-request-logging', '--config', '../serve.json']);
     await sleep(1000); // give a second to spawn server
     console.log("Starting puppeteer screenshot process");
     try {

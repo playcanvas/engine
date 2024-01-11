@@ -259,7 +259,7 @@ class XrHitTest extends EventHandler {
                     entityTypes: options.entityTypes || undefined,
                     offsetRay: xrRay
                 }).then((xrHitTestSource) => {
-                    this._onHitTestSource(xrHitTestSource, false, callback);
+                    this._onHitTestSource(xrHitTestSource, false, options.inputSource, callback);
                 }).catch((ex) => {
                     if (callback) callback(ex);
                     this.fire('error', ex);
@@ -274,7 +274,7 @@ class XrHitTest extends EventHandler {
                 entityTypes: options.entityTypes || undefined,
                 offsetRay: xrRay
             }).then((xrHitTestSource) => {
-                this._onHitTestSource(xrHitTestSource, true, callback);
+                this._onHitTestSource(xrHitTestSource, true, options.inputSource, callback);
             }).catch((ex) => {
                 if (callback) callback(ex);
                 this.fire('error', ex);
@@ -285,10 +285,11 @@ class XrHitTest extends EventHandler {
     /**
      * @param {XRHitTestSource} xrHitTestSource - Hit test source.
      * @param {boolean} transient - True if hit test source is created from transient input source.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - Input Source with which hit test source is associated with.
      * @param {Function} callback - Callback called once hit test source is created.
      * @private
      */
-    _onHitTestSource(xrHitTestSource, transient, callback) {
+    _onHitTestSource(xrHitTestSource, transient, inputSource, callback) {
         if (!this._session) {
             xrHitTestSource.cancel();
             const err = new Error('XR Session is not started (3)');
@@ -297,7 +298,7 @@ class XrHitTest extends EventHandler {
             return;
         }
 
-        const hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient);
+        const hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient, inputSource ?? null);
         this.sources.push(hitTestSource);
 
         if (callback) callback(null, hitTestSource);
