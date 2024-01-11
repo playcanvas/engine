@@ -101,11 +101,11 @@ class GizmoScale extends GizmoTransform {
         this._createTransform();
 
         this.on('key:down', (key, shiftKey, ctrlKey) => {
-            this.uniform = !ctrlKey;
+            this.uniform = ctrlKey;
         });
 
         this.on('key:up', () => {
-            this.uniform = true;
+            this.uniform = false;
         });
 
         this.on('transform:start', () => {
