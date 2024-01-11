@@ -116,8 +116,9 @@ class GizmoRotate extends GizmoTransform {
         });
 
         this.app.on('update', () => {
-            this._faceDiskToCamera(this._shapes.face.entity);
-            this._faceRingsToCamera();
+            const cameraPos = this.camera.entity.getPosition();
+            this._faceAxisLookAt(cameraPos);
+            this._xyzAxisLookAt(cameraPos);
 
             if (this._dragging) {
                 this._drawGuideAngleLine(guideAngleLine);
@@ -174,13 +175,13 @@ class GizmoRotate extends GizmoTransform {
         this.app.drawLine(tmpV1.add(gizmoPos), tmpV2.add(gizmoPos), this.hoverColor, false, this.layer);
     }
 
-    _faceDiskToCamera(entity) {
-        entity.lookAt(this.camera.entity.getPosition());
-        entity.rotateLocal(90, 0, 0);
+    _faceAxisLookAt(position) {
+        this._shapes.face.entity.lookAt(position);
+        this._shapes.face.entity.rotateLocal(90, 0, 0);
     }
 
-    _faceRingsToCamera() {
-        tmpV1.copy(this.camera.entity.getPosition()).sub(this.gizmo.getPosition());
+    _xyzAxisLookAt(position) {
+        tmpV1.copy(position).sub(this.gizmo.getPosition());
         tmpQ1.copy(this.gizmo.getRotation()).invert().transformVector(tmpV1, tmpV1);
         let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
