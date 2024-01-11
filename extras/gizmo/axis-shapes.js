@@ -428,21 +428,25 @@ class AxisDisk extends AxisShape {
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
-        const meshInstance = new MeshInstance(this._createTorusMesh(), this._defaultColor);
+        const meshInstances = [
+            new MeshInstance(this._createTorusMesh(this.entity, this._sectorAngle), this._defaultColor),
+            new MeshInstance(this._createTorusMesh(this.entity, 2 * Math.PI), this._defaultColor)
+        ];
+        meshInstances[1].visible = false;
         this.entity.addComponent('render', {
-            meshInstances: [meshInstance],
+            meshInstances: meshInstances,
             layers: this._layers,
             castShadows: false
         });
-        this.meshInstances.push(meshInstance);
+        this.meshInstances.push(...meshInstances);
     }
 
-    _createTorusMesh() {
-        return createShadowMesh(this.device, this.entity, 'torus', {
+    _createTorusMesh(entity, sectorAngle) {
+        return createShadowMesh(this.device, entity, 'torus', {
             lightDir: this._lightDir,
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
-            sectorAngle: this._sectorAngle,
+            sectorAngle: sectorAngle,
             segments: TORUS_SEGMENTS
         });
     }
@@ -463,6 +467,21 @@ class AxisDisk extends AxisShape {
 
     get ringRadius() {
         return this._ringRadius;
+    }
+
+    drag(state) {
+        this.meshInstances[0].visible = !state;
+        this.meshInstances[1].visible = state;
+    }
+
+    hide(state) {
+        if (state) {
+            this.meshInstances[0].visible = false;
+            this.meshInstances[1].visible = false;
+            return;
+        }
+
+        this.drag(false);
     }
 }
 

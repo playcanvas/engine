@@ -97,16 +97,23 @@ class GizmoRotate extends GizmoTransform {
 
         const guideAngleLine = new Vec3();
         this.on('transform:start', () => {
-            guideAngleLine.copy(this._selectionStartPoint).normalize().scale(this._getGuideAngleScale());
+            guideAngleLine.copy(this._selectionStartPoint).normalize();
+            guideAngleLine.scale(this._getGuideAngleScale());
             this._storeNodeRotations();
+            this._drag(true);
         });
 
         this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
-            guideAngleLine.copy(pointLast).normalize().scale(this._getGuideAngleScale());
+            guideAngleLine.copy(pointLast).normalize();
+            guideAngleLine.scale(this._getGuideAngleScale());
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
             this._setNodeRotations(this._selectedAxis, angleDelta);
+        });
+
+        this.on('transform:end', () => {
+            this._drag(false);
         });
 
         this.on('nodes:detach', () => {
@@ -189,6 +196,17 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.y.entity.setLocalEulerAngles(0, angle, 0);
         angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
         this._shapes.z.entity.setLocalEulerAngles(90, 0, angle + 90);
+    }
+
+    _drag(state) {
+        for (const axis in this._shapes) {
+            const shape = this._shapes[axis];
+            if (axis === this._selectedAxis) {
+                shape.drag(state);
+            } else {
+                shape.hide(state);
+            }
+        }
     }
 
     _storeNodeRotations() {

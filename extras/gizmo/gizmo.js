@@ -280,6 +280,9 @@ class Gizmo extends EventHandler {
             const meshInstances = renders[i].meshInstances;
             for (let j = 0; j < meshInstances.length; j++) {
                 const meshInstance = meshInstances[j];
+                if (!meshInstance.visible) {
+                    continue;
+                }
                 const mesh = meshInstance.mesh;
                 const wtm = meshInstance.node.getWorldTransform().clone().invert();
 

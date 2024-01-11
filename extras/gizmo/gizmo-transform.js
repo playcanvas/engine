@@ -265,6 +265,7 @@ class GizmoTransform extends Gizmo {
             if (this._dragging) {
                 return;
             }
+
             if (meshInstance) {
                 this._selectedAxis = this._getAxis(meshInstance);
                 this._selectedIsPlane =  this._getIsPlane(meshInstance);
@@ -272,13 +273,15 @@ class GizmoTransform extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 this._selectionStartPoint.copy(pointInfo.point);
                 this._selectionStartAngle = pointInfo.angle;
-                this.fire('transform:start');
                 this._dragging = true;
+                this.fire('transform:start');
             }
         });
 
         this.on('pointer:up', () => {
             this._dragging = false;
+            this.fire('transform:end');
+
             this._selectedAxis = '';
             this._selectedIsPlane = false;
         });
@@ -377,7 +380,6 @@ class GizmoTransform extends Gizmo {
             return;
         }
         this._hoverAxis = this._getAxis(meshInstance);
-        this._hoverIsPlane =  this._getIsPlane(meshInstance);
         const shape = this._shapeMap.get(meshInstance);
         if (shape === this._hoverShape) {
             return;
