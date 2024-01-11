@@ -83,10 +83,15 @@ class GizmoTransform extends Gizmo {
     /**
      * Internal version of the guide line color.
      *
-     * @type {Color}
+     * @type {Object<string, Color>}
      * @protected
      */
-    _guideLineColor = new Color(1, 1, 1, 0.8);
+    _guideColors = {
+        x: RED_COLOR,
+        y: GREEN_COLOR,
+        z: BLUE_COLOR,
+        face: WHITE_COLOR
+    };
 
     /**
      * Internal gizmo starting rotation in world space.
@@ -472,8 +477,7 @@ class GizmoTransform extends Gizmo {
         tmpV2.copy(tmpV1).scale(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
-        const color = this._materials.hover[axis].cullBack.emissive;
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, true);
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
     }
 
     _createMaterial(color, cull = CULLFACE_BACK) {

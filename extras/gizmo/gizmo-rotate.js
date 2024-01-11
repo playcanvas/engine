@@ -188,9 +188,7 @@ class GizmoRotate extends GizmoTransform {
     _drawGuideAngleLine(pos, axis) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(this._guideAngleEnd).scale(this._scale);
-        const color = axis === 'face' ? this._materials.hover.face.emissive :
-            this._materials.hover[axis].cullBack.emissive;
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this.layer);
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], false, this.layer);
     }
 
     _faceAxisLookAt(position) {
