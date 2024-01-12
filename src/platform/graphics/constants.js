@@ -169,7 +169,7 @@ export const BUFFER_STREAM = 2;
 
 /**
  * The data store contents will be modified repeatedly on the GPU and used many times. Optimal for
- * transform feedback usage (not supported by WebGL1).
+ * transform feedback usage (WebGL2 only).
  *
  * @type {number}
  */
