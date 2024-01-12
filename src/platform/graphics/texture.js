@@ -391,8 +391,12 @@ class Texture {
      */
     set minFilter(v) {
         if (this._minFilter !== v) {
-            this._minFilter = v;
-            this.propertyChanged(1);
+            if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+            } else {
+                this._minFilter = v;
+                this.propertyChanged(1);
+            }
         }
     }
 
@@ -410,8 +414,12 @@ class Texture {
      */
     set magFilter(v) {
         if (this._magFilter !== v) {
-            this._magFilter = v;
-            this.propertyChanged(2);
+            if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+            } else {
+                this._magFilter = v;
+                this.propertyChanged(2);
+            }
         }
     }
 
@@ -549,10 +557,13 @@ class Texture {
      */
     set mipmaps(v) {
         if (this._mipmaps !== v) {
-            this._mipmaps = v;
 
             if (this.device.isWebGPU) {
                 Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
+            } else if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false", this);
+            } else {
+                this._mipmaps = v;
             }
 
             if (v) this._needsMipmapsUpload = true;
