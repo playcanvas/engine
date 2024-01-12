@@ -57,7 +57,6 @@ const chunkVersions = {
     reflectionEnvHQPS: CHUNKAPI_1_62,
     reflectionSheenPS: CHUNKAPI_1_62,
     reflectionSpherePS: CHUNKAPI_1_62,
-    reflectionSphereLowPS: CHUNKAPI_1_62,
     shadowCommonPS: CHUNKAPI_1_62,
     shadowCoordPS: CHUNKAPI_1_62,
     shadowCoordPerspZBufferPS: CHUNKAPI_1_62,

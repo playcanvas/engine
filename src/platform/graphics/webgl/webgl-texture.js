@@ -287,6 +287,10 @@ class WebglTexture {
         this._glCreated = false;
     }
 
+    /**
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The device.
+     * @param {import('../texture.js').Texture} texture - The texture to update.
+     */
     upload(device, texture) {
 
         Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);

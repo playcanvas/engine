@@ -75,6 +75,12 @@ jobs:
     - name: Run ESLint
       run: npm run lint
 
+    - name: Run ESLint on examples
+      working-directory: ./examples
+      run: |
+        npm clean-install --progress=false --no-fund
+        npm run lint
+
   typescript-declarations:
     name: TypeScript Declarations
     runs-on: ubuntu-latest
