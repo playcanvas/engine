@@ -28,23 +28,20 @@ const precisionQualifiers = new Set(['highp', 'mediump', 'lowp']);
 const shadowSamplers = new Set(['sampler2DShadow', 'samplerCubeShadow', 'sampler2DArrayShadow']);
 const textureDimensions = {
     sampler2D: TEXTUREDIMENSION_2D,
+    sampler3D: TEXTUREDIMENSION_3D,
+    samplerCube: TEXTUREDIMENSION_CUBE,
+    samplerCubeShadow: TEXTUREDIMENSION_CUBE,
+    sampler2DShadow: TEXTUREDIMENSION_2D,
+    sampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
+    sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY,
     isampler2D: TEXTUREDIMENSION_2D,
     usampler2D: TEXTUREDIMENSION_2D,
-    sampler2DShadow: TEXTUREDIMENSION_2D,
-
-    sampler3D: TEXTUREDIMENSION_3D,
     isampler3D: TEXTUREDIMENSION_3D,
     usampler3D: TEXTUREDIMENSION_3D,
-
-    samplerCube: TEXTUREDIMENSION_CUBE,
     isamplerCube: TEXTUREDIMENSION_CUBE,
     usamplerCube: TEXTUREDIMENSION_CUBE,
-    samplerCubeShadow: TEXTUREDIMENSION_CUBE,
-
-    sampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
     isampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
-    usampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
-    sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY
+    usampler2DArray: TEXTUREDIMENSION_2D_ARRAY
 };
 
 class UniformLine {
