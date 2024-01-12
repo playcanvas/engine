@@ -289,11 +289,13 @@ class Gizmo extends EventHandler {
         this._updatePosition();
         this._updateRotation();
 
-        window.addEventListener('pointerdown', this._onPointerDown);
-        window.addEventListener('pointermove', this._onPointerMove);
-        window.addEventListener('pointerup', this._onPointerUp);
-        window.addEventListener('keydown', this._onKeyDown);
-        window.addEventListener('keyup', this._onKeyUp);
+        if (window) {
+            window.addEventListener('pointerdown', this._onPointerDown);
+            window.addEventListener('pointermove', this._onPointerMove);
+            window.addEventListener('pointerup', this._onPointerUp);
+            window.addEventListener('keydown', this._onKeyDown);
+            window.addEventListener('keyup', this._onKeyUp);
+        }
 
         this.fire('nodes:attach');
 
@@ -315,11 +317,13 @@ class Gizmo extends EventHandler {
 
         this.nodes = [];
 
-        window.removeEventListener('pointerdown', this._onPointerDown);
-        window.removeEventListener('pointermove', this._onPointerMove);
-        window.removeEventListener('pointerup', this._onPointerUp);
-        window.removeEventListener('keydown', this._onKeyDown);
-        window.removeEventListener('keyup', this._onKeyUp);
+        if (window) {
+            window.removeEventListener('pointerdown', this._onPointerDown);
+            window.removeEventListener('pointermove', this._onPointerMove);
+            window.removeEventListener('pointerup', this._onPointerUp);
+            window.removeEventListener('keydown', this._onKeyDown);
+            window.removeEventListener('keyup', this._onKeyUp);
+        }
     }
 }
 
