@@ -550,46 +550,43 @@ class WebglGraphicsDevice extends GraphicsDevice {
         ];
 
         this.pcUniformType = {};
-        this.pcUniformType[gl.FLOAT]                = UNIFORMTYPE_FLOAT;
-        this.pcUniformType[gl.INT]                  = UNIFORMTYPE_INT;
+        this.pcUniformType[gl.BOOL]         = UNIFORMTYPE_BOOL;
+        this.pcUniformType[gl.INT]          = UNIFORMTYPE_INT;
+        this.pcUniformType[gl.FLOAT]        = UNIFORMTYPE_FLOAT;
+        this.pcUniformType[gl.FLOAT_VEC2]   = UNIFORMTYPE_VEC2;
+        this.pcUniformType[gl.FLOAT_VEC3]   = UNIFORMTYPE_VEC3;
+        this.pcUniformType[gl.FLOAT_VEC4]   = UNIFORMTYPE_VEC4;
+        this.pcUniformType[gl.INT_VEC2]     = UNIFORMTYPE_IVEC2;
+        this.pcUniformType[gl.INT_VEC3]     = UNIFORMTYPE_IVEC3;
+        this.pcUniformType[gl.INT_VEC4]     = UNIFORMTYPE_IVEC4;
+        this.pcUniformType[gl.BOOL_VEC2]    = UNIFORMTYPE_BVEC2;
+        this.pcUniformType[gl.BOOL_VEC3]    = UNIFORMTYPE_BVEC3;
+        this.pcUniformType[gl.BOOL_VEC4]    = UNIFORMTYPE_BVEC4;
+        this.pcUniformType[gl.FLOAT_MAT2]   = UNIFORMTYPE_MAT2;
+        this.pcUniformType[gl.FLOAT_MAT3]   = UNIFORMTYPE_MAT3;
+        this.pcUniformType[gl.FLOAT_MAT4]   = UNIFORMTYPE_MAT4;
+        this.pcUniformType[gl.SAMPLER_2D]   = UNIFORMTYPE_TEXTURE2D;
+        this.pcUniformType[gl.SAMPLER_CUBE] = UNIFORMTYPE_TEXTURECUBE;
         this.pcUniformType[gl.UNSIGNED_INT]         = UNIFORMTYPE_UINT;
-        this.pcUniformType[gl.BOOL]                 = UNIFORMTYPE_BOOL;
-
-        this.pcUniformType[gl.FLOAT_VEC2]           = UNIFORMTYPE_VEC2;
-        this.pcUniformType[gl.INT_VEC2]             = UNIFORMTYPE_IVEC2;
         this.pcUniformType[gl.UNSIGNED_INT_VEC2]    = UNIFORMTYPE_UVEC2;
-        this.pcUniformType[gl.BOOL_VEC2]            = UNIFORMTYPE_BVEC2;
-
-        this.pcUniformType[gl.FLOAT_VEC3]           = UNIFORMTYPE_VEC3;
-        this.pcUniformType[gl.INT_VEC3]             = UNIFORMTYPE_IVEC3;
         this.pcUniformType[gl.UNSIGNED_INT_VEC3]    = UNIFORMTYPE_UVEC3;
-        this.pcUniformType[gl.BOOL_VEC3]            = UNIFORMTYPE_BVEC3;
-
-        this.pcUniformType[gl.FLOAT_VEC4]           = UNIFORMTYPE_VEC4;
-        this.pcUniformType[gl.INT_VEC4]             = UNIFORMTYPE_IVEC4;
         this.pcUniformType[gl.UNSIGNED_INT_VEC4]    = UNIFORMTYPE_UVEC4;
-        this.pcUniformType[gl.BOOL_VEC4]            = UNIFORMTYPE_BVEC4;
-
-        this.pcUniformType[gl.FLOAT_MAT2]           = UNIFORMTYPE_MAT2;
-        this.pcUniformType[gl.FLOAT_MAT3]           = UNIFORMTYPE_MAT3;
-        this.pcUniformType[gl.FLOAT_MAT4]           = UNIFORMTYPE_MAT4;
-        this.pcUniformType[gl.SAMPLER_2D]           = UNIFORMTYPE_TEXTURE2D;
-        this.pcUniformType[gl.SAMPLER_CUBE]         = UNIFORMTYPE_TEXTURECUBE;
 
         if (this.isWebGL2) {
+            this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = UNIFORMTYPE_TEXTURE2D_SHADOW;
+            this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_2D_ARRAY]    = UNIFORMTYPE_TEXTURE2D_ARRAY;
+            this.pcUniformType[gl.SAMPLER_3D]          = UNIFORMTYPE_TEXTURE3D;
+
             this.pcUniformType[gl.INT_SAMPLER_2D]           = UNIFORMTYPE_ITEXTURE2D;
             this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURE2D;
-            this.pcUniformType[gl.SAMPLER_2D_SHADOW]        = UNIFORMTYPE_TEXTURE2D_SHADOW;
 
             this.pcUniformType[gl.INT_SAMPLER_CUBE]         = UNIFORMTYPE_ITEXTURECUBE;
             this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURECUBE;
-            this.pcUniformType[gl.SAMPLER_CUBE_SHADOW]      = UNIFORMTYPE_TEXTURECUBE_SHADOW;
 
-            this.pcUniformType[gl.SAMPLER_3D]               = UNIFORMTYPE_TEXTURE3D;
             this.pcUniformType[gl.INT_SAMPLER_3D]           = UNIFORMTYPE_ITEXTURE3D;
             this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_3D]  = UNIFORMTYPE_UTEXTURE3D;
 
-            this.pcUniformType[gl.SAMPLER_2D_ARRAY]         = UNIFORMTYPE_TEXTURE2D_ARRAY;
             this.pcUniformType[gl.INT_SAMPLER_2D_ARRAY]     = UNIFORMTYPE_ITEXTURE2D_ARRAY;
             this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D_ARRAY] = UNIFORMTYPE_UTEXTURE2D_ARRAY;
         }
