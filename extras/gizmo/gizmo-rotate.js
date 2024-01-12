@@ -1,6 +1,7 @@
 import {
     math,
     Quat,
+    Mat4,
     Vec3
 } from 'playcanvas';
 
@@ -10,6 +11,7 @@ import { GizmoTransform } from "./gizmo-transform.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpM1 = new Mat4();
 const tmpQ1 = new Quat();
 const tmpQ2 = new Quat();
 
@@ -47,9 +49,9 @@ class GizmoRotate extends GizmoTransform {
         face: new AxisDisk(this.app.graphicsDevice, {
             axis: 'face',
             layers: [this.layer.id],
+            rotation: this._getLookAtEulerAngles(this.camera.entity.getPosition()),
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.face,
-            lightDir: this.camera.entity.forward,
             ringRadius: 0.63
         })
     };
@@ -189,6 +191,15 @@ class GizmoRotate extends GizmoTransform {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(this._guideAngleEnd).scale(this._scale);
         this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], false, this.layer);
+    }
+
+    _getLookAtEulerAngles(position) {
+        tmpV1.set(0, 0, 0);
+        tmpM1.setLookAt(tmpV1, position, Vec3.UP);
+        tmpQ1.setFromMat4(tmpM1);
+        tmpQ1.getEulerAngles(tmpV1);
+        tmpV1.x += 90;
+        return tmpV1;
     }
 
     _faceAxisLookAt(position) {

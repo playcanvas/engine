@@ -291,14 +291,14 @@ class Gizmo extends EventHandler {
             xdir.normalize();
 
             const pos = [];
-            const idx = [];
+            const indices = [];
             mesh.getPositions(pos);
-            mesh.getIndices(idx);
+            mesh.getIndices(indices);
 
-            for (let k = 0; k < idx.length; k += 3) {
-                const i1 = idx[k];
-                const i2 = idx[k + 1];
-                const i3 = idx[k + 2];
+            for (let k = 0; k < indices.length; k += 3) {
+                const i1 = indices[k];
+                const i2 = indices[k + 1];
+                const i3 = indices[k + 2];
 
                 tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
                 tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);

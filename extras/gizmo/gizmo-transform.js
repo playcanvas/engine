@@ -30,6 +30,7 @@ const GREEN_COLOR = new Color(0.3, 1, 0.3);
 const SEMI_GREEN_COLOR = new Color(0.3, 1, 0.3, 0.6);
 const BLUE_COLOR = new Color(0.3, 0.3, 1);
 const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.6);
+const YELLOW_COLOR = new Color(1, 1, 0.5);
 const WHITE_COLOR = new Color(1, 1, 1);
 const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
 
@@ -75,7 +76,7 @@ class GizmoTransform extends Gizmo {
                 cullBack: this._createMaterial(BLUE_COLOR),
                 cullNone: this._createMaterial(BLUE_COLOR, CULLFACE_NONE)
             },
-            face: this._createMaterial(WHITE_COLOR),
+            face: this._createMaterial(YELLOW_COLOR),
             xyz: this._createMaterial(WHITE_COLOR)
         }
     };
@@ -90,7 +91,7 @@ class GizmoTransform extends Gizmo {
         x: RED_COLOR,
         y: GREEN_COLOR,
         z: BLUE_COLOR,
-        face: WHITE_COLOR
+        face: YELLOW_COLOR
     };
 
     /**
@@ -180,14 +181,6 @@ class GizmoTransform extends Gizmo {
      * @protected
      */
     _isRotation = false;
-
-    /**
-     * Internal entity for mesh root.
-     *
-     * @type {Entity}
-     * @protected
-     */
-    _meshRoot;
 
     /**
      * Internal state for if the gizmo is being dragged.
@@ -284,10 +277,7 @@ class GizmoTransform extends Gizmo {
     }
 
     set xAxisColor(value) {
-        this._materials.axis.x.cullBack.emissive.copy(value);
-        this._materials.axis.x.cullNone.emissive.copy(value);
-        this._materials.axis.x.cullBack.update();
-        this._materials.axis.x.cullNone.update();
+        this._updateAxisColor('x', value);
     }
 
     get xAxisColor() {
@@ -295,10 +285,7 @@ class GizmoTransform extends Gizmo {
     }
 
     set yAxisColor(value) {
-        this._materials.axis.y.cullBack.emissive.copy(value);
-        this._materials.axis.y.cullNone.emissive.copy(value);
-        this._materials.axis.y.cullBack.update();
-        this._materials.axis.y.cullNone.update();
+        this._updateAxisColor('y', value);
     }
 
     get yAxisColor() {
@@ -306,14 +293,25 @@ class GizmoTransform extends Gizmo {
     }
 
     set zAxisColor(value) {
-        this._materials.axis.z.cullBack.emissive.copy(value);
-        this._materials.axis.z.cullNone.emissive.copy(value);
-        this._materials.axis.z.cullBack.update();
-        this._materials.axis.z.cullNone.update();
+        this._updateAxisColor('z', value);
     }
 
     get zAxisColor() {
         return this._materials.axis.z.cullBack.emissive;
+    }
+
+    _updateAxisColor(axis, value) {
+        this._guideColors[axis].copy(value);
+
+        this._materials.axis[axis].cullBack.emissive.copy(value);
+        this._materials.axis[axis].cullNone.emissive.copy(value);
+        this._materials.hover[axis].cullBack.emissive.copy(value);
+        this._materials.hover[axis].cullNone.emissive.copy(value);
+
+        this._materials.axis[axis].cullBack.update();
+        this._materials.axis[axis].cullNone.update();
+        this._materials.hover[axis].cullBack.update();
+        this._materials.hover[axis].cullNone.update();
     }
 
     _getAxis(meshInstance) {
@@ -493,14 +491,10 @@ class GizmoTransform extends Gizmo {
     }
 
     _createTransform() {
-        // mesh root
-        this._meshRoot = new Entity('meshRoot');
-        this.gizmo.addChild(this._meshRoot);
-
         // shapes
         for (const key in this._shapes) {
             const shape = this._shapes[key];
-            this._meshRoot.addChild(shape.entity);
+            this.gizmo.addChild(shape.entity);
             for (let i = 0; i < shape.miData.length; i++) {
                 const { meshInstance, intersect } = shape.miData[i];
                 this._hoverShapeMap.set(meshInstance, shape);

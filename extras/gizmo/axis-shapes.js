@@ -88,7 +88,6 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     }
 
     const mesh = createTemplate(device, templateOpts);
-
     const options = {
         positions: [],
         normals: [],
@@ -102,8 +101,10 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     mesh.getIndices(options.indices);
     mesh.getUvs(0, options.uvs);
 
+    // TODO: face disk entity hasnt been added to world yet so world transform is before lookAt
     const wtm = entity.getWorldTransform().clone().invert();
-    wtm.transformVector(templateOpts.lightDir ?? LIGHT_DIR, tmpV1);
+    tmpV1.copy(LIGHT_DIR);
+    wtm.transformVector(tmpV1, tmpV1);
     tmpV1.normalize();
     const numVertices = mesh.vertexBuffer.numVertices;
     calculateShadowColors(tmpV1, numVertices, options.normals, options.colors);
@@ -470,7 +471,6 @@ class AxisDisk extends AxisShape {
         this._tubeRadius = options.tubeRadius ?? this._tubeRadius;
         this._ringRadius = options.ringRadius ?? this._ringRadius;
         this._sectorAngle = options.sectorAngle ?? this._sectorAngle;
-        this._lightDir = options.lightDir ?? this._lightDir;
 
         this._createDisk();
     }
@@ -484,14 +484,12 @@ class AxisDisk extends AxisShape {
         this._diskRender = new Entity('diskRender:' + this.axis);
         this.entity.addChild(this._diskRender);
         const arcMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
-            lightDir: this._lightDir,
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
             segments: TORUS_RENDER_SEGMENTS
         });
         const circleMesh = createShadowMesh(this.device, this._diskRender, 'torus', {
-            lightDir: this._lightDir,
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: 2 * Math.PI,
