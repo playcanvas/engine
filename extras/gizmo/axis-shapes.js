@@ -12,7 +12,7 @@ import {
     Vec3
 } from 'playcanvas';
 
-import { Tri } from './tri';
+import { Tri } from './tri.js';
 
 // constants
 const TORUS_RENDER_SEGMENTS = 80;
