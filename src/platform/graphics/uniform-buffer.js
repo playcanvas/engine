@@ -1,7 +1,7 @@
 import { Debug } from '../../core/debug.js';
 import {
     uniformTypeToName,
-    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, uniformTypeToStorage, TYPE_INT32, TYPE_FLOAT32
+    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, uniformTypeToStorage, TYPE_INT32, TYPE_FLOAT32, TYPE_UINT32
 } from './constants.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
@@ -149,9 +149,8 @@ class UniformBuffer {
 
         if (value !== null && value !== undefined) {
             const storageType = uniformTypeToStorage[uniformFormat.type];
-            const dst = (!storageType || storageType === TYPE_FLOAT32) ?
-                this.storageFloat32 :
-                storageType === TYPE_INT32 ? this.storageInt32 : this.storageUint32;
+            const dst = storageType === TYPE_INT32 ? this.storageInt32 :
+                storageType === TYPE_UINT32 ? this.storageUint32 : this.storageFloat32;
 
             if (!dst) {
                 Debug.error(`Uniform buffer storage is not allocated for type ${uniformTypeToName[uniformFormat.type]}`);

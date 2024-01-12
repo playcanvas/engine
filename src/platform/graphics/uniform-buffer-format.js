@@ -15,28 +15,25 @@ import {
 // map of UNIFORMTYPE_*** to number of 32bit components
 const uniformTypeToNumComponents = [];
 uniformTypeToNumComponents[UNIFORMTYPE_FLOAT] = 1;
-uniformTypeToNumComponents[UNIFORMTYPE_INT] = 1;
-uniformTypeToNumComponents[UNIFORMTYPE_UINT] = 1;
-uniformTypeToNumComponents[UNIFORMTYPE_BOOL] = 1;
-
 uniformTypeToNumComponents[UNIFORMTYPE_VEC2] = 2;
-uniformTypeToNumComponents[UNIFORMTYPE_IVEC2] = 2;
-uniformTypeToNumComponents[UNIFORMTYPE_UVEC2] = 2;
-uniformTypeToNumComponents[UNIFORMTYPE_BVEC2] = 2;
-
 uniformTypeToNumComponents[UNIFORMTYPE_VEC3] = 3;
-uniformTypeToNumComponents[UNIFORMTYPE_IVEC3] = 3;
-uniformTypeToNumComponents[UNIFORMTYPE_UVEC3] = 3;
-uniformTypeToNumComponents[UNIFORMTYPE_BVEC3] = 3;
-
 uniformTypeToNumComponents[UNIFORMTYPE_VEC4] = 4;
+uniformTypeToNumComponents[UNIFORMTYPE_INT] = 1;
+uniformTypeToNumComponents[UNIFORMTYPE_IVEC2] = 2;
+uniformTypeToNumComponents[UNIFORMTYPE_IVEC3] = 3;
 uniformTypeToNumComponents[UNIFORMTYPE_IVEC4] = 4;
-uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
+uniformTypeToNumComponents[UNIFORMTYPE_BOOL] = 1;
+uniformTypeToNumComponents[UNIFORMTYPE_BVEC2] = 2;
+uniformTypeToNumComponents[UNIFORMTYPE_BVEC3] = 3;
 uniformTypeToNumComponents[UNIFORMTYPE_BVEC4] = 4;
-
 uniformTypeToNumComponents[UNIFORMTYPE_MAT2] = 8;    // 2 x vec4
 uniformTypeToNumComponents[UNIFORMTYPE_MAT3] = 12;   // 3 x vec4
 uniformTypeToNumComponents[UNIFORMTYPE_MAT4] = 16;   // 4 x vec4
+uniformTypeToNumComponents[UNIFORMTYPE_UINT] = 1;
+uniformTypeToNumComponents[UNIFORMTYPE_UVEC2] = 2;
+uniformTypeToNumComponents[UNIFORMTYPE_UVEC3] = 3;
+uniformTypeToNumComponents[UNIFORMTYPE_UVEC4] = 4;
+
 
 /**
  * A class storing description of an individual uniform, stored inside a uniform buffer.
@@ -142,13 +139,14 @@ class UniformFormat {
                 this.invalid = true;
         });
 
-        let elementSize = this.numElements;
+        let componentSize = this.numComponents;
 
-        // element size for arrays is aligned up to vec4
-        if (count)
-            elementSize = math.roundUp(elementSize, 4);
+        // component size for arrays is aligned up to vec4
+        if (count) {
+            componentSize = math.roundUp(componentSize, 4);
+        }
 
-        this.byteSize = elementSize * 4;
+        this.byteSize = componentSize * 4;
         if (count)
             this.byteSize *= count;
 

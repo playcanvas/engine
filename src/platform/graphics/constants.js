@@ -1339,174 +1339,172 @@ export const TYPE_FLOAT32 = 6;
  */
 export const TYPE_FLOAT16 = 7;
 
-/**
- * Uniform and sampler types
- */
-// Uniforms
-export const UNIFORMTYPE_FLOAT = 0;
+// Uniform types
+export const UNIFORMTYPE_BOOL = 0;
 export const UNIFORMTYPE_INT = 1;
-export const UNIFORMTYPE_UINT = 2;
-export const UNIFORMTYPE_BOOL = 3;
+export const UNIFORMTYPE_FLOAT = 2;
+export const UNIFORMTYPE_VEC2 = 3;
+export const UNIFORMTYPE_VEC3 = 4;
+export const UNIFORMTYPE_VEC4 = 5;
+export const UNIFORMTYPE_IVEC2 = 6;
+export const UNIFORMTYPE_IVEC3 = 7;
+export const UNIFORMTYPE_IVEC4 = 8;
+export const UNIFORMTYPE_BVEC2 = 9;
+export const UNIFORMTYPE_BVEC3 = 10;
+export const UNIFORMTYPE_BVEC4 = 11;
+export const UNIFORMTYPE_MAT2 = 12;
+export const UNIFORMTYPE_MAT3 = 13;
+export const UNIFORMTYPE_MAT4 = 14;
+export const UNIFORMTYPE_TEXTURE2D = 15;
+export const UNIFORMTYPE_TEXTURECUBE = 16;
+export const UNIFORMTYPE_FLOATARRAY = 17;
+export const UNIFORMTYPE_TEXTURE2D_SHADOW = 18;
+export const UNIFORMTYPE_TEXTURECUBE_SHADOW = 19;
+export const UNIFORMTYPE_TEXTURE3D = 20;
+export const UNIFORMTYPE_VEC2ARRAY = 21;
+export const UNIFORMTYPE_VEC3ARRAY = 22;
+export const UNIFORMTYPE_VEC4ARRAY = 23;
+export const UNIFORMTYPE_MAT4ARRAY = 24;
+export const UNIFORMTYPE_TEXTURE2D_ARRAY = 25;
 
-export const UNIFORMTYPE_VEC2 = 4;
-export const UNIFORMTYPE_IVEC2 = 5;
-export const UNIFORMTYPE_UVEC2 = 6;
-export const UNIFORMTYPE_BVEC2 = 7;
+// Unsigned uniform types
+export const UNIFORMTYPE_UINT = 26;
+export const UNIFORMTYPE_UVEC2 = 27;
+export const UNIFORMTYPE_UVEC3 = 28;
+export const UNIFORMTYPE_UVEC4 = 29;
 
-export const UNIFORMTYPE_VEC3 = 8;
-export const UNIFORMTYPE_IVEC3 = 9;
-export const UNIFORMTYPE_UVEC3 = 10;
-export const UNIFORMTYPE_BVEC3 = 11;
+// Integer uniform array types
+export const UNIFORMTYPE_INTARRAY = 30;
+export const UNIFORMTYPE_UINTARRAY = 31;
+export const UNIFORMTYPE_BOOLARRAY = 32;
+export const UNIFORMTYPE_IVEC2ARRAY = 33;
+export const UNIFORMTYPE_UVEC2ARRAY = 34;
+export const UNIFORMTYPE_BVEC2ARRAY = 35;
+export const UNIFORMTYPE_IVEC3ARRAY = 36;
+export const UNIFORMTYPE_UVEC3ARRAY = 37;
+export const UNIFORMTYPE_BVEC3ARRAY = 38;
+export const UNIFORMTYPE_IVEC4ARRAY = 39;
+export const UNIFORMTYPE_UVEC4ARRAY = 40;
+export const UNIFORMTYPE_BVEC4ARRAY = 41;
 
-export const UNIFORMTYPE_VEC4 = 12;
-export const UNIFORMTYPE_IVEC4 = 13;
-export const UNIFORMTYPE_UVEC4 = 14;
-export const UNIFORMTYPE_BVEC4 = 15;
-
-export const UNIFORMTYPE_MAT2 = 16;
-export const UNIFORMTYPE_MAT3 = 17;
-export const UNIFORMTYPE_MAT4 = 18;
-
-// Uniform buffers
-export const UNIFORMTYPE_FLOATARRAY = 19;
-export const UNIFORMTYPE_INTARRAY = 20;
-export const UNIFORMTYPE_UINTARRAY = 21;
-export const UNIFORMTYPE_BOOLARRAY = 22;
-
-export const UNIFORMTYPE_VEC2ARRAY = 23;
-export const UNIFORMTYPE_IVEC2ARRAY = 24;
-export const UNIFORMTYPE_UVEC2ARRAY = 25;
-export const UNIFORMTYPE_BVEC2ARRAY = 26;
-
-export const UNIFORMTYPE_VEC3ARRAY = 27;
-export const UNIFORMTYPE_IVEC3ARRAY = 28;
-export const UNIFORMTYPE_UVEC3ARRAY = 29;
-export const UNIFORMTYPE_BVEC3ARRAY = 30;
-
-export const UNIFORMTYPE_VEC4ARRAY = 31;
-export const UNIFORMTYPE_IVEC4ARRAY = 32;
-export const UNIFORMTYPE_UVEC4ARRAY = 33;
-export const UNIFORMTYPE_BVEC4ARRAY = 34;
-
-export const UNIFORMTYPE_MAT4ARRAY = 35;
-
-// Samplers: 2D
-export const UNIFORMTYPE_TEXTURE2D = 36;
-export const UNIFORMTYPE_ITEXTURE2D = 37;
-export const UNIFORMTYPE_UTEXTURE2D = 38;
-export const UNIFORMTYPE_TEXTURE2D_SHADOW = 39;
-
-// Samplers: Cube
-export const UNIFORMTYPE_TEXTURECUBE = 40;
-export const UNIFORMTYPE_ITEXTURECUBE = 41;
-export const UNIFORMTYPE_UTEXTURECUBE = 42;
-export const UNIFORMTYPE_TEXTURECUBE_SHADOW = 43;
-
-// Samplers: 3D
-export const UNIFORMTYPE_TEXTURE3D = 44;
-export const UNIFORMTYPE_ITEXTURE3D = 45;
-export const UNIFORMTYPE_UTEXTURE3D = 46;
-
-// Samplers Texture Array
-export const UNIFORMTYPE_TEXTURE2D_ARRAY = 47;
+// Integer texture types
+export const UNIFORMTYPE_ITEXTURE2D = 42;
+export const UNIFORMTYPE_UTEXTURE2D = 43;
+export const UNIFORMTYPE_ITEXTURECUBE = 44;
+export const UNIFORMTYPE_UTEXTURECUBE = 45;
+export const UNIFORMTYPE_ITEXTURE3D = 46;
+export const UNIFORMTYPE_UTEXTURE3D = 47;
 export const UNIFORMTYPE_ITEXTURE2D_ARRAY = 48;
 export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
 
 export const uniformTypeToName = [
     // Uniforms
-    'float',
-    'int',
-    'uint',
     'bool',
-
+    'int',
+    'float',
     'vec2',
-    'ivec2',
-    'uvec2',
-    'bvec2',
-
     'vec3',
-    'ivec3',
-    'uvec3',
-    'bvec3',
-
     'vec4',
+    'ivec2',
+    'ivec3',
     'ivec4',
-    'uvec4',
+    'bvec2',
+    'bvec3',
     'bvec4',
-
     'mat2',
     'mat3',
     'mat4',
-
-    // Uniform buffers
+    'sampler2D',
+    'samplerCube',
     '', // not directly handled: UNIFORMTYPE_FLOATARRAY
+    'sampler2DShadow',
+    'samplerCubeShadow',
+    'sampler3D',
+    '', // not directly handled: UNIFORMTYPE_VEC2ARRAY
+    '', // not directly handled: UNIFORMTYPE_VEC3ARRAY
+    '', // not directly handled: UNIFORMTYPE_VEC4ARRAY
+    '', // not directly handled: UNIFORMTYPE_MAT4ARRAY
+    'sampler2DArray',
+    'uint',
+    'uvec2',
+    'uvec3',
+    'uvec4',
     '', // not directly handled: UNIFORMTYPE_INTARRAY
     '', // not directly handled: UNIFORMTYPE_UINTARRAY
     '', // not directly handled: UNIFORMTYPE_BOOLARRAY
-
-    '', // not directly handled: UNIFORMTYPE_VEC2ARRAY
     '', // not directly handled: UNIFORMTYPE_IVEC2ARRAY
     '', // not directly handled: UNIFORMTYPE_UVEC2ARRAY
     '', // not directly handled: UNIFORMTYPE_BVEC2ARRAY
-
-    '', // not directly handled: UNIFORMTYPE_VEC3ARRAY
     '', // not directly handled: UNIFORMTYPE_IVEC3ARRAY
     '', // not directly handled: UNIFORMTYPE_UVEC3ARRAY
     '', // not directly handled: UNIFORMTYPE_BVEC3ARRAY
-
-    '', // not directly handled: UNIFORMTYPE_VEC4ARRAY
     '', // not directly handled: UNIFORMTYPE_IVEC4ARRAY
     '', // not directly handled: UNIFORMTYPE_UVEC4ARRAY
     '', // not directly handled: UNIFORMTYPE_BVEC4ARRAY
-
-    '', // not directly handled: UNIFORMTYPE_MAT4ARRAY
-
-    // Samplers: 2D
-    'sampler2D',
     'isampler2D',
     'usampler2D',
-    'sampler2DShadow',
-
-    // Samplers: Cube
-    'samplerCube',
     'isamplerCube',
     'usamplerCube',
-    'samplerCubeShadow',
-
-    // Samplers: 3D
-    'sampler3D',
     'isampler3D',
     'usampler3D',
-
-    // Samplers Texture Array
-    'sampler2DArray',
     'isampler2DArray',
     'usampler2DArray'
 ];
 
 // Map used in uniform-buffer.js to convert uniform type to storage type
-// Defaults to TYPE_FLOAT32 for unknown types
-export const uniformTypeToStorage = [
-    TYPE_FLOAT32,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_INT32,
-
-    TYPE_FLOAT32,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_INT32,
-
-    TYPE_FLOAT32,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_INT32,
-
-    TYPE_FLOAT32,
-    TYPE_INT32,
-    TYPE_UINT32,
-    TYPE_INT32
-];
+// used in the uniform buffer.
+export const uniformTypeToStorage = new Uint8Array([
+    TYPE_INT32,     // UNIFORMTYPE_BOOL
+    TYPE_INT32,     // UNIFORMTYPE_INT
+    TYPE_FLOAT32,   // UNIFORMTYPE_FLOAT
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4
+    TYPE_INT32,     // UNIFORMTYPE_IVEC2
+    TYPE_INT32,     // UNIFORMTYPE_IVEC3
+    TYPE_INT32,     // UNIFORMTYPE_IVEC4
+    TYPE_INT32,     // UNIFORMTYPE_BVEC2
+    TYPE_INT32,     // UNIFORMTYPE_BVEC3
+    TYPE_INT32,     // UNIFORMTYPE_BVEC4
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT2
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT3
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE
+    TYPE_FLOAT32,   // UNIFORMTYPE_FLOATARRAY
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_SHADOW
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE_SHADOW
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE3D
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UINT
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC2
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC3
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC4
+    TYPE_INT32,     // UNIFORMTYPE_INTARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UINTARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BOOLARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC2ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC2ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC2ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC3ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC3ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC3ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC4ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE2D
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURECUBE
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURECUBE
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE3D
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE3D
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D_ARRAY
+    TYPE_UINT32     // UNIFORMTYPE_UTEXTURE2D_ARRAY
+]);
 
 /**
  * A WebGL 1 device type.
