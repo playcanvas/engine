@@ -8,58 +8,24 @@ import {
     Vec3
 } from 'playcanvas';
 
+import {
+    Tri
+} from './tri.js';
+
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpV3 = new Vec3();
-const tmpV4 = new Vec3();
+const tmpT1 = new Tri();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
 
-const e1 = new Vec3();
-const e2 = new Vec3();
-const h = new Vec3();
-const s = new Vec3();
-const q = new Vec3();
-
 // constants
 const GIZMO_LAYER_ID = 1e5;
 const MIN_GIZMO_SCALE = 1e-4;
-const EPSILON = 1e-6;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
-
-function rayIntersectsTriangle(origin, dir, v0, v1, v2, out) {
-    e1.sub2(v1, v0);
-    e2.sub2(v2, v0);
-    h.cross(dir, e2);
-    const a = e1.dot(h);
-    if (a > -EPSILON && a < EPSILON) {
-        return false;
-    }
-
-    const f = 1 / a;
-    s.sub2(origin, v0);
-    const u = f * s.dot(h);
-    if (u < 0 || u > 1) {
-        return false;
-    }
-
-    q.cross(s, e1);
-    const v = f * dir.dot(q);
-    if (v < 0 || u + v > 1) {
-        return false;
-    }
-
-    const t = f * e2.dot(q);
-    if (t > EPSILON) {
-        out.copy(dir).scale(t).add(origin);
-        return true;
-    }
-
-    return false;
-}
 
 /**
  * The base class for all gizmos.
@@ -303,8 +269,9 @@ class Gizmo extends EventHandler {
                 tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
                 tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
                 tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
+                tmpT1.set(tmpV1, tmpV2, tmpV3);
 
-                if (rayIntersectsTriangle(xstart, xdir, tmpV1, tmpV2, tmpV3, tmpV4)) {
+                if (tmpT1.intersectRay(xstart, xdir)) {
                     selection.push(meshInstance);
                 }
             }

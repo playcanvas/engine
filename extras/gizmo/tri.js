@@ -12,7 +12,7 @@ const q = new Vec3();
 // constants
 const EPSILON = 1e-6;
 
-class Triangle {
+class Tri {
     v0;
 
     v1;
@@ -29,6 +29,14 @@ class Triangle {
             this.v1 = v1;
             this.v2 = v2;
         }
+    }
+
+    set(v0, v1, v2) {
+        this.v0.copy(v0);
+        this.v1.copy(v1);
+        this.v2.copy(v2);
+
+        return this;
     }
 
     intersectRay(origin, dir, out = new Vec3(), epsilon = EPSILON) {
@@ -63,4 +71,4 @@ class Triangle {
     }
 }
 
-export { Triangle };
+export { Tri };
