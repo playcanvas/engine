@@ -600,26 +600,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
         let scopeX, scopeY, scopeZ, scopeW;
         let uniformValue;
         this.commitFunction = [];
+        this.commitFunction[UNIFORMTYPE_BOOL] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1i(uniform.locationId, value);
+                uniform.value = value;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_INT] = this.commitFunction[UNIFORMTYPE_BOOL];
         this.commitFunction[UNIFORMTYPE_FLOAT] = function (uniform, value) {
             if (uniform.value !== value) {
                 gl.uniform1f(uniform.locationId, value);
                 uniform.value = value;
             }
         };
-        this.commitFunction[UNIFORMTYPE_INT] = function (uniform, value) {
-            if (uniform.value !== value) {
-                gl.uniform1i(uniform.locationId, value);
-                uniform.value = value;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_UINT] = function (uniform, value) {
-            if (uniform.value !== value) {
-                gl.uniform1ui(uniform.locationId, value);
-                uniform.value = value;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_BOOL] = this.commitFunction[UNIFORMTYPE_INT];
-
         this.commitFunction[UNIFORMTYPE_VEC2]  = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
@@ -630,28 +623,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[1] = scopeY;
             }
         };
-        this.commitFunction[UNIFORMTYPE_IVEC2]  = function (uniform, value) {
-            uniformValue = uniform.value;
-            scopeX = value[0];
-            scopeY = value[1];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
-                gl.uniform2iv(uniform.locationId, value);
-                uniformValue[0] = scopeX;
-                uniformValue[1] = scopeY;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_UVEC2]  = function (uniform, value) {
-            uniformValue = uniform.value;
-            scopeX = value[0];
-            scopeY = value[1];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
-                gl.uniform2uiv(uniform.locationId, value);
-                uniformValue[0] = scopeX;
-                uniformValue[1] = scopeY;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_BVEC2] = this.commitFunction[UNIFORMTYPE_IVEC2];
-
         this.commitFunction[UNIFORMTYPE_VEC3]  = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
@@ -664,32 +635,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[2] = scopeZ;
             }
         };
-        this.commitFunction[UNIFORMTYPE_IVEC3]  = function (uniform, value) {
-            uniformValue = uniform.value;
-            scopeX = value[0];
-            scopeY = value[1];
-            scopeZ = value[2];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
-                gl.uniform3iv(uniform.locationId, value);
-                uniformValue[0] = scopeX;
-                uniformValue[1] = scopeY;
-                uniformValue[2] = scopeZ;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_UVEC3]  = function (uniform, value) {
-            uniformValue = uniform.value;
-            scopeX = value[0];
-            scopeY = value[1];
-            scopeZ = value[2];
-            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
-                gl.uniform3uiv(uniform.locationId, value);
-                uniformValue[0] = scopeX;
-                uniformValue[1] = scopeY;
-                uniformValue[2] = scopeZ;
-            }
-        };
-        this.commitFunction[UNIFORMTYPE_BVEC3] = this.commitFunction[UNIFORMTYPE_IVEC3];
-
         this.commitFunction[UNIFORMTYPE_VEC4]  = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
@@ -704,6 +649,30 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[3] = scopeW;
             }
         };
+        this.commitFunction[UNIFORMTYPE_IVEC2] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2iv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC2] = this.commitFunction[UNIFORMTYPE_IVEC2];
+        this.commitFunction[UNIFORMTYPE_IVEC3] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3iv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC3] = this.commitFunction[UNIFORMTYPE_IVEC3];
         this.commitFunction[UNIFORMTYPE_IVEC4] = function (uniform, value) {
             uniformValue = uniform.value;
             scopeX = value[0];
@@ -716,6 +685,57 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[1] = scopeY;
                 uniformValue[2] = scopeZ;
                 uniformValue[3] = scopeW;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC4] = this.commitFunction[UNIFORMTYPE_IVEC4];
+        this.commitFunction[UNIFORMTYPE_MAT2]  = function (uniform, value) {
+            gl.uniformMatrix2fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[UNIFORMTYPE_MAT3]  = function (uniform, value) {
+            gl.uniformMatrix3fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[UNIFORMTYPE_MAT4]  = function (uniform, value) {
+            gl.uniformMatrix4fv(uniform.locationId, false, value);
+        };
+        this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
+            gl.uniform1fv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_VEC2ARRAY]  = function (uniform, value) {
+            gl.uniform2fv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_VEC3ARRAY]  = function (uniform, value) {
+            gl.uniform3fv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
+            gl.uniform4fv(uniform.locationId, value);
+        };
+
+        this.commitFunction[UNIFORMTYPE_UINT] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1ui(uniform.locationId, value);
+                uniform.value = value;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC2]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC3]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
             }
         };
         this.commitFunction[UNIFORMTYPE_UVEC4] = function (uniform, value) {
@@ -732,21 +752,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 uniformValue[3] = scopeW;
             }
         };
-        this.commitFunction[UNIFORMTYPE_BVEC4] = this.commitFunction[UNIFORMTYPE_IVEC4];
 
-        this.commitFunction[UNIFORMTYPE_MAT2]  = function (uniform, value) {
-            gl.uniformMatrix2fv(uniform.locationId, false, value);
-        };
-        this.commitFunction[UNIFORMTYPE_MAT3]  = function (uniform, value) {
-            gl.uniformMatrix3fv(uniform.locationId, false, value);
-        };
-        this.commitFunction[UNIFORMTYPE_MAT4]  = function (uniform, value) {
-            gl.uniformMatrix4fv(uniform.locationId, false, value);
-        };
-
-        this.commitFunction[UNIFORMTYPE_FLOATARRAY] = function (uniform, value) {
-            gl.uniform1fv(uniform.locationId, value);
-        };
         this.commitFunction[UNIFORMTYPE_INTARRAY] = function (uniform, value) {
             gl.uniform1iv(uniform.locationId, value);
         };
@@ -755,9 +761,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
         this.commitFunction[UNIFORMTYPE_BOOLARRAY] = this.commitFunction[UNIFORMTYPE_INTARRAY];
 
-        this.commitFunction[UNIFORMTYPE_VEC2ARRAY]  = function (uniform, value) {
-            gl.uniform2fv(uniform.locationId, value);
-        };
         this.commitFunction[UNIFORMTYPE_IVEC2ARRAY]  = function (uniform, value) {
             gl.uniform2iv(uniform.locationId, value);
         };
@@ -766,27 +769,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
         this.commitFunction[UNIFORMTYPE_BVEC2ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
 
-        this.commitFunction[UNIFORMTYPE_VEC3ARRAY]  = function (uniform, value) {
-            gl.uniform3fv(uniform.locationId, value);
-        };
         this.commitFunction[UNIFORMTYPE_IVEC3ARRAY]  = function (uniform, value) {
             gl.uniform3iv(uniform.locationId, value);
         };
         this.commitFunction[UNIFORMTYPE_UVEC3ARRAY]  = function (uniform, value) {
             gl.uniform3uiv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_BVEC3ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
+        this.commitFunction[UNIFORMTYPE_BVEC3ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC3ARRAY];
 
-        this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
-            gl.uniform4fv(uniform.locationId, value);
-        };
         this.commitFunction[UNIFORMTYPE_IVEC4ARRAY]  = function (uniform, value) {
             gl.uniform4iv(uniform.locationId, value);
         };
         this.commitFunction[UNIFORMTYPE_UVEC4ARRAY]  = function (uniform, value) {
             gl.uniform4uiv(uniform.locationId, value);
         };
-        this.commitFunction[UNIFORMTYPE_BVEC4ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
+        this.commitFunction[UNIFORMTYPE_BVEC4ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC4ARRAY];
 
         this.commitFunction[UNIFORMTYPE_MAT4ARRAY]  = function (uniform, value) {
             gl.uniformMatrix4fv(uniform.locationId, false, value);
