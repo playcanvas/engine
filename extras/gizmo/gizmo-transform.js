@@ -6,7 +6,6 @@ import {
     BLEND_NORMAL,
     Color,
     StandardMaterial,
-    Entity,
     Vec3,
     Quat
 } from 'playcanvas';
@@ -495,12 +494,13 @@ class GizmoTransform extends Gizmo {
         for (const key in this._shapes) {
             const shape = this._shapes[key];
             this.gizmo.addChild(shape.entity);
-            for (let i = 0; i < shape.miData.length; i++) {
-                const { meshInstance, intersect } = shape.miData[i];
-                this._hoverShapeMap.set(meshInstance, shape);
-                if (intersect) {
-                    this.intersectMeshInstances.push(meshInstance);
-                }
+            this.intersectData.push({
+                triData: shape.triData,
+                parent: shape.entity,
+                meshInstances: shape.meshInstances
+            });
+            for (let i = 0; i < shape.meshInstances.length; i++) {
+                this._hoverShapeMap.set(shape.meshInstances[i], shape);
             }
         }
     }

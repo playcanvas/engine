@@ -5,18 +5,13 @@ import {
     EventHandler,
     Layer,
     Entity,
+    Mat4,
     Vec3
 } from 'playcanvas';
 
-import {
-    Tri
-} from './tri.js';
-
 // temporary variables
 const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
-const tmpT1 = new Tri();
+const tmpM1 = new Mat4();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
@@ -84,11 +79,24 @@ class Gizmo extends EventHandler {
     gizmo;
 
     /**
-     * The mesh instances to check for intersections
-     *
-     * @type {import('playcanvas').MeshInstance[]}
+     * @typedef TriData
+     * @property {import('./tri.js').Tri[]} tris - The array of triangles for
+     * the mesh.
+     * @property {Mat4} ptm - The parent transform matrix for the mesh.
      */
-    intersectMeshInstances = [];
+    /**
+     * @typedef IntersectData
+     * @property {TriData[]} triData - The array of {@link TriData}
+     * @property {import('playcanvas').GraphNode} parent - The mesh parent node.
+     * @property {import('playcanvas').MeshInstance[]} meshInstances -
+     * array of mesh instances for rendering
+     */
+    /**
+     * The intersection data object.
+     *
+     * @type {IntersectData[]}
+     */
+    intersectData = [];
 
     /**
      * Creates a new Gizmo object.
@@ -246,38 +254,26 @@ class Gizmo extends EventHandler {
         const end = this.camera.screenToWorld(x, y, this.camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
-        const selection = [];
-        for (let j = 0; j < this.intersectMeshInstances.length; j++) {
-            const meshInstance = this.intersectMeshInstances[j];
-            const mesh = meshInstance.mesh;
-            const wtm = meshInstance.node.getWorldTransform().clone().invert();
+        for (let i = 0; i < this.intersectData.length; i++) {
+            const { triData, parent, meshInstances } = this.intersectData[i];
+            const wtm = parent.getWorldTransform().clone();
+            for (let j = 0; j < triData.length; j++) {
+                const { tris, ptm } = triData[j];
+                tmpM1.copy(wtm).mul(ptm);
+                tmpM1.invert();
+                tmpM1.transformPoint(start, xstart);
+                tmpM1.transformVector(dir, xdir);
+                xdir.normalize();
 
-            wtm.transformPoint(start, xstart);
-            wtm.transformVector(dir, xdir);
-            xdir.normalize();
-
-            const pos = [];
-            const indices = [];
-            mesh.getPositions(pos);
-            mesh.getIndices(indices);
-
-            for (let k = 0; k < indices.length; k += 3) {
-                const i1 = indices[k];
-                const i2 = indices[k + 1];
-                const i3 = indices[k + 2];
-
-                tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-                tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-                tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
-                tmpT1.set(tmpV1, tmpV2, tmpV3);
-
-                if (tmpT1.intersectRay(xstart, xdir)) {
-                    selection.push(meshInstance);
+                for (let k = 0; k < tris.length; k++) {
+                    if (tris[k].intersectRay(xstart, xdir)) {
+                        return meshInstances;
+                    }
                 }
             }
-
         }
-        return selection;
+
+        return [];
     }
 
     /**
