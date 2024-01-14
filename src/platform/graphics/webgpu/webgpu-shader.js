@@ -126,6 +126,8 @@ class WebgpuShader {
             this.processed = processed;
         });
 
+        console.log("Processing shader", shader);
+
         this._vertexCode = this.transpile(processed.vshader, 'vertex', shader.definition.vshader);
         this._fragmentCode = this.transpile(processed.fshader, 'fragment', shader.definition.fshader);
 

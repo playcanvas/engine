@@ -89,10 +89,10 @@ class RenderPassShaderQuad extends RenderPass {
         return this._shader;
     }
 
-    createQuadShader(name, fs) {
+    createQuadShader(name, fs, fragmentOutputType = 'vec4') {
         return createShaderFromCode(this.device, RenderPassShaderQuad.quadVertexShader, fs, name, {
             aPosition: SEMANTIC_POSITION
-        });
+        }, false, fragmentOutputType);
     }
 
     destroy() {

@@ -1240,6 +1240,8 @@ export const TEXTUREDIMENSION_3D = '3d';
 export const SAMPLETYPE_FLOAT = 0;
 export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
 export const SAMPLETYPE_DEPTH = 2;
+export const SAMPLETYPE_INT = 3;
+export const SAMPLETYPE_UINT = 4;
 
 /**
  * Texture data is not stored a specific projection format.

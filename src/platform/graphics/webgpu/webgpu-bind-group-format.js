@@ -1,6 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { StringIds } from '../../../core/string-ids.js';
-import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH } from '../constants.js';
+import { SAMPLETYPE_FLOAT, SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_INT, SAMPLETYPE_UINT } from '../constants.js';
 
 import { WebgpuUtils } from './webgpu-utils.js';
 import { gpuTextureFormats } from './constants.js';
@@ -9,11 +9,15 @@ const samplerTypes = [];
 samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
 samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
 samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
+samplerTypes[SAMPLETYPE_INT] = 'comparison';
+samplerTypes[SAMPLETYPE_UINT] = 'comparison';
 
 const sampleTypes = [];
 sampleTypes[SAMPLETYPE_FLOAT] = 'float';
 sampleTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'unfilterable-float';
 sampleTypes[SAMPLETYPE_DEPTH] = 'depth';
+sampleTypes[SAMPLETYPE_INT] = 'sint';
+sampleTypes[SAMPLETYPE_UINT] = 'uint';
 
 const stringIds = new StringIds();
 

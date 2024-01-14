@@ -51,19 +51,27 @@ class ShaderUtils {
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
      * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
+     * @param {string} [options.fragmentOutputType] - Output fragment shader type. Defaults to vec4.
      * to false.
      * @returns {object} Returns the created shader definition.
      */
     static createDefinition(device, options) {
         Debug.assert(options);
 
-        const getDefines = (gpu, gl2, gl1, isVertex) => {
+        const getDefines = (gpu, gl2, gl1, isVertex, options) => {
 
             const deviceIntro = device.isWebGPU ? gpu :
                 (device.isWebGL2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
+
+            // Define the fragment shader output type, vec4 by default
+            if (!isVertex) {
+                const outType = options.fragmentOutputType ?? 'vec4';
+                attachmentsDefine += `#define outType ${outType}\n`;
+            }
+
             for (let i = 0; i < device.maxColorAttachments; i++) {
                 attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
             }
@@ -74,7 +82,7 @@ class ShaderUtils {
         const name = options.name ?? 'Untitled';
 
         // vertex code
-        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
+        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true, options);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
             sharedFS +
@@ -82,7 +90,7 @@ class ShaderUtils {
             options.vertexCode;
 
         // fragment code
-        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
+        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false, options);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
             fragDefines +

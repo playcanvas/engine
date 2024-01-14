@@ -3,14 +3,18 @@ export default /* glsl */`
 // texelFetch support and others
 #extension GL_EXT_samplerless_texture_functions : require
 
-layout(location = 0) out highp vec4 pc_fragColor;
-layout(location = 1) out highp vec4 pc_fragColor1;
-layout(location = 2) out highp vec4 pc_fragColor2;
-layout(location = 3) out highp vec4 pc_fragColor3;
-layout(location = 4) out highp vec4 pc_fragColor4;
-layout(location = 5) out highp vec4 pc_fragColor5;
-layout(location = 6) out highp vec4 pc_fragColor6;
-layout(location = 7) out highp vec4 pc_fragColor7;
+#ifndef outType
+#define outType vec4
+#endif
+
+layout(location = 0) out highp outType pc_fragColor;
+layout(location = 1) out highp outType pc_fragColor1;
+layout(location = 2) out highp outType pc_fragColor2;
+layout(location = 3) out highp outType pc_fragColor3;
+layout(location = 4) out highp outType pc_fragColor4;
+layout(location = 5) out highp outType pc_fragColor5;
+layout(location = 6) out highp outType pc_fragColor6;
+layout(location = 7) out highp outType pc_fragColor7;
 
 #define gl_FragColor pc_fragColor
 
@@ -29,6 +33,8 @@ layout(location = 7) out highp vec4 pc_fragColor7;
 #define textureCube(res, uv) texture(samplerCube(res, res ## _sampler), uv)
 #define textureCubeLodEXT(res, uv, lod) textureLod(samplerCube(res, res ## _sampler), uv, lod)
 #define textureShadow(res, uv) textureLod(sampler2DShadow(res, res ## _sampler), uv, 0.0)
+#define itexture2D(res, uv) texture(isampler2D(res, res ## _sampler), uv)
+#define utexture2D(res, uv) texture(usampler2D(res, res ## _sampler), uv)
 
 // TODO: implement other texture sampling macros
 // #define texture2DProj textureProj

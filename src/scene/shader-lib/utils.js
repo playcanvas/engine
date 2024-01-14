@@ -13,14 +13,16 @@ import { ShaderGenerator } from './programs/shader-generator.js';
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {string} [fragmentOutputType] - Output fragment shader type. Defaults to vec4.
  * @returns {Shader} The newly created shader.
  */
-function createShader(device, vsName, fsName, useTransformFeedback = false) {
+function createShader(device, vsName, fsName, useTransformFeedback = false, fragmentOutputType = 'vec4') {
     return new Shader(device, ShaderUtils.createDefinition(device, {
         name: `${vsName}_${fsName}`,
         vertexCode: shaderChunks[vsName],
         fragmentCode: shaderChunks[fsName],
-        useTransformFeedback: useTransformFeedback
+        useTransformFeedback: useTransformFeedback,
+        fragmentOutputType
     }));
 }
 
@@ -40,9 +42,10 @@ function createShader(device, vsName, fsName, useTransformFeedback = false) {
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
  * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {string} [fragmentOutputType] - Output fragment shader type. Defaults to vec4.
  * @returns {Shader} The newly created shader.
  */
-function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false) {
+function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, fragmentOutputType = 'vec4') {
 
     // the function signature has changed, fail if called incorrectly
     Debug.assert(typeof attributes !== 'boolean');
@@ -55,7 +58,8 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
             vertexCode: vsCode,
             fragmentCode: fsCode,
             attributes: attributes,
-            useTransformFeedback: useTransformFeedback
+            useTransformFeedback: useTransformFeedback,
+            fragmentOutputType
         }));
         programLibrary.setCachedShader(uniqueName, shader);
     }
