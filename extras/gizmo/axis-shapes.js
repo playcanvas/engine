@@ -104,7 +104,6 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     mesh.getIndices(options.indices);
     mesh.getUvs(0, options.uvs);
 
-    // TODO: face disk entity hasnt been added to world yet so world transform is before lookAt
     const wtm = entity.getWorldTransform().clone().invert();
     tmpV1.copy(LIGHT_DIR);
     wtm.transformVector(tmpV1, tmpV1);
