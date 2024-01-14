@@ -15,6 +15,8 @@ import {
 import { Tri } from './tri.js';
 
 // constants
+const SHADOW_DAMP_SCALE = 0.25;
+const SHADOW_DAMP_OFFSET = 0.75;
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
 const LIGHT_DIR = new Vec3(1, 2, 3);
@@ -122,7 +124,7 @@ function calculateShadowColors(lightDir, numVertices, normals, colors = []) {
         tmpV2.set(x, y, z);
 
         const dot = lightDir.dot(tmpV2);
-        const shadow = dot * 0.25 + 0.75;
+        const shadow = dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET;
         colors.push(shadow * 255, shadow * 255, shadow * 255, 1);
     }
 
