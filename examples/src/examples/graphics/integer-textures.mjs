@@ -159,19 +159,19 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
     // It uses integer textures to store the state of each pixel
     const sandShader = pc.createShaderFromCode(
         device,
-        files['quad.vert'],
+        pc.RenderPassShaderQuad.quadVertexShader,
         files['sandSimulation.frag'],
         'SandShader',
         { aPosition: pc.SEMANTIC_POSITION },
         false,
-        'uint'
+        'uint' // The usual output format of a shader is vec4, but we change it to uint
     );
 
     // This shader reads the integer textures
     // and renders a visual representation of the simulation
     const outputShader = pc.createShaderFromCode(
         device,
-        files['quad.vert'],
+        pc.RenderPassShaderQuad.quadVertexShader,
         files['renderOutput.frag'],
         'RenderOutputShader',
         { aPosition: pc.SEMANTIC_POSITION }
@@ -477,15 +477,6 @@ export class IntegerTextureExample {
     };
 
     static FILES = {
-        'quad.vert': /* glsl */`
-            attribute vec2 aPosition;
-            varying vec2 uv0;
-            void main(void)
-            {
-                gl_Position = vec4(aPosition, 0.0, 1.0);
-                uv0 = getImageEffectUV((aPosition.xy + 1.0) * 0.5);
-            }
-        `,
         'sandSimulation.frag': /* glsl */`
             precision highp usampler2D;
 
