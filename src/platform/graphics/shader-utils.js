@@ -81,9 +81,6 @@ class ShaderUtils {
                 }
             }
 
-            console.log("fragmentOutputTypes", fragmentOutputTypes);
-            console.log("attachmentsDefine", attachmentsDefine);
-
             return attachmentsDefine + deviceIntro;
         };
 
