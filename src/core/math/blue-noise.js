@@ -32,17 +32,17 @@ class BlueNoise {
         initData();
     }
 
-    next() {
+    _next() {
         this.seed = (this.seed + 4) % data.length;
     }
 
     value() {
-        this.next();
+        this._next();
         return data[this.seed] / 255;
     }
 
     vec4(dest = new Vec4()) {
-        this.next();
+        this._next();
         return dest.set(data[this.seed], data[this.seed + 1], data[this.seed + 2], data[this.seed + 3]).mulScalar(1 / 255);
     }
 }
