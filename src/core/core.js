@@ -21,41 +21,32 @@ const apps = { }; // Storage for the applications using the PlayCanvas Engine
 const data = { }; // Storage for exported entity data
 
 /**
- * Create look up table for types.
- *
- * @returns {object} A hash table containing all types in this format: { '[object Type]': 'type' }
- * @private
- */
-const _typeLookup = function () {
-    const result = { };
-    const names = ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'];
-
-    for (let i = 0; i < names.length; i++)
-        result['[object ' + names[i] + ']'] = names[i].toLowerCase();
-
-    return result;
-}();
-
-/**
  * Extended typeof() function, returns the type of the object.
  *
  * @param {object} obj - The object to get the type of.
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
  * @ignore
  */
-function type(obj) {
-    if (obj === null) {
-        return 'null';
-    }
+const type = (() => {
+    const _typeLookup = { };
+    ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'].forEach((name) => {
+        _typeLookup[`[object ${name}]`] = name.toLowerCase();
+    });
 
-    const type = typeof obj;
+    return (obj) => {
+        if (obj === null) {
+            return 'null';
+        }
 
-    if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
-        return type;
-    }
+        const type = typeof obj;
 
-    return _typeLookup[Object.prototype.toString.call(obj)];
-}
+        if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
+            return type;
+        }
+
+        return _typeLookup[Object.prototype.toString.call(obj)];
+    };
+})();
 
 /**
  * Merge the contents of two objects into a single object.
