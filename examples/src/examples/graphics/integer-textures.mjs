@@ -179,17 +179,29 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
     // Write the initial simulation state to the integer texture
     const resetData = () => {
+        // Loop through the pixels in the texture
+        // and initialize them to either AIR, SAND or WALL
         const sourceTextureData = sourceTexture.lock();
         for (let x = 0; x < sourceTexture.width; x++) {
             for (let y = 0; y < sourceTexture.height; y++) {
                 const i = (y * sourceTexture.width + x);
-                if (x > sourceTexture.width * 0.3 && x < sourceTexture.width * 0.7 && y > sourceTexture.height * 0.7 && y < sourceTexture.height * 0.8) {
+
+                const isDefaultWall = x > sourceTexture.width * 0.3 && x < sourceTexture.width * 0.7 && y > sourceTexture.height * 0.7 && y < sourceTexture.height * 0.8;
+
+                if (isDefaultWall) { // Create the default wall in the middle of the screen
+                    // The WALL element is used to mark pixels that should not be moved
+                    // It uses the integer '4' (see sandCommon.frag)
                     sourceTextureData[i] = 4;
-                    sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
-                } else if (Math.random() > 0.94) {
+                } else if (Math.random() > 0.94) { // Sprinkle some sand randomly around the scene
+                    // The SAND element is used to mark pixels that fall like sand
+                    // It uses the integer '1' (see sandCommon.frag)
                     sourceTextureData[i] = 1;
+                    // The shade of each pixel is stored in the upper 4 bits of the integer
+                    // Here we write a random value to the shade bits
                     sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
                 } else {
+                    // The AIR element is used to mark pixels that are empty
+                    // Other than the wall and sand, all pixels are initialized to AIR
                     sourceTextureData[i] = 0;
                 }
             }
