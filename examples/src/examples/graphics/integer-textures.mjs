@@ -288,16 +288,39 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
         // Setup mouse controls
         const mouse = new pc.Mouse(document.body);
-        const lookRange = 1.5;
-        const mouseRay = new pc.Ray();
-        const planePoint = new pc.Vec3();
-        const mousePos = new pc.Vec2();
-        const mouseUniform = new Float32Array(2);
-        let mouseState = 0;
+        const keyboard = new pc.Keyboard(document.body);
+
         mouse.disableContextMenu();
+
+        // Reset on space bar, select brush on 1-4
+        keyboard.on(pc.EVENT_KEYUP, (event) => {
+            switch (event.key) {
+                case pc.KEY_SPACE:
+                    resetData();
+                    break;
+                case pc.KEY_1:
+                    data.set('options.brush', 1);
+                    break;
+                case pc.KEY_2:
+                    data.set('options.brush', 2);
+                    break;
+                case pc.KEY_3:
+                    data.set('options.brush', 3);
+                    break;
+                case pc.KEY_4:
+                    data.set('options.brush', 4);
+                    break;
+            }
+        }, this);
+
+        let mouseState = 0;
         mouse.on(pc.EVENT_MOUSEDOWN, function (event) {
             if (event.button === pc.MOUSEBUTTON_LEFT) {
-                mouseState = 1;
+                if (keyboard.isPressed(pc.KEY_SHIFT)) {
+                    mouseState = 2;
+                } else {
+                    mouseState = 1;
+                }
             } else if (event.button === pc.MOUSEBUTTON_RIGHT) {
                 mouseState = 2;
             }
@@ -305,6 +328,12 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         mouse.on(pc.EVENT_MOUSEUP, function () {
             mouseState = 0;
         });
+
+        const lookRange = 1.5;
+        const mouseRay = new pc.Ray();
+        const planePoint = new pc.Vec3();
+        const mousePos = new pc.Vec2();
+        const mouseUniform = new Float32Array(2);
         mouse.on(pc.EVENT_MOUSEMOVE, function (event) {
             const x = event.x;
             const y = event.y;
@@ -349,7 +378,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             anchor: new pc.Vec4(0.25, 0.01, 0.96, 0.99),
             fontAsset: assets.font.id,
             fontSize: 16,
-            text: 'Left click: add\nRight click: remove\nPress space: reset',
+            text: 'Left click:    Add\nShift click: Remove\nPress Space:  Reset',
             width: 500,
             height: 100,
             autoWidth: false,
