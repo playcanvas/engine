@@ -115,7 +115,11 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             name: `PixelBuffer_${i}`,
             width: TEXTURE_WIDTH,
             height: TEXTURE_HEIGHT,
-            format: pc.PIXELFORMAT_RG8UI,
+            // Note that we are using an unsigned integer format here.
+            // This can be helpful for storing bitfields in each pixel.
+            // In this example, we are storing 3 different properties
+            // in a single Uint8 value.
+            format: pc.PIXELFORMAT_R8UI,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });
@@ -160,7 +164,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         'SandShader',
         { aPosition: pc.SEMANTIC_POSITION },
         false,
-        'uvec2'
+        'uint'
     );
 
     // This shader reads the integer textures
@@ -178,7 +182,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         const sourceTextureData = sourceTexture.lock();
         for (let x = 0; x < sourceTexture.width; x++) {
             for (let y = 0; y < sourceTexture.height; y++) {
-                const i = (y * sourceTexture.width + x) * 2;
+                const i = (y * sourceTexture.width + x);
                 if (x > sourceTexture.width * 0.3 && x < sourceTexture.width * 0.7 && y > sourceTexture.height * 0.7 && y < sourceTexture.height * 0.8) {
                     sourceTextureData[i] = 4;
                     sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
@@ -419,30 +423,25 @@ export class IntegerTextureExample {
                 return fract(pos.x * pos.y * val * 1000.0);
             }
             
-            uvec2 pack(Particle particle) {
+            uint pack(Particle particle) {
                 uint packed = 0u;
                 packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits
                 packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit
                 packed |= (particle.shade << 4);          // Store shade in the next 4 bits
             
-                return uvec2(packed, particle.waterMass); // Second component is reserved/unused
+                return packed; // Second component is reserved/unused
             }
             
-            Particle unpack(uvec2 pixel) {
-                uint packed = pixel.x;
-            
+            Particle unpack(uint packed) {
                 Particle particle;
                 particle.element = packed & 0x7u;                         // Extract lowest 3 bits
                 particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit
-                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits
-
-                particle.waterMass = pixel.y;
-            
+                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            
                 return particle;
             }
 
             Particle getParticle(ivec2 c) {
-                uvec2 val = texelFetch(sourceTexture, c, 0).rg;
+                uint val = texelFetch(sourceTexture, c, 0).r;
                 return unpack(val);
             }
         `
@@ -479,8 +478,7 @@ export class IntegerTextureExample {
                 ivec2 coord = ivec2(uv0 * vec2(size));
 
                 if (!isInBounds(coord, size)) {
-                    //gl_FragColor = uvec2(WALL, 0u);
-                    gl_FragColor = uvec2(WALL, 0u);
+                    gl_FragColor = WALL;
                     return;
                 }
             
