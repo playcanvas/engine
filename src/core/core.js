@@ -20,6 +20,16 @@ const common = { };
 const apps = { }; // Storage for the applications using the PlayCanvas Engine
 const data = { }; // Storage for exported entity data
 
+const typeofs = ['undefined', 'number', 'string', 'boolean'];
+const objectTypes = {
+    '[object Array]': 'array',
+    '[object Object]': 'object',
+    '[object Function]': 'function',
+    '[object Date]': 'date',
+    '[object RegExp]': 'regexp',
+    '[object Float32Array]': 'float32array'
+};
+
 /**
  * Extended typeof() function, returns the type of the object.
  *
@@ -33,18 +43,11 @@ function type(obj) {
     }
 
     const typeString = typeof obj;
-    if (['undefined', 'number', 'string', 'boolean'].includes(typeString)) {
+    if (typeofs.includes(typeString)) {
         return typeString;
     }
 
-    return {
-        '[object Array]': 'array',
-        '[object Object]': 'object',
-        '[object Function]': 'function',
-        '[object Date]': 'date',
-        '[object RegExp]': 'regexp',
-        '[object Float32Array]': 'float32array'
-    }[Object.prototype.toString.call(obj)];
+    return objectTypes[Object.prototype.toString.call(obj)];
 }
 
 /**
