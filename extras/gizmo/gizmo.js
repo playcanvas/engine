@@ -79,14 +79,9 @@ class Gizmo extends EventHandler {
     gizmo;
 
     /**
-     * @typedef TriData
-     * @property {import('./tri.js').Tri[]} tris - The array of triangles for
-     * the mesh.
-     * @property {Mat4} ptm - The parent transform matrix for the mesh.
-     */
-    /**
      * @typedef IntersectData
-     * @property {TriData[]} triData - The array of {@link TriData}
+     * @property {import('./mesh-tri-data.js').MeshTriData[]} meshTriDataList -
+     * The array of {@link MeshTriData}
      * @property {import('playcanvas').GraphNode} parent - The mesh parent node.
      * @property {import('playcanvas').MeshInstance[]} meshInstances -
      * array of mesh instances for rendering
@@ -255,10 +250,10 @@ class Gizmo extends EventHandler {
         const dir = end.clone().sub(start).normalize();
 
         for (let i = 0; i < this.intersectData.length; i++) {
-            const { triData, parent, meshInstances } = this.intersectData[i];
+            const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
-            for (let j = 0; j < triData.length; j++) {
-                const { tris, ptm } = triData[j];
+            for (let j = 0; j < meshTriDataList.length; j++) {
+                const { tris, ptm } = meshTriDataList[j];
                 tmpM1.copy(wtm).mul(ptm);
                 tmpM1.invert();
                 tmpM1.transformPoint(start, xstart);

@@ -7,12 +7,11 @@ import {
     Color,
     MeshInstance,
     Entity,
-    Mat4,
     Quat,
     Vec3
 } from 'playcanvas';
 
-import { Tri } from './tri.js';
+import { MeshTriData } from './mesh-tri-data.js';
 
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
@@ -150,7 +149,7 @@ class AxisShape {
 
     entity;
 
-    triData = [];
+    meshTriDataList = [];
 
     meshInstances = [];
 
@@ -190,6 +189,11 @@ class AxisArrow extends AxisShape {
 
     constructor(device, options = {}) {
         super(device, options);
+
+        this.meshTriDataList = [
+            new MeshTriData(createCone(this.device)),
+            new MeshTriData(createCylinder(this.device))
+        ];
 
         this._createArrow();
     }
@@ -243,15 +247,6 @@ class AxisArrow extends AxisShape {
     }
 
     _createArrow() {
-        // intersect
-        this.triData.push({
-            tris: Tri.trisFromMesh(createCone(this.device)),
-            ptm: new Mat4()
-        }, {
-            tris: Tri.trisFromMesh(createCylinder(this.device)),
-            ptm: new Mat4()
-        });
-
         this.entity = new Entity('arrow:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
@@ -289,7 +284,7 @@ class AxisArrow extends AxisShape {
         tmpV1.set(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._arrowThickness, this._arrowLength, this._arrowThickness);
-        this.triData[0].ptm.setTRS(tmpV1, tmpQ1, tmpV2);
+        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
 
         this._head.setLocalPosition(0, this._gap + this._arrowLength * 0.5 + this._lineLength, 0);
         this._head.setLocalScale(this._arrowThickness, this._arrowLength, this._arrowThickness);
@@ -300,7 +295,7 @@ class AxisArrow extends AxisShape {
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
-        this.triData[1].ptm.setTRS(tmpV1, tmpQ1, tmpV2);
+        this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
@@ -314,17 +309,14 @@ class AxisBoxCenter extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
+        this.meshTriDataList = [
+            new MeshTriData(createBox(this.device))
+        ];
+
         this._createCenter();
     }
 
     _createCenter() {
-        // intersect
-        this.triData.push({
-            tris: Tri.trisFromMesh(createBox(this.device)),
-            ptm: new Mat4()
-        });
-
-        // render
         this.entity = new Entity('boxCenter:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
@@ -367,6 +359,11 @@ class AxisBoxLine extends AxisShape {
 
     constructor(device, options = {}) {
         super(device, options);
+
+        this.meshTriDataList = [
+            new MeshTriData(createBox(this.device)),
+            new MeshTriData(createCylinder(this.device))
+        ];
 
         this._createBoxLine();
     }
@@ -411,21 +408,12 @@ class AxisBoxLine extends AxisShape {
     }
 
     _createBoxLine() {
-        // intersect
-        this.triData.push({
-            tris: Tri.trisFromMesh(createBox(this.device)),
-            ptm: new Mat4()
-        }, {
-            tris: Tri.trisFromMesh(createCylinder(this.device)),
-            ptm: new Mat4()
-        });
-
-        // render
         this.entity = new Entity('boxLine:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._scale);
 
+        // box
         this._box = new Entity('box:' + this.axis);
         this.entity.addChild(this._box);
         this._updateBox();
@@ -438,6 +426,7 @@ class AxisBoxLine extends AxisShape {
         });
         this.meshInstances.push(meshInstance);
 
+        // line
         this._line = new Entity('line:' + this.axis);
         this.entity.addChild(this._line);
         this._updateLine();
@@ -456,7 +445,7 @@ class AxisBoxLine extends AxisShape {
         tmpV1.set(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._boxSize, this._boxSize, this._boxSize);
-        this.triData[0].ptm.setTRS(tmpV1, tmpQ1, tmpV2);
+        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._box.setLocalPosition(0, this._gap + this._boxSize * 0.5 + this._lineLength, 0);
@@ -468,7 +457,7 @@ class AxisBoxLine extends AxisShape {
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
         tmpV2.set(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
-        this.triData[1].ptm.setTRS(tmpV1, tmpQ1, tmpV2);
+        this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
         this._line.setLocalPosition(0, this._gap + this._lineLength * 0.5, 0);
@@ -494,22 +483,19 @@ class AxisDisk extends AxisShape {
         this._ringRadius = options.ringRadius ?? this._ringRadius;
         this._sectorAngle = options.sectorAngle ?? this._sectorAngle;
 
-        this._createDisk();
-    }
-
-    _createDisk() {
-        // intersect
-        this.triData.push({
-            tris: Tri.trisFromMesh(createTorus(this.device, {
+        this.meshTriDataList = [
+            new MeshTriData(createTorus(this.device, {
                 tubeRadius: this._tubeRadius + this._intersectTolerance,
                 ringRadius: this._ringRadius,
                 sectorAngle: this._sectorAngle,
                 segments: TORUS_INTERSECT_SEGMENTS
-            })),
-            ptm: new Mat4()
-        });
+            }))
+        ];
 
-        // render
+        this._createDisk();
+    }
+
+    _createDisk() {
         this.entity = new Entity('disk:' + this.axis);
         this.entity.setLocalPosition(this._position);
         this.entity.setLocalEulerAngles(this._rotation);
@@ -557,7 +543,7 @@ class AxisDisk extends AxisShape {
 
     _updateTransform() {
         // intersect
-        this.triData[0].tris = Tri.trisFromMesh(createTorus(this.device, {
+        this.meshTriDataList[0].setTris(createTorus(this.device, {
             tubeRadius: this._tubeRadius + this._intersectTolerance,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
@@ -579,8 +565,8 @@ class AxisDisk extends AxisShape {
             sectorAngle: 2 * Math.PI,
             segments: TORUS_RENDER_SEGMENTS
         });
-        this.meshInstances[0].meshInstance.mesh = arcMesh;
-        this.meshInstances[1].meshInstance.mesh = circleMesh;
+        this.meshInstances[0].mesh = arcMesh;
+        this.meshInstances[1].mesh = circleMesh;
     }
 
     drag(state) {
@@ -607,6 +593,10 @@ class AxisPlane extends AxisShape {
     constructor(device, options = {}) {
         super(device, options);
 
+        this.meshTriDataList = [
+            new MeshTriData(createPlane(this.device))
+        ];
+
         this._createPlane();
     }
 
@@ -618,13 +608,6 @@ class AxisPlane extends AxisShape {
     }
 
     _createPlane() {
-        // intersect
-        this.triData.push({
-            tris: Tri.trisFromMesh(createPlane(this.device)),
-            ptm: new Mat4()
-        });
-
-        // render
         this.entity = new Entity('plane:' + this.axis);
         this.entity.setLocalPosition(this._getPosition());
         this.entity.setLocalEulerAngles(this._rotation);
