@@ -49,6 +49,16 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, data, deviceType, assetPath, files, glslangPath, twgslPath, dracoPath }) {
+    //
+    //  In this example, integer textures are used to store the state of each pixel in a simulation.
+    //  The simulation is run in a shader, and the results are rendered to a texture.
+    //
+    //  Integer textures can be useful for "compute-like" use cases, where you want to store
+    //  arbitrary data in each pixel, and then use a shader to process the data.
+    //
+    //  This example uses integer textures instead of floats in order to store
+    //  multiple properties (element, shade, movedThisFrame) in the bits of each pixel.
+    //
 
     const STEPS_PER_FRAME = 4;
     const PLANE_WIDTH = 10;
@@ -65,10 +75,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         fallbackUrl: dracoPath + 'draco.js'
     });
 
-    const assets = {
-        noiseTexture: new pc.Asset('noise', 'texture', { url: assetPath + 'textures/clouds.jpg' }),
-        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
-    };
+    const assets = {};
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -84,16 +91,9 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
     createOptions.componentSystems = [
         pc.RenderComponentSystem,
         pc.CameraComponentSystem,
-        pc.LightComponentSystem,
-        pc.ScreenComponentSystem,
-        pc.ElementComponentSystem
+        pc.LightComponentSystem
     ];
-    createOptions.resourceHandlers = [
-        // @ts-ignore
-        pc.TextureHandler,
-        // @ts-ignore
-        pc.FontHandler
-    ];
+    createOptions.resourceHandlers = [];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
@@ -369,36 +369,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             }
         });
 
-        // Create a 2D screen for help text
-        const screen = new pc.Entity();
-        screen.addComponent("screen", {
-            referenceResolution: new pc.Vec2(1280, 720),
-            scaleBlend: 0.5,
-            scaleMode: pc.SCALEMODE_BLEND,
-            screenSpace: true
-        });
-        app.root.addChild(screen);
-
-        // Help text
-        const textMarkup = new pc.Entity();
-        textMarkup.setLocalPosition(0, 50, 0);
-        textMarkup.addComponent("element", {
-            alignment: new pc.Vec2(1.0, 0.0),
-            pivot: new pc.Vec2(0.0, 0.0),
-            anchor: new pc.Vec4(0.25, 0.01, 0.96, 0.99),
-            fontAsset: assets.font.id,
-            fontSize: 16,
-            text: 'Left click:    Add\nShift click: Remove\nPress Space:  Reset',
-            width: 500,
-            height: 100,
-            autoWidth: false,
-            autoHeight: false,
-            wrapLines: true,
-            enableMarkup: true,
-            type: pc.ELEMENTTYPE_TEXT
-        });
-        screen.addChild(textMarkup);
-
         let passNum = 0;
         app.on("update", function (/** @type {number} */) {
 
@@ -437,6 +407,7 @@ export class IntegerTextureExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static WEBGL1_DISABLED = true;
+    static DESCRIPTION = `<ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>`;
     static example = example;
     static controls = controls;
     static sharedShaderChunks = {
