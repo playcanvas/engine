@@ -16,8 +16,9 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
                     value: 1,
                     options: [
                         { v: 1, t: 'Sand' },
-                        { v: 2, t: 'Stone' },
-                        { v: 3, t: 'Water' }
+                        { v: 2, t: 'Orange Sand' },
+                        { v: 3, t: 'Gray Sand' },
+                        { v: 4, t: 'Stone' }
                     ]
                 })
             ),
@@ -25,9 +26,9 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'options.brushSize' },
-                    value: 3,
+                    value: 8,
                     min: 1,
-                    max: 12,
+                    max: 16,
                     precision: 0
                 })
             ),
@@ -50,7 +51,6 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
 async function example({ canvas, data, deviceType, assetPath, files, glslangPath, twgslPath, dracoPath }) {
 
     const STEPS_PER_FRAME = 4;
-
     const PLANE_WIDTH = 10;
     const PLANE_HEIGHT = 10;
 
@@ -126,25 +126,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             colorBuffer: colorBuffer
         });
     };
-
-    const sandShader = pc.createShaderFromCode(
-        device,
-        files['quad.vert'],
-        files['sandSimulation.frag'],
-        'SandShader',
-        { aPosition: pc.SEMANTIC_POSITION },
-        false,
-        'uvec2'
-    );
-
-    const outputShader = pc.createShaderFromCode(
-        device,
-        files['quad.vert'],
-        files['renderOutput.frag'],
-        'RenderOutputShader',
-        { aPosition: pc.SEMANTIC_POSITION }
-    );
-
     // Create our integer pixel buffers and render targets
     const pixelColorBuffers = [createPixelColorBuffer(0), createPixelColorBuffer(1)];
     const pixelRenderTargets = [
@@ -155,24 +136,9 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
     const sourceTexture = pixelColorBuffers[0];
     const sourceRenderTarget = pixelRenderTargets[0];
     const sandRenderTarget = pixelRenderTargets[1];
-    const sandTexture = pixelColorBuffers[1];
 
-    const sourceTextureData = sourceTexture.lock();
-    for (let x = 0; x < sourceTexture.width; x++) {
-        for (let y = 0; y < sourceTexture.height; y++) {
-            const i = (y * sourceTexture.width + x) * 2;
-            if (x > sourceTexture.width * 0.3 && x < sourceTexture.width * 0.7 && y > sourceTexture.height * 0.7 && y < sourceTexture.height * 0.8) {
-                sourceTextureData[i] = 2;
-            } else if (Math.random() > 0.94) {
-                sourceTextureData[i] = 1;
-                sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
-            } else {
-                sourceTextureData[i] = 0;
-            }
-        }
-    }
-    sourceTexture.unlock();
-
+    // Create an output texture and render target to render
+    // a visual representation of the simulation
     const outputTexture = new pc.Texture(device, {
         name: 'OutputTexture',
         width: TEXTURE_WIDTH,
@@ -183,16 +149,59 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         addressU: pc.ADDRESS_REPEAT,
         addressV: pc.ADDRESS_REPEAT
     });
-
     const outputRenderTarget = createPixelRenderTarget(2, outputTexture);
 
+    // This is shader runs the sand simulation
+    // It uses integer textures to store the state of each pixel
+    const sandShader = pc.createShaderFromCode(
+        device,
+        files['quad.vert'],
+        files['sandSimulation.frag'],
+        'SandShader',
+        { aPosition: pc.SEMANTIC_POSITION },
+        false,
+        'uvec2'
+    );
+
+    // This shader reads the integer textures
+    // and renders a visual representation of the simulation
+    const outputShader = pc.createShaderFromCode(
+        device,
+        files['quad.vert'],
+        files['renderOutput.frag'],
+        'RenderOutputShader',
+        { aPosition: pc.SEMANTIC_POSITION }
+    );
+
+    // Write the initial simulation state to the integer texture
+    const resetData = () => {
+        const sourceTextureData = sourceTexture.lock();
+        for (let x = 0; x < sourceTexture.width; x++) {
+            for (let y = 0; y < sourceTexture.height; y++) {
+                const i = (y * sourceTexture.width + x) * 2;
+                if (x > sourceTexture.width * 0.3 && x < sourceTexture.width * 0.7 && y > sourceTexture.height * 0.7 && y < sourceTexture.height * 0.8) {
+                    sourceTextureData[i] = 4;
+                    sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
+                } else if (Math.random() > 0.94) {
+                    sourceTextureData[i] = 1;
+                    sourceTextureData[i] |= (Math.floor(Math.random() * 15) << 4);
+                } else {
+                    sourceTextureData[i] = 0;
+                }
+            }
+        }
+        sourceTexture.unlock();
+    };
+
+    resetData();
+    data.on('reset', resetData);
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 
         data.set('options', {
             brush: 1,
-            brushSize: 3
+            brushSize: 8
         });
 
         app.start();
@@ -210,7 +219,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         app.root.addChild(cameraEntity);
         if (cameraEntity.camera === undefined) throw new Error('Camera component expected');
 
-        // create material used on the geometry
+        // create material used on the ground plane
         const groundMaterial = new pc.StandardMaterial();
         groundMaterial.gloss = 0.6;
         groundMaterial.metalness = 0.4;
@@ -219,6 +228,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         groundMaterial.useLighting = true;
         groundMaterial.update();
 
+        // Create the ground plane
         const ground = new pc.Entity();
         ground.addComponent('render', {
             castShadows: false,
@@ -247,7 +257,8 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         lightEntity.setLocalPosition(0, 10, 0);
         app.root.addChild(lightEntity);
 
-        // create a plane called gameScreen to display rendered texture
+        // create a plane called gameScreen to display the sand
+        // simulation visualization texture
         const gameScreen = new pc.Entity();
         gameScreen.addComponent('render', {
             castShadows: true,
@@ -260,25 +271,24 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         gameScreen.setLocalPosition(0, 5, 0);
         gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
         gameScreen.setEulerAngles(90, 0, 0);
-        const gamePlane = new pc.Plane(new pc.Vec3(0, 0, 1), 0);
-        // const gameScreenAabb = new pc.BoundingBox();
-        // gameScreenAabb.center = new pc.Vec3(0, 5, 1);
-        // gameScreenAabb.halfExtents = new pc.Vec3(7.5, 5, 1);
 
         /** @type {pc.StandardMaterial} */
         const gameScreenMaterial = gameScreen.render.material;
-        gameScreenMaterial.emissiveMap = outputTexture;     // assign the rendered texture as an emissive texture
+        gameScreenMaterial.emissiveMap = outputTexture;
         gameScreenMaterial.useLighting = false;
         gameScreenMaterial.update();
-
         app.root.addChild(gameScreen);
 
-        // Slightly rotate the camera to face the mouse cursor
+        // Create a matching plane for mouse picking
+        const gamePlane = new pc.Plane(new pc.Vec3(0, 0, 1), 0);
+
+        // Setup mouse controls
         const mouse = new pc.Mouse(document.body);
         const lookRange = 1.5;
         const mouseRay = new pc.Ray();
         const planePoint = new pc.Vec3();
         const mousePos = new pc.Vec2();
+        const mouseUniform = new Float32Array(2);
         let mouseState = 0;
         mouse.disableContextMenu();
         mouse.on(pc.EVENT_MOUSEDOWN, function (event) {
@@ -316,12 +326,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             }
         });
 
-        const worldLayer = app.scene.layers.getLayerByName("World");
-        if (!worldLayer) throw new Error('World layer expected');
-
-        const mousePosition = new Float32Array(2);
-
-        // Create a 2D screen
+        // Create a 2D screen for help text
         const screen = new pc.Entity();
         screen.addComponent("screen", {
             referenceResolution: new pc.Vec2(1280, 720),
@@ -331,7 +336,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         });
         app.root.addChild(screen);
 
-        // Markup Text with wrap
+        // Help text
         const textMarkup = new pc.Entity();
         textMarkup.setLocalPosition(0, 50, 0);
         textMarkup.addComponent("element", {
@@ -351,12 +356,11 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         });
         screen.addChild(textMarkup);
 
-        // update things every frame
         let passNum = 0;
-        app.on("update", function (/** @type {number} */dt) {
+        app.on("update", function (/** @type {number} */) {
 
-            mousePosition[0] = mousePos.x;
-            mousePosition[1] = mousePos.y;
+            mouseUniform[0] = mousePos.x;
+            mouseUniform[1] = mousePos.y;
 
             const brushRadius = data.get('options.brushSize') / Math.max(TEXTURE_WIDTH, TEXTURE_HEIGHT);
             const brush = data.get('options.brush') ?? 1;
@@ -364,18 +368,20 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             // Run the sand simulation shader
             for (let i = 0; i < STEPS_PER_FRAME; i++) {
                 device.scope.resolve('sourceTexture').setValue(sourceTexture);
-                device.scope.resolve('mousePosition').setValue(mousePosition);
+                device.scope.resolve('mousePosition').setValue(mouseUniform);
                 device.scope.resolve('mouseButton').setValue(mouseState);
                 device.scope.resolve('brush').setValue(brush);
                 device.scope.resolve('brushRadius').setValue(brushRadius);
                 device.scope.resolve('passNum').setValue(passNum);
+                device.scope.resolve('randomVal').setValue(Math.random());
                 pc.drawQuadWithShader(device, sandRenderTarget, sandShader);
                 device.copyRenderTarget(sandRenderTarget, sourceRenderTarget, true, false);
-                passNum = (passNum + 1) % 3;
+                passNum = (passNum + 1) % 16;
             }
 
+            // Render a visual representation of the simulation
             device.scope.resolve('sourceTexture').setValue(sandRenderTarget.colorBuffer);
-            device.scope.resolve('mousePosition').setValue(mousePosition);
+            device.scope.resolve('mousePosition').setValue(mouseUniform);
             device.scope.resolve('brushRadius').setValue(brushRadius);
             pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
 
@@ -394,29 +400,24 @@ export class IntegerTextureExample {
         'sandCommon.frag': /* glsl */`
             const uint AIR = 0u;
             const uint SAND = 1u;
-            const uint WALL = 2u;
-            const uint WATER = 3u;
+            const uint ORANGESAND = 2u;
+            const uint GRAYSAND = 3u;
+            const uint WALL = 4u;
                                     
             bool isInBounds(ivec2 c, ivec2 size) {
                 return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;
             }
             
-            int seed;
-
-            float rand() {
-                int n = (seed++ << 13) ^ seed;
-                return float((n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff) / 2147483647.0;
-            }
-            
-            #define INIT_SEED() \
-                seed = int(uv0.x + uv0.y + float(coord.x) + float(coord.y)); \
-                seed = int(rand() * 2147483647.0) + int(passNum);
-
             struct Particle {
                 uint element;        // 3 bits
                 bool movedThisFrame; // 1 bit
                 uint shade;          // 4 bits
+                uint waterMass;      // 8 bits
             };
+
+            float rand(vec2 pos, float val) {
+                return fract(pos.x * pos.y * val * 1000.0);
+            }
             
             uvec2 pack(Particle particle) {
                 uint packed = 0u;
@@ -424,7 +425,7 @@ export class IntegerTextureExample {
                 packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit
                 packed |= (particle.shade << 4);          // Store shade in the next 4 bits
             
-                return uvec2(packed, 0u); // Second component is reserved/unused
+                return uvec2(packed, particle.waterMass); // Second component is reserved/unused
             }
             
             Particle unpack(uvec2 pixel) {
@@ -434,6 +435,8 @@ export class IntegerTextureExample {
                 particle.element = packed & 0x7u;                         // Extract lowest 3 bits
                 particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit
                 particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits
+
+                particle.waterMass = pixel.y;
             
                 return particle;
             }
@@ -463,6 +466,7 @@ export class IntegerTextureExample {
             uniform uint mouseButton;
             uniform uint passNum;
             uniform uint brush;
+            uniform float randomVal;
             uniform float brushRadius;
 
             varying vec2 uv0;
@@ -480,46 +484,37 @@ export class IntegerTextureExample {
                     return;
                 }
             
-                Particle currentParticle = getParticle(coord);
-            
-                Particle nextState = currentParticle;
-                nextState.movedThisFrame = false;
                 float mouseDist = distance(mousePosition, uv0);
-
-                INIT_SEED();
-
                 int dir = int(passNum % 3u) - 1;
-                if (rand() > 0.75) {
-                    dir = ((dir + 1) % 3) - 1;
-                }
 
-                int upDown = 1;
-                if (rand() > 0.99) {
-                    upDown = 0;
-                }
+                Particle currentParticle = getParticle(coord);
+                Particle nextState = currentParticle;
 
                 if (mouseButton == 1u && mouseDist < brushRadius) {
                     nextState.element = brush;
                     nextState.movedThisFrame = true;
-                    nextState.shade = uint(rand() * 15.0);
+                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);
                 } else if (mouseButton == 2u && mouseDist < brushRadius) {
                     nextState.element = AIR;
                     nextState.movedThisFrame = false;
-                    nextState.shade = uint(rand() * 15.0);
-                } else if (currentParticle.element == AIR) {
-                    Particle particleAbove = getParticle(coord + ivec2(dir, -upDown));
-                    if (particleAbove.element == SAND) {
-                        nextState = particleAbove;
+                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);
+                }
+                
+                currentParticle.movedThisFrame = false;
+                if (currentParticle.element == AIR) {
+                    Particle above = getParticle(coord + ivec2(dir, -1));
+                    if (above.element != AIR && above.element != WALL) {
+                        nextState = above;
                         nextState.movedThisFrame = true;
                     }
-                } else if (currentParticle.element == SAND) {
-                    Particle particleBelow = getParticle(coord + ivec2(-dir, upDown));
-                    if ((particleBelow.element == AIR) && !particleBelow.movedThisFrame) {
-                        nextState = particleBelow;
+                } else if (currentParticle.element != WALL) {
+                    Particle below = getParticle(coord + ivec2(-dir, 1));
+                    if (below.element == AIR && !below.movedThisFrame) {
+                        nextState = below;
                         nextState.movedThisFrame = false;
                     }
                 }
-            
+
                 gl_FragColor = pack(nextState);
             }
         `,
@@ -533,6 +528,8 @@ export class IntegerTextureExample {
             vec3 whiteColor = vec3(1.0);
             vec3 skyBlueColor = vec3(0.6, 0.7, 0.8);
             vec3 yellowSandColor = vec3(0.73, 0.58, 0.26);
+            vec3 orangeSandColor = vec3(0.87, 0.43, 0.22);
+            vec3 graySandColor = vec3(0.13, 0.16, 0.17);
             vec3 grayWallColor = vec3(0.5, 0.5, 0.5);
             vec3 waterBlueColor = vec3(0.2, 0.3, 0.8);
 
@@ -540,7 +537,7 @@ export class IntegerTextureExample {
                 return length(p) - r;
             }
 
-            const float circleOutline = 0.01;
+            const float circleOutline = 0.0025;
 
             ${IntegerTextureExample.sharedShaderChunks['sandCommon.frag']}
 
@@ -554,10 +551,13 @@ export class IntegerTextureExample {
                     gameColor = mix(yellowSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
                 } else if (particle.element == WALL) {
                     gameColor = grayWallColor;
-                } else if (particle.element == WATER) {
-                    gameColor = mix(waterBlueColor, whiteColor, (float(particle.shade) / 15.0) * 0.75);
+                } else if (particle.element == ORANGESAND) {
+                    gameColor = mix(orangeSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
+                } else if (particle.element == GRAYSAND) {
+                    gameColor = mix(graySandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
                 }
 
+                // Render a brush circle
                 float d = length(uv0 - mousePosition);
                 float wd = fwidth(d);
                 float circle = smoothstep(brushRadius + wd, brushRadius, d);
@@ -565,7 +565,6 @@ export class IntegerTextureExample {
                 float brush = max(circle - circleInner, 0.0) * 0.5;
 
                 vec3 outColor = mix(gameColor, vec3(1.0), brush);
-                //vec3 outColor = mix(vec3(1.0), gameColor, circle);
 
                 gl_FragColor = vec4(outColor, 1.0);
             }
