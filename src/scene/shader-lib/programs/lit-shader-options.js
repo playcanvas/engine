@@ -1,4 +1,4 @@
-import { BLEND_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
+import { BLEND_NONE, DITHER_NONE, FOG_NONE, GAMMA_NONE } from '../../constants.js';
 
 /**
  * The lit shader options determines how the lit-shader gets generated. It specifies a set of
@@ -175,16 +175,16 @@ class LitShaderOptions {
     /**
      * Enable opacity dithering. See {@link StandardMaterial#opacityDither}.
      *
-     * @type {boolean}
+     * @type {string}
      */
-    opacityDither = false;
+    opacityDither = DITHER_NONE;
 
     /**
      * Enable opacity shadow dithering. See {@link StandardMaterial#opacityShadowDither}.
      *
-     * @type {boolean}
+     * @type {string}
      */
-    opacityShadowDither = false;
+    opacityShadowDither = DITHER_NONE;
 
     /**
      * The value of {@link StandardMaterial#cubeMapProjection}.
