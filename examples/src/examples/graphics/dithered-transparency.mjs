@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, SliderInput, BooleanInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, SliderInput, BooleanInput, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Settings' },
             jsx(LabelGroup, { text: 'Opacity' },
@@ -18,19 +18,27 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 })
             ),
             jsx(LabelGroup, { text: 'Dither Color' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                jsx(SelectInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.opacityDither' },
-                    value: true
+                    type: "string",
+                    options: [
+                        { v: pc.DITHER_NONE, t: 'None' },
+                        { v: pc.DITHER_BAYER8, t: 'Bayer8' },
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
+                    ]
                 })
             ),
             jsx(LabelGroup, { text: 'Dither Shadow' },
-                jsx(BooleanInput, {
-                    type: 'toggle',
+                jsx(SelectInput, {
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'data.opacityShadowDither' },
-                    value: true
+                    type: "string",
+                    options: [
+                        { v: pc.DITHER_NONE, t: 'None' },
+                        { v: pc.DITHER_BAYER8, t: 'Bayer8' },
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
+                    ]
                 })
             )
         )
@@ -41,7 +49,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath, data }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath, data, pcx }) {
 
     const assets = {
         envAtlas: new pc.Asset('env-atlas', 'texture', { url: assetPath + 'cubemaps/table-mountain-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -61,6 +69,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.mouse = new pc.Mouse(document.body);
     createOptions.touch = new pc.TouchDevice(document.body);
     createOptions.keyboard = new pc.Keyboard(document.body);
+
+    // render at full native resolution
+    device.maxPixelRatio = window.devicePixelRatio;
 
     createOptions.componentSystems = [
         pc.RenderComponentSystem,
@@ -197,7 +208,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
                 // turn on / off blending depending on the dithering of the color
                 if (propertyName === 'opacityDither') {
-                    material.blendType = value ? pc.BLEND_NONE : pc.BLEND_NORMAL;
+                    material.blendType = value === pc.DITHER_NONE ? pc.BLEND_NORMAL : pc.BLEND_NONE;
                 }
                 material.update();
             });
@@ -206,8 +217,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         // initial values
         data.set('data', {
             opacity: 0.5,
-            opacityDither: true,
-            opacityShadowDither: true
+            opacityDither: pc.DITHER_BAYER8,
+            opacityShadowDither: pc.DITHER_BAYER8
         });
     });
     return app;
