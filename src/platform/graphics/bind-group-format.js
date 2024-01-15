@@ -193,17 +193,13 @@ class BindGroupFormat {
 
             if (format.sampleType === SAMPLETYPE_INT) {
                 textureType = `i${textureType}`;
-                // code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
-                // extraCode;
             } else if (format.sampleType === SAMPLETYPE_UINT) {
                 textureType = `u${textureType}`;
-                // code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
-                // extraCode;
             }
 
             code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
-            `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n` +
-            extraCode;
+                    `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n` +
+                    extraCode;
 
         });
 
