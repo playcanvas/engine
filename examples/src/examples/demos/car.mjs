@@ -321,12 +321,15 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
             fov: 60
         });
 
+        cameraEntity.camera.jitter = true;
+
         const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
             const splat = resource.instantiateRenderEntity({
                 cameraEntity: cameraEntity,
                 debugRender: false,
                 fragment: fragment,
-                vertex: vertex
+                vertex: vertex,
+                dither: pc.DITHER_BLUENOISE
             });
             splat.setLocalPosition(px, py, pz);
             splat.setLocalScale(scale, scale, scale);
@@ -335,7 +338,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         };
 
         // add a splat based character
-        // Note: splat renders in sRGB mode, while this needs linear, and so it's over-exposed till that is supported
         const splatEntity = createSplatInstance(assets.biker.resource, -1.5, 0.05, 0, 0.6);
 
         // add orbit camera script with a mouse and a touch support
@@ -380,7 +382,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
         const renderPassCamera = new pcx.RenderPassCameraFrame(app, {
             camera: cameraEntity.camera,    // camera used to render those passes
             samples: 2,                     // number of samples for multi-sampling
-            sceneColorMap: true             // true if the scene color should be captured
+            sceneColorMap: true,            // true if the scene color should be captured
+            taaEnabled: true
+            //taaEnabled: false
         });
 
         // and set up these rendering passes to be used by the camera, instead of its default rendering
