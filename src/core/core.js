@@ -27,26 +27,25 @@ const data = { }; // Storage for exported entity data
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
  * @ignore
  */
-const type = (() => {
-    const _typeLookup = { };
-    ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'].forEach((name) => {
-        _typeLookup[`[object ${name}]`] = name.toLowerCase();
-    });
+function type (obj) {
+    if (obj === null) {
+        return 'null';
+    }
 
-    return (obj) => {
-        if (obj === null) {
-            return 'null';
-        }
+    const typeString = typeof obj;
+    if (['undefined', 'number', 'string', 'boolean'].includes(typeString)) {
+        return typeString;
+    }
 
-        const type = typeof obj;
-
-        if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
-            return type;
-        }
-
-        return _typeLookup[Object.prototype.toString.call(obj)];
-    };
-})();
+    return {
+        '[object array]': 'Array',
+        '[object object]': 'Object',
+        '[object function]': 'Function',
+        '[object date]': 'Date',
+        '[object regexp]': 'RegExp',
+        '[object float32array]': 'Float32Array'
+    }[Object.prototype.toString.call(obj)];
+};
 
 /**
  * Merge the contents of two objects into a single object.
