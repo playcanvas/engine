@@ -136,10 +136,6 @@ ${exampleClass.example.toString()}
                     console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
                     return 'webgl2';
                 }
-                if (last === 'webgl1' && ${exampleClass.WEBGL1_DISABLED === true}) {
-                    console.warn('Picked WebGL1 but example is not supported on WebGL1, defaulting to WebGL2');
-                    return 'webgl2';
-                }
                 return last;
             } else if (${Boolean(exampleClass.WEBGPU_ENABLED)}) {
                 let preferredDevice = 'webgpu';
@@ -148,7 +144,7 @@ ${exampleClass.example.toString()}
                     preferredDevice = 'webgl2';
                 }
                 return window.top.preferredGraphicsDevice || preferredDevice;
-            } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice) && !${Boolean(exampleClass.WEBGL1_DISABLED)}) {
+            } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
                 return window.top.preferredGraphicsDevice;
             } else {
                 return 'webgl2';

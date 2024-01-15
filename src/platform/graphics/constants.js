@@ -1453,8 +1453,7 @@ export const uniformTypeToName = [
     'usampler2DArray'
 ];
 
-// Map used in uniform-buffer.js to convert uniform type to storage type
-// used in the uniform buffer.
+// Map to convert uniform type to storage type, used in uniform-buffer.js
 export const uniformTypeToStorage = new Uint8Array([
     TYPE_INT32,     // UNIFORMTYPE_BOOL
     TYPE_INT32,     // UNIFORMTYPE_INT

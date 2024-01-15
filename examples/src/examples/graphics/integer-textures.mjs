@@ -5,8 +5,15 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, jsx, fragment }) {
-    const { BindingTwoWay, Container, Button, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, Container, Button, InfoBox, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
+
     return fragment(
+        jsx(InfoBox, {
+            icon: 'E218',
+            title: 'WebGL 1.0',
+            text: 'Integer textures are not supported on WebGL 1.0 devices',
+            hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
+        }),
         jsx(Panel, { headerText: 'Sand simulation' },
             jsx(LabelGroup, { text: 'Brush' },
                 jsx(SelectInput, {
@@ -48,7 +55,7 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, data, deviceType, assetPath, files, glslangPath, twgslPath, dracoPath }) {
+async function example({ canvas, data, deviceType, files, glslangPath, twgslPath, dracoPath }) {
     //
     //  In this example, integer textures are used to store the state of each pixel in a simulation.
     //  The simulation is run in a shader, and the results are rendered to a texture.
@@ -130,12 +137,15 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             colorBuffer: colorBuffer
         });
     };
+
     // Create our integer pixel buffers and render targets
-    const pixelColorBuffers = [createPixelColorBuffer(0), createPixelColorBuffer(1)];
-    const pixelRenderTargets = [
-        createPixelRenderTarget(0, pixelColorBuffers[0]),
-        createPixelRenderTarget(1, pixelColorBuffers[1])
-    ];
+    const pixelColorBuffers = [];
+    const pixelRenderTargets = [];
+    if (!device.isWebGL1) {
+        pixelColorBuffers.push(createPixelColorBuffer(0), createPixelColorBuffer(1));
+        pixelRenderTargets.push(createPixelRenderTarget(0, pixelColorBuffers[0]));
+        pixelRenderTargets.push(createPixelRenderTarget(1, pixelColorBuffers[1]));
+    }
 
     const sourceTexture = pixelColorBuffers[0];
     const sourceRenderTarget = pixelRenderTargets[0];
@@ -179,6 +189,7 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
     // Write the initial simulation state to the integer texture
     const resetData = () => {
+        if (device.isWebGL1) return;
         // Loop through the pixels in the texture
         // and initialize them to either AIR, SAND or WALL
         const sourceTextureData = sourceTexture.lock();
@@ -214,7 +225,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
-
         data.set('options', {
             brush: 1,
             brushSize: 8
@@ -371,6 +381,10 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
         let passNum = 0;
         app.on("update", function (/** @type {number} */) {
+            if (device.isWebGL1) {
+                // WebGL1 does not support integer textures
+                return;
+            }
 
             mouseUniform[0] = mousePos.x;
             mouseUniform[1] = mousePos.y;
@@ -406,7 +420,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 export class IntegerTextureExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
-    static WEBGL1_DISABLED = true;
     static DESCRIPTION = `<ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>`;
     static example = example;
     static controls = controls;
