@@ -233,7 +233,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
         cameraEntity.setPosition(0, 5, 15);
         cameraEntity.lookAt(0, 5, 0);
         app.root.addChild(cameraEntity);
-        if (cameraEntity.camera === undefined) throw new Error('Camera component expected');
 
         // create material used on the ground plane
         const groundMaterial = new pc.StandardMaterial();
@@ -283,7 +282,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             lightmapped: false,
             type: "plane"
         });
-        if (!gameScreen.render) throw new Error('Render component expected');
         gameScreen.setLocalPosition(0, 5, 0);
         gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
         gameScreen.setEulerAngles(90, 0, 0);
