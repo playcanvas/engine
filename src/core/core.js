@@ -27,7 +27,7 @@ const data = { }; // Storage for exported entity data
  * @returns {string} The type string: "null", "undefined", "number", "string", "boolean", "array", "object", "function", "date", "regexp" or "float32array".
  * @ignore
  */
-function type (obj) {
+function type(obj) {
     if (obj === null) {
         return 'null';
     }
