@@ -38,12 +38,12 @@ function type(obj) {
     }
 
     return {
-        '[object array]': 'Array',
-        '[object object]': 'Object',
-        '[object function]': 'Function',
-        '[object date]': 'Date',
-        '[object regexp]': 'RegExp',
-        '[object float32array]': 'Float32Array'
+        '[object Array]': 'array',
+        '[object Object]': 'object',
+        '[object Function]': 'function',
+        '[object Date]': 'date',
+        '[object RegExp]': 'regexp',
+        '[object Float32Array]': 'float32array'
     }[Object.prototype.toString.call(obj)];
 };
 
