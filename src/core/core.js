@@ -45,7 +45,7 @@ function type(obj) {
         '[object RegExp]': 'regexp',
         '[object Float32Array]': 'float32array'
     }[Object.prototype.toString.call(obj)];
-};
+}
 
 /**
  * Merge the contents of two objects into a single object.
