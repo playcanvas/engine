@@ -49,7 +49,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath, data, pcx }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath, data }) {
 
     const assets = {
         envAtlas: new pc.Asset('env-atlas', 'texture', { url: assetPath + 'cubemaps/table-mountain-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
