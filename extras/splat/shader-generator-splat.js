@@ -1,5 +1,6 @@
 import {
     ShaderUtils,
+    DITHER_NONE,
     SEMANTIC_ATTR13,
     SEMANTIC_POSITION,
     ShaderGenerator,
@@ -28,6 +29,7 @@ const splatCoreVS = `
 
     varying vec2 texCoord;
     varying vec4 color;
+    varying float id;
 
     mat3 quatToMat3(vec3 R)
     {
@@ -233,12 +235,15 @@ const splatCoreVS = `
                 vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
                     0.0, 0.0) * splat_proj.w;
         #endif
+
+        id = float(vertex_id);
     }
 `;
 
 const splatCoreFS = /* glsl_ */ `
     varying vec2 texCoord;
     varying vec4 color;
+    varying float id;
 
     vec4 evalSplat() {
 
@@ -253,16 +258,16 @@ const splatCoreFS = /* glsl_ */ `
             if (A < -4.0) discard;
             float B = exp(A) * color.a;
 
+            #ifndef DITHER_NONE
+                opacityDither(B, id * 0.013);
+            #endif
+
             // the color here is in gamma space, so bring it to linear
             vec3 diffuse = decodeGamma(color.rgb);
 
             // apply tone-mapping and gamma correction as needed
             diffuse = toneMap(diffuse);
             diffuse = gammaCorrectOutput(diffuse);
-
-            #ifdef DITHER
-                opacityDither(B);
-            #endif
 
             return vec4(diffuse, B);
 
@@ -282,11 +287,11 @@ class ShaderGeneratorSplat {
         const defines =
             (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
             (device.isWebGL1 ? '' : '#define INT_INDICES\n') +
-            (options.dither ? '#define DITHER\n' : '');
+            `#define DITHER_${options.dither.toUpperCase()}\n`;
 
         const vs = defines + splatCoreVS + options.vertex;
         const fs = defines + shaderChunks.decodePS +
-            (options.dither ? shaderChunks.bayerPS + shaderChunks.opacityDitherPS : '') +
+            (options.dither === DITHER_NONE ? '' : shaderChunks.bayerPS + shaderChunks.opacityDitherPS) +
             ShaderGenerator.tonemapCode(options.toneMapping) +
             ShaderGenerator.gammaCode(options.gamma) +
             splatCoreFS + options.fragment;
