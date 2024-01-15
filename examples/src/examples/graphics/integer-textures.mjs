@@ -173,8 +173,12 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
         files['sandSimulation.frag'],
         'SandShader',
         { aPosition: pc.SEMANTIC_POSITION },
-        false,
-        'uint' // The usual output format of a shader is vec4, but we change it to uint
+        // Note that we are changing the shader output type to 'uint'
+        // This means we only have to return a single integer value from the shader,
+        // whereas the default is to return a vec4. This option allows you to pass
+        // an array of types to specify the output type for each color attachment.
+        // Unspecified types are assumed to be 'vec4'.
+        { fragmentOutputTypes: ['uint'] }
     );
 
     // This shader reads the integer textures
@@ -185,6 +189,8 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
         files['renderOutput.frag'],
         'RenderOutputShader',
         { aPosition: pc.SEMANTIC_POSITION }
+        // For the output shader, we don't need to specify the output type,
+        // as we are returning a vec4 by default.
     );
 
     // Write the initial simulation state to the integer texture

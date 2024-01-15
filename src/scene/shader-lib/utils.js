@@ -12,17 +12,18 @@ import { ShaderGenerator } from './programs/shader-generator.js';
  * graphics device.
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
- * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string} [fragmentOutputType] - Output fragment shader type. Defaults to vec4.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
+ * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
  */
-function createShader(device, vsName, fsName, useTransformFeedback = false, fragmentOutputType = 'vec4') {
+function createShader(device, vsName, fsName, shaderDefinitionOptions) {
     return new Shader(device, ShaderUtils.createDefinition(device, {
+        ...shaderDefinitionOptions,
         name: `${vsName}_${fsName}`,
         vertexCode: shaderChunks[vsName],
-        fragmentCode: shaderChunks[fsName],
-        useTransformFeedback: useTransformFeedback,
-        fragmentOutputType
+        fragmentCode: shaderChunks[fsName]
     }));
 }
 
@@ -41,11 +42,13 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, frag
  * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
- * @param {boolean} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string} [fragmentOutputType] - Output fragment shader type. Defaults to vec4.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
+ * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
  */
-function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, fragmentOutputType = 'vec4') {
+function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, shaderDefinitionOptions) {
 
     // the function signature has changed, fail if called incorrectly
     Debug.assert(typeof attributes !== 'boolean');
@@ -54,12 +57,11 @@ function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, us
     let shader = programLibrary.getCachedShader(uniqueName);
     if (!shader) {
         shader = new Shader(device, ShaderUtils.createDefinition(device, {
+            ...shaderDefinitionOptions,
             name: uniqueName,
             vertexCode: vsCode,
             fragmentCode: fsCode,
-            attributes: attributes,
-            useTransformFeedback: useTransformFeedback,
-            fragmentOutputType
+            attributes: attributes
         }));
         programLibrary.setCachedShader(uniqueName, shader);
     }

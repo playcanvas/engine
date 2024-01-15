@@ -54,6 +54,7 @@ class Shader {
      * WebGPU platform.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
+     * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
      * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example

@@ -1,50 +1,50 @@
 export default /* glsl */`
 
-#ifndef outType
-#define outType vec4
+#ifndef outType_0
+#define outType_0 vec4
 #endif
 
-layout(location = 0) out highp outType pc_fragColor;
+layout(location = 0) out highp outType_0 pc_fragColor;
 
 #ifndef REMOVE_COLOR_ATTACHMENT_1
 #if COLOR_ATTACHMENT_1
-layout(location = 1) out highp outType pc_fragColor1;
+layout(location = 1) out highp outType_1 pc_fragColor1;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_2
 #if COLOR_ATTACHMENT_2
-layout(location = 2) out highp outType pc_fragColor2;
+layout(location = 2) out highp outType_2 pc_fragColor2;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_3
 #if COLOR_ATTACHMENT_3
-layout(location = 3) out highp outType pc_fragColor3;
+layout(location = 3) out highp outType_3 pc_fragColor3;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_4
 #if COLOR_ATTACHMENT_4
-layout(location = 4) out highp outType pc_fragColor4;
+layout(location = 4) out highp outType_4 pc_fragColor4;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_5
 #if COLOR_ATTACHMENT_5
-layout(location = 5) out highp outType pc_fragColor5;
+layout(location = 5) out highp outType_5 pc_fragColor5;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_6
 #if COLOR_ATTACHMENT_6
-layout(location = 6) out highp outType pc_fragColor6;
+layout(location = 6) out highp outType_6 pc_fragColor6;
 #endif
 #endif
 
 #ifndef REMOVE_COLOR_ATTACHMENT_7
 #if COLOR_ATTACHMENT_7
-layout(location = 7) out highp outType pc_fragColor7;
+layout(location = 7) out highp outType_7 pc_fragColor7;
 #endif
 #endif
 

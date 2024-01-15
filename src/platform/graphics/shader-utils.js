@@ -50,9 +50,8 @@ class ShaderUtils {
      * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
-     * @param {string} [options.fragmentOutputType] - Output fragment shader type. Defaults to vec4.
-     * to false.
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false
+     * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
      * @returns {object} Returns the created shader definition.
      */
     static createDefinition(device, options) {
@@ -66,15 +65,24 @@ class ShaderUtils {
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
 
-            // Define the fragment shader output type, vec4 by default
-            if (!isVertex) {
-                const outType = options.fragmentOutputType ?? 'vec4';
-                attachmentsDefine += `#define outType ${outType}\n`;
+            // Normalize fragmentOutputTypes to an array
+            let fragmentOutputTypes = options.fragmentOutputTypes ?? ['vec4'];
+            if (!Array.isArray(fragmentOutputTypes)) {
+                fragmentOutputTypes = [fragmentOutputTypes ?? 'vec4'];
             }
 
-            for (let i = 0; i < device.maxColorAttachments; i++) {
-                attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+            // Define the fragment shader output type, vec4 by default
+            if (!isVertex) {
+                let outType = '';
+                for (let i = 0; i < device.maxColorAttachments; i++) {
+                    attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+                    outType = fragmentOutputTypes[i] ?? 'vec4';
+                    attachmentsDefine += `#define outType_${i} ${outType}\n`;
+                }
             }
+
+            console.log("fragmentOutputTypes", fragmentOutputTypes);
+            console.log("attachmentsDefine", attachmentsDefine);
 
             return attachmentsDefine + deviceIntro;
         };
