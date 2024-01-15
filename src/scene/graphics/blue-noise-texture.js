@@ -1,5 +1,5 @@
 import { blueNoiseData } from "../../core/math/blue-noise.js";
-import { ADDRESS_REPEAT, FILTER_NEAREST, PIXELFORMAT_RGBA8, TEXTURETYPE_DEFAULT } from "../../platform/graphics/constants.js";
+import { ADDRESS_REPEAT, FILTER_NEAREST, PIXELFORMAT_L8, TEXTURETYPE_DEFAULT } from "../../platform/graphics/constants.js";
 import { DeviceCache } from "../../platform/graphics/device-cache.js";
 import { Texture } from "../../platform/graphics/texture.js";
 
@@ -11,13 +11,15 @@ function getBlueNoiseTexture(device) {
     return deviceCache.get(device, () => {
 
         const data = blueNoiseData();
-        const size = Math.sqrt(data.length / 4);
+        const size = 32;
 
         const texture = new Texture(device, {
             name: `BlueNoise${size}`,
             width: size,
             height: size,
-            format: PIXELFORMAT_RGBA8,
+            depth: size,
+            volume: true,
+            format: PIXELFORMAT_L8,
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_REPEAT,
             type: TEXTURETYPE_DEFAULT,

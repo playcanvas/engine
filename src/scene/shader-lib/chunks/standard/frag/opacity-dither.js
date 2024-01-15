@@ -1,10 +1,12 @@
 export default /* glsl */`
 
-uniform vec4 blueNoiseJitter;
-
 #ifndef DITHER_BAYER8
-    uniform sampler2D blueNoiseTex32;
+    precision highp sampler3D;
+    uniform sampler3D blueNoiseTex32;
+    uniform float blueNoiseFrame;
 #endif
+
+uniform vec4 blueNoiseJitter;
 
 void opacityDither(float alpha, float id) {
     #ifdef DITHER_BAYER8
@@ -13,8 +15,9 @@ void opacityDither(float alpha, float id) {
 
     #else   // blue noise
 
-        vec2 uv = fract(gl_FragCoord.xy / 32.0 + blueNoiseJitter.xy + id);
-        float noise = texture2DLodEXT(blueNoiseTex32, uv, 0.0).y;
+        vec2 uv2D = fract(gl_FragCoord.xy / 32.0 + blueNoiseJitter.xy + id);
+        vec3 uv3D = vec3(uv2D, blueNoiseFrame / 32.0);
+        float noise = texture(blueNoiseTex32, uv3D).r;
 
     #endif
 

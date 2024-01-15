@@ -149,6 +149,8 @@ class Renderer {
 
     blueNoise = new BlueNoise(123);
 
+    blueNoiseFrame = 0;
+
     /**
      * Create a new instance.
      *
@@ -223,6 +225,7 @@ class Renderer {
 
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
+        this.blueNoiseFrameId = scope.resolve('blueNoiseFrame');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -1223,6 +1226,10 @@ class Renderer {
     }
 
     updateFrameUniforms() {
+        // Increment blue noise frame
+        this.blueNoiseFrame = (this.blueNoiseFrame + 1) % 32;
+        this.blueNoiseFrameId.setValue(this.blueNoiseFrame);
+
         // blue noise texture
         this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
     }
