@@ -163,9 +163,17 @@ class Gizmo extends EventHandler {
             this.fire('key:up');
         };
 
+        if (window) {
+            window.addEventListener('pointerdown', this._onPointerDown);
+            window.addEventListener('pointermove', this._onPointerMove);
+            window.addEventListener('pointerup', this._onPointerUp);
+            window.addEventListener('keydown', this._onKeyDown);
+            window.addEventListener('keyup', this._onKeyUp);
+        }
+
         app.on('update', () => this._updateScale());
 
-        app.on('destroy', () => this.detach());
+        app.on('destroy', () => this.destroy());
     }
 
     set coordSpace(value) {
@@ -277,14 +285,6 @@ class Gizmo extends EventHandler {
         this._updatePosition();
         this._updateRotation();
 
-        if (window) {
-            window.addEventListener('pointerdown', this._onPointerDown);
-            window.addEventListener('pointermove', this._onPointerMove);
-            window.addEventListener('pointerup', this._onPointerUp);
-            window.addEventListener('keydown', this._onKeyDown);
-            window.addEventListener('keyup', this._onKeyUp);
-        }
-
         this.fire('nodes:attach');
 
         this.gizmo.enabled = true;
@@ -304,6 +304,19 @@ class Gizmo extends EventHandler {
         this.fire('nodes:detach');
 
         this.nodes = [];
+    }
+
+    /**
+     * Destroys the gizmo instance; detaches
+     * all graph nodes.
+     *
+     * @example
+     * const gizmo = new pcx.Gizmo();
+     * gizmo.attach([boxA, boxB]);
+     * gizmo.destroy();
+     */
+    destroy() {
+        this.detach();
 
         if (window) {
             window.removeEventListener('pointerdown', this._onPointerDown);
@@ -312,6 +325,8 @@ class Gizmo extends EventHandler {
             window.removeEventListener('keydown', this._onKeyDown);
             window.removeEventListener('keyup', this._onKeyUp);
         }
+
+        this.gizmo.destroy();
     }
 }
 
