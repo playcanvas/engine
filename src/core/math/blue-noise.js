@@ -1,6 +1,7 @@
 import { Vec4 } from "./vec4.js";
 
-// this is a 32x32x32 blue noise texture
+// this is a 32x32x32 blue noise texture.
+// See blue-noise-data.js for some more info on how the data was generated.
 import base64Strings from './blue-noise-data.js';
 
 let data = null;
