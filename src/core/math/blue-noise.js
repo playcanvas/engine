@@ -1,16 +1,18 @@
 import { Vec4 } from "./vec4.js";
 
 // this is a 32x32x32 blue noise texture
-import base64String from './blue-noise-data.js';
+import base64Strings from './blue-noise-data.js';
 
 let data = null;
 const initData = () => {
     if (!data) {
-        const binaryString = atob(base64String);
+        data = base64Strings.map((base64String) => {
+            const binaryString = atob(base64String);
 
-        // the data stores an array of RGBA 8-bit values, each of the color channels represents
-        // a separate blue noise stream
-        data = Uint8Array.from(binaryString, char => char.charCodeAt(0));
+            // the data stores an array of RGBA 8-bit values, each of the color channels represents
+            // a separate blue noise stream
+            return Uint8Array.from(binaryString, char => char.charCodeAt(0));
+        });
     }
 };
 

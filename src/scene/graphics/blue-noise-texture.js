@@ -17,8 +17,8 @@ function getBlueNoiseTexture(device) {
             name: `BlueNoise${size}`,
             width: size,
             height: size,
-            depth: size,
-            volume: true,
+            arrayLength: size,
+            volume: false,
             format: PIXELFORMAT_L8,
             addressU: ADDRESS_REPEAT,
             addressV: ADDRESS_REPEAT,
@@ -26,11 +26,12 @@ function getBlueNoiseTexture(device) {
             magFilter: FILTER_NEAREST,
             minFilter: FILTER_NEAREST,
             anisotropy: 1,
-            mipmaps: false
+            mipmaps: false,
+            levels: [data]
         });
 
-        texture.lock().set(data);
-        texture.unlock();
+        // texture.lock().set(data);
+        // texture.unlock();
 
         return texture;
     });

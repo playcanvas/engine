@@ -1226,12 +1226,12 @@ class Renderer {
     }
 
     updateFrameUniforms() {
+        // blue noise texture
+        this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
+
         // Increment blue noise frame
         this.blueNoiseFrame = (this.blueNoiseFrame + 1) % 32;
         this.blueNoiseFrameId.setValue(this.blueNoiseFrame);
-
-        // blue noise texture
-        this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
     }
 
     /**
