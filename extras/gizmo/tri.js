@@ -30,7 +30,7 @@ class Tri {
         return this;
     }
 
-    intersectRay(origin, dir, out = new Vec3(), epsilon = EPSILON) {
+    intersectRay(origin, dir, out, epsilon = EPSILON) {
         e1.sub2(this.v1, this.v0);
         e2.sub2(this.v2, this.v0);
         h.cross(dir, e2);
@@ -54,7 +54,9 @@ class Tri {
 
         const t = f * e2.dot(q);
         if (t > epsilon) {
-            out.copy(dir).scale(t).add(origin);
+            if (out instanceof Vec3) {
+                out.copy(dir).scale(t).add(origin);
+            }
             return true;
         }
 
