@@ -164,6 +164,36 @@ class AxisShape {
         this._hoverColor = options.hoverColor ?? Color.WHITE;
     }
 
+    _createRoot(name) {
+        this.entity = new Entity(name + ':' + this.axis);
+        this._updateRootTransform();
+    }
+
+    _updateRootTransform() {
+        this.entity.setLocalPosition(this._position);
+        this.entity.setLocalEulerAngles(this._rotation);
+        this.entity.setLocalScale(this._scale);
+    }
+
+    _addRenderMeshes(entity, meshes) {
+        const meshInstances = [];
+        for (let i = 0; i < meshes.length; i++) {
+            const mi = new MeshInstance(meshes[i], this._defaultColor);
+            meshInstances.push(mi);
+            this.meshInstances.push(mi);
+        }
+        entity.addComponent('render', {
+            meshInstances: meshInstances,
+            layers: this._layers,
+            castShadows: false
+        });
+    }
+
+    _addRenderShadowMesh(entity, type) {
+        const mesh = createShadowMesh(this.device, entity, type);
+        this._addRenderMeshes(entity, [mesh]);
+    }
+
     hover(state) {
         const material = state ? this._hoverColor : this._defaultColor;
         for (let i = 0; i < this.meshInstances.length; i++) {
@@ -245,36 +275,19 @@ class AxisArrow extends AxisShape {
     }
 
     _createArrow() {
-        this.entity = new Entity('arrow:' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
+        this._createRoot('arrow');
 
         // head
         this._head = new Entity('head:' + this.axis);
         this.entity.addChild(this._head);
         this._updateHead();
-        let mesh = createShadowMesh(this.device, this._head, 'cone');
-        let meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._head.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._addRenderShadowMesh(this._head, 'cone');
 
         // line
         this._line = new Entity('line:' + this.axis);
         this.entity.addChild(this._line);
         this._updateLine();
-        mesh = createShadowMesh(this.device, this._line, 'cylinder');
-        meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._line.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._addRenderShadowMesh(this._line, 'cylinder');
     }
 
     _updateHead() {
@@ -315,18 +328,11 @@ class AxisBoxCenter extends AxisShape {
     }
 
     _createCenter() {
-        this.entity = new Entity('boxCenter:' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._size, this._size, this._size);
-        const mesh = createShadowMesh(this.device, this.entity, 'box');
-        const meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this.entity.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._createRoot('boxCenter');
+        this._updateTransform();
+
+        // box
+        this._addRenderShadowMesh(this.entity, 'box');
     }
 
     set size(value) {
@@ -406,36 +412,20 @@ class AxisBoxLine extends AxisShape {
     }
 
     _createBoxLine() {
-        this.entity = new Entity('boxLine:' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
+        this._createRoot('boxLine');
 
         // box
         this._box = new Entity('box:' + this.axis);
         this.entity.addChild(this._box);
         this._updateBox();
-        let mesh = createShadowMesh(this.device, this._box, 'box');
-        let meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._box.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._addRenderShadowMesh(this._box, 'box');
 
         // line
         this._line = new Entity('line:' + this.axis);
         this.entity.addChild(this._line);
         this._updateLine();
-        mesh = createShadowMesh(this.device, this._line, 'cylinder');
-        meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this._line.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._addRenderShadowMesh(this._line, 'cylinder');
+
     }
 
     _updateBox() {
@@ -482,43 +472,39 @@ class AxisDisk extends AxisShape {
         this._sectorAngle = options.sectorAngle ?? this._sectorAngle;
 
         this.meshTriDataList = [
-            new MeshTriData(createTorus(this.device, {
-                tubeRadius: this._tubeRadius + this._intersectTolerance,
-                ringRadius: this._ringRadius,
-                sectorAngle: this._sectorAngle,
-                segments: TORUS_INTERSECT_SEGMENTS
-            }))
+            new MeshTriData(this._createIntersectTorus())
         ];
 
         this._createDisk();
     }
 
-    _createDisk() {
-        this.entity = new Entity('disk:' + this.axis);
-        this.entity.setLocalPosition(this._position);
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._scale);
-        const arcMesh = createShadowMesh(this.device, this.entity, 'torus', {
-            tubeRadius: this._tubeRadius,
+    _createIntersectTorus() {
+        return createTorus(this.device, {
+            tubeRadius: this._tubeRadius + this._intersectTolerance,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
-            segments: TORUS_RENDER_SEGMENTS
+            segments: TORUS_INTERSECT_SEGMENTS
         });
-        const circleMesh = createShadowMesh(this.device, this.entity, 'torus', {
+    }
+
+    _createRenderTorus(sectorAngle) {
+        return createShadowMesh(this.device, this.entity, 'torus', {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
-            sectorAngle: 2 * Math.PI,
+            sectorAngle: sectorAngle,
             segments: TORUS_RENDER_SEGMENTS
         });
-        const arcMeshInstance = new MeshInstance(arcMesh, this._defaultColor);
-        const circleMeshInstance = new MeshInstance(circleMesh, this._defaultColor);
-        circleMeshInstance.visible = false;
-        this.entity.addComponent('render', {
-            meshInstances: [arcMeshInstance, circleMeshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(arcMeshInstance, circleMeshInstance);
+    }
+
+    _createDisk() {
+        this._createRoot('disk');
+
+        // arc/circle
+        this._addRenderMeshes(this.entity, [
+            this._createRenderTorus(this._sectorAngle),
+            this._createRenderTorus(2 * Math.PI)
+        ]);
+        this.drag(false);
     }
 
     set tubeRadius(value) {
@@ -541,30 +527,11 @@ class AxisDisk extends AxisShape {
 
     _updateTransform() {
         // intersect
-        this.meshTriDataList[0].setTris(createTorus(this.device, {
-            tubeRadius: this._tubeRadius + this._intersectTolerance,
-            ringRadius: this._ringRadius,
-            sectorAngle: this._sectorAngle,
-            segments: TORUS_INTERSECT_SEGMENTS
-        }));
+        this.meshTriDataList[0].setTris(this._createIntersectTorus());
 
         // render
-        const arcMesh = createShadowMesh(this.device, this.entity, 'torus', {
-            lightDir: this._lightDir,
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius,
-            sectorAngle: this._sectorAngle,
-            segments: TORUS_RENDER_SEGMENTS
-        });
-        const circleMesh = createShadowMesh(this.device, this.entity, 'torus', {
-            lightDir: this._lightDir,
-            tubeRadius: this._tubeRadius,
-            ringRadius: this._ringRadius,
-            sectorAngle: 2 * Math.PI,
-            segments: TORUS_RENDER_SEGMENTS
-        });
-        this.meshInstances[0].mesh = arcMesh;
-        this.meshInstances[1].mesh = circleMesh;
+        this.meshInstances[0].mesh = this._createRenderTorus(this._sectorAngle);
+        this.meshInstances[1].mesh = this._createRenderTorus(2 * Math.PI);
     }
 
     drag(state) {
@@ -606,18 +573,11 @@ class AxisPlane extends AxisShape {
     }
 
     _createPlane() {
-        this.entity = new Entity('plane:' + this.axis);
-        this.entity.setLocalPosition(this._getPosition());
-        this.entity.setLocalEulerAngles(this._rotation);
-        this.entity.setLocalScale(this._size, this._size, this._size);
-        const mesh = createShadowMesh(this.device, this.entity, 'plane');
-        const meshInstance = new MeshInstance(mesh, this._defaultColor);
-        this.entity.addComponent('render', {
-            meshInstances: [meshInstance],
-            layers: this._layers,
-            castShadows: false
-        });
-        this.meshInstances.push(meshInstance);
+        this._createRoot('plane');
+        this._updateTransform();
+
+        // plane
+        this._addRenderShadowMesh(this.entity, 'plane');
     }
 
     set size(value) {
@@ -641,6 +601,7 @@ class AxisPlane extends AxisShape {
     _updateTransform() {
         // intersect/render
         this.entity.setLocalPosition(this._getPosition());
+        this.entity.setLocalEulerAngles(this._rotation);
         this.entity.setLocalScale(this._size, this._size, this._size);
     }
 }
