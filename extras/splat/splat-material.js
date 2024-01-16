@@ -5,6 +5,7 @@ import {
     CULLFACE_BACK,
     CULLFACE_NONE,
     Material,
+    DITHER_NONE,
     SHADER_FORWARDHDR,
     TONEMAP_LINEAR,
     GAMMA_SRGBHDR,
@@ -45,12 +46,13 @@ const splatMainFS = `
  */
 const createSplatMaterial = (options = {}) => {
 
-    const { debugRender, dither } = options;
+    const { debugRender } = options;
+    const dither = options.dither ?? DITHER_NONE;
 
     const material = new Material();
     material.name = 'splatMaterial';
     material.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
-    material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
+    material.blendType = dither === DITHER_NONE ? BLEND_NORMAL : BLEND_NONE;
     material.depthWrite = dither;
 
     material.getShaderVariant = function (device, scene, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
@@ -62,7 +64,7 @@ const createSplatMaterial = (options = {}) => {
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             debugRender: debugRender,
-            dither: !!dither
+            dither: dither
         };
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
