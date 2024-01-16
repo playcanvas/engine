@@ -17,7 +17,7 @@ const tmpV3 = new Vec3();
  */
 class MeshTriData {
     /**
-     * The local to parent transform matrix.
+     * The transform of the mesh.
      *
      * @type {Mat4}
      */
