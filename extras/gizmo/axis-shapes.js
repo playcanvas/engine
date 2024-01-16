@@ -95,7 +95,6 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     const options = {
         positions: [],
         normals: [],
-        uvs: [],
         indices: [],
         colors: []
     };
@@ -103,7 +102,6 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     mesh.getPositions(options.positions);
     mesh.getNormals(options.normals);
     mesh.getIndices(options.indices);
-    mesh.getUvs(0, options.uvs);
 
     const wtm = entity.getWorldTransform().clone().invert();
     tmpV1.copy(LIGHT_DIR);
