@@ -50,7 +50,7 @@ class ShaderUtils {
      * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
      * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
      * @returns {object} Returns the created shader definition.
      */
