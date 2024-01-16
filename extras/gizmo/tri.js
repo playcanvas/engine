@@ -12,22 +12,14 @@ const q = new Vec3();
 const EPSILON = 1e-6;
 
 class Tri {
-    v0 = new Vec3();
+    v0;
 
-    v1 = new Vec3();
+    v1;
 
-    v2 = new Vec3();
+    v2;
 
-    constructor(v0 = new Vec3(), v1 = new Vec3(), v2 = new Vec3()) {
-        if (v0.length === 3) {
-            this.v0.copy(v0[0]);
-            this.v1.copy(v0[1]);
-            this.v2.copy(v0[2]);
-        } else {
-            this.v0.copy(v0);
-            this.v1.copy(v1);
-            this.v2.copy(v2);
-        }
+    constructor(v0, v1, v2) {
+        this.set(v0, v1, v2);
     }
 
     set(v0, v1, v2) {
