@@ -1,9 +1,7 @@
 import {
     math,
     PROJECTION_PERSPECTIVE,
-    SORTMODE_NONE,
     EventHandler,
-    Layer,
     Entity,
     Mat4,
     Vec3
@@ -17,7 +15,6 @@ const xstart = new Vec3();
 const xdir = new Vec3();
 
 // constants
-const GIZMO_LAYER_ID = 1e5;
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
