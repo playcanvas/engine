@@ -23,27 +23,6 @@ class Tri {
 
     v2 = new Vec3();
 
-    static trisFromMesh(mesh) {
-        const tris = [];
-        const pos = [];
-        const indices = [];
-        mesh.getPositions(pos);
-        mesh.getIndices(indices);
-
-        for (let k = 0; k < indices.length; k += 3) {
-            const i1 = indices[k];
-            const i2 = indices[k + 1];
-            const i3 = indices[k + 2];
-
-            tmpV1.set(pos[i1 * 3], pos[i1 * 3 + 1], pos[i1 * 3 + 2]);
-            tmpV2.set(pos[i2 * 3], pos[i2 * 3 + 1], pos[i2 * 3 + 2]);
-            tmpV3.set(pos[i3 * 3], pos[i3 * 3 + 1], pos[i3 * 3 + 2]);
-            const tri = new Tri(tmpV1, tmpV2, tmpV3);
-            tris.push(tri);
-        }
-        return tris;
-    }
-
     constructor(v0 = new Vec3(), v1 = new Vec3(), v2 = new Vec3()) {
         if (v0.length === 3) {
             this.v0.copy(v0[0]);
