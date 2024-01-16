@@ -38,12 +38,15 @@ class MeshTriData {
         return this._ptm;
     }
 
-    _trisFromMesh(mesh) {
+    _trisFromMesh(mesh, destroy = true) {
         const tris = [];
         const pos = [];
         const indices = [];
         mesh.getPositions(pos);
         mesh.getIndices(indices);
+        if (destroy) {
+            mesh.destroy();
+        }
 
         for (let k = 0; k < indices.length; k += 3) {
             const i1 = indices[k];

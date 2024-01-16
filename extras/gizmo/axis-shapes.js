@@ -200,6 +200,10 @@ class AxisShape {
             this.meshInstances[i].material = material;
         }
     }
+
+    destroy() {
+        this.entity.destroy();
+    }
 }
 
 class AxisArrow extends AxisShape {

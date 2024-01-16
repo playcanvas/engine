@@ -505,6 +505,14 @@ class GizmoTransform extends Gizmo {
             }
         }
     }
+
+    destroy() {
+        for (const key in this._shapes) {
+            this._shapes[key].destroy();
+        }
+
+        super.destroy();
+    }
 }
 
 export { GizmoTransform };
