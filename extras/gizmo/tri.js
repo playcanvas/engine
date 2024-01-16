@@ -2,11 +2,6 @@ import {
     Vec3
 } from 'playcanvas';
 
-// temporary variables
-const tmpV1 = new Vec3();
-const tmpV2 = new Vec3();
-const tmpV3 = new Vec3();
-
 const e1 = new Vec3();
 const e2 = new Vec3();
 const h = new Vec3();
