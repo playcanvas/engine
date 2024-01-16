@@ -65,18 +65,17 @@ class ShaderUtils {
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
 
-            // Normalize fragmentOutputTypes to an array
-            let fragmentOutputTypes = options.fragmentOutputTypes ?? ['vec4'];
-            if (!Array.isArray(fragmentOutputTypes)) {
-                fragmentOutputTypes = [fragmentOutputTypes ?? 'vec4'];
-            }
-
             // Define the fragment shader output type, vec4 by default
             if (!isVertex) {
-                let outType = '';
+                // Normalize fragmentOutputTypes to an array
+                let fragmentOutputTypes = options.fragmentOutputTypes ?? 'vec4';
+                if (!Array.isArray(fragmentOutputTypes)) {
+                    fragmentOutputTypes = [fragmentOutputTypes];
+                }
+
                 for (let i = 0; i < device.maxColorAttachments; i++) {
                     attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
-                    outType = fragmentOutputTypes[i] ?? 'vec4';
+                    const outType = fragmentOutputTypes[i] ?? 'vec4';
                     attachmentsDefine += `#define outType_${i} ${outType}\n`;
                 }
             }
