@@ -12,11 +12,11 @@ const q = new Vec3();
 const EPSILON = 1e-6;
 
 class Tri {
-    v0;
+    v0 = new Vec3();
 
-    v1;
+    v1 = new Vec3();
 
-    v2;
+    v2 = new Vec3();
 
     constructor(v0, v1, v2) {
         this.set(v0, v1, v2);

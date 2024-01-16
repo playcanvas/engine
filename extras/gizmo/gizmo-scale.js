@@ -92,11 +92,12 @@ class GizmoScale extends GizmoTransform {
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
+     * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoScale(app, camera);
+     * const gizmo = new pcx.GizmoScale(app, camera, layer);
      */
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(app, camera, layer) {
+        super(app, camera, layer);
 
         this._createTransform();
 

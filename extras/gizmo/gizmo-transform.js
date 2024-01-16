@@ -208,11 +208,12 @@ class GizmoTransform extends Gizmo {
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
+     * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoTransform(app, camera);
+     * const gizmo = new pcx.GizmoTransform(app, camera, layer);
      */
-    constructor(app, camera) {
-        super(app, camera);
+    constructor(app, camera, layer) {
+        super(app, camera, layer);
 
         this.app.on('update', () => {
             if (!this.gizmo.enabled) {

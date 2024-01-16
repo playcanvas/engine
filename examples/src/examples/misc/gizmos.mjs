@@ -217,10 +217,19 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         skipSetFire = false;
 
         constructor(app, camera) {
+            const layer = new pc.Layer({
+                name: 'Gizmo',
+                clearDepthBuffer: true,
+                opaqueSortMode: pc.SORTMODE_NONE,
+                transparentSortMode: pc.SORTMODE_NONE
+            });
+            app.scene.layers.push(layer);
+            camera.layers = camera.layers.concat(layer.id);
+
             this.gizmos = {
-                translate: new pcx.GizmoTranslate(app, camera),
-                rotate: new pcx.GizmoRotate(app, camera),
-                scale: new pcx.GizmoScale(app, camera)
+                translate: new pcx.GizmoTranslate(app, camera, layer),
+                rotate: new pcx.GizmoRotate(app, camera, layer),
+                scale: new pcx.GizmoScale(app, camera, layer)
             };
         }
 

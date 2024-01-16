@@ -98,16 +98,17 @@ class Gizmo extends EventHandler {
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
+     * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
      * const gizmo = new pcx.Gizmo(app, camera);
      */
-    constructor(app, camera) {
+    constructor(app, camera, layer) {
         super();
 
         this.app = app;
         this.camera = camera;
+        this.layer = layer;
 
-        this._createLayer();
         this._createGizmo();
 
         this._updateScale();
@@ -179,25 +180,6 @@ class Gizmo extends EventHandler {
         const cameraPos = this.camera.entity.getPosition();
         const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this.camera.entity.forward);
         return dist * Math.tan(this.camera.fov * math.DEG_TO_RAD / 2);
-    }
-
-    _createLayer() {
-        const layerMap = this.app.scene.layers.layerIdMap;
-        if (layerMap.has(GIZMO_LAYER_ID)) {
-            this.layer = layerMap.get(GIZMO_LAYER_ID);
-        } else {
-            this.layer = new Layer({
-                id: GIZMO_LAYER_ID,
-                name: 'Gizmo',
-                clearDepthBuffer: true,
-                opaqueSortMode: SORTMODE_NONE,
-                transparentSortMode: SORTMODE_NONE
-            });
-            this.app.scene.layers.push(this.layer);
-        }
-        if (this.camera.layers.indexOf(this.layer.id) === -1) {
-            this.camera.layers = this.camera.layers.concat(this.layer.id);
-        }
     }
 
     _createGizmo() {
