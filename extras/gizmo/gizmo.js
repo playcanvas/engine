@@ -20,6 +20,20 @@ const PERS_SCALE_RATIO = 0.3;
 const ORTHO_SCALE_RATIO = 0.32;
 
 /**
+ * Local coordinate space.
+ *
+ * @type {string}
+ */
+export const LOCAL_COORD_SPACE = 'local';
+
+/**
+ * World coordinate space.
+ *
+ * @type {string}
+ */
+export const WORLD_COORD_SPACE = 'world';
+
+/**
  * The base class for all gizmos.
  */
 class Gizmo extends EventHandler {
@@ -40,12 +54,12 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space.
+     * Internal version of coordinate space. Defaults to {@link WORLD_COORD_SPACE}.
      *
      * @type {string}
      * @protected
      */
-    _coordSpace = 'world';
+    _coordSpace = WORLD_COORD_SPACE;
 
     /**
      * The application instance containing the gizmo.
@@ -155,7 +169,7 @@ class Gizmo extends EventHandler {
     }
 
     set coordSpace(value) {
-        this._coordSpace = value ?? 'world';
+        this._coordSpace = value ?? WORLD_COORD_SPACE;
         this._updateRotation();
     }
 
@@ -199,7 +213,7 @@ class Gizmo extends EventHandler {
 
     _updateRotation() {
         tmpV1.set(0, 0, 0);
-        if (this._coordSpace === 'local') {
+        if (this._coordSpace === LOCAL_COORD_SPACE) {
             for (let i = 0; i < this.nodes.length; i++) {
                 const node = this.nodes[i];
                 tmpV1.add(node.getEulerAngles());

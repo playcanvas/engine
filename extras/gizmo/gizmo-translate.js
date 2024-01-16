@@ -4,6 +4,7 @@ import {
 } from 'playcanvas';
 
 import { AxisArrow, AxisPlane } from './axis-shapes.js';
+import { LOCAL_COORD_SPACE } from './gizmo.js';
 import { GizmoTransform } from "./gizmo-transform.js";
 
 // temporary variables
@@ -195,7 +196,7 @@ class GizmoTranslate extends GizmoTransform {
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (this._coordSpace === 'local') {
+            if (this._coordSpace === LOCAL_COORD_SPACE) {
                 tmpV1.copy(pointDelta);
                 node.parent.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;
