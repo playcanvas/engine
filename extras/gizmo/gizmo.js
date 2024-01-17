@@ -250,6 +250,7 @@ class Gizmo extends EventHandler {
         const end = this.camera.screenToWorld(x, y, this.camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
+        const selection = [];
         for (let i = 0; i < this.intersectData.length; i++) {
             const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
@@ -262,11 +263,19 @@ class Gizmo extends EventHandler {
                 xdir.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
-                    if (tris[k].intersectRay(xstart, xdir)) {
-                        return meshInstances;
+                    if (tris[k].intersectRay(xstart, xdir, tmpV1)) {
+                        selection.push({
+                            dist: tmpV1.sub(xstart).length(),
+                            meshInstances: meshInstances
+                        });
                     }
                 }
             }
+        }
+
+        if (selection.length) {
+            selection.sort((s0, s1) => s0.dist - s1.dist);
+            return selection[0].meshInstances;
         }
 
         return [];
