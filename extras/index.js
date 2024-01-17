@@ -13,7 +13,7 @@ export { SplatInstance } from './splat/splat-instance.js';
 // render passes
 export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';
 export { RenderPassCompose } from './render-passes/render-pass-compose.js';
-export { RenderPassDownSample } from './render-passes/render-pass-downsample.js';
-export { RenderPassUpSample } from './render-passes/render-pass-upsample.js';
+export { RenderPassDownsample } from './render-passes/render-pass-downsample.js';
+export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
