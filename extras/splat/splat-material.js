@@ -47,12 +47,14 @@ const splatMainFS = `
 const createSplatMaterial = (options = {}) => {
 
     const { debugRender } = options;
-    const dither = options.dither ?? DITHER_NONE;
+
+    const ditherEnum = options.dither ?? DITHER_NONE;
+    const dither = ditherEnum !== DITHER_NONE;
 
     const material = new Material();
     material.name = 'splatMaterial';
     material.cull = debugRender ? CULLFACE_BACK : CULLFACE_NONE;
-    material.blendType = dither === DITHER_NONE ? BLEND_NORMAL : BLEND_NONE;
+    material.blendType = dither ? BLEND_NONE : BLEND_NORMAL;
     material.depthWrite = dither;
 
     material.getShaderVariant = function (device, scene, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
@@ -64,7 +66,7 @@ const createSplatMaterial = (options = {}) => {
             vertex: options.vertex ?? splatMainVS,
             fragment: options.fragment ?? splatMainFS,
             debugRender: debugRender,
-            dither: dither
+            dither: ditherEnum
         };
 
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
