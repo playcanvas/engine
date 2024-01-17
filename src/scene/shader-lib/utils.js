@@ -12,10 +12,15 @@ import { ShaderGenerator } from './programs/shader-generator.js';
  * graphics device.
  * @param {string} vsName - The vertex shader chunk name.
  * @param {string} fsName - The fragment shader chunk name.
- * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader definition.
- * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
+ * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether
+ * to use transform feedback. Defaults to false.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader
+ * definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
+ * feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
+ * output types, which default to vec4. Passing a string will set the output type for all color
+ * attachments. Passing an array will set the output type for each color attachment.
  * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
  */
@@ -54,10 +59,15 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
  * @param {Object<string, string>} [attributes] - Object detailing the mapping of vertex shader
  * attribute names to semantics SEMANTIC_*. This enables the engine to match vertex buffer data as
  * inputs to the shader. Defaults to undefined, which generates the default attributes.
- * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader definition.
- * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
- * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
+ * @param {boolean | Record<string, boolean | string | string[]>} [useTransformFeedback] - Whether
+ * to use transform feedback. Defaults to false.
+ * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader
+ * definition.
+ * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
+ * feedback. Defaults to false.
+ * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
+ * output types, which default to vec4. Passing a string will set the output type for all color
+ * attachments. Passing an array will set the output type for each color attachment.
  * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
  */
