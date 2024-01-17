@@ -1,8 +1,5 @@
-import {
-    SplatData,
-    SplatResource
-} from "playcanvas";
-import { readPly } from './ply-reader.js';
+import { SplatData } from '../../scene/splat/splat-data.js';
+import { SplatResource } from './splat-resource.js';
 
 // filter out element data we're not going to use
 const defaultElements = [
@@ -16,18 +13,18 @@ const defaultElementsSet = new Set(defaultElements);
 const defaultElementFilter = val => defaultElementsSet.has(val);
 
 class PlyParser {
-    /** @type {import('playcanvas').GraphicsDevice} */
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
-    /** @type {import('playcanvas').AssetRegistry} */
+    /** @type {import('../asset/asset-registry.js').AssetRegistry} */
     assets;
 
     /** @type {number} */
     maxRetries;
 
     /**
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
-     * @param {import('playcanvas').AssetRegistry} assets - The asset registry.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      * @param {number} maxRetries - Maximum amount of retries.
      */
     constructor(device, assets, maxRetries) {
@@ -40,9 +37,9 @@ class PlyParser {
      * @param {object} url - The URL of the resource to load.
      * @param {string} url.load - The URL to use for loading the resource.
      * @param {string} url.original - The original URL useful for identifying the resource type.
-     * @param {import('playcanvas').ResourceHandlerCallback} callback - The callback used when
+     * @param {import('../handlers/handler.js').ResourceHandlerCallback} callback - The callback used when
      * the resource is loaded or an error occurs.
-     * @param {import('playcanvas').Asset} asset - Container asset.
+     * @param {import('../asset/asset.js').Asset} asset - Container asset.
      */
     async load(url, callback, asset) {
         const response = await fetch(url.load);
@@ -65,16 +62,16 @@ class PlyParser {
     }
 }
 
-/**
- * @param {import('playcanvas').AppBase} app - The application.
- */
-const registerPlyParser = (app) => {
-    const containerHandler = app.loader.getHandler('container');
-    containerHandler.parsers.ply = new PlyParser(app.graphicsDevice, app.assets, containerHandler.maxRetries);
-};
+// /**
+//  * @param {import('playcanvas').AppBase} app - The application.
+//  */
+// const registerPlyParser = (app) => {
+//     const containerHandler = app.loader.getHandler('container');
+//     containerHandler.parsers.ply = new PlyParser(app.graphicsDevice, app.assets, containerHandler.maxRetries);
+// };
 
-const getDefaultPlyElements = () => {
-    return defaultElements.slice();
-};
+// const getDefaultPlyElements = () => {
+//     return defaultElements.slice();
+// };
 
-export { registerPlyParser, getDefaultPlyElements };
+export { PlyParser /*registerPlyParser, getDefaultPlyElements */};

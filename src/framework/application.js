@@ -59,6 +59,7 @@ import { TemplateHandler } from './handlers/template.js';
 import { TextHandler } from './handlers/text.js';
 import { TextureAtlasHandler } from './handlers/texture-atlas.js';
 import { TextureHandler } from './handlers/texture.js';
+import { PlyHandler } from './handlers/ply.js';
 
 import { XrManager } from './xr/xr-manager.js';
 
@@ -209,7 +210,8 @@ class Application extends AppBase {
             TextureAtlasHandler,
             SpriteHandler,
             TemplateHandler,
-            ContainerHandler
+            ContainerHandler,
+            PlyHandler
         ];
     }
 }

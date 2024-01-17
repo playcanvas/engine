@@ -34,13 +34,13 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         // @ts-ignore
         pc.ContainerHandler,
         // @ts-ignore
-        pc.ScriptHandler
+        pc.ScriptHandler,
+        // @ts-ignore
+        pc.PlyHandler
     ];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
-
-    pcx.registerPlyParser(app);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -54,7 +54,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        biker: new pc.Asset('splat', 'container', { url: assetPath + 'splats/biker.ply' }),
+        biker: new pc.Asset('splat', 'splat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 

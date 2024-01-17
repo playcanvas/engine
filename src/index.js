@@ -174,11 +174,6 @@ export { SplatData } from './scene/splat/splat-data.js';
 export { Splat } from './scene/splat/splat.js';
 export { SplatInstance } from './scene/splat/splat-instance.js';
 
-// temp !@!!!!
-export { SplatResource } from './framework/parsers/splat-resource.js';
-
-
-
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
@@ -314,6 +309,7 @@ export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { PlyHandler } from './framework/handlers/ply.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
