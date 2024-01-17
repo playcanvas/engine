@@ -384,7 +384,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     // create gizmo
     const gizmoHandler = new GizmoHandler(app, camera.camera);
-    gizmoHandler.switch('rotate', [boxA, boxB]);
+    gizmoHandler.switch('translate', [boxA, boxB]);
 
     const tmpC = new pc.Color();
     data.on('*:set', (/** @type {string} */ path, value) => {
