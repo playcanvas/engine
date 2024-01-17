@@ -1,4 +1,4 @@
-import { EventHandler } from 'playcanvas';
+import { EventHandler } from "../../core/event-handler.js";
 
 // sort blind set of data
 function SortWorker() {

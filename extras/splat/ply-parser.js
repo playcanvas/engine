@@ -1,5 +1,7 @@
-import { SplatContainerResource } from './splat-container-resource.js';
-import { SplatData } from './splat-data.js';
+import {
+    SplatData,
+    SplatContainerResource
+} from "playcanvas";
 import { readPly } from './ply-reader.js';
 
 // filter out element data we're not going to use

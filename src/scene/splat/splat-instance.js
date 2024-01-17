@@ -1,14 +1,11 @@
-import {
-    MeshInstance,
-    Mesh,
-    Vec3,
-    Mat4,
-    createBox,
-    BUFFER_DYNAMIC,
-    DITHER_NONE,
-    VertexBuffer
-} from "playcanvas";
-
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { BUFFER_DYNAMIC } from '../../platform/graphics/constants.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { DITHER_NONE } from '../constants.js';
+import { MeshInstance } from '../mesh-instance.js';
+import { Mesh } from '../mesh.js';
+import { createBox } from '../procedural.js';
 import { SplatSorter } from './splat-sorter.js';
 
 const mat = new Mat4();
@@ -26,7 +23,7 @@ class SplatInstance {
     /** @type {MeshInstance} */
     meshInstance;
 
-    /** @type {import('playcanvas').Material} */
+    /** @type {import('../materials/material.js').Material} */
     material;
 
     /** @type {VertexBuffer} */

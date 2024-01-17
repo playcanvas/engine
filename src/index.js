@@ -169,6 +169,16 @@ export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightm
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
+// SCENE / SPLAT
+export { SplatData } from './scene/splat/splat-data.js';
+export { Splat } from './scene/splat/splat.js';
+export { SplatInstance } from './scene/splat/splat-instance.js';
+
+// temp !@!!!!
+export { SplatContainerResource } from './framework/parsers/splat-container-resource.js';
+
+
+
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';

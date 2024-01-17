@@ -1,21 +1,9 @@
-import {
-    ShaderUtils,
-    DITHER_NONE,
-    SEMANTIC_ATTR13,
-    SEMANTIC_POSITION,
-    ShaderGenerator,
-    shaderChunks
-} from "playcanvas";
-
-// extracted from engine, hash.js
-const hashCode = (str) => {
-    let hash = 0;
-    for (let i = 0, len = str.length; i < len; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-    }
-    return hash;
-};
+import { hashCode } from "../../core/hash.js";
+import { SEMANTIC_ATTR13, SEMANTIC_POSITION } from "../../platform/graphics/constants.js";
+import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
+import { DITHER_NONE } from "../constants.js";
+import { shaderChunks } from "../shader-lib/chunks/chunks.js";
+import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
 
 const splatCoreVS = `
     attribute vec3 vertex_position;

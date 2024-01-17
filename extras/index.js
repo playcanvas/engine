@@ -6,9 +6,6 @@ export { GltfExporter } from './exporters/gltf-exporter.js';
 
 // splat
 export { registerPlyParser, getDefaultPlyElements } from './splat/ply-parser.js';
-export { Splat } from './splat/splat.js';
-export { SplatData } from './splat/splat-data.js';
-export { SplatInstance } from './splat/splat-instance.js';
 
 // render passes
 export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';

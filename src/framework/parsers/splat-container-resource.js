@@ -1,25 +1,22 @@
-import {
-    BoundingBox,
-    ContainerResource,
-    Entity
-} from 'playcanvas';
-
-import { Splat } from './splat.js';
-import { SplatInstance } from './splat-instance.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Entity } from '../../framework/entity.js';
+import { ContainerResource } from '../../framework/handlers/container.js';
+import { SplatInstance } from '../../scene/splat/splat-instance.js';
+import { Splat } from '../../scene/splat/splat.js';
 
 class SplatContainerResource extends ContainerResource {
-    /** @type {import('playcanvas').GraphicsDevice} */
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
-    /** @type {import('./splat-data.js').SplatData} */
+    /** @type {import('../../scene/splat/splat-data.js').SplatData} */
     splatData;
 
-    /** @type {Splat} */
-    splat;
+    /** @type {Splat | null} */
+    splat = null;
 
     /**
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
-     * @param {import('./splat-data.js').SplatData} splatData - The splat data.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../../scene/splat/splat-data.js').SplatData} splatData - The splat data.
      */
     constructor(device, splatData) {
         super();
@@ -70,7 +67,7 @@ class SplatContainerResource extends ContainerResource {
     }
 
     /**
-     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @param {import('../../scene/splat/splat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {null} Null.
      */
     instantiateModelEntity(options) {
@@ -78,7 +75,7 @@ class SplatContainerResource extends ContainerResource {
     }
 
     /**
-     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @param {import('../../scene/splat/splat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The GS entity.
      */
     instantiateRenderEntity(options = {}) {
