@@ -10,12 +10,10 @@ samplerTypes[SAMPLETYPE_FLOAT] = 'filtering';
 samplerTypes[SAMPLETYPE_UNFILTERABLE_FLOAT] = 'non-filtering';
 samplerTypes[SAMPLETYPE_DEPTH] = 'comparison';
 
-// Using 'comparison' instead of 'non-filtering' may seem unusual,
-// but currently we will get a validation error if we use 'non-filtering'
-// along with texelFetch/textureLoad. 'comparison' works very well
-//  for the most common use-case of integer textures, texelFetch.
-// We may be able to change how we initialize the sampler elsewhere
-// to support 'non-filtering' in the future.
+// Using 'comparison' instead of 'non-filtering' may seem unusual, but currently we will get a
+// validation error if we use 'non-filtering' along with texelFetch/textureLoad. 'comparison' works
+// very well for the most common use-case of integer textures, texelFetch. We may be able to change
+// how we initialize the sampler elsewhere to support 'non-filtering' in the future.
 samplerTypes[SAMPLETYPE_INT] = 'comparison';
 samplerTypes[SAMPLETYPE_UINT] = 'comparison';
 
