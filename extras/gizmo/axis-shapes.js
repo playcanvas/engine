@@ -278,6 +278,15 @@ class AxisArrow extends AxisShape {
         return this._arrowLength;
     }
 
+    set intersectionTolerance(value) {
+        this._intersectTolerance = value;
+        this._updateLine();
+    }
+
+    get intersectionTolerance() {
+        return this._intersectTolerance;
+    }
+
     _createArrow() {
         this._createRoot('arrow');
 
@@ -415,6 +424,15 @@ class AxisBoxLine extends AxisShape {
         return this._boxSize;
     }
 
+    set intersectionTolerance(value) {
+        this._intersectTolerance = value;
+        this._updateLine();
+    }
+
+    get intersectionTolerance() {
+        return this._intersectTolerance;
+    }
+
     _createBoxLine() {
         this._createRoot('boxLine');
 
@@ -466,7 +484,7 @@ class AxisDisk extends AxisShape {
 
     _lightDir;
 
-    _intersectTolerance = 0.1;
+    _intersectTolerance = 0.05;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -527,6 +545,15 @@ class AxisDisk extends AxisShape {
 
     get ringRadius() {
         return this._ringRadius;
+    }
+
+    set intersectionTolerance(value) {
+        this._intersectTolerance = value;
+        this._updateTransform();
+    }
+
+    get intersectionTolerance() {
+        return this._intersectTolerance;
     }
 
     _updateTransform() {

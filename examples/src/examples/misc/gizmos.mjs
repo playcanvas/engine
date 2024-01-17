@@ -73,7 +73,18 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 })
             )
         ),
-        jsx(Panel, { headerText: 'Mesh' },
+        jsx(Panel, { headerText: 'Intersection' },
+            jsx(LabelGroup, { text: 'Tolerance' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'gizmo.intersectionTolerance' },
+                    min: 0,
+                    max: 0.5,
+                    precision: 2
+                })
+            )
+        ),
+        jsx(Panel, { headerText: 'Render' },
             (type === 'translate' || type === 'scale') &&
                 jsx(LabelGroup, { text: 'Gap' },
                     jsx(SliderInput, {
@@ -243,6 +254,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
                 coordSpace: gizmo.coordSpace,
+                intersectionTolerance: gizmo.intersectionTolerance,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,
                 axisLineLength: gizmo.axisLineLength,

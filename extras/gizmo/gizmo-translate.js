@@ -173,6 +173,14 @@ class GizmoTranslate extends GizmoTransform {
         return this._shapes.yz.gap;
     }
 
+    set intersectionTolerance(value) {
+        this._setArrowProp('intersectionTolerance', value);
+    }
+
+    get intersectionTolerance() {
+        return this._shapes.x.intersectionTolerance;
+    }
+
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
