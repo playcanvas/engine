@@ -195,13 +195,13 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.face.ringRadius;
     }
 
-    set intersectionTolerance(value) {
-        this._setDiskProp('intersectionTolerance', value);
-        this._shapes.face.intersectionTolerance = value;
+    set ringTolerance(value) {
+        this._setDiskProp('tolerance', value);
+        this._shapes.face.tolerance = value;
     }
 
-    get intersectionTolerance() {
-        return this._shapes.x.intersectionTolerance;
+    get ringTolerance() {
+        return this._shapes.x.tolerance;
     }
 
     _setDiskProp(prop, value) {

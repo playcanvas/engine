@@ -484,9 +484,9 @@ class GizmoTransform extends Gizmo {
         material.emissive = color;
         material.emissiveVertexColor = true;
         material.cull = cull;
+        material.blendType = BLEND_NORMAL;
         if (color.a !== 1) {
             material.opacity = color.a;
-            material.blendType = BLEND_NORMAL;
         }
         return material;
     }

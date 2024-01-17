@@ -171,6 +171,14 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.lineLength;
     }
 
+    set axisLineTolerance(value) {
+        this._setArrowProp('tolerance', value);
+    }
+
+    get axisLineTolerance() {
+        return this._shapes.x.tolerance;
+    }
+
     set axisBoxSize(value) {
         this._setArrowProp('boxSize', value);
     }
@@ -203,13 +211,14 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.xyz.size;
     }
 
-    set intersectionTolerance(value) {
-        this._setArrowProp('intersectionTolerance', value);
+    set axisCenterTolerance(value) {
+        this._shapes.xyz.tolerance = value;
     }
 
-    get intersectionTolerance() {
-        return this._shapes.x.intersectionTolerance;
+    get axisCenterTolerance() {
+        return this._shapes.xyz.tolerance;
     }
+
 
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;

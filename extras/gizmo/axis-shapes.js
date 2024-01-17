@@ -217,7 +217,7 @@ class AxisArrow extends AxisShape {
 
     _arrowLength = 0.2;
 
-    _intersectTolerance = 0.1;
+    _tolerance = 0.1;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -278,13 +278,13 @@ class AxisArrow extends AxisShape {
         return this._arrowLength;
     }
 
-    set intersectionTolerance(value) {
-        this._intersectTolerance = value;
+    set tolerance(value) {
+        this._tolerance = value;
         this._updateLine();
     }
 
-    get intersectionTolerance() {
-        return this._intersectTolerance;
+    get tolerance() {
+        return this._tolerance;
     }
 
     _createArrow() {
@@ -318,7 +318,7 @@ class AxisArrow extends AxisShape {
         // intersect
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
-        tmpV2.set(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
+        tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
         this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
@@ -329,6 +329,8 @@ class AxisArrow extends AxisShape {
 
 class AxisBoxCenter extends AxisShape {
     _size = 0.14;
+
+    _tolerance = 0.05;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -357,8 +359,24 @@ class AxisBoxCenter extends AxisShape {
         return this._size;
     }
 
+    set tolerance(value) {
+        this._tolerance = value;
+        this._updateTransform();
+    }
+
+    get tolerance() {
+        return this._tolerance;
+    }
+
     _updateTransform() {
-        // intersect/render
+        // intersect
+        const iSize = (this._size + this._tolerance) / this._size;
+        tmpV1.set(0, 0, 0);
+        tmpQ1.set(0, 0, 0, 1);
+        tmpV2.set(iSize, iSize, iSize);
+        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
+
+        // render
         this.entity.setLocalScale(this._size, this._size, this._size);
     }
 }
@@ -372,7 +390,7 @@ class AxisBoxLine extends AxisShape {
 
     _boxSize = 0.14;
 
-    _intersectTolerance = 0.1;
+    _tolerance = 0.1;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -424,13 +442,13 @@ class AxisBoxLine extends AxisShape {
         return this._boxSize;
     }
 
-    set intersectionTolerance(value) {
-        this._intersectTolerance = value;
+    set tolerance(value) {
+        this._tolerance = value;
         this._updateLine();
     }
 
-    get intersectionTolerance() {
-        return this._intersectTolerance;
+    get tolerance() {
+        return this._tolerance;
     }
 
     _createBoxLine() {
@@ -466,7 +484,7 @@ class AxisBoxLine extends AxisShape {
         // intersect
         tmpV1.set(0, this._gap + this._lineLength * 0.5, 0);
         tmpQ1.set(0, 0, 0, 1);
-        tmpV2.set(this._lineThickness + this._intersectTolerance, this._lineLength, this._lineThickness + this._intersectTolerance);
+        tmpV2.set(this._lineThickness + this._tolerance, this._lineLength, this._lineThickness + this._tolerance);
         this.meshTriDataList[1].setTransform(tmpV1, tmpQ1, tmpV2);
 
         // render
@@ -484,7 +502,7 @@ class AxisDisk extends AxisShape {
 
     _lightDir;
 
-    _intersectTolerance = 0.05;
+    _tolerance = 0.05;
 
     constructor(device, options = {}) {
         super(device, options);
@@ -502,7 +520,7 @@ class AxisDisk extends AxisShape {
 
     _createIntersectTorus() {
         return createTorus(this.device, {
-            tubeRadius: this._tubeRadius + this._intersectTolerance,
+            tubeRadius: this._tubeRadius + this._tolerance,
             ringRadius: this._ringRadius,
             sectorAngle: this._sectorAngle,
             segments: TORUS_INTERSECT_SEGMENTS
@@ -547,13 +565,13 @@ class AxisDisk extends AxisShape {
         return this._ringRadius;
     }
 
-    set intersectionTolerance(value) {
-        this._intersectTolerance = value;
+    set tolerance(value) {
+        this._tolerance = value;
         this._updateTransform();
     }
 
-    get intersectionTolerance() {
-        return this._intersectTolerance;
+    get tolerance() {
+        return this._tolerance;
     }
 
     _updateTransform() {

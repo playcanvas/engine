@@ -74,15 +74,36 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             )
         ),
         jsx(Panel, { headerText: 'Intersection' },
-            jsx(LabelGroup, { text: 'Tolerance' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.intersectionTolerance' },
-                    min: 0,
-                    max: 0.5,
-                    precision: 2
-                })
-            )
+            (type === 'translate' || type === 'scale') &&
+                jsx(LabelGroup, { text: 'Line Tolerance' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisLineTolerance' },
+                        min: 0,
+                        max: 0.5,
+                        precision: 2
+                    })
+                ),
+            type === 'scale' &&
+                jsx(LabelGroup, { text: 'Center Tolerance' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.axisCenterTolerance' },
+                        min: 0,
+                        max: 0.5,
+                        precision: 2
+                    })
+                ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Ring Tolerance' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.ringTolerance' },
+                        min: 0,
+                        max: 0.5,
+                        precision: 2
+                    })
+                )
         ),
         jsx(Panel, { headerText: 'Render' },
             (type === 'translate' || type === 'scale') &&
@@ -254,7 +275,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
                 coordSpace: gizmo.coordSpace,
-                intersectionTolerance: gizmo.intersectionTolerance,
+                axisLineTolerance: gizmo.axisLineTolerance,
+                axisCenterTolerance: gizmo.axisCenterTolerance,
+                ringTolerance: gizmo.ringTolerance,
                 axisGap: gizmo.axisGap,
                 axisLineThickness: gizmo.axisLineThickness,
                 axisLineLength: gizmo.axisLineLength,
