@@ -53,6 +53,28 @@ export const EVENT_MOUSEUP = 'mouseup';
 export const EVENT_MOUSEWHEEL = 'mousewheel';
 
 /**
+ * Name of event fired when the mouse moves out of `Mouse#_target`.
+ *
+ * This also fires upon:
+ *  - entering DOM elements on top of `Mouse#_target`
+ *  - moving out of an unfocused PlayCanvas browser window so you may want to check for focus
+ *    with {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/hasFocus document.hasFocus()}.
+ *
+ * @type {string}
+ */
+export const EVENT_MOUSEOUT = 'mouseout';
+
+/**
+ * Name of event fired when the mouse enters `Mouse#_target`.
+ *
+ * This also fires upon entering an unfocused PlayCanvas browser window so you may want to check for focus
+ * with {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/hasFocus document.hasFocus()}.
+ *
+ * @type {string}
+ */
+export const EVENT_MOUSEENTER = 'mouseenter';
+
+/**
  * Name of event fired when a new touch occurs. For example, a finger is placed on the device.
  *
  * @type {string}
