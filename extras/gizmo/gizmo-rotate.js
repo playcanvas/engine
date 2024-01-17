@@ -90,7 +90,7 @@ class GizmoRotate extends GizmoTransform {
      * @type {Vec3}
      * @private
      */
-    _guideAngleStartColor = Color.WHITE;
+    _guideAngleStartColor = new Color(0, 0, 0, 0.3);
 
     /**
      * Internal vector for the start point of the guide line angle.
