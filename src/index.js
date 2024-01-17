@@ -175,7 +175,7 @@ export { Splat } from './scene/splat/splat.js';
 export { SplatInstance } from './scene/splat/splat-instance.js';
 
 // temp !@!!!!
-export { SplatContainerResource } from './framework/parsers/splat-container-resource.js';
+export { SplatResource } from './framework/parsers/splat-resource.js';
 
 
 

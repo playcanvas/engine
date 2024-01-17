@@ -1,10 +1,9 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
-import { Entity } from '../../framework/entity.js';
-import { ContainerResource } from '../../framework/handlers/container.js';
+import { Entity } from '../entity.js';
 import { SplatInstance } from '../../scene/splat/splat-instance.js';
 import { Splat } from '../../scene/splat/splat.js';
 
-class SplatContainerResource extends ContainerResource {
+class SplatResource {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
@@ -19,8 +18,6 @@ class SplatContainerResource extends ContainerResource {
      * @param {import('../../scene/splat/splat-data.js').SplatData} splatData - The splat data.
      */
     constructor(device, splatData) {
-        super();
-
         this.device = device;
         this.splatData = splatData.isCompressed ? splatData.decompress() : splatData;
     }
@@ -68,14 +65,6 @@ class SplatContainerResource extends ContainerResource {
 
     /**
      * @param {import('../../scene/splat/splat-material.js').SplatMaterialOptions} [options] - The options.
-     * @returns {null} Null.
-     */
-    instantiateModelEntity(options) {
-        return null;
-    }
-
-    /**
-     * @param {import('../../scene/splat/splat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The GS entity.
      */
     instantiateRenderEntity(options = {}) {
@@ -116,4 +105,4 @@ class SplatContainerResource extends ContainerResource {
     }
 }
 
-export { SplatContainerResource };
+export { SplatResource };

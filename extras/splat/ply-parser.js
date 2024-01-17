@@ -1,6 +1,6 @@
 import {
     SplatData,
-    SplatContainerResource
+    SplatResource
 } from "playcanvas";
 import { readPly } from './ply-reader.js';
 
@@ -48,7 +48,7 @@ class PlyParser {
         const response = await fetch(url.load);
         readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
             .then((response) => {
-                callback(null, new SplatContainerResource(this.device, new SplatData(response)));
+                callback(null, new SplatResource(this.device, new SplatData(response)));
             })
             .catch((err) => {
                 callback(err, null);
@@ -57,8 +57,8 @@ class PlyParser {
 
     /**
      * @param {string} url - The URL.
-     * @param {SplatContainerResource} data - The data.
-     * @returns {SplatContainerResource} Return the data.
+     * @param {SplatResource} data - The data.
+     * @returns {SplatResource} Return the data.
      */
     open(url, data) {
         return data;
