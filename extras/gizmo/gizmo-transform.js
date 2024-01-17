@@ -333,6 +333,7 @@ class GizmoTransform extends Gizmo {
             return;
         }
         this._hoverAxis = this._getAxis(meshInstance);
+        this._hoverIsPlane = this._getIsPlane(meshInstance);
         const shape = this._hoverShapeMap.get(meshInstance);
         if (shape === this._hoverShape) {
             return;
