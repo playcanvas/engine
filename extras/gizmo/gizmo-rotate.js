@@ -1,5 +1,6 @@
 import {
     math,
+    Color,
     Quat,
     Mat4,
     Vec3
@@ -84,6 +85,22 @@ class GizmoRotate extends GizmoTransform {
     _nodeOffsets = new Map();
 
     /**
+     * Internal color for guide angle starting line.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _guideAngleStartColor = Color.WHITE;
+
+    /**
+     * Internal vector for the start point of the guide line angle.
+     *
+     * @type {Vec3}
+     * @private
+     */
+    _guideAngleStart = new Vec3();
+
+    /**
      * Internal vector for the end point of the guide line angle.
      *
      * @type {Vec3}
@@ -109,7 +126,8 @@ class GizmoRotate extends GizmoTransform {
 
         this.on('transform:start', () => {
             this._storeNodeRotations();
-            this._updateGuideAngleEnd(this._selectionStartPoint);
+            this._updateGuideAngle(this._selectionStartPoint, this._guideAngleStart);
+            this._updateGuideAngle(this._selectionStartPoint, this._guideAngleEnd);
             this._drag(true);
         });
 
@@ -118,7 +136,7 @@ class GizmoRotate extends GizmoTransform {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
             this._setNodeRotations(this._selectedAxis, angleDelta);
-            this._updateGuideAngleEnd(pointLast);
+            this._updateGuideAngle(pointLast, this._guideAngleEnd);
         });
 
         this.on('transform:end', () => {
@@ -138,7 +156,9 @@ class GizmoRotate extends GizmoTransform {
 
             if (this._dragging) {
                 const gizmoPos = this.gizmo.getPosition();
-                this._drawGuideAngleLine(gizmoPos, this._selectedAxis);
+                this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
+                                         this._guideAngleStart, this._guideAngleStartColor);
+                this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
             }
         });
     }
@@ -181,18 +201,18 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.z[prop] = value;
     }
 
-    _updateGuideAngleEnd(point) {
+    _updateGuideAngle(point, out) {
         const axis = this._selectedAxis;
         const scale = axis === 'face' ? this.faceRingRadius : this.xyzRingRadius;
-        this._guideAngleEnd.copy(point).normalize();
-        this._guideAngleEnd.scale(scale);
-        this._gizmoRotationStart.transformVector(this._guideAngleEnd, this._guideAngleEnd);
+        out.copy(point).normalize();
+        out.scale(scale);
+        this._gizmoRotationStart.transformVector(out, out);
     }
 
-    _drawGuideAngleLine(pos, axis) {
+    _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
         tmpV1.set(0, 0, 0);
-        tmpV2.copy(this._guideAngleEnd).scale(this._scale);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], false, this.layer);
+        tmpV2.copy(point).scale(this._scale);
+        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this.layer);
     }
 
     _getLookAtEulerAngles(position) {
@@ -200,7 +220,7 @@ class GizmoRotate extends GizmoTransform {
         tmpM1.setLookAt(tmpV1, position, Vec3.UP);
         tmpQ1.setFromMat4(tmpM1);
         tmpQ1.getEulerAngles(tmpV1);
-        tmpV1.x += 90;
+        tmpV1.x -= 90;
         return tmpV1;
     }
 
