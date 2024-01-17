@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
 
@@ -51,7 +51,15 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     max: 10,
                     precision: 0
                 })
-            )
+            ),
+            type === 'rotate' &&
+                jsx(LabelGroup, { text: 'Legacy Rotation' },
+                    jsx(BooleanInput, {
+                        type: 'toggle',
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.legacyRotation' }
+                    })
+                )
         ),
         jsx(Panel, { headerText: 'Color' },
             jsx(LabelGroup, { text: 'X Axis' },
@@ -271,6 +279,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 type: type,
                 size: gizmo.size,
                 snapIncrement: gizmo.snapIncrement,
+                legacyRotation: gizmo.legacyRotation,
                 xAxisColor: Object.values(gizmo.xAxisColor),
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
@@ -386,6 +395,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     });
     boxA.setPosition(0.5, 0, -0.5);
     app.root.addChild(boxA);
+
     const boxB = new pc.Entity('cubeB');
     boxB.addComponent('render', {
         type: 'box'

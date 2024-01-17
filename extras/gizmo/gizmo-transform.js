@@ -22,6 +22,7 @@ const pointDelta = new Vec3();
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
 const SPANLINE_SIZE = 1e3;
+const ROTATE_SCALE = 900;
 
 const RED_COLOR = new Color(1, 0.3, 0.3);
 const SEMI_RED_COLOR = new Color(1, 0.3, 0.3, 0.6);
@@ -204,6 +205,13 @@ class GizmoTransform extends Gizmo {
     snapIncrement = 1;
 
     /**
+     * Use legacy rotation calculation. Defaults to false.
+     *
+     * @type {boolean}
+     */
+    legacyRotation = false;
+
+    /**
      * Creates a new GizmoTransform object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
@@ -246,7 +254,7 @@ class GizmoTransform extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
                 const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire('transform:move', pointDelta, angleDelta, pointInfo.point, pointInfo.angle);
+                this.fire('transform:move', pointDelta, angleDelta);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }
@@ -423,23 +431,29 @@ class GizmoTransform extends Gizmo {
             }
         }
 
-        // calculate angle based on axis
+        // calculate angle
         let angle = 0;
         if (isRotation) {
-            switch (axis) {
-                case 'x':
-                    angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
-                    break;
-                case 'y':
-                    angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
-                    break;
-                case 'z':
-                    angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
-                    break;
-                case 'face':
-                    cameraRot.invert().transformVector(point, tmpV1);
-                    angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
-                    break;
+            if (this.legacyRotation || isFacing) {
+                switch (axis) {
+                    case 'x':
+                        angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
+                        break;
+                    case 'y':
+                        angle = Math.atan2(point.x, point.z) * math.RAD_TO_DEG;
+                        break;
+                    case 'z':
+                        angle = Math.atan2(point.y, point.x) * math.RAD_TO_DEG;
+                        break;
+                    case 'face':
+                        cameraRot.invert().transformVector(point, tmpV1);
+                        angle = Math.atan2(tmpV1.y, tmpV1.x) * math.RAD_TO_DEG;
+                        break;
+                }
+            } else {
+                tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
+                tmpV2.cross(planeNormal, tmpV1).normalize();
+                angle = mouseWPos.dot(tmpV2) * ROTATE_SCALE;
             }
         }
 

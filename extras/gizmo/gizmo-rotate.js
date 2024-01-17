@@ -125,18 +125,43 @@ class GizmoRotate extends GizmoTransform {
         this._createTransform();
 
         this.on('transform:start', () => {
+            const axis = this._selectedAxis;
+            const isFacing = axis === 'face';
+            const scale = isFacing ? this.faceRingRadius : this.xyzRingRadius;
+
             this._storeNodeRotations();
-            this._updateGuideAngle(this._selectionStartPoint, this._guideAngleStart);
-            this._updateGuideAngle(this._selectionStartPoint, this._guideAngleEnd);
+
+            // guide angle line start
+            this._guideAngleStart.copy(this._selectionStartPoint).normalize();
+            this._guideAngleStart.scale(scale);
+            this._gizmoRotationStart.transformVector(this._guideAngleStart, this._guideAngleStart);
+            this._guideAngleEnd.copy(this._guideAngleStart);
+
+            // drag handle for disk (arc <-> circle)
             this._drag(true);
         });
 
-        this.on('transform:move', (pointDelta, angleDelta, pointLast) => {
+        this.on('transform:move', (pointDelta, angleDelta) => {
+            const gizmoPos = this.gizmo.getPosition();
+            const cameraPos = this.camera.entity.getPosition();
+            const axis = this._selectedAxis;
+            const isFacing = axis === 'face';
+
             if (this.snap) {
                 angleDelta = Math.round(angleDelta / this.snapIncrement) * this.snapIncrement;
             }
-            this._setNodeRotations(this._selectedAxis, angleDelta);
-            this._updateGuideAngle(pointLast, this._guideAngleEnd);
+            this._setNodeRotations(axis, angleDelta);
+
+            // guide angle line update rotation
+            tmpV1.set(0, 0, 0);
+            if (isFacing) {
+                tmpV1.copy(cameraPos).sub(gizmoPos).normalize();
+            } else {
+                tmpV1[axis] = 1;
+            }
+            this._gizmoRotationStart.transformVector(tmpV1, tmpV1);
+            tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
+            tmpQ1.transformVector(this._guideAngleStart, this._guideAngleEnd);
         });
 
         this.on('transform:end', () => {
@@ -208,14 +233,6 @@ class GizmoRotate extends GizmoTransform {
         this._shapes.x[prop] = value;
         this._shapes.y[prop] = value;
         this._shapes.z[prop] = value;
-    }
-
-    _updateGuideAngle(point, out) {
-        const axis = this._selectedAxis;
-        const scale = axis === 'face' ? this.faceRingRadius : this.xyzRingRadius;
-        out.copy(point).normalize();
-        out.scale(scale);
-        this._gizmoRotationStart.transformVector(out, out);
     }
 
     _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
