@@ -94,9 +94,13 @@ class RenderPassShaderQuad extends RenderPass {
      *
      * @param {string} name - A name of the shader.
      * @param {string} fs - Fragment shader source code.
-     * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the shader definition.
-     * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
-     * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader output types, which default to vec4. Passing a string will set the output type for all color attachments. Passing an array will set the output type for each color attachment.
+     * @param {object} [shaderDefinitionOptions] - Additional options that will be added to the
+     * shader definition.
+     * @param {boolean} [shaderDefinitionOptions.useTransformFeedback] - Whether to use transform
+     * feedback. Defaults to false.
+     * @param {string | string[]} [shaderDefinitionOptions.fragmentOutputTypes] - Fragment shader
+     * output types, which default to vec4. Passing a string will set the output type for all color
+     * attachments. Passing an array will set the output type for each color attachment.
      * @returns {object} Returns the created shader.
      */
     createQuadShader(name, fs, shaderDefinitionOptions = {}) {
