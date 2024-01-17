@@ -178,14 +178,6 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     link: { observer, path: 'camera.proj' }
                 })
             ),
-            jsx(LabelGroup, { text: 'Distance' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.dist' },
-                    min: 1,
-                    max: 10
-                })
-            ),
             jsx(LabelGroup, { text: 'FOV' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
@@ -334,7 +326,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     // assets
     const assets = {
-        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/fly-camera.js' })
+        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
     /**
@@ -378,9 +370,10 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         clearColor: new pc.Color(0.5, 0.6, 0.9)
     });
     camera.addComponent("script");
-    camera.script.create("flyCamera");
-    camera.setPosition(5, 3, 5);
-    camera.lookAt(0, 0, 0);
+    camera.script.create("orbitCamera");
+    camera.script.create("orbitCameraInputMouse");
+    camera.script.create("orbitCameraInputTouch");
+    camera.rotate(-20, 45, 0);
     app.root.addChild(camera);
 
     // create directional light entity
@@ -402,9 +395,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 switch (pathArray[1]) {
                     case 'proj':
                         camera.camera.projection = value - 1;
-                        break;
-                    case 'dist':
-                        camera.setPosition(5 * value, 3 * value, 5 * value);
                         break;
                     case 'fov':
                         camera.camera.fov = value;
