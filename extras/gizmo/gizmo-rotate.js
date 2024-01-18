@@ -246,7 +246,7 @@ class GizmoRotate extends GizmoTransform {
         tmpM1.setLookAt(tmpV1, position, Vec3.UP);
         tmpQ1.setFromMat4(tmpM1);
         tmpQ1.getEulerAngles(tmpV1);
-        tmpV1.x -= 90;
+        tmpV1.x += 90;
         return tmpV1;
     }
 

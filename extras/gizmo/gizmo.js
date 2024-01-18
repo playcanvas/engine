@@ -222,15 +222,11 @@ class Gizmo extends EventHandler {
     _updateRotation() {
         tmpV1.set(0, 0, 0);
         if (this._coordSpace === LOCAL_COORD_SPACE) {
-            for (let i = 0; i < this.nodes.length; i++) {
-                const node = this.nodes[i];
-                tmpV1.add(node.getEulerAngles());
-            }
-            tmpV1.scale(1.0 / (this.nodes.length || 1));
+            tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
         this.gizmo.setEulerAngles(tmpV1);
 
-        this.fire('eulerAngles:set', tmpV1);
+        this.fire('rotation:set', tmpV1);
     }
 
     _updateScale() {
