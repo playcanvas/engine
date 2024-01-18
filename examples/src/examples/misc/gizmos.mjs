@@ -51,15 +51,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     max: 10,
                     precision: 0
                 })
-            ),
-            type === 'rotate' &&
-                jsx(LabelGroup, { text: 'Legacy Rotation' },
-                    jsx(BooleanInput, {
-                        type: 'toggle',
-                        binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.useLegacyRotation' }
-                    })
-                )
+            )
         ),
         jsx(Panel, { headerText: 'Color' },
             jsx(LabelGroup, { text: 'X Axis' },
@@ -287,7 +279,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 type: type,
                 size: gizmo.size,
                 snapIncrement: gizmo.snapIncrement,
-                useLegacyRotation: gizmo.useLegacyRotation,
                 xAxisColor: Object.values(gizmo.xAxisColor),
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),

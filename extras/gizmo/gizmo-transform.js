@@ -206,13 +206,6 @@ class GizmoTransform extends Gizmo {
     snapIncrement = 1;
 
     /**
-     * Use legacy rotation calculation. Defaults to false.
-     *
-     * @type {boolean}
-     */
-    useLegacyRotation = false;
-
-    /**
      * Creates a new GizmoTransform object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
@@ -436,13 +429,11 @@ class GizmoTransform extends Gizmo {
         let angle = 0;
         if (isRotation) {
             let isAxisFacing = isFacing;
-            if (!this.useLegacyRotation) {
-                tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
-                tmpV2.cross(planeNormal, tmpV1);
-                isAxisFacing ||= tmpV2.length() < FACING_EPSILON;
-            }
+            tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
+            tmpV2.cross(planeNormal, tmpV1);
+            isAxisFacing ||= tmpV2.length() < FACING_EPSILON;
 
-            if (this.useLegacyRotation || isAxisFacing) {
+            if (isAxisFacing) {
                 switch (axis) {
                     case 'x':
                         angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
