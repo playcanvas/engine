@@ -328,7 +328,7 @@ class GltfExporter extends CoreExporter {
 
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
-            if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+            if (textureIndex < 0) console.warn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
                 index: textureIndex
             };
