@@ -887,3 +887,24 @@ export const SKYTYPE_BOX = 'box';
  * @type {string}
  */
 export const SKYTYPE_DOME = 'dome';
+
+/**
+ * Opacity dithering is disabled.
+ *
+ * @type {string}
+ */
+export const DITHER_NONE = 'none';
+
+/**
+ * Opacity is dithered using a Bayer 8 matrix.
+ *
+ * @type {string}
+ */
+export const DITHER_BAYER8 = 'bayer8';
+
+/**
+ * Opacity is dithered using a blue noise texture.
+ *
+ * @type {string}
+ */
+export const DITHER_BLUENOISE = 'bluenoise';
