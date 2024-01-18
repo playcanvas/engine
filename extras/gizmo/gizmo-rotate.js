@@ -61,17 +61,17 @@ class GizmoRotate extends GizmoTransform {
     _isRotation = true;
 
     /**
-     * Internal mapping from each attached node to their starting rotation (euler angles) in local space.
+     * Internal mapping from each attached node to their starting rotation in local space.
      *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @type {Map<import('playcanvas').GraphNode, Quat>}
      * @private
      */
     _nodeLocalRotations = new Map();
 
     /**
-     * Internal mapping from each attached node to their starting rotation (euler angles) in world space.
+     * Internal mapping from each attached node to their starting rotation in world space.
      *
-     * @type {Map<import('playcanvas').GraphNode, Vec3>}
+     * @type {Map<import('playcanvas').GraphNode, Quat>}
      * @private
      */
     _nodeRotations = new Map();
