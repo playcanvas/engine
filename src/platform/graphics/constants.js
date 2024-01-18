@@ -786,23 +786,23 @@ export const pixelFormatInfo = new Map([
 
     // uncompressed integer formats (Not supported on WebGL1)
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
-    [PIXELFORMAT_R8U,     { name: 'R8U', size: 1, isInt: true }],
+    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isInt: true }],
     [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
-    [PIXELFORMAT_R16U,    { name: 'R16UI', size: 2, isInt: true }],
+    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isInt: true }],
     [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
-    [PIXELFORMAT_R32U,    { name: 'R32UI', size: 4, isInt: true }],
+    [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isInt: true }],
     [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
-    [PIXELFORMAT_RG8U,    { name: 'RG8UI', size: 2, isInt: true }],
+    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isInt: true }],
     [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG16U,   { name: 'RG16UI', size: 4, isInt: true }],
+    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isInt: true }],
     [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
-    [PIXELFORMAT_RG32U,   { name: 'RG32UI', size: 8, isInt: true }],
+    [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
-    [PIXELFORMAT_RGBA8U,  { name: 'RGBA8UI', size: 4, isInt: true }],
+    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isInt: true }],
     [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA16U, { name: 'RGBA16UI', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
-    [PIXELFORMAT_RGBA32U, { name: 'RGBA32UI', size: 16, isInt: true }]
+    [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isInt: true }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
