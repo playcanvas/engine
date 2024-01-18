@@ -21,6 +21,7 @@ const pointDelta = new Vec3();
 
 // constants
 const VEC3_AXES = Object.keys(tmpV1);
+const FACING_EPSILON = 0.2;
 const SPANLINE_SIZE = 1e3;
 const ROTATE_SCALE = 900;
 
@@ -434,7 +435,14 @@ class GizmoTransform extends Gizmo {
         // calculate angle
         let angle = 0;
         if (isRotation) {
-            if (this.useLegacyRotation || isFacing) {
+            let isAxisFacing = isFacing;
+            if (!this.useLegacyRotation) {
+                tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
+                tmpV2.cross(planeNormal, tmpV1);
+                isAxisFacing ||= tmpV2.length() < FACING_EPSILON;
+            }
+
+            if (this.useLegacyRotation || isAxisFacing) {
                 switch (axis) {
                     case 'x':
                         angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;
@@ -451,9 +459,7 @@ class GizmoTransform extends Gizmo {
                         break;
                 }
             } else {
-                tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
-                tmpV2.cross(planeNormal, tmpV1).normalize();
-                angle = mouseWPos.dot(tmpV2) * ROTATE_SCALE;
+                angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
             }
         }
 
