@@ -69,14 +69,14 @@ function generateExampleFile(category, example, exampleClass) {
         <div id="app">
             <div id="appInner">
                 <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
-                <div style="width:100%; position:absolute; top:10px">
+                ${exampleClass.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
                     <div style="text-align: center;">
                         <a id="ar-link" rel="ar" download="asset.usdz">
                             <img src="./arkit.png" id="button" width="200"/>
                         </a>    
                     </div>
-                </div>
-                <canvas id='application-canvas'></canvas>
+                </div>` : ''}
+                ${exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>'}
             </div>
         </div>
         <script src='./playcanvas-observer.js'></script>
@@ -171,6 +171,7 @@ ${exampleClass.example.toString()}
             }
             return specifiedEngine;
         }
+        let app;
         let ready = false; // Used in indicate if UI can render Controls
         let started = false;
         let miniStats;
@@ -206,13 +207,12 @@ ${exampleClass.example.toString()}
          */
         function showStats() {
             // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
-            if (${Boolean(exampleClass.MINISTATS)}) {
+            if (${Boolean(exampleClass.NO_MINISTATS)}) {
                 return;
             }
             if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
                 return;
             }
-            const { app } = pc;
             const deviceType = app?.graphicsDevice?.deviceType;
             if (deviceType === 'null') {
                 return;
@@ -240,7 +240,6 @@ ${exampleClass.example.toString()}
             miniStats = null;
             // Can't call app.destroy() twice without an error,
             // so we check for app.graphicsDevice first
-            const app = window.pc?.app;
             if (app && app.graphicsDevice) {
                 app.destroy();
             }
@@ -270,7 +269,7 @@ ${exampleClass.example.toString()}
         }
         function updateActiveDevice() {
             const event = new CustomEvent("updateActiveDevice", {
-                detail: pc.app.graphicsDevice.deviceType
+                detail: app.graphicsDevice.deviceType
             });
             window.top.dispatchEvent(event);
         }
@@ -292,12 +291,17 @@ ${exampleClass.example.toString()}
             }
             if (!started) {
                 // console.log("Dispatch exampleLoading!");
-                const event = new CustomEvent("exampleLoading"); // just notify to clean UI, but not during hot-reload
+                // just notify to clean UI, but not during hot-reload
+                const event = new CustomEvent("exampleLoading", {
+                    detail: {
+                        showDeviceSelector: ${Boolean(exampleClass.NO_DEVICE_SELECTOR !== true)},
+                    }
+                });
                 window.top.dispatchEvent(event);
             }
             const example = resolveFunction(files['example.mjs']);
             files['example.mjs'] = files['example.mjs'].toString();
-            const app = await example({
+            app = await example({
                 canvas,
                 deviceType,
                 data,
@@ -316,6 +320,7 @@ ${exampleClass.example.toString()}
                 constructor(deviceType) {
                     super("exampleLoad");
                     this.files = files;
+                    this.description = ${JSON.stringify(exampleClass.DESCRIPTION || '')};
                 }
             }
             const finalFunc = () => {
@@ -335,10 +340,19 @@ ${exampleClass.example.toString()}
             // Wait until example has called app.start()
             // And if it already called start, we will know by app.frame > 0
             // app.start() is called when assets loaded in examples
-            if (app.frame) { // app already started
-                finalFunc();
-            } else { // Wait for app.start()
-                app.once('start', finalFunc);
+            if (app) {
+                if (app.frame) { // app already started
+                    finalFunc();
+                } else { // Wait for app.start()
+                    app.once('start', finalFunc);
+                }
+            } else {
+                // The example function didn't return an app instance
+                // still update the UI and assume it has started.
+                window.top.dispatchEvent(new ExampleLoadEvent());
+                started = true;
+                updateControls();
+                allowRestart = true;
             }
         }
         window.onload = () => main(files);

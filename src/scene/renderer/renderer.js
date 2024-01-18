@@ -2,6 +2,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
@@ -37,6 +38,8 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
+import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
 const boneTextureSize = [0, 0, 0, 0];
@@ -48,6 +51,7 @@ const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
+const _tempVec4 = new Vec4();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -143,6 +147,8 @@ class Renderer {
      */
     dirLightShadows = new Map();
 
+    blueNoise = new BlueNoise(123);
+
     /**
      * Create a new instance.
      *
@@ -215,6 +221,9 @@ class Renderer {
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
         this.viewIndex = scope.resolve('view_index');
+
+        this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
+        this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -367,6 +376,7 @@ class Renderer {
 
             // camera jitter
             const { jitter } = camera;
+            let noise = Vec4.ZERO;
             if (jitter > 0) {
 
                 // render target size
@@ -387,7 +397,12 @@ class Renderer {
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
                 projMatSkybox.data[8] = offsetX;
                 projMatSkybox.data[9] = offsetY;
+
+                // blue noise vec4 - only set when jitter is enabled
+                noise = this.blueNoise.vec4(_tempVec4);
             }
+
+            this.blueNoiseJitterId.setValue([noise.x, noise.y, noise.z, noise.w]);
 
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
@@ -1208,6 +1223,11 @@ class Renderer {
         _tempSet.clear();
     }
 
+    updateFrameUniforms() {
+        // blue noise texture
+        this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
+    }
+
     /**
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
@@ -1257,6 +1277,8 @@ class Renderer {
             scene.updateShaders = false;
             scene._shaderVersion++;
         }
+
+        this.updateFrameUniforms();
 
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
         this.updateCpuSkinMatrices(_tempMeshInstancesSkinned);

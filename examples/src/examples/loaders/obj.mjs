@@ -5,9 +5,37 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath, scriptsPath }) {
-    // Create the app and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, scriptsPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ScriptComponentSystem,
+        pc.ModelComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+        // @ts-ignore
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.ScriptHandler,
+        // @ts-ignore
+        pc.ModelHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -83,5 +111,6 @@ async function example({ canvas, assetPath, scriptsPath }) {
 
 export class ObjExample {
     static CATEGORY = 'Loaders';
+    static WEBGPU_ENABLED = true;
     static example = example;
 }
