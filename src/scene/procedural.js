@@ -298,6 +298,8 @@ function createMesh(device, positions, opts) {
  * (defaults to 0.2).
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
  * tube (defaults to 0.3).
+ * @param {number} [opts.sectorAngle] - The sector angle in radians of the ring of the torus
+ * (defaults to 2 * Math.PI).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
  * torus ring (defaults to 20).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
@@ -309,6 +311,7 @@ function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
     const rc = opts.tubeRadius ?? 0.2;
     const rt = opts.ringRadius ?? 0.3;
+    const sectorAngle = opts.sectorAngle ?? 2 * Math.PI;
     const segments = opts.segments ?? 30;
     const sides = opts.sides ?? 20;
     const calcTangents = opts.calculateTangents ?? false;
@@ -321,13 +324,13 @@ function createTorus(device, opts = {}) {
 
     for (let i = 0; i <= sides; i++) {
         for (let j = 0; j <= segments; j++) {
-            const x = Math.cos(2 * Math.PI * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const x = Math.cos(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
             const y = Math.sin(2 * Math.PI * i / sides) * rc;
-            const z = Math.sin(2 * Math.PI * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const z = Math.sin(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
 
-            const nx = Math.cos(2 * Math.PI * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nx = Math.cos(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
             const ny = Math.sin(2 * Math.PI * i / sides);
-            const nz = Math.sin(2 * Math.PI * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nz = Math.sin(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
 
             const u = i / sides;
             const v = 1 - j / segments;
