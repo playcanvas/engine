@@ -249,7 +249,10 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
         _nodes = [];
 
+        _ignorePicker = false;
+
         skipSetFire = false;
+
 
         constructor(app, camera, layer) {
             this._gizmos = {
@@ -257,10 +260,24 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 rotate: new pcx.GizmoRotate(app, camera, layer),
                 scale: new pcx.GizmoScale(app, camera, layer)
             };
+
+            for (const type in this._gizmos) {
+                const gizmo = this._gizmos[type];
+                gizmo.on('pointer:down', (x, y, selection) => {
+                    this._ignorePicker = !!selection;
+                });
+                gizmo.on('pointer:up', () => {
+                    this._ignorePicker = false;
+                });
+            }
         }
 
         get gizmo() {
             return this._gizmos[this._type];
+        }
+
+        get ignorePicker() {
+            return this._ignorePicker;
         }
 
         _updateData(type) {
@@ -295,17 +312,19 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
             this.skipSetFire = false;
         }
 
-        attach(nodes) {
-            for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i];
-                if (this._nodes.indexOf(node) === -1) {
-                    this._nodes.push(node);
-                }
+        add(node, clear = false) {
+            if (clear) {
+                this._nodes.length = 0;
             }
+            if (this._nodes.indexOf(node) === -1) {
+                this._nodes.push(node);
+            }
+            this.gizmo.attach(this._nodes);
         }
 
-        detach() {
+        clear() {
             this._nodes.length = 0;
+            this.gizmo.detach();
         }
 
         switch(type) {
@@ -379,20 +398,44 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     app.start();
 
-    // create box entities
-    const boxA = new pc.Entity('cubeA');
-    boxA.addComponent('render', {
-        type: 'box'
+    // create entities
+    function createMaterial(color) {
+        const material = new pc.StandardMaterial();
+        material.diffuse = color;
+        return material;
+    }
+    const box = new pc.Entity('box');
+    box.addComponent('render', {
+        type: 'box',
+        material: createMaterial(new pc.Color(0.8, 1, 1))
     });
-    boxA.setPosition(0.5, 0, -0.5);
-    app.root.addChild(boxA);
+    box.setPosition(1, 0, 1);
+    app.root.addChild(box);
 
-    const boxB = new pc.Entity('cubeB');
-    boxB.addComponent('render', {
-        type: 'box'
+    const sphere = new pc.Entity('sphere');
+    sphere.addComponent('render', {
+        type: 'sphere',
+        material: createMaterial(new pc.Color(1, 0.8, 1))
     });
-    boxB.setPosition(-0.5, 0, 0.5);
-    app.root.addChild(boxB);
+    sphere.setPosition(-1, 0, 1);
+    app.root.addChild(sphere);
+
+    const cone = new pc.Entity('cone');
+    cone.addComponent('render', {
+        type: 'cone',
+        material: createMaterial(new pc.Color(1, 1, 0.8))
+    });
+    cone.setPosition(-1, 0, -1);
+    cone.setLocalScale(1.5, 2.25, 1.5);
+    app.root.addChild(cone);
+
+    const capsule = new pc.Entity('capsule');
+    capsule.addComponent('render', {
+        type: 'capsule',
+        material: createMaterial(new pc.Color(0.8, 0.8, 1))
+    });
+    capsule.setPosition(1, 0, -1);
+    app.root.addChild(capsule);
 
     // create camera entity
     data.set('camera', {
@@ -403,20 +446,37 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     });
     const camera = new pc.Entity('camera');
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.5, 0.6, 0.9)
+        clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     camera.addComponent("script");
-    camera.script.create("orbitCamera");
+    const orbitCamera = camera.script.create("orbitCamera");
     camera.script.create("orbitCameraInputMouse");
     camera.script.create("orbitCameraInputTouch");
-    camera.rotate(-20, 45, 0);
+    camera.setPosition(1, 1, 1);
     app.root.addChild(camera);
+    orbitCamera.distance = 14;
 
-    // create directional light entity
-    const light = new pc.Entity('light');
-    light.addComponent('light');
-    app.root.addChild(light);
-    light.setEulerAngles(45, 20, 0);
+    // create 3-point lighting
+    const backLight = new pc.Entity('light');
+    backLight.addComponent('light', {
+        intensity: 0.5
+    });
+    app.root.addChild(backLight);
+    backLight.setEulerAngles(-60, 0, 90);
+
+    const fillLight = new pc.Entity('light');
+    fillLight.addComponent('light', {
+        intensity: 0.5
+    });
+    app.root.addChild(fillLight);
+    fillLight.setEulerAngles(45, 0, 0);
+
+    const keyLight = new pc.Entity('light');
+    keyLight.addComponent('light', {
+        intensity: 1
+    });
+    app.root.addChild(keyLight);
+    keyLight.setEulerAngles(0, 0, -60);
 
     // create gizmoLayer
     const gizmoLayer = new pc.Layer({
@@ -430,7 +490,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     // create gizmo
     const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
-    gizmoHandler.attach([boxA, boxB]);
     gizmoHandler.switch('translate');
 
     // Change gizmo mode keybinds
@@ -500,45 +559,46 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     });
 
     // Picker
-    // const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-    // const worldLayer = app.scene.layers.getLayerByName("World");
-    // const pickerLayers = [worldLayer, gizmoLayer];
+    const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
+    const worldLayer = app.scene.layers.getLayerByName("World");
+    const pickerLayers = [worldLayer];
 
-    // const onPointerDown = (e) => {
-    //     if (picker) {
-    //         picker.prepare(camera.camera, app.scene, pickerLayers);
-    //     }
+    const onPointerDown = (e) => {
+        if (gizmoHandler.ignorePicker) {
+            return;
+        }
 
-    //     const selection = picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
-    //     console.log(selection[0]?.node.name);
+        if (picker) {
+            picker.prepare(camera.camera, app.scene, pickerLayers);
+        }
 
-    //     // // skip adding selection if selected gizmo
-    //     // if (selection[0] &&
-    //     //     selection[0].node.render.layers.indexOf(gizmoLayer.id) !== -1
-    //     // ) {
-    //     //     return;
-    //     // }
+        const selection = picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
+        if (!selection[0]) {
+            gizmoHandler.clear();
+            return;
+        }
 
-    //     // // reset gizmo nodes if not multi select
-    //     // if (!e.ctrlKey && !e.metaKey) {
-    //     //     gizmoNodes.length = 0;
-    //     // }
+        gizmoHandler.add(selection[0].node, !e.ctrlKey && !e.metaKey);
+    };
+    window.addEventListener('pointerdown', onPointerDown);
 
-    //     // if (selection[0] && gizmoNodes.indexOf(selection[0].node) === -1) {
-    //     //     gizmoNodes.push(selection[0].node);
-    //     // }
-
-    //     // gizmoHandler.switch('translate', gizmoNodes);
-    // };
-
-    // window.addEventListener('pointerdown', onPointerDown);
+    const gridColor = new pc.Color(1, 1, 1, 0.5);
+    const gridHalfSize = 4;
+    const gridLines = [];
+    for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
+        gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
+        gridLines.push(new pc.Vec3(i - gridHalfSize, 0, -gridHalfSize), new pc.Vec3(i - gridHalfSize, 0, gridHalfSize));
+    }
+    app.on('update', () => {
+        app.drawLines(gridLines, gridColor);
+    });
 
     app.on('destroy', () => {
-        this.gizmoHandler.destroy();
+        gizmoHandler.destroy();
 
         window.removeEventListener('resize', resize);
         window.removeEventListener('keypress', keypress);
-        // window.removeEventListener('pointerdown', onPointerDown);
+        window.removeEventListener('pointerdown', onPointerDown);
     });
 
     return app;

@@ -290,6 +290,10 @@ class Gizmo extends EventHandler {
      * gizmo.attach([boxA, boxB]);
      */
     attach(nodes = []) {
+        if (nodes.length === 0) {
+            return;
+        }
+
         this.nodes = nodes;
         this._updatePosition();
         this._updateRotation();
