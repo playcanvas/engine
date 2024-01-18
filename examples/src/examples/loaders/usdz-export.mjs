@@ -125,6 +125,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 export class UsdzExportExample {
     static CATEGORY = 'Loaders';
     static WEBGPU_ENABLED = true;
+    static INCLUDE_AR_LINK = true;
     static controls = controls;
     static example = example;
 }

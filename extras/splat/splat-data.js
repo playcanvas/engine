@@ -240,10 +240,10 @@ class SplatData {
     }
 
     /**
-     * @param {import('playcanvas').AppBase} app - The application.
+     * @param {import('playcanvas').Scene} scene - The application's scene.
      * @param {Mat4} worldMat - The world matrix.
      */
-    renderWireframeBounds(app, worldMat) {
+    renderWireframeBounds(scene, worldMat) {
         const x = this.getProp('x');
         const y = this.getProp('y');
         const z = this.getProp('z');
@@ -285,7 +285,7 @@ class SplatData {
                 mat4.transformPoint(vec3, debugPoints[j]);
             }
 
-            app.drawLines(debugLines, debugColor);
+            scene.drawLineArrays(debugLines, debugColor);
         }
     }
 

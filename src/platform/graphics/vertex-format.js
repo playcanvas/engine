@@ -255,32 +255,29 @@ class VertexFormat {
      * @private
      */
     _evaluateHash() {
-        let stringElementBatch;
         const stringElementsBatch = [];
-        let stringElementRender;
         const stringElementsRender = [];
         const len = this._elements.length;
         for (let i = 0; i < len; i++) {
-            const element = this._elements[i];
+            const { name, dataType, numComponents, normalize, offset, stride, size, asInt } = this._elements[i];
 
             // create string description of each element that is relevant for batching
-            stringElementBatch = element.name;
-            stringElementBatch += element.dataType;
-            stringElementBatch += element.numComponents;
-            stringElementBatch += element.normalize;
+            const stringElementBatch = name + dataType + numComponents + normalize + asInt;
             stringElementsBatch.push(stringElementBatch);
 
             // create string description of each element that is relevant for rendering
-            stringElementRender = stringElementBatch;
-            stringElementRender += element.offset;
-            stringElementRender += element.stride;
-            stringElementRender += element.size;
+            const stringElementRender = stringElementBatch + offset + stride + size;
             stringElementsRender.push(stringElementRender);
         }
 
         // sort batching ones alphabetically to make the hash order independent
         stringElementsBatch.sort();
-        this.batchingHash = hashCode(stringElementsBatch.join());
+        const batchingString = stringElementsBatch.join();
+        this.batchingHash = hashCode(batchingString);
+
+        // shader processing hash - all elements that are used by the ShaderProcessor processing attributes
+        // at the moment this matches the batching hash
+        this.shaderProcessingHashString = batchingString;
 
         // rendering hash
         this.renderingHashString = stringElementsRender.join('_');
