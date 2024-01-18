@@ -9,7 +9,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
     const [type, setType] = React.useState('translate');
 
-    this.setType = (value) => setType(value);
+    window.setType = (value) => setType(value);
 
     return fragment(
         jsx(Panel, { headerText: 'Transform' },
@@ -243,22 +243,16 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+    // Class for handling gizmos
     class GizmoHandler {
         _type = 'translate';
 
+        _nodes = [];
+
         skipSetFire = false;
 
-        constructor(app, camera) {
-            const layer = new pc.Layer({
-                name: 'Gizmo',
-                clearDepthBuffer: true,
-                opaqueSortMode: pc.SORTMODE_NONE,
-                transparentSortMode: pc.SORTMODE_NONE
-            });
-            app.scene.layers.push(layer);
-            camera.layers = camera.layers.concat(layer.id);
-
-            this.gizmos = {
+        constructor(app, camera, layer) {
+            this._gizmos = {
                 translate: new pcx.GizmoTranslate(app, camera, layer),
                 rotate: new pcx.GizmoRotate(app, camera, layer),
                 scale: new pcx.GizmoScale(app, camera, layer)
@@ -266,14 +260,11 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         }
 
         get gizmo() {
-            return this.gizmos[this._type];
+            return this._gizmos[this._type];
         }
 
-        switch(type, nodes) {
-            this.gizmo.detach();
-            this._type = type ?? 'translate';
+        _updateData(type) {
             const gizmo = this.gizmo;
-            gizmo.attach(nodes);
             this.skipSetFire = true;
             data.set('gizmo', {
                 type: type,
@@ -302,6 +293,32 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 faceRingRadius: gizmo.faceRingRadius
             });
             this.skipSetFire = false;
+        }
+
+        attach(nodes) {
+            for (let i = 0; i < nodes.length; i++) {
+                const node = nodes[i];
+                if (this._nodes.indexOf(node) === -1) {
+                    this._nodes.push(node);
+                }
+            }
+        }
+
+        detach() {
+            this._nodes.length = 0;
+        }
+
+        switch(type) {
+            this.gizmo.detach();
+            this._type = type ?? 'translate';
+            this.gizmo.attach(this._nodes);
+            this._updateData(type);
+        }
+
+        destroy() {
+            for (const type in this._gizmos) {
+                this._gizmos[type].destroy();
+            }
         }
     }
 
@@ -342,37 +359,11 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
-    app.on('destroy', () => {
-        window.removeEventListener('resize', resize);
-    });
 
-    // control keybinds
-    const setType = (value) => {
-        data.set('gizmo.type', value);
-        this.top.setType(value);
-    };
-    window.addEventListener('keypress', (e) => {
-        switch (e.key) {
-            case 'x':
-                data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
-                break;
-            case '1':
-                setType('translate');
-                break;
-            case '2':
-                setType('rotate');
-                break;
-            case '3':
-                setType('scale');
-                break;
-        }
-    });
-
-    // assets
+    // load assets
     const assets = {
         script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
-
     /**
      * @param {pc.Asset[] | number[]} assetList - The asset list.
      * @param {pc.AssetRegistry} assetRegistry - The asset registry.
@@ -427,10 +418,47 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     app.root.addChild(light);
     light.setEulerAngles(45, 20, 0);
 
-    // create gizmo
-    const gizmoHandler = new GizmoHandler(app, camera.camera);
-    gizmoHandler.switch('translate', [boxA, boxB]);
+    // create gizmoLayer
+    const gizmoLayer = new pc.Layer({
+        name: 'Gizmo',
+        clearDepthBuffer: true,
+        opaqueSortMode: pc.SORTMODE_NONE,
+        transparentSortMode: pc.SORTMODE_NONE
+    });
+    app.scene.layers.push(gizmoLayer);
+    camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
+    // create gizmo
+    const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
+    gizmoHandler.attach([boxA, boxB]);
+    gizmoHandler.switch('translate');
+
+    // Change gizmo mode keybinds
+    const setType = (value) => {
+        data.set('gizmo.type', value);
+
+        // call method from top context (same as controls)
+        window.top.setType(value);
+    };
+    const keypress = (e) => {
+        switch (e.key) {
+            case 'x':
+                data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
+                break;
+            case '1':
+                setType('translate');
+                break;
+            case '2':
+                setType('rotate');
+                break;
+            case '3':
+                setType('scale');
+                break;
+        }
+    };
+    window.addEventListener('keypress', keypress);
+
+    // Gizmo and camera set handler
     const tmpC = new pc.Color();
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
@@ -455,7 +483,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 }
                 switch (pathArray[1]) {
                     case 'type':
-                        gizmoHandler.switch(value, [boxA, boxB]);
+                        gizmoHandler.switch(value);
                         break;
                     case 'xAxisColor':
                     case 'yAxisColor':
@@ -469,6 +497,48 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 }
                 break;
         }
+    });
+
+    // Picker
+    // const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
+    // const worldLayer = app.scene.layers.getLayerByName("World");
+    // const pickerLayers = [worldLayer, gizmoLayer];
+
+    // const onPointerDown = (e) => {
+    //     if (picker) {
+    //         picker.prepare(camera.camera, app.scene, pickerLayers);
+    //     }
+
+    //     const selection = picker.getSelection(e.clientX - 1, e.clientY - 1, 2, 2);
+    //     console.log(selection[0]?.node.name);
+
+    //     // // skip adding selection if selected gizmo
+    //     // if (selection[0] &&
+    //     //     selection[0].node.render.layers.indexOf(gizmoLayer.id) !== -1
+    //     // ) {
+    //     //     return;
+    //     // }
+
+    //     // // reset gizmo nodes if not multi select
+    //     // if (!e.ctrlKey && !e.metaKey) {
+    //     //     gizmoNodes.length = 0;
+    //     // }
+
+    //     // if (selection[0] && gizmoNodes.indexOf(selection[0].node) === -1) {
+    //     //     gizmoNodes.push(selection[0].node);
+    //     // }
+
+    //     // gizmoHandler.switch('translate', gizmoNodes);
+    // };
+
+    // window.addEventListener('pointerdown', onPointerDown);
+
+    app.on('destroy', () => {
+        this.gizmoHandler.destroy();
+
+        window.removeEventListener('resize', resize);
+        window.removeEventListener('keypress', keypress);
+        // window.removeEventListener('pointerdown', onPointerDown);
     });
 
     return app;
