@@ -630,7 +630,7 @@ export const PIXELFORMAT_R8I = 32;
  *
  * @type {number}
  */
-export const PIXELFORMAT_R8UI = 33;
+export const PIXELFORMAT_R8U = 33;
 
 /**
  * 16-bit signed integer single-channel (R) format (Not supported by WebGL1).
@@ -644,7 +644,7 @@ export const PIXELFORMAT_R16I = 34;
  *
  * @type {number}
  */
-export const PIXELFORMAT_R16UI = 35;
+export const PIXELFORMAT_R16U = 35;
 
 /**
  * 32-bit signed integer single-channel (R) format (Not supported by WebGL1).
@@ -658,7 +658,7 @@ export const PIXELFORMAT_R32I = 36;
  *
  * @type {number}
  */
-export const PIXELFORMAT_R32UI = 37;
+export const PIXELFORMAT_R32U = 37;
 
 /**
  * 8-bit per-channel signed integer (RG) format (Not supported by WebGL1).
@@ -672,7 +672,7 @@ export const PIXELFORMAT_RG8I = 38;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RG8UI = 39;
+export const PIXELFORMAT_RG8U = 39;
 
 /**
  * 16-bit per-channel signed integer (RG) format (Not supported by WebGL1).
@@ -686,7 +686,7 @@ export const PIXELFORMAT_RG16I = 40;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RG16UI = 41;
+export const PIXELFORMAT_RG16U = 41;
 
 /**
  * 32-bit per-channel signed integer (RG) format (Not supported by WebGL1).
@@ -700,7 +700,7 @@ export const PIXELFORMAT_RG32I = 42;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RG32UI = 43;
+export const PIXELFORMAT_RG32U = 43;
 
 /**
  * 8-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
@@ -714,7 +714,7 @@ export const PIXELFORMAT_RGBA8I = 44;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RGBA8UI = 45;
+export const PIXELFORMAT_RGBA8U = 45;
 
 /**
  * 16-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
@@ -728,7 +728,7 @@ export const PIXELFORMAT_RGBA16I = 46;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RGBA16UI = 47;
+export const PIXELFORMAT_RGBA16U = 47;
 
 /**
  * 32-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
@@ -742,7 +742,7 @@ export const PIXELFORMAT_RGBA32I = 48;
  *
  * @type {number}
  */
-export const PIXELFORMAT_RGBA32UI = 49;
+export const PIXELFORMAT_RGBA32U = 49;
 
 
 // map of engine PIXELFORMAT_*** enums to information about the format
@@ -786,23 +786,23 @@ export const pixelFormatInfo = new Map([
 
     // uncompressed integer formats (Not supported on WebGL1)
     [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
-    [PIXELFORMAT_R8UI,     { name: 'R8UI', size: 1, isInt: true }],
+    [PIXELFORMAT_R8U,     { name: 'R8U', size: 1, isInt: true }],
     [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
-    [PIXELFORMAT_R16UI,    { name: 'R16UI', size: 2, isInt: true }],
+    [PIXELFORMAT_R16U,    { name: 'R16UI', size: 2, isInt: true }],
     [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
-    [PIXELFORMAT_R32UI,    { name: 'R32UI', size: 4, isInt: true }],
+    [PIXELFORMAT_R32U,    { name: 'R32UI', size: 4, isInt: true }],
     [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
-    [PIXELFORMAT_RG8UI,    { name: 'RG8UI', size: 2, isInt: true }],
+    [PIXELFORMAT_RG8U,    { name: 'RG8UI', size: 2, isInt: true }],
     [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
-    [PIXELFORMAT_RG16UI,   { name: 'RG16UI', size: 4, isInt: true }],
+    [PIXELFORMAT_RG16U,   { name: 'RG16UI', size: 4, isInt: true }],
     [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
-    [PIXELFORMAT_RG32UI,   { name: 'RG32UI', size: 8, isInt: true }],
+    [PIXELFORMAT_RG32U,   { name: 'RG32UI', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
-    [PIXELFORMAT_RGBA8UI,  { name: 'RGBA8UI', size: 4, isInt: true }],
+    [PIXELFORMAT_RGBA8U,  { name: 'RGBA8UI', size: 4, isInt: true }],
     [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
-    [PIXELFORMAT_RGBA16UI, { name: 'RGBA16UI', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA16U, { name: 'RGBA16UI', size: 8, isInt: true }],
     [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
-    [PIXELFORMAT_RGBA32UI, { name: 'RGBA32UI', size: 16, isInt: true }]
+    [PIXELFORMAT_RGBA32U, { name: 'RGBA32UI', size: 16, isInt: true }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
@@ -824,17 +824,17 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RG32I:
         case PIXELFORMAT_RGBA32I:
             return Int32Array;
-        case PIXELFORMAT_R32UI:
-        case PIXELFORMAT_RG32UI:
-        case PIXELFORMAT_RGBA32UI:
+        case PIXELFORMAT_R32U:
+        case PIXELFORMAT_RG32U:
+        case PIXELFORMAT_RGBA32U:
             return Uint32Array;
         case PIXELFORMAT_R16I:
         case PIXELFORMAT_RG16I:
         case PIXELFORMAT_RGBA16I:
             return Int16Array;
-        case PIXELFORMAT_R16UI:
-        case PIXELFORMAT_RG16UI:
-        case PIXELFORMAT_RGBA16UI:
+        case PIXELFORMAT_R16U:
+        case PIXELFORMAT_RG16U:
+        case PIXELFORMAT_RGBA16U:
         case PIXELFORMAT_RGB565:
         case PIXELFORMAT_RGBA5551:
         case PIXELFORMAT_RGBA4:

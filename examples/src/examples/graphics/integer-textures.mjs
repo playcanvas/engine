@@ -126,7 +126,7 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
             // This can be helpful for storing bitfields in each pixel.
             // In this example, we are storing 3 different properties
             // in a single Uint8 value.
-            format: pc.PIXELFORMAT_R8UI,
+            format: pc.PIXELFORMAT_R8U,
             addressU: pc.ADDRESS_CLAMP_TO_EDGE,
             addressV: pc.ADDRESS_CLAMP_TO_EDGE
         });

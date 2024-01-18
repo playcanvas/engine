@@ -7,10 +7,10 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8UI, PIXELFORMAT_R16I, PIXELFORMAT_R16UI,
-    PIXELFORMAT_R32I, PIXELFORMAT_R32UI, PIXELFORMAT_RG16I, PIXELFORMAT_RG16UI, PIXELFORMAT_RG32I, PIXELFORMAT_RG32UI,
-    PIXELFORMAT_RG8I, PIXELFORMAT_RG8UI, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16UI, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32UI,
-    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8UI
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
+    PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
+    PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
+    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U
 } from '../constants.js';
 
 /**
@@ -288,7 +288,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.R8I;
                 this._glPixelType = gl.BYTE;
                 break;
-            case PIXELFORMAT_R8UI: // WebGL2 only
+            case PIXELFORMAT_R8U: // WebGL2 only
                 this._glFormat = gl.RED_INTEGER;
                 this._glInternalFormat = gl.R8UI;
                 this._glPixelType = gl.UNSIGNED_BYTE;
@@ -298,7 +298,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.R16I;
                 this._glPixelType = gl.SHORT;
                 break;
-            case PIXELFORMAT_R16UI: // WebGL2 only
+            case PIXELFORMAT_R16U: // WebGL2 only
                 this._glFormat = gl.RED_INTEGER;
                 this._glInternalFormat = gl.R16UI;
                 this._glPixelType = gl.UNSIGNED_SHORT;
@@ -308,7 +308,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.R32I;
                 this._glPixelType = gl.INT;
                 break;
-            case PIXELFORMAT_R32UI: // WebGL2 only
+            case PIXELFORMAT_R32U: // WebGL2 only
                 this._glFormat = gl.RED_INTEGER;
                 this._glInternalFormat = gl.R32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
@@ -319,7 +319,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RG8I;
                 this._glPixelType = gl.BYTE;
                 break;
-            case PIXELFORMAT_RG8UI: // WebGL2 only
+            case PIXELFORMAT_RG8U: // WebGL2 only
                 this._glFormat = gl.RG_INTEGER;
                 this._glInternalFormat = gl.RG8UI;
                 this._glPixelType = gl.UNSIGNED_BYTE;
@@ -329,7 +329,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RG16I;
                 this._glPixelType = gl.SHORT;
                 break;
-            case PIXELFORMAT_RG16UI: // WebGL2 only
+            case PIXELFORMAT_RG16U: // WebGL2 only
                 this._glFormat = gl.RG_INTEGER;
                 this._glInternalFormat = gl.RG16UI;
                 this._glPixelType = gl.UNSIGNED_SHORT;
@@ -339,7 +339,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RG32I;
                 this._glPixelType = gl.INT;
                 break;
-            case PIXELFORMAT_RG32UI: // WebGL2 only
+            case PIXELFORMAT_RG32U: // WebGL2 only
                 this._glFormat = gl.RG_INTEGER;
                 this._glInternalFormat = gl.RG32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
@@ -350,7 +350,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA8I;
                 this._glPixelType = gl.BYTE;
                 break;
-            case PIXELFORMAT_RGBA8UI: // WebGL2 only
+            case PIXELFORMAT_RGBA8U: // WebGL2 only
                 this._glFormat = gl.RGBA_INTEGER;
                 this._glInternalFormat = gl.RGBA8UI;
                 this._glPixelType = gl.UNSIGNED_BYTE;
@@ -360,7 +360,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA16I;
                 this._glPixelType = gl.SHORT;
                 break;
-            case PIXELFORMAT_RGBA16UI: // WebGL2 only
+            case PIXELFORMAT_RGBA16U: // WebGL2 only
                 this._glFormat = gl.RGBA_INTEGER;
                 this._glInternalFormat = gl.RGBA16UI;
                 this._glPixelType = gl.UNSIGNED_SHORT;
@@ -370,7 +370,7 @@ class WebglTexture {
                 this._glInternalFormat = gl.RGBA32I;
                 this._glPixelType = gl.INT;
                 break;
-            case PIXELFORMAT_RGBA32UI: // WebGL2 only
+            case PIXELFORMAT_RGBA32U: // WebGL2 only
                 this._glFormat = gl.RGBA_INTEGER;
                 this._glInternalFormat = gl.RGBA32UI;
                 this._glPixelType = gl.UNSIGNED_INT;
