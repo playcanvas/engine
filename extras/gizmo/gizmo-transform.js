@@ -209,7 +209,7 @@ class GizmoTransform extends Gizmo {
      *
      * @type {boolean}
      */
-    legacyRotation = false;
+    useLegacyRotation = false;
 
     /**
      * Creates a new GizmoTransform object.
@@ -434,7 +434,7 @@ class GizmoTransform extends Gizmo {
         // calculate angle
         let angle = 0;
         if (isRotation) {
-            if (this.legacyRotation || isFacing) {
+            if (this.useLegacyRotation || isFacing) {
                 switch (axis) {
                     case 'x':
                         angle = Math.atan2(point.z, point.y) * math.RAD_TO_DEG;

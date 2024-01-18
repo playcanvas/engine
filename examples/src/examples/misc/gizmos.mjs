@@ -57,7 +57,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     jsx(BooleanInput, {
                         type: 'toggle',
                         binding: new BindingTwoWay(),
-                        link: { observer, path: 'gizmo.legacyRotation' }
+                        link: { observer, path: 'gizmo.useLegacyRotation' }
                     })
                 )
         ),
@@ -270,7 +270,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 type: type,
                 size: gizmo.size,
                 snapIncrement: gizmo.snapIncrement,
-                legacyRotation: gizmo.legacyRotation,
+                useLegacyRotation: gizmo.useLegacyRotation,
                 xAxisColor: Object.values(gizmo.xAxisColor),
                 yAxisColor: Object.values(gizmo.yAxisColor),
                 zAxisColor: Object.values(gizmo.zAxisColor),
