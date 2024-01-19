@@ -220,7 +220,7 @@ class Renderer {
         this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
-        this.viewIndex = scope.resolve('view_index');
+        this.viewIndexId = scope.resolve('view_index');
 
         this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
         this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
