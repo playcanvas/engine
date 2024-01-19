@@ -157,13 +157,13 @@ class AxisShape {
 class AxisArrow extends AxisShape {
     _gap = 0;
 
-    _lineThickness = 0.04;
+    _lineThickness = 0.02;
 
     _lineLength = 0.5;
 
-    _arrowThickness = 0.15;
+    _arrowThickness = 0.12;
 
-    _arrowLength = 0.2;
+    _arrowLength = 0.18;
 
     _tolerance = 0.1;
 
@@ -276,7 +276,7 @@ class AxisArrow extends AxisShape {
 }
 
 class AxisBoxCenter extends AxisShape {
-    _size = 0.14;
+    _size = 0.12;
 
     _tolerance = 0.05;
 
@@ -332,11 +332,11 @@ class AxisBoxCenter extends AxisShape {
 class AxisBoxLine extends AxisShape {
     _gap = 0;
 
-    _lineThickness = 0.04;
+    _lineThickness = 0.02;
 
     _lineLength = 0.5;
 
-    _boxSize = 0.14;
+    _boxSize = 0.12;
 
     _tolerance = 0.1;
 
@@ -442,9 +442,9 @@ class AxisBoxLine extends AxisShape {
 }
 
 class AxisDisk extends AxisShape {
-    _tubeRadius = 0.02;
+    _tubeRadius = 0.01;
 
-    _ringRadius = 0.55;
+    _ringRadius = 0.5;
 
     _sectorAngle;
 

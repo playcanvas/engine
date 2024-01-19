@@ -54,7 +54,7 @@ class GizmoRotate extends GizmoTransform {
             rotation: this._getLookAtEulerAngles(this.camera.entity.getPosition()),
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.face,
-            ringRadius: 0.63
+            ringRadius: 0.55
         })
     };
 
@@ -310,7 +310,9 @@ class GizmoRotate extends GizmoTransform {
                 tmpV1.copy(this._nodeOffsets.get(node));
                 tmpQ1.transformVector(tmpV1, tmpV1);
                 tmpQ2.copy(tmpQ1).mul(this._nodeRotations.get(node));
-                node.setRotation(tmpQ2);
+
+                // Fix: Rotation via quaternion causes scale warping?
+                node.setEulerAngles(tmpQ2.getEulerAngles());
                 node.setPosition(tmpV1.add(gizmoPos));
             }
         }

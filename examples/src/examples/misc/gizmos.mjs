@@ -482,6 +482,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     // create gizmo
     const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
     gizmoHandler.switch('translate');
+    gizmoHandler.add(box);
 
     // Change gizmo mode keybinds
     const setType = (value) => {
