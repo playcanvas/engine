@@ -17,3 +17,10 @@ export { RenderPassDownsample } from './render-passes/render-pass-downsample.js'
 export { RenderPassUpsample } from './render-passes/render-pass-upsample.js';
 export { RenderPassBloom } from './render-passes/render-pass-bloom.js';
 export { RenderPassTAA } from './render-passes/render-pass-taa.js';
+
+// gizmo
+export { Gizmo } from "./gizmo/gizmo.js";
+export { GizmoTransform } from "./gizmo/gizmo-transform.js";
+export { GizmoTranslate } from "./gizmo/gizmo-translate.js";
+export { GizmoRotate } from "./gizmo/gizmo-rotate.js";
+export { GizmoScale } from "./gizmo/gizmo-scale.js";
