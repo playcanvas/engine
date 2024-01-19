@@ -600,7 +600,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
 class GizmosExample {
     static CATEGORY = 'Misc';
-    static WEBGPU_ENABLED = true;
+    static WEBGPU_ENABLED = false;
     static controls = controls;
     static example = example;
 }
