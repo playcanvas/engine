@@ -6,8 +6,8 @@ import {
     RenderPass,
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
 } from "playcanvas";
-import { RenderPassDownSample } from "./render-pass-downsample.js";
-import { RenderPassUpSample } from "./render-pass-upsample.js";
+import { RenderPassDownsample } from "./render-pass-downsample.js";
+import { RenderPassUpsample } from "./render-pass-upsample.js";
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 
@@ -90,7 +90,7 @@ class RenderPassBloom extends RenderPass {
         let passSourceTexture = this.sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const pass = new RenderPassDownSample(device, passSourceTexture);
+            const pass = new RenderPassDownsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt, {
                 resizeSource: passSourceTexture,
@@ -106,7 +106,7 @@ class RenderPassBloom extends RenderPass {
         passSourceTexture = this.renderTargets[numPasses - 1].colorBuffer;
         for (let i = numPasses - 2; i >= 0; i--) {
 
-            const pass = new RenderPassUpSample(device, passSourceTexture);
+            const pass = new RenderPassUpsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt);
             pass.blendState = BlendState.ADDBLEND;  // blend when up-scaling

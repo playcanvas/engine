@@ -87,7 +87,7 @@ class ShaderProcessorOptions {
 
         // WebGPU shaders are processed per vertex format
         if (device.isWebGPU) {
-            key += this.vertexFormat?.renderingHashString;
+            key += this.vertexFormat?.shaderProcessingHashString;
         }
 
         return key;
