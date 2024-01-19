@@ -25,16 +25,17 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     onSelect: this.setType
                 })
             ),
-            jsx(LabelGroup, { text: 'Coord Space' },
-                jsx(SelectInput, {
-                    options: [
-                        { v: 'world', t: 'World' },
-                        { v: 'local', t: 'Local' }
-                    ],
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'gizmo.coordSpace' }
-                })
-            ),
+            (type === 'translate' || type === 'rotate') &&
+                jsx(LabelGroup, { text: 'Coord Space' },
+                    jsx(SelectInput, {
+                        options: [
+                            { v: 'world', t: 'World' },
+                            { v: 'local', t: 'Local' }
+                        ],
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'gizmo.coordSpace' }
+                    })
+                ),
             jsx(LabelGroup, { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
