@@ -299,7 +299,7 @@ function createMesh(device, positions, opts) {
  * (defaults to 0.2).
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
  * tube (defaults to 0.3).
- * @param {number} [opts.sectorAngle] - The sector angle in radians of the ring of the torus
+ * @param {number} [opts.sectorAngle] - The sector angle in degrees of the ring of the torus
  * (defaults to 2 * Math.PI).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
  * torus ring (defaults to 20).
