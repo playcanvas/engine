@@ -563,6 +563,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         }
 
         if (picker) {
+            picker.resize(canvas.clientWidth, canvas.clientHeight);
             picker.prepare(camera.camera, app.scene, pickerLayers);
         }
 
