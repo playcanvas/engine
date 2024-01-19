@@ -125,12 +125,6 @@ const textureSemantics = [
  */
 class GltfExporter extends CoreExporter {
     /**
-     * Creates an instance of the GltfExporter.
-     * @function
-     */
-    // No actual constructor code here, just JSDoc.
-
-    /**
      * @ignore
      */
     collectResources(root) {
