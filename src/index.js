@@ -10,7 +10,6 @@ import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
-import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export * from './core/constants.js';
