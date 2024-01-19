@@ -8,6 +8,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, BooleanInput, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
+    const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
 
     window.setType = (value) => setType(value);
 
@@ -208,25 +209,19 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         { v: pc.PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.proj' }
+                    link: { observer, path: 'camera.proj' },
+                    onSelect: value => setProj(value - 1)
                 })
             ),
-            jsx(LabelGroup, { text: 'FOV' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.fov' },
-                    min: 30,
-                    max: 100
-                })
-            ),
-            jsx(LabelGroup, { text: 'Ortho Height' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'camera.orthoHeight' },
-                    min: 1,
-                    max: 20
-                })
-            )
+            (proj === pc.PROJECTION_PERSPECTIVE) &&
+                jsx(LabelGroup, { text: 'FOV' },
+                    jsx(SliderInput, {
+                        binding: new BindingTwoWay(),
+                        link: { observer, path: 'camera.fov' },
+                        min: 30,
+                        max: 100
+                    })
+                )
         )
     );
 }
@@ -442,7 +437,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     });
     camera.addComponent("script");
     const orbitCamera = camera.script.create("orbitCamera");
-    camera.script.create("orbitCameraInputMouse");
+    const orbitCameraInputMouse = camera.script.create("orbitCameraInputMouse");
     camera.script.create("orbitCameraInputTouch");
     camera.setPosition(1, 1, 1);
     app.root.addChild(camera);
@@ -524,9 +519,6 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                         break;
                     case 'fov':
                         camera.camera.fov = value;
-                        break;
-                    case 'orthoHeight':
-                        camera.camera.orthoHeight = value;
                         break;
                 }
                 return;
