@@ -312,7 +312,7 @@ function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
     const rc = opts.tubeRadius ?? 0.2;
     const rt = opts.ringRadius ?? 0.3;
-    const sectorAngle = opts.sectorAngle ?? 360;
+    const sectorAngle = (opts.sectorAngle ?? 360) * math.DEG_TO_RAD;
     const segments = opts.segments ?? 30;
     const sides = opts.sides ?? 20;
     const calcTangents = opts.calculateTangents ?? false;
@@ -325,13 +325,13 @@ function createTorus(device, opts = {}) {
 
     for (let i = 0; i <= sides; i++) {
         for (let j = 0; j <= segments; j++) {
-            const x = Math.cos(sectorAngle * math.DEG_TO_RAD * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const x = Math.cos(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
             const y = Math.sin(2 * Math.PI * i / sides) * rc;
-            const z = Math.sin(sectorAngle * math.DEG_TO_RAD * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const z = Math.sin(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
 
-            const nx = Math.cos(sectorAngle * math.DEG_TO_RAD * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nx = Math.cos(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
             const ny = Math.sin(2 * Math.PI * i / sides);
-            const nz = Math.sin(sectorAngle * math.DEG_TO_RAD * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nz = Math.sin(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
 
             const u = i / sides;
             const v = 1 - j / segments;
