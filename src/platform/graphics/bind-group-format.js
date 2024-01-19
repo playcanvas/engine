@@ -3,7 +3,7 @@ import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT
 } from './constants.js';
 
 let id = 0;
@@ -180,7 +180,7 @@ class BindGroupFormat {
         let bindIndex = this.bufferFormats.length;
         this.textureFormats.forEach((format) => {
 
-            const textureType = textureDimensionInfo[format.textureDimension];
+            let textureType = textureDimensionInfo[format.textureDimension];
             Debug.assert(textureType, "Unsupported texture type", format.textureDimension);
 
             // handle texture2DArray by renaming the texture object and defining a replacement macro
@@ -191,9 +191,16 @@ class BindGroupFormat {
                 extraCode = `#define ${format.name} sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
             }
 
+            if (format.sampleType === SAMPLETYPE_INT) {
+                textureType = `i${textureType}`;
+            } else if (format.sampleType === SAMPLETYPE_UINT) {
+                textureType = `u${textureType}`;
+            }
+
             code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
                     `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n` +
                     extraCode;
+
         });
 
         return code;
