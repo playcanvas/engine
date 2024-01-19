@@ -46,6 +46,7 @@ import { LightmapCache } from '../../scene/graphics/lightmap-cache.js';
 import { LightmapFilters } from './lightmap-filters.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
 import { DepthState } from '../../platform/graphics/depth-state.js';
+import { RenderPassLightmapper } from './render-pass-lightmapper.js';
 
 const MAX_LIGHTMAP_SIZE = 2048;
 
@@ -228,7 +229,8 @@ class Lightmapper {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
         material.chunks.APIVersion = CHUNKAPI_1_65;
-        material.chunks.transformVS = '#define UV1LAYOUT\n' + shaderChunks.transformVS; // draw UV1
+        const transformDefines = '#define UV1LAYOUT\n' + (device.isWebGPU ? '#define UV1LAYOUT_FLIP\n' : '');
+        material.chunks.transformVS = transformDefines + shaderChunks.transformVS; // draw into UV1 texture space
 
         if (pass === PASS_COLOR) {
             let bakeLmEndChunk = shaderChunksLightmapper.bakeLmEndPS; // encode to RGBM
@@ -514,11 +516,6 @@ class Lightmapper {
     bake(nodes, mode = BAKE_COLORDIR) {
 
         const device = this.device;
-        if (device.isWebGPU) {
-            Debug.warnOnce('Lightmapper is not supported on WebGPU, skipping.');
-            return;
-        }
-
         const startTime = now();
 
         // update skybox
@@ -854,12 +851,24 @@ class Lightmapper {
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
                 this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
-            } else {
-                this.renderer._shadowRendererLocal.cull(light, comp, casters);
-            }
 
-            const insideRenderPass = false;
-            this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+                const shadowPass = this.renderer._shadowRendererDirectional.getLightRenderPass(light, this.camera);
+                shadowPass?.render();
+
+            } else {
+
+                // TODO: lightmapper on WebGPU does not yet support spot and omni shadows
+                if (this.device.isWebGPU) {
+                    Debug.warnOnce('Lightmapper on WebGPU does not yet support spot and omni shadows.');
+                    return true;
+                }
+
+                this.renderer._shadowRendererLocal.cull(light, comp, casters);
+
+                // TODO: this needs to used render passes to work on WebGPU
+                const insideRenderPass = false;
+                this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
+            }
         }
 
         return true;
@@ -1078,24 +1087,17 @@ class Lightmapper {
                         // update shader
                         this.renderer.updateShaders(rcv);
 
-                        // ping-ponging output
-                        this.renderer.setCamera(this.camera, tempRT, true);
-
+                        // render receivers to the tempRT
                         if (pass === PASS_DIR) {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
-                        // prepare clustered lighting
-                        if (clusteredLightingEnabled) {
-                            this.worldClusters.activate();
-                        }
-
-                        this.renderer._forwardTime = 0;
-                        this.renderer._shadowMapTime = 0;
-
-                        this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
-
-                        device.updateEnd();
+                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
+                                                                     clusteredLightingEnabled ? this.worldClusters : null,
+                                                                     rcv, lightArray);
+                        renderPass.init(tempRT);
+                        renderPass.render();
+                        renderPass.destroy();
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;
