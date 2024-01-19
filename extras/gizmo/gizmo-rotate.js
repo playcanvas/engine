@@ -30,7 +30,7 @@ class GizmoRotate extends GizmoTransform {
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack,
-            sectorAngle: Math.PI
+            sectorAngle: 180
         }),
         x: new AxisDisk(this.app.graphicsDevice, {
             axis: 'x',
@@ -38,7 +38,7 @@ class GizmoRotate extends GizmoTransform {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack,
-            sectorAngle: Math.PI
+            sectorAngle: 180
         }),
         y: new AxisDisk(this.app.graphicsDevice, {
             axis: 'y',
@@ -46,7 +46,7 @@ class GizmoRotate extends GizmoTransform {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack,
-            sectorAngle: Math.PI
+            sectorAngle: 180
         }),
         face: new AxisDisk(this.app.graphicsDevice, {
             axis: 'face',
@@ -311,7 +311,7 @@ class GizmoRotate extends GizmoTransform {
                 tmpQ1.transformVector(tmpV1, tmpV1);
                 tmpQ2.copy(tmpQ1).mul(this._nodeRotations.get(node));
 
-                // Fix: Rotation via quaternion causes scale warping?
+                // Fix: Rotation via quaternion when scale inverted causes scale warping?
                 node.setEulerAngles(tmpQ2.getEulerAngles());
                 node.setPosition(tmpV1.add(gizmoPos));
             }

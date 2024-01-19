@@ -490,7 +490,7 @@ class AxisDisk extends AxisShape {
         // arc/circle
         this._addRenderMeshes(this.entity, [
             this._createRenderTorus(this._sectorAngle),
-            this._createRenderTorus(2 * Math.PI)
+            this._createRenderTorus(360)
         ]);
         this.drag(false);
     }
@@ -528,7 +528,7 @@ class AxisDisk extends AxisShape {
 
         // render
         this.meshInstances[0].mesh = this._createRenderTorus(this._sectorAngle);
-        this.meshInstances[1].mesh = this._createRenderTorus(2 * Math.PI);
+        this.meshInstances[1].mesh = this._createRenderTorus(360);
     }
 
     drag(state) {
