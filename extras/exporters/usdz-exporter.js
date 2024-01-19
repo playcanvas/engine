@@ -116,6 +116,12 @@ class UsdzExporter extends CoreExporter {
      */
     files;
 
+    /**
+     * Creates an instance of the UsdzExporter.
+     * @function
+     */
+    // No actual constructor code here, just JSDoc.
+
     init() {
         this.meshMap = new Map();
         this.textureMap = new Map();

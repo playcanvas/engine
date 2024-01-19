@@ -124,6 +124,15 @@ const textureSemantics = [
  * Implementation of the GLTF 2.0 format exporter.
  */
 class GltfExporter extends CoreExporter {
+    /**
+     * Creates an instance of the GltfExporter.
+     * @function
+     */
+    // No actual constructor code here, just JSDoc.
+
+    /**
+     * @ignore
+     */
     collectResources(root) {
         const resources = {
             buffers: [],
