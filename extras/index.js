@@ -1,3 +1,11 @@
+/**
+ * EngineExtras is a collection of supplementary APIs designed to extend the capabilities of the
+ * PlayCanvas Engine. They cover features such as gizmos, file export, runtime performance
+ * profiling and advanced post-processing effects.
+ *
+ * @module EngineExtras
+ */
+
 export { MiniStats } from './mini-stats/mini-stats.js';
 
 // exporters

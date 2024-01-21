@@ -1,3 +1,13 @@
+/**
+ * This module provides the core functionality for the PlayCanvas Engine. It includes the main
+ * classes and methods used to create and manage a PlayCanvas application. It provides APIs for
+ * graphics, audio, input, physics, asset management, scripting and much more. It also includes an
+ * application framework and entity-component system, making it easy to manage the lifetime of your
+ * application.
+ *
+ * @module Engine
+ */
+
 // POLYFILLS
 import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
