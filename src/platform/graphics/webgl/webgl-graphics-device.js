@@ -1,4 +1,3 @@
-import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
@@ -414,11 +413,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
-
-        // init polyfill for VAOs under webgl1
-        if (!this.isWebGL2) {
-            setupVertexArrayObject(gl);
-        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);

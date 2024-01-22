@@ -628,6 +628,7 @@ class ForwardRenderer extends Renderer {
                     this.viewId3.setValue(view.viewMat3.data);
                     this.viewProjId.setValue(view.projViewOffMat.data);
                     this.viewPosId.setValue(view.positionData);
+                    this.viewIndexId.setValue(v);
 
                     if (v === 0) {
                         this.drawInstance(device, drawCall, mesh, style, true);
