@@ -1,5 +1,3 @@
-import { Debug } from './debug.js';
-
 /**
  * File path API.
  *
