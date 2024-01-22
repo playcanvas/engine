@@ -4,7 +4,7 @@ import {
     UNIFORMTYPE_INT, UNIFORMTYPE_FLOAT, UNIFORMTYPE_VEC2, UNIFORMTYPE_VEC3,
     UNIFORMTYPE_VEC4, UNIFORMTYPE_IVEC2, UNIFORMTYPE_IVEC3, UNIFORMTYPE_IVEC4,
     UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
-    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3
+    UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_BVEC3ARRAY
 } from './constants.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
@@ -117,6 +117,83 @@ _updateFunctions[UNIFORMTYPE_VEC3ARRAY] = (uniformBuffer, value, offset, count) 
     }
 };
 
+_updateFunctions[UNIFORMTYPE_UINT] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    dst[offset] = value;
+};
+
+_updateFunctions[UNIFORMTYPE_UVEC2] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    dst[offset] = value[0];
+    dst[offset + 1] = value[1];
+};
+
+_updateFunctions[UNIFORMTYPE_UVEC3] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    dst[offset] = value[0];
+    dst[offset + 1] = value[1];
+    dst[offset + 2] = value[2];
+};
+
+_updateFunctions[UNIFORMTYPE_UVEC4] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    dst[offset] = value[0];
+    dst[offset + 1] = value[1];
+    dst[offset + 2] = value[2];
+    dst[offset + 3] = value[3];
+};
+
+_updateFunctions[UNIFORMTYPE_INTARRAY] = function (uniformBuffer, value, offset, count) {
+    const dst = uniformBuffer.storageInt32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i];
+    }
+};
+_updateFunctions[UNIFORMTYPE_BOOLARRAY] = _updateFunctions[UNIFORMTYPE_INTARRAY];
+
+_updateFunctions[UNIFORMTYPE_UINTARRAY] = function (uniformBuffer, value, offset, count) {
+    const dst = uniformBuffer.storageUint32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_IVEC2ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageInt32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 2];
+        dst[offset + i * 4 + 1] = value[i * 2 + 1];
+    }
+};
+_updateFunctions[UNIFORMTYPE_BVEC2ARRAY] = _updateFunctions[UNIFORMTYPE_IVEC2ARRAY];
+
+_updateFunctions[UNIFORMTYPE_UVEC2ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 2];
+        dst[offset + i * 4 + 1] = value[i * 2 + 1];
+    }
+};
+
+_updateFunctions[UNIFORMTYPE_IVEC3ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageInt32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 3];
+        dst[offset + i * 4 + 1] = value[i * 3 + 1];
+        dst[offset + i * 4 + 2] = value[i * 3 + 2];
+    }
+};
+_updateFunctions[UNIFORMTYPE_BVEC3ARRAY] = _updateFunctions[UNIFORMTYPE_IVEC3ARRAY];
+
+_updateFunctions[UNIFORMTYPE_UVEC3ARRAY] = (uniformBuffer, value, offset, count) => {
+    const dst = uniformBuffer.storageUint32;
+    for (let i = 0; i < count; i++) {
+        dst[offset + i * 4] = value[i * 3];
+        dst[offset + i * 4 + 1] = value[i * 3 + 1];
+        dst[offset + i * 4 + 2] = value[i * 3 + 2];
+    }
+};
+
 /**
  * A uniform buffer represents a GPU memory buffer storing the uniforms.
  *
@@ -136,6 +213,9 @@ class UniformBuffer {
 
     /** @type {Int32Array} */
     storageInt32;
+
+    /** @type {Uint32Array} */
+    storageUint32;
 
     /**
      * A render version used to track the last time the properties requiring bind group to be
@@ -204,6 +284,7 @@ class UniformBuffer {
      */
     assignStorage(storage) {
         this.storageInt32 = storage;
+        this.storageUint32 = new Uint32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
         this.storageFloat32 = new Float32Array(storage.buffer, storage.byteOffset, storage.byteLength / 4);
     }
 
