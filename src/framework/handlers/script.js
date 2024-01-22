@@ -1,3 +1,4 @@
+import { platform } from 'src/core/platform.js';
 import { script } from '../script.js';
 import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
@@ -105,9 +106,12 @@ class ScriptHandler {
 
         if (isEsmScript) {
 
+            const baseUrl = platform.browser ? window.location.origin : '';
+            const importUrl = new URL(url, baseUrl);
+            importUrl.searchParams.append('cacheBust', new Date().valueOf().toString());
+
             // @ts-ignore
-            const cacheBust = `&cacheBust=${new Date().valueOf()}`;
-            import(window.location.origin + url + cacheBust).then((module) => {
+            import(importUrl.toString()).then((module) => {
 
                 for (const key in module) {
                     const scriptClass = module[key];
