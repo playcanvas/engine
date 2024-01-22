@@ -1,5 +1,7 @@
 import { script } from '../script.js';
+import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
+import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -97,28 +99,62 @@ class ScriptHandler {
     patch(asset, assets) { }
 
     _loadScript(url, callback) {
-        const head = document.head;
-        const element = document.createElement('script');
-        this._cache[url] = element;
 
-        // use async=false to force scripts to execute in order
-        element.async = false;
+        const path = url.split('?')[0];
+        const isEsmScript = path.endsWith('.esm.js');
 
-        element.addEventListener('error', function (e) {
-            callback(`Script: ${e.target.src} failed to load`);
-        }, false);
+        if (isEsmScript) {
 
-        let done = false;
-        element.onload = element.onreadystatechange = function () {
-            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
-                done = true; // prevent double event firing
-                callback(null, url, element);
-            }
-        };
-        // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
-        element.src = url;
+            // @ts-ignore
+            const cacheBust = `&cacheBust=${new Date().valueOf()}`;
+            import(window.location.origin + url + cacheBust).then((module) => {
 
-        head.appendChild(element);
+                for (const key in module) {
+                    const scriptClass = module[key];
+                    const extendsScriptType = Object.getPrototypeOf(scriptClass.prototype) === ScriptType.prototype;
+
+                    if (extendsScriptType) {
+
+                        if (script.attributesDefinition) {
+                            for (const key in script.attributesDefinition) {
+                                scriptClass.attributes.add(key, script.attributesDefinition[key]);
+                            }
+                        }
+
+                        registerScript(scriptClass, scriptClass.name);
+                    }
+                }
+
+                callback(null, url, null);
+
+            }).catch((err) => {
+                callback(err);
+            });
+
+        } else {
+            const head = document.head;
+            const element = document.createElement('script');
+            this._cache[url] = element;
+
+            // use async=false to force scripts to execute in order
+            element.async = false;
+
+            element.addEventListener('error', function (e) {
+                callback(`Script: ${e.target.src} failed to load`);
+            }, false);
+
+            let done = false;
+            element.onload = element.onreadystatechange = function () {
+                if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
+                    done = true; // prevent double event firing
+                    callback(null, url, element);
+                }
+            };
+            // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
+            element.src = url;
+
+            head.appendChild(element);
+        }
     }
 }
 
