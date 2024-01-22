@@ -1,4 +1,4 @@
-import { platform } from 'src/core/platform.js';
+import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
 import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
