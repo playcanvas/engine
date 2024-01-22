@@ -230,6 +230,7 @@ class XrManager extends EventHandler {
         this._available[XRTYPE_VR] = false;
         this._available[XRTYPE_AR] = false;
 
+        this.views = new XrViews(this);
         this.depthSensing = new XrDepthSensing(this);
         this.domOverlay = new XrDomOverlay(this);
         this.hitTest = new XrHitTest(this);
@@ -329,10 +330,7 @@ class XrManager extends EventHandler {
      *
      * @ignore
      */
-    destroy() {
-        this.depthSensing.destroy();
-        this.depthSensing = null;
-    }
+    destroy() { }
 
     /**
      * Attempts to start XR session for provided {@link CameraComponent} and optionally fires
@@ -876,9 +874,6 @@ class XrManager extends EventHandler {
             if (this.lightEstimation.supported)
                 this.lightEstimation.update(frame);
 
-            if (this.depthSensing.supported)
-                this.depthSensing.update(frame, pose && pose.views[0]);
-
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
 
@@ -887,6 +882,9 @@ class XrManager extends EventHandler {
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);
+
+            if (this.depthSensing.supported)
+                this.depthSensing.update();
 
             if (this.meshDetection.supported)
                 this.meshDetection.update(frame);

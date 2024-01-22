@@ -14,6 +14,7 @@ export * from "./grab-pass.mjs";
 export * from "./ground-fog.mjs";
 export * from "./hardware-instancing.mjs";
 export * from "./hierarchy.mjs";
+export * from "./integer-textures.mjs";
 export * from "./layers.mjs";
 export * from "./lights-baked-a-o.mjs";
 export * from "./lights-baked.mjs";
