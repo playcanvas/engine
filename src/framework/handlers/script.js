@@ -115,7 +115,7 @@ class ScriptHandler {
 
                 for (const key in module) {
                     const scriptClass = module[key];
-                    const extendsScriptType = Object.getPrototypeOf(scriptClass.prototype) === ScriptType.prototype;
+                    const extendsScriptType = scriptClass instanceof ScriptType;
 
                     if (extendsScriptType) {
 
