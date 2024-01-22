@@ -864,7 +864,7 @@ class Lightmapper {
 
                 this.renderer._shadowRendererLocal.cull(light, comp, casters);
 
-                // TODO: this needs to used render passes to work on WebGPU
+                // TODO: this needs to use render passes to work on WebGPU
                 const insideRenderPass = false;
                 this.renderer.shadowRenderer.render(light, this.camera, insideRenderPass);
             }
