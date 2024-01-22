@@ -228,7 +228,7 @@ class Lightmapper {
         const material = new StandardMaterial();
         material.name = `lmMaterial-pass:${pass}-ambient:${addAmbient}`;
         material.chunks.APIVersion = CHUNKAPI_1_65;
-        const transformDefines = '#define UV1LAYOUT\n' + (device.isWebGPU ? '#define UV1LAYOUT_FLIP\n' : '');
+        const transformDefines = '#define UV1LAYOUT\n';
         material.chunks.transformVS = transformDefines + shaderChunks.transformVS; // draw into UV1 texture space
 
         if (pass === PASS_COLOR) {
