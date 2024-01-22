@@ -22,17 +22,9 @@ void getTBN(vec3 tangent, vec3 binormal, vec3 normal) {
     float invmax = (denom == 0.0) ? 0.0 : tbnBasis / sqrt( denom );
 
     #ifdef TWO_SIDED_LIGHTING
-        #ifdef WEBGPU
-            dTBN = mat3(T * invmax, -B * invmax, gl_FrontFacing ? -normal : normal);
-        #else
-            dTBN = mat3(T * invmax, -B * invmax, gl_FrontFacing ? normal : -normal);
-        #endif
+        dTBN = mat3(T * invmax, -B * invmax, gl_FrontFacing ? normal : -normal);
     #else
-        #ifdef WEBGPU
-            dTBN = mat3(T * invmax, -B * invmax, -normal);
-        #else
-            dTBN = mat3(T * invmax, -B * invmax, normal);
-        #endif
+        dTBN = mat3(T * invmax, -B * invmax, normal);
     #endif
 }
 `;

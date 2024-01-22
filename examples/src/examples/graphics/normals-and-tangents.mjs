@@ -69,7 +69,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
     // Setup skydome
     app.scene.envAtlas = assets.helipad.resource;
     app.scene.toneMapping = pc.TONEMAP_ACES;
-    app.scene.skyboxMip = 2;
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;
 
