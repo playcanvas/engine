@@ -113,7 +113,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
 class NormalsAndTangentsExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
-    static DESCRIPTION = '<a href="https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/NormalTangentTest">Model and textures by Ed Mackey</a>, copyright 2017-2018 Analytical Graphics Inc. CC-BY 4.0 <a href="https://creativecommons.org/licenses/by/4.0/">https://creativecommons.org/licenses/by/4.0/</a>.';
     static example = example;
 }
 
