@@ -69,13 +69,13 @@ function generateExampleFile(category, example, exampleClass) {
         <div id="app">
             <div id="appInner">
                 <!--A link without href, which makes it invisible. Setting href in an example would trigger a download when clicked.-->
-                <div style="width:100%; position:absolute; top:10px">
+                ${exampleClass.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
                     <div style="text-align: center;">
                         <a id="ar-link" rel="ar" download="asset.usdz">
                             <img src="./arkit.png" id="button" width="200"/>
                         </a>    
                     </div>
-                </div>
+                </div>` : ''}
                 ${exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>'}
             </div>
         </div>

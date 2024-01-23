@@ -417,5 +417,4 @@ export class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
     static controls = controls;
     static example = example;
-    static WEBGPU_ENABLED = false; // house is just gray
 }

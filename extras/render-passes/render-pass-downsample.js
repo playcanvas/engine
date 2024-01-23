@@ -2,7 +2,7 @@ import {
     RenderPassShaderQuad
 } from "playcanvas";
 
-class RenderPassDownSample extends RenderPassShaderQuad {
+class RenderPassDownsample extends RenderPassShaderQuad {
     constructor(device, sourceTexture) {
         super(device);
         this.sourceTexture = sourceTexture;
@@ -59,4 +59,4 @@ class RenderPassDownSample extends RenderPassShaderQuad {
     }
 }
 
-export { RenderPassDownSample };
+export { RenderPassDownsample };
