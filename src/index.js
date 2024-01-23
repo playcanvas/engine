@@ -179,6 +179,11 @@ export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightm
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
+// SCENE / SPLAT
+export { GSplatData } from './scene/gsplat/gsplat-data.js';
+export { Splat } from './scene/gsplat/gsplat.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
@@ -314,6 +319,7 @@ export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
