@@ -244,9 +244,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
         constructor(app, camera, layer) {
             this._gizmos = {
-                translate: new pcx.GizmoTranslate(app, camera, layer),
-                rotate: new pcx.GizmoRotate(app, camera, layer),
-                scale: new pcx.GizmoScale(app, camera, layer)
+                translate: new pcx.TranslateGizmo(app, camera, layer),
+                rotate: new pcx.RotateGizmo(app, camera, layer),
+                scale: new pcx.ScaleGizmo(app, camera, layer)
             };
 
             for (const type in this._gizmos) {
