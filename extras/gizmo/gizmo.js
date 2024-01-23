@@ -62,18 +62,36 @@ class Gizmo extends EventHandler {
     _coordSpace = WORLD_COORD_SPACE;
 
     /**
-     * The application instance containing the gizmo.
+     * Internal reference to the app containing the gizmo.
      *
      * @type {import('playcanvas').AppBase}
+     * @protected
      */
-    app;
+    _app;
 
     /**
-     * The camera entity that displays the gizmo.
+     * Internal reference to the graphics device of the app.
      *
-     * @type {Entity}
+     * @type {import('playcanvas').AppBase}
+     * @protected
      */
-    camera;
+    _device;
+
+    /**
+     * Internal reference to camera component to view the gizmo.
+     *
+     * @type {import('playcanvas').CameraComponent}
+     * @protected
+     */
+    _camera;
+
+    /**
+     * Internal reference to layer to render the gizmo..
+     *
+     * @type {import('playcanvas').Layer}
+     * @protected
+     */
+    _layer;
 
     /**
      * The graph nodes attached to the gizmo.
@@ -116,9 +134,10 @@ class Gizmo extends EventHandler {
     constructor(app, camera, layer) {
         super();
 
-        this.app = app;
-        this.camera = camera;
-        this.layer = layer;
+        this._app = app;
+        this._device = app.graphicsDevice;
+        this._camera = camera;
+        this._layer = layer;
 
         this._createGizmo();
 
@@ -196,14 +215,14 @@ class Gizmo extends EventHandler {
 
     _getProjFrustumWidth() {
         const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.entity.getPosition();
-        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this.camera.entity.forward);
-        return dist * Math.tan(this.camera.fov * math.DEG_TO_RAD / 2);
+        const cameraPos = this._camera.entity.getPosition();
+        const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this._camera.entity.forward);
+        return dist * Math.tan(this._camera.fov * math.DEG_TO_RAD / 2);
     }
 
     _createGizmo() {
         this.gizmo = new Entity('gizmo');
-        this.app.root.addChild(this.gizmo);
+        this._app.root.addChild(this.gizmo);
         this.gizmo.enabled = false;
     }
 
@@ -230,10 +249,10 @@ class Gizmo extends EventHandler {
     }
 
     _updateScale() {
-        if (this.camera.projection === PROJECTION_PERSPECTIVE) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             this._scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
         } else {
-            this._scale = this.camera.orthoHeight * ORTHO_SCALE_RATIO;
+            this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
         this.gizmo.setLocalScale(this._scale, this._scale, this._scale);
@@ -242,8 +261,8 @@ class Gizmo extends EventHandler {
     }
 
     _getSelection(x, y) {
-        const start = this.camera.screenToWorld(x, y, 1);
-        const end = this.camera.screenToWorld(x, y, this.camera.farClip);
+        const start = this._camera.screenToWorld(x, y, 1);
+        const end = this._camera.screenToWorld(x, y, this._camera.farClip);
         const dir = end.clone().sub(start).normalize();
 
         const selection = [];

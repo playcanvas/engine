@@ -24,34 +24,34 @@ const tmpQ2 = new Quat();
  */
 class RotateGizmo extends TransformGizmo {
     _shapes = {
-        z: new AxisDisk(this.app.graphicsDevice, {
+        z: new AxisDisk(this._device, {
             axis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack,
             sectorAngle: 180
         }),
-        x: new AxisDisk(this.app.graphicsDevice, {
+        x: new AxisDisk(this._device, {
             axis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack,
             sectorAngle: 180
         }),
-        y: new AxisDisk(this.app.graphicsDevice, {
+        y: new AxisDisk(this._device, {
             axis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack,
             sectorAngle: 180
         }),
-        face: new AxisDisk(this.app.graphicsDevice, {
+        face: new AxisDisk(this._device, {
             axis: 'face',
-            layers: [this.layer.id],
-            rotation: this._getLookAtEulerAngles(this.camera.entity.getPosition()),
+            layers: [this._layer.id],
+            rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.face,
             ringRadius: 0.55
@@ -143,7 +143,7 @@ class RotateGizmo extends TransformGizmo {
 
         this.on('transform:move', (pointDelta, angleDelta) => {
             const gizmoPos = this.gizmo.getPosition();
-            const cameraPos = this.camera.entity.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
             const axis = this._selectedAxis;
             const isFacing = axis === 'face';
 
@@ -174,8 +174,8 @@ class RotateGizmo extends TransformGizmo {
             this._nodeOffsets.clear();
         });
 
-        this.app.on('update', () => {
-            const cameraPos = this.camera.entity.getPosition();
+        app.on('update', () => {
+            const cameraPos = this._camera.entity.getPosition();
             this._faceAxisLookAt(cameraPos);
             this._xyzAxisLookAt(cameraPos);
 
@@ -238,7 +238,7 @@ class RotateGizmo extends TransformGizmo {
     _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
         tmpV1.set(0, 0, 0);
         tmpV2.copy(point).scale(this._scale);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this.layer);
+        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);
     }
 
     _getLookAtEulerAngles(position) {
@@ -289,7 +289,7 @@ class RotateGizmo extends TransformGizmo {
 
     _setNodeRotations(axis, angleDelta) {
         const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.entity.getPosition();
+        const cameraPos = this._camera.entity.getPosition();
         const isFacing = axis === 'face';
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];

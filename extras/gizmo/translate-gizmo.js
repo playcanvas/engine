@@ -19,47 +19,47 @@ const tmpQ1 = new Quat();
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {
-        yz: new AxisPlane(this.app.graphicsDevice, {
+        yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullNone,
             hoverColor: this._materials.hover.x.cullNone
         }),
-        xz: new AxisPlane(this.app.graphicsDevice, {
+        xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullNone,
             hoverColor: this._materials.hover.y.cullNone
         }),
-        xy: new AxisPlane(this.app.graphicsDevice, {
+        xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullNone,
             hoverColor: this._materials.hover.z.cullNone
         }),
-        x: new AxisArrow(this.app.graphicsDevice, {
+        x: new AxisArrow(this._device, {
             axis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack
         }),
-        y: new AxisArrow(this.app.graphicsDevice, {
+        y: new AxisArrow(this._device, {
             axis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack
         }),
-        z: new AxisArrow(this.app.graphicsDevice, {
+        z: new AxisArrow(this._device, {
             axis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack

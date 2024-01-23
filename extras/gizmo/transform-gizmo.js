@@ -217,7 +217,7 @@ class TransformGizmo extends Gizmo {
     constructor(app, camera, layer) {
         super(app, camera, layer);
 
-        this.app.on('update', () => {
+        app.on('update', () => {
             if (!this.gizmo.enabled) {
                 return;
             }
@@ -352,9 +352,9 @@ class TransformGizmo extends Gizmo {
 
     _calcPoint(x, y) {
         const gizmoPos = this.gizmo.getPosition();
-        const mouseWPos = this.camera.screenToWorld(x, y, 1);
-        const cameraRot = this.camera.entity.getRotation();
-        const rayOrigin = this.camera.entity.getPosition();
+        const mouseWPos = this._camera.screenToWorld(x, y, 1);
+        const cameraRot = this._camera.entity.getRotation();
+        const rayOrigin = this._camera.entity.getPosition();
         const rayDir = new Vec3();
         const planeNormal = new Vec3();
         const axis = this._selectedAxis;
@@ -364,11 +364,11 @@ class TransformGizmo extends Gizmo {
         const isFacing = axis === 'face';
 
         // calculate ray direction from mouse position
-        if (this.camera.projection === PROJECTION_PERSPECTIVE) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             rayDir.copy(mouseWPos).sub(rayOrigin).normalize();
         } else {
             rayOrigin.add(mouseWPos);
-            this.camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
+            this._camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
         }
 
         if (isAllAxes || isFacing) {
@@ -401,7 +401,7 @@ class TransformGizmo extends Gizmo {
         if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
-            tmpV2.copy(this.camera.entity.up).add(this.camera.entity.right).normalize();
+            tmpV2.copy(this._camera.entity.up).add(this._camera.entity.right).normalize();
 
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
@@ -487,7 +487,7 @@ class TransformGizmo extends Gizmo {
         tmpV2.copy(tmpV1).scale(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
+        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
     }
 
     _createMaterial(color, cull = CULLFACE_BACK) {
