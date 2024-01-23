@@ -54,8 +54,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        gallery: new pc.Asset('gallery', 'container', { url: assetPath + 'models/vr-gallery.glb' }),
-        guitar: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/guitar.ply' }),
         biker: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
@@ -67,18 +65,14 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         app.scene.toneMapping = pc.TONEMAP_ACES;
 
-        // get the instance of the gallery and set up with render component
-        const galleryEntity = assets.gallery.resource.instantiateRenderEntity();
-        app.root.addChild(galleryEntity);
-
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
             clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
-        camera.setLocalPosition(-3, 1, 2);
+        camera.setLocalPosition(2, 1, 1);
 
-        const createSplatInstance = (name, resource, px, py, pz, scale, vertex, fragment) => {
+        const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
 
             const splat = resource.instantiateRenderEntity({
                 cameraEntity: camera,
@@ -86,24 +80,20 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
                 fragment: fragment,
                 vertex: vertex
             });
-            splat.name = name;
             splat.setLocalPosition(px, py, pz);
             splat.setLocalScale(scale, scale, scale);
             app.root.addChild(splat);
             return splat;
         };
 
-        const guitar = createSplatInstance('guitar', assets.guitar.resource, 0, 0.8, 0, 0.4, files['shader.vert'], files['shader.frag']);
-        const biker1 = createSplatInstance('biker1', assets.biker.resource, -1.5, 0.05, 0, 0.7);
-        const biker2 = createSplatInstance('biker2', assets.biker.resource, 1.5, 0.05, 0.8, 0.7);
-        biker2.rotate(0, 150, 0);
+        const biker = createSplatInstance(assets.biker.resource, -1.5, 0.05, 0, 0.7);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
         camera.script.create("orbitCamera", {
             attributes: {
                 inertiaFactor: 0.2,
-                focusEntity: guitar,
+                focusEntity: biker,
                 distanceMax: 60,
                 frameOnStart: false
             }
@@ -111,60 +101,11 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.script.create("orbitCameraInputMouse");
         camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
-
-        let currentTime = 0;
-        app.on("update", function (dt) {
-            currentTime += dt;
-
-            const material = guitar.render.meshInstances[0].material;
-            material.setParameter('uTime', currentTime);
-        });
     });
     return app;
 }
 
-export class SplatManyExample {
+export class GSplatExample {
     static CATEGORY = 'Loaders';
     static example = example;
-
-    static FILES = {
-        'shader.vert': /* glsl */`
-            uniform float uTime;
-            varying float height;
-
-            void main(void)
-            {
-                // evaluate center of the splat in object space
-                vec3 centerLocal = evalCenter();
-
-                // modify it
-                float heightIntensity = centerLocal.y * 0.2;
-                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3 * heightIntensity;
-
-                // output y-coordinate
-                height = centerLocal.y;
-
-                // evaluate the rest of the splat using world space center
-                vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
-                gl_Position = evalSplat(centerWorld);
-            }
-        `,
-
-        'shader.frag': /* glsl */`
-            uniform float uTime;
-            varying float height;
-
-            void main(void)
-            {
-                // get splat color and alpha
-                gl_FragColor = evalSplat();
-
-                // modify it
-                vec3 gold = vec3(1.0, 0.85, 0.0);
-                float sineValue = abs(sin(uTime * 5.0 + height));
-                float blend = smoothstep(0.9, 1.0, sineValue);
-                gl_FragColor.xyz = mix(gl_FragColor.xyz, gold, blend);
-            }
-        `
-    };
 }
