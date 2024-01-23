@@ -1,13 +1,13 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Entity } from '../entity.js';
-import { SplatInstance } from '../../scene/gsplat/splat-instance.js';
-import { Splat } from '../../scene/gsplat/splat.js';
+import { SplatInstance } from '../../scene/gsplat/gsplat-instance.js';
+import { Splat } from '../../scene/gsplat/gsplat.js';
 
 class SplatResource {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
-    /** @type {import('../../scene/gsplat/splat-data.js').SplatData} */
+    /** @type {import('../../scene/gsplat/gsplat-data.js').GSplatData} */
     splatData;
 
     /** @type {Splat | null} */
@@ -15,7 +15,7 @@ class SplatResource {
 
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
-     * @param {import('../../scene/gsplat/splat-data.js').SplatData} splatData - The splat data.
+     * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
      */
     constructor(device, splatData) {
         this.device = device;
@@ -64,7 +64,7 @@ class SplatResource {
     }
 
     /**
-     * @param {import('../../scene/gsplat/splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @param {import('../../scene/gsplat/gsplat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The GS entity.
      */
     instantiateRenderEntity(options = {}) {

@@ -3,7 +3,7 @@ import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
 import { Material } from "../materials/material.js";
 import { getProgramLibrary } from "../shader-lib/get-program-library.js";
-import { splat } from "./shader-generator-splat.js";
+import { splat } from "./shader-generator-gsplat.js";
 
 const splatMainVS = `
     void main(void)

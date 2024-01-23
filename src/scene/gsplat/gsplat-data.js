@@ -70,7 +70,7 @@ const calcSplatMat = (result, data) => {
     ]);
 };
 
-class SplatData {
+class GSplatData {
     // /** @type {import('./ply-reader').PlyElement[]} */
     elements;
 
@@ -196,9 +196,9 @@ class SplatData {
 
             if (first) {
                 first = false;
-                SplatData.calcSplatAabb(result, splat);
+                GSplatData.calcSplatAabb(result, splat);
             } else {
-                SplatData.calcSplatAabb(aabb2, splat);
+                GSplatData.calcSplatAabb(aabb2, splat);
                 result.add(aabb2);
             }
         }
@@ -395,7 +395,7 @@ class SplatData {
             data.opacity[i] = -Math.log(1 / c.w - 1);
         }
 
-        return new SplatData([{
+        return new GSplatData([{
             name: 'vertex',
             count: vertices.count,
             properties: members.map((name) => {
@@ -410,4 +410,4 @@ class SplatData {
     }
 }
 
-export { SplatData };
+export { GSplatData };

@@ -1,4 +1,4 @@
-import { SplatData } from '../../scene/gsplat/splat-data.js';
+import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
 import { SplatResource } from './splat-resource.js';
 
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
@@ -288,7 +288,7 @@ class PlyParser {
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
                 .then((response) => {
-                    callback(null, new SplatResource(this.device, new SplatData(response)));
+                    callback(null, new SplatResource(this.device, new GSplatData(response)));
                 })
                 .catch((err) => {
                     callback(err, null);

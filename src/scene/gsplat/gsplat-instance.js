@@ -6,7 +6,7 @@ import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
 import { createBox } from '../procedural.js';
-import { SplatSorter } from './splat-sorter.js';
+import { SplatSorter } from './gsplat-sorter.js';
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
@@ -14,7 +14,7 @@ const cameraDirection = new Vec3();
 const viewport = [0, 0];
 
 class SplatInstance {
-    /** @type {import('./splat.js').Splat} */
+    /** @type {import('./gsplat.js').Splat} */
     splat;
 
     /** @type {Mesh} */
@@ -37,8 +37,8 @@ class SplatInstance {
     lastCameraDirection = new Vec3();
 
     /**
-     * @param {import('./splat.js').Splat} splat - The splat instance.
-     * @param {import('./splat-material.js').SplatMaterialOptions} options - The options.
+     * @param {import('./gsplat.js').Splat} splat - The splat instance.
+     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The options.
      */
     constructor(splat, options) {
         this.splat = splat;
