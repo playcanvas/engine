@@ -170,9 +170,9 @@ export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used 
 export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
 // SCENE / SPLAT
-export { SplatData } from './scene/splat/splat-data.js';
-export { Splat } from './scene/splat/splat.js';
-export { SplatInstance } from './scene/splat/splat-instance.js';
+export { SplatData } from './scene/gsplat/splat-data.js';
+export { Splat } from './scene/gsplat/splat.js';
+export { SplatInstance } from './scene/gsplat/splat-instance.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';

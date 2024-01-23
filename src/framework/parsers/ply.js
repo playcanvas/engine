@@ -1,4 +1,4 @@
-import { SplatData } from '../../scene/splat/splat-data.js';
+import { SplatData } from '../../scene/gsplat/splat-data.js';
 import { SplatResource } from './splat-resource.js';
 
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
