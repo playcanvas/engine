@@ -86,7 +86,7 @@ class SplatResource {
         // set custom aabb
         entity.render.customAabb = splat.aabb.clone();
 
-        // HACK: store splat instance on the render component, to allow it to be destroye in the following code
+        // HACK: store splat instance on the render component, to allow it to be destroyed in the following code
         entity.render.splatInstance = splatInstance;
 
         // when the render component gets deleted, destroy the splat instance
