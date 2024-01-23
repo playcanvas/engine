@@ -8,7 +8,7 @@ import {
 
 import { AxisDisk } from './axis-shapes.js';
 import { LOCAL_COORD_SPACE } from './gizmo.js';
-import { GizmoTransform } from "./gizmo-transform.js";
+import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -20,9 +20,9 @@ const tmpQ2 = new Quat();
 /**
  * Rotation gizmo.
  *
- * @augments GizmoTransform
+ * @augments TransformGizmo
  */
-class GizmoRotate extends GizmoTransform {
+class RotateGizmo extends TransformGizmo {
     _shapes = {
         z: new AxisDisk(this.app.graphicsDevice, {
             axis: 'z',
@@ -111,13 +111,13 @@ class GizmoRotate extends GizmoTransform {
     snapIncrement = 5;
 
     /**
-     * Creates a new GizmoRotate object.
+     * Creates a new RotateGizmo object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoRotate(app, camera, layer);
+     * const gizmo = new pcx.RotateGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
@@ -323,4 +323,4 @@ class GizmoRotate extends GizmoTransform {
     }
 }
 
-export { GizmoRotate };
+export { RotateGizmo };

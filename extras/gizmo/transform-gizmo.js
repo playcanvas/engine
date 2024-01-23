@@ -40,7 +40,7 @@ const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
  *
  * @augments Gizmo
  */
-class GizmoTransform extends Gizmo {
+class TransformGizmo extends Gizmo {
     /**
      * Internal material objects for mesh instances.
      *
@@ -206,13 +206,13 @@ class GizmoTransform extends Gizmo {
     snapIncrement = 1;
 
     /**
-     * Creates a new GizmoTransform object.
+     * Creates a new TransformGizmo object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoTransform(app, camera, layer);
+     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
@@ -527,4 +527,4 @@ class GizmoTransform extends Gizmo {
     }
 }
 
-export { GizmoTransform };
+export { TransformGizmo };
