@@ -122,6 +122,8 @@ const textureSemantics = [
 
 /**
  * Implementation of the GLTF 2.0 format exporter.
+ *
+ * @category Exporter
  */
 class GltfExporter extends CoreExporter {
     /**
