@@ -3,7 +3,7 @@ import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor
 import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
 import { Material } from "../materials/material.js";
 import { getProgramLibrary } from "../shader-lib/get-program-library.js";
-import { splat } from "./shader-generator-gsplat.js";
+import { gsplat } from "./shader-generator-gsplat.js";
 
 const splatMainVS = `
     void main(void)
@@ -34,7 +34,7 @@ const splatMainFS = `
  * @param {SplatMaterialOptions} [options] - The options.
  * @returns {Material} The GS material.
  */
-const createSplatMaterial = (options = {}) => {
+const createGSplatMaterial = (options = {}) => {
 
     const { debugRender } = options;
 
@@ -62,7 +62,7 @@ const createSplatMaterial = (options = {}) => {
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
         const library = getProgramLibrary(device);
-        library.register('splat', splat);
+        library.register('splat', gsplat);
         return library.getProgram('splat', programOptions, processingOptions);
     };
 
@@ -71,4 +71,4 @@ const createSplatMaterial = (options = {}) => {
     return material;
 };
 
-export { createSplatMaterial };
+export { createGSplatMaterial };

@@ -6,14 +6,14 @@ import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
 import { createBox } from '../procedural.js';
-import { SplatSorter } from './gsplat-sorter.js';
+import { GSplatSorter } from './gsplat-sorter.js';
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const viewport = [0, 0];
 
-class SplatInstance {
+class GSplatInstance {
     /** @type {import('./gsplat.js').Splat} */
     splat;
 
@@ -29,7 +29,7 @@ class SplatInstance {
     /** @type {VertexBuffer} */
     vb;
 
-    /** @type {SplatSorter} */
+    /** @type {GSplatSorter} */
     sorter;
 
     lastCameraPosition = new Vec3();
@@ -95,7 +95,7 @@ class SplatInstance {
         this.centers = new Float32Array(splat.centers);
 
         if (!options.dither || options.dither === DITHER_NONE) {
-            this.sorter = new SplatSorter();
+            this.sorter = new GSplatSorter();
             this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
 
             // if camera entity is provided, automatically use it to sort splats
@@ -158,4 +158,4 @@ class SplatInstance {
     }
 }
 
-export { SplatInstance };
+export { GSplatInstance };

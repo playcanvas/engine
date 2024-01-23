@@ -263,7 +263,7 @@ const splatCoreFS = /* glsl_ */ `
     }
 `;
 
-class ShaderGeneratorSplat {
+class GShaderGeneratorSplat {
     generateKey(options) {
         const vsHash = hashCode(options.vertex);
         const fsHash = hashCode(options.fragment);
@@ -296,6 +296,6 @@ class ShaderGeneratorSplat {
     }
 }
 
-const splat = new ShaderGeneratorSplat();
+const gsplat = new GShaderGeneratorSplat();
 
-export { splat };
+export { gsplat };

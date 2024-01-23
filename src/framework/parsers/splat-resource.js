@@ -1,6 +1,6 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Entity } from '../entity.js';
-import { SplatInstance } from '../../scene/gsplat/gsplat-instance.js';
+import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
 import { Splat } from '../../scene/gsplat/gsplat.js';
 
 class SplatResource {
@@ -72,7 +72,7 @@ class SplatResource {
         // shared splat between instances
         const splat = this.createSplat();
 
-        const splatInstance = new SplatInstance(splat, options);
+        const splatInstance = new GSplatInstance(splat, options);
 
         const entity = new Entity('Splat');
         entity.addComponent('render', {

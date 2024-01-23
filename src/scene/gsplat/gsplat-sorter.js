@@ -167,7 +167,7 @@ function SortWorker() {
     };
 }
 
-class SplatSorter extends EventHandler {
+class GSplatSorter extends EventHandler {
     worker;
 
     vertexBuffer;
@@ -222,4 +222,4 @@ class SplatSorter extends EventHandler {
     }
 }
 
-export { SplatSorter };
+export { GSplatSorter };

@@ -172,7 +172,7 @@ export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
 export { Splat } from './scene/gsplat/gsplat.js';
-export { SplatInstance } from './scene/gsplat/gsplat-instance.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';

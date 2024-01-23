@@ -8,7 +8,7 @@ import {
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { VertexFormat } from '../../platform/graphics/vertex-format.js';
-import { createSplatMaterial } from './gsplat-material.js';
+import { createGSplatMaterial } from './gsplat-material.js';
 
 /**
  * @typedef {object} SplatTextureFormat
@@ -77,7 +77,7 @@ class Splat {
      * @returns {import('../materials/material.js').Material} The created GS material.
      */
     createMaterial(options) {
-        const material = createSplatMaterial(options);
+        const material = createGSplatMaterial(options);
         const { width, height } = this.colorTexture;
 
         material.setParameter('splatColor', this.colorTexture);
