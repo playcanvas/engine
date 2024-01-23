@@ -1,5 +1,5 @@
 import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
-import { SplatResource } from './splat-resource.js';
+import { GSplatResource } from './gsplat-resource.js';
 
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
 const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
@@ -288,7 +288,7 @@ class PlyParser {
         } else {
             readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
                 .then((response) => {
-                    callback(null, new SplatResource(this.device, new GSplatData(response)));
+                    callback(null, new GSplatResource(this.device, new GSplatData(response)));
                 })
                 .catch((err) => {
                     callback(err, null);
@@ -298,8 +298,8 @@ class PlyParser {
 
     /**
      * @param {string} url - The URL.
-     * @param {SplatResource} data - The data.
-     * @returns {SplatResource} Return the data.
+     * @param {GSplatResource} data - The data.
+     * @returns {GSplatResource} Return the data.
      */
     open(url, data) {
         return data;

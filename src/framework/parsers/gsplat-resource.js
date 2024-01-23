@@ -3,7 +3,7 @@ import { Entity } from '../entity.js';
 import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
 import { Splat } from '../../scene/gsplat/gsplat.js';
 
-class SplatResource {
+class GSplatResource {
     /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
@@ -105,4 +105,4 @@ class SplatResource {
     }
 }
 
-export { SplatResource };
+export { GSplatResource };
