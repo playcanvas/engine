@@ -30,7 +30,7 @@ class GSplatHandler {
     }
 
     open(url, data, asset) {
-        this.parser.open(url, data, asset);
+        return this.parser.open(url, data, asset);
     }
 
     patch(asset, assets) {

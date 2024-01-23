@@ -36,7 +36,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         // @ts-ignore
         pc.ScriptHandler,
         // @ts-ignore
-        pc.PlyHandler
+        pc.GSplatHandler
     ];
 
     const app = new pc.AppBase(canvas);
@@ -54,7 +54,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        biker: new pc.Asset('splat', 'splat', { url: assetPath + 'splats/biker.ply' }),
+        biker: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
