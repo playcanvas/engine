@@ -46,6 +46,7 @@ import { CssHandler } from './handlers/css.js';
 import { CubemapHandler } from './handlers/cubemap.js';
 import { FolderHandler } from './handlers/folder.js';
 import { FontHandler } from './handlers/font.js';
+import { GSplatHandler } from './handlers/gsplat.js';
 import { HierarchyHandler } from './handlers/hierarchy.js';
 import { HtmlHandler } from './handlers/html.js';
 import { JsonHandler } from './handlers/json.js';
@@ -59,7 +60,6 @@ import { TemplateHandler } from './handlers/template.js';
 import { TextHandler } from './handlers/text.js';
 import { TextureAtlasHandler } from './handlers/texture-atlas.js';
 import { TextureHandler } from './handlers/texture.js';
-import { PlyHandler } from './handlers/ply.js';
 
 import { XrManager } from './xr/xr-manager.js';
 
@@ -211,7 +211,7 @@ class Application extends AppBase {
             SpriteHandler,
             TemplateHandler,
             ContainerHandler,
-            PlyHandler
+            GSplatHandler
         ];
     }
 }

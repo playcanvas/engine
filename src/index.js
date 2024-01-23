@@ -309,7 +309,7 @@ export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
-export { PlyHandler } from './framework/handlers/ply.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
