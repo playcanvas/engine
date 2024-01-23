@@ -34,7 +34,7 @@ class GSplatHandler {
     }
 
     patch(asset, assets) {
-        
+
     }
 }
 
