@@ -218,7 +218,7 @@ class TransformGizmo extends Gizmo {
         super(app, camera, layer);
 
         app.on('update', () => {
-            if (!this.gizmo.enabled) {
+            if (!this.root.enabled) {
                 return;
             }
             this._drawGuideLines();
@@ -232,7 +232,7 @@ class TransformGizmo extends Gizmo {
             if (meshInstance) {
                 this._selectedAxis = this._getAxis(meshInstance);
                 this._selectedIsPlane =  this._getIsPlane(meshInstance);
-                this._gizmoRotationStart.copy(this.gizmo.getRotation());
+                this._gizmoRotationStart.copy(this.root.getRotation());
                 const pointInfo = this._calcPoint(x, y);
                 this._selectionStartPoint.copy(pointInfo.point);
                 this._selectionStartAngle = pointInfo.angle;
@@ -351,7 +351,7 @@ class TransformGizmo extends Gizmo {
     }
 
     _calcPoint(x, y) {
-        const gizmoPos = this.gizmo.getPosition();
+        const gizmoPos = this.root.getPosition();
         const mouseWPos = this._camera.screenToWorld(x, y, 1);
         const cameraRot = this._camera.entity.getRotation();
         const rayOrigin = this._camera.entity.getPosition();
@@ -458,8 +458,8 @@ class TransformGizmo extends Gizmo {
     }
 
     _drawGuideLines() {
-        const gizmoPos = this.gizmo.getPosition();
-        const gizmoRot = tmpQ1.copy(this.gizmo.getRotation());
+        const gizmoPos = this.root.getPosition();
+        const gizmoRot = tmpQ1.copy(this.root.getRotation());
         const checkAxis = this._hoverAxis || this._selectedAxis;
         const checkIsPlane = this._hoverIsPlane || this._selectedIsPlane;
         for (let i = 0; i < VEC3_AXES.length; i++) {
@@ -506,7 +506,7 @@ class TransformGizmo extends Gizmo {
         // shapes
         for (const key in this._shapes) {
             const shape = this._shapes[key];
-            this.gizmo.addChild(shape.entity);
+            this.root.addChild(shape.entity);
             this.intersectData.push({
                 meshTriDataList: shape.meshTriDataList,
                 parent: shape.entity,

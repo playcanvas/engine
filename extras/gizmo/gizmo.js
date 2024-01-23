@@ -105,7 +105,7 @@ class Gizmo extends EventHandler {
      *
      * @type {import('playcanvas').Entity}
      */
-    gizmo;
+    root;
 
     /**
      * @typedef IntersectData
@@ -144,7 +144,7 @@ class Gizmo extends EventHandler {
         this._updateScale();
 
         this._onPointerDown = (e) => {
-            if (!this.gizmo.enabled || document.pointerLockElement) {
+            if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
@@ -154,7 +154,7 @@ class Gizmo extends EventHandler {
             this.fire('pointer:down', e.clientX, e.clientY, selection[0]);
         };
         this._onPointerMove = (e) => {
-            if (!this.gizmo.enabled || document.pointerLockElement) {
+            if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
             const selection = this._getSelection(e.clientX, e.clientY);
@@ -164,19 +164,19 @@ class Gizmo extends EventHandler {
             this.fire('pointer:move', e.clientX, e.clientY, selection[0]);
         };
         this._onPointerUp = (e) => {
-            if (!this.gizmo.enabled || document.pointerLockElement) {
+            if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
             this.fire('pointer:up');
         };
         this._onKeyDown = (e) => {
-            if (!this.gizmo.enabled) {
+            if (!this.root.enabled) {
                 return;
             }
             this.fire('key:down', e.key, e.shiftKey, e.ctrlKey, e.metaKey);
         };
         this._onKeyUp = (e) => {
-            if (!this.gizmo.enabled) {
+            if (!this.root.enabled) {
                 return;
             }
             this.fire('key:up');
@@ -214,16 +214,16 @@ class Gizmo extends EventHandler {
     }
 
     _getProjFrustumWidth() {
-        const gizmoPos = this.gizmo.getPosition();
+        const gizmoPos = this.root.getPosition();
         const cameraPos = this._camera.entity.getPosition();
         const dist = tmpV1.copy(gizmoPos).sub(cameraPos).dot(this._camera.entity.forward);
         return dist * Math.tan(this._camera.fov * math.DEG_TO_RAD / 2);
     }
 
     _createGizmo() {
-        this.gizmo = new Entity('gizmo');
-        this._app.root.addChild(this.gizmo);
-        this.gizmo.enabled = false;
+        this.root = new Entity('gizmo');
+        this._app.root.addChild(this.root);
+        this.root.enabled = false;
     }
 
     _updatePosition() {
@@ -233,7 +233,7 @@ class Gizmo extends EventHandler {
             tmpV1.add(node.getPosition());
         }
         tmpV1.scale(1.0 / (this.nodes.length || 1));
-        this.gizmo.setPosition(tmpV1);
+        this.root.setPosition(tmpV1);
 
         this.fire('position:set', tmpV1);
     }
@@ -243,7 +243,7 @@ class Gizmo extends EventHandler {
         if (this._coordSpace === LOCAL_COORD_SPACE) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
-        this.gizmo.setEulerAngles(tmpV1);
+        this.root.setEulerAngles(tmpV1);
 
         this.fire('rotation:set', tmpV1);
     }
@@ -255,7 +255,7 @@ class Gizmo extends EventHandler {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
-        this.gizmo.setLocalScale(this._scale, this._scale, this._scale);
+        this.root.setLocalScale(this._scale, this._scale, this._scale);
 
         this.fire('scale:set', this._scale);
     }
@@ -315,7 +315,7 @@ class Gizmo extends EventHandler {
 
         this.fire('nodes:attach');
 
-        this.gizmo.enabled = true;
+        this.root.enabled = true;
     }
 
     /**
@@ -327,7 +327,7 @@ class Gizmo extends EventHandler {
      * gizmo.detach();
      */
     detach() {
-        this.gizmo.enabled = false;
+        this.root.enabled = false;
 
         this.fire('nodes:detach');
 
@@ -354,7 +354,7 @@ class Gizmo extends EventHandler {
             window.removeEventListener('keyup', this._onKeyUp);
         }
 
-        this.gizmo.destroy();
+        this.root.destroy();
     }
 }
 

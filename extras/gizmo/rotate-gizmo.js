@@ -142,7 +142,7 @@ class RotateGizmo extends TransformGizmo {
         });
 
         this.on('transform:move', (pointDelta, angleDelta) => {
-            const gizmoPos = this.gizmo.getPosition();
+            const gizmoPos = this.root.getPosition();
             const cameraPos = this._camera.entity.getPosition();
             const axis = this._selectedAxis;
             const isFacing = axis === 'face';
@@ -180,7 +180,7 @@ class RotateGizmo extends TransformGizmo {
             this._xyzAxisLookAt(cameraPos);
 
             if (this._dragging) {
-                const gizmoPos = this.gizmo.getPosition();
+                const gizmoPos = this.root.getPosition();
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
                                          this._guideAngleStart, this._guideAngleStartColor);
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
@@ -256,8 +256,8 @@ class RotateGizmo extends TransformGizmo {
     }
 
     _xyzAxisLookAt(position) {
-        tmpV1.copy(position).sub(this.gizmo.getPosition());
-        tmpQ1.copy(this.gizmo.getRotation()).invert().transformVector(tmpV1, tmpV1);
+        tmpV1.copy(position).sub(this.root.getPosition());
+        tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
         let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
@@ -278,7 +278,7 @@ class RotateGizmo extends TransformGizmo {
     }
 
     _storeNodeRotations() {
-        const gizmoPos = this.gizmo.getPosition();
+        const gizmoPos = this.root.getPosition();
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             this._nodeLocalRotations.set(node, node.getLocalRotation().clone());
@@ -288,7 +288,7 @@ class RotateGizmo extends TransformGizmo {
     }
 
     _setNodeRotations(axis, angleDelta) {
-        const gizmoPos = this.gizmo.getPosition();
+        const gizmoPos = this.root.getPosition();
         const cameraPos = this._camera.entity.getPosition();
         const isFacing = axis === 'face';
         for (let i = 0; i < this.nodes.length; i++) {
