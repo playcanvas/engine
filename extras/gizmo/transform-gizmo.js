@@ -61,7 +61,7 @@ class TransformGizmo extends Gizmo {
      * @example
      * const gizmo = new pcx.TransformGizmo(app, camera, layer);
      * gizmo.on('transform:move', (pointDelta, angleDelta) => {
-     *    console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
+     *     console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
      * });
      */
     static EVENT_TRANSFORMMOVE = 'transform:move';
