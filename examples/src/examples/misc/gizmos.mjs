@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
@@ -244,15 +244,15 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
         constructor(app, camera, layer) {
             this._gizmos = {
-                translate: new pcx.GizmoTranslate(app, camera, layer),
-                rotate: new pcx.GizmoRotate(app, camera, layer),
-                scale: new pcx.GizmoScale(app, camera, layer)
+                translate: new pcx.TranslateGizmo(app, camera, layer),
+                rotate: new pcx.RotateGizmo(app, camera, layer),
+                scale: new pcx.ScaleGizmo(app, camera, layer)
             };
 
             for (const type in this._gizmos) {
                 const gizmo = this._gizmos[type];
-                gizmo.on('pointer:down', (x, y, selection) => {
-                    this._ignorePicker = !!selection;
+                gizmo.on('pointer:down', (x, y, meshInstance) => {
+                    this._ignorePicker = !!meshInstance;
                 });
                 gizmo.on('pointer:up', () => {
                     this._ignorePicker = false;
@@ -488,6 +488,13 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         // call method from top context (same as controls)
         window.top.setType(value);
     };
+
+    const keydown = (e) => {
+        gizmoHandler.gizmo.snap = !!e.shiftKey;
+    };
+    const keyup = (e) => {
+        gizmoHandler.gizmo.snap = !!e.shiftKey;
+    };
     const keypress = (e) => {
         switch (e.key) {
             case 'x':
@@ -504,6 +511,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 break;
         }
     };
+    window.addEventListener('keydown', keydown);
+    window.addEventListener('keyup', keyup);
     window.addEventListener('keypress', keypress);
 
     // Gizmo and camera set handler
@@ -584,6 +593,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         gizmoHandler.destroy();
 
         window.removeEventListener('resize', resize);
+        window.removeEventListener('keydown', keydown);
+        window.removeEventListener('keyup', keyup);
         window.removeEventListener('keypress', keypress);
         window.removeEventListener('pointerdown', onPointerDown);
     });
