@@ -274,7 +274,7 @@ class TransformGizmo extends Gizmo {
     }
 
     set snap(value) {
-        this.snap = this.root.enabled && value;
+        this._snap = this.root.enabled && value;
     }
 
     get snap() {
