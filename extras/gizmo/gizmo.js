@@ -326,7 +326,7 @@ class Gizmo extends EventHandler {
             const node = this.nodes[i];
             tmpV1.add(node.getPosition());
         }
-        tmpV1.scale(1.0 / (this.nodes.length || 1));
+        tmpV1.mulScalar(1.0 / (this.nodes.length || 1));
         this.root.setPosition(tmpV1);
 
         this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);

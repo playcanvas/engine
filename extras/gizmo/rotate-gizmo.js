@@ -137,7 +137,7 @@ class RotateGizmo extends TransformGizmo {
 
             // guide angle line start
             this._guideAngleStart.copy(this._selectionStartPoint).normalize();
-            this._guideAngleStart.scale(scale);
+            this._guideAngleStart.mulScalar(scale);
             this._gizmoRotationStart.transformVector(this._guideAngleStart, this._guideAngleStart);
             this._guideAngleEnd.copy(this._guideAngleStart);
 
@@ -266,7 +266,7 @@ class RotateGizmo extends TransformGizmo {
 
     _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
         tmpV1.set(0, 0, 0);
-        tmpV2.copy(point).scale(this._scale);
+        tmpV2.copy(point).mulScalar(this._scale);
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);
     }
 

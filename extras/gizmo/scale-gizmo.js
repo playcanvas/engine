@@ -123,9 +123,9 @@ class ScaleGizmo extends TransformGizmo {
             const axis = this._selectedAxis;
             const isPlane = this._selectedIsPlane;
             if (this.snap) {
-                pointDelta.scale(1 / this.snapIncrement);
+                pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
-                pointDelta.scale(this.snapIncrement);
+                pointDelta.mulScalar(this.snapIncrement);
             }
             if (this.uniform && isPlane) {
                 tmpV1.set(Math.abs(pointDelta.x), Math.abs(pointDelta.y), Math.abs(pointDelta.z));

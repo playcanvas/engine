@@ -442,7 +442,7 @@ class TransformGizmo extends Gizmo {
 
             if (!isPlane && !isRotation) {
                 tmpV1.copy(rayOrigin).sub(gizmoPos).normalize();
-                planeNormal.copy(tmpV1.sub(planeNormal.scale(planeNormal.dot(tmpV1))).normalize());
+                planeNormal.copy(tmpV1.sub(planeNormal.mulScalar(planeNormal.dot(tmpV1))).normalize());
             }
         }
 
@@ -450,7 +450,7 @@ class TransformGizmo extends Gizmo {
         const rayPlaneDot = planeNormal.dot(rayDir);
         const planeDist = gizmoPos.dot(planeNormal);
         const pointPlaneDist = (planeNormal.dot(rayOrigin) - planeDist) / rayPlaneDot;
-        const point = rayDir.scale(-pointPlaneDist).add(rayOrigin);
+        const point = rayDir.mulScalar(-pointPlaneDist).add(rayOrigin);
 
         if (isRotation) {
             // point needs to be relative to gizmo for angle calculation
@@ -470,7 +470,7 @@ class TransformGizmo extends Gizmo {
                 planeNormal.set(0, 0, 0);
                 planeNormal[axis] = 1;
                 tmpQ1.transformVector(planeNormal, planeNormal);
-                point.copy(planeNormal.scale(planeNormal.dot(point)));
+                point.copy(planeNormal.mulScalar(planeNormal.dot(point)));
             }
 
             // rotate point back to world coords
@@ -542,8 +542,8 @@ class TransformGizmo extends Gizmo {
     _drawSpanLine(pos, rot, axis) {
         tmpV1.set(0, 0, 0);
         tmpV1[axis] = 1;
-        tmpV1.scale(SPANLINE_SIZE);
-        tmpV2.copy(tmpV1).scale(-1);
+        tmpV1.mulScalar(SPANLINE_SIZE);
+        tmpV2.copy(tmpV1).mulScalar(-1);
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);

@@ -108,9 +108,9 @@ class TranslateGizmo extends TransformGizmo {
 
         this.on('transform:move', (pointDelta) => {
             if (this.snap) {
-                pointDelta.scale(1 / this.snapIncrement);
+                pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
-                pointDelta.scale(this.snapIncrement);
+                pointDelta.mulScalar(this.snapIncrement);
             }
             this._setNodePositions(pointDelta);
         });
