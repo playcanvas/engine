@@ -283,6 +283,11 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('x', value);
     }
 
+    /**
+     * X axis color.
+     *
+     * @type {Color}
+     */
     get xAxisColor() {
         return this._materials.axis.x.cullBack.emissive;
     }
@@ -291,6 +296,11 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('y', value);
     }
 
+    /**
+     * Y axis color.
+     *
+     * @type {Color}
+     */
     get yAxisColor() {
         return this._materials.axis.y.cullBack.emissive;
     }
@@ -299,6 +309,11 @@ class TransformGizmo extends Gizmo {
         this._updateAxisColor('z', value);
     }
 
+    /**
+     * Z axis color.
+     *
+     * @type {Color}
+     */
     get zAxisColor() {
         return this._materials.axis.z.cullBack.emissive;
     }
@@ -519,6 +534,9 @@ class TransformGizmo extends Gizmo {
         }
     }
 
+    /**
+     * @override
+     */
     destroy() {
         for (const key in this._shapes) {
             this._shapes[key].destroy();
