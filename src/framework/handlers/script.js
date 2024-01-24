@@ -99,8 +99,8 @@ class ScriptHandler {
         if (isEsmScript) {
 
             // The browser will hold its own cache of the script, so we need to bust it
-            let path = url.load
-            if(path.startsWith(this._app.assets.prefix)) {
+            let path = url.load;
+            if (path.startsWith(this._app.assets.prefix)) {
                 path = path.replace(this._app.assets.prefix, '');
             }
 
