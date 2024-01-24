@@ -49,7 +49,7 @@ class TransformGizmo extends Gizmo {
      * @example
      * const gizmo = new pcx.TransformGizmo(app, camera, layer);
      * gizmo.on('transform:start', () => {
-     *    console.log('Transformation started');
+     *     console.log('Transformation started');
      * });
      */
     static EVENT_TRANSFORMSTART = 'transform:start';
