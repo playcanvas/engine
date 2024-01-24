@@ -360,6 +360,5 @@ export { XrPlane } from './framework/xr/xr-plane.js';
 export { XrHand } from './framework/xr/xr-hand.js';
 export { XrFinger } from './framework/xr/xr-finger.js';
 
-
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
