@@ -23,6 +23,29 @@ const mat4B = new Mat4();
  */
 class XrLightEstimation extends EventHandler {
     /**
+     * Fired when light estimation data becomes available.
+     *
+     * @event
+     * @example
+     * app.xr.lightEstimation.on('available', () => {
+     *     console.log('Light estimation is available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when light estimation has failed to start. The handler is passed the Error object
+     * related to failure of light estimation start.
+     *
+     * @event
+     * @example
+     * app.xr.lightEstimation.on('error', (error) => {
+     *     console.error(error.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -90,23 +113,6 @@ class XrLightEstimation extends EventHandler {
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
     }
-
-    /**
-     * Fired when light estimation data becomes available.
-     *
-     * @event XrLightEstimation#available
-     */
-
-    /**
-     * Fired when light estimation has failed to start.
-     *
-     * @event XrLightEstimation#error
-     * @param {Error} error - Error object related to failure of light estimation start.
-     * @example
-     * app.xr.lightEstimation.on('error', function (ex) {
-     *     // has failed to start
-     * });
-     */
 
     /** @private */
     _onSessionStart() {

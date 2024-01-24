@@ -776,6 +776,38 @@ class GamePad {
  */
 class GamePads extends EventHandler {
     /**
+     * Fired when a gamepad is connected. The handler is passed the {@link GamePad} object that was
+     * connected.
+     *
+     * @event
+     * @example
+     * const onPadConnected = (pad) => {
+     *     if (!pad.mapping) {
+     *         // Map the gamepad as the system could not find the proper map.
+     *     } else {
+     *         // Make the gamepad pulse.
+     *     }
+     * };
+     *
+     * app.keyboard.on("gamepadconnected", onPadConnected, this);
+     */
+    static EVENT_GAMEPADCONNECTED = 'gamepadconnected';
+
+    /**
+     * Fired when a gamepad is disconnected. The handler is passed the {@link GamePad} object that
+     * was disconnected.
+     *
+     * @event
+     * @example
+     * const onPadDisconnected = (pad) => {
+     *     // Pause the game.
+     * };
+     *
+     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
+     */
+    static EVENT_GAMEPADDISCONNECTED = 'gamepaddisconnected';
+
+    /**
      * Create a new GamePads instance.
      */
     constructor() {
@@ -811,34 +843,6 @@ class GamePads extends EventHandler {
 
         this.poll();
     }
-
-    /**
-     * Fired when a gamepad is connected.
-     *
-     * @event GamePads#gamepadconnected
-     * @param {GamePad} gamepad - The gamepad that was just connected.
-     * @example
-     * const onPadConnected = function (pad) {
-     *     if (!pad.mapping) {
-     *         // Map the gamepad as the system could not find the proper map.
-     *     } else {
-     *         // Make the gamepad pulse.
-     *     }
-     * };
-     * app.keyboard.on("gamepadconnected", onPadConnected, this);
-     */
-
-    /**
-     * Fired when a gamepad is disconnected.
-     *
-     * @event GamePads#gamepaddisconnected
-     * @param {GamePad} gamepad - The gamepad that was just disconnected.
-     * @example
-     * const onPadDisconnected = function (pad) {
-     *     // Pause the game.
-     * };
-     * app.keyboard.on("gamepaddisconnected", onPadDisconnected, this);
-     */
 
     /**
      * Threshold for axes to return values. Must be between 0 and 1.

@@ -27,6 +27,63 @@ import { XrAnchor } from './xr-anchor.js';
  */
 class XrAnchors extends EventHandler {
     /**
+     * Fired when anchors become available.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('available', () => {
+     *     console.log('Anchors are available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when anchors become unavailable.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('unavailable', () => {
+     *     console.log('Anchors are unavailable');
+     * });
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Fired when an anchor failed to be created. The handler is passed an Error object.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * Fired when a new {@link XrAnchor} is added. The handler is passed the {@link XrAnchor} that
+     * was added.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('add', (anchor) => {
+     *     console.log('Anchor added');
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when an {@link XrAnchor} is destroyed. The handler is passed the {@link XrAnchor} that
+     * was destroyed.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('destroy', (anchor) => {
+     *     console.log('Anchor destroyed');
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @ignore
      */
@@ -103,47 +160,6 @@ class XrAnchors extends EventHandler {
             this.manager.on('end', this._onSessionEnd, this);
         }
     }
-
-    /**
-     * Fired when anchors becomes available.
-     *
-     * @event XrAnchors#available
-     */
-
-    /**
-     * Fired when anchors becomes unavailable.
-     *
-     * @event XrAnchors#unavailable
-     */
-
-    /**
-     * Fired when anchor failed to be created.
-     *
-     * @event XrAnchors#error
-     * @param {Error} error - Error object related to a failure of anchors.
-     */
-
-    /**
-     * Fired when a new {@link XrAnchor} is added.
-     *
-     * @event XrAnchors#add
-     * @param {XrAnchor} anchor - Anchor that has been added.
-     * @example
-     * app.xr.anchors.on('add', function (anchor) {
-     *     // new anchor is added
-     * });
-     */
-
-    /**
-     * Fired when an {@link XrAnchor} is destroyed.
-     *
-     * @event XrAnchors#destroy
-     * @param {XrAnchor} anchor - Anchor that has been destroyed.
-     * @example
-     * app.xr.anchors.on('destroy', function (anchor) {
-     *     // anchor that is destroyed
-     * });
-     */
 
     /** @private */
     _onSessionStart() {

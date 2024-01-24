@@ -41,6 +41,75 @@ import { XrViews } from './xr-views.js';
  */
 class XrManager extends EventHandler {
     /**
+     * Fired when availability of the XR type is changed. This event is available in two
+     * forms. They are as follows:
+     *
+     * 1. `available` - Fired when availability of any XR type is changed. The handler is passed
+     * the session type that has changed availability and a boolean representing the availability.
+     * 2. `available:[type]` - Fired when availability of specific XR type is changed. The handler
+     * is passed a boolean representing the availability.
+     *
+     * @event
+     * @example
+     * app.xr.on('available', (type, available) => {
+     *     console.log(`XR type ${type} is now ${available ? 'available' : 'unavailable'}`);
+     * });
+     * @example
+     * app.xr.on(`available:${pc.XRTYPE_VR}`, (available) => {
+     *     console.log(`XR type VR is now ${available ? 'available' : 'unavailable'}`);
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when XR session is started.
+     *
+     * @event
+     * @example
+     * app.xr.on('start', () => {
+     *     // XR session has started
+     * });
+     */
+    static EVENT_START = 'start';
+
+    /**
+     * Fired when XR session is ended.
+     *
+     * @event
+     * @example
+     * app.xr.on('end', () => {
+     *     // XR session has ended
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
+     * Fired when XR session is updated, providing relevant XRFrame object. The handler is passed
+     * [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame) object that can be used
+     * for interfacing directly with WebXR APIs.
+     *
+     * @event
+     * @example
+     * app.xr.on('update', (frame) => {
+     *     console.log('XR frame updated');
+     * });
+     */
+    static EVENT_UPDATE = 'update';
+
+    /**
+     * Fired when XR session is failed to start or failed to check for session type support. The handler
+     * is passed the [Error](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error)
+     * object related to failure of session start or check of session type support.
+     *
+     * @event
+     * @example
+     * app.xr.on('error', (error) => {
+     *     console.error(error.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
      * @type {import('../app-base.js').AppBase}
      * @ignore
      */
@@ -257,73 +326,6 @@ class XrManager extends EventHandler {
             this.app.graphicsDevice.on('devicerestored', this._onDeviceRestored, this);
         }
     }
-
-    /**
-     * Fired when availability of specific XR type is changed.
-     *
-     * @event XrManager#available
-     * @param {string} type - The session type that has changed availability.
-     * @param {boolean} available - True if specified session type is now available.
-     * @example
-     * app.xr.on('available', function (type, available) {
-     *     console.log('"' + type + '" XR session is now ' + (available ? 'available' : 'unavailable'));
-     * });
-     */
-
-    /**
-     * Fired when availability of specific XR type is changed.
-     *
-     * @event XrManager#available:[type]
-     * @param {boolean} available - True if specified session type is now available.
-     * @example
-     * app.xr.on('available:' + pc.XRTYPE_VR, function (available) {
-     *     console.log('Immersive VR session is now ' + (available ? 'available' : 'unavailable'));
-     * });
-     */
-
-    /**
-     * Fired when XR session is started.
-     *
-     * @event XrManager#start
-     * @example
-     * app.xr.on('start', function () {
-     *     // XR session has started
-     * });
-     */
-
-    /**
-     * Fired when XR session is ended.
-     *
-     * @event XrManager#end
-     * @example
-     * app.xr.on('end', function () {
-     *     // XR session has ended
-     * });
-     */
-
-    /**
-     * Fired when XR session is updated, providing relevant XRFrame object.
-     *
-     * @event XrManager#update
-     * @param {object} frame - [XRFrame](https://developer.mozilla.org/en-US/docs/Web/API/XRFrame)
-     * object that can be used for interfacing directly with WebXR APIs.
-     * @example
-     * app.xr.on('update', function (frame) {
-     *
-     * });
-     */
-
-    /**
-     * Fired when XR session is failed to start or failed to check for session type support.
-     *
-     * @event XrManager#error
-     * @param {Error} error - Error object related to failure of session start or check of session
-     * type support.
-     * @example
-     * app.xr.on('error', function (ex) {
-     *     // XR session has failed to start, or failed to check for session type support
-     * });
-     */
 
     /**
      * Destroys the XrManager instance.
