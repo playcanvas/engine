@@ -56,7 +56,7 @@ class ScriptHandler {
         const self = this;
         script.app = this._app;
 
-        this._loadScript(url.load, (err, url, extra) => {
+        const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
                 if (script.legacy) {
                     let Type = null;
@@ -91,6 +91,28 @@ class ScriptHandler {
                 callback(err);
             }
         });
+
+        // check if we're loading a module or a classic script
+        const [basePath, search] = url.load.split('?');
+        const isEsmScript = basePath.endsWith('.esm.js');
+
+        if (isEsmScript) {
+
+            // The browser will hold its own cache of the script, so we need to bust it
+            let path = url.load
+            if(path.startsWith(this._app.assets.prefix)) {
+                path = path.replace(this._app.assets.prefix, '');
+            }
+
+            const hash = this._app.assets.getByUrl(path).file.hash;
+            const searchParams = new URLSearchParams(search);
+            searchParams.set('hash', hash);
+            const urlWithHash = `${basePath}?${searchParams.toString()}`;
+
+            this._loadModule(urlWithHash, onScriptLoad);
+        } else {
+            this._loadScript(url.load, onScriptLoad);
+        }
     }
 
     open(url, data) {
@@ -100,65 +122,61 @@ class ScriptHandler {
     patch(asset, assets) { }
 
     _loadScript(url, callback) {
+        const head = document.head;
+        const element = document.createElement('script');
+        element.type = 'module';
+        this._cache[url] = element;
 
-        const path = url.split('?')[0];
-        const isEsmScript = path.endsWith('.esm.js');
+        // use async=false to force scripts to execute in order
+        element.async = false;
 
-        if (isEsmScript) {
+        element.addEventListener('error', function (e) {
+            callback(`Script: ${e.target.src} failed to load`);
+        }, false);
 
-            const baseUrl = platform.browser ? window.location.origin : '';
-            const importUrl = new URL(url, baseUrl);
-            importUrl.searchParams.append('cacheBust', new Date().valueOf().toString());
+        let done = false;
+        element.onload = element.onreadystatechange = function () {
+            if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
+                done = true; // prevent double event firing
+                callback(null, url, element);
+            }
+        };
+        // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
+        element.src = url;
 
-            // @ts-ignore
-            import(importUrl.toString()).then((module) => {
+        head.appendChild(element);
+    }
 
-                for (const key in module) {
-                    const scriptClass = module[key];
-                    const extendsScriptType = scriptClass instanceof ScriptType;
+    _loadModule(url, callback) {
 
-                    if (extendsScriptType) {
+        // if we're in the browser, we need to use the full URL
+        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const importUrl = new URL(url, baseUrl);
 
-                        if (script.attributesDefinition) {
-                            for (const key in script.attributesDefinition) {
-                                scriptClass.attributes.add(key, script.attributesDefinition[key]);
-                            }
+        // @ts-ignore
+        import(importUrl.toString()).then((module) => {
+
+            for (const key in module) {
+                const scriptClass = module[key];
+                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
+
+                if (extendsScriptType) {
+
+                    if (script.attributesDefinition) {
+                        for (const key in script.attributesDefinition) {
+                            scriptClass.attributes.add(key, script.attributesDefinition[key]);
                         }
-
-                        registerScript(scriptClass, scriptClass.name);
                     }
+
+                    registerScript(scriptClass, scriptClass.name);
                 }
+            }
 
-                callback(null, url, null);
+            callback(null, url, null);
 
-            }).catch((err) => {
-                callback(err);
-            });
-
-        } else {
-            const head = document.head;
-            const element = document.createElement('script');
-            this._cache[url] = element;
-
-            // use async=false to force scripts to execute in order
-            element.async = false;
-
-            element.addEventListener('error', function (e) {
-                callback(`Script: ${e.target.src} failed to load`);
-            }, false);
-
-            let done = false;
-            element.onload = element.onreadystatechange = function () {
-                if (!done && (!this.readyState || (this.readyState === 'loaded' || this.readyState === 'complete'))) {
-                    done = true; // prevent double event firing
-                    callback(null, url, element);
-                }
-            };
-            // set the src attribute after the onload callback is set, to avoid an instant loading failing to fire the callback
-            element.src = url;
-
-            head.appendChild(element);
-        }
+        }).catch((err) => {
+            callback(err);
+        });
     }
 }
 
