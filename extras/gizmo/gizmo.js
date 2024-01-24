@@ -70,7 +70,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('pointer:up', (x, y, meshInstance) => {
-     *    console.log(`Pointer was up on ${meshInstance.node.name} at ${x}, ${y}`);
+     *     console.log(`Pointer was up on ${meshInstance.node.name} at ${x}, ${y}`);
      * })
      */
     static EVENT_POINTERUP = 'pointer:up';
