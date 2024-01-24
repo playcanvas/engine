@@ -21,6 +21,7 @@ const tmpQ2 = new Quat();
  * Rotation gizmo.
  *
  * @augments TransformGizmo
+ * @category Gizmo
  */
 class RotateGizmo extends TransformGizmo {
     _shapes = {

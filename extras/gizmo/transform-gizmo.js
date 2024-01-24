@@ -39,6 +39,7 @@ const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
  * The base class for all transform gizmos.
  *
  * @augments Gizmo
+ * @category Gizmo
  */
 class TransformGizmo extends Gizmo {
     /**

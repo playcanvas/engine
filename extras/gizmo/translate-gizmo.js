@@ -16,6 +16,7 @@ const tmpQ1 = new Quat();
  * Translation gizmo.
  *
  * @augments TransformGizmo
+ * @category Gizmo
  */
 class TranslateGizmo extends TransformGizmo {
     _shapes = {

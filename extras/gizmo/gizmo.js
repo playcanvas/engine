@@ -35,6 +35,8 @@ export const WORLD_COORD_SPACE = 'world';
 
 /**
  * The base class for all gizmos.
+ *
+ * @category Gizmo
  */
 class Gizmo extends EventHandler {
     /**

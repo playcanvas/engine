@@ -13,6 +13,7 @@ const tmpV1 = new Vec3();
  * Scaling gizmo.
  *
  * @augments TransformGizmo
+ * @category Gizmo
  */
 class ScaleGizmo extends TransformGizmo {
     _shapes = {
