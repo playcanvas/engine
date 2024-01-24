@@ -73,7 +73,7 @@ class TransformGizmo extends Gizmo {
      * @example
      * const gizmo = new pcx.TransformGizmo(app, camera, layer);
      * gizmo.on('transform:end', () => {
-     *    console.log('Transformation ended');
+     *     console.log('Transformation ended');
      * });
      */
     static EVENT_TRANSFORMEND = 'transform:end';
