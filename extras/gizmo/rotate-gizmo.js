@@ -195,15 +195,12 @@ class RotateGizmo extends TransformGizmo {
     /**
      * XYZ tube radius.
      *
-     * @param {number} value - tube radius.
+     * @type {number}
      */
     set xyzTubeRadius(value) {
         this._setDiskProp('tubeRadius', value);
     }
 
-    /**
-     * @type {number}
-     */
     get xyzTubeRadius() {
         return this._shapes.x.tubeRadius;
     }
@@ -211,15 +208,12 @@ class RotateGizmo extends TransformGizmo {
     /**
      * XYZ ring radius.
      *
-     * @param {number} value - ring radius.
+     * @type {number}
      */
     set xyzRingRadius(value) {
         this._setDiskProp('ringRadius', value);
     }
 
-    /**
-     * @type {number}
-     */
     get xyzRingRadius() {
         return this._shapes.x.ringRadius;
     }
@@ -227,15 +221,12 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Face tube radius.
      *
-     * @param {number} value - tube radius.
+     * @type {number}
      */
     set faceTubeRadius(value) {
         this._shapes.face.tubeRadius = value;
     }
 
-    /**
-     * @type {number}
-     */
     get faceTubeRadius() {
         return this._shapes.face.tubeRadius;
     }
@@ -243,15 +234,12 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Face ring radius.
      *
-     * @param {number} value - ring radius.
+     * @type {number}
      */
     set faceRingRadius(value) {
         this._shapes.face.ringRadius = value;
     }
 
-    /**
-     * @type {number}
-     */
     get faceRingRadius() {
         return this._shapes.face.ringRadius;
     }
@@ -259,16 +247,13 @@ class RotateGizmo extends TransformGizmo {
     /**
      * Ring tolerance.
      *
-     * @param {number} value - ring tolerance.
+     * @type {number}
      */
     set ringTolerance(value) {
         this._setDiskProp('tolerance', value);
         this._shapes.face.tolerance = value;
     }
 
-    /**
-     * @type {number}
-     */
     get ringTolerance() {
         return this._shapes.x.tolerance;
     }

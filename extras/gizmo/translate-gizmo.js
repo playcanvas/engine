@@ -124,15 +124,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Axis gap.
      *
-     * @param {number} value - gap.
+     * @type {number}
      */
     set axisGap(value) {
         this._setArrowProp('gap', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisGap() {
         return this._shapes.x.gap;
     }
@@ -140,15 +137,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Axis line thickness.
      *
-     * @param {number} value - line thickness.
+     * @type {number}
      */
     set axisLineThickness(value) {
         this._setArrowProp('lineThickness', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisLineThickness() {
         return this._shapes.x.lineThickness;
     }
@@ -156,15 +150,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Axis line length.
      *
-     * @param {number} value - line length.
+     * @type {number}
      */
     set axisLineLength(value) {
         this._setArrowProp('lineLength', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisLineLength() {
         return this._shapes.x.lineLength;
     }
@@ -172,15 +163,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Axis line tolerance.
      *
-     * @param {number} value - line tolerance.
+     * @type {number}
      */
     set axisLineTolerance(value) {
         this._setArrowProp('tolerance', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisLineTolerance() {
         return this._shapes.x.tolerance;
     }
@@ -188,15 +176,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Arrow thickness.
      *
-     * @param {number} value - arrow thickness.
+     * @type {number}
      */
     set axisArrowThickness(value) {
         this._setArrowProp('arrowThickness', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisArrowThickness() {
         return this._shapes.x.arrowThickness;
     }
@@ -204,15 +189,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Arrow length.
      *
-     * @param {number} value - arrow length.
+     * @type {number}
      */
     set axisArrowLength(value) {
         this._setArrowProp('arrowLength', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisArrowLength() {
         return this._shapes.x.arrowLength;
     }
@@ -220,15 +202,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Plane size.
      *
-     * @param {number} value - plane size.
+     * @type {number}
      */
     set axisPlaneSize(value) {
         this._setPlaneProp('size', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisPlaneSize() {
         return this._shapes.yz.size;
     }
@@ -236,15 +215,12 @@ class TranslateGizmo extends TransformGizmo {
     /**
      * Plane gap.
      *
-     * @param {number} value - plane gap.
+     * @type {number}
      */
     set axisPlaneGap(value) {
         this._setPlaneProp('gap', value);
     }
 
-    /**
-     * @type {number}
-     */
     get axisPlaneGap() {
         return this._shapes.yz.gap;
     }
