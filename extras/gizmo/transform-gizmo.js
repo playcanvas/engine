@@ -274,6 +274,8 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
+     * State for if snapping is enabled. Defaults to false.
+     *
      * @param {boolean} value - snap state
      * @type {boolean}
      */
@@ -282,8 +284,6 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * State for if snapping is enabled. Defaults to false.
-     *
      * @type {boolean}
      */
     get snap() {
