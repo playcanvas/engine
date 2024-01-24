@@ -106,7 +106,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('scale:update', (scale) => {
-     *    console.log(`The gizmo's scale was updated to ${scale}`);
+     *     console.log(`The gizmo's scale was updated to ${scale}`);
      * });
      */
     static EVENT_SCALEUPDATE = 'scale:update';
