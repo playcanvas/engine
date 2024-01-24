@@ -118,7 +118,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('nodes:attach', () => {
-     *    console.log('Graph nodes attached');
+     *     console.log('Graph nodes attached');
      * });
      */
     static EVENT_NODESATTACH = 'nodes:attach';
