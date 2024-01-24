@@ -40,6 +40,126 @@ export const WORLD_COORD_SPACE = 'world';
  */
 class Gizmo extends EventHandler {
     /**
+     * Fired when the pointer is down.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('pointer:down', (x, y, meshInstance) => {
+     *    console.log(`Pointer was down on ${meshInstance.node.name} at ${x}, ${y}`);
+     * });
+     */
+    static EVENT_POINTER_DOWN = 'pointer:down';
+
+    /**
+     * Fired when the pointer is down.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('pointer:move', (x, y, meshInstance) => {
+     *    console.log(`Pointer was moving on ${meshInstance.node.name} at ${x}, ${y}`);
+     * });
+     */
+    static EVENT_POINTER_MOVE = 'pointer:move';
+
+    /**
+     * Fired when the pointer is up.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('pointer:up', (x, y, meshInstance) => {
+     *    console.log(`Pointer was up on ${meshInstance.node.name} at ${x}, ${y}`);
+     * })
+     */
+    static EVENT_POINTER_UP = 'pointer:up';
+
+    /**
+     * Fired when a key is down is up.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('key:down', (key, shiftKey, ctrlKey, metaKey) => {
+     *    console.log(`${key} was down (shift: ${shiftKey}, ctrl: ${ctrlKey}, meta: ${metaKey})`);
+     * });
+     */
+    static EVENT_KEY_DOWN = 'key:down';
+
+    /**
+     * Fired when a key is up.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('key:up', (key, shiftKey, ctrlKey, metaKey) => {
+     *    console.log(`${key} was up (shift: ${shiftKey}, ctrl: ${ctrlKey}, meta: ${metaKey})`);
+     * });
+     */
+    static EVENT_KEY_UP = 'key:up';
+
+    /**
+     * Fired when the gizmo's position is updated.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('position:update', (position) => {
+     *    console.log(`The gizmo's position was updated to ${position}`);
+     * })
+     */
+    static EVENT_POSITION_UPDATE = 'position:update';
+
+    /**
+     * Fired when the gizmo's rotation is updated.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('rotation:update', (rotation) => {
+     *    console.log(`The gizmo's rotation was updated to ${rotation}`);
+     * });
+     */
+    static EVENT_ROTATION_UPDATE = 'rotation:update';
+
+    /**
+     * Fired when the gizmo's scale is updated.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('scale:update', (scale) => {
+     *    console.log(`The gizmo's scale was updated to ${scale}`);
+     * });
+     */
+    static EVENT_SCALE_UPDATE = 'scale:update';
+
+    /**
+     * Fired when graph nodes are attached.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('nodes:attach', () => {
+     *    console.log('Graph nodes attached');
+     * });
+     */
+    static EVENT_NODES_ATTACH = 'nodes:attach';
+
+    /**
+     * Fired when graph nodes are detached.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
+     * gizmo.on('nodes:detach', () => {
+     *    console.log('Graph nodes detached');
+     * });
+     */
+    static EVENT_NODES_DETACH = 'nodes:detach';
+
+    /**
      * Internal version of the gizmo size.
      *
      * @type {number}
@@ -131,7 +251,7 @@ class Gizmo extends EventHandler {
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.Gizmo(app, camera);
+     * const gizmo = new pcx.Gizmo(app, camera, layerapp, camera);
      */
     constructor(app, camera, layer) {
         super();
@@ -153,7 +273,7 @@ class Gizmo extends EventHandler {
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire('pointer:down', e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTER_DOWN, e.clientX, e.clientY, selection[0]);
         };
         this._onPointerMove = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
@@ -163,25 +283,25 @@ class Gizmo extends EventHandler {
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire('pointer:move', e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTER_MOVE, e.clientX, e.clientY, selection[0]);
         };
         this._onPointerUp = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
-            this.fire('pointer:up');
+            this.fire(Gizmo.EVENT_POINTER_UP);
         };
         this._onKeyDown = (e) => {
             if (!this.root.enabled) {
                 return;
             }
-            this.fire('key:down', e.key, e.shiftKey, e.ctrlKey, e.metaKey);
+            this.fire(Gizmo.EVENT_KEY_DOWN, e.key, e.shiftKey, e.ctrlKey, e.metaKey);
         };
         this._onKeyUp = (e) => {
             if (!this.root.enabled) {
                 return;
             }
-            this.fire('key:up');
+            this.fire(Gizmo.EVENT_KEY_UP, e.key, e.shiftKey, e.ctrlKey, e.metaKey);
         };
 
         if (window) {
@@ -237,7 +357,7 @@ class Gizmo extends EventHandler {
         tmpV1.scale(1.0 / (this.nodes.length || 1));
         this.root.setPosition(tmpV1);
 
-        this.fire('position:set', tmpV1);
+        this.fire(Gizmo.EVENT_POSITION_UPDATE, tmpV1);
     }
 
     _updateRotation() {
@@ -247,7 +367,7 @@ class Gizmo extends EventHandler {
         }
         this.root.setEulerAngles(tmpV1);
 
-        this.fire('rotation:set', tmpV1);
+        this.fire(Gizmo.EVENT_ROTATION_UPDATE, tmpV1);
     }
 
     _updateScale() {
@@ -259,7 +379,7 @@ class Gizmo extends EventHandler {
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
         this.root.setLocalScale(this._scale, this._scale, this._scale);
 
-        this.fire('scale:set', this._scale);
+        this.fire(Gizmo.EVENT_SCALE_UPDATE, this._scale);
     }
 
     _getSelection(x, y) {
@@ -303,7 +423,7 @@ class Gizmo extends EventHandler {
      *
      * @param {import('playcanvas').GraphNode} [nodes] - The graph nodes. Defaults to [].
      * @example
-     * const gizmo = new pcx.Gizmo();
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      */
     attach(nodes = []) {
@@ -315,7 +435,7 @@ class Gizmo extends EventHandler {
         this._updatePosition();
         this._updateRotation();
 
-        this.fire('nodes:attach');
+        this.fire(Gizmo.EVENT_NODES_ATTACH);
 
         this.root.enabled = true;
     }
@@ -324,14 +444,14 @@ class Gizmo extends EventHandler {
      * Detaches all graph nodes from the gizmo.
      *
      * @example
-     * const gizmo = new pcx.Gizmo();
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      * gizmo.detach();
      */
     detach() {
         this.root.enabled = false;
 
-        this.fire('nodes:detach');
+        this.fire(Gizmo.EVENT_NODES_DETACH);
 
         this.nodes = [];
     }
@@ -341,7 +461,7 @@ class Gizmo extends EventHandler {
      * all graph nodes.
      *
      * @example
-     * const gizmo = new pcx.Gizmo();
+     * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);
      * gizmo.destroy();
      */
