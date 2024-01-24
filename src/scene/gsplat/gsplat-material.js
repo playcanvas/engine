@@ -1,17 +1,9 @@
-import {
-    BLEND_NORMAL, BLEND_NONE,
-    ShaderProcessorOptions,
-    getProgramLibrary,
-    CULLFACE_BACK,
-    CULLFACE_NONE,
-    Material,
-    DITHER_NONE,
-    SHADER_FORWARDHDR,
-    TONEMAP_LINEAR,
-    GAMMA_SRGBHDR,
-    GAMMA_NONE
-} from "playcanvas";
-import { splat } from "./shader-generator-splat.js";
+import { CULLFACE_BACK, CULLFACE_NONE } from "../../platform/graphics/constants.js";
+import { ShaderProcessorOptions } from "../../platform/graphics/shader-processor-options.js";
+import { BLEND_NONE, BLEND_NORMAL, DITHER_NONE, GAMMA_NONE, GAMMA_SRGBHDR, SHADER_FORWARDHDR, TONEMAP_LINEAR } from "../constants.js";
+import { Material } from "../materials/material.js";
+import { getProgramLibrary } from "../shader-lib/get-program-library.js";
+import { gsplat } from "./shader-generator-gsplat.js";
 
 const splatMainVS = `
     void main(void)
@@ -35,16 +27,14 @@ const splatMainFS = `
  * @property {boolean} [debugRender] - Adds #define DEBUG_RENDER for shader.
  * @property {string} [vertex] - Custom vertex shader, see SPLAT MANY example.
  * @property {string} [fragment] - Custom fragment shader, see SPLAT MANY example.
- * @property {boolean} [dither] - True if opacity dithering should be used instead of opacity.
+ * @property {string} [dither] - Opacity dithering enum.
  */
 
 /**
- * @param {import('playcanvas').GraphicsDevice} device - The graphics device to use
- * for the material creation.
  * @param {SplatMaterialOptions} [options] - The options.
  * @returns {Material} The GS material.
  */
-const createSplatMaterial = (options = {}) => {
+const createGSplatMaterial = (options = {}) => {
 
     const { debugRender } = options;
 
@@ -72,7 +62,7 @@ const createSplatMaterial = (options = {}) => {
         const processingOptions = new ShaderProcessorOptions(viewUniformFormat, viewBindGroupFormat);
 
         const library = getProgramLibrary(device);
-        library.register('splat', splat);
+        library.register('splat', gsplat);
         return library.getProgram('splat', programOptions, processingOptions);
     };
 
@@ -81,4 +71,4 @@ const createSplatMaterial = (options = {}) => {
     return material;
 };
 
-export { createSplatMaterial };
+export { createGSplatMaterial };

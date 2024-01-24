@@ -34,13 +34,13 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         // @ts-ignore
         pc.ContainerHandler,
         // @ts-ignore
-        pc.ScriptHandler
+        pc.ScriptHandler,
+        // @ts-ignore
+        pc.GSplatHandler
     ];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
-
-    pcx.registerPlyParser(app);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -55,8 +55,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
     const assets = {
         gallery: new pc.Asset('gallery', 'container', { url: assetPath + 'models/vr-gallery.glb' }),
-        guitar: new pc.Asset('splat', 'container', { url: assetPath + 'splats/guitar.ply' }),
-        biker: new pc.Asset('splat', 'container', { url: assetPath + 'splats/biker.ply' }),
+        guitar: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/guitar.ply' }),
+        biker: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
@@ -123,7 +123,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     return app;
 }
 
-export class SplatManyExample {
+export class GSplatManyExample {
     static CATEGORY = 'Loaders';
     static example = example;
 

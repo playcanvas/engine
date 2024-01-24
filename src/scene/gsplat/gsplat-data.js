@@ -1,11 +1,9 @@
-import {
-    BoundingBox,
-    Color,
-    Mat4,
-    Vec3,
-    Vec4,
-    Quat
-} from "playcanvas";
+import { Color } from '../../core/math/color.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
 
 const vec3 = new Vec3();
 const mat4 = new Mat4();
@@ -72,17 +70,17 @@ const calcSplatMat = (result, data) => {
     ]);
 };
 
-class SplatData {
-    /** @type {import('./ply-reader').PlyElement[]} */
+class GSplatData {
+    // /** @type {import('./ply-reader').PlyElement[]} */
     elements;
 
-    /** @type {import('./ply-reader').PlyElement} */
+    // /** @type {import('./ply-reader').PlyElement} */
     vertexElement;
 
-    /**
-     * @param {import('./ply-reader').PlyElement[]} elements - The elements.
-     * @param {boolean} [performZScale] - Whether to perform z scaling.
-     */
+    // /**
+    //  * @param {import('./ply-reader').PlyElement[]} elements - The elements.
+    //  * @param {boolean} [performZScale] - Whether to perform z scaling.
+    //  */
     constructor(elements, performZScale = true) {
         this.elements = elements;
         this.vertexElement = elements.find(element => element.name === 'vertex');
@@ -198,9 +196,9 @@ class SplatData {
 
             if (first) {
                 first = false;
-                SplatData.calcSplatAabb(result, splat);
+                GSplatData.calcSplatAabb(result, splat);
             } else {
-                SplatData.calcSplatAabb(aabb2, splat);
+                GSplatData.calcSplatAabb(aabb2, splat);
                 result.add(aabb2);
             }
         }
@@ -240,7 +238,7 @@ class SplatData {
     }
 
     /**
-     * @param {import('playcanvas').Scene} scene - The application's scene.
+     * @param {import('../scene.js').Scene} scene - The application's scene.
      * @param {Mat4} worldMat - The world matrix.
      */
     renderWireframeBounds(scene, worldMat) {
@@ -397,7 +395,7 @@ class SplatData {
             data.opacity[i] = -Math.log(1 / c.w - 1);
         }
 
-        return new SplatData([{
+        return new GSplatData([{
             name: 'vertex',
             count: vertices.count,
             properties: members.map((name) => {
@@ -412,4 +410,4 @@ class SplatData {
     }
 }
 
-export { SplatData };
+export { GSplatData };

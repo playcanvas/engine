@@ -30,6 +30,7 @@ export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
+export { EventHandle } from './core/event-handle.js';
 export { IndexedList } from './core/indexed-list.js';
 export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
@@ -178,6 +179,11 @@ export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightm
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
+// SCENE / SPLAT
+export { GSplatData } from './scene/gsplat/gsplat-data.js';
+export { Splat } from './scene/gsplat/gsplat.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
@@ -313,6 +319,7 @@ export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
@@ -357,6 +364,8 @@ export { XrAnchors } from './framework/xr/xr-anchors.js';
 export { XrAnchor } from './framework/xr/xr-anchor.js';
 export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
+export { XrHand } from './framework/xr/xr-hand.js';
+export { XrFinger } from './framework/xr/xr-finger.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';

@@ -1,29 +1,23 @@
-import {
-    BoundingBox,
-    ContainerResource,
-    Entity
-} from 'playcanvas';
+import { BoundingBox } from '../../core/shape/bounding-box.js';
+import { Entity } from '../entity.js';
+import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
+import { Splat } from '../../scene/gsplat/gsplat.js';
 
-import { Splat } from './splat.js';
-import { SplatInstance } from './splat-instance.js';
-
-class SplatContainerResource extends ContainerResource {
-    /** @type {import('playcanvas').GraphicsDevice} */
+class GSplatResource {
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
     device;
 
-    /** @type {import('./splat-data.js').SplatData} */
+    /** @type {import('../../scene/gsplat/gsplat-data.js').GSplatData} */
     splatData;
 
-    /** @type {Splat} */
-    splat;
+    /** @type {Splat | null} */
+    splat = null;
 
     /**
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
-     * @param {import('./splat-data.js').SplatData} splatData - The splat data.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
      */
     constructor(device, splatData) {
-        super();
-
         this.device = device;
         this.splatData = splatData.isCompressed ? splatData.decompress() : splatData;
     }
@@ -70,15 +64,7 @@ class SplatContainerResource extends ContainerResource {
     }
 
     /**
-     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
-     * @returns {null} Null.
-     */
-    instantiateModelEntity(options) {
-        return null;
-    }
-
-    /**
-     * @param {import('./splat-material.js').SplatMaterialOptions} [options] - The options.
+     * @param {import('../../scene/gsplat/gsplat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The GS entity.
      */
     instantiateRenderEntity(options = {}) {
@@ -86,7 +72,7 @@ class SplatContainerResource extends ContainerResource {
         // shared splat between instances
         const splat = this.createSplat();
 
-        const splatInstance = new SplatInstance(splat, options);
+        const splatInstance = new GSplatInstance(splat, options);
 
         const entity = new Entity('Splat');
         entity.addComponent('render', {
@@ -100,7 +86,7 @@ class SplatContainerResource extends ContainerResource {
         // set custom aabb
         entity.render.customAabb = splat.aabb.clone();
 
-        // HACK: store splat instance on the render component, to allow it to be destroye in the following code
+        // HACK: store splat instance on the render component, to allow it to be destroyed in the following code
         entity.render.splatInstance = splatInstance;
 
         // when the render component gets deleted, destroy the splat instance
@@ -119,4 +105,4 @@ class SplatContainerResource extends ContainerResource {
     }
 }
 
-export { SplatContainerResource };
+export { GSplatResource };
