@@ -1,4 +1,4 @@
-import { EventHandler } from 'playcanvas';
+import { EventHandler } from "../../core/event-handler.js";
 
 // sort blind set of data
 function SortWorker() {
@@ -167,7 +167,7 @@ function SortWorker() {
     };
 }
 
-class SplatSorter extends EventHandler {
+class GSplatSorter extends EventHandler {
     worker;
 
     vertexBuffer;
@@ -222,4 +222,4 @@ class SplatSorter extends EventHandler {
     }
 }
 
-export { SplatSorter };
+export { GSplatSorter };

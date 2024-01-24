@@ -18,6 +18,50 @@ import { isMousePointerLocked, MouseEvent } from './mouse-event.js';
  */
 class Mouse extends EventHandler {
     /**
+     * Fired when the mouse is moved. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousemove', (e) => {
+     *     console.log(`Current mouse position is: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEMOVE = EVENT_MOUSEMOVE;
+
+    /**
+     * Fired when a mouse button is pressed. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousedown', (e) => {
+     *     console.log(`The ${e.button} button was pressed at position: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEDOWN = EVENT_MOUSEDOWN;
+
+    /**
+     * Fired when a mouse button is released. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mouseup', (e) => {
+     *     console.log(`The ${e.button} button was released at position: ${e.x}, ${e.y}`);
+     * });
+     */
+    static EVENT_MOUSEUP = EVENT_MOUSEUP;
+
+    /**
+     * Fired when a mouse wheel is moved. The handler is passed a {@link MouseEvent}.
+     *
+     * @event
+     * @example
+     * app.mouse.on('mousewheel', (e) => {
+     *     console.log(`The mouse wheel was moved by ${e.wheelDelta}`);
+     * });
+     */
+    static EVENT_MOUSEWHEEL = EVENT_MOUSEWHEEL;
+
+    /**
      * Create a new Mouse instance.
      *
      * @param {Element} [element] - The Element that the mouse events are attached to.
@@ -46,34 +90,6 @@ class Mouse extends EventHandler {
 
         this.attach(element);
     }
-
-    /**
-     * Fired when the mouse is moved.
-     *
-     * @event Mouse#mousemove
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse button is pressed.
-     *
-     * @event Mouse#mousedown
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse button is released.
-     *
-     * @event Mouse#mouseup
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
-
-    /**
-     * Fired when a mouse wheel is moved.
-     *
-     * @event Mouse#mousewheel
-     * @param {MouseEvent} event - The MouseEvent object.
-     */
 
     /**
      * Check if the mouse pointer has been locked, using {@link Mouse#enablePointerLock}.

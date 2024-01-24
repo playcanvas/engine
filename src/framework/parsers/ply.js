@@ -1,3 +1,6 @@
+import { GSplatData } from '../../scene/gsplat/gsplat-data.js';
+import { GSplatResource } from './gsplat-resource.js';
+
 const magicBytes = new Uint8Array([112, 108, 121, 10]);                                                 // ply\n
 const endHeaderBytes = new Uint8Array([10, 101, 110, 100, 95, 104, 101, 97, 100, 101, 114, 10]);        // \nend_header\n
 
@@ -238,4 +241,69 @@ const readPly = async (reader, propertyFilter = null) => {
     return elements;
 };
 
-export { readPly };
+// filter out element data we're not going to use
+const defaultElements = [
+    'x', 'y', 'z',
+    'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
+    'rot_0', 'rot_1', 'rot_2', 'rot_3',
+    'scale_0', 'scale_1', 'scale_2'
+];
+
+const defaultElementsSet = new Set(defaultElements);
+const defaultElementFilter = val => defaultElementsSet.has(val);
+
+class PlyParser {
+    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    device;
+
+    /** @type {import('../asset/asset-registry.js').AssetRegistry} */
+    assets;
+
+    /** @type {number} */
+    maxRetries;
+
+    /**
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
+     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
+     * @param {number} maxRetries - Maximum amount of retries.
+     */
+    constructor(device, assets, maxRetries) {
+        this.device = device;
+        this.assets = assets;
+        this.maxRetries = maxRetries;
+    }
+
+    /**
+     * @param {object} url - The URL of the resource to load.
+     * @param {string} url.load - The URL to use for loading the resource.
+     * @param {string} url.original - The original URL useful for identifying the resource type.
+     * @param {import('../handlers/handler.js').ResourceHandlerCallback} callback - The callback used when
+     * the resource is loaded or an error occurs.
+     * @param {import('../asset/asset.js').Asset} asset - Container asset.
+     */
+    async load(url, callback, asset) {
+        const response = await fetch(url.load);
+        if (!response || !response.body) {
+            callback("Error loading resource", null);
+        } else {
+            readPly(response.body.getReader(), asset.data.elementFilter ?? defaultElementFilter)
+                .then((response) => {
+                    callback(null, new GSplatResource(this.device, new GSplatData(response)));
+                })
+                .catch((err) => {
+                    callback(err, null);
+                });
+        }
+    }
+
+    /**
+     * @param {string} url - The URL.
+     * @param {GSplatResource} data - The data.
+     * @returns {GSplatResource} Return the data.
+     */
+    open(url, data) {
+        return data;
+    }
+}
+
+export { PlyParser };

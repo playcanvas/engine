@@ -31,6 +31,17 @@ import { StencilParameters } from './stencil-parameters.js';
  */
 class GraphicsDevice extends EventHandler {
     /**
+     * Fired when the canvas is resized. The handler is passed the new width and height as number
+     * parameters.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('resizecanvas', (width, height) => {
+     *     console.log(`The canvas was resized to ${width}x${height}`);
+     * });
+     */
+
+    /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
      * @type {HTMLCanvasElement}
@@ -434,14 +445,6 @@ class GraphicsDevice extends EventHandler {
         const positions = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
         this.quadVertexBuffer = new VertexBuffer(this, vertexFormat, 4, BUFFER_STATIC, positions);
     }
-
-    /**
-     * Fired when the canvas is resized.
-     *
-     * @event GraphicsDevice#resizecanvas
-     * @param {number} width - The new width of the canvas in pixels.
-     * @param {number} height - The new height of the canvas in pixels.
-     */
 
     /**
      * Destroy the graphics device.
