@@ -136,7 +136,7 @@ class Gizmo extends EventHandler {
     static EVENT_NODES_DETACH = 'nodes:detach';
 
     /**
-     * Internal version of the gizmo size.
+     * Internal version of the gizmo size. Defaults to 1.
      *
      * @type {number}
      * @private
@@ -144,7 +144,7 @@ class Gizmo extends EventHandler {
     _size = 1;
 
     /**
-     * Internal version of the gizmo scale.
+     * Internal version of the gizmo scale. Defaults to 1.
      *
      * @type {number}
      * @protected
@@ -279,6 +279,11 @@ class Gizmo extends EventHandler {
         app.on('destroy', () => this.destroy());
     }
 
+    /**
+     * The gizmo coordinate space. Defaults to {@link WORLD_COORD_SPACE}.
+     *
+     * @type {string}
+     */
     set coordSpace(value) {
         this._coordSpace = value ?? WORLD_COORD_SPACE;
         this._updateRotation();
@@ -288,6 +293,11 @@ class Gizmo extends EventHandler {
         return this._coordSpace;
     }
 
+    /**
+     * The gizmo size. Defaults to 1.
+     *
+     * @type {number}
+     */
     set size(value) {
         this._size = value;
         this._updateScale();

@@ -276,15 +276,12 @@ class TransformGizmo extends Gizmo {
     /**
      * State for if snapping is enabled. Defaults to false.
      *
-     * @param {boolean} value - snap state.
+     * @type {boolean}
      */
     set snap(value) {
         this._snap = this.root.enabled && value;
     }
 
-    /**
-     * @type {boolean}
-     */
     get snap() {
         return this._snap;
     }
@@ -292,15 +289,12 @@ class TransformGizmo extends Gizmo {
     /**
      * X axis color.
      *
-     * @param {Color} value - axis color.
+     * @type {Color}
      */
     set xAxisColor(value) {
         this._updateAxisColor('x', value);
     }
 
-    /**
-     * @type {Color}
-     */
     get xAxisColor() {
         return this._materials.axis.x.cullBack.emissive;
     }
@@ -308,15 +302,12 @@ class TransformGizmo extends Gizmo {
     /**
      * Y axis color.
      *
-     * @param {Color} value - axis color.
+     * @type {Color}
      */
     set yAxisColor(value) {
         this._updateAxisColor('y', value);
     }
 
-    /**
-     * @type {Color}
-     */
     get yAxisColor() {
         return this._materials.axis.y.cullBack.emissive;
     }
@@ -324,15 +315,12 @@ class TransformGizmo extends Gizmo {
     /**
      * Z axis color.
      *
-     * @param {Color} value - axis color.
+     * @type {Color}
      */
     set zAxisColor(value) {
         this._updateAxisColor('z', value);
     }
 
-    /**
-     * @type {Color}
-     */
     get zAxisColor() {
         return this._materials.axis.z.cullBack.emissive;
     }
