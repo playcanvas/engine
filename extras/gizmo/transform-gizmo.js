@@ -273,10 +273,18 @@ class TransformGizmo extends Gizmo {
         });
     }
 
+    /**
+     * State for if snapping is enabled. Defaults to false.
+     *
+     * @type {boolean}
+     */
     set snap(value) {
         this._snap = this.root.enabled && value;
     }
 
+    /**
+     * @type {boolean}
+     */
     get snap() {
         return this._snap;
     }
