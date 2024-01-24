@@ -66,6 +66,8 @@ const materialValueTemplate = (type, name, value) => `                    ${type
 
 /**
  * Implementation of the USDZ format exporter. Note that ASCII version of the format (USDA) is used.
+ *
+ * @category Exporter
  */
 class UsdzExporter extends CoreExporter {
     /**
