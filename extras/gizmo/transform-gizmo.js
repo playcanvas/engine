@@ -43,6 +43,42 @@ const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
  */
 class TransformGizmo extends Gizmo {
     /**
+     * Fired when when the transformation has started.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
+     * gizmo.on('transform:start', () => {
+     *    console.log('Transformation started');
+     * });
+     */
+    static EVENT_TRANSFORMSTART = 'transform:start';
+
+    /**
+     * Fired during the transformation.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
+     * gizmo.on('transform:move', (pointDelta, angleDelta) => {
+     *    console.log('Transformation moved by ${pointDelta} (angle: ${angleDelta})');
+     * });
+     */
+    static EVENT_TRANSFORMMOVE = 'transform:move';
+
+    /**
+     * Fired when when the transformation has ended.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
+     * gizmo.on('transform:end', () => {
+     *    console.log('Transformation ended');
+     * });
+     */
+    static EVENT_TRANSFORMEND = 'transform:end';
+
+    /**
      * Internal material objects for mesh instances.
      *
      * @type {Object}
@@ -239,7 +275,7 @@ class TransformGizmo extends Gizmo {
                 this._selectionStartPoint.copy(pointInfo.point);
                 this._selectionStartAngle = pointInfo.angle;
                 this._dragging = true;
-                this.fire('transform:start');
+                this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
             }
         });
 
@@ -250,7 +286,7 @@ class TransformGizmo extends Gizmo {
                 const pointInfo = this._calcPoint(x, y);
                 pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
                 const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire('transform:move', pointDelta, angleDelta);
+                this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
                 this._hoverAxis = '';
                 this._hoverIsPlane = false;
             }
@@ -258,7 +294,7 @@ class TransformGizmo extends Gizmo {
 
         this.on('pointer:up', () => {
             this._dragging = false;
-            this.fire('transform:end');
+            this.fire(TransformGizmo.EVENT_TRANSFORMEND);
 
             this._selectedAxis = '';
             this._selectedIsPlane = false;
