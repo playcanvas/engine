@@ -40,7 +40,7 @@ export const WORLD_COORD_SPACE = 'world';
  */
 class Gizmo extends EventHandler {
     /**
-     * Fired when the pointer is down.
+     * Fired when the pointer is down on the gizmo.
      *
      * @event
      * @example
@@ -52,7 +52,7 @@ class Gizmo extends EventHandler {
     static EVENT_POINTER_DOWN = 'pointer:down';
 
     /**
-     * Fired when the pointer is down.
+     * Fired when the pointer is moving over the gizmo.
      *
      * @event
      * @example
@@ -64,7 +64,7 @@ class Gizmo extends EventHandler {
     static EVENT_POINTER_MOVE = 'pointer:move';
 
     /**
-     * Fired when the pointer is up.
+     * Fired when the pointer is up off the gizmo.
      *
      * @event
      * @example
