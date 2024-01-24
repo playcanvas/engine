@@ -94,7 +94,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('rotation:update', (rotation) => {
-     *    console.log(`The gizmo's rotation was updated to ${rotation}`);
+     *     console.log(`The gizmo's rotation was updated to ${rotation}`);
      * });
      */
     static EVENT_ROTATIONUPDATE = 'rotation:update';
