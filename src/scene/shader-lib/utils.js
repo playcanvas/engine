@@ -70,6 +70,7 @@ function createShader(device, vsName, fsName, useTransformFeedback = false, shad
  * attachments. Passing an array will set the output type for each color attachment.
  * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
+ * @category Graphics
  */
 function createShaderFromCode(device, vsCode, fsCode, uniqueName, attributes, useTransformFeedback = false, shaderDefinitionOptions = {}) {
 

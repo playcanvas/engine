@@ -397,6 +397,7 @@ void main(void) {
  * @param {import('../../core/math/vec4.js').Vec4} [options.rect] - Optional viewport rectangle.
  * @param {number} [options.seamPixels] - Optional number of seam pixels to render
  * @returns {boolean} True if the reprojection was applied and false otherwise (e.g. if rect is empty)
+ * @category Graphics
  */
 function reprojectTexture(source, target, options = {}) {
     // maintain backwards compatibility with previous function signature
