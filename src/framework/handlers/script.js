@@ -124,7 +124,6 @@ class ScriptHandler {
     _loadScript(url, callback) {
         const head = document.head;
         const element = document.createElement('script');
-        element.type = 'module';
         this._cache[url] = element;
 
         // use async=false to force scripts to execute in order
