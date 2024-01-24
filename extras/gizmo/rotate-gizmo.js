@@ -194,7 +194,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * XYZ tube radius.
-     * 
+     *
      * @param {number} value - tube radius.
      */
     set xyzTubeRadius(value) {
@@ -210,7 +210,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * XYZ ring radius.
-     * 
+     *
      * @param {number} value - ring radius.
      */
     set xyzRingRadius(value) {
@@ -226,7 +226,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * Face tube radius.
-     * 
+     *
      * @param {number} value - tube radius.
      */
     set faceTubeRadius(value) {
@@ -242,7 +242,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * Face ring radius.
-     * 
+     *
      * @param {number} value - ring radius.
      */
     set faceRingRadius(value) {
@@ -258,7 +258,7 @@ class RotateGizmo extends TransformGizmo {
 
     /**
      * Ring tolerance.
-     * 
+     *
      * @param {number} value - ring tolerance.
      */
     set ringTolerance(value) {

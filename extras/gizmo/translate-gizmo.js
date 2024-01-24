@@ -123,7 +123,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Axis gap.
-     * 
+     *
      * @param {number} value - gap.
      */
     set axisGap(value) {
@@ -139,7 +139,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Axis line thickness.
-     * 
+     *
      * @param {number} value - line thickness.
      */
     set axisLineThickness(value) {
@@ -155,7 +155,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Axis line length.
-     * 
+     *
      * @param {number} value - line length.
      */
     set axisLineLength(value) {
@@ -171,7 +171,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Axis line tolerance.
-     * 
+     *
      * @param {number} value - line tolerance.
      */
     set axisLineTolerance(value) {
@@ -187,7 +187,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Arrow thickness.
-     * 
+     *
      * @param {number} value - arrow thickness.
      */
     set axisArrowThickness(value) {
@@ -203,7 +203,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Arrow length.
-     * 
+     *
      * @param {number} value - arrow length.
      */
     set axisArrowLength(value) {
@@ -219,7 +219,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Plane size.
-     * 
+     *
      * @param {number} value - plane size.
      */
     set axisPlaneSize(value) {
@@ -235,7 +235,7 @@ class TranslateGizmo extends TransformGizmo {
 
     /**
      * Plane gap.
-     * 
+     *
      * @param {number} value - plane gap.
      */
     set axisPlaneGap(value) {

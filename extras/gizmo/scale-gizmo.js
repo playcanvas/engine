@@ -153,7 +153,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis gap.
-     * 
+     *
      * @param {number} value - gap.
      */
     set axisGap(value) {
@@ -169,7 +169,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis line thickness.
-     * 
+     *
      * @param {number} value - line thickness.
      */
     set axisLineThickness(value) {
@@ -185,7 +185,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis line length.
-     * 
+     *
      * @param {number} value - line length.
      */
     set axisLineLength(value) {
@@ -201,7 +201,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis line tolerance.
-     * 
+     *
      * @param {number} value - line tolerance.
      */
     set axisLineTolerance(value) {
@@ -217,7 +217,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis box size.
-     * 
+     *
      * @param {number} value - box size.
      */
     set axisBoxSize(value) {
@@ -233,7 +233,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Plane size.
-     * 
+     *
      * @param {number} value - plane size.
      */
     set axisPlaneSize(value) {
@@ -249,7 +249,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Plane gap.
-     * 
+     *
      * @param {number} value - plane gap.
      */
     set axisPlaneGap(value) {
@@ -265,7 +265,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis center size.
-     * 
+     *
      * @param {number} value - center size.
      */
     set axisCenterSize(value) {
@@ -281,7 +281,7 @@ class ScaleGizmo extends TransformGizmo {
 
     /**
      * Axis center tolerance.
-     * 
+     *
      * @param {number} value - center tolerance.
      */
     set axisCenterTolerance(value) {
