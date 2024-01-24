@@ -1,21 +1,31 @@
 import { BoundingBox } from '../../core/shape/bounding-box.js';
 import { Entity } from '../entity.js';
 import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
-import { Splat } from '../../scene/gsplat/gsplat.js';
+import { GSplat } from '../../scene/gsplat/gsplat.js';
 
 class GSplatResource {
-    /** @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice} */
+    /**
+     * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
+     * @ignore
+     */
     device;
 
-    /** @type {import('../../scene/gsplat/gsplat-data.js').GSplatData} */
+    /**
+     * @type {import('../../scene/gsplat/gsplat-data.js').GSplatData}
+     * @ignore
+     */
     splatData;
 
-    /** @type {Splat | null} */
+    /**
+     * @type {GSplat | null}
+     * @ignore
+     */
     splat = null;
 
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
+     * @hideconstructor
      */
     constructor(device, splatData) {
         this.device = device;
@@ -37,7 +47,7 @@ class GSplatResource {
             const aabb = new BoundingBox();
             this.splatData.calcAabb(aabb);
 
-            const splat = new Splat(this.device, splatData.numSplats, aabb);
+            const splat = new GSplat(this.device, splatData.numSplats, aabb);
             this.splat = splat;
 
             // texture data
@@ -65,43 +75,28 @@ class GSplatResource {
 
     /**
      * @param {import('../../scene/gsplat/gsplat-material.js').SplatMaterialOptions} [options] - The options.
-     * @returns {Entity} The GS entity.
+     * @returns {Entity} The entity with {@link GSplatComponent}.
      */
-    instantiateRenderEntity(options = {}) {
+    instantiate(options = {}) {
 
-        // shared splat between instances
-        const splat = this.createSplat();
+        const splatInstance = this.createInstance(options);
 
-        const splatInstance = new GSplatInstance(splat, options);
-
-        const entity = new Entity('Splat');
-        entity.addComponent('render', {
-            type: 'asset',
-            meshInstances: [splatInstance.meshInstance],
-
-            // shadows not supported
-            castShadows: false
+        const entity = new Entity();
+        const component = entity.addComponent('gsplat', {
+            instance: splatInstance
         });
 
         // set custom aabb
-        entity.render.customAabb = splat.aabb.clone();
-
-        // HACK: store splat instance on the render component, to allow it to be destroyed in the following code
-        entity.render.splatInstance = splatInstance;
-
-        // when the render component gets deleted, destroy the splat instance
-        entity.render.system.on('beforeremove', (entity, component) => {
-
-            // HACK: the render component is already destroyed, so cannot get splat instance from the mesh instance,
-            // and so get it from the temporary property
-            // TODO: if this gets integrated into the engine, mesh instance would destroy splat instance
-            if (component.splatInstance) {
-                component.splatInstance?.destroy();
-                component.splatInstance = null;
-            }
-        }, this);
+        component.customAabb = splatInstance.splat.aabb.clone();
 
         return entity;
+    }
+
+    createInstance(options = {}) {
+
+        // shared splat between instances
+        const splat = this.createSplat();
+        return new GSplatInstance(splat, options);
     }
 }
 

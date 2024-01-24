@@ -13,8 +13,9 @@ const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const viewport = [0, 0];
 
+/** @ignore */
 class GSplatInstance {
-    /** @type {import('./gsplat.js').Splat} */
+    /** @type {import('./gsplat.js').GSplat} */
     splat;
 
     /** @type {Mesh} */
@@ -29,19 +30,32 @@ class GSplatInstance {
     /** @type {VertexBuffer} */
     vb;
 
-    /** @type {GSplatSorter} */
-    sorter;
+    options = {};
+
+    /** @type {GSplatSorter | null} */
+    sorter = null;
 
     lastCameraPosition = new Vec3();
 
     lastCameraDirection = new Vec3();
 
     /**
-     * @param {import('./gsplat.js').Splat} splat - The splat instance.
+     * List of cameras this instance is visible for. Updated every frame by the renderer.
+     *
+     * @type {import('../camera.js').Camera[]}
+     * @ignore
+     */
+    cameras = [];
+
+    /**
+     * @param {import('./gsplat.js').GSplat} splat - The splat instance.
      * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The options.
      */
     constructor(splat, options) {
         this.splat = splat;
+
+        // clone options object
+        options = Object.assign(this.options, options);
 
         // material
         const debugRender = options.debugRender;
@@ -89,25 +103,16 @@ class GSplatInstance {
 
         this.meshInstance = new MeshInstance(this.mesh, this.material);
         this.meshInstance.setInstancing(vb, true);
-        this.meshInstance.splatInstance = this;
+        this.meshInstance.gsplatInstance = this;
 
-        // clone centers to allow multiple instancing of sorter
+        // clone centers to allow multiple instances of sorter
         this.centers = new Float32Array(splat.centers);
 
+        // create sorter
         if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new GSplatSorter();
             this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
-
-            // if camera entity is provided, automatically use it to sort splats
-            const cameraEntity = options.cameraEntity;
-            if (cameraEntity) {
-                this.callbackHandle = cameraEntity._app.on('prerender', () => {
-                    this.sort(cameraEntity);
-                });
-            }
         }
-
-        this.updateViewport();
     }
 
     destroy() {
@@ -115,10 +120,14 @@ class GSplatInstance {
         this.vb.destroy();
         this.meshInstance.destroy();
         this.sorter?.destroy();
-        this.callbackHandle?.off();
+    }
+
+    clone() {
+        return new GSplatInstance(this.splat, this.options);
     }
 
     updateViewport() {
+        // TODO: improve, needs to handle render targets of different sizes
         const device = this.splat.device;
         viewport[0] = device.width;
         viewport[1] = device.height;
@@ -126,35 +135,42 @@ class GSplatInstance {
     }
 
     /**
-     * Sorts the GS vertices based on the given camera entity.
-     * @param {import('playcanvas').Entity} camera - The camera entity used for sorting.
-     * @returns {boolean} Returns true if the sorting was performed, otherwise false.
+     * Sorts the GS vertices based on the given camera.
+     * @param {import('../graph-node.js').GraphNode} cameraNode - The camera node used for sorting.
      */
-    sort(camera) {
+    sort(cameraNode) {
+        if (this.sorter) {
+            const cameraMat = cameraNode.getWorldTransform();
+            cameraMat.getTranslation(cameraPosition);
+            cameraMat.getZ(cameraDirection);
 
-        let sorted = false;
+            const modelMat = this.meshInstance.node.getWorldTransform();
+            const invModelMat = mat.invert(modelMat);
+            invModelMat.transformPoint(cameraPosition, cameraPosition);
+            invModelMat.transformVector(cameraDirection, cameraDirection);
 
-        const cameraMat = camera.getWorldTransform();
-        cameraMat.getTranslation(cameraPosition);
-        cameraMat.getZ(cameraDirection);
-
-        const modelMat = this.meshInstance.node.getWorldTransform();
-        const invModelMat = mat.invert(modelMat);
-        invModelMat.transformPoint(cameraPosition, cameraPosition);
-        invModelMat.transformVector(cameraDirection, cameraDirection);
-
-        // sort if the camera has changed
-        if (!cameraPosition.equalsApprox(this.lastCameraPosition) || !cameraDirection.equalsApprox(this.lastCameraDirection)) {
-            this.lastCameraPosition.copy(cameraPosition);
-            this.lastCameraDirection.copy(cameraDirection);
-            sorted = true;
-
-            this.sorter.setCamera(cameraPosition, cameraDirection);
+            // sort if the camera has changed
+            if (!cameraPosition.equalsApprox(this.lastCameraPosition) || !cameraDirection.equalsApprox(this.lastCameraDirection)) {
+                this.lastCameraPosition.copy(cameraPosition);
+                this.lastCameraDirection.copy(cameraDirection);
+                this.sorter.setCamera(cameraPosition, cameraDirection);
+            }
         }
 
         this.updateViewport();
+    }
 
-        return sorted;
+    update() {
+        if (this.cameras.length > 0) {
+
+            // sort by the first camera it's visible for
+            // TODO: extend to support multiple cameras
+            const camera = this.cameras[0];
+            this.sort(camera._node);
+
+            // we get new list of cameras each frame
+            this.cameras.length = 0;
+        }
     }
 }
 

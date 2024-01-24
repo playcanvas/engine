@@ -95,6 +95,14 @@ class Entity extends GraphNode {
     element;
 
     /**
+     * Gets the {@link GSplatComponent} attached to this entity.
+     *
+     * @type {import('./components/gsplat/component.js').GSplatComponent|undefined}
+     * @readonly
+     */
+    gsplat;
+
+    /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
      *
      * @type {import('./components/layout-child/component.js').LayoutChildComponent|undefined}
@@ -288,6 +296,7 @@ class Entity extends GraphNode {
      * - "camera" - see {@link CameraComponent}
      * - "collision" - see {@link CollisionComponent}
      * - "element" - see {@link ElementComponent}
+     * - "gsplat" - see {@link GSplatComponent}
      * - "layoutchild" - see {@link LayoutChildComponent}
      * - "layoutgroup" - see {@link LayoutGroupComponent}
      * - "light" - see {@link LightComponent}

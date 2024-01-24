@@ -181,7 +181,7 @@ export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js
 
 // SCENE / SPLAT
 export { GSplatData } from './scene/gsplat/gsplat-data.js';
-export { Splat } from './scene/gsplat/gsplat.js';
+export { GSplat } from './scene/gsplat/gsplat.js';
 export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 
 // FRAMEWORK
@@ -215,6 +215,7 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
+export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';

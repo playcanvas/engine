@@ -26,7 +26,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         pc.RenderComponentSystem,
         pc.CameraComponentSystem,
         pc.LightComponentSystem,
-        pc.ScriptComponentSystem
+        pc.ScriptComponentSystem,
+        pc.GSplatComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
@@ -55,8 +56,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
     const assets = {
         gallery: new pc.Asset('gallery', 'container', { url: assetPath + 'models/vr-gallery.glb' }),
-        guitar: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/guitar.ply' }),
-        biker: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
+        guitar: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/guitar.ply' }),
+        biker: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
@@ -80,8 +81,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         const createSplatInstance = (name, resource, px, py, pz, scale, vertex, fragment) => {
 
-            const splat = resource.instantiateRenderEntity({
-                cameraEntity: camera,
+            const splat = resource.instantiate({
                 debugRender: false,
                 fragment: fragment,
                 vertex: vertex
@@ -95,8 +95,12 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         const guitar = createSplatInstance('guitar', assets.guitar.resource, 0, 0.8, 0, 0.4, files['shader.vert'], files['shader.frag']);
         const biker1 = createSplatInstance('biker1', assets.biker.resource, -1.5, 0.05, 0, 0.7);
-        const biker2 = createSplatInstance('biker2', assets.biker.resource, 1.5, 0.05, 0.8, 0.7);
+
+        // clone the biker and add the clone to the scene
+        const biker2 = biker1.clone();
+        biker2.setLocalPosition(1.5, 0.05, 0);
         biker2.rotate(0, 150, 0);
+        app.root.addChild(biker2);
 
         // add orbit camera script with a mouse and a touch support
         camera.addComponent("script");
@@ -116,7 +120,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         app.on("update", function (dt) {
             currentTime += dt;
 
-            const material = guitar.render.meshInstances[0].material;
+            const material = guitar.gsplat.material;
             material.setParameter('uTime', currentTime);
         });
     });
