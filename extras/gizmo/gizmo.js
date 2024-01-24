@@ -49,7 +49,7 @@ class Gizmo extends EventHandler {
      *    console.log(`Pointer was down on ${meshInstance.node.name} at ${x}, ${y}`);
      * });
      */
-    static EVENT_POINTER_DOWN = 'pointer:down';
+    static EVENT_POINTERDOWN = 'pointer:down';
 
     /**
      * Fired when the pointer is moving over the gizmo.
@@ -61,7 +61,7 @@ class Gizmo extends EventHandler {
      *    console.log(`Pointer was moving on ${meshInstance.node.name} at ${x}, ${y}`);
      * });
      */
-    static EVENT_POINTER_MOVE = 'pointer:move';
+    static EVENT_POINTERMOVE = 'pointer:move';
 
     /**
      * Fired when the pointer is up off the gizmo.
@@ -73,7 +73,7 @@ class Gizmo extends EventHandler {
      *    console.log(`Pointer was up on ${meshInstance.node.name} at ${x}, ${y}`);
      * })
      */
-    static EVENT_POINTER_UP = 'pointer:up';
+    static EVENT_POINTERUP = 'pointer:up';
 
     /**
      * Fired when the gizmo's position is updated.
@@ -85,7 +85,7 @@ class Gizmo extends EventHandler {
      *    console.log(`The gizmo's position was updated to ${position}`);
      * })
      */
-    static EVENT_POSITION_UPDATE = 'position:update';
+    static EVENT_POSITIONUPDATE = 'position:update';
 
     /**
      * Fired when the gizmo's rotation is updated.
@@ -97,7 +97,7 @@ class Gizmo extends EventHandler {
      *    console.log(`The gizmo's rotation was updated to ${rotation}`);
      * });
      */
-    static EVENT_ROTATION_UPDATE = 'rotation:update';
+    static EVENT_ROTATIONUPDATE = 'rotation:update';
 
     /**
      * Fired when the gizmo's scale is updated.
@@ -109,7 +109,7 @@ class Gizmo extends EventHandler {
      *    console.log(`The gizmo's scale was updated to ${scale}`);
      * });
      */
-    static EVENT_SCALE_UPDATE = 'scale:update';
+    static EVENT_SCALEUPDATE = 'scale:update';
 
     /**
      * Fired when graph nodes are attached.
@@ -121,7 +121,7 @@ class Gizmo extends EventHandler {
      *    console.log('Graph nodes attached');
      * });
      */
-    static EVENT_NODES_ATTACH = 'nodes:attach';
+    static EVENT_NODESATTACH = 'nodes:attach';
 
     /**
      * Fired when graph nodes are detached.
@@ -133,7 +133,7 @@ class Gizmo extends EventHandler {
      *    console.log('Graph nodes detached');
      * });
      */
-    static EVENT_NODES_DETACH = 'nodes:detach';
+    static EVENT_NODESDETACH = 'nodes:detach';
 
     /**
      * Internal version of the gizmo size. Defaults to 1.
@@ -249,7 +249,7 @@ class Gizmo extends EventHandler {
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire(Gizmo.EVENT_POINTER_DOWN, e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTERDOWN, e.clientX, e.clientY, selection[0]);
         };
         this._onPointerMove = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
@@ -259,13 +259,13 @@ class Gizmo extends EventHandler {
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire(Gizmo.EVENT_POINTER_MOVE, e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTERMOVE, e.clientX, e.clientY, selection[0]);
         };
         this._onPointerUp = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
-            this.fire(Gizmo.EVENT_POINTER_UP);
+            this.fire(Gizmo.EVENT_POINTERUP);
         };
 
         if (window) {
@@ -329,7 +329,7 @@ class Gizmo extends EventHandler {
         tmpV1.scale(1.0 / (this.nodes.length || 1));
         this.root.setPosition(tmpV1);
 
-        this.fire(Gizmo.EVENT_POSITION_UPDATE, tmpV1);
+        this.fire(Gizmo.EVENT_POSITIONUPDATE, tmpV1);
     }
 
     _updateRotation() {
@@ -339,7 +339,7 @@ class Gizmo extends EventHandler {
         }
         this.root.setEulerAngles(tmpV1);
 
-        this.fire(Gizmo.EVENT_ROTATION_UPDATE, tmpV1);
+        this.fire(Gizmo.EVENT_ROTATIONUPDATE, tmpV1);
     }
 
     _updateScale() {
@@ -351,7 +351,7 @@ class Gizmo extends EventHandler {
         this._scale = Math.max(this._scale * this._size, MIN_GIZMO_SCALE);
         this.root.setLocalScale(this._scale, this._scale, this._scale);
 
-        this.fire(Gizmo.EVENT_SCALE_UPDATE, this._scale);
+        this.fire(Gizmo.EVENT_SCALEUPDATE, this._scale);
     }
 
     _getSelection(x, y) {
@@ -407,7 +407,7 @@ class Gizmo extends EventHandler {
         this._updatePosition();
         this._updateRotation();
 
-        this.fire(Gizmo.EVENT_NODES_ATTACH);
+        this.fire(Gizmo.EVENT_NODESATTACH);
 
         this.root.enabled = true;
     }
@@ -423,7 +423,7 @@ class Gizmo extends EventHandler {
     detach() {
         this.root.enabled = false;
 
-        this.fire(Gizmo.EVENT_NODES_DETACH);
+        this.fire(Gizmo.EVENT_NODESDETACH);
 
         this.nodes = [];
     }

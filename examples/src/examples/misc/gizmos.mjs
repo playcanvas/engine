@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
+    const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
