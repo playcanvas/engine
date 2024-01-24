@@ -37,6 +37,7 @@ import { NullGraphicsDevice } from './null/null-graphics-device.js';
  *
  * Defaults to 'default'.
  * @returns {Promise} - Promise object representing the created graphics device.
+ * @category Graphics
  */
 function createGraphicsDevice(canvas, options = {}) {
 
