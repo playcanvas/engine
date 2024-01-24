@@ -1,23 +1,20 @@
-import {
-    MeshInstance,
-    Mesh,
-    Vec3,
-    Mat4,
-    createBox,
-    BUFFER_DYNAMIC,
-    DITHER_NONE,
-    VertexBuffer
-} from "playcanvas";
-
-import { SplatSorter } from './splat-sorter.js';
+import { Mat4 } from '../../core/math/mat4.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { BUFFER_DYNAMIC } from '../../platform/graphics/constants.js';
+import { VertexBuffer } from '../../platform/graphics/vertex-buffer.js';
+import { DITHER_NONE } from '../constants.js';
+import { MeshInstance } from '../mesh-instance.js';
+import { Mesh } from '../mesh.js';
+import { createBox } from '../procedural.js';
+import { GSplatSorter } from './gsplat-sorter.js';
 
 const mat = new Mat4();
 const cameraPosition = new Vec3();
 const cameraDirection = new Vec3();
 const viewport = [0, 0];
 
-class SplatInstance {
-    /** @type {import('./splat.js').Splat} */
+class GSplatInstance {
+    /** @type {import('./gsplat.js').Splat} */
     splat;
 
     /** @type {Mesh} */
@@ -26,13 +23,13 @@ class SplatInstance {
     /** @type {MeshInstance} */
     meshInstance;
 
-    /** @type {import('playcanvas').Material} */
+    /** @type {import('../materials/material.js').Material} */
     material;
 
     /** @type {VertexBuffer} */
     vb;
 
-    /** @type {SplatSorter} */
+    /** @type {GSplatSorter} */
     sorter;
 
     lastCameraPosition = new Vec3();
@@ -40,8 +37,8 @@ class SplatInstance {
     lastCameraDirection = new Vec3();
 
     /**
-     * @param {import('./splat.js').Splat} splat - The splat instance.
-     * @param {import('./splat-material.js').SplatMaterialOptions} options - The options.
+     * @param {import('./gsplat.js').Splat} splat - The splat instance.
+     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The options.
      */
     constructor(splat, options) {
         this.splat = splat;
@@ -98,7 +95,7 @@ class SplatInstance {
         this.centers = new Float32Array(splat.centers);
 
         if (!options.dither || options.dither === DITHER_NONE) {
-            this.sorter = new SplatSorter();
+            this.sorter = new GSplatSorter();
             this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
 
             // if camera entity is provided, automatically use it to sort splats
@@ -161,4 +158,4 @@ class SplatInstance {
     }
 }
 
-export { SplatInstance };
+export { GSplatInstance };

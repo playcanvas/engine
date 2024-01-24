@@ -9,6 +9,24 @@ import { Mat4 } from '../../core/math/mat4.js';
  */
 class XrDepthSensing extends EventHandler {
     /**
+     * @event
+     * @deprecated
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * @event
+     * @deprecated
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * @event
+     * @deprecated
+     */
+    static EVENT_RESIZE = 'resize';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -54,26 +72,6 @@ class XrDepthSensing extends EventHandler {
         }
     }
 
-    /**
-     * @event XrDepthSensing#available
-     * @deprecated
-     * @ignore
-     */
-
-    /**
-     * @event XrDepthSensing#unavailable
-     * @deprecated
-     * @ignore
-     */
-
-    /**
-     * @event XrDepthSensing#resize
-     * @param {number} width
-     * @param {number} height
-     * @deprecated
-     * @ignore
-     */
-
     /** @private */
     _onSessionStart() {
         if (this._views.availableDepth)
@@ -102,7 +100,6 @@ class XrDepthSensing extends EventHandler {
      * @param {number} u - u
      * @param {number} v - v
      * @deprecated
-     * @ignore
      * @returns {number|null} number
      */
     getDepth(u, v) {
@@ -111,7 +108,6 @@ class XrDepthSensing extends EventHandler {
 
     /**
      * @deprecated
-     * @ignore
      */
     update() {
         if (this._manager.session && this.supported && this._views.availableDepth && this._views.list.length && !this._available) {
@@ -123,7 +119,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {boolean}
      * @deprecated
-     * @ignore
      */
     get supported() {
         return this._views.supportedDepth;
@@ -132,7 +127,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {boolean}
      * @deprecated
-     * @ignore
      */
     get available() {
         return this._views.availableDepth;
@@ -141,7 +135,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {string}
      * @deprecated
-     * @ignore
      */
     get usage() {
         return this._views.depthUsage;
@@ -150,7 +143,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {string}
      * @deprecated
-     * @ignore
      */
     get dataFormat() {
         return this._views.depthFormat;
@@ -159,7 +151,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {number}
      * @deprecated
-     * @ignore
      */
     get width() {
         return this._views.list[0]?.textureDepth?.width ?? 0;
@@ -168,7 +159,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {number}
      * @deprecated
-     * @ignore
      */
     get height() {
         return this._views.list[0]?.textureDepth?.height ?? 0;
@@ -177,7 +167,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {import('../../platform/graphics/texture.js').Texture|null}
      * @deprecated
-     * @ignore
      */
     get texture() {
         return this._views.list[0]?.textureDepth;
@@ -186,7 +175,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {Mat4}
      * @deprecated
-     * @ignore
      */
     get uvMatrix() {
         return this._views.list[0]?.depthUvMatrix ?? this._uvMatrix;
@@ -195,7 +183,6 @@ class XrDepthSensing extends EventHandler {
     /**
      * @type {number}
      * @deprecated
-     * @ignore
      */
     get rawValueToMeters() {
         return this._views.list[0]?.depthValueToMeters ?? 0;

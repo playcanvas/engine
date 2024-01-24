@@ -34,6 +34,123 @@ import { Asset } from './asset.js';
  */
 class AssetRegistry extends EventHandler {
     /**
+     * Fired when an asset completes loading. This event is available in three forms. They are as
+     * follows:
+     *
+     * 1. `load` - Fired when any asset finishes loading.
+     * 2. `load:[id]` - Fired when a specific asset has finished loading, where `[id]` is the
+     * unique id of the asset.
+     * 3. `load:url:[url]` - Fired when an asset finishes loading whose URL matches `[url]`, where
+     * `[url]` is the URL of the asset.
+     *
+     * @event
+     * @example
+     * app.assets.on('load', (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('load:' + id, (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * app.assets.load(asset);
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('load:url:' + asset.file.url, (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     * app.assets.load(asset);
+     */
+    static EVENT_LOAD = 'load';
+
+    /**
+     * Fired when an asset is added to the registry. This event is available in three forms. They
+     * are as follows:
+     *
+     * 1. `add` - Fired when any asset is added to the registry.
+     * 2. `add:[id]` - Fired when an asset is added to the registry, where `[id]` is the unique id
+     * of the asset.
+     * 3. `add:url:[url]` - Fired when an asset is added to the registry and matches the URL
+     * `[url]`, where `[url]` is the URL of the asset.
+     *
+     * @event
+     * @example
+     * app.assets.on('add', (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * app.assets.on('add:' + id, (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('add:url:' + asset.file.url, (asset) => {
+     *    console.log(`Asset added: ${asset.name}`);
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when an asset is removed from the registry. This event is available in three forms.
+     * They are as follows:
+     *
+     * 1. `remove` - Fired when any asset is removed from the registry.
+     * 2. `remove:[id]` - Fired when an asset is removed from the registry, where `[id]` is the
+     * unique id of the asset.
+     * 3. `remove:url:[url]` - Fired when an asset is removed from the registry and matches the
+     * URL `[url]`, where `[url]` is the URL of the asset.
+     *
+     * @event
+     * @param {Asset} asset - The asset that was removed.
+     * @example
+     * app.assets.on('remove', (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * app.assets.on('remove:' + id, (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('remove:url:' + asset.file.url, (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when an error occurs during asset loading. This event is available in two forms. They
+     * are as follows:
+     *
+     * 1. `error` - Fired when any asset reports an error in loading.
+     * 2. `error:[id]` - Fired when an asset reports an error in loading, where `[id]` is the
+     * unique id of the asset.
+     *
+     * @event
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('error', (err, asset) => {
+     *     console.error(err);
+     * });
+     * app.assets.load(asset);
+     * @example
+     * const id = 123456;
+     * const asset = app.assets.get(id);
+     * app.assets.on('error:' + id, (err, asset) => {
+     *     console.error(err);
+     * });
+     * app.assets.load(asset);
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
      * @type {Set<Asset>}
      * @private
      */
@@ -82,134 +199,6 @@ class AssetRegistry extends EventHandler {
 
         this._loader = loader;
     }
-
-    /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * app.assets.on("load", function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load:[id]
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("load:" + id, function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an asset completes loading.
-     *
-     * @event AssetRegistry#load:url:[url]
-     * @param {Asset} asset - The asset that has just loaded.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("load:url:" + asset.file.url, function (asset) {
-     *     console.log("asset loaded: " + asset.name);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add
-     * @param {Asset} asset - The asset that was added.
-     * @example
-     * app.assets.on("add", function (asset) {
-     *     console.log("New asset added: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add:[id]
-     * @param {Asset} asset - The asset that was added.
-     * @example
-     * const id = 123456;
-     * app.assets.on("add:" + id, function (asset) {
-     *     console.log("Asset 123456 loaded");
-     * });
-     */
-
-    /**
-     * Fired when an asset is added to the registry.
-     *
-     * @event AssetRegistry#add:url:[url]
-     * @param {Asset} asset - The asset that was added.
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove
-     * @param {Asset} asset - The asset that was removed.
-     * @example
-     * app.assets.on("remove", function (asset) {
-     *     console.log("Asset removed: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove:[id]
-     * @param {Asset} asset - The asset that was removed.
-     * @example
-     * const id = 123456;
-     * app.assets.on("remove:" + id, function (asset) {
-     *     console.log("Asset removed: " + asset.name);
-     * });
-     */
-
-    /**
-     * Fired when an asset is removed from the registry.
-     *
-     * @event AssetRegistry#remove:url:[url]
-     * @param {Asset} asset - The asset that was removed.
-     */
-
-    /**
-     * Fired when an error occurs during asset loading.
-     *
-     * @event AssetRegistry#error
-     * @param {string} err - The error message.
-     * @param {Asset} asset - The asset that generated the error.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("error", function (err, asset) {
-     *     console.error(err);
-     * });
-     * app.assets.load(asset);
-     */
-
-    /**
-     * Fired when an error occurs during asset loading.
-     *
-     * @event AssetRegistry#error:[id]
-     * @param {Asset} asset - The asset that generated the error.
-     * @example
-     * const id = 123456;
-     * const asset = app.assets.get(id);
-     * app.assets.on("error:" + id, function (err, asset) {
-     *     console.error(err);
-     * });
-     * app.assets.load(asset);
-     */
 
     /**
      * Create a filtered list of assets from the registry.

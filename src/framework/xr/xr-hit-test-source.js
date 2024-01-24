@@ -23,6 +23,32 @@ const poolQuat = [];
  */
 class XrHitTestSource extends EventHandler {
     /**
+     * Fired when {@link XrHitTestSource} is removed.
+     *
+     * @event
+     * @example
+     * hitTestSource.once('remove', () => {
+     *     // hit test source has been removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when the hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry. The handler is passed the {@link Vec3} position,
+     * the {@link Quat} rotation, the {@link XrInputSource} (if it is a transient hit test source)
+     * and the {@link XRHitTestResult} object that is created by WebXR API.
+     *
+     * @event
+     * @example
+     * hitTestSource.on('result', (position, rotation) => {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
+    static EVENT_RESULT = 'result';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -63,33 +89,6 @@ class XrHitTestSource extends EventHandler {
         this._transient = transient;
         this._inputSource = inputSource;
     }
-
-    /**
-     * Fired when {@link XrHitTestSource} is removed.
-     *
-     * @event XrHitTestSource#remove
-     * @example
-     * hitTestSource.once('remove', function () {
-     *     // hit test source has been removed
-     * });
-     */
-
-    /**
-     * Fired when hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry.
-     *
-     * @event XrHitTestSource#result
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
-     * test source, then it will provide related input source.
-     * @param {XRHitTestResult} XRHitTestResult - object that is created by WebXR API.
-     * @example
-     * hitTestSource.on('result', function (position, rotation) {
-     *     target.setPosition(position);
-     *     target.setRotation(rotation);
-     * });
-     */
 
     /**
      * Stop and remove hit test source.

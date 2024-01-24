@@ -14,6 +14,72 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
  */
 class SpriteAnimationClip extends EventHandler {
     /**
+     * Fired when the clip starts playing.
+     *
+     * @event
+     * @example
+     * clip.on('play', () => {
+     *     console.log('Clip started playing');
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when the clip is paused.
+     *
+     * @event
+     * @example
+     * clip.on('pause', () => {
+     *     console.log('Clip paused');
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when the clip is resumed.
+     *
+     * @event
+     * @example
+     * clip.on('resume', () => {
+     *     console.log('Clip resumed');
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when the clip is stopped.
+     *
+     * @event
+     * @example
+     * clip.on('stop', () => {
+     *     console.log('Clip stopped');
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when the clip stops playing because it reached its end.
+     *
+     * @event
+     * @example
+     * clip.on('end', () => {
+     *     console.log('Clip ended');
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
+     * Fired when the clip reached the end of its current loop.
+     *
+     * @event
+     * @example
+     * clip.on('loop', () => {
+     *     console.log('Clip looped');
+     * });
+     */
+    static EVENT_LOOP = 'loop';
+
+    /**
      * Create a new SpriteAnimationClip instance.
      *
      * @param {import('./component.js').SpriteComponent} component - The sprite component managing
@@ -43,42 +109,6 @@ class SpriteAnimationClip extends EventHandler {
 
         this._time = 0;
     }
-
-    /**
-     * Fired when the clip starts playing.
-     *
-     * @event SpriteAnimationClip#play
-     */
-
-    /**
-     * Fired when the clip is paused.
-     *
-     * @event SpriteAnimationClip#pause
-     */
-
-    /**
-     * Fired when the clip is resumed.
-     *
-     * @event SpriteAnimationClip#resume
-     */
-
-    /**
-     * Fired when the clip is stopped.
-     *
-     * @event SpriteAnimationClip#stop
-     */
-
-    /**
-     * Fired when the clip stops playing because it reached its ending.
-     *
-     * @event SpriteAnimationClip#end
-     */
-
-    /**
-     * Fired when the clip reached the end of its current loop.
-     *
-     * @event SpriteAnimationClip#loop
-     */
 
     /**
      * The total duration of the animation in seconds.

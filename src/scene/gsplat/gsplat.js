@@ -1,21 +1,14 @@
+import { FloatPacking } from '../../core/math/float-packing.js';
+import { math } from '../../core/math/math.js';
+import { Quat } from '../../core/math/quat.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import {
-    Texture,
-    FILTER_NEAREST,
-    ADDRESS_CLAMP_TO_EDGE,
-    Vec2,
-    Quat,
-    math,
-    PIXELFORMAT_RGBA8,
-    SEMANTIC_ATTR13,
-    TYPE_FLOAT32,
-    VertexFormat,
-    TYPE_UINT32,
-    PIXELFORMAT_RGBA16F,
-    PIXELFORMAT_RGB32F,
-    PIXELFORMAT_RGBA32F,
-    FloatPacking
-} from "playcanvas";
-import { createSplatMaterial } from "./splat-material.js";
+    ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F,
+    PIXELFORMAT_RGBA8, SEMANTIC_ATTR13, TYPE_FLOAT32, TYPE_UINT32
+} from '../../platform/graphics/constants.js';
+import { Texture } from '../../platform/graphics/texture.js';
+import { VertexFormat } from '../../platform/graphics/vertex-format.js';
+import { createGSplatMaterial } from './gsplat-material.js';
 
 /**
  * @typedef {object} SplatTextureFormat
@@ -46,13 +39,13 @@ class Splat {
     /** @type {Float32Array} */
     centers;
 
-    /** @type {import('playcanvas').BoundingBox} */
+    /** @type {import('../../core/shape/bounding-box.js').BoundingBox} */
     aabb;
 
     /**
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {number} numSplats - Number of splats.
-     * @param {import('playcanvas').BoundingBox} aabb - The bounding box.
+     * @param {import('../../core/shape/bounding-box.js').BoundingBox} aabb - The bounding box.
      */
     constructor(device, numSplats, aabb) {
         this.device = device;
@@ -80,11 +73,11 @@ class Splat {
     }
 
     /**
-     * @param {import('./splat-material.js').SplatMaterialOptions} options - The options.
-     * @returns {import('playcanvas').Material} The created GS material.
+     * @param {import('./gsplat-material.js').SplatMaterialOptions} options - The options.
+     * @returns {import('../materials/material.js').Material} The created GS material.
      */
     createMaterial(options) {
-        const material = createSplatMaterial(options);
+        const material = createGSplatMaterial(options);
         const { width, height } = this.colorTexture;
 
         material.setParameter('splatColor', this.colorTexture);
@@ -113,7 +106,7 @@ class Splat {
     /**
      * Creates a new texture with the specified parameters.
      *
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device to use for the texture creation.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device to use for the texture creation.
      * @param {string} name - The name of the texture to be created.
      * @param {number} format - The pixel format of the texture.
      * @param {Vec2} size - The size of the texture in a Vec2 object, containing width (x) and height (y).
@@ -137,7 +130,7 @@ class Splat {
     /**
      * Gets the most suitable texture format based on device capabilities.
      *
-     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
+     * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {boolean} preferHighPrecision - True to prefer high precision when available.
      * @returns {SplatTextureFormat} The texture format info or undefined if not available.
      */

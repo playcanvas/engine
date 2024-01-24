@@ -15,6 +15,19 @@ import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../pl
  */
 class XrView extends EventHandler {
     /**
+     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
+     * to be updated for relevant shaders. The handler is passed the new width and height of the
+     * depth texture in pixels.
+     *
+     * @event
+     * @example
+     * view.on('depth:resize', () => {
+     *     material.setParameter('matrix_depth_uv', view.depthUvMatrix);
+     * });
+     */
+    static EVENT_DEPTHRESIZE = 'depth:resize';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -174,19 +187,6 @@ class XrView extends EventHandler {
         if (this._textureColor || this._textureDepth)
             device.on('devicelost', this._onDeviceLost, this);
     }
-
-    /**
-     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
-     * to be updated for relevant shaders.
-     *
-     * @event XrView#depth:resize
-     * @param {number} width - The new width of the depth texture in pixels.
-     * @param {number} height - The new height of the depth texture in pixels.
-     * @example
-     * view.on('depth:resize', function () {
-     *     material.setParameter('matrix_depth_uv', view.depthUvMatrix);
-     * });
-     */
 
     /**
      * Texture associated with this view's camera color. Equals to null if camera color is
