@@ -109,6 +109,9 @@ class RotateGizmo extends TransformGizmo {
      */
     _guideAngleEnd = new Vec3();
 
+    /**
+     * @override
+     */
     snapIncrement = 5;
 
     /**
@@ -189,43 +192,83 @@ class RotateGizmo extends TransformGizmo {
         });
     }
 
+    /**
+     * XYZ tube radius.
+     * 
+     * @param {number} value - tube radius.
+     */
     set xyzTubeRadius(value) {
         this._setDiskProp('tubeRadius', value);
     }
 
+    /**
+     * @type {number}
+     */
     get xyzTubeRadius() {
         return this._shapes.x.tubeRadius;
     }
 
+    /**
+     * XYZ ring radius.
+     * 
+     * @param {number} value - ring radius.
+     */
     set xyzRingRadius(value) {
         this._setDiskProp('ringRadius', value);
     }
 
+    /**
+     * @type {number}
+     */
     get xyzRingRadius() {
         return this._shapes.x.ringRadius;
     }
 
+    /**
+     * Face tube radius.
+     * 
+     * @param {number} value - tube radius.
+     */
     set faceTubeRadius(value) {
         this._shapes.face.tubeRadius = value;
     }
 
+    /**
+     * @type {number}
+     */
     get faceTubeRadius() {
         return this._shapes.face.tubeRadius;
     }
 
+    /**
+     * Face ring radius.
+     * 
+     * @param {number} value - ring radius.
+     */
     set faceRingRadius(value) {
         this._shapes.face.ringRadius = value;
     }
 
+    /**
+     * @type {number}
+     */
     get faceRingRadius() {
         return this._shapes.face.ringRadius;
     }
 
+    /**
+     * Ring tolerance.
+     * 
+     * @param {number} value - ring tolerance.
+     */
     set ringTolerance(value) {
         this._setDiskProp('tolerance', value);
         this._shapes.face.tolerance = value;
     }
 
+    /**
+     * @type {number}
+     */
     get ringTolerance() {
         return this._shapes.x.tolerance;
     }

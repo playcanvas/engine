@@ -83,6 +83,9 @@ class TranslateGizmo extends TransformGizmo {
      */
     _nodePositions = new Map();
 
+    /**
+     * @override
+     */
     snapIncrement = 1;
 
     /**
@@ -118,66 +121,130 @@ class TranslateGizmo extends TransformGizmo {
         });
     }
 
+    /**
+     * Axis gap.
+     * 
+     * @param {number} value - gap.
+     */
     set axisGap(value) {
         this._setArrowProp('gap', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisGap() {
         return this._shapes.x.gap;
     }
 
+    /**
+     * Axis line thickness.
+     * 
+     * @param {number} value - line thickness.
+     */
     set axisLineThickness(value) {
         this._setArrowProp('lineThickness', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineThickness() {
         return this._shapes.x.lineThickness;
     }
 
+    /**
+     * Axis line length.
+     * 
+     * @param {number} value - line length.
+     */
     set axisLineLength(value) {
         this._setArrowProp('lineLength', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineLength() {
         return this._shapes.x.lineLength;
     }
 
+    /**
+     * Axis line tolerance.
+     * 
+     * @param {number} value - line tolerance.
+     */
     set axisLineTolerance(value) {
         this._setArrowProp('tolerance', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineTolerance() {
         return this._shapes.x.tolerance;
     }
 
+    /**
+     * Arrow thickness.
+     * 
+     * @param {number} value - arrow thickness.
+     */
     set axisArrowThickness(value) {
         this._setArrowProp('arrowThickness', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisArrowThickness() {
         return this._shapes.x.arrowThickness;
     }
 
+    /**
+     * Arrow length.
+     * 
+     * @param {number} value - arrow length.
+     */
     set axisArrowLength(value) {
         this._setArrowProp('arrowLength', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisArrowLength() {
         return this._shapes.x.arrowLength;
     }
 
+    /**
+     * Plane size.
+     * 
+     * @param {number} value - plane size.
+     */
     set axisPlaneSize(value) {
         this._setPlaneProp('size', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisPlaneSize() {
         return this._shapes.yz.size;
     }
 
+    /**
+     * Plane gap.
+     * 
+     * @param {number} value - plane gap.
+     */
     set axisPlaneGap(value) {
         this._setPlaneProp('gap', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisPlaneGap() {
         return this._shapes.yz.gap;
     }

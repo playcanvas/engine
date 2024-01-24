@@ -87,6 +87,9 @@ class ScaleGizmo extends TransformGizmo {
      */
     uniform = true;
 
+    /**
+     * @override
+     */
     snapIncrement = 1;
 
     /**
@@ -148,78 +151,149 @@ class ScaleGizmo extends TransformGizmo {
         return this._coordSpace;
     }
 
+    /**
+     * Axis gap.
+     * 
+     * @param {number} value - gap.
+     */
     set axisGap(value) {
         this._setArrowProp('gap', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisGap() {
         return this._shapes.x.gap;
     }
 
+    /**
+     * Axis line thickness.
+     * 
+     * @param {number} value - line thickness.
+     */
     set axisLineThickness(value) {
         this._setArrowProp('lineThickness', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineThickness() {
         return this._shapes.x.lineThickness;
     }
 
+    /**
+     * Axis line length.
+     * 
+     * @param {number} value - line length.
+     */
     set axisLineLength(value) {
         this._setArrowProp('lineLength', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineLength() {
         return this._shapes.x.lineLength;
     }
 
+    /**
+     * Axis line tolerance.
+     * 
+     * @param {number} value - line tolerance.
+     */
     set axisLineTolerance(value) {
         this._setArrowProp('tolerance', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisLineTolerance() {
         return this._shapes.x.tolerance;
     }
 
+    /**
+     * Axis box size.
+     * 
+     * @param {number} value - box size.
+     */
     set axisBoxSize(value) {
         this._setArrowProp('boxSize', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisBoxSize() {
         return this._shapes.x.boxSize;
     }
 
+    /**
+     * Plane size.
+     * 
+     * @param {number} value - plane size.
+     */
     set axisPlaneSize(value) {
         this._setPlaneProp('size', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisPlaneSize() {
         return this._shapes.yz.size;
     }
 
+    /**
+     * Plane gap.
+     * 
+     * @param {number} value - plane gap.
+     */
     set axisPlaneGap(value) {
         this._setPlaneProp('gap', value);
     }
 
+    /**
+     * @type {number}
+     */
     get axisPlaneGap() {
         return this._shapes.yz.gap;
     }
 
+    /**
+     * Axis center size.
+     * 
+     * @param {number} value - center size.
+     */
     set axisCenterSize(value) {
         this._shapes.xyz.size = value;
     }
 
+    /**
+     * @type {number}
+     */
     get axisCenterSize() {
         return this._shapes.xyz.size;
     }
 
+    /**
+     * Axis center tolerance.
+     * 
+     * @param {number} value - center tolerance.
+     */
     set axisCenterTolerance(value) {
         this._shapes.xyz.tolerance = value;
     }
 
+    /**
+     * @type {number}
+     */
     get axisCenterTolerance() {
         return this._shapes.xyz.tolerance;
     }
-
 
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
