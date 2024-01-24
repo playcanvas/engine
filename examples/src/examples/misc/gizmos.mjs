@@ -251,8 +251,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
             for (const type in this._gizmos) {
                 const gizmo = this._gizmos[type];
-                gizmo.on('pointer:down', (x, y, selection) => {
-                    this._ignorePicker = !!selection;
+                gizmo.on('pointer:down', (x, y, meshInstance) => {
+                    this._ignorePicker = !!meshInstance;
                 });
                 gizmo.on('pointer:up', () => {
                     this._ignorePicker = false;
@@ -488,6 +488,13 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         // call method from top context (same as controls)
         window.top.setType(value);
     };
+
+    const keydown = (e) => {
+        gizmoHandler.gizmo.snap = !!e.shiftKey;
+    };
+    const keyup = (e) => {
+        gizmoHandler.gizmo.snap = !!e.shiftKey;
+    };
     const keypress = (e) => {
         switch (e.key) {
             case 'x':
@@ -504,6 +511,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 break;
         }
     };
+    window.addEventListener('keydown', keydown);
+    window.addEventListener('keyup', keyup);
     window.addEventListener('keypress', keypress);
 
     // Gizmo and camera set handler
@@ -584,6 +593,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         gizmoHandler.destroy();
 
         window.removeEventListener('resize', resize);
+        window.removeEventListener('keydown', keydown);
+        window.removeEventListener('keyup', keyup);
         window.removeEventListener('keypress', keypress);
         window.removeEventListener('pointerdown', onPointerDown);
     });

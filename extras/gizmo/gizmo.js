@@ -76,30 +76,6 @@ class Gizmo extends EventHandler {
     static EVENT_POINTER_UP = 'pointer:up';
 
     /**
-     * Fired when a key is down is up.
-     *
-     * @event
-     * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
-     * gizmo.on('key:down', (key, shiftKey, ctrlKey, metaKey) => {
-     *    console.log(`${key} was down (shift: ${shiftKey}, ctrl: ${ctrlKey}, meta: ${metaKey})`);
-     * });
-     */
-    static EVENT_KEY_DOWN = 'key:down';
-
-    /**
-     * Fired when a key is up.
-     *
-     * @event
-     * @example
-     * const gizmo = new pcx.Gizmo(app, camera, layer);
-     * gizmo.on('key:up', (key, shiftKey, ctrlKey, metaKey) => {
-     *    console.log(`${key} was up (shift: ${shiftKey}, ctrl: ${ctrlKey}, meta: ${metaKey})`);
-     * });
-     */
-    static EVENT_KEY_UP = 'key:up';
-
-    /**
      * Fired when the gizmo's position is updated.
      *
      * @event
@@ -291,25 +267,11 @@ class Gizmo extends EventHandler {
             }
             this.fire(Gizmo.EVENT_POINTER_UP);
         };
-        this._onKeyDown = (e) => {
-            if (!this.root.enabled) {
-                return;
-            }
-            this.fire(Gizmo.EVENT_KEY_DOWN, e.key, e.shiftKey, e.ctrlKey, e.metaKey);
-        };
-        this._onKeyUp = (e) => {
-            if (!this.root.enabled) {
-                return;
-            }
-            this.fire(Gizmo.EVENT_KEY_UP, e.key, e.shiftKey, e.ctrlKey, e.metaKey);
-        };
 
         if (window) {
             window.addEventListener('pointerdown', this._onPointerDown);
             window.addEventListener('pointermove', this._onPointerMove);
             window.addEventListener('pointerup', this._onPointerUp);
-            window.addEventListener('keydown', this._onKeyDown);
-            window.addEventListener('keyup', this._onKeyUp);
         }
 
         app.on('update', () => this._updateScale());
@@ -472,8 +434,6 @@ class Gizmo extends EventHandler {
             window.removeEventListener('pointerdown', this._onPointerDown);
             window.removeEventListener('pointermove', this._onPointerMove);
             window.removeEventListener('pointerup', this._onPointerUp);
-            window.removeEventListener('keydown', this._onKeyDown);
-            window.removeEventListener('keyup', this._onKeyUp);
         }
 
         this.root.destroy();

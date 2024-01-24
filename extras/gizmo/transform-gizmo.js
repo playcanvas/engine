@@ -193,11 +193,12 @@ class TransformGizmo extends Gizmo {
     _dragging = false;
 
     /**
-     * State for if snapping is enabled. Defaults to false.
+     * Internal state for if snapping is enabled. Defaults to false.
      *
      * @type {boolean}
+     * @private
      */
-    snap = false;
+    _snap = false;
 
     /**
      * Snapping increment. Defaults to 1.
@@ -263,20 +264,21 @@ class TransformGizmo extends Gizmo {
             this._selectedIsPlane = false;
         });
 
-        this.on('key:down', (key, shiftKey) => {
-            this.snap = shiftKey;
-        });
-
-        this.on('key:up', () => {
-            this.snap = false;
-        });
-
         this.on('nodes:detach', () => {
+            this.snap = false;
             this._hoverAxis = '';
             this._hoverIsPlane = false;
             this._hover(null);
             this.fire('pointer:up');
         });
+    }
+
+    set snap(value) {
+        this.snap = this.root.enabled && value;
+    }
+
+    get snap() {
+        return this._snap;
     }
 
     set xAxisColor(value) {
