@@ -350,22 +350,22 @@ export { I18n } from './framework/i18n/i18n.js';
 
 // FRAMEWORK / XR
 export * from './framework/xr/constants.js';
-export { XrInput } from './framework/xr/xr-input.js';
-export { XrInputSource } from './framework/xr/xr-input-source.js';
-export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
 export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
-export { XrManager } from './framework/xr/xr-manager.js';
+export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrFinger } from './framework/xr/xr-finger.js';
+export { XrHand } from './framework/xr/xr-hand.js';
 export { XrHitTest } from './framework/xr/xr-hit-test.js';
 export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
-export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
-export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
-export { XrAnchors } from './framework/xr/xr-anchors.js';
-export { XrAnchor } from './framework/xr/xr-anchor.js';
-export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrInput } from './framework/xr/xr-input.js';
+export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrManager } from './framework/xr/xr-manager.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
-export { XrHand } from './framework/xr/xr-hand.js';
-export { XrFinger } from './framework/xr/xr-finger.js';
+export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
