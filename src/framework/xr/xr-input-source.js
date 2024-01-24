@@ -23,6 +23,136 @@ let ids = 0;
  */
 class XrInputSource extends EventHandler {
     /**
+     * Fired when {@link XrInputSource} is removed.
+     *
+     * @event
+     * @example
+     * inputSource.once('remove', () => {
+     *     // input source is not available anymore
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when input source has triggered primary action. This could be pressing a trigger
+     * button, or touching a screen. The handler is passed an {@link XRInputSourceEvent} object
+     * from the WebXR API.
+     *
+     * @event
+     * @example
+     * const ray = new pc.Ray();
+     * inputSource.on('select', (evt) => {
+     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
+     *     if (obj.intersectsRay(ray)) {
+     *         // selected an object with input source
+     *     }
+     * });
+     */
+    static EVENT_SELECT = 'select';
+
+    /**
+     * Fired when input source has started to trigger primary action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('selectstart', (evt) => {
+     *     console.log('Select started');
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when input source has ended triggering primary action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('selectend', (evt) => {
+     *     console.log('Select ended');
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when input source has triggered squeeze action. This is associated with "grabbing"
+     * action on the controllers. The handler is passed an {@link XRInputSourceEvent} object from
+     * the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeeze', (evt) => {
+     *     console.log('Squeeze');
+     * });
+     */
+    static EVENT_SQUEEZE = 'squeeze';
+
+    /**
+     * Fired when input source has started to trigger squeeze action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeezestart', (evt) => {
+     *     if (obj.containsPoint(inputSource.getPosition())) {
+     *         // grabbed an object
+     *     }
+     * });
+     */
+    static EVENT_SQUEEZESTART = 'squeezestart';
+
+    /**
+     * Fired when input source has ended triggering squeeze action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeezeend', (evt) => {
+     *     console.log('Squeeze ended');
+     * });
+     */
+    static EVENT_SQUEEZEEND = 'squeezeend';
+
+    /**
+     * Fired when new {@link XrHitTestSource} is added to the input source. The handler is passed
+     * the {@link XrHitTestSource} object that has been added.
+     *
+     * @event
+     * @example
+     * inputSource.on('hittest:add', (hitTestSource) => {
+     *     // new hit test source is added
+     * });
+     */
+    static EVENT_HITTESTADD = 'hittest:add';
+
+    /**
+     * Fired when {@link XrHitTestSource} is removed to the the input source. The handler is passed
+     * the {@link XrHitTestSource} object that has been removed.
+     *
+     * @event
+     * @example
+     * inputSource.on('remove', (hitTestSource) => {
+     *     // hit test source is removed
+     * });
+     */
+    static EVENT_HITTESTREMOVE = 'hittest:remove';
+
+    /**
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
+     * object that produced the hit result, the {@link Vec3} position and the {@link Quat}
+     * rotation.
+     *
+     * @event
+     * @example
+     * inputSource.on('hittest:result', (hitTestSource, position, rotation) => {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
+    static EVENT_HITTESTRESULT = 'hittest:result';
+
+    /**
      * @type {number}
      * @private
      */
@@ -185,114 +315,6 @@ class XrInputSource extends EventHandler {
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
     }
-
-    /**
-     * Fired when {@link XrInputSource} is removed.
-     *
-     * @event XrInputSource#remove
-     * @example
-     * inputSource.once('remove', function () {
-     *     // input source is not available anymore
-     * });
-     */
-
-    /**
-     * Fired when input source has triggered primary action. This could be pressing a trigger
-     * button, or touching a screen.
-     *
-     * @event XrInputSource#select
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * const ray = new pc.Ray();
-     * inputSource.on('select', function (evt) {
-     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
-     *     if (obj.intersectsRay(ray)) {
-     *         // selected an object with input source
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when input source has started to trigger primary action.
-     *
-     * @event XrInputSource#selectstart
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has ended triggering primary action.
-     *
-     * @event XrInputSource#selectend
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has triggered squeeze action. This is associated with "grabbing"
-     * action on the controllers.
-     *
-     * @event XrInputSource#squeeze
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has started to trigger squeeze action.
-     *
-     * @event XrInputSource#squeezestart
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * inputSource.on('squeezestart', function (evt) {
-     *     if (obj.containsPoint(inputSource.getPosition())) {
-     *         // grabbed an object
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when input source has ended triggering squeeze action.
-     *
-     * @event XrInputSource#squeezeend
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when new {@link XrHitTestSource} is added to the input source.
-     *
-     * @event XrInputSource#hittest:add
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that has been added.
-     * @example
-     * inputSource.on('hittest:add', function (hitTestSource) {
-     *     // new hit test source is added
-     * });
-     */
-
-    /**
-     * Fired when {@link XrHitTestSource} is removed to the the input source.
-     *
-     * @event XrInputSource#hittest:remove
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that has been removed.
-     * @example
-     * inputSource.on('remove', function (hitTestSource) {
-     *     // hit test source is removed
-     * });
-     */
-
-    /**
-     * Fired when hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry.
-     *
-     * @event XrInputSource#hittest:result
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that produced the hit result.
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @example
-     * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
-     *     target.setPosition(position);
-     *     target.setRotation(rotation);
-     * });
-     */
 
     /**
      * Unique number associated with instance of input source. Same physical devices when

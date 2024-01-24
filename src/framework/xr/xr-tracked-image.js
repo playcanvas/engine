@@ -12,6 +12,28 @@ import { Quat } from '../../core/math/quat.js';
  */
 class XrTrackedImage extends EventHandler {
     /**
+     * Fired when image becomes actively tracked.
+     *
+     * @event
+     * @example
+     * trackedImage.on('tracked', () => {
+     *     console.log('Image is now tracked');
+     * });
+     */
+    static EVENT_TRACKED = 'tracked';
+
+    /**
+     * Fired when image is no longer actively tracked.
+     *
+     * @event
+     * @example
+     * trackedImage.on('untracked', () => {
+     *     console.log('Image is no longer tracked');
+     * });
+     */
+    static EVENT_UNTRACKED = 'untracked';
+
+    /**
      * @type {HTMLCanvasElement|HTMLImageElement|SVGImageElement|HTMLVideoElement|Blob|ImageData|ImageBitmap}
      * @private
      */
@@ -91,18 +113,6 @@ class XrTrackedImage extends EventHandler {
         this._image = image;
         this._width = width;
     }
-
-    /**
-     * Fired when image becomes actively tracked.
-     *
-     * @event XrTrackedImage#tracked
-     */
-
-    /**
-     * Fired when image is no more actively tracked.
-     *
-     * @event XrTrackedImage#untracked
-     */
 
     /**
      * Image that is used for tracking.
