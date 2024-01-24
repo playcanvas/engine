@@ -130,7 +130,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('nodes:detach', () => {
-     *    console.log('Graph nodes detached');
+     *     console.log('Graph nodes detached');
      * });
      */
     static EVENT_NODESDETACH = 'nodes:detach';
