@@ -28,6 +28,17 @@ const _enableList = [];
  */
 class Entity extends GraphNode {
     /**
+     * Fired after the entity is destroyed.
+     *
+     * @event
+     * @example
+     * entity.on('destroy', (e) => {
+     *     console.log(`Entity ${e.name} has been destroyed`);
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
      * Gets the {@link AnimComponent} attached to this entity.
      *
      * @type {import('./components/anim/component.js').AnimComponent|undefined}
@@ -676,16 +687,5 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         }
     }
 }
-
-/**
- * Fired after the entity is destroyed.
- *
- * @event Entity#destroy
- * @param {Entity} entity - The entity that was destroyed.
- * @example
- * entity.on("destroy", function (e) {
- *     console.log('entity ' + e.name + ' has been destroyed');
- * });
- */
 
 export { Entity };
