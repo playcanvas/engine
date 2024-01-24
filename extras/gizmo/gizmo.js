@@ -82,7 +82,7 @@ class Gizmo extends EventHandler {
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.on('position:update', (position) => {
-     *    console.log(`The gizmo's position was updated to ${position}`);
+     *     console.log(`The gizmo's position was updated to ${position}`);
      * })
      */
     static EVENT_POSITIONUPDATE = 'position:update';
