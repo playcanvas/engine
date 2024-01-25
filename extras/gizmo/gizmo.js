@@ -401,7 +401,6 @@ class Gizmo extends EventHandler {
                 }
                 return s0.dist - s1.dist;
             });
-            console.log(selection);
             return selection[0].meshInstances;
         }
 
