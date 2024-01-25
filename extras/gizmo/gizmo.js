@@ -136,6 +136,18 @@ class Gizmo extends EventHandler {
     static EVENT_NODESDETACH = 'nodes:detach';
 
     /**
+     * Fired when when the gizmo render has updated.
+     *
+     * @event
+     * @example
+     * const gizmo = new pcx.TransformGizmo(app, camera, layer);
+     * gizmo.on('render:update', () => {
+     *     console.log('Gizmo render has been updated');
+     * });
+     */
+    static EVENT_RENDERUPDATE = 'render:update';
+
+    /**
      * Internal version of the gizmo size. Defaults to 1.
      *
      * @type {number}
@@ -410,6 +422,8 @@ class Gizmo extends EventHandler {
         this.fire(Gizmo.EVENT_NODESATTACH);
 
         this.root.enabled = true;
+
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
     }
 
     /**
@@ -423,6 +437,7 @@ class Gizmo extends EventHandler {
     detach() {
         this.root.enabled = false;
 
+        this.fire(Gizmo.EVENT_RENDERUPDATE);
         this.fire(Gizmo.EVENT_NODESDETACH);
 
         this.nodes = [];

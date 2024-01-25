@@ -437,7 +437,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     });
     camera.addComponent("script");
     const orbitCamera = camera.script.create("orbitCamera");
-    const orbitCameraInputMouse = camera.script.create("orbitCameraInputMouse");
+    camera.script.create("orbitCameraInputMouse");
     camera.script.create("orbitCameraInputTouch");
     camera.setPosition(1, 1, 1);
     app.root.addChild(camera);

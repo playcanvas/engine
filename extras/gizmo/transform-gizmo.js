@@ -162,7 +162,7 @@ class TransformGizmo extends Gizmo {
      * @type {import('./axis-shapes.js').AxisShape}
      * @private
      */
-    _hoverShape;
+    _hoverShape = null;
 
     /**
      * Internal currently hovered axis.
@@ -395,7 +395,7 @@ class TransformGizmo extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = this._hoverShapeMap.get(meshInstance);
+        const shape = this._hoverShapeMap.get(meshInstance) || null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -407,6 +407,7 @@ class TransformGizmo extends Gizmo {
             shape.hover(true);
             this._hoverShape = shape;
         }
+        this.fire('render:update');
     }
 
     _calcPoint(x, y) {
