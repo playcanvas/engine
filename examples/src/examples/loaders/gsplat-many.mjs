@@ -1,11 +1,27 @@
 import * as pc from 'playcanvas';
 
 /**
+ * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { Button } = ReactPCUI;
+    return fragment(
+        jsx(Button, {
+            text: 'Custom Shader',
+            onClick: () => {
+                observer.set('shader', !observer.get('shader'));
+            }
+        })
+    );
+}
+
+/**
  * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, pcx, files }) {
+async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, files }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -116,6 +132,20 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         camera.script.create("orbitCameraInputTouch");
         app.root.addChild(camera);
 
+        let useCustomShader = true;
+        data.on('shader:set', () => {
+
+            // Apply custom or default material options to the splats when the button is clicked. Note
+            // that this uses non-public API, which is subject to change when a proper API is added.
+            const materialOptions = {
+                fragment: files['shader.frag'],
+                vertex: files['shader.vert']
+            };
+            biker1.gsplat.materialOptions = useCustomShader ? materialOptions : null;
+            biker2.gsplat.materialOptions = useCustomShader ? materialOptions : null;
+            useCustomShader = !useCustomShader;
+        });
+
         let currentTime = 0;
         app.on("update", function (dt) {
             currentTime += dt;
@@ -130,7 +160,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 export class GSplatManyExample {
     static CATEGORY = 'Loaders';
     static example = example;
-
+    static controls = controls;
     static FILES = {
         'shader.vert': /* glsl */`
             uniform float uTime;

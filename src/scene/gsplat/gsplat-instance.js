@@ -6,6 +6,7 @@ import { DITHER_NONE } from '../constants.js';
 import { MeshInstance } from '../mesh-instance.js';
 import { Mesh } from '../mesh.js';
 import { createBox } from '../procedural.js';
+import { createGSplatMaterial } from './gsplat-material.js';
 import { GSplatSorter } from './gsplat-sorter.js';
 
 const mat = new Mat4();
@@ -59,7 +60,7 @@ class GSplatInstance {
 
         // material
         const debugRender = options.debugRender;
-        this.material = splat.createMaterial(options);
+        this.createMaterial(options);
 
         // mesh
         const device = splat.device;
@@ -124,6 +125,14 @@ class GSplatInstance {
 
     clone() {
         return new GSplatInstance(this.splat, this.options);
+    }
+
+    createMaterial(options) {
+        this.material = createGSplatMaterial(options);
+        this.splat.setupMaterial(this.material);
+        if (this.meshInstance) {
+            this.meshInstance.material = this.material;
+        }
     }
 
     updateViewport() {
