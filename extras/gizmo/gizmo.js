@@ -257,21 +257,21 @@ class Gizmo extends EventHandler {
             if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
-            const selection = this._getSelection(e.clientX, e.clientY);
+            const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire(Gizmo.EVENT_POINTERDOWN, e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTERDOWN, e.offsetX, e.offsetY, selection[0]);
         };
         this._onPointerMove = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
                 return;
             }
-            const selection = this._getSelection(e.clientX, e.clientY);
+            const selection = this._getSelection(e.offsetX, e.offsetY);
             if (selection[0]) {
                 e.preventDefault();
             }
-            this.fire(Gizmo.EVENT_POINTERMOVE, e.clientX, e.clientY, selection[0]);
+            this.fire(Gizmo.EVENT_POINTERMOVE, e.offsetX, e.offsetY, selection[0]);
         };
         this._onPointerUp = (e) => {
             if (!this.root.enabled || document.pointerLockElement) {
@@ -280,11 +280,9 @@ class Gizmo extends EventHandler {
             this.fire(Gizmo.EVENT_POINTERUP);
         };
 
-        if (window) {
-            window.addEventListener('pointerdown', this._onPointerDown);
-            window.addEventListener('pointermove', this._onPointerMove);
-            window.addEventListener('pointerup', this._onPointerUp);
-        }
+        this._device.canvas.addEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.addEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.addEventListener('pointerup', this._onPointerUp);
 
         app.on('update', () => this._updateScale());
 
@@ -455,11 +453,9 @@ class Gizmo extends EventHandler {
     destroy() {
         this.detach();
 
-        if (window) {
-            window.removeEventListener('pointerdown', this._onPointerDown);
-            window.removeEventListener('pointermove', this._onPointerMove);
-            window.removeEventListener('pointerup', this._onPointerUp);
-        }
+        this._device.canvas.removeEventListener('pointerdown', this._onPointerDown);
+        this._device.canvas.removeEventListener('pointermove', this._onPointerMove);
+        this._device.canvas.removeEventListener('pointerup', this._onPointerUp);
 
         this.root.destroy();
     }
