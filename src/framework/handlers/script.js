@@ -1,5 +1,8 @@
+import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
+import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
+import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 /** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
@@ -53,7 +56,7 @@ class ScriptHandler {
         const self = this;
         script.app = this._app;
 
-        this._loadScript(url.load, (err, url, extra) => {
+        const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
                 if (script.legacy) {
                     let Type = null;
@@ -88,6 +91,28 @@ class ScriptHandler {
                 callback(err);
             }
         });
+
+        // check if we're loading a module or a classic script
+        const [basePath, search] = url.load.split('?');
+        const isEsmScript = basePath.endsWith('.mjs');
+
+        if (isEsmScript) {
+
+            // The browser will hold its own cache of the script, so we need to bust it
+            let path = url.load;
+            if (path.startsWith(this._app.assets.prefix)) {
+                path = path.replace(this._app.assets.prefix, '');
+            }
+
+            const hash = this._app.assets.getByUrl(path).file.hash;
+            const searchParams = new URLSearchParams(search);
+            searchParams.set('hash', hash);
+            const urlWithHash = `${basePath}?${searchParams.toString()}`;
+
+            this._loadModule(urlWithHash, onScriptLoad);
+        } else {
+            this._loadScript(url.load, onScriptLoad);
+        }
     }
 
     open(url, data) {
@@ -119,6 +144,38 @@ class ScriptHandler {
         element.src = url;
 
         head.appendChild(element);
+    }
+
+    _loadModule(url, callback) {
+
+        // if we're in the browser, we need to use the full URL
+        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const importUrl = new URL(url, baseUrl);
+
+        // @ts-ignore
+        import(importUrl.toString()).then((module) => {
+
+            for (const key in module) {
+                const scriptClass = module[key];
+                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
+
+                if (extendsScriptType) {
+
+                    if (script.attributesDefinition) {
+                        for (const key in script.attributesDefinition) {
+                            scriptClass.attributes.add(key, script.attributesDefinition[key]);
+                        }
+                    }
+
+                    registerScript(scriptClass, scriptClass.name);
+                }
+            }
+
+            callback(null, url, null);
+
+        }).catch((err) => {
+            callback(err);
+        });
     }
 }
 
