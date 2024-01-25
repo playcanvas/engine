@@ -94,7 +94,7 @@ class ScriptHandler {
 
         // check if we're loading a module or a classic script
         const [basePath, search] = url.load.split('?');
-        const isEsmScript = basePath.endsWith('.esm.js');
+        const isEsmScript = basePath.endsWith('.mjs');
 
         if (isEsmScript) {
 
