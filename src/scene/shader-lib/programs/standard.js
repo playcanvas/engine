@@ -1,7 +1,7 @@
 import { Debug } from '../../../core/debug.js';
 
 import {
-    BLEND_NONE, FRESNEL_SCHLICK,
+    BLEND_NONE, DITHER_BAYER8, DITHER_NONE, FRESNEL_SCHLICK,
     SHADER_FORWARD, SHADER_FORWARDHDR,
     SPECULAR_PHONG,
     SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED
@@ -292,7 +292,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
 
             // opacity
-            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither) {
+            if (options.litOptions.blendType !== BLEND_NONE || options.litOptions.alphaTest || options.litOptions.alphaToCoverage || options.litOptions.opacityDither !== DITHER_NONE) {
                 decl.append("float dAlpha;");
                 code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
                 func.append("getOpacity();");
@@ -303,10 +303,13 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     func.append("alphaTest(dAlpha);");
                 }
 
-                if (options.litOptions.opacityDither) {
-                    decl.append(litShader.chunks.bayerPS);
+                const opacityDither = options.litOptions.opacityDither;
+                if (opacityDither !== DITHER_NONE) {
+                    if (opacityDither === DITHER_BAYER8)
+                        decl.append(litShader.chunks.bayerPS);
+                    decl.append(`#define DITHER_${opacityDither.toUpperCase()}\n`);
                     decl.append(litShader.chunks.opacityDitherPS);
-                    func.append("opacityDither(dAlpha);");
+                    func.append("opacityDither(dAlpha, 0.0);");
                 }
             } else {
                 decl.append("float dAlpha = 1.0;");
@@ -489,7 +492,8 @@ class ShaderGeneratorStandard extends ShaderGenerator {
             }
         } else {
             // all other passes require only opacity
-            if (options.litOptions.alphaTest || options.litOptions.opacityShadowDither) {
+            const opacityShadowDither = options.litOptions.opacityShadowDither;
+            if (options.litOptions.alphaTest || opacityShadowDither) {
                 decl.append("float dAlpha;");
                 code.append(this._addMap("opacity", "opacityPS", options, litShader.chunks, textureMapping));
                 func.append("getOpacity();");
@@ -498,10 +502,12 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     code.append(litShader.chunks.alphaTestPS);
                     func.append("alphaTest(dAlpha);");
                 }
-                if (options.litOptions.opacityShadowDither) {
-                    decl.append(litShader.chunks.bayerPS);
+                if (opacityShadowDither) {
+                    if (opacityShadowDither === DITHER_BAYER8)
+                        decl.append(litShader.chunks.bayerPS);
+                    decl.append(`#define DITHER_${opacityShadowDither.toUpperCase()}\n`);
                     decl.append(litShader.chunks.opacityDitherPS);
-                    func.append("opacityDither(dAlpha);");
+                    func.append("opacityDither(dAlpha, 0.0);");
                 }
             }
         }

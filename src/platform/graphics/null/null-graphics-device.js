@@ -74,6 +74,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
     }
 
+    updateBegin() {
+    }
+
+    updateEnd() {
+    }
+
+    readPixels(x, y, w, h, pixels) {
+    }
+
     createVertexBufferImpl(vertexBuffer, format) {
         return new NullVertexBuffer(vertexBuffer, format);
     }

@@ -20,21 +20,15 @@ const common = { };
 const apps = { }; // Storage for the applications using the PlayCanvas Engine
 const data = { }; // Storage for exported entity data
 
-/**
- * Create look up table for types.
- *
- * @returns {object} A hash table containing all types in this format: { '[object Type]': 'type' }
- * @private
- */
-const _typeLookup = function () {
-    const result = { };
-    const names = ['Array', 'Object', 'Function', 'Date', 'RegExp', 'Float32Array'];
-
-    for (let i = 0; i < names.length; i++)
-        result['[object ' + names[i] + ']'] = names[i].toLowerCase();
-
-    return result;
-}();
+const typeofs = ['undefined', 'number', 'string', 'boolean'];
+const objectTypes = {
+    '[object Array]': 'array',
+    '[object Object]': 'object',
+    '[object Function]': 'function',
+    '[object Date]': 'date',
+    '[object RegExp]': 'regexp',
+    '[object Float32Array]': 'float32array'
+};
 
 /**
  * Extended typeof() function, returns the type of the object.
@@ -48,13 +42,12 @@ function type(obj) {
         return 'null';
     }
 
-    const type = typeof obj;
-
-    if (type === 'undefined' || type === 'number' || type === 'string' || type === 'boolean') {
-        return type;
+    const typeString = typeof obj;
+    if (typeofs.includes(typeString)) {
+        return typeString;
     }
 
-    return _typeLookup[Object.prototype.toString.call(obj)];
+    return objectTypes[Object.prototype.toString.call(obj)];
 }
 
 /**

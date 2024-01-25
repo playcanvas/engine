@@ -206,6 +206,7 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
         const ball = new pc.Entity();
         ball.tags.add('shape');
         ball.setLocalScale(0.4, 0.4, 0.4);
+        ball.translate(0, -1, 0);
         ball.addComponent("render", {
             type: "sphere"
         });

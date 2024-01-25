@@ -8,9 +8,13 @@ import {
     SEMANTIC_TEXCOORD0, SEMANTIC_TEXCOORD1, SEMANTIC_ATTR12, SEMANTIC_ATTR13, SEMANTIC_ATTR14, SEMANTIC_ATTR15,
     SEMANTIC_COLOR, SEMANTIC_TANGENT, TYPE_FLOAT32, typedArrayTypesByteSize, vertexTypesNames
 } from './constants.js';
+import { DeviceCache } from './device-cache.js';
 
 const stringIds = new StringIds();
 const webgpuValidElementSizes = [2, 4, 8, 12, 16];
+
+// device cache storing the default instancing format per device
+const deviceCache = new DeviceCache();
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
@@ -207,12 +211,6 @@ class VertexFormat {
     }
 
     /**
-     * @type {VertexFormat}
-     * @private
-     */
-    static _defaultInstancingFormat = null;
-
-    /**
      * The {@link VertexFormat} used to store matrices of type {@link Mat4} for hardware instancing.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
@@ -222,16 +220,15 @@ class VertexFormat {
      */
     static getDefaultInstancingFormat(graphicsDevice) {
 
-        if (!VertexFormat._defaultInstancingFormat) {
-            VertexFormat._defaultInstancingFormat = new VertexFormat(graphicsDevice, [
+        // get it from the device cache, or create a new one if not cached yet
+        return deviceCache.get(graphicsDevice, () => {
+            return new VertexFormat(graphicsDevice, [
                 { semantic: SEMANTIC_ATTR12, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR13, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR14, components: 4, type: TYPE_FLOAT32 },
                 { semantic: SEMANTIC_ATTR15, components: 4, type: TYPE_FLOAT32 }
             ]);
-        }
-
-        return VertexFormat._defaultInstancingFormat;
+        });
     }
 
     static isElementValid(graphicsDevice, elementDesc) {
@@ -258,32 +255,29 @@ class VertexFormat {
      * @private
      */
     _evaluateHash() {
-        let stringElementBatch;
         const stringElementsBatch = [];
-        let stringElementRender;
         const stringElementsRender = [];
         const len = this._elements.length;
         for (let i = 0; i < len; i++) {
-            const element = this._elements[i];
+            const { name, dataType, numComponents, normalize, offset, stride, size, asInt } = this._elements[i];
 
             // create string description of each element that is relevant for batching
-            stringElementBatch = element.name;
-            stringElementBatch += element.dataType;
-            stringElementBatch += element.numComponents;
-            stringElementBatch += element.normalize;
+            const stringElementBatch = name + dataType + numComponents + normalize + asInt;
             stringElementsBatch.push(stringElementBatch);
 
             // create string description of each element that is relevant for rendering
-            stringElementRender = stringElementBatch;
-            stringElementRender += element.offset;
-            stringElementRender += element.stride;
-            stringElementRender += element.size;
+            const stringElementRender = stringElementBatch + offset + stride + size;
             stringElementsRender.push(stringElementRender);
         }
 
         // sort batching ones alphabetically to make the hash order independent
         stringElementsBatch.sort();
-        this.batchingHash = hashCode(stringElementsBatch.join());
+        const batchingString = stringElementsBatch.join();
+        this.batchingHash = hashCode(batchingString);
+
+        // shader processing hash - all elements that are used by the ShaderProcessor processing attributes
+        // at the moment this matches the batching hash
+        this.shaderProcessingHashString = batchingString;
 
         // rendering hash
         this.renderingHashString = stringElementsRender.join('_');

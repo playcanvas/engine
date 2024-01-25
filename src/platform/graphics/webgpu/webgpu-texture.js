@@ -8,7 +8,7 @@ import {
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_DEPTHSTENCIL,
     SAMPLETYPE_UNFILTERABLE_FLOAT, SAMPLETYPE_DEPTH,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_NEAREST_MIPMAP_LINEAR,
-    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR
+    FILTER_LINEAR_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_LINEAR, isIntegerPixelFormat, SAMPLETYPE_INT, SAMPLETYPE_UINT
 } from '../constants.js';
 import { TextureUtils } from '../texture-utils.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -215,7 +215,7 @@ class WebgpuTexture {
                 sampleType = SAMPLETYPE_DEPTH;
             }
 
-            if (sampleType === SAMPLETYPE_DEPTH) {
+            if (sampleType === SAMPLETYPE_DEPTH || sampleType === SAMPLETYPE_INT || sampleType === SAMPLETYPE_UINT) {
 
                 // depth compare sampling
                 descr.compare = 'less';
@@ -225,7 +225,7 @@ class WebgpuTexture {
 
             } else if (sampleType === SAMPLETYPE_UNFILTERABLE_FLOAT) {
 
-                // webgpu cannot currently filter float / half float textures
+                // webgpu cannot currently filter float / half float textures, or integer textures
                 descr.magFilter = 'nearest';
                 descr.minFilter = 'nearest';
                 descr.mipmapFilter = 'nearest';
@@ -236,7 +236,7 @@ class WebgpuTexture {
                 // TODO: this is temporary and needs to be made generic
                 if (this.texture.format === PIXELFORMAT_RGBA32F ||
                     this.texture.format === PIXELFORMAT_DEPTHSTENCIL ||
-                    this.texture.format === PIXELFORMAT_RGBA16F) {
+                    this.texture.format === PIXELFORMAT_RGBA16F || isIntegerPixelFormat(this.texture.format)) {
                     descr.magFilter = 'nearest';
                     descr.minFilter = 'nearest';
                     descr.mipmapFilter = 'nearest';
@@ -384,6 +384,14 @@ class WebgpuTexture {
             if (anyUploads && anyLevelMissing && texture.mipmaps && !isCompressedPixelFormat(texture.format)) {
                 device.mipmapRenderer.generate(this);
             }
+
+            // update vram stats
+            if (texture._gpuSize) {
+                texture.adjustVramSizeTracking(device._vram, -texture._gpuSize);
+            }
+
+            texture._gpuSize = texture.gpuSize;
+            texture.adjustVramSizeTracking(device._vram, texture._gpuSize);
         }
     }
 

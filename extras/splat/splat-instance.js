@@ -5,6 +5,7 @@ import {
     Mat4,
     createBox,
     BUFFER_DYNAMIC,
+    DITHER_NONE,
     VertexBuffer
 } from "playcanvas";
 
@@ -96,7 +97,7 @@ class SplatInstance {
         // clone centers to allow multiple instancing of sorter
         this.centers = new Float32Array(splat.centers);
 
-        if (!options.dither) {
+        if (!options.dither || options.dither === DITHER_NONE) {
             this.sorter = new SplatSorter();
             this.sorter.init(this.vb, this.centers, !this.splat.device.isWebGL1);
 

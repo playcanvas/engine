@@ -50,22 +50,36 @@ class ShaderUtils {
      * @param {string} [options.fragmentDefines] - The fragment shader defines.
      * @param {string} [options.fragmentExtensions] - The fragment shader extensions code.
      * @param {string} [options.fragmentPreamble] - The preamble string for the fragment shader.
-     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults
-     * to false.
+     * @param {boolean} [options.useTransformFeedback] - Whether to use transform feedback. Defaults to false.
+     * @param {string | string[]} [options.fragmentOutputTypes] - Fragment shader output types,
+     * which default to vec4. Passing a string will set the output type for all color attachments.
+     * Passing an array will set the output type for each color attachment.
      * @returns {object} Returns the created shader definition.
      */
     static createDefinition(device, options) {
         Debug.assert(options);
 
-        const getDefines = (gpu, gl2, gl1, isVertex) => {
+        const getDefines = (gpu, gl2, gl1, isVertex, options) => {
 
             const deviceIntro = device.isWebGPU ? gpu :
                 (device.isWebGL2 ? gl2 : ShaderUtils.gl1Extensions(device, options) + gl1);
 
             // a define per supported color attachment, which strips out unsupported output definitions in the deviceIntro
             let attachmentsDefine = '';
-            for (let i = 0; i < device.maxColorAttachments; i++) {
-                attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+
+            // Define the fragment shader output type, vec4 by default
+            if (!isVertex) {
+                // Normalize fragmentOutputTypes to an array
+                let fragmentOutputTypes = options.fragmentOutputTypes ?? 'vec4';
+                if (!Array.isArray(fragmentOutputTypes)) {
+                    fragmentOutputTypes = [fragmentOutputTypes];
+                }
+
+                for (let i = 0; i < device.maxColorAttachments; i++) {
+                    attachmentsDefine += `#define COLOR_ATTACHMENT_${i}\n`;
+                    const outType = fragmentOutputTypes[i] ?? 'vec4';
+                    attachmentsDefine += `#define outType_${i} ${outType}\n`;
+                }
             }
 
             return attachmentsDefine + deviceIntro;
@@ -74,7 +88,7 @@ class ShaderUtils {
         const name = options.name ?? 'Untitled';
 
         // vertex code
-        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true);
+        const vertDefines = options.vertexDefines || getDefines(webgpuVS, gles3VS, '', true, options);
         const vertCode = ShaderUtils.versionCode(device) +
             vertDefines +
             sharedFS +
@@ -82,7 +96,7 @@ class ShaderUtils {
             options.vertexCode;
 
         // fragment code
-        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false);
+        const fragDefines = options.fragmentDefines || getDefines(webgpuFS, gles3FS, gles2FS, false, options);
         const fragCode = (options.fragmentPreamble || '') +
             ShaderUtils.versionCode(device) +
             fragDefines +
