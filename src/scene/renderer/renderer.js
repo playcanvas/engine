@@ -682,7 +682,7 @@ class Renderer {
      */
     updateGSplats(drawCalls) {
         for (const drawCall of drawCalls) {
-            drawCall.gsplatInstance.update();
+            drawCall.gsplatInstance?.update();
         }
     }
 
