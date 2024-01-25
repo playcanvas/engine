@@ -172,7 +172,7 @@ class AxisArrow extends AxisShape {
 
         this.meshTriDataList = [
             new MeshTriData(createCone(this.device)),
-            new MeshTriData(createCylinder(this.device))
+            new MeshTriData(createCylinder(this.device), 1)
         ];
 
         this._createArrow();
@@ -284,7 +284,7 @@ class AxisBoxCenter extends AxisShape {
         super(device, options);
 
         this.meshTriDataList = [
-            new MeshTriData(createBox(this.device))
+            new MeshTriData(createBox(this.device), 2)
         ];
 
         this._createCenter();
@@ -317,14 +317,7 @@ class AxisBoxCenter extends AxisShape {
     }
 
     _updateTransform() {
-        // intersect
-        const iSize = (this._size + this._tolerance) / this._size;
-        tmpV1.set(0, 0, 0);
-        tmpQ1.set(0, 0, 0, 1);
-        tmpV2.set(iSize, iSize, iSize);
-        this.meshTriDataList[0].setTransform(tmpV1, tmpQ1, tmpV2);
-
-        // render
+        // intersect/render
         this.entity.setLocalScale(this._size, this._size, this._size);
     }
 }
@@ -345,7 +338,7 @@ class AxisBoxLine extends AxisShape {
 
         this.meshTriDataList = [
             new MeshTriData(createBox(this.device)),
-            new MeshTriData(createCylinder(this.device))
+            new MeshTriData(createCylinder(this.device), 1)
         ];
 
         this._createBoxLine();

@@ -10,6 +10,7 @@ import {
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpM1 = new Mat4();
+const tmpM2 = new Mat4();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
@@ -374,18 +375,19 @@ class Gizmo extends EventHandler {
             const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
             for (let j = 0; j < meshTriDataList.length; j++) {
-                const { tris, ptm } = meshTriDataList[j];
+                const { tris, ptm, priority } = meshTriDataList[j];
                 tmpM1.copy(wtm).mul(ptm);
-                tmpM1.invert();
-                tmpM1.transformPoint(start, xstart);
-                tmpM1.transformVector(dir, xdir);
+                tmpM2.copy(tmpM1).invert();
+                tmpM2.transformPoint(start, xstart);
+                tmpM2.transformVector(dir, xdir);
                 xdir.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
                     if (tris[k].intersectRay(xstart, xdir, tmpV1)) {
                         selection.push({
-                            dist: tmpV1.sub(xstart).length(),
-                            meshInstances: meshInstances
+                            dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
+                            meshInstances: meshInstances,
+                            priority: priority
                         });
                     }
                 }
@@ -393,7 +395,12 @@ class Gizmo extends EventHandler {
         }
 
         if (selection.length) {
-            selection.sort((s0, s1) => s0.dist - s1.dist);
+            selection.sort((s0, s1) => {
+                if (s0.priority !== 0 && s1.priority !== 0) {
+                    return s1.priority - s0.priority;
+                }
+                return s0.dist - s1.dist;
+            });
             return selection[0].meshInstances;
         }
 
