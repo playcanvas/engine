@@ -18,6 +18,11 @@ const textureBlitFragmentShader = `
         gl_FragColor = texture2D(blitTexture, uv0);
     }`;
 
+/**
+ * The base class for the exporters, implementing shared functionality.
+ *
+ * @category Exporter
+ */
 class CoreExporter {
     /**
      * Create a new instance of the exporter.
@@ -33,6 +38,8 @@ class CoreExporter {
      * @param {import('playcanvas').Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {Promise<HTMLCanvasElement>|Promise<undefined>} - The canvas element containing the image.
+     *
+     * @ignore
      */
     textureToCanvas(texture, options = {}) {
 

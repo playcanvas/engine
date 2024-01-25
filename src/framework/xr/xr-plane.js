@@ -12,6 +12,29 @@ let ids = 0;
  */
 class XrPlane extends EventHandler {
     /**
+     * Fired when an {@link XrPlane} is removed.
+     *
+     * @event
+     * @example
+     * plane.once('remove', () => {
+     *     // plane is not available anymore
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed.
+     * Position and rotation can change at any time without triggering a `change` event.
+     *
+     * @event
+     * @example
+     * plane.on('change', () -> {
+     *     // plane has been changed
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
+    /**
      * @type {number}
      * @private
      */
@@ -70,27 +93,6 @@ class XrPlane extends EventHandler {
         this._lastChangedTime = xrPlane.lastChangedTime;
         this._orientation = xrPlane.orientation;
     }
-
-    /**
-     * Fired when {@link XrPlane} is removed.
-     *
-     * @event XrPlane#remove
-     * @example
-     * plane.once('remove', function () {
-     *     // plane is not available anymore
-     * });
-     */
-
-    /**
-     * Fired when {@link XrPlane} attributes such as: orientation and/or points have been changed.
-     * Position and rotation can change at any time without triggering a `change` event.
-     *
-     * @event XrPlane#change
-     * @example
-     * plane.on('change', function () {
-     *     // plane has been changed
-     * });
-     */
 
     /** @ignore */
     destroy() {

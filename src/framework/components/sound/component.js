@@ -14,6 +14,66 @@ import { SoundSlot } from './slot.js';
  */
 class SoundComponent extends Component {
     /**
+     * Fired when a sound instance starts playing. The handler is passed the {@link SoundSlot} and
+     * the {@link SoundInstance} that started playing.
+     *
+     * @event
+     * @example
+     * entity.sound.on('play', (slot, instance) => {
+     *     console.log(`Sound ${slot.name} started playing`);
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when a sound instance is paused. The handler is passed the {@link SoundSlot} and the
+     * {@link SoundInstance} that was paused.
+     *
+     * @event
+     * @example
+     * entity.sound.on('pause', (slot, instance) => {
+     *     console.log(`Sound ${slot.name} paused`);
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when a sound instance is resumed. The handler is passed the {@link SoundSlot} and the
+     * {@link SoundInstance} that was resumed.
+     *
+     * @event
+     * @example
+     * entity.sound.on('resume', (slot, instance) => {
+     *     console.log(`Sound ${slot.name} resumed`);
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when a sound instance is stopped. The handler is passed the {@link SoundSlot} and the
+     * {@link SoundInstance} that was stopped.
+     *
+     * @event
+     * @example
+     * entity.sound.on('stop', (slot, instance) => {
+     *     console.log(`Sound ${slot.name} stopped`);
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when a sound instance stops playing because it reached its end. The handler is passed
+     * the {@link SoundSlot} and the {@link SoundInstance} that ended.
+     *
+     * @event
+     * @example
+     * entity.sound.on('end', (slot, instance) => {
+     *     console.log(`Sound ${slot.name} ended`);
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
      * Create a new Sound Component.
      *
      * @param {import('./system.js').SoundComponentSystem} system - The ComponentSystem that
@@ -48,51 +108,6 @@ class SoundComponent extends Component {
         /** @private */
         this._playingBeforeDisable = {};
     }
-
-    /**
-     * Fired when a sound instance starts playing.
-     *
-     * @event SoundComponent#play
-     * @param {SoundSlot} slot - The slot whose instance started playing.
-     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
-     * that started playing.
-     */
-
-    /**
-     * Fired when a sound instance is paused.
-     *
-     * @event SoundComponent#pause
-     * @param {SoundSlot} slot - The slot whose instance was paused.
-     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
-     * that was paused created to play the sound.
-     */
-
-    /**
-     * Fired when a sound instance is resumed.
-     *
-     * @event SoundComponent#resume
-     * @param {SoundSlot} slot - The slot whose instance was resumed.
-     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
-     * that was resumed.
-     */
-
-    /**
-     * Fired when a sound instance is stopped.
-     *
-     * @event SoundComponent#stop
-     * @param {SoundSlot} slot - The slot whose instance was stopped.
-     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
-     * that was stopped.
-     */
-
-    /**
-     * Fired when a sound instance stops playing because it reached its ending.
-     *
-     * @event SoundComponent#end
-     * @param {SoundSlot} slot - The slot whose instance ended.
-     * @param {import('../../../platform/sound/instance.js').SoundInstance} instance - The instance
-     * that ended.
-     */
 
     /**
      * Update the specified property on all sound instances.

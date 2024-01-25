@@ -12,6 +12,31 @@ import { PIXELFORMAT_LA8, PIXELFORMAT_R32F } from '../../platform/graphics/const
  */
 class XrViews extends EventHandler {
     /**
+     * Fired when view has been added. Views are not available straight away on session start
+     * and are added mid-session. They can be added/removed mid session by underlyng system. The
+     * handler is passed the {@link XrView} that has been added.
+     *
+     * @event
+     * @example
+     * xr.views.on('add', (view) => {
+     *     console.log('View added');
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when view has been removed. They can be added/removed mid session by underlyng system.
+     * The handler is passed the {@link XrView} that has been removed.
+     *
+     * @event
+     * @example
+     * xr.views.on('remove', (view) => {
+     *     console.log('View removed');
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -91,29 +116,6 @@ class XrViews extends EventHandler {
         this._manager.on('start', this._onSessionStart, this);
         this._manager.on('end', this._onSessionEnd, this);
     }
-
-    /**
-     * Fired when view has been added. Views are not available straight away on session start
-     * and are added mid-session. They can be added/removed mid session by underlyng system.
-     *
-     * @event XrViews#add
-     * @param {XrView} view - XrView that has been added.
-     * @example
-     * xr.views.on('add', function (view) {
-     *     // view that has been added
-     * });
-     */
-
-    /**
-     * Fired when view has been removed. They can be added/removed mid session by underlyng system.
-     *
-     * @event XrViews#remove
-     * @param {XrView} view - XrView that has been removed.
-     * @example
-     * xr.views.on('remove', function (view) {
-     *     // view that has been added
-     * });
-     */
 
     /**
      * An array of {@link XrView}'s of this session. Views are not available straight

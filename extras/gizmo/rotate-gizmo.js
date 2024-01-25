@@ -8,7 +8,7 @@ import {
 
 import { AxisDisk } from './axis-shapes.js';
 import { LOCAL_COORD_SPACE } from './gizmo.js';
-import { GizmoTransform } from "./gizmo-transform.js";
+import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -20,38 +20,39 @@ const tmpQ2 = new Quat();
 /**
  * Rotation gizmo.
  *
- * @augments GizmoTransform
+ * @augments TransformGizmo
+ * @category Gizmo
  */
-class GizmoRotate extends GizmoTransform {
+class RotateGizmo extends TransformGizmo {
     _shapes = {
-        z: new AxisDisk(this.app.graphicsDevice, {
+        z: new AxisDisk(this._device, {
             axis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack,
             sectorAngle: 180
         }),
-        x: new AxisDisk(this.app.graphicsDevice, {
+        x: new AxisDisk(this._device, {
             axis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack,
             sectorAngle: 180
         }),
-        y: new AxisDisk(this.app.graphicsDevice, {
+        y: new AxisDisk(this._device, {
             axis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack,
             sectorAngle: 180
         }),
-        face: new AxisDisk(this.app.graphicsDevice, {
+        face: new AxisDisk(this._device, {
             axis: 'face',
-            layers: [this.layer.id],
-            rotation: this._getLookAtEulerAngles(this.camera.entity.getPosition()),
+            layers: [this._layer.id],
+            rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.face,
             ringRadius: 0.55
@@ -108,16 +109,19 @@ class GizmoRotate extends GizmoTransform {
      */
     _guideAngleEnd = new Vec3();
 
+    /**
+     * @override
+     */
     snapIncrement = 5;
 
     /**
-     * Creates a new GizmoRotate object.
+     * Creates a new RotateGizmo object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoRotate(app, camera, layer);
+     * const gizmo = new pcx.RotateGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
@@ -133,7 +137,7 @@ class GizmoRotate extends GizmoTransform {
 
             // guide angle line start
             this._guideAngleStart.copy(this._selectionStartPoint).normalize();
-            this._guideAngleStart.scale(scale);
+            this._guideAngleStart.mulScalar(scale);
             this._gizmoRotationStart.transformVector(this._guideAngleStart, this._guideAngleStart);
             this._guideAngleEnd.copy(this._guideAngleStart);
 
@@ -142,8 +146,8 @@ class GizmoRotate extends GizmoTransform {
         });
 
         this.on('transform:move', (pointDelta, angleDelta) => {
-            const gizmoPos = this.gizmo.getPosition();
-            const cameraPos = this.camera.entity.getPosition();
+            const gizmoPos = this.root.getPosition();
+            const cameraPos = this._camera.entity.getPosition();
             const axis = this._selectedAxis;
             const isFacing = axis === 'face';
 
@@ -174,13 +178,13 @@ class GizmoRotate extends GizmoTransform {
             this._nodeOffsets.clear();
         });
 
-        this.app.on('update', () => {
-            const cameraPos = this.camera.entity.getPosition();
+        app.on('update', () => {
+            const cameraPos = this._camera.entity.getPosition();
             this._faceAxisLookAt(cameraPos);
             this._xyzAxisLookAt(cameraPos);
 
             if (this._dragging) {
-                const gizmoPos = this.gizmo.getPosition();
+                const gizmoPos = this.root.getPosition();
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis,
                                          this._guideAngleStart, this._guideAngleStartColor);
                 this._drawGuideAngleLine(gizmoPos, this._selectedAxis, this._guideAngleEnd);
@@ -188,6 +192,11 @@ class GizmoRotate extends GizmoTransform {
         });
     }
 
+    /**
+     * XYZ tube radius.
+     *
+     * @type {number}
+     */
     set xyzTubeRadius(value) {
         this._setDiskProp('tubeRadius', value);
     }
@@ -196,6 +205,11 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.x.tubeRadius;
     }
 
+    /**
+     * XYZ ring radius.
+     *
+     * @type {number}
+     */
     set xyzRingRadius(value) {
         this._setDiskProp('ringRadius', value);
     }
@@ -204,6 +218,11 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.x.ringRadius;
     }
 
+    /**
+     * Face tube radius.
+     *
+     * @type {number}
+     */
     set faceTubeRadius(value) {
         this._shapes.face.tubeRadius = value;
     }
@@ -212,6 +231,11 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.face.tubeRadius;
     }
 
+    /**
+     * Face ring radius.
+     *
+     * @type {number}
+     */
     set faceRingRadius(value) {
         this._shapes.face.ringRadius = value;
     }
@@ -220,6 +244,11 @@ class GizmoRotate extends GizmoTransform {
         return this._shapes.face.ringRadius;
     }
 
+    /**
+     * Ring tolerance.
+     *
+     * @type {number}
+     */
     set ringTolerance(value) {
         this._setDiskProp('tolerance', value);
         this._shapes.face.tolerance = value;
@@ -237,8 +266,8 @@ class GizmoRotate extends GizmoTransform {
 
     _drawGuideAngleLine(pos, axis, point, color = this._guideColors[axis]) {
         tmpV1.set(0, 0, 0);
-        tmpV2.copy(point).scale(this._scale);
-        this.app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this.layer);
+        tmpV2.copy(point).mulScalar(this._scale);
+        this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), color, false, this._layer);
     }
 
     _getLookAtEulerAngles(position) {
@@ -256,8 +285,8 @@ class GizmoRotate extends GizmoTransform {
     }
 
     _xyzAxisLookAt(position) {
-        tmpV1.copy(position).sub(this.gizmo.getPosition());
-        tmpQ1.copy(this.gizmo.getRotation()).invert().transformVector(tmpV1, tmpV1);
+        tmpV1.copy(position).sub(this.root.getPosition());
+        tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
         let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
@@ -275,10 +304,11 @@ class GizmoRotate extends GizmoTransform {
                 shape.hide(state);
             }
         }
+        this.fire('render:update');
     }
 
     _storeNodeRotations() {
-        const gizmoPos = this.gizmo.getPosition();
+        const gizmoPos = this.root.getPosition();
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
             this._nodeLocalRotations.set(node, node.getLocalRotation().clone());
@@ -288,8 +318,8 @@ class GizmoRotate extends GizmoTransform {
     }
 
     _setNodeRotations(axis, angleDelta) {
-        const gizmoPos = this.gizmo.getPosition();
-        const cameraPos = this.camera.entity.getPosition();
+        const gizmoPos = this.root.getPosition();
+        const cameraPos = this._camera.entity.getPosition();
         const isFacing = axis === 'face';
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
@@ -323,4 +353,4 @@ class GizmoRotate extends GizmoTransform {
     }
 }
 
-export { GizmoRotate };
+export { RotateGizmo };

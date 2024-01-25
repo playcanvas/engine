@@ -12,6 +12,18 @@ import { XrTrackedImage } from './xr-tracked-image.js';
  */
 class XrImageTracking extends EventHandler {
     /**
+     * Fired when the XR session is started, but image tracking failed to process the provided
+     * images. The handler is passed the Error object.
+     *
+     * @event
+     * @example
+     * app.xr.imageTracking.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -52,14 +64,6 @@ class XrImageTracking extends EventHandler {
             this._manager.on('end', this._onSessionEnd, this);
         }
     }
-
-    /**
-     * Fired when the XR session is started, but image tracking failed to process the provided
-     * images.
-     *
-     * @event XrImageTracking#error
-     * @param {Error} error - Error object related to a failure of image tracking.
-     */
 
     /**
      * Add an image for image tracking. A width can also be provided to help the underlying system

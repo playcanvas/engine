@@ -1,14 +1,16 @@
+/**
+ * EngineExtras is a collection of supplementary APIs designed to extend the capabilities of the
+ * PlayCanvas Engine. They cover features such as gizmos, file export, runtime performance
+ * profiling and advanced post-processing effects.
+ *
+ * @module EngineExtras
+ */
+
 export { MiniStats } from './mini-stats/mini-stats.js';
 
 // exporters
 export { UsdzExporter } from './exporters/usdz-exporter.js';
 export { GltfExporter } from './exporters/gltf-exporter.js';
-
-// splat
-export { registerPlyParser, getDefaultPlyElements } from './splat/ply-parser.js';
-export { Splat } from './splat/splat.js';
-export { SplatData } from './splat/splat-data.js';
-export { SplatInstance } from './splat/splat-instance.js';
 
 // render passes
 export { RenderPassCameraFrame } from './render-passes/render-pass-camera-frame.js';
@@ -20,7 +22,7 @@ export { RenderPassTAA } from './render-passes/render-pass-taa.js';
 
 // gizmo
 export { Gizmo } from "./gizmo/gizmo.js";
-export { GizmoTransform } from "./gizmo/gizmo-transform.js";
-export { GizmoTranslate } from "./gizmo/gizmo-translate.js";
-export { GizmoRotate } from "./gizmo/gizmo-rotate.js";
-export { GizmoScale } from "./gizmo/gizmo-scale.js";
+export { TransformGizmo } from "./gizmo/transform-gizmo.js";
+export { TranslateGizmo } from "./gizmo/translate-gizmo.js";
+export { RotateGizmo } from "./gizmo/rotate-gizmo.js";
+export { ScaleGizmo } from "./gizmo/scale-gizmo.js";

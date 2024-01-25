@@ -4,7 +4,7 @@ import {
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { LOCAL_COORD_SPACE } from './gizmo.js';
-import { GizmoTransform } from "./gizmo-transform.js";
+import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -12,57 +12,58 @@ const tmpV1 = new Vec3();
 /**
  * Scaling gizmo.
  *
- * @augments GizmoTransform
+ * @augments TransformGizmo
+ * @category Gizmo
  */
-class GizmoScale extends GizmoTransform {
+class ScaleGizmo extends TransformGizmo {
     _shapes = {
-        xyz: new AxisBoxCenter(this.app.graphicsDevice, {
+        xyz: new AxisBoxCenter(this._device, {
             axis: 'xyz',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             defaultColor: this._materials.axis.xyz,
             hoverColor: this._materials.hover.xyz
         }),
-        yz: new AxisPlane(this.app.graphicsDevice, {
+        yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullNone,
             hoverColor: this._materials.hover.x.cullNone
         }),
-        xz: new AxisPlane(this.app.graphicsDevice, {
+        xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullNone,
             hoverColor: this._materials.hover.y.cullNone
         }),
-        xy: new AxisPlane(this.app.graphicsDevice, {
+        xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullNone,
             hoverColor: this._materials.hover.z.cullNone
         }),
-        x: new AxisBoxLine(this.app.graphicsDevice, {
+        x: new AxisBoxLine(this._device, {
             axis: 'x',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack
         }),
-        y: new AxisBoxLine(this.app.graphicsDevice, {
+        y: new AxisBoxLine(this._device, {
             axis: 'y',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack
         }),
-        z: new AxisBoxLine(this.app.graphicsDevice, {
+        z: new AxisBoxLine(this._device, {
             axis: 'z',
-            layers: [this.layer.id],
+            layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack
@@ -86,16 +87,19 @@ class GizmoScale extends GizmoTransform {
      */
     uniform = true;
 
+    /**
+     * @override
+     */
     snapIncrement = 1;
 
     /**
-     * Creates a new GizmoScale object.
+     * Creates a new ScaleGizmo object.
      *
      * @param {import('playcanvas').AppBase} app - The application instance.
      * @param {import('playcanvas').CameraComponent} camera - The camera component.
      * @param {import('playcanvas').Layer} layer - The render layer.
      * @example
-     * const gizmo = new pcx.GizmoScale(app, camera, layer);
+     * const gizmo = new pcx.ScaleGizmo(app, camera, layer);
      */
     constructor(app, camera, layer) {
         super(app, camera, layer);
@@ -119,9 +123,9 @@ class GizmoScale extends GizmoTransform {
             const axis = this._selectedAxis;
             const isPlane = this._selectedIsPlane;
             if (this.snap) {
-                pointDelta.scale(1 / this.snapIncrement);
+                pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
-                pointDelta.scale(this.snapIncrement);
+                pointDelta.mulScalar(this.snapIncrement);
             }
             if (this.uniform && isPlane) {
                 tmpV1.set(Math.abs(pointDelta.x), Math.abs(pointDelta.y), Math.abs(pointDelta.z));
@@ -147,6 +151,11 @@ class GizmoScale extends GizmoTransform {
         return this._coordSpace;
     }
 
+    /**
+     * Axis gap.
+     *
+     * @type {number}
+     */
     set axisGap(value) {
         this._setArrowProp('gap', value);
     }
@@ -155,6 +164,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.gap;
     }
 
+    /**
+     * Axis line thickness.
+     *
+     * @type {number}
+     */
     set axisLineThickness(value) {
         this._setArrowProp('lineThickness', value);
     }
@@ -163,6 +177,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.lineThickness;
     }
 
+    /**
+     * Axis line length.
+     *
+     * @type {number}
+     */
     set axisLineLength(value) {
         this._setArrowProp('lineLength', value);
     }
@@ -171,6 +190,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.lineLength;
     }
 
+    /**
+     * Axis line tolerance.
+     *
+     * @type {number}
+     */
     set axisLineTolerance(value) {
         this._setArrowProp('tolerance', value);
     }
@@ -179,6 +203,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.tolerance;
     }
 
+    /**
+     * Axis box size.
+     *
+     * @type {number}
+     */
     set axisBoxSize(value) {
         this._setArrowProp('boxSize', value);
     }
@@ -187,6 +216,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.x.boxSize;
     }
 
+    /**
+     * Plane size.
+     *
+     * @type {number}
+     */
     set axisPlaneSize(value) {
         this._setPlaneProp('size', value);
     }
@@ -195,6 +229,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.yz.size;
     }
 
+    /**
+     * Plane gap.
+     *
+     * @type {number}
+     */
     set axisPlaneGap(value) {
         this._setPlaneProp('gap', value);
     }
@@ -203,6 +242,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.yz.gap;
     }
 
+    /**
+     * Axis center size.
+     *
+     * @type {number}
+     */
     set axisCenterSize(value) {
         this._shapes.xyz.size = value;
     }
@@ -211,6 +255,11 @@ class GizmoScale extends GizmoTransform {
         return this._shapes.xyz.size;
     }
 
+    /**
+     * Axis center tolerance.
+     *
+     * @type {number}
+     */
     set axisCenterTolerance(value) {
         this._shapes.xyz.tolerance = value;
     }
@@ -218,7 +267,6 @@ class GizmoScale extends GizmoTransform {
     get axisCenterTolerance() {
         return this._shapes.xyz.tolerance;
     }
-
 
     _setArrowProp(prop, value) {
         this._shapes.x[prop] = value;
@@ -247,4 +295,4 @@ class GizmoScale extends GizmoTransform {
     }
 }
 
-export { GizmoScale };
+export { ScaleGizmo };

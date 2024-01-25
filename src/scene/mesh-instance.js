@@ -280,6 +280,12 @@ class MeshInstance {
          */
         this._morphInstance = null;
 
+        /**
+         * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+         * @ignore
+         */
+        this.gsplatInstance = null;
+
         this.instancingData = null;
 
         /**
