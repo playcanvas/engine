@@ -117,7 +117,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
-    pcx.registerPlyParser(app);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
