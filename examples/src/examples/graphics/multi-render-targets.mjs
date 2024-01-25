@@ -40,13 +40,9 @@ async function example({ canvas, deviceType, files, dracoPath, assetPath, glslan
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 

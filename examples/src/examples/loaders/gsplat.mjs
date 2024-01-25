@@ -30,13 +30,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         pc.GSplatComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.GSplatHandler
     ];
 

@@ -16,7 +16,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
 
-    // @ts-ignore
     createOptions.batchManager = pc.BatchManager;
 
     createOptions.componentSystems = [
