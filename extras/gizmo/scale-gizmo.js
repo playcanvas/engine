@@ -106,14 +106,6 @@ class ScaleGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this.on('key:down', (key, shiftKey, ctrlKey) => {
-            this.uniform = ctrlKey;
-        });
-
-        this.on('key:up', () => {
-            this.uniform = false;
-        });
-
         this.on('transform:start', () => {
             this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();

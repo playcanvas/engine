@@ -491,9 +491,11 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     const keydown = (e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
+        gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
     const keyup = (e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
+        gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
     const keypress = (e) => {
         switch (e.key) {
