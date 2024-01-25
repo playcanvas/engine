@@ -6,6 +6,7 @@ import { Quat } from './core/math/quat.js';
 import { Mat3 } from './core/math/mat3.js';
 import { Mat4 } from './core/math/mat4.js';
 import { customTypes, customValidations, validateNumber } from '@runtime-type-inspector/runtime';
+import 'display-anything/src/style.js';
 Object.assign(customTypes, {
     AnimSetter(value) {
         // console.log("@todo Is AnimSetter?", value);
