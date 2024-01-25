@@ -26,7 +26,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         pc.RenderComponentSystem,
         pc.CameraComponentSystem,
         pc.LightComponentSystem,
-        pc.ScriptComponentSystem
+        pc.ScriptComponentSystem,
+        pc.GSplatComponentSystem
     ];
     createOptions.resourceHandlers = [
         // @ts-ignore
@@ -54,7 +55,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        biker: new pc.Asset('splat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
+        biker: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
     };
 
@@ -74,8 +75,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         const createSplatInstance = (resource, px, py, pz, scale, vertex, fragment) => {
 
-            const splat = resource.instantiateRenderEntity({
-                cameraEntity: camera,
+            const splat = resource.instantiate({
                 debugRender: false,
                 fragment: fragment,
                 vertex: vertex

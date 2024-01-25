@@ -674,6 +674,19 @@ class Renderer {
     }
 
     /**
+     * Update gsplats ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing gsplatInstances.
+     * @ignore
+     */
+    updateGSplats(drawCalls) {
+        for (const drawCall of drawCalls) {
+            drawCall.gsplatInstance.update();
+        }
+    }
+
+    /**
      * Update draw calls ahead of rendering.
      *
      * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
@@ -685,6 +698,7 @@ class Renderer {
         // that are visible in this frame
         this.updateGpuSkinMatrices(drawCalls);
         this.updateMorphing(drawCalls);
+        this.updateGSplats(drawCalls);
     }
 
     setVertexBuffers(device, mesh) {
@@ -930,8 +944,14 @@ class Renderer {
                     const bucket = drawCall.transparent ? transparent : opaque;
                     bucket.push(drawCall);
 
-                    if (drawCall.skinInstance || drawCall.morphInstance)
+                    if (drawCall.skinInstance || drawCall.morphInstance || drawCall.gsplatInstance) {
                         this.processingMeshInstances.add(drawCall);
+
+                        // register visible cameras
+                        if (drawCall.gsplatInstance) {
+                            drawCall.gsplatInstance.cameras.push(camera);
+                        }
+                    }
                 }
             }
         }

@@ -17,7 +17,8 @@ import { createGSplatMaterial } from './gsplat-material.js';
  * @property {boolean} isHalf - Indicates if the format uses half-precision floats.
  */
 
-class Splat {
+/** @ignore */
+class GSplat {
     device;
 
     numSplats;
@@ -305,4 +306,4 @@ class Splat {
     }
 }
 
-export { Splat };
+export { GSplat };
