@@ -304,6 +304,7 @@ class RotateGizmo extends TransformGizmo {
                 shape.hide(state);
             }
         }
+        this.fire('render:update');
     }
 
     _storeNodeRotations() {
