@@ -310,6 +310,15 @@ OrbitCamera.prototype._buildAabb = function (entity) {
         }
     }
 
+    var gsplats = entity.findComponents("gsplat");
+    for (i = 0; i < gsplats.length; i++) {
+        var gsplat = gsplats[i];
+        var instance = gsplat.instance;
+        if (instance) {
+            meshInstances.push(instance.meshInstance);
+        }
+    }
+
     for (i = 0; i < meshInstances.length; i++) {
         if (i === 0) {
             this._modelsAabb.copy(meshInstances[i].aabb);

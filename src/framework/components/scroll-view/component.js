@@ -59,6 +59,19 @@ const _tempScrollValue = new Vec2();
  */
 class ScrollViewComponent extends Component {
     /**
+     * Fired whenever the scroll position changes. The handler is passed a {@link Vec2} containing
+     * the horizontal and vertical scroll values in the range 0..1.
+     *
+     * @event
+     * @example
+     * entity.scrollview.on('set:scroll', (scroll) => {
+     *     console.log(`Horizontal scroll position: ${scroll.x}`);
+     *     console.log(`Vertical scroll position: ${scroll.y}`);
+     * });
+     */
+    static EVENT_SETSCROLL = 'set:scroll';
+
+    /**
      * Create a new ScrollViewComponent.
      *
      * @param {import('./system.js').ScrollViewComponentSystem} system - The ComponentSystem that
@@ -105,13 +118,6 @@ class ScrollViewComponent extends Component {
         this._toggleLifecycleListeners('on', system);
         this._toggleElementListeners('on');
     }
-
-    /**
-     * Fired whenever the scroll position changes.
-     *
-     * @event ScrollViewComponent#set:scroll
-     * @param {Vec2} scrollPosition - Horizontal and vertical scroll values in the range 0...1.
-     */
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.

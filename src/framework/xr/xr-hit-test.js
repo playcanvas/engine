@@ -22,6 +22,56 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 class XrHitTest extends EventHandler {
     /**
+     * Fired when new {@link XrHitTestSource} is added to the list. The handler is passed the
+     * {@link XrHitTestSource} object that has been added.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('add', (hitTestSource) => {
+     *     // new hit test source is added
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when {@link XrHitTestSource} is removed to the list. The handler is passed the
+     * {@link XrHitTestSource} object that has been removed.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('remove', (hitTestSource) => {
+     *     // hit test source is removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
+     * that produced the hit result, the {@link Vec3} position, the {@link Quat} rotation and the
+     * {@link XrInputSource} (if it is a transient hit test source).
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('result', (hitTestSource, position, rotation, inputSource) => {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
+    static EVENT_RESULT = 'result';
+
+    /**
+     * Fired when failed create hit test source. The handler is passed the Error object.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -62,52 +112,6 @@ class XrHitTest extends EventHandler {
             this.manager.on('end', this._onSessionEnd, this);
         }
     }
-
-    /**
-     * Fired when new {@link XrHitTestSource} is added to the list.
-     *
-     * @event XrHitTest#add
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
-     * @example
-     * app.xr.hitTest.on('add', function (hitTestSource) {
-     *     // new hit test source is added
-     * });
-     */
-
-    /**
-     * Fired when {@link XrHitTestSource} is removed to the list.
-     *
-     * @event XrHitTest#remove
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
-     * @example
-     * app.xr.hitTest.on('remove', function (hitTestSource) {
-     *     // hit test source is removed
-     * });
-     */
-
-    /**
-     * Fired when hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry.
-     *
-     * @event XrHitTest#result
-     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
-     * @param {import('../../core/math/vec3.js').Vec3} position - Position of hit test.
-     * @param {import('../../core/math/quat.js').Quat} rotation - Rotation of hit test.
-     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
-     * test source, then it will provide related input source.
-     * @example
-     * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
-     *     target.setPosition(position);
-     *     target.setRotation(rotation);
-     * });
-     */
-
-    /**
-     * Fired when failed create hit test source.
-     *
-     * @event XrHitTest#error
-     * @param {Error} error - Error object related to failure of creating hit test source.
-     */
 
     /** @private */
     _onSessionStart() {

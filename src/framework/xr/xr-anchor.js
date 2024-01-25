@@ -30,6 +30,55 @@ import { Quat } from '../../core/math/quat.js';
  */
 class XrAnchor extends EventHandler {
     /**
+     * Fired when an anchor is destroyed.
+     *
+     * @event
+     * @example
+     * // once anchor is destroyed
+     * anchor.once('destroy', () => {
+     *     // destroy its related entity
+     *     entity.destroy();
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
+     * Fired when an anchor's position and/or rotation is changed.
+     *
+     * @event
+     * @example
+     * anchor.on('change', () => {
+     *     // anchor has been updated
+     *     entity.setPosition(anchor.getPosition());
+     *     entity.setRotation(anchor.getRotation());
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
+    /**
+     * Fired when an anchor has has been persisted. The handler is passed the UUID string that can
+     * be used to restore this anchor.
+     *
+     * @event
+     * @example
+     * anchor.on('persist', (uuid) => {
+     *     // anchor has been persisted
+     * });
+     */
+    static EVENT_PERSIST = 'persist';
+
+    /**
+     * Fired when an anchor has been forgotten.
+     *
+     * @event
+     * @example
+     * anchor.on('forget', () => {
+     *     // anchor has been forgotten
+     * });
+     */
+    static EVENT_FORGET = 'forget';
+
+    /**
      * @type {Vec3}
      * @private
      */
@@ -66,51 +115,6 @@ class XrAnchor extends EventHandler {
         this._xrAnchor = xrAnchor;
         this._uuid = uuid;
     }
-
-    /**
-     * Fired when an {@link XrAnchor} is destroyed.
-     *
-     * @event XrAnchor#destroy
-     * @example
-     * // once anchor is destroyed
-     * anchor.once('destroy', function () {
-     *     // destroy its related entity
-     *     entity.destroy();
-     * });
-     */
-
-    /**
-     * Fired when an {@link XrAnchor}'s position and/or rotation is changed.
-     *
-     * @event XrAnchor#change
-     * @example
-     * anchor.on('change', function () {
-     *     // anchor has been updated
-     *     entity.setPosition(anchor.getPosition());
-     *     entity.setRotation(anchor.getRotation());
-     * });
-     */
-
-    /**
-     * Fired when an {@link XrAnchor}'s has been persisted.
-     *
-     * @event XrAnchor#persist
-     * @param {string} uuid - Unique string that can be used to restore this anchor.
-     * @example
-     * anchor.on('persist', function (uuid) {
-     *     // anchor has been persisted
-     * });
-     */
-
-    /**
-     * Fired when an {@link XrAnchor}'s has been forgotten.
-     *
-     * @event XrAnchor#forget
-     * @example
-     * anchor.on('forget', function () {
-     *     // anchor has been forgotten
-     * });
-     */
 
     /**
      * Destroy an anchor.

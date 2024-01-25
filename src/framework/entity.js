@@ -28,6 +28,17 @@ const _enableList = [];
  */
 class Entity extends GraphNode {
     /**
+     * Fired after the entity is destroyed.
+     *
+     * @event
+     * @example
+     * entity.on('destroy', (e) => {
+     *     console.log(`Entity ${e.name} has been destroyed`);
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
      * Gets the {@link AnimComponent} attached to this entity.
      *
      * @type {import('./components/anim/component.js').AnimComponent|undefined}
@@ -82,6 +93,14 @@ class Entity extends GraphNode {
      * @readonly
      */
     element;
+
+    /**
+     * Gets the {@link GSplatComponent} attached to this entity.
+     *
+     * @type {import('./components/gsplat/component.js').GSplatComponent|undefined}
+     * @readonly
+     */
+    gsplat;
 
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
@@ -277,6 +296,7 @@ class Entity extends GraphNode {
      * - "camera" - see {@link CameraComponent}
      * - "collision" - see {@link CollisionComponent}
      * - "element" - see {@link ElementComponent}
+     * - "gsplat" - see {@link GSplatComponent}
      * - "layoutchild" - see {@link LayoutChildComponent}
      * - "layoutgroup" - see {@link LayoutGroupComponent}
      * - "light" - see {@link LightComponent}
@@ -676,16 +696,5 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         }
     }
 }
-
-/**
- * Fired after the entity is destroyed.
- *
- * @event Entity#destroy
- * @param {Entity} entity - The entity that was destroyed.
- * @example
- * entity.on("destroy", function (e) {
- *     console.log('entity ' + e.name + ' has been destroyed');
- * });
- */
 
 export { Entity };

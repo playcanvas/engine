@@ -30,6 +30,7 @@ export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
+export { EventHandle } from './core/event-handle.js';
 export { IndexedList } from './core/indexed-list.js';
 export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
@@ -178,6 +179,11 @@ export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightm
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
 export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
 
+// SCENE / SPLAT
+export { GSplatData } from './scene/gsplat/gsplat-data.js';
+export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
+
 // FRAMEWORK
 export * from './framework/constants.js';
 export { script } from './framework/script.js';
@@ -209,6 +215,7 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
+export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';
@@ -313,6 +320,7 @@ export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
@@ -343,20 +351,22 @@ export { I18n } from './framework/i18n/i18n.js';
 
 // FRAMEWORK / XR
 export * from './framework/xr/constants.js';
-export { XrInput } from './framework/xr/xr-input.js';
-export { XrInputSource } from './framework/xr/xr-input-source.js';
-export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
 export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
-export { XrManager } from './framework/xr/xr-manager.js';
+export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrFinger } from './framework/xr/xr-finger.js';
+export { XrHand } from './framework/xr/xr-hand.js';
 export { XrHitTest } from './framework/xr/xr-hit-test.js';
 export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
-export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
-export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
-export { XrAnchors } from './framework/xr/xr-anchors.js';
-export { XrAnchor } from './framework/xr/xr-anchor.js';
-export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrInput } from './framework/xr/xr-input.js';
+export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrManager } from './framework/xr/xr-manager.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
+export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';

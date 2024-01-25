@@ -29,6 +29,7 @@ const shapePrimitives = [];
  *     uvs: uvs,
  *     indices: indices
  * });
+ * @category Graphics
  */
 function calculateNormals(positions, indices) {
     const triangleCount = indices.length / 3;
@@ -103,6 +104,7 @@ function calculateNormals(positions, indices) {
  *     uvs: uvs,
  *     indices: indices
  * });
+ * @category Graphics
  */
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
@@ -238,6 +240,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  *     uvs: [0, 0, 1, 0, 0, 1],
  *     indices: [0, 1, 2]
  * });
+ * @category Graphics
  */
 function createMesh(device, positions, opts) {
 
@@ -307,6 +310,7 @@ function createMesh(device, positions, opts) {
  * (defaults to 30).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new torus-shaped mesh.
+ * @category Graphics
  */
 function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -605,6 +609,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * cylinder (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
+ * @category Graphics
  */
 function createCylinder(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -647,6 +652,7 @@ function createCylinder(device, opts = {}) {
  * (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
+ * @category Graphics
  */
 function createCapsule(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -688,6 +694,7 @@ function createCapsule(device, opts = {}) {
  * (defaults to 18).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cone-shaped mesh.
+ * @category Graphics
  */
 function createCone(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -727,6 +734,7 @@ function createCone(device, opts = {}) {
  * the sphere (defaults to 16).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new sphere-shaped mesh.
+ * @category Graphics
  */
 function createSphere(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -810,6 +818,7 @@ function createSphere(device, opts = {}) {
  * (defaults to 5).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new plane-shaped mesh.
+ * @category Graphics
  */
 function createPlane(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -895,6 +904,7 @@ function createPlane(device, opts = {}) {
  * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
  * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
  * @returns {Mesh} A new box-shaped mesh.
+ * @category Graphics
  */
 function createBox(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones

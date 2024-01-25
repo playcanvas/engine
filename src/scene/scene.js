@@ -25,6 +25,44 @@ import { EnvLighting } from './graphics/env-lighting.js';
  */
 class Scene extends EventHandler {
     /**
+     * Fired when the layer composition is set. Use this event to add callbacks or advanced
+     * properties to your layers. The handler is passed the old and the new
+     * {@link LayerComposition}.
+     *
+     * @event
+     * @example
+     * app.scene.on('set:layers', (oldComp, newComp) => {
+     *     const list = newComp.layerList;
+     *     for (let i = 0; i < list.length; i++) {
+     *         const layer = list[i];
+     *         switch (layer.name) {
+     *             case 'MyLayer':
+     *                 layer.onEnable = myOnEnableFunction;
+     *                 layer.onDisable = myOnDisableFunction;
+     *                 break;
+     *             case 'MyOtherLayer':
+     *                 layer.shaderPass = myShaderPass;
+     *                 break;
+     *         }
+     *     }
+     * });
+     */
+    static EVENT_SETLAYERS = 'set:layers';
+
+    /**
+     * Fired when the skybox is set. The handler is passed the {@link Texture} that is the
+     * previously used skybox cubemap texture. The new skybox cubemap texture is in the
+     * {@link Scene#skybox} property.
+     *
+     * @event
+     * @example
+     * app.scene.on('set:skybox', (oldSkybox) => {
+     *     console.log(`Skybox changed from ${oldSkybox.name} to ${app.scene.skybox.name}`);
+     * });
+     */
+    static EVENT_SETSKYBOX = 'set:skybox';
+
+    /**
      * If enabled, the ambient lighting will be baked into lightmaps. This will be either the
      * {@link Scene#skybox} if set up, otherwise {@link Scene#ambientLight}. Defaults to false.
      *
@@ -262,41 +300,6 @@ class Scene extends EventHandler {
         // immediate rendering
         this.immediate = new Immediate(this.device);
     }
-
-    /**
-     * Fired when the skybox is set.
-     *
-     * @event Scene#set:skybox
-     * @param {import('../platform/graphics/texture.js').Texture} usedTex - Previously used cubemap
-     * texture. New is in the {@link Scene#skybox}.
-     */
-
-    /**
-     * Fired when the layer composition is set. Use this event to add callbacks or advanced
-     * properties to your layers.
-     *
-     * @event Scene#set:layers
-     * @param {import('./composition/layer-composition.js').LayerComposition} oldComp - Previously
-     * used {@link LayerComposition}.
-     * @param {import('./composition/layer-composition.js').LayerComposition} newComp - Newly set
-     * {@link LayerComposition}.
-     * @example
-     * this.app.scene.on('set:layers', function (oldComp, newComp) {
-     *     const list = newComp.layerList;
-     *     for (let i = 0; i < list.length; i++) {
-     *         const layer = list[i];
-     *         switch (layer.name) {
-     *             case 'MyLayer':
-     *                 layer.onEnable = myOnEnableFunction;
-     *                 layer.onDisable = myOnDisableFunction;
-     *                 break;
-     *             case 'MyOtherLayer':
-     *                 layer.shaderPass = myShaderPass;
-     *                 break;
-     *         }
-     *     }
-     * });
-     */
 
     /**
      * Returns the default layer used by the immediate drawing functions.

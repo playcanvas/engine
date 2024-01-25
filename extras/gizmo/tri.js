@@ -55,7 +55,7 @@ class Tri {
         const t = f * e2.dot(q);
         if (t > epsilon) {
             if (out instanceof Vec3) {
-                out.copy(dir).scale(t).add(origin);
+                out.copy(dir).mulScalar(t).add(origin);
             }
             return true;
         }

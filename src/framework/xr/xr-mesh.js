@@ -11,6 +11,29 @@ import { Quat } from "../../core/math/quat.js";
  */
 class XrMesh extends EventHandler {
     /**
+     * Fired when an {@link XrMesh} is removed.
+     *
+     * @event
+     * @example
+     * mesh.once('remove', () => {
+     *     // mesh is no longer available
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when {@link XrMesh} attributes such as vertices, indices and/or label have been
+     * changed. Position and rotation can change at any time without triggering a `change` event.
+     *
+     * @event
+     * @example
+     * mesh.on('change', () => {
+     *     // mesh attributes have been changed
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
+    /**
      * @type {import('./xr-mesh-detection.js').XrMeshDetection}
      * @private
      */
@@ -55,27 +78,6 @@ class XrMesh extends EventHandler {
         this._xrMesh = xrMesh;
         this._lastChanged = this._xrMesh.lastChangedTime;
     }
-
-    /**
-     * Fired when {@link XrMesh} is removed.
-     *
-     * @event XrMesh#remove
-     * @example
-     * mesh.once('remove', function () {
-     *     // mesh is no longer available
-     * });
-     */
-
-    /**
-     * Fired when {@link XrMesh} attributes such as vertices, indices and/or label have been changed.
-     * Position and rotation can change at any time without triggering a `change` event.
-     *
-     * @event XrMesh#change
-     * @example
-     * mesh.on('change', function () {
-     *     // mesh attributes have been changed
-     * });
-     */
 
     /**
      * @type {XRMesh}
