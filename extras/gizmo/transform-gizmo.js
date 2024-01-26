@@ -267,32 +267,40 @@ class TransformGizmo extends Gizmo {
                 return;
             }
 
-            if (meshInstance) {
-                this._selectedAxis = this._getAxis(meshInstance);
-                this._selectedIsPlane =  this._getIsPlane(meshInstance);
-                this._gizmoRotationStart.copy(this.root.getRotation());
-                const pointInfo = this._calcPoint(x, y);
-                this._selectionStartPoint.copy(pointInfo.point);
-                this._selectionStartAngle = pointInfo.angle;
-                this._dragging = true;
-                this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
+            if (!meshInstance) {
+                return;
             }
+
+            this._selectedAxis = this._getAxis(meshInstance);
+            this._selectedIsPlane =  this._getIsPlane(meshInstance);
+            this._gizmoRotationStart.copy(this.root.getRotation());
+            const pointInfo = this._calcPoint(x, y);
+            this._selectionStartPoint.copy(pointInfo.point);
+            this._selectionStartAngle = pointInfo.angle;
+            this._dragging = true;
+            this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
         });
 
         this.on('pointer:move', (x, y, meshInstance) => {
             this._hover(meshInstance);
 
-            if (this._dragging) {
-                const pointInfo = this._calcPoint(x, y);
-                pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-                const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
-                this._hoverAxis = '';
-                this._hoverIsPlane = false;
+            if (!this._dragging) {
+                return;
             }
+
+            const pointInfo = this._calcPoint(x, y);
+            pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
+            const angleDelta = pointInfo.angle - this._selectionStartAngle;
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
+
+            this._hoverAxis = '';
+            this._hoverIsPlane = false;
         });
 
         this.on('pointer:up', () => {
+            if (!this._dragging) {
+                return;
+            }
             this._dragging = false;
             this.fire(TransformGizmo.EVENT_TRANSFORMEND);
 
