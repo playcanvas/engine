@@ -120,12 +120,10 @@ class AxisShape {
     }
 
     set disabled(value) {
-        this._disabled = value ?? false;
-        if (value) {
-            for (let i = 0; i < this.meshInstances.length; i++) {
-                this.meshInstances[i].material = this._disabledMaterial;
-            }
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            this.meshInstances[i].material = value ? this._disabledMaterial : this._defaultMaterial;
         }
+        this._disabled = value ?? false;
     }
 
     get disabled() {
