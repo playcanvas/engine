@@ -29,36 +29,36 @@ class RotateGizmo extends TransformGizmo {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack,
-            disabledColor: this._materials.disabled.cullBack,
+            defaultMaterial: this._materials.axis.z.cullBack,
+            hoverMaterial: this._materials.hover.z.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         x: new AxisDisk(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack,
-            disabledColor: this._materials.disabled.cullBack,
+            defaultMaterial: this._materials.axis.x.cullBack,
+            hoverMaterial: this._materials.hover.x.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         y: new AxisDisk(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack,
-            disabledColor: this._materials.disabled.cullBack,
+            defaultMaterial: this._materials.axis.y.cullBack,
+            hoverMaterial: this._materials.hover.y.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         face: new AxisDisk(this._device, {
             axis: 'face',
             layers: [this._layer.id],
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultColor: this._materials.axis.face,
-            hoverColor: this._materials.hover.face,
-            disabledColor: this._materials.disabled.cullBack,
+            defaultMaterial: this._materials.axis.face,
+            hoverMaterial: this._materials.hover.face,
+            disabledMaterial: this._materials.disabled.cullBack,
             ringRadius: 0.55
         })
     };

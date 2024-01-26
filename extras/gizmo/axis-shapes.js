@@ -87,11 +87,11 @@ class AxisShape {
 
     _disabled;
 
-    _defaultColor;
+    _defaultMaterial;
 
-    _hoverColor;
+    _hoverMaterial;
 
-    _disabledColor;
+    _disabledMaterial;
 
     device;
 
@@ -114,16 +114,16 @@ class AxisShape {
 
         this._layers = options.layers ?? this._layers;
 
-        this._defaultColor = options.defaultColor ?? Color.BLACK;
-        this._hoverColor = options.hoverColor ?? Color.WHITE;
-        this._disabledColor = options.disabledColor ?? Color.GRAY_COLOR;
+        this._defaultMaterial = options.defaultMaterial ?? Color.BLACK;
+        this._hoverMaterial = options.hoverMaterial ?? Color.WHITE;
+        this._disabledMaterial = options.disabledMaterial ?? Color.GRAY_COLOR;
     }
 
     set disabled(value) {
         this._disabled = value ?? false;
         if (value) {
             for (let i = 0; i < this.meshInstances.length; i++) {
-                this.meshInstances[i].material = this._disabledColor;
+                this.meshInstances[i].material = this._disabledMaterial;
             }
         }
     }
@@ -146,7 +146,7 @@ class AxisShape {
     _addRenderMeshes(entity, meshes) {
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
-            const mi = new MeshInstance(meshes[i], this._disabled ? this._disabledColor : this._defaultColor);
+            const mi = new MeshInstance(meshes[i], this._disabled ? this._disabledMaterial : this._defaultMaterial);
             meshInstances.push(mi);
             this.meshInstances.push(mi);
         }
@@ -166,7 +166,7 @@ class AxisShape {
         if (this._disabled) {
             return;
         }
-        const material = state ? this._hoverColor : this._defaultColor;
+        const material = state ? this._hoverMaterial : this._defaultMaterial;
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].material = material;
         }
