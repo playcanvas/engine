@@ -54,7 +54,6 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { ShaderUtils } from '../platform/graphics/shader-utils.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
@@ -568,8 +567,8 @@ Object.defineProperties(RenderTarget.prototype, {
 
 Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
     get: function () {
-        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
-        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
+        Debug.assert('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return null;
     }
 });
 
