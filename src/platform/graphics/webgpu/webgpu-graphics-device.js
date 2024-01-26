@@ -225,7 +225,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // Do not request timestamp feature as it has changed and current form is not supported.
         // See engine issue #5989
-        //this.supportsTimestampQuery = requireFeature('timestamp-query');
+        // this.supportsTimestampQuery = requireFeature('timestamp-query');
 
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
