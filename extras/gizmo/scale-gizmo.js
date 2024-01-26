@@ -3,7 +3,7 @@ import {
 } from 'playcanvas';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -20,57 +20,63 @@ class ScaleGizmo extends TransformGizmo {
         xyz: new AxisBoxCenter(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
-            defaultColor: this._materials.axis.xyz,
-            hoverColor: this._materials.hover.xyz
+            defaultMaterial: this._materials.axis.xyz,
+            hoverMaterial: this._materials.hover.xyz
         }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullNone,
-            hoverColor: this._materials.hover.x.cullNone
+            defaultMaterial: this._materials.axis.x.cullNone,
+            hoverMaterial: this._materials.hover.x.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullNone,
-            hoverColor: this._materials.hover.y.cullNone
+            defaultMaterial: this._materials.axis.y.cullNone,
+            hoverMaterial: this._materials.hover.y.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullNone,
-            hoverColor: this._materials.hover.z.cullNone
+            defaultMaterial: this._materials.axis.z.cullNone,
+            hoverMaterial: this._materials.hover.z.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         x: new AxisBoxLine(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack
+            defaultMaterial: this._materials.axis.x.cullBack,
+            hoverMaterial: this._materials.hover.x.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         y: new AxisBoxLine(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack
+            defaultMaterial: this._materials.axis.y.cullBack,
+            hoverMaterial: this._materials.hover.y.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         z: new AxisBoxLine(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack
+            defaultMaterial: this._materials.axis.z.cullBack,
+            hoverMaterial: this._materials.hover.z.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         })
     };
 
-    _coordSpace = LOCAL_COORD_SPACE;
+    _coordSpace = GIZMO_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.

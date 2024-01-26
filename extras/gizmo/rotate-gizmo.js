@@ -7,7 +7,7 @@ import {
 } from 'playcanvas';
 
 import { AxisDisk } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -29,32 +29,36 @@ class RotateGizmo extends TransformGizmo {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack,
+            defaultMaterial: this._materials.axis.z.cullBack,
+            hoverMaterial: this._materials.hover.z.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         x: new AxisDisk(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack,
+            defaultMaterial: this._materials.axis.x.cullBack,
+            hoverMaterial: this._materials.hover.x.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         y: new AxisDisk(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack,
+            defaultMaterial: this._materials.axis.y.cullBack,
+            hoverMaterial: this._materials.hover.y.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         face: new AxisDisk(this._device, {
             axis: 'face',
             layers: [this._layer.id],
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultColor: this._materials.axis.face,
-            hoverColor: this._materials.hover.face,
+            defaultMaterial: this._materials.axis.face,
+            hoverMaterial: this._materials.hover.face,
+            disabledMaterial: this._materials.disabled.cullBack,
             ringRadius: 0.55
         })
     };
@@ -333,7 +337,7 @@ class RotateGizmo extends TransformGizmo {
 
             tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
-            if (!isFacing && this._coordSpace === LOCAL_COORD_SPACE) {
+            if (!isFacing && this._coordSpace === GIZMO_LOCAL) {
                 tmpQ2.copy(this._nodeLocalRotations.get(node)).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
@@ -347,7 +351,7 @@ class RotateGizmo extends TransformGizmo {
             }
         }
 
-        if (this._coordSpace === LOCAL_COORD_SPACE) {
+        if (this._coordSpace === GIZMO_LOCAL) {
             this._updateRotation();
         }
     }

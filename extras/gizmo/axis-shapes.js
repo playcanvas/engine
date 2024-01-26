@@ -5,7 +5,7 @@ import {
     createPlane,
     createMesh,
     createTorus,
-    Color,
+    Material,
     MeshInstance,
     Entity,
     Quat,
@@ -85,9 +85,13 @@ class AxisShape {
 
     _layers = [];
 
-    _defaultColor;
+    _disabled;
 
-    _hoverColor;
+    _defaultMaterial;
+
+    _hoverMaterial;
+
+    _disabledMaterial;
 
     device;
 
@@ -106,10 +110,35 @@ class AxisShape {
         this._rotation = options.rotation ?? new Vec3();
         this._scale = options.scale ?? new Vec3(1, 1, 1);
 
+        this._disabled = options.disabled ?? false;
+
         this._layers = options.layers ?? this._layers;
 
-        this._defaultColor = options.defaultColor ?? Color.BLACK;
-        this._hoverColor = options.hoverColor ?? Color.WHITE;
+        if (!(options.defaultMaterial instanceof Material)) {
+            throw new Error('No default material provided.');
+        }
+        this._defaultMaterial = options.defaultMaterial;
+
+        if (!(options.hoverMaterial instanceof Material)) {
+            throw new Error('No hover material provided.');
+        }
+        this._hoverMaterial = options.hoverMaterial;
+
+        if (!(options.disabledMaterial instanceof Material)) {
+            throw new Error('No disabled material provided.');
+        }
+        this._disabledMaterial = options.disabledMaterial;
+    }
+
+    set disabled(value) {
+        for (let i = 0; i < this.meshInstances.length; i++) {
+            this.meshInstances[i].material = value ? this._disabledMaterial : this._defaultMaterial;
+        }
+        this._disabled = value ?? false;
+    }
+
+    get disabled() {
+        return this._disabled;
     }
 
     _createRoot(name) {
@@ -126,7 +155,7 @@ class AxisShape {
     _addRenderMeshes(entity, meshes) {
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
-            const mi = new MeshInstance(meshes[i], this._defaultColor);
+            const mi = new MeshInstance(meshes[i], this._disabled ? this._disabledMaterial : this._defaultMaterial);
             meshInstances.push(mi);
             this.meshInstances.push(mi);
         }
@@ -143,7 +172,10 @@ class AxisShape {
     }
 
     hover(state) {
-        const material = state ? this._hoverColor : this._defaultColor;
+        if (this._disabled) {
+            return;
+        }
+        const material = state ? this._hoverMaterial : this._defaultMaterial;
         for (let i = 0; i < this.meshInstances.length; i++) {
             this.meshInstances[i].material = material;
         }

@@ -34,6 +34,63 @@ const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.6);
 const YELLOW_COLOR = new Color(1, 1, 0.5);
 const WHITE_COLOR = new Color(1, 1, 1);
 const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
+const GRAY_COLOR = new Color(0.5, 0.5, 0.5, 0.5);
+
+/**
+ * Shape axis for the line X.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_X = 'x';
+
+/**
+ * Shape axis for the line Y.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_Y = 'y';
+
+/**
+ * Shape axis for the line Z.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_Z = 'z';
+
+/**
+ * Shape axis for the plane YZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_YZ = 'yz';
+
+/**
+ * Shape axis for the plane XZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XZ = 'xz';
+
+/**
+ * Shape axis for the plane XY.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XY = 'xy';
+
+/**
+ * Shape axis for all directions XYZ.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_XYZ = 'xyz';
+
+/**
+ * Shape axis for facing the camera.
+ *
+ * @type {string}
+ */
+export const SHAPEAXIS_FACE = 'face';
 
 /**
  * The base class for all transform gizmos.
@@ -116,6 +173,10 @@ class TransformGizmo extends Gizmo {
             },
             face: this._createMaterial(YELLOW_COLOR),
             xyz: this._createMaterial(WHITE_COLOR)
+        },
+        disabled: {
+            cullBack: this._createMaterial(GRAY_COLOR),
+            cullNone: this._createMaterial(GRAY_COLOR, CULLFACE_NONE)
         }
     };
 
@@ -149,12 +210,12 @@ class TransformGizmo extends Gizmo {
     _shapes = {};
 
     /**
-     * Internal mapping of mesh instances to axis shapes for hovering.
+     * Internal mapping of mesh instances to axis shapes.
      *
      * @type {Map<import('playcanvas').MeshInstance, import('./axis-shapes.js').AxisShape>}
      * @private
      */
-    _hoverShapeMap = new Map();
+    _shapeMap = new Map();
 
     /**
      * Internal currently hovered shape.
@@ -263,36 +324,54 @@ class TransformGizmo extends Gizmo {
         });
 
         this.on('pointer:down', (x, y, meshInstance) => {
+            const shape = this._shapeMap.get(meshInstance);
+            if (shape?.disabled) {
+                return;
+            }
+
             if (this._dragging) {
                 return;
             }
 
-            if (meshInstance) {
-                this._selectedAxis = this._getAxis(meshInstance);
-                this._selectedIsPlane =  this._getIsPlane(meshInstance);
-                this._gizmoRotationStart.copy(this.root.getRotation());
-                const pointInfo = this._calcPoint(x, y);
-                this._selectionStartPoint.copy(pointInfo.point);
-                this._selectionStartAngle = pointInfo.angle;
-                this._dragging = true;
-                this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
+            if (!meshInstance) {
+                return;
             }
+
+            this._selectedAxis = this._getAxis(meshInstance);
+            this._selectedIsPlane =  this._getIsPlane(meshInstance);
+            this._gizmoRotationStart.copy(this.root.getRotation());
+            const pointInfo = this._calcPoint(x, y);
+            this._selectionStartPoint.copy(pointInfo.point);
+            this._selectionStartAngle = pointInfo.angle;
+            this._dragging = true;
+            this.fire(TransformGizmo.EVENT_TRANSFORMSTART);
         });
 
         this.on('pointer:move', (x, y, meshInstance) => {
+            const shape = this._shapeMap.get(meshInstance);
+            if (shape?.disabled) {
+                return;
+            }
+
             this._hover(meshInstance);
 
-            if (this._dragging) {
-                const pointInfo = this._calcPoint(x, y);
-                pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
-                const angleDelta = pointInfo.angle - this._selectionStartAngle;
-                this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
-                this._hoverAxis = '';
-                this._hoverIsPlane = false;
+            if (!this._dragging) {
+                return;
             }
+
+            const pointInfo = this._calcPoint(x, y);
+            pointDelta.copy(pointInfo.point).sub(this._selectionStartPoint);
+            const angleDelta = pointInfo.angle - this._selectionStartAngle;
+            this.fire(TransformGizmo.EVENT_TRANSFORMMOVE, pointDelta, angleDelta);
+
+            this._hoverAxis = '';
+            this._hoverIsPlane = false;
         });
 
         this.on('pointer:up', () => {
+            if (!this._dragging) {
+                return;
+            }
             this._dragging = false;
             this.fire(TransformGizmo.EVENT_TRANSFORMEND);
 
@@ -395,7 +474,7 @@ class TransformGizmo extends Gizmo {
         }
         this._hoverAxis = this._getAxis(meshInstance);
         this._hoverIsPlane = this._getIsPlane(meshInstance);
-        const shape = this._hoverShapeMap.get(meshInstance) || null;
+        const shape = this._shapeMap.get(meshInstance) || null;
         if (shape === this._hoverShape) {
             return;
         }
@@ -573,9 +652,57 @@ class TransformGizmo extends Gizmo {
                 meshInstances: shape.meshInstances
             });
             for (let i = 0; i < shape.meshInstances.length; i++) {
-                this._hoverShapeMap.set(shape.meshInstances[i], shape);
+                this._shapeMap.set(shape.meshInstances[i], shape);
             }
         }
+    }
+
+    /**
+     * Set the shape to be enabled or disabled.
+     *
+     * @param {string} shapeAxis - The shape axis. Can be:
+     *
+     * {@link SHAPEAXIS_X}
+     * {@link SHAPEAXIS_Y}
+     * {@link SHAPEAXIS_Z}
+     * {@link SHAPEAXIS_YZ}
+     * {@link SHAPEAXIS_XZ}
+     * {@link SHAPEAXIS_XY}
+     * {@link SHAPEAXIS_XYZ}
+     * {@link SHAPEAXIS_FACE}
+     *
+     * @param {boolean} enabled - The enabled state of shape.
+     */
+    enableShape(shapeAxis, enabled) {
+        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+            return;
+        }
+
+        this._shapes[shapeAxis].disabled = !enabled;
+    }
+
+    /**
+     * Get the enabled state of the shape.
+     *
+     * @param {string} shapeAxis - The shape axis. Can be:
+     *
+     * {@link SHAPEAXIS_X}
+     * {@link SHAPEAXIS_Y}
+     * {@link SHAPEAXIS_Z}
+     * {@link SHAPEAXIS_YZ}
+     * {@link SHAPEAXIS_XZ}
+     * {@link SHAPEAXIS_XY}
+     * {@link SHAPEAXIS_XYZ}
+     * {@link SHAPEAXIS_FACE}
+     *
+     * @returns {boolean} - Then enabled state of the shape
+     */
+    isShapeEnabled(shapeAxis) {
+        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+            return false;
+        }
+
+        return !this._shapes[shapeAxis].disabled;
     }
 
     /**
