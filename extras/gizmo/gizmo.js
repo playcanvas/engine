@@ -165,12 +165,7 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Can be:
-     *
-     * {@link GIZMO_LOCAL}
-     * {@link GIZMO_WORLD}
-     *
-     * Defaults to {@link GIZMO_WORLD}.
+     * Internal version of coordinate space. Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      * @protected
@@ -296,7 +291,12 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Defaults to {@link GIZMO_WORLD}.
+     * The gizmo coordinate space. Can be:
+     *
+     * {@link GIZMO_LOCAL}
+     * {@link GIZMO_WORLD}
+     *
+     * Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      */
