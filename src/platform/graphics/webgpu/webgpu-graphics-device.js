@@ -222,7 +222,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-        this.supportsTimestampQuery = requireFeature('timestamp-query');
+
+        // Do not request timestamp feature as it has changed and current form is not supported.
+        // See engine issue #5989
+        //this.supportsTimestampQuery = requireFeature('timestamp-query');
+
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
