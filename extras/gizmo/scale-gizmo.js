@@ -21,7 +21,8 @@ class ScaleGizmo extends TransformGizmo {
             axis: 'xyz',
             layers: [this._layer.id],
             defaultMaterial: this._materials.axis.xyz,
-            hoverMaterial: this._materials.hover.xyz
+            hoverMaterial: this._materials.hover.xyz,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
