@@ -5,7 +5,7 @@ import {
     createPlane,
     createMesh,
     createTorus,
-    Color,
+    Material,
     MeshInstance,
     Entity,
     Quat,
@@ -114,9 +114,20 @@ class AxisShape {
 
         this._layers = options.layers ?? this._layers;
 
-        this._defaultMaterial = options.defaultMaterial ?? Color.BLACK;
-        this._hoverMaterial = options.hoverMaterial ?? Color.WHITE;
-        this._disabledMaterial = options.disabledMaterial ?? Color.GRAY;
+        if (!(options.defaultMaterial instanceof Material)) {
+            throw new Error('No default material provided.');
+        }
+        this._defaultMaterial = options.defaultMaterial;
+
+        if (!(options.hoverMaterial instanceof Material)) {
+            throw new Error('No hover material provided.');
+        }
+        this._hoverMaterial = options.hoverMaterial;
+
+        if (!(options.disabledMaterial instanceof Material)) {
+            throw new Error('No disabled material provided.');
+        }
+        this._disabledMaterial = options.disabledMaterial;
     }
 
     set disabled(value) {
