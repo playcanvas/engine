@@ -175,7 +175,7 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
