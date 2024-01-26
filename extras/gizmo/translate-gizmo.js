@@ -26,7 +26,8 @@ class TranslateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullNone,
-            hoverColor: this._materials.hover.x.cullNone
+            hoverColor: this._materials.hover.x.cullNone,
+            disabledColor: this._materials.disabled.cullNone
         }),
         xz: new AxisPlane(this._device, {
             axis: 'y',
@@ -34,7 +35,8 @@ class TranslateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullNone,
-            hoverColor: this._materials.hover.y.cullNone
+            hoverColor: this._materials.hover.y.cullNone,
+            disabledColor: this._materials.disabled.cullNone
         }),
         xy: new AxisPlane(this._device, {
             axis: 'z',
@@ -42,28 +44,32 @@ class TranslateGizmo extends TransformGizmo {
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullNone,
-            hoverColor: this._materials.hover.z.cullNone
+            hoverColor: this._materials.hover.z.cullNone,
+            disabledColor: this._materials.disabled.cullNone
         }),
         x: new AxisArrow(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack
+            hoverColor: this._materials.hover.x.cullBack,
+            disabledColor: this._materials.disabled.cullBack
         }),
         y: new AxisArrow(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack
+            hoverColor: this._materials.hover.y.cullBack,
+            disabledColor: this._materials.disabled.cullBack
         }),
         z: new AxisArrow(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
             defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack
+            hoverColor: this._materials.hover.z.cullBack,
+            disabledColor: this._materials.disabled.cullBack
         })
     };
 

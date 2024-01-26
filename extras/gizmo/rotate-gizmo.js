@@ -31,6 +31,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(90, 0, 90),
             defaultColor: this._materials.axis.z.cullBack,
             hoverColor: this._materials.hover.z.cullBack,
+            disabledColor: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         x: new AxisDisk(this._device, {
@@ -39,6 +40,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, -90),
             defaultColor: this._materials.axis.x.cullBack,
             hoverColor: this._materials.hover.x.cullBack,
+            disabledColor: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         y: new AxisDisk(this._device, {
@@ -47,6 +49,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: new Vec3(0, 0, 0),
             defaultColor: this._materials.axis.y.cullBack,
             hoverColor: this._materials.hover.y.cullBack,
+            disabledColor: this._materials.disabled.cullBack,
             sectorAngle: 180
         }),
         face: new AxisDisk(this._device, {
@@ -55,6 +58,7 @@ class RotateGizmo extends TransformGizmo {
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
             defaultColor: this._materials.axis.face,
             hoverColor: this._materials.hover.face,
+            disabledColor: this._materials.disabled.cullBack,
             ringRadius: 0.55
         })
     };
