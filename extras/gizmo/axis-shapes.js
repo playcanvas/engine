@@ -116,7 +116,7 @@ class AxisShape {
 
         this._defaultMaterial = options.defaultMaterial ?? Color.BLACK;
         this._hoverMaterial = options.hoverMaterial ?? Color.WHITE;
-        this._disabledMaterial = options.disabledMaterial ?? Color.GRAY_COLOR;
+        this._disabledMaterial = options.disabledMaterial ?? Color.GRAY;
     }
 
     set disabled(value) {
