@@ -6,9 +6,6 @@ import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
 import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
-// temporary variables
-const tmpV1 = new Vec3();
-
 /**
  * Scaling gizmo.
  *
@@ -88,13 +85,6 @@ class ScaleGizmo extends TransformGizmo {
     _nodeScales = new Map();
 
     /**
-     * State for if uniform scaling is enabled for planes. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    uniform = true;
-
-    /**
      * @override
      */
     snapIncrement = 1;
@@ -119,20 +109,10 @@ class ScaleGizmo extends TransformGizmo {
         });
 
         this.on('transform:move', (pointDelta) => {
-            const axis = this._selectedAxis;
-            const isPlane = this._selectedIsPlane;
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
-            }
-            if (this.uniform && isPlane) {
-                tmpV1.set(Math.abs(pointDelta.x), Math.abs(pointDelta.y), Math.abs(pointDelta.z));
-                tmpV1[axis] = 0;
-                const v = tmpV1.length();
-                tmpV1.set(v * Math.sign(pointDelta.x), v * Math.sign(pointDelta.y), v * Math.sign(pointDelta.z));
-                tmpV1[axis] = 1;
-                pointDelta.copy(tmpV1);
             }
             this._setNodeScales(pointDelta);
         });
@@ -148,6 +128,19 @@ class ScaleGizmo extends TransformGizmo {
 
     get coordSpace() {
         return this._coordSpace;
+    }
+
+    /**
+     * Uniform scaling state for planes.
+     *
+     * @type {boolean}
+     */
+    set uniform(value) {
+        this._useUniformScaling = value ?? true;
+    }
+
+    get uniform() {
+        return this._useUniformScaling;
     }
 
     /**

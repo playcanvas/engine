@@ -282,6 +282,14 @@ class TransformGizmo extends Gizmo {
     _isRotation = false;
 
     /**
+     * Internal state if transform should use uniform scaling.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _useUniformScaling = false;
+
+    /**
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
@@ -499,6 +507,7 @@ class TransformGizmo extends Gizmo {
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
         const isRotation = this._isRotation;
+        const isUniform = this._useUniformScaling && isPlane;
         const isAllAxes = axis === 'xyz';
         const isFacing = axis === 'face';
 
@@ -510,7 +519,7 @@ class TransformGizmo extends Gizmo {
             this._camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
         }
 
-        if (isAllAxes || isFacing) {
+        if (isUniform || isAllAxes || isFacing) {
             // all axes so set normal to plane facing camera
             planeNormal.copy(rayOrigin).sub(gizmoPos).normalize();
         } else {
@@ -537,7 +546,27 @@ class TransformGizmo extends Gizmo {
             point.sub(gizmoPos);
         }
 
-        if (isAllAxes) {
+        if (isUniform) {
+            // calculate point distance from gizmo
+            tmpV1.copy(point).sub(gizmoPos).normalize();
+
+            switch (axis) {
+                case 'x':
+                    tmpV2.copy(this.root.up).add(this.root.right.mulScalar(-1)).normalize();
+                    break;
+                case 'y':
+                    tmpV2.copy(this.root.up.mulScalar(-1)).normalize();
+                    break;
+                case 'z':
+                    tmpV2.copy(this.root.up).add(this.root.right).normalize();
+                    break;
+            }
+
+            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
+            point.set(v, v, v);
+            point[axis] = 1;
+
+        } else if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
             tmpV2.copy(this._camera.entity.up).add(this._camera.entity.right).normalize();
