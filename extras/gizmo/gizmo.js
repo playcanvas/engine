@@ -32,7 +32,7 @@ export const GIZMO_LOCAL = 'local';
  *
  * @type {string}
  */
-export const GIZMO_GLOBAL = 'world';
+export const GIZMO_WORLD = 'world';
 
 /**
  * The base class for all gizmos.
@@ -168,14 +168,14 @@ class Gizmo extends EventHandler {
      * Internal version of coordinate space. Can be:
      *
      * {@link GIZMO_LOCAL}
-     * {@link GIZMO_GLOBAL}
+     * {@link GIZMO_WORLD}
      *
-     * Defaults to {@link GIZMO_GLOBAL}.
+     * Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      * @protected
      */
-    _coordSpace = GIZMO_GLOBAL;
+    _coordSpace = GIZMO_WORLD;
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -296,12 +296,12 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Defaults to {@link GIZMO_GLOBAL}.
+     * The gizmo coordinate space. Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? GIZMO_GLOBAL;
+        this._coordSpace = value ?? GIZMO_WORLD;
         this._updateRotation();
     }
 
