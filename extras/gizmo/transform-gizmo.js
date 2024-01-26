@@ -658,9 +658,9 @@ class TransformGizmo extends Gizmo {
     }
 
     /**
-     * Toggles the shape to be enabled or disabled.
+     * Set the shape to be enabled or disabled.
      *
-     * @param {string} shapeAxis - the shape axis. Can be:
+     * @param {string} shapeAxis - The shape axis. Can be:
      *
      * {@link SHAPEAXIS_X}
      * {@link SHAPEAXIS_Y}
@@ -670,13 +670,39 @@ class TransformGizmo extends Gizmo {
      * {@link SHAPEAXIS_XY}
      * {@link SHAPEAXIS_XYZ}
      * {@link SHAPEAXIS_FACE}
+     *
+     * @param {boolean} enabled - The enabled state of shape.
      */
-    toggle(shapeAxis) {
+    enableShape(shapeAxis, enabled) {
         if (!this._shapes.hasOwnProperty(shapeAxis)) {
             return;
         }
 
-        this._shapes[shapeAxis].disabled = !this._shapes[shapeAxis].disabled;
+        this._shapes[shapeAxis].disabled = !enabled;
+    }
+
+    /**
+     * Get the enabled state of the shape.
+     *
+     * @param {string} shapeAxis - The shape axis. Can be:
+     *
+     * {@link SHAPEAXIS_X}
+     * {@link SHAPEAXIS_Y}
+     * {@link SHAPEAXIS_Z}
+     * {@link SHAPEAXIS_YZ}
+     * {@link SHAPEAXIS_XZ}
+     * {@link SHAPEAXIS_XY}
+     * {@link SHAPEAXIS_XYZ}
+     * {@link SHAPEAXIS_FACE}
+     *
+     * @returns {boolean} - Then enabled state of the shape
+     */
+    isShapeEnabled(shapeAxis) {
+        if (!this._shapes.hasOwnProperty(shapeAxis)) {
+            return false;
+        }
+
+        return !this._shapes[shapeAxis].disabled;
     }
 
     /**
