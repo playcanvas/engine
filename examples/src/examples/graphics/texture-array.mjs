@@ -266,6 +266,7 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         });
         data.on('mipmaps:set', (/** @type {number} */ value) => {
             groundMaterial.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
+            material.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
         });
     });
     return app;
