@@ -16,7 +16,6 @@ import { Vec3 } from '../core/math/vec3.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
 } from '../platform/graphics/constants.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
@@ -271,7 +270,6 @@ class AppBase extends EventHandler {
          * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
          */
         this.graphicsDevice = device;
-        GraphicsDeviceAccess.set(device);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
