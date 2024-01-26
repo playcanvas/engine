@@ -552,10 +552,10 @@ class TransformGizmo extends Gizmo {
 
             switch (axis) {
                 case 'x':
-                    tmpV2.copy(this.root.up).add(this.root.right.mulScalar(-1)).normalize();
+                    tmpV2.copy(this.root.up).add(this.root.forward.mulScalar(-1)).normalize();
                     break;
                 case 'y':
-                    tmpV2.copy(this.root.up.mulScalar(-1)).normalize();
+                    tmpV2.copy(this.root.right).add(this.root.forward.mulScalar(-1)).normalize();
                     break;
                 case 'z':
                     tmpV2.copy(this.root.up).add(this.root.right).normalize();
