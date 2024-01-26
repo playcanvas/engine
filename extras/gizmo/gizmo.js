@@ -25,14 +25,14 @@ const ORTHO_SCALE_RATIO = 0.32;
  *
  * @type {string}
  */
-export const LOCAL_COORD_SPACE = 'local';
+export const GIZMO_LOCAL = 'local';
 
 /**
  * World coordinate space.
  *
  * @type {string}
  */
-export const WORLD_COORD_SPACE = 'world';
+export const GIZMO_GLOBAL = 'world';
 
 /**
  * The base class for all gizmos.
@@ -167,15 +167,15 @@ class Gizmo extends EventHandler {
     /**
      * Internal version of coordinate space. Can be:
      *
-     * {@link LOCAL_COORD_SPACE}
-     * {@link WORLD_COORD_SPACE}
+     * {@link GIZMO_LOCAL}
+     * {@link GIZMO_GLOBAL}
      *
-     * Defaults to {@link WORLD_COORD_SPACE}.
+     * Defaults to {@link GIZMO_GLOBAL}.
      *
      * @type {string}
      * @protected
      */
-    _coordSpace = WORLD_COORD_SPACE;
+    _coordSpace = GIZMO_GLOBAL;
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -296,12 +296,12 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Defaults to {@link WORLD_COORD_SPACE}.
+     * The gizmo coordinate space. Defaults to {@link GIZMO_GLOBAL}.
      *
      * @type {string}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? WORLD_COORD_SPACE;
+        this._coordSpace = value ?? GIZMO_GLOBAL;
         this._updateRotation();
     }
 
@@ -350,7 +350,7 @@ class Gizmo extends EventHandler {
 
     _updateRotation() {
         tmpV1.set(0, 0, 0);
-        if (this._coordSpace === LOCAL_COORD_SPACE && this.nodes.length !== 0) {
+        if (this._coordSpace === GIZMO_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
         this.root.setEulerAngles(tmpV1);

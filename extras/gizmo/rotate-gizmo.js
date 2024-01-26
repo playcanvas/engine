@@ -7,7 +7,7 @@ import {
 } from 'playcanvas';
 
 import { AxisDisk } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -337,7 +337,7 @@ class RotateGizmo extends TransformGizmo {
 
             tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
-            if (!isFacing && this._coordSpace === LOCAL_COORD_SPACE) {
+            if (!isFacing && this._coordSpace === GIZMO_LOCAL) {
                 tmpQ2.copy(this._nodeLocalRotations.get(node)).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
@@ -351,7 +351,7 @@ class RotateGizmo extends TransformGizmo {
             }
         }
 
-        if (this._coordSpace === LOCAL_COORD_SPACE) {
+        if (this._coordSpace === GIZMO_LOCAL) {
             this._updateRotation();
         }
     }

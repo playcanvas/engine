@@ -3,7 +3,7 @@ import {
 } from 'playcanvas';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -76,7 +76,7 @@ class ScaleGizmo extends TransformGizmo {
         })
     };
 
-    _coordSpace = LOCAL_COORD_SPACE;
+    _coordSpace = GIZMO_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.
