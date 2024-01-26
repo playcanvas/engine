@@ -293,8 +293,8 @@ class Gizmo extends EventHandler {
     /**
      * The gizmo coordinate space. Can be:
      *
-     * {@link GIZMO_LOCAL}
-     * {@link GIZMO_WORLD}
+     * - {@link GIZMO_LOCAL}
+     * - {@link GIZMO_WORLD}
      *
      * Defaults to {@link GIZMO_WORLD}.
      *
