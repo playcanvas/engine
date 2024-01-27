@@ -15,6 +15,7 @@ import { Gizmo } from "./gizmo.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 const pointDelta = new Vec3();
@@ -282,6 +283,14 @@ class TransformGizmo extends Gizmo {
     _isRotation = false;
 
     /**
+     * Internal state if transform should use uniform scaling.
+     *
+     * @type {boolean}
+     * @protected
+     */
+    _useUniformScaling = false;
+
+    /**
      * Internal state for if the gizmo is being dragged.
      *
      * @type {boolean}
@@ -499,6 +508,7 @@ class TransformGizmo extends Gizmo {
         const axis = this._selectedAxis;
         const isPlane = this._selectedIsPlane;
         const isRotation = this._isRotation;
+        const isUniform = this._useUniformScaling && isPlane;
         const isAllAxes = axis === 'xyz';
         const isFacing = axis === 'face';
 
@@ -510,7 +520,7 @@ class TransformGizmo extends Gizmo {
             this._camera.entity.getWorldTransform().transformVector(tmpV1.set(0, 0, -1), rayDir);
         }
 
-        if (isAllAxes || isFacing) {
+        if (isUniform || isAllAxes || isFacing) {
             // all axes so set normal to plane facing camera
             planeNormal.copy(rayOrigin).sub(gizmoPos).normalize();
         } else {
@@ -537,7 +547,35 @@ class TransformGizmo extends Gizmo {
             point.sub(gizmoPos);
         }
 
-        if (isAllAxes) {
+        if (isUniform) {
+            // calculate point distance from gizmo
+            tmpV1.copy(point).sub(gizmoPos).normalize();
+
+            // calculate projecion vector for scale direction
+            switch (axis) {
+                case 'x':
+                    tmpV2.copy(this.root.up);
+                    tmpV3.copy(this.root.forward).mulScalar(-1);
+                    break;
+                case 'y':
+                    tmpV2.copy(this.root.right);
+                    tmpV3.copy(this.root.forward).mulScalar(-1);
+                    break;
+                case 'z':
+                    tmpV2.copy(this.root.up);
+                    tmpV3.copy(this.root.right);
+                    break;
+                default:
+                    tmpV2.set(0, 0, 0);
+                    tmpV3.set(0, 0, 0);
+                    break;
+            }
+            tmpV2.add(tmpV3).normalize();
+
+            const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
+            point.set(v, v, v);
+            point[axis] = 1;
+        } else if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
             tmpV2.copy(this._camera.entity.up).add(this._camera.entity.right).normalize();
