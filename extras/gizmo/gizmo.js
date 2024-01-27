@@ -24,6 +24,7 @@ const ORTHO_SCALE_RATIO = 0.32;
  * Local coordinate space.
  *
  * @type {string}
+ * @category Gizmo
  */
 export const GIZMO_LOCAL = 'local';
 
@@ -31,6 +32,7 @@ export const GIZMO_LOCAL = 'local';
  * World coordinate space.
  *
  * @type {string}
+ * @category Gizmo
  */
 export const GIZMO_WORLD = 'world';
 
