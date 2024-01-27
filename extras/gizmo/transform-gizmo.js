@@ -15,6 +15,7 @@ import { Gizmo } from "./gizmo.js";
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
+const tmpV3 = new Vec3();
 const tmpQ1 = new Quat();
 
 const pointDelta = new Vec3();
@@ -550,22 +551,30 @@ class TransformGizmo extends Gizmo {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
 
+            // calculate projecion vector for scale direction
             switch (axis) {
                 case 'x':
-                    tmpV2.copy(this.root.up).add(this.root.forward.mulScalar(-1)).normalize();
+                    tmpV2.copy(this.root.up);
+                    tmpV3.copy(this.root.forward).mulScalar(-1);
                     break;
                 case 'y':
-                    tmpV2.copy(this.root.right).add(this.root.forward.mulScalar(-1)).normalize();
+                    tmpV2.copy(this.root.right);
+                    tmpV3.copy(this.root.forward).mulScalar(-1);
                     break;
                 case 'z':
-                    tmpV2.copy(this.root.up).add(this.root.right).normalize();
+                    tmpV2.copy(this.root.up);
+                    tmpV3.copy(this.root.right);
+                    break;
+                default:
+                    tmpV2.set(0, 0, 0);
+                    tmpV3.set(0, 0, 0);
                     break;
             }
+            tmpV2.add(tmpV3).normalize();
 
             const v = point.sub(gizmoPos).length() * tmpV1.dot(tmpV2);
             point.set(v, v, v);
             point[axis] = 1;
-
         } else if (isAllAxes) {
             // calculate point distance from gizmo
             tmpV1.copy(point).sub(gizmoPos).normalize();
