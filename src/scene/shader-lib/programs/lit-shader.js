@@ -999,20 +999,11 @@ class LitShader {
         code.append(this._fsGetStartCode(code, device, chunks, options));
 
         if (this.needsNormal) {
-            if (options.twoSidedLighting) {
-                code.append("    dVertexNormalW = normalize(gl_FrontFacing ? vNormalW * twoSidedLightingNegScaleFactor : -vNormalW * twoSidedLightingNegScaleFactor);");
-            } else {
-                code.append("    dVertexNormalW = normalize(vNormalW);");
-            }
+            code.append("    dVertexNormalW = normalize(vNormalW);");
 
             if ((options.useHeights || options.useNormals) && options.hasTangents) {
-                if (options.twoSidedLighting) {
-                    code.append("    dTangentW = gl_FrontFacing ? vTangentW * twoSidedLightingNegScaleFactor : -vTangentW * twoSidedLightingNegScaleFactor;");
-                    code.append("    dBinormalW = gl_FrontFacing ? vBinormalW * twoSidedLightingNegScaleFactor : -vBinormalW * twoSidedLightingNegScaleFactor;");
-                } else {
-                    code.append("    dTangentW = vTangentW;");
-                    code.append("    dBinormalW = vBinormalW;");
-                }
+                code.append("    dTangentW = vTangentW;");
+                code.append("    dBinormalW = vBinormalW;");
             }
 
             code.append("    getViewDir();");

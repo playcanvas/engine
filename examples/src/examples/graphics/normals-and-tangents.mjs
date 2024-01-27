@@ -37,7 +37,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
     app.init(createOptions);
 
     const assets = {
-        statue:  new pc.Asset('statue',            'container', { url: assetPath   + 'models/NormalTangentTest.glb' }),
+        model:   new pc.Asset('model',             'container', { url: assetPath   + 'models/NormalTangentTest.glb' }),
         script:  new pc.Asset('script',            'script',    { url: scriptsPath + 'camera/orbit-camera.js' }),
         helipad: new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
     };
@@ -72,10 +72,17 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
     app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, 70, 0);
     app.scene.skyboxIntensity = 1.5;
 
-    // Create an entity hierarchy representing the statue
-    const statueEntity = assets.statue.resource.instantiateRenderEntity();
-    statueEntity.setLocalEulerAngles(0, 90, 0);
-    app.root.addChild(statueEntity);
+    const leftEntity = assets.model.resource.instantiateRenderEntity();
+    leftEntity.setLocalEulerAngles(0, 90, 0);
+    leftEntity.setPosition(0, 0, 1);
+    leftEntity.setLocalScale(0.8, 0.8, 0.8);
+    app.root.addChild(leftEntity);
+
+    const rightEntity = assets.model.resource.instantiateRenderEntity();
+    rightEntity.setLocalEulerAngles(0, 90, 0);
+    rightEntity.setPosition(0, 0, -1);
+    rightEntity.setLocalScale(-0.8, -0.8, -0.8);
+    app.root.addChild(rightEntity);
 
     // Create a camera with an orbit camera script
     const camera = new pc.Entity();
