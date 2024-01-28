@@ -15,6 +15,7 @@ class WebgpuBuffer {
 
     destroy(device) {
         if (this.buffer) {
+            this.buffer.unmap();
             this.buffer.destroy();
             this.buffer = null;
         }
@@ -83,6 +84,16 @@ class WebgpuBuffer {
 
         // TODO: handle usage types:
         // - BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM, BUFFER_GPUDYNAMIC
+    }
+
+    /**
+     * @returns {Promise<Uint8Array>}
+     */
+    async getMappedRange() {
+        await this.buffer.mapAsync(GPUMapMode.READ);
+
+        const arrayBuffer = this.buffer.getMappedRange();
+        return new Uint8Array(arrayBuffer);
     }
 }
 

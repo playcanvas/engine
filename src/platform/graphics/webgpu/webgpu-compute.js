@@ -1,5 +1,7 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { BindGroup } from "../bind-group.js";
+import { Buffer } from "../buffer.js";
+import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
  * A WebGPU implementation of the Compute.
@@ -23,11 +25,7 @@ class WebgpuCompute {
     }
 
     dispatch(x, y, z) {
-
-        // TODO: currently each dispatch is a separate compute pass, which is not optimal, and we should
-        // batch multiple dispatches into a single compute pass
         const device = this.compute.device;
-        device.startComputePass();
 
         // bind group data
         const { bindGroup } = this;
@@ -38,23 +36,14 @@ class WebgpuCompute {
         const passEncoder = device.passEncoder;
         passEncoder.setPipeline(this.pipeline);
         passEncoder.dispatchWorkgroups(x, y, z);
-
-        device.endComputePass();
     }
 
     /**
      *
-     * @param {GPUTexture} texture
+     * @param {import('../texture.js').Texture} texture
+     * @returns {import('../buffer.js').Buffer}
      */
-    async read(texture) {
-        const device = this.compute.device;
-        device.startCompute();
-
-        // bind group data
-        const { bindGroup } = this;
-        bindGroup.update();
-        device.setBindGroup(0, bindGroup);
-
+    getBuffer(texture) {
         // Calculate bytes per pixel, assuming RGBA8 format (4 bytes per pixel)
         const bytesPerPixel = 4;
 
@@ -64,13 +53,13 @@ class WebgpuCompute {
         // Calculate the size of the buffer to hold the texture data
         const bufferSize = bytesPerRow * texture.height;
 
-        const gpuBuffer = device.wgpu.createBuffer({
+        const gpuBuffer = this.compute.device.wgpu.createBuffer({
             size: bufferSize,
             usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
         });
 
         const textureCopyView = {
-            texture,
+            texture: texture.impl.gpuTexture,
             origin: { x: 0, y: 0 },
         };
         const bufferCopyView = {
@@ -82,25 +71,13 @@ class WebgpuCompute {
             height: texture.height,
         };
 
-        // Encode command to copy from texture to buffer
-        device.commandEncoder.copyTextureToBuffer(textureCopyView, bufferCopyView, extent);
+        this.compute.device.copyTextureToBufferCommands.push([textureCopyView, bufferCopyView, extent]);
 
-        device.endCompute();
+        const buffer = new Buffer();
+        buffer.impl = new WebgpuBuffer();
+        buffer.impl.buffer = gpuBuffer;
 
-        await device.wgpu.queue.onSubmittedWorkDone();
-
-        // Ensure that the GPU operations are complete
-        await gpuBuffer.mapAsync(GPUMapMode.READ);
-
-        // Read buffer contents
-        const arrayBuffer = gpuBuffer.getMappedRange();
-        const data = new Uint8Array(arrayBuffer); // or another typed array based on the texture format
-
-        // Cleanup
-        //gpuBuffer.unmap();
-        //gpuBuffer.destroy();
-
-        return data;
+        return buffer;
     }
 }
 

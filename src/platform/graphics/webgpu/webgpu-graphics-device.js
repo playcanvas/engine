@@ -89,6 +89,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     limits;
 
+    copyTextureToBufferCommands = [];
+
     constructor(canvas, options = {}) {
         super(canvas, options);
         options = this.initOptions;
@@ -654,7 +656,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this, { renderPass });
     }
 
-    startCompute() {
+    startComputePass() {
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
@@ -667,10 +669,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.pipeline = null;
 
         // TODO: add performance queries to compute passes
-    }
-
-    startComputePass() {
-        this.startCompute();
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginComputePass();
@@ -684,12 +682,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // end the compute pass
         this.passEncoder.end();
         this.passEncoder = null;
-        this.insideRenderPass = false;
 
-        this.endCompute();
-    }
+        for (const [textureCopyView, bufferCopyView, extent] of this.copyTextureToBufferCommands) {
+            this.commandEncoder.copyTextureToBuffer(textureCopyView, bufferCopyView, extent);
+        }
 
-    endCompute() {
+        this.copyTextureToBufferCommands.length = 0;
+
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 
@@ -698,8 +697,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // DebugHelper.setLabel(cb, `${renderPass.name}-CommandBuffer`);
         DebugHelper.setLabel(cb, 'ComputePass-CommandBuffer');
 
-        this.addCommandBuffer(cb);
+        //this.addCommandBuffer(cb);
+        this.wgpu.queue.submit([cb]);
+
         this.commandEncoder = null;
+
+        this.insideRenderPass = false;
 
         WebgpuDebug.end(this);
         WebgpuDebug.end(this);

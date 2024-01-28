@@ -62,11 +62,16 @@ shader.impl.computeBindGroupFormat = new pc.BindGroupFormat(device,[], [], [
 });
 
 const compute = new pc.Compute(app.graphicsDevice, shader);
+const buffer = compute.getBuffer(texture);
 
+app.graphicsDevice.startComputePass();
 compute.dispatch(texture.width, texture.height);
+app.graphicsDevice.endComputePass();
 
-const data = await compute.read(texture.impl.gpuTexture);
+const data = await buffer.getMappedRange();
 
 console.log(data);
+
+buffer.destroy(app.graphicsDevice);
 
 export { app };

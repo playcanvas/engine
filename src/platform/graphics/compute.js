@@ -42,10 +42,11 @@ class Compute {
 
     /**
      *
-     * @param {GPUTexture} texture
+     * @param {import('./texture.js').Texture} texture
+     * @returns {import('./buffer.js').Buffer}
      */
-    async read(texture) {
-        return this.impl?.read(texture);
+    getBuffer(texture) {
+        return this.impl?.getBuffer(texture);
     }
 }
 
