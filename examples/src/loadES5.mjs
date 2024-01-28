@@ -11,5 +11,6 @@ export async function loadES5(url) {
     const module = {
         exports: {}
     };
-    return (Function.prototype.constructor('module', 'exports', txt).call(module, module, module.exports), module).exports;
+    // eslint-disable-next-line no-new-func
+    return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
 }
