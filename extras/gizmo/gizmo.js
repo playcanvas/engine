@@ -209,7 +209,7 @@ class Gizmo extends EventHandler {
     /**
      * The graph nodes attached to the gizmo.
      *
-     * @type {import('playcanvas').GraphNode}
+     * @type {import('playcanvas').GraphNode[]}
      */
     nodes = [];
 
