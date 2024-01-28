@@ -63,3 +63,4 @@ export * from "./texture-array.mjs";
 export * from "./texture-basis.mjs";
 export * from "./transform-feedback.mjs";
 export * from "./video-texture.mjs";
+export * from "./wgsl-shader.mjs"
