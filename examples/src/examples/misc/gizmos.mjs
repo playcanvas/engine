@@ -235,21 +235,45 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
 
     // Class for handling gizmos
     class GizmoHandler {
+        /**
+         * Gizmo type.
+         *
+         * @type {string}
+         * @private
+         */
         _type = 'translate';
 
         /**
+         * Object to reference each gizmo.
+         *
          * @type {pcx.Gizmo}
+         * @private
          */
         _gizmos;
 
         /**
+         * Nodes to attach to active gizmo.
+         *
          * @type {pc.GraphNode[]}
+         * @private
          */
         _nodes = [];
 
+        /**
+         * Flag to ignore picker on gizmo pointer events.
+         *
+         * @type {boolean}
+         * @private
+         */
         _ignorePicker = false;
 
-        skipSetFire = false;
+        /**
+         * Flag to skip data set from firing event.
+         *
+         * @type {boolean}
+         * @private
+         */
+        _skipSetFire = false;
 
 
         /**
@@ -283,12 +307,16 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
             return this._ignorePicker;
         }
 
+        get skipSetFire() {
+            return this._skipSetFire;
+        }
+
         /**
          * @param {string} type - The transform gizmo type.
          */
         _updateData(type) {
             const gizmo = this.gizmo;
-            this.skipSetFire = true;
+            this._skipSetFire = true;
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
@@ -314,10 +342,12 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
                 faceTubeRadius: gizmo.faceTubeRadius,
                 faceRingRadius: gizmo.faceRingRadius
             });
-            this.skipSetFire = false;
+            this._skipSetFire = false;
         }
 
         /**
+         * Adds single node to active gizmo.
+         *
          * @param {pc.GraphNode} node - The node to add.
          * @param {boolean} clear - To clear the node array.
          */
@@ -331,12 +361,17 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
             this.gizmo.attach(this._nodes);
         }
 
+        /**
+         * Clear all nodes.
+         */
         clear() {
             this._nodes.length = 0;
             this.gizmo.detach();
         }
 
         /**
+         * Switches between gizmo types
+         *
          * @param {string} type - The transform gizmo type.
          */
         switch(type) {
@@ -520,15 +555,15 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
         window.top.setType(value);
     };
 
-    const keydown = (/** @type {{ shiftKey: boolean; ctrlKey: boolean; }} */ e) => {
+    const keydown = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
-    const keyup = (/** @type {{ shiftKey: boolean; ctrlKey: boolean; }} */ e) => {
+    const keyup = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
-    const keypress = (/** @type {{ key: string; }} */ e) => {
+    const keypress = (/** @type {KeyboardEvent} */ e) => {
         switch (e.key) {
             case 'x':
                 data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
@@ -592,7 +627,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const worldLayer = app.scene.layers.getLayerByName("World");
     const pickerLayers = [worldLayer];
 
-    const onPointerDown = (/** @type {{ clientX: number; clientY: number; ctrlKey: boolean; metaKey: boolean; }} */ e) => {
+    const onPointerDown = (/** @type {PointerEvent} */ e) => {
         if (gizmoHandler.ignorePicker) {
             return;
         }
