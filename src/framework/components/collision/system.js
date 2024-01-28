@@ -374,7 +374,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                 let idx;
                 if (checkDupes) {
                     const str = `${x}:${y}:${z}`;
-    
+
                     idx = vertexCache.get(str);
                     if (idx !== undefined) {
                         return idx;
@@ -387,9 +387,9 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                     v1.setValue(x, y, z);
                     idx = triMesh.findOrAddVertex(v1, false);
                 }
-                
+
                 return idx;
-            }
+            };
 
             for (var i = 0; i < numTriangles; i++) {
                 i1 = addVertex(indices[base + i * 3]);
