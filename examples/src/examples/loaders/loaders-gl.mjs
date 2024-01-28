@@ -5,9 +5,7 @@ import { loadES5 } from '../../loadES5.mjs';
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
 
 /**
- * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
+ * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {

@@ -11,6 +11,5 @@
  * @property {string} ammoPath - The ammo path.
  * @property {string} basisPath - The basis path.
  * @property {any} pcx - The pcx.
- * @template {Record<string, string>} [FILES=Record<string, string>]
- * @property {FILES} files - The files.
+ * @property {Record<string, string>} files - The files.
  */
