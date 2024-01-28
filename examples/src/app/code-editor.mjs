@@ -11,7 +11,7 @@ loader.config({ paths: { vs: './node_modules/monaco-editor/min/vs' } });
 function getShowMinimap() {
     let showMinimap = true;
     if (localStorage.getItem("showMinimap")) {
-        showMinimap = localStorage.getItem("showMinimap") === 'true' ? true : false;
+        showMinimap = localStorage.getItem("showMinimap") === 'true';
     }
     return showMinimap;
 }
@@ -23,20 +23,24 @@ const FILE_TYPE_LANGUAGES = {
     'frag': null,
     'javascript': 'javascript',
     'js': 'javascript',
-    'mjs': 'javascript',
+    'mjs': 'javascript'
 };
 
+/**
+ * @type {import('monaco-editor').editor.IStandaloneCodeEditor}
+ */
 let monacoEditor;
 
+// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
  */
 
 /**
  * @typedef {object} State
- * @property {Record<string, string>} files
- * @property {string} selectedFile
- * @property {boolean} showMinimap
+ * @property {Record<string, string>} files - The example files.
+ * @property {string} selectedFile - The selected file.
+ * @property {boolean} showMinimap - The state of showing the Minimap
  */
 
 /** @type {typeof Component<Props, State>} */
@@ -45,7 +49,7 @@ const TypedComponent = Component;
 class CodeEditor extends TypedComponent {
     /** @type {State} */
     state = {
-        files: {'example.mjs': '// init'},
+        files: { 'example.mjs': '// init' },
         selectedFile: 'example.mjs',
         showMinimap: getShowMinimap()
     };
@@ -75,26 +79,39 @@ class CodeEditor extends TypedComponent {
         window.removeEventListener("requestedFiles", this.handleRequestedFiles);
     }
 
+    /**
+     * @param {Event} event - The event.
+     */
     handleExampleLoad(event) {
         // console.log("CodeEditor got files event", event);
         /** @type {Record<string, string>} */
+        // @ts-ignore
         const files = event.files;
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
+    /**
+     * @param {Event} event - The event.
+     */
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     handleExampleLoading(event) {
         this.mergeState({
-            files: {'example.mjs': '// reloading'}
+            files: { 'example.mjs': '// reloading' }
         });
     }
 
+    /**
+     * @param {Event} event - The event.
+     */
     handleRequestedFiles(event) {
+        // @ts-ignore
         const files = event.detail;
         this.mergeState({ files });
     }
 
     /**
-     * @param {import('@monaco-editor/react').Monaco} monaco 
+     * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
      */
     beforeMount(monaco) {
         fetch(pcTypes).then((r) => {
@@ -112,30 +129,37 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor
+     * @param {import('monaco-editor').editor.IStandaloneCodeEditor} editor - The monaco editor.
      */
     editorDidMount(editor) {
+        // @ts-ignore
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
+        // @ts-ignore
+        // eslint-disable-next-line no-undef
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
         const codePane = document.getElementById('codePane');
+        if (!codePane) {
+            return;
+        }
         codePane.classList.add('multiple-files');
         if (!this.state.files[this.state.selectedFile]) {
             this.mergeState({
-                selectedFile: 'example.mjs',
+                selectedFile: 'example.mjs'
             });
         }
         // @ts-ignore
-        codePane.ui.on('resize', () => {
-            localStorage.setItem('codePaneStyle', codePane.getAttribute('style'));
-        });
+        codePane.ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style')));
         const codePaneStyle = localStorage.getItem('codePaneStyle');
         if (codePaneStyle) {
             codePane.setAttribute('style', codePaneStyle);
         }
         // set up the code panel toggle button
         const panelToggleDiv = codePane.querySelector('.panel-toggle');
+        if (!panelToggleDiv) {
+            return;
+        }
         panelToggleDiv.addEventListener('click', function () {
             codePane.classList.toggle('collapsed');
             localStorage.setItem('codePaneCollapsed', codePane.classList.contains('collapsed') ? 'true' : 'false');
@@ -148,6 +172,8 @@ class CodeEditor extends TypedComponent {
             // keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
             // contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
+            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             run: (editor) => {
                 const showMinimap = !getShowMinimap();
                 localStorage.setItem("showMinimap", `${showMinimap}`);
@@ -157,7 +183,7 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {string} value 
+     * @param {string} value - The on change state.
      */
     onChange(value) {
         const { files, selectedFile } = this.state;
@@ -185,10 +211,11 @@ class CodeEditor extends TypedComponent {
         for (const name in files) {
             const button = jsx(Button, {
                 key: name,
+                // @ts-ignore
                 id: `code-editor-file-tab-${name}`,
                 text: name,
                 class: name === selectedFile ? 'selected' : null,
-                onClick: () => this.selectFile(name),
+                onClick: () => this.selectFile(name)
             });
             tabs.push(button);
         }
@@ -198,6 +225,7 @@ class CodeEditor extends TypedComponent {
     render() {
         setTimeout(iframeResize, 50);
         const { files, selectedFile, showMinimap } = this.state;
+        // @ts-ignore
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()];
         let value = files[selectedFile];
         if (value) {
@@ -221,18 +249,19 @@ class CodeEditor extends TypedComponent {
                 minimap: {
                     enabled: showMinimap
                 }
-            },
+            }
             /**
-             * @todo Without a key the syntax highlighting mode isn't updated.
+             * TODO: Without a key the syntax highlighting mode isn't updated.
              * But WITH a key the theme information isn't respected any longer... this
              * is probably a Monaco bug, which we need to file. Related:
              * https://github.com/microsoft/monaco-editor/issues/1713
-            */
-            //key: selectedFile,
+             */
+            // key: selectedFile,
         };
         return jsx(
             Panel,
             {
+                // @ts-ignore
                 headerText: 'CODE',
                 id: 'codePane',
                 class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
@@ -249,16 +278,19 @@ class CodeEditor extends TypedComponent {
             jsx(
                 Container,
                 {
+                    // @ts-ignore
                     class: 'tabs-wrapper'
                 },
                 jsx(
                     Container,
                     {
+                        // @ts-ignore
                         class: 'code-editor-menu-container'
                     },
                     jsx(
                         Button,
                         {
+                            // @ts-ignore
                             id: 'play-button',
                             icon: 'E304',
                             text: '',
@@ -267,6 +299,7 @@ class CodeEditor extends TypedComponent {
                     ),
                     jsx(
                         Button, {
+                            // @ts-ignore
                             icon: 'E259',
                             text: '',
                             onClick: () => {
@@ -279,14 +312,15 @@ class CodeEditor extends TypedComponent {
                 jsx(
                     Container,
                     {
+                        // @ts-ignore
                         class: 'tabs-container'
                     },
-                    this.renderTabs(),
+                    this.renderTabs()
                 )
             ),
             jsx(MonacoEditor, options)
         );
-    };
+    }
 }
 
 export { CodeEditor };

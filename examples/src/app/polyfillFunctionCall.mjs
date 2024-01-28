@@ -1,5 +1,10 @@
 const functionCall = Function.prototype.call;
 
+/**
+ * @param {any} thisArg - This context.
+ * @param {any[]} args - Arguments
+ * @returns {Function} - The bound function
+ */
 function polyCall(thisArg, ...args) {
     if (this.toString().startsWith('class')) {
         return Object.assign(thisArg, new this(...args));
@@ -13,9 +18,10 @@ function polyCall(thisArg, ...args) {
  * // doesn't start with 'class', so not changing any behaviour
  * debugger; // step through with F11 to debug
  * Object.prototype.toString.call(1) === '[object Number]'
- * 
+ *
  */
 function enablePolyfillFunctionCall() {
+    // eslint-disable-next-line no-extend-native
     Function.prototype.call = polyCall;
 }
 export { enablePolyfillFunctionCall };

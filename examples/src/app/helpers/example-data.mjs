@@ -9,9 +9,12 @@ Object.keys(exampleData).forEach((categorySlug) => {
     categories[categorySlug] = {
         examples: {}
     };
+    // @ts-ignore
     Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
         const name = kebabCaseToPascalCase(exampleSlug);
+        // @ts-ignore
         categories[categorySlug].examples[exampleSlug] = name;
+        // @ts-ignore
         const data = exampleData[categorySlug][exampleSlug];
         const files = [
             {

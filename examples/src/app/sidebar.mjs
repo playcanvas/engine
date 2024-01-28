@@ -9,6 +9,7 @@ import { jsx } from './jsx.mjs';
 import { getOrientation } from './utils.mjs';
 import { iframeDestroy } from './iframeUtils.mjs';
 
+// eslint-disable-next-line jsdoc/require-property
 /**
  * @typedef {object} Props
  */
@@ -35,14 +36,22 @@ export class SideBar extends TypedComponent {
         filteredCategories: null,
         hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),
+        // @ts-ignore
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
-        orientation: getOrientation(),
-    }
+        orientation: getOrientation()
+    };
 
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBar = document.getElementById("sideBar");
+        if (!sideBar) {
+            return;
+        }
         const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
+        if (!sideBarHeader) {
+            return;
+        }
+        // @ts-ignore
         sideBarHeader.onclick = () => this.toggleCollapse();
         this.setupControlPanelToggleButton();
         // setup events
@@ -59,11 +68,14 @@ export class SideBar extends TypedComponent {
     setupControlPanelToggleButton() {
         // set up the control panel toggle button
         const sideBar = document.getElementById('sideBar');
+        if (!sideBar) {
+            return;
+        }
         window.addEventListener('hashchange', () => {
             this.mergeState({ hash: location.hash });
         });
+        /** @type {Element} */
         this.state.observer.on('largeThumbnails:set', () => {
-            /** @type {HTMLElement} */
             let topNavItem;
             let minTopNavItemDistance = Number.MAX_VALUE;
             document.querySelectorAll('.nav-item').forEach((nav) => {
@@ -74,13 +86,16 @@ export class SideBar extends TypedComponent {
                 }
             });
             sideBar.classList.toggle('small-thumbnails');
+            // @ts-ignore
             topNavItem.scrollIntoView();
         });
         sideBar.classList.add('visible');
         // when first opening the examples browser via a specific example, scroll it into view
+        // @ts-ignore
         if (!window._scrolledToExample) {
             const examplePath = location.hash.split('/');
             document.getElementById(`link-${examplePath[1]}-${examplePath[2]}`)?.scrollIntoView();
+            // @ts-ignore
             window._scrolledToExample = true;
         }
     }
@@ -125,6 +140,7 @@ export class SideBar extends TypedComponent {
                 return null;
             }
             Object.keys(defaultCategories[category].examples).forEach((example) => {
+                // @ts-ignore
                 const title = defaultCategories[category].examples[example];
                 if (title.search(reg) !== -1) {
                     if (!updatedCategories[category]) {
@@ -135,6 +151,7 @@ export class SideBar extends TypedComponent {
                             }
                         };
                     } else {
+                        // @ts-ignore
                         updatedCategories[category].examples[example] = title;
                     }
                 }
@@ -142,10 +159,11 @@ export class SideBar extends TypedComponent {
         });
         this.mergeState({ filteredCategories: updatedCategories });
     }
+
     onClickExample() {
-        // this.mergeState({ collapsed: true });
         iframeDestroy();
     }
+
     renderContents() {
         const categories = this.state.filteredCategories || this.state.defaultCategories;
         if (Object.keys(categories).length === 0) {
@@ -162,46 +180,48 @@ export class SideBar extends TypedComponent {
                     collapsible: true,
                     collapsed: false
                 },
-                jsx("ul", {
-                    className: "category-nav"
-                },
-                Object.keys(categories[category].examples).sort((a, b) => (a > b ? 1 : -1)).map((example) => {
-                    //console.log({ category, example });
-                    const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
-                    const className = `nav-item ${isSelected ? 'selected' : null}`;
-                    return jsx(Link, {
-                        key: example,
-                        to: `/${category}/${example}`,
-                        onClick: this.onClickExample.bind(this),
+                jsx("ul",
+                    {
+                        className: "category-nav"
                     },
-                        jsx("div", { className: className, id: `link-${category}-${example}` },
-                            jsx(
-                                "img",
-                                {
-                                    className: 'small-thumbnail',
-                                    loading: "lazy",
-                                    src: thumbnailPath + `${category}_${example}_small.png`
-                                }
-                            ),
-                            jsx("img", {
-                                className: 'large-thumbnail',
-                                loading: "lazy",
-                                src: thumbnailPath + `${category}_${example}_large.png`
-                            }),
-                            jsx(
-                                "div",
-                                {
-                                    className: 'nav-item-text'
-                                },
-                                example.split('-').join(' ').toUpperCase()
-                            )
-                        )
-                    );
-                })
+                    Object.keys(categories[category].examples).sort((a, b) => (a > b ? 1 : -1)).map((example) => {
+                        const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
+                        const className = `nav-item ${isSelected ? 'selected' : null}`;
+                        return jsx(Link,
+                                   {
+                                       key: example,
+                                       to: `/${category}/${example}`,
+                                       onClick: this.onClickExample.bind(this)
+                                   },
+                                   jsx("div", { className: className, id: `link-${category}-${example}` },
+                                       jsx(
+                                           "img",
+                                           {
+                                               className: 'small-thumbnail',
+                                               loading: "lazy",
+                                               src: thumbnailPath + `${category}_${example}_small.png`
+                                           }
+                                       ),
+                                       jsx("img", {
+                                           className: 'large-thumbnail',
+                                           loading: "lazy",
+                                           src: thumbnailPath + `${category}_${example}_large.png`
+                                       }),
+                                       jsx(
+                                           "div",
+                                           {
+                                               className: 'nav-item-text'
+                                           },
+                                           example.split('-').join(' ').toUpperCase()
+                                       )
+                                   )
+                        );
+                    })
                 )
             );
         });
     }
+
     render() {
         const { observer, collapsed, orientation } = this.state;
         const panelOptions = {
@@ -215,6 +235,7 @@ export class SideBar extends TypedComponent {
             ]
         };
         if (orientation === 'portrait') {
+            // @ts-ignore
             panelOptions.class = 'small-thumbnails';
             panelOptions.collapsed = collapsed;
         }
@@ -224,7 +245,7 @@ export class SideBar extends TypedComponent {
                 class: 'filter-input',
                 keyChange: true,
                 placeholder: "Filter...",
-                onChange: this.onChangeFilter.bind(this),
+                onChange: this.onChangeFilter.bind(this)
             }),
             jsx(LabelGroup, { text: 'Large thumbnails:' },
                 jsx(BooleanInput, {
@@ -235,7 +256,7 @@ export class SideBar extends TypedComponent {
             ),
             jsx(Container, { id: 'sideBar-contents' },
                 this.renderContents()
-            ),
-        )
+            )
+        );
     }
 }
