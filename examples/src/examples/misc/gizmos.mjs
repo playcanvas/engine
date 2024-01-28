@@ -10,7 +10,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const [type, setType] = React.useState('translate');
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
 
-    window.setType = (value) => setType(value);
+    // @ts-ignore
+    window.setType = (/** @type {string} */ value) => setType(value);
 
     return fragment(
         jsx(Panel, { headerText: 'Transform' },
@@ -210,7 +211,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'camera.proj' },
-                    onSelect: value => setProj(value - 1)
+                    onSelect: value => setProj((parseInt(value) || 0) - 1)
                 })
             ),
             (proj === pc.PROJECTION_PERSPECTIVE) &&
@@ -230,18 +231,56 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+
     // Class for handling gizmos
     class GizmoHandler {
+        /**
+         * Gizmo type.
+         *
+         * @type {string}
+         * @private
+         */
         _type = 'translate';
 
+        /**
+         * Object to reference each gizmo.
+         *
+         * @type {pcx.Gizmo}
+         * @private
+         */
+        _gizmos;
+
+        /**
+         * Nodes to attach to active gizmo.
+         *
+         * @type {pc.GraphNode[]}
+         * @private
+         */
         _nodes = [];
 
+        /**
+         * Flag to ignore picker on gizmo pointer events.
+         *
+         * @type {boolean}
+         * @private
+         */
         _ignorePicker = false;
 
-        skipSetFire = false;
+        /**
+         * Flag to skip data set from firing event.
+         *
+         * @type {boolean}
+         * @private
+         */
+        _skipSetFire = false;
 
 
+        /**
+         * @param {pc.AppBase} app - The application.
+         * @param {pc.CameraComponent | undefined} camera - The camera component.
+         * @param {pc.Layer} layer - The gizmo layer
+         */
         constructor(app, camera, layer) {
             this._gizmos = {
                 translate: new pcx.TranslateGizmo(app, camera, layer),
@@ -251,7 +290,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
             for (const type in this._gizmos) {
                 const gizmo = this._gizmos[type];
-                gizmo.on('pointer:down', (x, y, meshInstance) => {
+                gizmo.on('pointer:down', (/** @type {number} */ x, /** @type {number} */ y, /** @type {pc.MeshInstance} */ meshInstance) => {
                     this._ignorePicker = !!meshInstance;
                 });
                 gizmo.on('pointer:up', () => {
@@ -268,9 +307,16 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
             return this._ignorePicker;
         }
 
+        get skipSetFire() {
+            return this._skipSetFire;
+        }
+
+        /**
+         * @param {string} type - The transform gizmo type.
+         */
         _updateData(type) {
             const gizmo = this.gizmo;
-            this.skipSetFire = true;
+            this._skipSetFire = true;
             data.set('gizmo', {
                 type: type,
                 size: gizmo.size,
@@ -296,9 +342,15 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                 faceTubeRadius: gizmo.faceTubeRadius,
                 faceRingRadius: gizmo.faceRingRadius
             });
-            this.skipSetFire = false;
+            this._skipSetFire = false;
         }
 
+        /**
+         * Adds single node to active gizmo.
+         *
+         * @param {pc.GraphNode} node - The node to add.
+         * @param {boolean} clear - To clear the node array.
+         */
         add(node, clear = false) {
             if (clear) {
                 this._nodes.length = 0;
@@ -309,11 +361,19 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
             this.gizmo.attach(this._nodes);
         }
 
+        /**
+         * Clear all nodes.
+         */
         clear() {
             this._nodes.length = 0;
             this.gizmo.detach();
         }
 
+        /**
+         * Switches between gizmo types
+         *
+         * @param {string} type - The transform gizmo type.
+         */
         switch(type) {
             this.gizmo.detach();
             this._type = type ?? 'translate';
@@ -385,12 +445,17 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     app.start();
 
-    // create entities
+    /**
+     * @param {pc.Color} color - The color.
+     * @returns {pc.Material} - The standard material.
+     */
     function createMaterial(color) {
         const material = new pc.StandardMaterial();
         material.diffuse = color;
         return material;
     }
+
+    // create entities
     const box = new pc.Entity('box');
     box.addComponent('render', {
         type: 'box',
@@ -482,22 +547,23 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     this.focus();
 
     // Change gizmo mode keybinds
-    const setType = (value) => {
+    const setType = (/** @type {string} */ value) => {
         data.set('gizmo.type', value);
 
         // call method from top context (same as controls)
+        // @ts-ignore
         window.top.setType(value);
     };
 
-    const keydown = (e) => {
+    const keydown = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
-    const keyup = (e) => {
+    const keyup = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
     };
-    const keypress = (e) => {
+    const keypress = (/** @type {KeyboardEvent} */ e) => {
         switch (e.key) {
             case 'x':
                 data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
@@ -544,6 +610,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
                     case 'xAxisColor':
                     case 'yAxisColor':
                     case 'zAxisColor':
+                        // @ts-ignore
                         tmpC.set(...value);
                         gizmoHandler.gizmo[pathArray[1]] = tmpC;
                         break;
@@ -560,7 +627,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
     const worldLayer = app.scene.layers.getLayerByName("World");
     const pickerLayers = [worldLayer];
 
-    const onPointerDown = (e) => {
+    const onPointerDown = (/** @type {PointerEvent} */ e) => {
         if (gizmoHandler.ignorePicker) {
             return;
         }
@@ -582,6 +649,9 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     const gridColor = new pc.Color(1, 1, 1, 0.5);
     const gridHalfSize = 4;
+    /**
+     * @type {pc.Vec3[]}
+     */
     const gridLines = [];
     for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
         gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
