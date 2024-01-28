@@ -37,7 +37,7 @@ export class SideBar extends TypedComponent {
         hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),
         // @ts-ignore
-        collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
+        collapsed: localStorage.getItem('sideBarCollapsed') === 'true' || window.top.innerWidth < MIN_DESKTOP_WIDTH,
         orientation: getOrientation()
     };
 
@@ -112,6 +112,7 @@ export class SideBar extends TypedComponent {
 
     toggleCollapse() {
         const { collapsed } = this.state;
+        localStorage.setItem('sideBarCollapsed', `${!collapsed}`);
         this.mergeState({ collapsed: !collapsed });
     }
 
