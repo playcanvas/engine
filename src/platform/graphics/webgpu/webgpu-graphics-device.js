@@ -654,8 +654,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this, { renderPass });
     }
 
-    startComputePass() {
-
+    startCompute() {
         WebgpuDebug.internal(this);
         WebgpuDebug.validate(this);
 
@@ -668,6 +667,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.pipeline = null;
 
         // TODO: add performance queries to compute passes
+    }
+
+    startComputePass() {
+        this.startCompute();
 
         // start the pass
         this.passEncoder = this.commandEncoder.beginComputePass();
@@ -678,12 +681,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     endComputePass() {
-
         // end the compute pass
         this.passEncoder.end();
         this.passEncoder = null;
         this.insideRenderPass = false;
 
+        this.endCompute();
+    }
+
+    endCompute() {
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
 

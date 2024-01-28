@@ -41,6 +41,67 @@ class WebgpuCompute {
 
         device.endComputePass();
     }
+
+    /**
+     *
+     * @param {GPUTexture} texture
+     */
+    async read(texture) {
+        const device = this.compute.device;
+        device.startCompute();
+
+        // bind group data
+        const { bindGroup } = this;
+        bindGroup.update();
+        device.setBindGroup(0, bindGroup);
+
+        // Calculate bytes per pixel, assuming RGBA8 format (4 bytes per pixel)
+        const bytesPerPixel = 4;
+
+        // Calculate bytes per row, ensuring it's a multiple of 256
+        const bytesPerRow = Math.ceil((texture.width * bytesPerPixel) / 256) * 256;
+
+        // Calculate the size of the buffer to hold the texture data
+        const bufferSize = bytesPerRow * texture.height;
+
+        const gpuBuffer = device.wgpu.createBuffer({
+            size: bufferSize,
+            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+        });
+
+        const textureCopyView = {
+            texture,
+            origin: { x: 0, y: 0 },
+        };
+        const bufferCopyView = {
+            buffer: gpuBuffer,
+            bytesPerRow: bytesPerRow,
+        };
+        const extent = {
+            width: texture.width,
+            height: texture.height,
+        };
+
+        // Encode command to copy from texture to buffer
+        device.commandEncoder.copyTextureToBuffer(textureCopyView, bufferCopyView, extent);
+
+        device.endCompute();
+
+        await device.wgpu.queue.onSubmittedWorkDone();
+
+        // Ensure that the GPU operations are complete
+        await gpuBuffer.mapAsync(GPUMapMode.READ);
+
+        // Read buffer contents
+        const arrayBuffer = gpuBuffer.getMappedRange();
+        const data = new Uint8Array(arrayBuffer); // or another typed array based on the texture format
+
+        // Cleanup
+        //gpuBuffer.unmap();
+        //gpuBuffer.destroy();
+
+        return data;
+    }
 }
 
 export { WebgpuCompute };

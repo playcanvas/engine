@@ -39,6 +39,14 @@ class Compute {
     dispatch(x, y, z) {
         this.impl?.dispatch(x, y, z);
     }
+
+    /**
+     *
+     * @param {GPUTexture} texture
+     */
+    async read(texture) {
+        return this.impl?.read(texture);
+    }
 }
 
 export { Compute };
