@@ -206,8 +206,7 @@ class CollisionSystemImpl {
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
-            render: src.data.render,
-            checkVertexDuplicates: src.data.checkVertexDuplicates
+            render: src.data.render
         };
 
         return this.system.addComponent(clone, data);
@@ -332,17 +331,17 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
-    createAmmoMesh(mesh, node, shape, checkDuplicates = true) {
+    createAmmoMesh(mesh, node, shape, checkDupes = true) {
+        const system = this.system;
         let triMesh;
 
-        if (this.system._triMeshCache[mesh.id]) {
-            triMesh = this.system._triMeshCache[mesh.id];
+        if (system._triMeshCache[mesh.id]) {
+            triMesh = system._triMeshCache[mesh.id];
         } else {
             const vb = mesh.vertexBuffer;
 
             const format = vb.getFormat();
-            let stride;
-            let positions;
+            let stride, positions;
             for (let i = 0; i < format.elements.length; i++) {
                 const element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
@@ -361,22 +360,41 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
             const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
-            this.system._triMeshCache[mesh.id] = triMesh;
+            system._triMeshCache[mesh.id] = triMesh;
 
-            const numVertices = positions.length / stride;
-
+            const vertexCache = new Map();
             const indexedArray = triMesh.getIndexedMeshArray();
             indexedArray.at(0).m_numTriangles = numTriangles;
 
-            for (let i = 0; i < numVertices; i++) {
-                v1.setValue(positions[i * stride], positions[i * stride + 1], positions[i * stride + 2]);
-                triMesh.findOrAddVertex(v1, checkDuplicates);
+            const addVertex = (index) => {
+                const x = positions[index * stride];
+                const y = positions[index * stride + 1];
+                const z = positions[index * stride + 2];
+
+                let idx;
+                if (checkDupes) {
+                    const str = `${x}:${y}:${z}`;
+    
+                    idx = vertexCache.get(str);
+                    if (idx !== undefined) {
+                        return idx;
+                    }
+
+                    v1.setValue(x, y, z);
+                    idx = triMesh.findOrAddVertex(v1, false);
+                    vertexCache.set(str, idx);
+                } else {
+                    v1.setValue(x, y, z);
+                    idx = triMesh.findOrAddVertex(v1, false);
+                }
+                
+                return idx;
             }
 
             for (var i = 0; i < numTriangles; i++) {
-                i1 = indices[base + i * 3];
-                i2 = indices[base + i * 3 + 1];
-                i3 = indices[base + i * 3 + 2];
+                i1 = addVertex(indices[base + i * 3]);
+                i2 = addVertex(indices[base + i * 3 + 1]);
+                i3 = addVertex(indices[base + i * 3 + 2]);
 
                 triMesh.addIndex(i1);
                 triMesh.addIndex(i2);
@@ -386,14 +404,13 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             Ammo.destroy(v1);
         }
 
-        const useQuantizedAabbCompression = true;
-        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, true /* useQuantizedAabbCompression */);
 
-        const scaling = this.system._getNodeScaling(node);
+        const scaling = system._getNodeScaling(node);
         triMeshShape.setLocalScaling(scaling);
         Ammo.destroy(scaling);
 
-        const transform = this.system._getNodeTransform(node);
+        const transform = system._getNodeTransform(node);
         shape.addChildShape(transform, triMeshShape);
         Ammo.destroy(transform);
     }
