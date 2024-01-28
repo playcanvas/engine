@@ -41,9 +41,11 @@ class Compute {
     }
 
     /**
+     * Get a buffer that contains the data of the specified texture.
+     * This needs to be called before dispatch! But can be called before device.startComputePass().
      *
-     * @param {import('./texture.js').Texture} texture
-     * @returns {import('./buffer.js').Buffer}
+     * @param {import('./texture.js').Texture} texture - The texture to get the buffer for.
+     * @returns {import('./buffer.js').Buffer} The buffer.
      */
     getBuffer(texture) {
         return this.impl?.getBuffer(texture);

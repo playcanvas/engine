@@ -7,6 +7,10 @@ if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 
+const assets = {
+    rocks: new pc.Asset('rocks', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
+};
+
 const gfxOptions = {
     deviceTypes: [deviceType],
 
@@ -17,11 +21,16 @@ const gfxOptions = {
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+
+if (!device.isWebGPU) {
+    throw new Error('WebGPU is required for this example.');
+}
+
 const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 
-createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
-createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
+createOptions.componentSystems = [pc.RenderComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
@@ -38,16 +47,21 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
+const inputTexture = assets.rocks.resource;
+const width = inputTexture.width;
+const height = inputTexture.height;
+
 const texture = new pc.Texture(app.graphicsDevice, {
     name: 'outputTexture',
-    width: 2,
-    height: 2,
+    width,
+    height,
     format: pc.PIXELFORMAT_RGBA8,
     mipmaps: false,
     storage: true
 });
 
 app.graphicsDevice.scope.resolve("outputTexture").setValue(texture);
+app.graphicsDevice.scope.resolve("inputTexture").setValue(inputTexture);
 
 const shaderDefinition = {
     cshader: files['shader.wgsl'],
@@ -55,7 +69,9 @@ const shaderDefinition = {
 };
 const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
-shader.impl.computeBindGroupFormat = new pc.BindGroupFormat(device,[], [], [
+shader.computeBindGroupFormat = new pc.BindGroupFormat(device, [], [
+    new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_FLOAT),
+], [
     new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D),
 ], {
     compute: true
@@ -65,7 +81,8 @@ const compute = new pc.Compute(app.graphicsDevice, shader);
 const buffer = compute.getBuffer(texture);
 
 app.graphicsDevice.startComputePass();
-compute.dispatch(texture.width, texture.height);
+compute.dispatch(width, height);
+// TODO: potentially dispatch more compute work in the same pass.
 app.graphicsDevice.endComputePass();
 
 const data = await buffer.getMappedRange();

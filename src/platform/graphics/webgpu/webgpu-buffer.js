@@ -87,7 +87,10 @@ class WebgpuBuffer {
     }
 
     /**
-     * @returns {Promise<Uint8Array>}
+     * Returns a mapped range of the underlying buffer.
+     * On WebGPU this will wait for the buffer to be copied to the CPU.
+     *
+     * @returns {Promise<Uint8Array>} The mapped range.
      */
     async getMappedRange() {
         await this.buffer.mapAsync(GPUMapMode.READ);

@@ -9,13 +9,15 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
  * @ignore
  */
 class WebgpuCompute {
+    copyTextureToBufferCommands = [];
+
     constructor(compute) {
         this.compute = compute;
 
         const { device, shader } = compute;
 
         // create bind group
-        const { computeBindGroupFormat } = shader.impl;
+        const { computeBindGroupFormat } = shader;
         Debug.assert(computeBindGroupFormat, 'Compute shader does not have computeBindGroupFormat specified', shader);
         this.bindGroup = new BindGroup(device, computeBindGroupFormat);
         DebugHelper.setName(this.bindGroup, `Compute-BindGroup_${this.bindGroup.id}`);
@@ -24,6 +26,13 @@ class WebgpuCompute {
         this.pipeline = device.computePipeline.get(shader, computeBindGroupFormat);
     }
 
+    /**
+     * Dispatch the compute work.
+     *
+     * @param {number} x - X dimension of the grid of work-groups to dispatch.
+     * @param {number} [y] - Y dimension of the grid of work-groups to dispatch.
+     * @param {number} [z] - Z dimension of the grid of work-groups to dispatch.
+     */
     dispatch(x, y, z) {
         const device = this.compute.device;
 
@@ -36,12 +45,17 @@ class WebgpuCompute {
         const passEncoder = device.passEncoder;
         passEncoder.setPipeline(this.pipeline);
         passEncoder.dispatchWorkgroups(x, y, z);
+
+        this.compute.device.copyTextureToBufferCommands.push(...this.copyTextureToBufferCommands);
+        this.copyTextureToBufferCommands.length = 0;
     }
 
     /**
+     * Get a buffer that contains the data of the specified texture.
+     * This needs to be called before dispatch! But can be called before device.startComputePass().
      *
-     * @param {import('../texture.js').Texture} texture
-     * @returns {import('../buffer.js').Buffer}
+     * @param {import('../texture.js').Texture} texture - The texture to get the buffer for.
+     * @returns {import('../buffer.js').Buffer} The buffer.
      */
     getBuffer(texture) {
         // Calculate bytes per pixel, assuming RGBA8 format (4 bytes per pixel)
@@ -60,18 +74,18 @@ class WebgpuCompute {
 
         const textureCopyView = {
             texture: texture.impl.gpuTexture,
-            origin: { x: 0, y: 0 },
+            origin: { x: 0, y: 0 }
         };
         const bufferCopyView = {
             buffer: gpuBuffer,
-            bytesPerRow: bytesPerRow,
+            bytesPerRow: bytesPerRow
         };
         const extent = {
             width: texture.width,
-            height: texture.height,
+            height: texture.height
         };
 
-        this.compute.device.copyTextureToBufferCommands.push([textureCopyView, bufferCopyView, extent]);
+        this.copyTextureToBufferCommands.push([textureCopyView, bufferCopyView, extent]);
 
         const buffer = new Buffer();
         buffer.impl = new WebgpuBuffer();

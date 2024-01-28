@@ -668,6 +668,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // clear cached encoder state
         this.pipeline = null;
 
+        this.copyTextureToBufferCommands.length = 0;
+
         // TODO: add performance queries to compute passes
 
         // start the pass
@@ -683,11 +685,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.passEncoder.end();
         this.passEncoder = null;
 
+        // These commands can only be called outside of a compute pass.
         for (const [textureCopyView, bufferCopyView, extent] of this.copyTextureToBufferCommands) {
             this.commandEncoder.copyTextureToBuffer(textureCopyView, bufferCopyView, extent);
         }
-
-        this.copyTextureToBufferCommands.length = 0;
 
         // each render pass can use different number of bind groups
         this.bindGroupFormats.length = 0;
@@ -697,7 +698,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // DebugHelper.setLabel(cb, `${renderPass.name}-CommandBuffer`);
         DebugHelper.setLabel(cb, 'ComputePass-CommandBuffer');
 
-        //this.addCommandBuffer(cb);
+        // Don't this.addCommandBuffer(cb) as that means we'll have to
+        // wait for the render pass to finish before this is submitted
+        // which isn't required.
         this.wgpu.queue.submit([cb]);
 
         this.commandEncoder = null;
