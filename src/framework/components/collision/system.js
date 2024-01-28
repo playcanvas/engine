@@ -206,7 +206,8 @@ class CollisionSystemImpl {
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
-            render: src.data.render
+            render: src.data.render,
+            checkVertexDuplicates: src.data.checkVertexDuplicates
         };
 
         return this.system.addComponent(clone, data);
