@@ -23,9 +23,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -86,7 +84,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class KeyboardExample {
     static CATEGORY = 'Input';
-    static NAME = 'Keyboard';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

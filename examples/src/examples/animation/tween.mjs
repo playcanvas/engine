@@ -24,15 +24,10 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -175,7 +170,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class TweenExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Tween';
     static WEBGPU_ENABLED = true;
     static example = example;
     // added by examples/scripts/generate-standalone-files.mjs

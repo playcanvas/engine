@@ -99,8 +99,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -138,6 +136,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
+        this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
+        this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
@@ -151,6 +151,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
+        this.textureHalfFloatFilterable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.textureHalfFloatUpdatable = true;
@@ -206,7 +207,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         //      "depth32float-stencil8",
         //      "indirect-first-instance",
         //      "shader-f16",
-        //      "rg11b10ufloat-renderable",
         //      "bgra8unorm-storage",
 
         // request optional features
@@ -222,7 +222,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureS3TC = requireFeature('texture-compression-bc');
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
-        this.supportsTimestampQuery = requireFeature('timestamp-query');
+
+        // Do not request timestamp feature as it has changed and current form is not supported.
+        // See engine issue #5989
+        // this.supportsTimestampQuery = requireFeature('timestamp-query');
+
+        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         /** @type {GPUDeviceDescriptor} */
@@ -287,6 +292,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     postInit() {
         super.postInit();
+
+        this.initializeRenderState();
+        this.setupPassEncoderDefaults();
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
@@ -512,8 +520,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendColor(r, g, b, a) {
-        // TODO: this should use passEncoder.setBlendConstant(color)
-        // similar implementation to this.stencilRef
+        const c = this.blendColor;
+        if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
+            c.set(r, g, b, a);
+            this.passEncoder.setBlendConstant(c);
+        }
     }
 
     setCullMode(cullMode) {
@@ -531,7 +542,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Set up default values for the render pass encoder.
      */
     setupPassEncoderDefaults() {
+        this.pipeline = null;
         this.stencilRef = 0;
+        this.blendColor.set(0, 0, 0, 0);
     }
 
     _uploadDirtyTextures() {
@@ -576,9 +589,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
-
-        // clear cached encoder state
-        this.pipeline = null;
 
         const renderPassDesc = wrt.renderPassDescriptor;
 
@@ -728,12 +738,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
     }
 
     setViewport(x, y, w, h) {

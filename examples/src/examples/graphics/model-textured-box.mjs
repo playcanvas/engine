@@ -21,11 +21,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -113,7 +110,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ModelTexturedBoxExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Textured Box';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -618,6 +618,133 @@ export const PIXELFORMAT_ATC_RGBA = 30;
  */
 export const PIXELFORMAT_BGRA8 = 31;
 
+/**
+ * 8-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R8I = 32;
+
+/**
+ * 8-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R8U = 33;
+
+/**
+ * 16-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R16I = 34;
+
+/**
+ * 16-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R16U = 35;
+
+/**
+ * 32-bit signed integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R32I = 36;
+
+/**
+ * 32-bit unsigned integer single-channel (R) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_R32U = 37;
+
+/**
+ * 8-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG8I = 38;
+
+/**
+ * 8-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG8U = 39;
+
+/**
+ * 16-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG16I = 40;
+
+/**
+ * 16-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG16U = 41;
+
+/**
+ * 32-bit per-channel signed integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG32I = 42;
+
+/**
+ * 32-bit per-channel unsigned integer (RG) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RG32U = 43;
+
+/**
+ * 8-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA8I = 44;
+
+/**
+ * 8-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA8U = 45;
+
+/**
+ * 16-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA16I = 46;
+
+/**
+ * 16-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA16U = 47;
+
+/**
+ * 32-bit per-channel signed integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA32I = 48;
+
+/**
+ * 32-bit per-channel unsigned integer (RGBA) format (Not supported by WebGL1).
+ *
+ * @type {number}
+ */
+export const PIXELFORMAT_RGBA32U = 49;
+
+
 // map of engine PIXELFORMAT_*** enums to information about the format
 export const pixelFormatInfo = new Map([
 
@@ -655,12 +782,36 @@ export const pixelFormatInfo = new Map([
     [PIXELFORMAT_PVRTC_4BPP_RGBA_1, { name: 'PVRTC_4BPP_RGBA_1', blockSize: 8 }],
     [PIXELFORMAT_ASTC_4x4, { name: 'ASTC_4x4', blockSize: 16 }],
     [PIXELFORMAT_ATC_RGB, { name: 'ATC_RGB', blockSize: 8 }],
-    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }]
+    [PIXELFORMAT_ATC_RGBA, { name: 'ATC_RGBA', blockSize: 16 }],
+
+    // uncompressed integer formats (Not supported on WebGL1)
+    [PIXELFORMAT_R8I,      { name: 'R8I', size: 1, isInt: true }],
+    [PIXELFORMAT_R8U,      { name: 'R8U', size: 1, isInt: true }],
+    [PIXELFORMAT_R16I,     { name: 'R16I', size: 2, isInt: true }],
+    [PIXELFORMAT_R16U,     { name: 'R16U', size: 2, isInt: true }],
+    [PIXELFORMAT_R32I,     { name: 'R32I', size: 4, isInt: true }],
+    [PIXELFORMAT_R32U,     { name: 'R32U', size: 4, isInt: true }],
+    [PIXELFORMAT_RG8I,     { name: 'RG8I', size: 2, isInt: true }],
+    [PIXELFORMAT_RG8U,     { name: 'RG8U', size: 2, isInt: true }],
+    [PIXELFORMAT_RG16I,    { name: 'RG16I', size: 4, isInt: true }],
+    [PIXELFORMAT_RG16U,    { name: 'RG16U', size: 4, isInt: true }],
+    [PIXELFORMAT_RG32I,    { name: 'RG32I', size: 8, isInt: true }],
+    [PIXELFORMAT_RG32U,    { name: 'RG32U', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA8I,   { name: 'RGBA8I', size: 4, isInt: true }],
+    [PIXELFORMAT_RGBA8U,   { name: 'RGBA8U', size: 4, isInt: true }],
+    [PIXELFORMAT_RGBA16I,  { name: 'RGBA16I', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA16U,  { name: 'RGBA16U', size: 8, isInt: true }],
+    [PIXELFORMAT_RGBA32I,  { name: 'RGBA32I', size: 16, isInt: true }],
+    [PIXELFORMAT_RGBA32U,  { name: 'RGBA32U', size: 16, isInt: true }]
 ]);
 
 // update this function when exposing additional compressed pixel formats
 export const isCompressedPixelFormat = (format) => {
-    return pixelFormatInfo.get(format).blockSize !== undefined;
+    return pixelFormatInfo.get(format)?.blockSize !== undefined;
+};
+
+export const isIntegerPixelFormat = (format) => {
+    return pixelFormatInfo.get(format)?.isInt === true;
 };
 
 // get the pixel format array type
@@ -669,12 +820,31 @@ export const getPixelFormatArrayType = (format) => {
         case PIXELFORMAT_RGB32F:
         case PIXELFORMAT_RGBA32F:
             return Float32Array;
+        case PIXELFORMAT_R32I:
+        case PIXELFORMAT_RG32I:
+        case PIXELFORMAT_RGBA32I:
+            return Int32Array;
+        case PIXELFORMAT_R32U:
+        case PIXELFORMAT_RG32U:
+        case PIXELFORMAT_RGBA32U:
+            return Uint32Array;
+        case PIXELFORMAT_R16I:
+        case PIXELFORMAT_RG16I:
+        case PIXELFORMAT_RGBA16I:
+            return Int16Array;
+        case PIXELFORMAT_R16U:
+        case PIXELFORMAT_RG16U:
+        case PIXELFORMAT_RGBA16U:
         case PIXELFORMAT_RGB565:
         case PIXELFORMAT_RGBA5551:
         case PIXELFORMAT_RGBA4:
         case PIXELFORMAT_RGB16F:
         case PIXELFORMAT_RGBA16F:
             return Uint16Array;
+        case PIXELFORMAT_R8I:
+        case PIXELFORMAT_RG8I:
+        case PIXELFORMAT_RGBA8I:
+            return Int8Array;
         default:
             return Uint8Array;
     }
@@ -1070,6 +1240,8 @@ export const TEXTUREDIMENSION_3D = '3d';
 export const SAMPLETYPE_FLOAT = 0;
 export const SAMPLETYPE_UNFILTERABLE_FLOAT = 1;
 export const SAMPLETYPE_DEPTH = 2;
+export const SAMPLETYPE_INT = 3;
+export const SAMPLETYPE_UINT = 4;
 
 /**
  * Texture data is not stored a specific projection format.
@@ -1169,6 +1341,7 @@ export const TYPE_FLOAT32 = 6;
  */
 export const TYPE_FLOAT16 = 7;
 
+// Uniform types
 export const UNIFORMTYPE_BOOL = 0;
 export const UNIFORMTYPE_INT = 1;
 export const UNIFORMTYPE_FLOAT = 2;
@@ -1194,8 +1367,40 @@ export const UNIFORMTYPE_VEC2ARRAY = 21;
 export const UNIFORMTYPE_VEC3ARRAY = 22;
 export const UNIFORMTYPE_VEC4ARRAY = 23;
 export const UNIFORMTYPE_MAT4ARRAY = 24;
+export const UNIFORMTYPE_TEXTURE2D_ARRAY = 25;
+
+// Unsigned uniform types
+export const UNIFORMTYPE_UINT = 26;
+export const UNIFORMTYPE_UVEC2 = 27;
+export const UNIFORMTYPE_UVEC3 = 28;
+export const UNIFORMTYPE_UVEC4 = 29;
+
+// Integer uniform array types
+export const UNIFORMTYPE_INTARRAY = 30;
+export const UNIFORMTYPE_UINTARRAY = 31;
+export const UNIFORMTYPE_BOOLARRAY = 32;
+export const UNIFORMTYPE_IVEC2ARRAY = 33;
+export const UNIFORMTYPE_UVEC2ARRAY = 34;
+export const UNIFORMTYPE_BVEC2ARRAY = 35;
+export const UNIFORMTYPE_IVEC3ARRAY = 36;
+export const UNIFORMTYPE_UVEC3ARRAY = 37;
+export const UNIFORMTYPE_BVEC3ARRAY = 38;
+export const UNIFORMTYPE_IVEC4ARRAY = 39;
+export const UNIFORMTYPE_UVEC4ARRAY = 40;
+export const UNIFORMTYPE_BVEC4ARRAY = 41;
+
+// Integer texture types
+export const UNIFORMTYPE_ITEXTURE2D = 42;
+export const UNIFORMTYPE_UTEXTURE2D = 43;
+export const UNIFORMTYPE_ITEXTURECUBE = 44;
+export const UNIFORMTYPE_UTEXTURECUBE = 45;
+export const UNIFORMTYPE_ITEXTURE3D = 46;
+export const UNIFORMTYPE_UTEXTURE3D = 47;
+export const UNIFORMTYPE_ITEXTURE2D_ARRAY = 48;
+export const UNIFORMTYPE_UTEXTURE2D_ARRAY = 49;
 
 export const uniformTypeToName = [
+    // Uniforms
     'bool',
     'int',
     'float',
@@ -1205,9 +1410,9 @@ export const uniformTypeToName = [
     'ivec2',
     'ivec3',
     'ivec4',
-    'bec2',
-    'bec3',
-    'bec4',
+    'bvec2',
+    'bvec3',
+    'bvec4',
     'mat2',
     'mat3',
     'mat4',
@@ -1219,8 +1424,88 @@ export const uniformTypeToName = [
     'sampler3D',
     '', // not directly handled: UNIFORMTYPE_VEC2ARRAY
     '', // not directly handled: UNIFORMTYPE_VEC3ARRAY
-    '' // not directly handled: UNIFORMTYPE_VEC4ARRAY
+    '', // not directly handled: UNIFORMTYPE_VEC4ARRAY
+    '', // not directly handled: UNIFORMTYPE_MAT4ARRAY
+    'sampler2DArray',
+    'uint',
+    'uvec2',
+    'uvec3',
+    'uvec4',
+    '', // not directly handled: UNIFORMTYPE_INTARRAY
+    '', // not directly handled: UNIFORMTYPE_UINTARRAY
+    '', // not directly handled: UNIFORMTYPE_BOOLARRAY
+    '', // not directly handled: UNIFORMTYPE_IVEC2ARRAY
+    '', // not directly handled: UNIFORMTYPE_UVEC2ARRAY
+    '', // not directly handled: UNIFORMTYPE_BVEC2ARRAY
+    '', // not directly handled: UNIFORMTYPE_IVEC3ARRAY
+    '', // not directly handled: UNIFORMTYPE_UVEC3ARRAY
+    '', // not directly handled: UNIFORMTYPE_BVEC3ARRAY
+    '', // not directly handled: UNIFORMTYPE_IVEC4ARRAY
+    '', // not directly handled: UNIFORMTYPE_UVEC4ARRAY
+    '', // not directly handled: UNIFORMTYPE_BVEC4ARRAY
+    'isampler2D',
+    'usampler2D',
+    'isamplerCube',
+    'usamplerCube',
+    'isampler3D',
+    'usampler3D',
+    'isampler2DArray',
+    'usampler2DArray'
 ];
+
+// Map to convert uniform type to storage type, used in uniform-buffer.js
+export const uniformTypeToStorage = new Uint8Array([
+    TYPE_INT32,     // UNIFORMTYPE_BOOL
+    TYPE_INT32,     // UNIFORMTYPE_INT
+    TYPE_FLOAT32,   // UNIFORMTYPE_FLOAT
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4
+    TYPE_INT32,     // UNIFORMTYPE_IVEC2
+    TYPE_INT32,     // UNIFORMTYPE_IVEC3
+    TYPE_INT32,     // UNIFORMTYPE_IVEC4
+    TYPE_INT32,     // UNIFORMTYPE_BVEC2
+    TYPE_INT32,     // UNIFORMTYPE_BVEC3
+    TYPE_INT32,     // UNIFORMTYPE_BVEC4
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT2
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT3
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE
+    TYPE_FLOAT32,   // UNIFORMTYPE_FLOATARRAY
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_SHADOW
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURECUBE_SHADOW
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE3D
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC2ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC3ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_VEC4ARRAY
+    TYPE_FLOAT32,   // UNIFORMTYPE_MAT4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_TEXTURE2D_ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UINT
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC2
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC3
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC4
+    TYPE_INT32,     // UNIFORMTYPE_INTARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UINTARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BOOLARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC2ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC2ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC2ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC3ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC3ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC3ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_IVEC4ARRAY
+    TYPE_UINT32,    // UNIFORMTYPE_UVEC4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_BVEC4ARRAY
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE2D
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURECUBE
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURECUBE
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE3D
+    TYPE_UINT32,    // UNIFORMTYPE_UTEXTURE3D
+    TYPE_INT32,     // UNIFORMTYPE_ITEXTURE2D_ARRAY
+    TYPE_UINT32     // UNIFORMTYPE_UTEXTURE2D_ARRAY
+]);
 
 /**
  * A WebGL 1 device type.

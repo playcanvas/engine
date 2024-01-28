@@ -151,7 +151,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
- */    
+ */
 async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath }) {
 
     // set up and load draco module, as the glb we load is draco compressed
@@ -175,10 +175,7 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
-
-        // WebGPU does not currently support antialiased depth resolve, disable it till we implement a shader resolve solution
-        antialias: false
+        twgslUrl: twgslPath + 'twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -187,17 +184,11 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -433,7 +424,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class PostEffectsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Post Effects';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

@@ -31,11 +31,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -205,7 +202,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ShaderCompileExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shader Compile';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

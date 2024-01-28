@@ -120,7 +120,15 @@ const textureSemantics = [
     'emissiveMap'
 ];
 
+/**
+ * Implementation of the GLTF 2.0 format exporter.
+ *
+ * @category Exporter
+ */
 class GltfExporter extends CoreExporter {
+    /**
+     * @ignore
+     */
     collectResources(root) {
         const resources = {
             buffers: [],
@@ -328,7 +336,7 @@ class GltfExporter extends CoreExporter {
 
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
-            if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+            if (textureIndex < 0) console.warn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
                 index: textureIndex
             };
@@ -749,9 +757,10 @@ class GltfExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to GLB format.
      *
-     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
+     * the size.
      * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {

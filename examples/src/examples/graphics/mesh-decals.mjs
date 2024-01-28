@@ -7,7 +7,7 @@ import * as pc from 'playcanvas';
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
     const assets = {
-        'spark': new pc.Asset('spark', 'texture', { url: assetPath + 'textures/spark.png' })
+        heart: new pc.Asset('heart', 'texture', { url: assetPath + 'textures/heart.png' })
     };
 
     const gfxOptions = {
@@ -21,11 +21,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -56,8 +53,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         // create material for the plane
         const planeMaterial = new pc.StandardMaterial();
         planeMaterial.gloss = 0.6;
-        planeMaterial.metalness = 0.3;
+        planeMaterial.metalness = 0.5;
         planeMaterial.useMetalness = true;
+        planeMaterial.gloss = 0.6;
         planeMaterial.update();
 
         // create plane primitive
@@ -67,9 +65,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
             material: planeMaterial
         });
 
-        // set position and scale and add it to scene
+        // set scale and add it to scene
         primitive.setLocalScale(new pc.Vec3(20, 20, 20));
-        primitive.setLocalPosition(new pc.Vec3(0, -0.01, 0));
         app.root.addChild(primitive);
 
         // Create an Entity with a omni light component
@@ -77,6 +74,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         light.addComponent("light", {
             type: "omni",
             color: new pc.Color(0.2, 0.2, 0.2),
+            intensity: 2.5,
             range: 30,
             castShadows: true,
             shadowBias: 0.1,
@@ -93,10 +91,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
         // Add the camera to the hierarchy
         app.root.addChild(camera);
-
-        // Position the camera
-        camera.translate(0, 10, 20);
-        camera.lookAt(pc.Vec3.ZERO);
 
         // Create bouncing ball model and add it to hierarchy
         const ball = new pc.Entity();
@@ -214,9 +208,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         material.useLighting = false;      // turn off lighting - we use emissive texture only. Also, lighting needs normal maps which we don't generate
         material.diffuse = new pc.Color(0, 0, 0);
         material.emissiveVertexColor = true;
-        material.blendType = pc.BLEND_ADDITIVE;     // additive alpha blend
+        material.blendType = pc.BLEND_ADDITIVEALPHA;     // additive alpha blend
         material.depthWrite = false;        // optimization - no need to write to depth buffer, as decals are part of the ground plane
-        material.emissiveMap = assets.spark.resource;
+        material.emissiveMap = assets.heart.resource;
+        material.opacityMap = assets.heart.resource;
+        material.depthBias = -0.1;          // depth biases to avoid z-fighting with ground plane
+        material.slopeDepthBias = -0.1;
         material.update();
 
         // Create the mesh instance
@@ -272,6 +269,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
             // update mesh with the streams that were updated
             updateMesh(mesh, positionsUpdated, colorsUpdated);
+
+            // orbit camera around
+            camera.setLocalPosition(20 * Math.sin(time * 0.3), 10, 20 * Math.cos(time * 0.3));
+            camera.lookAt(pc.Vec3.ZERO);
         });
     });
     return app;
@@ -279,7 +280,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MeshDecalsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Decals';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -17,11 +17,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -74,7 +71,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 class HelloWorldExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Hello World';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

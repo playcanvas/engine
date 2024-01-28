@@ -35,15 +35,10 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.ParticleSystemComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -294,7 +289,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class RenderToTextureExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Render to Texture';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

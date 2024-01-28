@@ -6,9 +6,32 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files }) {
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, files }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+
+    // render to low resolution to make particles more visible on WebGPU, as it doesn't support point
+    // size and those are very small otherwise. This is not a proper solution, and only a temporary
+    // workaround specifically for this example use case.
+    if (device.isWebGPU) {
+        device.maxPixelRatio = 0.2;
+    }
+
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
     app.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -64,10 +87,9 @@ async function example({ canvas, files }) {
     mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 
     // Create the shader from the vertex and fragment shaders
-    const shader = new pc.Shader(app.graphicsDevice, {
-        attributes: { aPosition: pc.SEMANTIC_POSITION },
-        vshader: files['shader.vert'],
-        fshader: files['shader.frag']
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
+        aPosition: pc.SEMANTIC_POSITION,
+        aUv0: pc.SEMANTIC_TEXCOORD0
     });
 
     // Create a new material with the new shader and additive alpha blending
@@ -144,7 +166,6 @@ async function example({ canvas, files }) {
 
 export class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud Simulation';
     static FILES = {
         'shader.vert': /* glsl */`
 // Attributes per vertex: position
@@ -169,11 +190,14 @@ void main(void)
     vec4 vertexWorld = matrix_model * aPosition;
 
     // point sprite size depends on its distance to camera
-    float dist = 25.0 - length(vertexWorld.xyz - view_position);
-    gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
+    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+    #ifndef WEBGPU
+        float dist = 25.0 - length(vertexWorld.xyz - view_position);
+        gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
+    #endif
 
     // color depends on position of particle
-    outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1);
+    outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1.0);
 }`,
         'shader.frag': /* glsl */`
 precision mediump float;
@@ -184,10 +208,12 @@ void main(void)
     // color supplied by vertex shader
     gl_FragColor = outColor;
 
-    // make point round instead of square - make pixels outside of the circle black, using provided gl_PointCoord
-    vec2 dist = gl_PointCoord.xy - vec2(0.5, 0.5);
-    gl_FragColor.a = 1.0 - smoothstep(0.4, 0.5, sqrt(dot(dist, dist)));
-
+    // Using gl_PointCoord in WebGPU fails to compile with: "unknown SPIR-V builtin: 16"
+    #ifndef WEBGPU
+        // make point round instead of square - make pixels outside of the circle black, using provided gl_PointCoord
+        vec2 dist = gl_PointCoord.xy - vec2(0.5, 0.5);
+        gl_FragColor.a = 1.0 - smoothstep(0.4, 0.5, sqrt(dot(dist, dist)));
+    #endif
 }`
     };
 

@@ -199,50 +199,43 @@ class ShadowRendererDirectional {
         }
     }
 
-    addLightRenderPasses(frameGraph, light, camera) {
-
-        // shadow cascades have more faces rendered within a singe render pass
-        const faceCount = light.numShadowFaces;
-        const shadowUpdateOverrides = light.shadowUpdateOverrides;
-
-        // prepare render targets / cameras for rendering
-        let allCascadesRendering = true;
-        let shadowCamera;
-        for (let face = 0; face < faceCount; face++) {
-
-            if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
-                allCascadesRendering = false;
-
-            shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
-        }
-
-        const renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, allCascadesRendering);
-
-        // setup render pass using any of the cameras, they all have the same pass related properties
-        this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
-
-        frameGraph.addRenderPass(renderPass);
-    }
-
     /**
-     * Builds a frame graph for rendering of directional shadows for the render action.
+     * Create a render pass for directional light shadow rendering for a specified camera.
      *
-     * @param {import('../frame-graph.js').FrameGraph} frameGraph - The frame-graph that is built.
-     * @param {import('../light.js').Light[]} directionalLights - The
-     * directional lights.
-     * @param {import('../../framework/components/camera/component.js').CameraComponent} camera - The camera.
+     * @param {import('../light.js').Light} light - The directional light.
+     * @param {import('../camera.js').Camera} camera - The camera.
+     * @returns {RenderPassShadowDirectional|null} - The render pass if the shadow rendering is
+     * required, or null otherwise.
      */
-    buildFrameGraph(frameGraph, directionalLights, camera) {
+    getLightRenderPass(light, camera) {
 
-        // create required render passes per light
-        for (let i = 0; i < directionalLights.length; i++) {
-            const light = directionalLights[i];
-            Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
+        Debug.assert(light && light._type === LIGHTTYPE_DIRECTIONAL);
 
-            if (this.shadowRenderer.needsShadowRendering(light)) {
-                this.addLightRenderPasses(frameGraph, light, camera.camera);
+        let renderPass = null;
+        if (this.shadowRenderer.needsShadowRendering(light)) {
+
+            // shadow cascades have more faces rendered within a singe render pass
+            const faceCount = light.numShadowFaces;
+            const shadowUpdateOverrides = light.shadowUpdateOverrides;
+
+            // prepare render targets / cameras for rendering
+            let allCascadesRendering = true;
+            let shadowCamera;
+            for (let face = 0; face < faceCount; face++) {
+
+                if (shadowUpdateOverrides?.[face] === SHADOWUPDATE_NONE)
+                    allCascadesRendering = false;
+
+                shadowCamera = this.shadowRenderer.prepareFace(light, camera, face);
             }
+
+            renderPass = new RenderPassShadowDirectional(this.device, this.shadowRenderer, light, camera, allCascadesRendering);
+
+            // setup render pass using any of the cameras, they all have the same pass related properties
+            this.shadowRenderer.setupRenderPass(renderPass, shadowCamera, allCascadesRendering);
         }
+
+        return renderPass;
     }
 }
 

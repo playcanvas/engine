@@ -5,7 +5,7 @@ import { XrAnchor } from './xr-anchor.js';
 /**
  * Callback used by {@link XrAnchors#create}.
  *
- * @callback XrAnchorCreate
+ * @callback XrAnchorCreateCallback
  * @param {Error|null} err - The Error object if failed to create an anchor or null.
  * @param {XrAnchor|null} anchor - The anchor that is tracked against real world geometry.
  */
@@ -27,10 +27,79 @@ import { XrAnchor } from './xr-anchor.js';
  */
 class XrAnchors extends EventHandler {
     /**
+     * Fired when anchors become available.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('available', () => {
+     *     console.log('Anchors are available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when anchors become unavailable.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('unavailable', () => {
+     *     console.log('Anchors are unavailable');
+     * });
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Fired when an anchor failed to be created. The handler is passed an Error object.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * Fired when a new {@link XrAnchor} is added. The handler is passed the {@link XrAnchor} that
+     * was added.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('add', (anchor) => {
+     *     console.log('Anchor added');
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when an {@link XrAnchor} is destroyed. The handler is passed the {@link XrAnchor} that
+     * was destroyed.
+     *
+     * @event
+     * @example
+     * app.xr.anchors.on('destroy', (anchor) => {
+     *     console.log('Anchor destroyed');
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
+     * @type {import('./xr-manager.js').XrManager}
+     * @ignore
+     */
+    manager;
+
+    /**
      * @type {boolean}
      * @private
      */
     _supported = platform.browser && !!window.XRAnchor;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _available = false;
 
     /**
      * @type {boolean}
@@ -72,7 +141,7 @@ class XrAnchors extends EventHandler {
      * Map of callbacks to XRAnchors so that we can call its callback once
      * an anchor is updated with a pose for the first time.
      *
-     * @type {Map<XrAnchor,XrAnchorCreate>}
+     * @type {Map<XrAnchor, XrAnchorCreateCallback>}
      * @private
      */
     _callbacksAnchors = new Map();
@@ -87,41 +156,24 @@ class XrAnchors extends EventHandler {
         this.manager = manager;
 
         if (this._supported) {
+            this.manager.on('start', this._onSessionStart, this);
             this.manager.on('end', this._onSessionEnd, this);
         }
     }
 
-    /**
-     * Fired when anchor failed to be created.
-     *
-     * @event XrAnchors#error
-     * @param {Error} error - Error object related to a failure of anchors.
-     */
-
-    /**
-     * Fired when a new {@link XrAnchor} is added.
-     *
-     * @event XrAnchors#add
-     * @param {XrAnchor} anchor - Anchor that has been added.
-     * @example
-     * app.xr.anchors.on('add', function (anchor) {
-     *     // new anchor is added
-     * });
-     */
-
-    /**
-     * Fired when an {@link XrAnchor} is destroyed.
-     *
-     * @event XrAnchors#destroy
-     * @param {XrAnchor} anchor - Anchor that has been destroyed.
-     * @example
-     * app.xr.anchors.on('destroy', function (anchor) {
-     *     // anchor that is destroyed
-     * });
-     */
+    /** @private */
+    _onSessionStart() {
+        const available = this.manager.session.enabledFeatures.indexOf('anchors') !== -1;
+        if (!available) return;
+        this._available = available;
+        this.fire('available');
+    }
 
     /** @private */
     _onSessionEnd() {
+        if (!this._available) return;
+        this._available = false;
+
         // clear anchor creation queue
         for (let i = 0; i < this._creationQueue.length; i++) {
             if (!this._creationQueue[i].callback)
@@ -140,6 +192,8 @@ class XrAnchors extends EventHandler {
             this._list[i].destroy();
         }
         this._list.length = 0;
+
+        this.fire('unavailable');
     }
 
     /**
@@ -174,8 +228,8 @@ class XrAnchors extends EventHandler {
      * Create anchor with position, rotation and a callback.
      *
      * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor.
-     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreate} [rotation] - Rotation for an anchor.
-     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreateCallback} [rotation] - Rotation for an anchor.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
      * // create an anchor using a position and rotation
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
@@ -194,6 +248,11 @@ class XrAnchors extends EventHandler {
      * });
      */
     create(position, rotation, callback) {
+        if (!this._available) {
+            callback?.(new Error('Anchors API is not available'), null);
+            return;
+        }
+
         // eslint-disable-next-line no-undef
         if (window.XRHitTestResult && position instanceof XRHitTestResult) {
             const hitResult = position;
@@ -231,7 +290,7 @@ class XrAnchors extends EventHandler {
      * Restore anchor using persistent UUID.
      *
      * @param {string} uuid - UUID string associated with persistent anchor.
-     * @param {XrAnchorCreate} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
      * @example
      * // restore an anchor using uuid string
      * app.xr.anchors.restore(uuid, function (err, anchor) {
@@ -247,6 +306,11 @@ class XrAnchors extends EventHandler {
      * }
      */
     restore(uuid, callback) {
+        if (!this._available) {
+            callback?.(new Error('Anchors API is not available'), null);
+            return;
+        }
+
         if (!this._persistence) {
             callback?.(new Error('Anchor Persistence is not supported'), null);
             return;
@@ -283,6 +347,11 @@ class XrAnchors extends EventHandler {
      * }
      */
     forget(uuid, callback) {
+        if (!this._available) {
+            callback?.(new Error('Anchors API is not available'));
+            return;
+        }
+
         if (!this._persistence) {
             callback?.(new Error('Anchor Persistence is not supported'));
             return;
@@ -308,6 +377,9 @@ class XrAnchors extends EventHandler {
      * @ignore
      */
     update(frame) {
+        if (!this._available)
+            return;
+
         // check if need to create anchors
         if (this._creationQueue.length) {
             for (let i = 0; i < this._creationQueue.length; i++) {
@@ -379,6 +451,15 @@ class XrAnchors extends EventHandler {
     }
 
     /**
+     * True if Anchors are available. This information is available only when session has started.
+     *
+     * @type {boolean}
+     */
+    get available() {
+        return this._available;
+    }
+
+    /**
      * True if Anchors support persistence.
      *
      * @type {boolean}
@@ -393,6 +474,9 @@ class XrAnchors extends EventHandler {
      * @type {null|string[]}
      */
     get uuids() {
+        if (!this._available)
+            return null;
+
         if (!this._persistence)
             return null;
 

@@ -5,12 +5,36 @@ import * as pc from 'playcanvas';
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath, scriptsPath }) {
-    // Create the app and start the update loop
-    const app = new pc.Application(canvas, {
-        mouse: new pc.Mouse(document.body),
-        touch: new pc.TouchDevice(document.body)
-    });
+async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, scriptsPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+    createOptions.mouse = new pc.Mouse(document.body);
+    createOptions.touch = new pc.TouchDevice(document.body);
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ScriptComponentSystem
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+        // @ts-ignore
+        pc.ContainerHandler,
+        // @ts-ignore
+        pc.ScriptHandler
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assets = {
         statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
@@ -75,7 +99,7 @@ async function example({ canvas, assetPath, scriptsPath }) {
 
 class OrbitExample {
     static CATEGORY = 'Camera';
-    static NAME = 'Orbit';
+    static WEBGPU_ENABLED = true;
     static example = example;
 }
 

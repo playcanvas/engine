@@ -20,11 +20,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     createOptions.lightmapper = pc.Lightmapper;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
 
@@ -154,7 +151,5 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class LightsBakedExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights Baked';
     static example = example;
-    static WEBGPU_ENABLED = false; // house is black
 }

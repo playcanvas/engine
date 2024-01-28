@@ -66,19 +66,12 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -421,7 +414,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 }
 class LocomotionExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Locomotion';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

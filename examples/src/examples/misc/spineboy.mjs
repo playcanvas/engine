@@ -24,9 +24,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -107,7 +105,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class SpineboyExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Spineboy';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

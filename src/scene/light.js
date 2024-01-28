@@ -14,6 +14,7 @@ import {
     LIGHTSHAPE_PUNCTUAL, LIGHTFALLOFF_LINEAR
 } from './constants.js';
 import { ShadowRenderer } from './renderer/shadow-renderer.js';
+import { DepthState } from '../platform/graphics/depth-state.js';
 
 const tmpVec = new Vec3();
 const tmpBiases = {
@@ -125,8 +126,23 @@ class Light {
      */
     layers = new Set();
 
-    constructor(graphicsDevice) {
+    /**
+     * True if the clustered lighting is enabled.
+     *
+     * @type {boolean}
+     */
+    clusteredLighting;
+
+    /**
+     * The depth state used when rendering the shadow map.
+     *
+     * @type {DepthState}
+     */
+    shadowDepthState = DepthState.DEFAULT.clone();
+
+    constructor(graphicsDevice, clusteredLighting) {
         this.device = graphicsDevice;
+        this.clusteredLighting = clusteredLighting;
         this.id = id++;
 
         // Light properties (defaults)
@@ -197,7 +213,7 @@ class Light {
         // Shadow mapping properties
         this.shadowDistance = 40;
         this._shadowResolution = 1024;
-        this.shadowBias = -0.0005;
+        this._shadowBias = -0.0005;
         this.shadowIntensity = 1.0;
         this._normalOffsetBias = 0.0;
         this.shadowUpdateMode = SHADOWUPDATE_REALTIME;
@@ -227,6 +243,8 @@ class Light {
         // maximum size of the light bounding sphere on the screen by any camera within a frame
         // (used to estimate shadow resolution), range [0..1]
         this.maxScreenSize = 0;
+
+        this._updateShadowBias();
     }
 
     destroy() {
@@ -253,6 +271,17 @@ class Light {
 
     removeLayer(layer) {
         this.layers.delete(layer);
+    }
+
+    set shadowBias(value) {
+        if (this._shadowBias !== value) {
+            this._shadowBias = value;
+            this._updateShadowBias();
+        }
+    }
+
+    get shadowBias() {
+        return this._shadowBias;
     }
 
     set numCascades(value) {
@@ -309,6 +338,7 @@ class Light {
 
         this._type = value;
         this._destroyShadowMap();
+        this._updateShadowBias();
         this.updateKey();
 
         const stype = this._shadowType;
@@ -691,7 +721,7 @@ class Light {
      * @returns {Light} A cloned Light.
      */
     clone() {
-        const clone = new Light(this.device);
+        const clone = new Light(this.device, this.clusteredLighting);
 
         // Clone Light properties
         clone.type = this._type;
@@ -730,6 +760,7 @@ class Light {
         clone.shape = this._shape;
 
         // Shadow properties
+        clone.shadowDepthState.copy(this.shadowDepthState);
         clone.shadowBias = this.shadowBias;
         clone.normalOffsetBias = this._normalOffsetBias;
         clone.shadowResolution = this._shadowResolution;
@@ -856,6 +887,20 @@ class Light {
         } else if (this._type === LIGHTTYPE_OMNI) {
             box.center.copy(this._node.getPosition());
             box.halfExtents.set(this.attenuationEnd, this.attenuationEnd, this.attenuationEnd);
+        }
+    }
+
+    _updateShadowBias() {
+        const device = this.device;
+        if (device.isWebGL2 || device.isWebGPU) {
+            if (this._type === LIGHTTYPE_OMNI && !this.clusteredLighting) {
+                this.shadowDepthState.depthBias = 0;
+                this.shadowDepthState.depthBiasSlope = 0;
+            } else {
+                const bias = this.shadowBias * -1000.0;
+                this.shadowDepthState.depthBias = bias;
+                this.shadowDepthState.depthBiasSlope = bias;
+            }
         }
     }
 

@@ -17,11 +17,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
 
@@ -125,7 +122,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class LayersExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Layers';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

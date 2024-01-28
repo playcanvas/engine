@@ -21,11 +21,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.ModelComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -99,7 +96,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ModelAssetExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Asset';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

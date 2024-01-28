@@ -46,13 +46,9 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -205,7 +201,6 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
 
 export class GroundFogExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Ground Fog';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

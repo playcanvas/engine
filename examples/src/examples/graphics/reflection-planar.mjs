@@ -24,11 +24,8 @@ async function example({ canvas, deviceType, files, scriptsPath, assetPath, glsl
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -205,7 +202,6 @@ async function example({ canvas, deviceType, files, scriptsPath, assetPath, glsl
 
 export class ReflectionPlanarExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Reflection Planar';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

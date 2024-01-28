@@ -39,13 +39,9 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -299,8 +295,8 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
 
 class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Component Properties';
     static WEBGPU_ENABLED = true;
+    static DESCRIPTION = 'This example demonstrates how to use the Anim Component to animate the properties of other Components.';
     static controls = controls;
     static example = example;
 }

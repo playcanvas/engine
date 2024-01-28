@@ -25,11 +25,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -114,7 +111,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class MeshMorphManyExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Mesh Morph Many';
     static example = example;
     static WEBGPU_ENABLED = false; // doesn't morph anything
 }

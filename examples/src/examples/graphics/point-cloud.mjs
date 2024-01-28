@@ -6,9 +6,30 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files, assetPath }) {
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, files, assetPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+        // @ts-ignore
+        pc.ContainerHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assets = {
         statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
@@ -44,14 +65,10 @@ async function example({ canvas, files, assetPath }) {
         app.root.addChild(entity);
 
         // Create the shader definition and shader from the vertex and fragment shaders
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION
-            },
-            vshader: files['shader.vert'],
-            fshader: files['shader.frag']
-        };
-        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+        const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        });
 
         // Create a new material with the new shader
         const material = new pc.Material();
@@ -88,7 +105,6 @@ async function example({ canvas, files, assetPath }) {
 
 export class PointCloudExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Point Cloud';
     static FILES = {
         'shader.vert': /* glsl */`
 // Attributes per vertex: position
@@ -96,7 +112,6 @@ attribute vec4 aPosition;
 
 uniform mat4   matrix_viewProjection;
 uniform mat4   matrix_model;
-uniform mat4   matrix_view;
 
 // time
 uniform float uTime;
@@ -107,7 +122,6 @@ varying vec4 outColor;
 void main(void)
 {
     // Transform the geometry
-    mat4 modelView = matrix_view * matrix_model;
     mat4 modelViewProj = matrix_viewProjection * matrix_model;
     gl_Position = modelViewProj * aPosition;
 
@@ -121,7 +135,10 @@ void main(void)
     intensity = smoothstep(0.9, 1.0, intensity);
 
     // point size depends on intensity
-    gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
+    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+    #ifndef WEBGPU
+        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
+    #endif
 
     // color mixes red and yellow based on intensity
     outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);

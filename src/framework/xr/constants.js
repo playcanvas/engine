@@ -101,6 +101,27 @@ export const XRTARGETRAY_SCREEN = 'screen';
 export const XRTARGETRAY_POINTER = 'tracked-pointer';
 
 /**
+ * None - view associated with a monoscopic screen, such as mobile phone screens.
+ *
+ * @type {string}
+ */
+export const XREYE_NONE = 'none';
+
+/**
+ * Left - view associated with left eye.
+ *
+ * @type {string}
+ */
+export const XREYE_LEFT = 'left';
+
+/**
+ * Right - view associated with right eye.
+ *
+ * @type {string}
+ */
+export const XREYE_RIGHT = 'right';
+
+/**
  * None - input source is not meant to be held in hands.
  *
  * @type {string}

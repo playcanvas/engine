@@ -24,11 +24,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -257,7 +254,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class AreaPickerExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Area Picker';
     static example = example;
     static WEBGPU_ENABLED = false; // device.updateBegin() is not a function
 }

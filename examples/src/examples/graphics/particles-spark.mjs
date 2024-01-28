@@ -20,13 +20,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ParticleSystemComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -143,7 +139,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ParticlesSparkExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Particles: Spark';
     static example = example;
     static WEBGPU_ENABLED = false; // no particles visible
 }

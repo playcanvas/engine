@@ -24,23 +24,14 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ButtonComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem,
-        // @ts-ignore
         pc.LayoutGroupComponentSystem,
-        // @ts-ignore
         pc.ScrollViewComponentSystem,
-        // @ts-ignore
         pc.ScrollbarComponentSystem,
-        // @ts-ignore
         pc.LayoutChildComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -189,7 +180,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class TextEmojisExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text Emojis';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

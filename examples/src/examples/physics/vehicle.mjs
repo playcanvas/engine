@@ -34,17 +34,11 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, g
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.ModelComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -237,7 +231,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, g
 
 class VehicleExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Vehicle';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

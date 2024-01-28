@@ -28,6 +28,17 @@ const _enableList = [];
  */
 class Entity extends GraphNode {
     /**
+     * Fired after the entity is destroyed.
+     *
+     * @event
+     * @example
+     * entity.on('destroy', (e) => {
+     *     console.log(`Entity ${e.name} has been destroyed`);
+     * });
+     */
+    static EVENT_DESTROY = 'destroy';
+
+    /**
      * Gets the {@link AnimComponent} attached to this entity.
      *
      * @type {import('./components/anim/component.js').AnimComponent|undefined}
@@ -82,6 +93,14 @@ class Entity extends GraphNode {
      * @readonly
      */
     element;
+
+    /**
+     * Gets the {@link GSplatComponent} attached to this entity.
+     *
+     * @type {import('./components/gsplat/component.js').GSplatComponent|undefined}
+     * @readonly
+     */
+    gsplat;
 
     /**
      * Gets the {@link LayoutChildComponent} attached to this entity.
@@ -277,6 +296,7 @@ class Entity extends GraphNode {
      * - "camera" - see {@link CameraComponent}
      * - "collision" - see {@link CollisionComponent}
      * - "element" - see {@link ElementComponent}
+     * - "gsplat" - see {@link GSplatComponent}
      * - "layoutchild" - see {@link LayoutChildComponent}
      * - "layoutgroup" - see {@link LayoutGroupComponent}
      * - "light" - see {@link LightComponent}
@@ -377,6 +397,36 @@ class Entity extends GraphNode {
         return entities.map(function (entity) {
             return entity.c[type];
         });
+    }
+
+    /**
+     * Search the entity and all of its descendants for the first script instance of specified type.
+     *
+     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {import('./script/script-type.js').ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
+     * has one. Returns undefined otherwise.
+     * @example
+     * // Get the first found "playerController" instance in the hierarchy tree that starts with this entity
+     * var controller = entity.findScript("playerController");
+     */
+    findScript(nameOrType) {
+        const entity = this.findOne(node => node.c?.script?.has(nameOrType));
+        return entity?.c.script.get(nameOrType);
+    }
+
+    /**
+     * Search the entity and all of its descendants for all script instances of specified type.
+     *
+     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @returns {import('./script/script-type.js').ScriptType[]} All script instances of specified type in the entity or any of its
+     * descendants. Returns empty array if none found.
+     * @example
+     * // Get all "playerController" instances in the hierarchy tree that starts with this entity
+     * var controllers = entity.findScripts("playerController");
+     */
+    findScripts(nameOrType) {
+        const entities = this.find(node => node.c?.script?.has(nameOrType));
+        return entities.map(entity => entity.c.script.get(nameOrType));
     }
 
     /**
@@ -646,16 +696,5 @@ function resolveDuplicatedEntityReferenceProperties(oldSubtreeRoot, oldEntity, n
         }
     }
 }
-
-/**
- * Fired after the entity is destroyed.
- *
- * @event Entity#destroy
- * @param {Entity} entity - The entity that was destroyed.
- * @example
- * entity.on("destroy", function (e) {
- *     console.log('entity ' + e.name + ' has been destroyed');
- * });
- */
 
 export { Entity };

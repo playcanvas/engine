@@ -21,13 +21,9 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -188,7 +184,6 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
 
 export class ModelOutlineExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Outline';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

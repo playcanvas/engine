@@ -24,13 +24,9 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -246,7 +242,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Lighting';
     static ENGINE = 'PERFORMANCE';
     static WEBGPU_ENABLED = true;
     static example = example;

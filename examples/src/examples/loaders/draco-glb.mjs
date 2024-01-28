@@ -23,11 +23,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -97,7 +94,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class DracoGlbExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'Draco GLB';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -27,9 +27,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -180,7 +178,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class GrabPassExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Grab Pass';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

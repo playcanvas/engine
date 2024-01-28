@@ -3,34 +3,6 @@ import { loadES5 } from '../../loadES5.mjs';
 // todo simply import "@loaders.gl/core";
 // https://loaders.gl/docs/developer-guide/get-started
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
-const vshader = /* glsl */`
-// Attributes per vertex: position
-attribute vec4 aPosition;
-attribute vec4 aColor;
-
-uniform mat4   matrix_viewProjection;
-uniform mat4   matrix_model;
-
-// Color to fragment program
-varying vec4 outColor;
-
-void main(void)
-{
-    mat4 modelViewProj = matrix_viewProjection * matrix_model;
-    gl_Position = modelViewProj * aPosition;
-
-    gl_PointSize = 1.5;
-    outColor = aColor;
-}`;
-const fshader = /* glsl */`
-precision lowp float;
-varying vec4 outColor;
-
-void main(void)
-{
-    // just output color supplied by vertex shader
-    gl_FragColor = outColor;
-}`;
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
@@ -57,11 +29,8 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -86,7 +55,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     });
 
     /**
-     * @param {string} url 
+     * @param {string} url - The url to load.
      */
     async function loadModel(url) {
         console.log("loader.gl example url", url);
@@ -112,16 +81,10 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         mesh.setColors32(colors32);
         mesh.update(pc.PRIMITIVE_POINTS);
 
-        // Create shader to render mesh as circular points with color
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION,
-                aColor: pc.SEMANTIC_COLOR
-            },
-            vshader: files['shader.vert'],
-            fshader: files['shader.frag'],
-        };
-        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+        const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], "MyShader", {
+            aPosition: pc.SEMANTIC_POSITION,
+            aColor: pc.SEMANTIC_COLOR
+        });
 
         // create material using the shader
         const material = new pc.Material();
@@ -164,12 +127,41 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 class LoadersGlExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'Loaders.gl';
     static FILES = {
-        'shader.vert': vshader,
-        'shader.frag': fshader,
+        'shader.vert': `
+            // Attributes per vertex: position
+            attribute vec4 aPosition;
+            attribute vec4 aColor;
+            
+            uniform mat4   matrix_viewProjection;
+            uniform mat4   matrix_model;
+            
+            // Color to fragment program
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                mat4 modelViewProj = matrix_viewProjection * matrix_model;
+                gl_Position = modelViewProj * aPosition;
+            
+                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+                #ifndef WEBGPU
+                    gl_PointSize = 1.5;
+                #endif
+            
+                outColor = aColor;
+            }`,
+
+        'shader.frag': `
+            precision lowp float;
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                // just output color supplied by vertex shader
+                gl_FragColor = outColor;
+            }`
     };
-    static WEBGPU_ENABLED = false;
     static example = example;
     static imports = [ loadES5 ];
 }

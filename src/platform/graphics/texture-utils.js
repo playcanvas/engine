@@ -22,6 +22,18 @@ class TextureUtils {
     }
 
     /**
+     * Calculate the number of mip levels for a texture with the specified dimensions.
+     *
+     * @param {number} width - Texture's width.
+     * @param {number} height - Texture's height.
+     * @param {number} [depth] - Texture's depth. Defaults to 1.
+     * @returns {number} The number of mip levels required for the texture.
+     */
+    static calcMipLevelsCount(width, height, depth = 1) {
+        return 1 + Math.floor(Math.log2(Math.max(width, height, depth)));
+    }
+
+    /**
      * Calculate the size in bytes of the texture level given its format and dimensions.
      *
      * @param {number} width - Texture's width.

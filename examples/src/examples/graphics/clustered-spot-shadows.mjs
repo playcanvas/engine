@@ -106,7 +106,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 /**
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
- */    
+ */
 async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
     const observer = data;
     const assets = {
@@ -130,13 +130,9 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
@@ -464,7 +460,6 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
 
 export class ClusteredSpotShadowsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Clustered Spot Shadows';
     static ENGINE = 'DEBUG';
     static WEBGPU_ENABLED = true;
     static controls = controls;

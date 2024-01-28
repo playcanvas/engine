@@ -598,10 +598,6 @@ export const SHADERDEF_MORPH_NORMAL = 2048;
 export const SHADERDEF_MORPH_TEXTURE_BASED = 4096;
 export const SHADERDEF_LMAMBIENT = 8192; // lightmaps contain ambient
 
-export const LINEBATCH_WORLD = 0;
-export const LINEBATCH_OVERLAY = 1;
-export const LINEBATCH_GIZMO = 2;
-
 /**
  * The shadow map is not to be updated.
  *
@@ -868,3 +864,47 @@ export const ORIENTATION_HORIZONTAL = 0;
  * @type {number}
  */
 export const ORIENTATION_VERTICAL = 1;
+
+/**
+ * A sky texture is rendered using an infinite projection.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_INFINITE = 'infinite';
+
+/**
+ * A sky texture is rendered using a box projection. This is generally suitable for interior
+ * environments.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_BOX = 'box';
+
+/**
+ *  A sky texture is rendered using a dome projection. This is generally suitable for exterior
+ * environments.
+ *
+ * @type {string}
+ */
+export const SKYTYPE_DOME = 'dome';
+
+/**
+ * Opacity dithering is disabled.
+ *
+ * @type {string}
+ */
+export const DITHER_NONE = 'none';
+
+/**
+ * Opacity is dithered using a Bayer 8 matrix.
+ *
+ * @type {string}
+ */
+export const DITHER_BAYER8 = 'bayer8';
+
+/**
+ * Opacity is dithered using a blue noise texture.
+ *
+ * @type {string}
+ */
+export const DITHER_BLUENOISE = 'bluenoise';

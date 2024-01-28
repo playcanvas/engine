@@ -1,3 +1,4 @@
+import { math } from '../core/math/math.js';
 import { Vec2 } from '../core/math/vec2.js';
 import { Vec3 } from '../core/math/vec3.js';
 
@@ -28,6 +29,7 @@ const shapePrimitives = [];
  *     uvs: uvs,
  *     indices: indices
  * });
+ * @category Graphics
  */
 function calculateNormals(positions, indices) {
     const triangleCount = indices.length / 3;
@@ -102,6 +104,7 @@ function calculateNormals(positions, indices) {
  *     uvs: uvs,
  *     indices: indices
  * });
+ * @category Graphics
  */
 function calculateTangents(positions, normals, uvs, indices) {
     // Lengyel's Method
@@ -237,6 +240,7 @@ function calculateTangents(positions, normals, uvs, indices) {
  *     uvs: [0, 0, 1, 0, 0, 1],
  *     indices: [0, 1, 2]
  * });
+ * @category Graphics
  */
 function createMesh(device, positions, opts) {
 
@@ -298,17 +302,21 @@ function createMesh(device, positions, opts) {
  * (defaults to 0.2).
  * @param {number} [opts.ringRadius] - The radius from the centre of the torus to the centre of the
  * tube (defaults to 0.3).
+ * @param {number} [opts.sectorAngle] - The sector angle in degrees of the ring of the torus
+ * (defaults to 2 * Math.PI).
  * @param {number} [opts.segments] - The number of radial divisions forming cross-sections of the
  * torus ring (defaults to 20).
  * @param {number} [opts.sides] - The number of divisions around the tubular body of the torus ring
  * (defaults to 30).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new torus-shaped mesh.
+ * @category Graphics
  */
 function createTorus(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
     const rc = opts.tubeRadius ?? 0.2;
     const rt = opts.ringRadius ?? 0.3;
+    const sectorAngle = (opts.sectorAngle ?? 360) * math.DEG_TO_RAD;
     const segments = opts.segments ?? 30;
     const sides = opts.sides ?? 20;
     const calcTangents = opts.calculateTangents ?? false;
@@ -321,13 +329,13 @@ function createTorus(device, opts = {}) {
 
     for (let i = 0; i <= sides; i++) {
         for (let j = 0; j <= segments; j++) {
-            const x = Math.cos(2 * Math.PI * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const x = Math.cos(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
             const y = Math.sin(2 * Math.PI * i / sides) * rc;
-            const z = Math.sin(2 * Math.PI * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
+            const z = Math.sin(sectorAngle * j / segments) * (rt + rc * Math.cos(2 * Math.PI * i / sides));
 
-            const nx = Math.cos(2 * Math.PI * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nx = Math.cos(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
             const ny = Math.sin(2 * Math.PI * i / sides);
-            const nz = Math.sin(2 * Math.PI * j / segments) * Math.cos(2 * Math.PI * i / sides);
+            const nz = Math.sin(sectorAngle * j / segments) * Math.cos(2 * Math.PI * i / sides);
 
             const u = i / sides;
             const v = 1 - j / segments;
@@ -601,6 +609,7 @@ function _createConeData(baseRadius, peakRadius, height, heightSegments, capSegm
  * cylinder (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
+ * @category Graphics
  */
 function createCylinder(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -643,6 +652,7 @@ function createCylinder(device, opts = {}) {
  * (defaults to 20).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cylinder-shaped mesh.
+ * @category Graphics
  */
 function createCapsule(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -684,6 +694,7 @@ function createCapsule(device, opts = {}) {
  * (defaults to 18).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new cone-shaped mesh.
+ * @category Graphics
  */
 function createCone(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -723,6 +734,7 @@ function createCone(device, opts = {}) {
  * the sphere (defaults to 16).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new sphere-shaped mesh.
+ * @category Graphics
  */
 function createSphere(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -806,6 +818,7 @@ function createSphere(device, opts = {}) {
  * (defaults to 5).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
  * @returns {Mesh} A new plane-shaped mesh.
+ * @category Graphics
  */
 function createPlane(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -888,7 +901,10 @@ function createPlane(device, opts = {}) {
  * @param {number} [opts.heightSegments] - The number of divisions along the Y axis of the box
  * (defaults to 1).
  * @param {boolean} [opts.calculateTangents] - Generate tangent information (defaults to false).
+ * @param {number} [opts.yOffset] - Move the box vertically by given offset in local space. Pass
+ * 0.5 to generate the box with pivot point at the bottom face. Defaults to 0.
  * @returns {Mesh} A new box-shaped mesh.
+ * @category Graphics
  */
 function createBox(device, opts = {}) {
     // Check the supplied options and provide defaults for unspecified ones
@@ -898,15 +914,19 @@ function createBox(device, opts = {}) {
     const hs = opts.heightSegments ?? 1;
     const calcTangents = opts.calculateTangents ?? false;
 
+    const yOffset = opts.yOffset ?? 0;
+    const minY = -he.y + yOffset;
+    const maxY = he.y + yOffset;
+
     const corners = [
-        new Vec3(-he.x, -he.y, he.z),
-        new Vec3(he.x, -he.y, he.z),
-        new Vec3(he.x, he.y, he.z),
-        new Vec3(-he.x, he.y, he.z),
-        new Vec3(he.x, -he.y, -he.z),
-        new Vec3(-he.x, -he.y, -he.z),
-        new Vec3(-he.x, he.y, -he.z),
-        new Vec3(he.x, he.y, -he.z)
+        new Vec3(-he.x, minY, he.z),
+        new Vec3(he.x, minY, he.z),
+        new Vec3(he.x, maxY, he.z),
+        new Vec3(-he.x, maxY, he.z),
+        new Vec3(he.x, minY, -he.z),
+        new Vec3(-he.x, minY, -he.z),
+        new Vec3(-he.x, maxY, -he.z),
+        new Vec3(he.x, maxY, -he.z)
     ];
 
     const faceAxes = [

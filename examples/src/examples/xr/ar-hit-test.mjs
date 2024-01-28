@@ -57,11 +57,16 @@ async function example({ canvas }) {
     l.translate(0, 10, 0);
     app.root.addChild(l);
 
+    const material = new pc.StandardMaterial();
+    material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+
     const target = new pc.Entity();
     target.addComponent("render", {
-        type: "cylinder"
+        type: "cylinder",
+        material: material
     });
     target.setLocalScale(0.1, 0.01, 0.1);
+    target.render.meshInstances[0].setParameter('material_diffuse', [ Math.random(), Math.random(), Math.random() ]);
     app.root.addChild(target);
 
     if (app.xr.supported) {
@@ -149,9 +154,11 @@ async function example({ canvas }) {
 
                         let target = new pc.Entity();
                         target.addComponent("render", {
-                            type: "cylinder"
+                            type: "cylinder",
+                            material: material
                         });
                         target.setLocalScale(0.1, 0.01, 0.1);
+                        target.render.meshInstances[0].setParameter('material_diffuse', [ Math.random(), Math.random(), Math.random() ]);
                         app.root.addChild(target);
 
                         hitTestSource.on('result', (position, rotation) => {
@@ -183,7 +190,6 @@ async function example({ canvas }) {
 
 class ArHitTestExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Hit Test';
     static example = example;
 }
 
