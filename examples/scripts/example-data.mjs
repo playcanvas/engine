@@ -7,6 +7,7 @@ import { toKebabCase } from '../src/app/helpers/strings.mjs';
  * It would be possible to *not* pregenerate example-data.js, but then we would include all
  * examples only to generate the list in the UI... which would be a waste.
  */
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const exampleData = {};
@@ -15,7 +16,9 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
 }
 for (const category_ in realExamples) {
     const category = toKebabCase(category_);
+    // @ts-ignore
     exampleData[category] = {};
+    // @ts-ignore
     const examples = realExamples[category_];
     for (const exampleName_ in examples) {
         const release = process.env.NODE_ENV !== 'development';
@@ -25,8 +28,11 @@ for (const category_ in realExamples) {
         }
         const example = toKebabCase(exampleName_).replace('-example', '');
         // turn: turn into simple array...
+        // @ts-ignore
         exampleData[category][example] = {};
+        // @ts-ignore
         exampleData[category][example].nameSlug = example;
+        // @ts-ignore
         exampleData[category][example].categorySlug = category;
     }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import puppeteer from 'puppeteer';
 import sharp from 'sharp';
@@ -6,27 +7,32 @@ import { fileURLToPath } from 'url';
 import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
 import * as categories from "../src/examples/index.mjs";
 import { spawn } from 'node:child_process';
+
 const port = process.env.PORT || '12321';
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
 const debug = false;
+
 /** @type {{category: string, example: string}[]} */
 const exampleList = [];
 for (const category_ in categories) {
     const category = toKebabCase(category_);
+    // @ts-ignore
     const examples = categories[category_];
     for (const example_ in examples) {
         const example = toKebabCase(example_).replace('-example', '');
         exampleList.push({
             category,
-            example,
+            example
         });
     }
 }
 if (!fs.existsSync(`${MAIN_DIR}/dist/thumbnails`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/thumbnails`);
 }
+
 async function takeScreenshots() {
     for (let i = 0; i < exampleList.length; i++) {
         const exampleListItem = exampleList[i];
@@ -43,10 +49,8 @@ async function takeScreenshots() {
         if (debug) {
             page.on('console', message => console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`));
             page.on('pageerror', ({ message }) => console.log(message));
-            // page.on('response', response => console.log(`${response.status()} ${response.url()}`));
-            page.on('requestfailed', request => console.log(`${request.failure().errorText} ${request.url()}`));
+            page.on('requestfailed', request => console.log(`${request.failure()?.errorText} ${request.url()}`));
         }
-        // const link = `http://localhost/playcanvas-engine/examples/dist/iframe/${category}_${example}.html?miniStats=false`;
         const link = `http://localhost:${port}/iframe/${category}_${example}.html?miniStats=false`;
         if (debug) {
             console.log("goto", link);
@@ -68,11 +72,17 @@ async function takeScreenshots() {
         await browser.close();
     }
 }
-async function sleep(ms) {
-    return new Promise(resolve => {
+
+/**
+ * @param {number} ms - Milliseconds.
+ * @returns {Promise<void>} - Sleep promise.
+ */
+function sleep(ms = 0) {
+    return new Promise((resolve) => {
         setTimeout(resolve, ms);
     });
 }
+
 async function main() {
     console.log('Spawn server on', port);
     // We need this kind of command:
@@ -90,5 +100,6 @@ async function main() {
     }
     console.log('Kill server on', port);
     server.kill();
+    return 0;
 }
-main();
+main().then(process.exit);
