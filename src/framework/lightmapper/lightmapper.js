@@ -32,7 +32,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
     MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
-    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
+    SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME, SHADER_FORWARDHDR
 } from '../../scene/constants.js';
 import { Camera } from '../../scene/camera.js';
 import { GraphNode } from '../../scene/graph-node.js';
@@ -1091,12 +1091,37 @@ class Lightmapper {
                             this.constantBakeDir.setValue(bakeLight.light.bakeDir ? 1 : 0);
                         }
 
-                        const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
-                                                                     clusteredLightingEnabled ? this.worldClusters : null,
-                                                                     rcv, lightArray);
-                        renderPass.init(tempRT);
-                        renderPass.render();
-                        renderPass.destroy();
+                        if (device.isWebGPU) {
+
+                            // TODO: On WebGPU we use a render pass, but this has some issue it seems,
+                            // and needs to be investigated and fixed. In the LightsBaked example, edges of
+                            // some geometry are not lit correctly, especially visible on boxes. Most likely
+                            // some global per frame / per camera constants are not set up or similar, that
+                            // renderForward sets up.
+                            const renderPass = new RenderPassLightmapper(device, this.renderer, this.camera,
+                                                                         clusteredLightingEnabled ? this.worldClusters : null,
+                                                                         rcv, lightArray);
+                            renderPass.init(tempRT);
+                            renderPass.render();
+                            renderPass.destroy();
+
+                        } else {    // use the old path for WebGL till the render pass way above is fixed
+
+                            // ping-ponging output
+                            this.renderer.setCamera(this.camera, tempRT, true);
+
+                            // prepare clustered lighting
+                            if (clusteredLightingEnabled) {
+                                this.worldClusters.activate();
+                            }
+
+                            this.renderer._forwardTime = 0;
+                            this.renderer._shadowMapTime = 0;
+
+                            this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
+
+                            device.updateEnd();
+                        }
 
                         // #if _PROFILER
                         this.stats.shadowMapTime += this.renderer._shadowMapTime;
