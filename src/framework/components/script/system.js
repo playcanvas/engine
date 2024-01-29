@@ -21,6 +21,7 @@ let executionOrderCounter = 0;
  * Allows scripts to be attached to an Entity and executed.
  *
  * @augments ComponentSystem
+ * @category Script
  */
 class ScriptComponentSystem extends ComponentSystem {
     /**

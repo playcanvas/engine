@@ -8,6 +8,8 @@ const int32View = new Int32Array(floatView.buffer);
 /**
  * Utility static class providing functionality to pack float values to various storage
  * representations.
+ *
+ * @category Math
  */
 class FloatPacking {
     /**
