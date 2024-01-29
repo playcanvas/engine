@@ -16,46 +16,6 @@ const MAIN_DIR = `${__dirname}/../`;
 const TIMEOUT = 1e8;
 const DEBUG = false;
 
-// Minimal chrome arguments
-// https://www.bannerbear.com/blog/ways-to-speed-up-puppeteer-screenshots/
-const MINIMAL_ARGS = [
-    '--autoplay-policy=user-gesture-required',
-    '--disable-background-networking',
-    '--disable-background-timer-throttling',
-    '--disable-backgrounding-occluded-windows',
-    '--disable-breakpad',
-    '--disable-client-side-phishing-detection',
-    '--disable-component-update',
-    '--disable-default-apps',
-    '--disable-dev-shm-usage',
-    '--disable-domain-reliability',
-    '--disable-extensions',
-    '--disable-features=AudioServiceOutOfProcess',
-    '--disable-hang-monitor',
-    '--disable-ipc-flooding-protection',
-    '--disable-notifications',
-    '--disable-offer-store-unmasked-wallet-cards',
-    '--disable-popup-blocking',
-    '--disable-print-preview',
-    '--disable-prompt-on-repost',
-    '--disable-renderer-backgrounding',
-    '--disable-setuid-sandbox',
-    '--disable-speech-api',
-    '--disable-sync',
-    '--hide-scrollbars',
-    '--ignore-gpu-blacklist',
-    '--metrics-recording-only',
-    '--mute-audio',
-    '--no-default-browser-check',
-    '--no-first-run',
-    '--no-pings',
-    '--no-sandbox',
-    '--no-zygote',
-    '--password-store=basic',
-    '--use-gl=swiftshader',
-    '--use-mock-keychain'
-];
-
 /** @type {{category: string, example: string}[]} */
 const exampleList = [];
 for (const category_ in categories) {
@@ -223,7 +183,7 @@ async function takeScreenshots() {
 
     // create browser instance with new page
     const pool = new PuppeteerPool(4);
-    await pool.launch({ headless: 'new', args: MINIMAL_ARGS });
+    await pool.launch({ headless: 'new' });
 
     const screenshotPromises = [];
     for (let i = 0; i < exampleList.length; i++) {
