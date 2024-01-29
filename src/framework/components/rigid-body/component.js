@@ -48,8 +48,8 @@ const _vec3 = new Vec3();
  *
  * Relevant 'Engine-only' examples:
  *
- * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes)
- * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle)
+ * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)
+ * - [Vehicle physics](https://playcanvas.github.io/#/physics/vehicle)
  *
  * @augments Component
  * @category Physics
