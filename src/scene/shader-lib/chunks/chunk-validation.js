@@ -135,7 +135,7 @@ const validateUserChunks = (userChunks) => {
             const chunkIsOutdated = engineAPIVersion && (!userAPIVersion || semverLess(userAPIVersion, engineAPIVersion));
 
             if (chunkIsOutdated) {
-                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API: https://developer.playcanvas.com/en/user-manual/graphics/shader-chunk-migrations/`);
+                Debug.warnOnce(`Shader chunk '${chunkName}' is API version ${engineAPIVersion}, but the supplied chunk is version ${userAPIVersion || '-'}. Please update to the latest API: https://developer.playcanvas.com/user-manual/graphics/shader-chunk-migrations/`);
             }
         }
     }
