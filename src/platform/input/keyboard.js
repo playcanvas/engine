@@ -98,7 +98,7 @@ class Keyboard extends EventHandler {
      * @param {Element|Window} [element] - Element to attach Keyboard to. Note that elements like
      * &lt;div&gt; can't accept focus by default. To use keyboard events on an element like this it
      * must have a value of 'tabindex' e.g. tabindex="0". See
-     * [here](http://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html) for more details.
+     * [here](https://www.w3.org/WAI/GL/WCAG20/WD-WCAG20-TECHS/SCR29.html) for more details.
      * @param {object} [options] - Optional options object.
      * @param {boolean} [options.preventDefault] - Call preventDefault() in key event handlers.
      * This stops the default action of the event occurring. e.g. Ctrl+T will not open a new

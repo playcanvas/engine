@@ -34,7 +34,9 @@ const staticFiles = [
     { src: '../scripts', dest: 'dist/static/scripts/' },
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' }
+
+    // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
 ];
 
 // ^ = beginning of line

@@ -37,7 +37,7 @@ void main(void) {
     // Force skybox to far Z, regardless of the clip planes on the camera
     // Subtract a tiny fudge factor to ensure floating point errors don't
     // still push pixels beyond far Z. See:
-    // http://www.opengl.org/discussion_boards/showthread.php/171867-skybox-problem
+    // https://community.khronos.org/t/skybox-problem/61857
 
     gl_Position.z = gl_Position.w - 0.00001;
 }
