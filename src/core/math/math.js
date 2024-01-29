@@ -2,6 +2,7 @@
  * Math API.
  *
  * @namespace
+ * @category Math
  */
 const math = {
     /**

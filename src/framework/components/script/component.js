@@ -16,6 +16,7 @@ import { Entity } from '../../entity.js';
  * details on scripting see [Scripting](https://developer.playcanvas.com/user-manual/scripting/).
  *
  * @augments Component
+ * @category Script
  */
 class ScriptComponent extends Component {
     /**

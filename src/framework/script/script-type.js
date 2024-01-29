@@ -31,6 +31,7 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * reload at runtime.
  *
  * @augments EventHandler
+ * @category Script
  */
 class ScriptType extends EventHandler {
     /**

@@ -54,6 +54,7 @@ function getReservedScriptNames() {
  * Turning.prototype.update = function (dt) {
  *     this.entity.rotate(0, this.speed * dt, 0);
  * };
+ * @category Script
  */
 function createScript(name, app) {
     if (script.legacy) {
@@ -123,6 +124,7 @@ createScript.reservedAttributes = reservedAttributes;
  *
  * // declare script attributes (Must be after pc.registerScript())
  * PlayerController.attributes.add('attribute1', {type: 'number'});
+ * @category Script
  */
 function registerScript(script, name, app) {
     if (script.legacy) {
