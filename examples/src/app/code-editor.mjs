@@ -16,11 +16,14 @@ function getShowMinimap() {
     return showMinimap;
 }
 
+/**
+ * @type {Record<string, string>}
+ */
 const FILE_TYPE_LANGUAGES = {
     'json': 'json',
-    'shader': null,
-    'vert': null,
-    'frag': null,
+    'shader': '',
+    'vert': '',
+    'frag': '',
     'javascript': 'javascript',
     'js': 'javascript',
     'mjs': 'javascript'
@@ -80,34 +83,35 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {Event} event - The event.
+     * @typedef {object} CustomEvent
+     * @property {Record<string, string>} detail - The detail object.
+     */
+
+    /**
+     * @typedef {object} ExampleLoadEvent
+     * @property {Record<string, string>} files - The examples files.
+     * @property {string} description - The example description.
+     */
+
+    /**
+     * @param {ExampleLoadEvent & CustomEvent & Event} event - The event.
      */
     handleExampleLoad(event) {
-        // console.log("CodeEditor got files event", event);
-        /** @type {Record<string, string>} */
-        // @ts-ignore
         const files = event.files;
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
-    /**
-     * @param {Event} event - The event.
-     */
-    // @ts-ignore
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    handleExampleLoading(event) {
+    handleExampleLoading() {
         this.mergeState({
             files: { 'example.mjs': '// reloading' }
         });
     }
 
     /**
-     * @param {Event} event - The event.
+     * @param {CustomEvent & Event} event - The event.
      */
     handleRequestedFiles(event) {
-        // @ts-ignore
-        const files = event.detail;
-        this.mergeState({ files });
+        this.mergeState({ files: event.detail });
     }
 
     /**
@@ -136,8 +140,6 @@ class CodeEditor extends TypedComponent {
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
-        // @ts-ignore
-        // eslint-disable-next-line no-undef
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
         const codePane = document.getElementById('codePane');
         if (!codePane) {
@@ -149,8 +151,7 @@ class CodeEditor extends TypedComponent {
                 selectedFile: 'example.mjs'
             });
         }
-        // @ts-ignore
-        codePane.ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style')));
+        codePane.ui.on('resize', () => localStorage.setItem('codePaneStyle', codePane.getAttribute('style') ?? ''));
         const codePaneStyle = localStorage.getItem('codePaneStyle');
         if (codePaneStyle) {
             codePane.setAttribute('style', codePaneStyle);
@@ -169,12 +170,8 @@ class CodeEditor extends TypedComponent {
         editor.addAction({
             id: 'view-toggle-minimap',
             label: 'View: Toggle Minimap',
-            // keybindings: [monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter],
-            // contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
-            // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            run: (editor) => {
+            run: () => {
                 const showMinimap = !getShowMinimap();
                 localStorage.setItem("showMinimap", `${showMinimap}`);
                 this.mergeState({ showMinimap });
@@ -211,7 +208,6 @@ class CodeEditor extends TypedComponent {
         for (const name in files) {
             const button = jsx(Button, {
                 key: name,
-                // @ts-ignore
                 id: `code-editor-file-tab-${name}`,
                 text: name,
                 class: name === selectedFile ? 'selected' : null,
@@ -225,8 +221,7 @@ class CodeEditor extends TypedComponent {
     render() {
         setTimeout(iframeResize, 50);
         const { files, selectedFile, showMinimap } = this.state;
-        // @ts-ignore
-        const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop()];
+        const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
         let value = files[selectedFile];
         if (value) {
             value = removeRedundantSpaces(value);
@@ -261,7 +256,6 @@ class CodeEditor extends TypedComponent {
         return jsx(
             Panel,
             {
-                // @ts-ignore
                 headerText: 'CODE',
                 id: 'codePane',
                 class: localStorage.getItem('codePaneCollapsed') === 'true' ? 'collapsed' : null,
@@ -278,19 +272,16 @@ class CodeEditor extends TypedComponent {
             jsx(
                 Container,
                 {
-                    // @ts-ignore
                     class: 'tabs-wrapper'
                 },
                 jsx(
                     Container,
                     {
-                        // @ts-ignore
                         class: 'code-editor-menu-container'
                     },
                     jsx(
                         Button,
                         {
-                            // @ts-ignore
                             id: 'play-button',
                             icon: 'E304',
                             text: '',
@@ -299,7 +290,6 @@ class CodeEditor extends TypedComponent {
                     ),
                     jsx(
                         Button, {
-                            // @ts-ignore
                             icon: 'E259',
                             text: '',
                             onClick: () => {
@@ -312,7 +302,6 @@ class CodeEditor extends TypedComponent {
                 jsx(
                     Container,
                     {
-                        // @ts-ignore
                         class: 'tabs-container'
                     },
                     this.renderTabs()
