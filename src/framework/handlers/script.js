@@ -13,6 +13,7 @@ import { ResourceLoader } from './loader.js';
  * files, such as third-party libraries.
  *
  * @implements {ResourceHandler}
+ * @category Script
  */
 class ScriptHandler {
     /**
