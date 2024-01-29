@@ -13,9 +13,9 @@ import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
 
 /**
- * MiniStats is a small graphical that displays realtime performance metrics. By default, it shows
- * CPU and GPU utilization, frame timings and draw call count. It can also be configured to display
- * additional graphs based on data collected into {@link AppBase#stats}.
+ * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
+ * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
+ * to display additional graphs based on data collected into {@link AppBase#stats}.
  */
 class MiniStats {
     /**
