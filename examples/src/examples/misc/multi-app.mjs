@@ -194,9 +194,9 @@ async function example({ glslangPath, twgslPath, data }) {
 
             // rotate the box according to the delta time since the last frame
             app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
-
-            return app;
         });
+
+        return app;
     };
 
     const apps = {
