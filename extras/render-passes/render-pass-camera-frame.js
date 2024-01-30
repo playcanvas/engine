@@ -23,6 +23,8 @@ class RenderPassCameraFrame extends RenderPass {
 
     bloomPass;
 
+    taaPass;
+
     _bloomEnabled = true;
 
     _renderTargetScale = 1;
@@ -174,11 +176,10 @@ class RenderPassCameraFrame extends RenderPass {
 
         // ------ TAA ------
 
-        let taaPass;
         let sceneTextureWithTaa = sceneTexture;
         if (options.taaEnabled) {
-            taaPass = new RenderPassTAA(device, sceneTexture);
-            sceneTextureWithTaa = taaPass.accumulationTexture;
+            this.taaPass = new RenderPassTAA(device, sceneTexture);
+            sceneTextureWithTaa = this.taaPass.accumulationTexture;
         }
 
         // ------ BLOOM GENERATION ------
@@ -190,7 +191,7 @@ class RenderPassCameraFrame extends RenderPass {
 
         // create a compose pass, which combines the scene texture with the bloom texture
         this.composePass = new RenderPassCompose(app.graphicsDevice);
-        this.composePass.sceneTexture = sceneTextureWithTaa;
+        // this.composePass.sceneTexture = sceneTextureWithTaa;
         this.composePass.bloomTexture = this.bloomPass.bloomTexture;
 
         // compose pass renders directly to target renderTarget
@@ -206,8 +207,22 @@ class RenderPassCameraFrame extends RenderPass {
         afterPass.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget);
 
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.scenePass, colorGrabPass, scenePassTransparent, taaPass, this.bloomPass, this.composePass, afterPass];
+        const allPasses = [this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
         this.beforePasses = allPasses.filter(element => element !== undefined);
+    }
+
+    frameUpdate() {
+
+        super.frameUpdate();
+
+        // scene texture is either output of taa pass or the scene render target
+        const sceneTexture = this.taaPass?.update() ?? this._rt.colorBuffer;
+
+        // TAA accumulation buffer is double buffered, assign the current one to the follow up passes.
+        this.composePass.sceneTexture = sceneTexture;
+        if (this.bloomEnabled) {
+            this.bloomPass.sourceTexture = sceneTexture;
+        }
     }
 }
 
