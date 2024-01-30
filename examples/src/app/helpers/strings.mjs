@@ -48,7 +48,6 @@ function kebabCaseToPascalCase(str) {
 /**
  * @param {string} str - String with leading spaces.
  * @returns {number} Number of spaces.
- *
  * @example
  * countLeadingSpaces('  Hello!'); // Result: 2
  */
