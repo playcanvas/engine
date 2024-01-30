@@ -1,7 +1,9 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @typedef {{ 'output.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, files, dracoPath, assetPath, glslangPath, twgslPath }) {

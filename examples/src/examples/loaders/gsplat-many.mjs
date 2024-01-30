@@ -17,7 +17,9 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
+ * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, files }) {
