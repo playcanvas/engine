@@ -7,6 +7,15 @@ import { toKebabCase } from '../src/app/helpers/strings.mjs';
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
+/**
+ * @type {Record<string, Record<string, {
+ *  example: string,
+ *  nameSlug: string,
+ *  categorySlug: string,
+ *  files: any,
+ *  controls: string
+ * }>>}
+ */
 const exampleData = {};
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
@@ -16,28 +25,24 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
 }
 for (const category_ in realExamples) {
     const category = toKebabCase(category_);
-    // @ts-ignore
     exampleData[category] = {};
     // @ts-ignore
     const examples = realExamples[category_];
     for (const exampleName_ in examples) {
         const exampleClass = examples[exampleName_];
         const example = toKebabCase(exampleName_).replace('-example', '');
-        // @ts-ignore
-        exampleData[category][example] = {};
         const exampleFunc = exampleClass.example.toString();
-        // @ts-ignore
-        exampleData[category][example].example = exampleFunc;
-        // @ts-ignore
-        exampleData[category][example].nameSlug = example;
-        // @ts-ignore
-        exampleData[category][example].categorySlug = category;
+        exampleData[category][example] = {
+            example: exampleFunc,
+            nameSlug: example,
+            categorySlug: category,
+            files: undefined,
+            controls: ''
+        };
         if (exampleClass.FILES) {
-            // @ts-ignore
             exampleData[category][example].files = exampleClass.FILES;
         }
         if (exampleClass.controls) {
-            // @ts-ignore
             exampleData[category][example].controls = exampleClass.controls.toString();
         }
         const dropEnding = exampleName_.replace(/Example$/, ""); // TestExample -> Test
