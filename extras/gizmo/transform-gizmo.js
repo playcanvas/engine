@@ -630,7 +630,7 @@ class TransformGizmo extends Gizmo {
             } else {
                 angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
                 if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
-                    angle /= this._camera.orthoHeight;
+                    angle /= (this._camera.orthoHeight || 1);
                 }
             }
         }
