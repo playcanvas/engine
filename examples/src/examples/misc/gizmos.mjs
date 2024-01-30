@@ -511,19 +511,6 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     app.root.addChild(camera);
     orbitCamera.distance = 14;
 
-    const tmpV1 = new pc.Vec3();
-    const tmpQ1 = new pc.Quat();
-    app.on('update', () => {
-        if (camera.camera.projection === pc.PROJECTION_PERSPECTIVE) {
-            cone.lookAt(camera.getPosition());
-        } else {
-            tmpQ1.copy(camera.getRotation());
-            tmpQ1.getEulerAngles(tmpV1);
-            // tmpV1.mulScalar(-1);
-            cone.setEulerAngles(tmpV1);
-        }
-    });
-
     // create 3-point lighting
     const backLight = new pc.Entity('light');
     backLight.addComponent('light', {
