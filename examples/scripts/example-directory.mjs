@@ -1,32 +1,35 @@
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import * as realExamples from "../src/examples/index.mjs";
+import * as realExamples from '../src/examples/index.mjs';
 import { toKebabCase } from '../src/app/helpers/strings.mjs';
+
 /**
  * @param {object} options - The options.
  * @param {string} options.path - The path.
  * @param {string} options.exampleTitle - The example title.
  * @param {string} options.largeThumbnailName - The large thumbnail name.
- * @returns {string}
+ * @returns {string} - The template string.
  */
 function template({ path, exampleTitle, largeThumbnailName }) {
     return `<!DOCTYPE html>
-  <html>
-    <head>
-      <meta http-equiv="refresh" content="0; url='/#/${path}'" />
-      <meta name="twitter:card" content="photo" />
-      <meta name="twitter:site" content="@playcanvas" />
-      <meta name="twitter:title" content="${exampleTitle}" />
-      <meta name="twitter:description" content="A PlayCanvas engine example" />
-      <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/${largeThumbnailName}.png" />
-      <meta name="twitter:url" content="https://playcanvas.github.io/${path}" />
-    </head>
-    <body>
-      <p>Please follow <a href="/#/${path}">this link</a>.</p>
-    </body>
-  </html>`;
-  }
+      <html>
+        <head>
+          <meta http-equiv="refresh" content="0; url='/#/${path}'" />
+          <meta name="twitter:card" content="photo" />
+          <meta name="twitter:site" content="@playcanvas" />
+          <meta name="twitter:title" content="${exampleTitle}" />
+          <meta name="twitter:description" content="A PlayCanvas engine example" />
+          <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/${largeThumbnailName}.png" />
+          <meta name="twitter:url" content="https://playcanvas.github.io/${path}" />
+        </head>
+        <body>
+          <p>Please follow <a href="/#/${path}">this link</a>.</p>
+        </body>
+      </html>`;
+}
+
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
@@ -37,6 +40,7 @@ for (const category_ in realExamples) {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
+    // @ts-ignore
     const examples = realExamples[category_];
     categoriesList.push({
         name: category,

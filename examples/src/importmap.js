@@ -1,8 +1,10 @@
+// @ts-ignore
 window.process = {
     env: {
         NODE_ENV: 'development'
     }
 };
+// @ts-ignore
 const playcanvasEngineThis = document.currentScript.src + '/../../../';
 const playcanvasEngine = playcanvasEngineThis;
 // const playcanvasEngine = '/playcanvas-engine-jsdoc/';

@@ -12,6 +12,7 @@ import { iframeReady, iframeReload, iframeRequestFiles } from './iframeUtils.mjs
 import { getOrientation } from './utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
+import './events.js';
 
 /**
  * @typedef {object} ControlOptions
@@ -25,7 +26,7 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
 
 /**
  * @typedef {object} Props
- * @property {{params: {category: string, example: string}}} match
+ * @property {{params: {category: string, example: string}}} match - The match object.
  */
 
 /**
@@ -33,7 +34,8 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
  * @property {'portrait' | 'landscape'} orientation - The orientation.
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
- * @property {Function} controls - Controls function from example.
+ * @property {Function | null} controls - Controls function from example.
+ * @property {boolean} showDeviceSelector - Show device selector.
  * @property {'code' | 'parameters'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
@@ -46,14 +48,14 @@ class Example extends TypedComponent {
     /** @type {State} */
     state = {
         orientation: getOrientation(),
+        // @ts-ignore
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
         exampleLoaded: false,
-        //controls: () => jsx('pre', null, 'Status: initial'),
         controls: () => undefined,
         showDeviceSelector: true,
         show: 'code',
-        files: {'example.mjs': '// loading'},
-        description: '',
+        files: { 'example.mjs': '// loading' },
+        description: ''
     };
 
     /**
@@ -72,23 +74,28 @@ class Example extends TypedComponent {
         this.mergeState({ orientation: getOrientation() });
     }
 
+    /**
+     * @param {LoadingEvent} event - Event.
+     */
     onExampleLoading(event) {
         this.mergeState({
             exampleLoaded: false,
-            //controls: () => jsx('h1', null, 'state: reload'),
             controls: null,
-            showDeviceSelector: event.detail.showDeviceSelector,
+            showDeviceSelector: event.detail.showDeviceSelector
         });
     }
 
+    /**
+     * @param {LoadEvent} event - Event.
+     */
     onExampleLoad(event) {
-        /** @type {Record<string, string>} */
         const { files, description } = event;
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
             let controls;
             try {
-                controls = Function('return ' + controlsSrc)();
+                // eslint-disable-next-line no-new-func
+                controls = new Function('return ' + controlsSrc)();
             } catch (e) {
                 controls = () => jsx('pre', null, 'error: ' + e.toString());
             }
@@ -96,47 +103,58 @@ class Example extends TypedComponent {
                 exampleLoaded: true,
                 controls,
                 files,
-                description,
+                description
             });
-            // console.log("controlsSrc", controlsSrc);
         } else {
             // When switching examples from one with controls to one without controls...
             this.mergeState({
                 exampleLoaded: true,
                 controls: null,
                 files,
-                description,
+                description
             });
         }
     }
 
+    /**
+     * @param {UpdateFilesEvent} event - Event.
+     */
     onUpdateFiles(event) {
         const files = event.detail.files;
-        // console.log("updateFiles", files);
         const controlsSrc = files['controls.mjs'] ?? 'null';
         if (!files['controls.mjs']) {
             this.mergeState({
                 exampleLoaded: true,
-                controls: null,
+                controls: null
             });
         }
         let controls;
         try {
-            controls = Function('return ' + controlsSrc)();
+            // eslint-disable-next-line no-new-func
+            controls = new Function('return ' + controlsSrc)();
         } catch (e) {
             controls = () => jsx('pre', null, e.toString());
         }
         this.mergeState({
             exampleLoaded: true,
-            controls,
+            controls
         });
     }
-    
+
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
         const controlPanel = document.getElementById("controlPanel");
+        if (!controlPanel) {
+            return;
+        }
+
+        /** @type {HTMLElement | null} */
         const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
+        if (!controlPanelHeader) {
+            return;
+        }
         controlPanelHeader.onclick = () => this.toggleCollapse();
+
         // Other events
         this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
         this.onLayoutChange = this.onLayoutChange.bind(this);
@@ -166,9 +184,11 @@ class Example extends TypedComponent {
     }
 
     get iframePath() {
+        /** @type {{ category: string; name: string }} */
+        // @ts-ignore
         const example = examples.paths[this.path];
         return `${iframePath}/${example.category}_${example.name}.html`;
-        // todo: Complete standalone ES6 version, currently ignored, because focus is on MVP
+        // TODO: Complete standalone ES6 version, currently ignored, because focus is on MVP
         // return `${iframePath}/index.html?category=${example.category}&example=${example.name}`;
     }
 
@@ -180,7 +200,7 @@ class Example extends TypedComponent {
         }
 
         return jsx(DeviceSelector, {
-            onSelect: iframeReload, // reload the iframe after updating the device
+            onSelect: iframeReload // reload the iframe after updating the device
         });
     }
 
@@ -193,14 +213,15 @@ class Example extends TypedComponent {
         return jsx(
             ErrorBoundary,
             null,
-            jsx(this.state.controls, {
+            jsx(controls, {
+                // @ts-ignore
                 observer: window.observerData,
                 PCUI,
                 ReactPCUI,
                 React,
                 jsx,
-                fragment,
-            }),
+                fragment
+            })
         );
     }
 
@@ -214,12 +235,12 @@ class Example extends TypedComponent {
             Container,
             {
                 id: 'descriptionPanel',
-                class: orientation === 'portrait' ? 'mobile' : null,
+                class: orientation === 'portrait' ? 'mobile' : null
             },
             jsx('span', {
                 dangerouslySetInnerHTML: {
-                    __html: description,
-                },
+                    __html: description
+                }
             })
         );
     }
@@ -231,20 +252,26 @@ class Example extends TypedComponent {
      * 1) Hoping that the toggle functionality just happens to be calibrated
      * to the on/off toggling.
      * 2) Setting "collapsed" state everywhere via informed guesses.
+     *
+     * @type {boolean}
      */
     get collapsed() {
         const controlPanel = document.getElementById("controlPanel");
+        if (!controlPanel) {
+            return false;
+        }
         const collapsed = controlPanel.classList.contains("pcui-collapsed");
         return collapsed;
     }
 
     toggleCollapse() {
         this.mergeState({ collapsed: !this.collapsed });
-        //console.log("Example#toggleCollapse> was ", collapsed);
     }
 
+    /**
+     * @param {HandleFilesEvent} event - Event.
+     */
     handleRequestedFiles(event) {
-        // console.log('Example#handleRequestedFiles, files: ', event.detail);
         const files = event.detail;
         this.mergeState({ files });
     }
@@ -259,14 +286,9 @@ class Example extends TypedComponent {
                     resizable: 'top',
                     headerText: 'CODE & CONTROLS',
                     collapsible: true,
-                    collapsed,
-                    //header: jsx('h1', null, "data header"),
-                    //onClick: this.toggleCollapse.bind(this),
-                    //onExpand: this.toggleCollapse.bind(this),  
+                    collapsed
                 },
-                // jsx('button', null, "Example#renderPortrait()"),
                 this.renderDeviceSelector(),
-                //this.renderControls(),
                 jsx(
                     Container,
                     {
@@ -296,30 +318,29 @@ class Example extends TypedComponent {
                             class: show === 'description' ? 'selected' : null,
                             id: 'descButton',
                             onClick: () => this.mergeState({ show: 'description' })
-                        }) : null,
+                        }) : null
                     ),
-                    // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderPortrait"),
                     show === 'parameters' && jsx(
                         Container,
                         {
                             id: 'controlPanel-controls'
                         },
-                        this.renderControls(),
+                        this.renderControls()
                     ),
                     show === 'code' && jsx(
                         MonacoEditor,
                         {
                             options: {
                                 readOnly: true,
-                                theme: 'vs-dark',
+                                theme: 'vs-dark'
                             },
                             defaultLanguage: "javascript",
-                            value: files['example.mjs'],
+                            value: files['example.mjs']
                         }
-                    ),
-                ),
+                    )
+                )
             ),
-            this.renderDescription(),
+            this.renderDescription()
         );
     }
 
@@ -333,21 +354,20 @@ class Example extends TypedComponent {
                     resizable: 'top',
                     headerText: 'CONTROLS',
                     collapsible: true,
-                    collapsed,
+                    collapsed
                 },
-                // jsx('button', {onClick: () => console.log(this.state)}, "Example#renderLandscape"),
                 this.renderDeviceSelector(),
-                this.renderControls(),
+                this.renderControls()
             ),
-            this.renderDescription(),
+            this.renderDescription()
         );
     }
 
     render() {
         const { iframePath } = this;
         const { orientation, exampleLoaded } = this.state;
-        // console.log("Example#render", JSON.stringify(this.state, null, 2));
-        return jsx(Container,
+        return jsx(
+            Container,
             {
                 id: "canvas-container"
             },
@@ -357,13 +377,12 @@ class Example extends TypedComponent {
                 key: iframePath,
                 src: iframePath
             }),
-            orientation === 'portrait' ? this.renderPortrait() : this.renderLandscape(),
-        );       
+            orientation === 'portrait' ? this.renderPortrait() : this.renderLandscape()
+        );
     }
 }
 
+// @ts-ignore
 const ExamptWithRouter = withRouter(Example);
 
-export {
-    ExamptWithRouter as Example
-};
+export { ExamptWithRouter as Example };

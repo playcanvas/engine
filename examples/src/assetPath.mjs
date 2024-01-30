@@ -6,7 +6,7 @@ const href = typeof location !== 'undefined' ? location.href : '';
  * const assetPath = getAssetPath(); // 'http://127.0.0.1/playcanvas-engine/examples/assets/'
  * // Test output for href:
  * // http://127.0.0.1/playcanvas-engine/examples/src/examples/animation/test-examples.html
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getAssetPath() {
     const i = href.indexOf("/examples/");
@@ -20,7 +20,7 @@ export const assetPath = getAssetPath();
 /**
  * @example
  * http://127.0.0.1/playcanvas-engine/examples/../build/playcanvas.d.ts
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getPlayCanvasTypes() {
     const i = href.indexOf("/examples/");
@@ -35,7 +35,7 @@ export const pcTypes = getPlayCanvasTypes();
  * @example
  * console.log(getScriptsPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/scripts/'
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getScriptsPath() {
     const i = href.indexOf("/examples/");
@@ -50,10 +50,10 @@ export const scriptsPath = getScriptsPath();
  * @example
  * console.log(getIframePath());
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getIframePath() {
-    const i = href.indexOf("/examples/")
+    const i = href.indexOf("/examples/");
     if (i === -1) { // npm run serve
         return '/iframe/';
     }
@@ -65,7 +65,7 @@ export const iframePath = getIframePath();
  * @example
  * console.log(getAmmoPath());
  * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/ammo/";
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getAmmoPath() {
     const i = href.indexOf("/examples/");
@@ -80,7 +80,7 @@ export const ammoPath = getAmmoPath();
  * @example
  * console.log(getBasisPath());
  * // Outputs: "http://127.0.0.1/playcanvas-engine/examples/src/lib/basis/";
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getBasisPath() {
     const i = href.indexOf("/examples/");
@@ -95,7 +95,7 @@ export const basisPath = getBasisPath();
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/draco/'
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getDracoPath() {
     const i = href.indexOf("/examples/");
@@ -110,7 +110,7 @@ export const dracoPath = getDracoPath();
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/glslang/'
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getGlslangPath() {
     const i = href.indexOf("/examples/");
@@ -125,7 +125,7 @@ export const glslangPath = getGlslangPath();
  * @example
  * console.log(getDracoPath());
  * // Outputs: 'http://127.0.0.1/playcanvas-engine/examples/src/lib/twgsl/'
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getTwgslPath() {
     const i = href.indexOf("/examples/");
@@ -140,7 +140,7 @@ export const twgslPath = getTwgslPath();
  * @example
  * console.log(getIframePath());
  * // Outputs: http://127.0.0.1/playcanvas-engine/examples/src/iframe/
- * @returns {string}
+ * @returns {string} - The path.
  */
 function getThumbnailPath() {
     const i = href.lastIndexOf("/examples/");

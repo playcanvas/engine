@@ -3,8 +3,19 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import * as realExamples from "../src/examples/index.mjs";
 import { toKebabCase } from '../src/app/helpers/strings.mjs';
+
+// @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
+/**
+ * @type {Record<string, Record<string, {
+ *  example: string,
+ *  nameSlug: string,
+ *  categorySlug: string,
+ *  files: any,
+ *  controls: string
+ * }>>}
+ */
 const exampleData = {};
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
@@ -15,15 +26,19 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
 for (const category_ in realExamples) {
     const category = toKebabCase(category_);
     exampleData[category] = {};
+    // @ts-ignore
     const examples = realExamples[category_];
-    for (const exampleName_ in examples) {        
+    for (const exampleName_ in examples) {
         const exampleClass = examples[exampleName_];
         const example = toKebabCase(exampleName_).replace('-example', '');
-        exampleData[category][example] = {};
         const exampleFunc = exampleClass.example.toString();
-        exampleData[category][example].example = exampleFunc;
-        exampleData[category][example].nameSlug = example;
-        exampleData[category][example].categorySlug = category;
+        exampleData[category][example] = {
+            example: exampleFunc,
+            nameSlug: example,
+            categorySlug: category,
+            files: undefined,
+            controls: ''
+        };
         if (exampleClass.FILES) {
             exampleData[category][example].files = exampleClass.FILES;
         }
@@ -39,10 +54,12 @@ for (const category_ in realExamples) {
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
- * @param {'PERFORMANCE'|'DEBUG'|undefined} str 
+ *
+ * @param {'PERFORMANCE'|'DEBUG'|undefined} type - The build type.
+ * @returns {string} - The build file.
  */
-function engineFor(str) {
-    switch (str) {
+function engineFor(type) {
+    switch (type) {
         case 'PERFORMANCE':
             return './playcanvas.prf.js';
         case 'DEBUG':
@@ -52,10 +69,24 @@ function engineFor(str) {
 }
 
 /**
+ * @typedef {object} ExampleClass
+ * @property {Function} example - The example function.
+ * @property {Function} [controls] - The controls function.
+ * @property {object[]} [imports] - The imports array.
+ * @property {string[]} [es5libs] - The ES5Libs array.
+ * @property {string} DESCRIPTION - The example description.
+ * @property {"PERFORMANCE" | "DEBUG" | undefined} ENGINE - The engine type.
+ * @property {object} FILES - The object of extra files to include (e.g shaders).
+ * @property {boolean} INCLUDE_AR_LINK - Include AR link png.
+ * @property {boolean} NO_DEVICE_SELECTOR - No device selector.
+ * @property {boolean} NO_CANVAS - No canvas element.
+ * @property {boolean} NO_MINISTATS - No ministats.
+ * @property {boolean} WEBGPU_ENABLED - If webGPU is enabled.
+ */
+/**
  * @param {string} category - The category.
  * @param {string} example - The example.
- * @param {object} exampleClass - The example class.
- * @param {object} ministats - Should ministats be enabled?
+ * @param {ExampleClass} exampleClass - The example class.
  * @returns {string} File to write as standalone example.
  */
 function generateExampleFile(category, example, exampleClass) {
@@ -63,7 +94,7 @@ function generateExampleFile(category, example, exampleClass) {
     <head>
         <link rel="stylesheet" href="./example.css">
         <title>${category}: ${example}</title>
-        ${exampleClass.es5libs?.map(_ => `<script src="${_}"></script>`).join('\n') || '<!-- no es5libs -->'}
+        ${exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '<!-- no es5libs -->'}
     </head>
     <body>
         <div id="app">
@@ -83,7 +114,7 @@ function generateExampleFile(category, example, exampleClass) {
         <script src='./pathes.js'></script>
         <!-- imports (if any) -->
         <script>
-${exampleClass.imports?.map(_ => _.toString()).join('\n\n') || ''}
+${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ _) => _.toString()).join('\n\n') || ''}
         </script>
         <!-- controls (if given) -->
         <script>
@@ -207,7 +238,7 @@ ${exampleClass.example.toString()}
          */
         function showStats() {
             // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
-            if (${Boolean(exampleClass.NO_MINISTATS)}) {
+            if (${!!exampleClass.NO_MINISTATS}) {
                 return;
             }
             if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
@@ -294,7 +325,7 @@ ${exampleClass.example.toString()}
                 // just notify to clean UI, but not during hot-reload
                 const event = new CustomEvent("exampleLoading", {
                     detail: {
-                        showDeviceSelector: ${Boolean(exampleClass.NO_DEVICE_SELECTOR !== true)},
+                        showDeviceSelector: ${!exampleClass.NO_DEVICE_SELECTOR},
                     }
                 });
                 window.top.dispatchEvent(event);
