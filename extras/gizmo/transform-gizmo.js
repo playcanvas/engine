@@ -3,6 +3,7 @@ import {
     CULLFACE_NONE,
     CULLFACE_BACK,
     PROJECTION_PERSPECTIVE,
+    PROJECTION_ORTHOGRAPHIC,
     BLEND_NORMAL,
     Color,
     StandardMaterial,
@@ -628,6 +629,9 @@ class TransformGizmo extends Gizmo {
                 }
             } else {
                 angle = mouseWPos.dot(tmpV2.normalize()) * ROTATE_SCALE;
+                if (this._camera.projection === PROJECTION_ORTHOGRAPHIC) {
+                    angle /= this._camera.orthoHeight;
+                }
             }
         }
 
