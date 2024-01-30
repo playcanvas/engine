@@ -5,6 +5,7 @@ import { jsx } from './jsx.mjs';
 import MonacoEditor, { loader } from "@monaco-editor/react";
 import { iframeHotReload, iframeRequestFiles, iframeResize } from './iframeUtils.mjs';
 import { removeRedundantSpaces } from './helpers/strings.mjs';
+import './events.js';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
@@ -83,32 +84,24 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @typedef {object} CustomEvent
-     * @property {Record<string, string>} detail - The detail object.
-     */
-
-    /**
-     * @typedef {object} ExampleLoadEvent
-     * @property {Record<string, string>} files - The examples files.
-     * @property {string} description - The example description.
-     */
-
-    /**
-     * @param {ExampleLoadEvent & CustomEvent & Event} event - The event.
+     * @param {LoadEvent} event - The event.
      */
     handleExampleLoad(event) {
         const files = event.files;
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
-    handleExampleLoading() {
+    /**
+     * @param {LoadingEvent} event - The event.
+     */
+    handleExampleLoading(event) {
         this.mergeState({
             files: { 'example.mjs': '// reloading' }
         });
     }
 
     /**
-     * @param {CustomEvent & Event} event - The event.
+     * @param {HandleFilesEvent} event - The event.
      */
     handleRequestedFiles(event) {
         this.mergeState({ files: event.detail });

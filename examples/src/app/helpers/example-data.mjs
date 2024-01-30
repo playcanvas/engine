@@ -21,7 +21,7 @@ Object.keys(exampleData).forEach((categorySlug) => {
                 name: 'example.js',
                 text: data.example,
                 type: 'javascript'
-            },
+            }
         ];
         const extraFiles = data.files;
         if (extraFiles) {

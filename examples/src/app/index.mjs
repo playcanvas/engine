@@ -6,7 +6,9 @@ import '@playcanvas/pcui/styles';
 function main() {
     // render out the app
     const container = document.getElementById('app');
-    // @ts-ignore
+    if (!container) {
+        return;
+    }
     const root = createRoot(container);
     root.render(jsx(MainLayout, null));
 }

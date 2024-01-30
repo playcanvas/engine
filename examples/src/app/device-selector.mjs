@@ -6,6 +6,7 @@ import {
 import { Component } from 'react';
 import { jsx } from './jsx.mjs';
 import { SelectInput } from '@playcanvas/pcui/react';
+import './events.js';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
@@ -41,8 +42,7 @@ class DeviceSelector extends TypedComponent {
      */
     constructor(props) {
         super(props);
-        window.addEventListener('updateActiveDevice', (event) => {
-            // @ts-ignore
+        window.addEventListener('updateActiveDevice', (/** @type {UpdateActiveDeviceEvent} */ event) => {
             const activeDevice = event.detail;
             this.onSetActiveGraphicsDevice(activeDevice);
         });
@@ -147,9 +147,7 @@ class DeviceSelector extends TypedComponent {
                 { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
             ],
             value: activeDevice,
-            // @ts-ignore
             fallbackOrder,
-            // @ts-ignore
             disabledOptions,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
             prefix: 'Active Device: '

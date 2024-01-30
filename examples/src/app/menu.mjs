@@ -58,8 +58,11 @@ class Menu extends TypedComponent {
 
     componentDidMount() {
         const escapeKeyEvent = (/** @type {{ keyCode: number; }} */ e) => {
-            // @ts-ignore
-            if (e.keyCode === 27 && document.querySelector('#canvas-container').classList.contains('fullscreen')) {
+            const canvasContainer = document.querySelector('#canvas-container');
+            if (!canvasContainer) {
+                return;
+            }
+            if (e.keyCode === 27 && canvasContainer.classList.contains('fullscreen')) {
                 this.toggleFullscreen();
             }
         };
@@ -74,9 +77,11 @@ class Menu extends TypedComponent {
     }
 
     handleExampleLoad() {
-        // @ts-ignore
-        const selected = document.getElementById('showMiniStatsButton').classList.contains('selected');
-        // console.log('Menu#handleExampleLoad, selected:', selected);
+        const showMiniStatsBtn = document.getElementById('showMiniStatsButton');
+        if (!showMiniStatsBtn) {
+            return;
+        }
+        const selected = showMiniStatsBtn.classList.contains('selected');
         this.props.setShowMiniStats(selected);
     }
 

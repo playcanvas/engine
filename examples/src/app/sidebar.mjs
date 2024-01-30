@@ -47,11 +47,12 @@ export class SideBar extends TypedComponent {
         if (!sideBar) {
             return;
         }
+
+        /** @type {HTMLElement | null} */
         const sideBarHeader = sideBar.querySelector('.pcui-panel-header');
         if (!sideBarHeader) {
             return;
         }
-        // @ts-ignore
         sideBarHeader.onclick = () => this.toggleCollapse();
         this.setupControlPanelToggleButton();
         // setup events
@@ -74,20 +75,21 @@ export class SideBar extends TypedComponent {
         window.addEventListener('hashchange', () => {
             this.mergeState({ hash: location.hash });
         });
-        /** @type {Element} */
         this.state.observer.on('largeThumbnails:set', () => {
-            let topNavItem;
             let minTopNavItemDistance = Number.MAX_VALUE;
-            document.querySelectorAll('.nav-item').forEach((nav) => {
+
+            /** @type {NodeListOf<HTMLElement>} */
+            const navItems = document.querySelectorAll('.nav-item');
+            for (let i = 0; i < navItems.length; i++) {
+                const nav = navItems[i];
                 const navItemDistance = Math.abs(120 - nav.getBoundingClientRect().top);
                 if (navItemDistance < minTopNavItemDistance) {
                     minTopNavItemDistance = navItemDistance;
-                    topNavItem = nav;
+                    sideBar.classList.toggle('small-thumbnails');
+                    nav.scrollIntoView();
+                    break;
                 }
-            });
-            sideBar.classList.toggle('small-thumbnails');
-            // @ts-ignore
-            topNavItem.scrollIntoView();
+            }
         });
         sideBar.classList.add('visible');
         // when first opening the examples browser via a specific example, scroll it into view
@@ -236,11 +238,11 @@ export class SideBar extends TypedComponent {
             ]
         };
         if (orientation === 'portrait') {
-            // @ts-ignore
-            panelOptions.class = 'small-thumbnails';
+            panelOptions.class = ['small-thumbnails'];
             panelOptions.collapsed = collapsed;
         }
         return jsx(
+            // @ts-ignore
             Panel, panelOptions,
             jsx(TextInput, {
                 class: 'filter-input',

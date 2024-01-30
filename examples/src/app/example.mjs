@@ -12,6 +12,7 @@ import { iframeReady, iframeReload, iframeRequestFiles } from './iframeUtils.mjs
 import { getOrientation } from './utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
+import './events.js';
 
 /**
  * @typedef {object} ControlOptions
@@ -34,6 +35,7 @@ import * as ReactPCUI from '@playcanvas/pcui/react';
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {Function | null} controls - Controls function from example.
+ * @property {boolean} showDeviceSelector - Show device selector.
  * @property {'code' | 'parameters'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
  * @property {string} description - Description of example.
@@ -50,7 +52,6 @@ class Example extends TypedComponent {
         collapsed: window.top.innerWidth < MIN_DESKTOP_WIDTH,
         exampleLoaded: false,
         controls: () => undefined,
-        // @ts-ignore
         showDeviceSelector: true,
         show: 'code',
         files: { 'example.mjs': '// loading' },
@@ -74,24 +75,21 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {Event} event - Event.
+     * @param {LoadingEvent} event - Event.
      */
     onExampleLoading(event) {
         this.mergeState({
             exampleLoaded: false,
             controls: null,
-            // @ts-ignore
             showDeviceSelector: event.detail.showDeviceSelector
         });
     }
 
     /**
-     * @param {Event} event - Event.
+     * @param {LoadEvent} event - Event.
      */
     onExampleLoad(event) {
-        // @ts-ignore
         const { files, description } = event;
-        // @ts-ignore
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
             let controls;
@@ -119,10 +117,9 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {Event} event - Event.
+     * @param {UpdateFilesEvent} event - Event.
      */
     onUpdateFiles(event) {
-        // @ts-ignore
         const files = event.detail.files;
         const controlsSrc = files['controls.mjs'] ?? 'null';
         if (!files['controls.mjs']) {
@@ -150,8 +147,12 @@ class Example extends TypedComponent {
         if (!controlPanel) {
             return;
         }
+
+        /** @type {HTMLElement | null} */
         const controlPanelHeader = controlPanel.querySelector('.pcui-panel-header');
-        // @ts-ignore
+        if (!controlPanelHeader) {
+            return;
+        }
         controlPanelHeader.onclick = () => this.toggleCollapse();
 
         // Other events
@@ -192,7 +193,6 @@ class Example extends TypedComponent {
     }
 
     renderDeviceSelector() {
-        // @ts-ignore
         const { showDeviceSelector } = this.state;
 
         if (!showDeviceSelector) {
@@ -213,7 +213,7 @@ class Example extends TypedComponent {
         return jsx(
             ErrorBoundary,
             null,
-            jsx(this.state.controls, {
+            jsx(controls, {
                 // @ts-ignore
                 observer: window.observerData,
                 PCUI,
@@ -269,10 +269,9 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {Event} event - Event.
+     * @param {HandleFilesEvent} event - Event.
      */
     handleRequestedFiles(event) {
-        // @ts-ignore
         const files = event.detail;
         this.mergeState({ files });
     }
