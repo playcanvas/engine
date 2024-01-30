@@ -13,6 +13,9 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     // @ts-ignore
     window.setType = (/** @type {string} */ value) => setType(value);
 
+    // @ts-ignore
+    window.setProj = (/** @type {number} */ value) => setProj(value);
+
     return fragment(
         jsx(Panel, { headerText: 'Transform' },
             jsx(LabelGroup, { text: 'Type' },
@@ -211,7 +214,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'camera.proj' },
-                    onSelect: value => setProj((parseInt(value) || 0) - 1)
+                    onSelect: value => setProj((parseInt(value) || 1) - 1)
                 })
             ),
             (proj === pc.PROJECTION_PERSPECTIVE) &&
@@ -508,6 +511,19 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     app.root.addChild(camera);
     orbitCamera.distance = 14;
 
+    const tmpV1 = new pc.Vec3();
+    const tmpQ1 = new pc.Quat();
+    app.on('update', () => {
+        if (camera.camera.projection === pc.PROJECTION_PERSPECTIVE) {
+            cone.lookAt(camera.getPosition());
+        } else {
+            tmpQ1.copy(camera.getRotation());
+            tmpQ1.getEulerAngles(tmpV1);
+            // tmpV1.mulScalar(-1);
+            cone.setEulerAngles(tmpV1);
+        }
+    });
+
     // create 3-point lighting
     const backLight = new pc.Entity('light');
     backLight.addComponent('light', {
@@ -546,13 +562,20 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     gizmoHandler.add(box);
     this.focus();
 
-    // Change gizmo mode keybinds
+    // wrappers for control state changes
     const setType = (/** @type {string} */ value) => {
         data.set('gizmo.type', value);
 
         // call method from top context (same as controls)
         // @ts-ignore
         window.top.setType(value);
+    };
+    const setProj = (/** @type {number} */ value) => {
+        data.set('camera.proj', value + 1);
+
+        // call method from top context (same as controls)
+        // @ts-ignore
+        window.top.setProj(value);
     };
 
     const keydown = (/** @type {KeyboardEvent} */ e) => {
@@ -576,6 +599,12 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
                 break;
             case '3':
                 setType('scale');
+                break;
+            case 'p':
+                setProj(pc.PROJECTION_PERSPECTIVE);
+                break;
+            case 'o':
+                setProj(pc.PROJECTION_ORTHOGRAPHIC);
                 break;
         }
     };
