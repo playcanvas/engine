@@ -18,7 +18,6 @@ function polyCall(thisArg, ...args) {
  * // doesn't start with 'class', so not changing any behaviour
  * debugger; // step through with F11 to debug
  * Object.prototype.toString.call(1) === '[object Number]'
- *
  */
 function enablePolyfillFunctionCall() {
     // eslint-disable-next-line no-extend-native
