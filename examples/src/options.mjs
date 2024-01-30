@@ -1,4 +1,5 @@
 /**
+ * @template {Record<string, string>} [FILES=Record<string, string>]
  * @typedef {object} ExampleOptions
  * @property {HTMLCanvasElement} canvas - The canvas.
  * @property {import('@playcanvas/observer').Observer} data - The data.
@@ -11,6 +12,5 @@
  * @property {string} ammoPath - The ammo path.
  * @property {string} basisPath - The basis path.
  * @property {any} pcx - The pcx.
- * @template {Record<string, string>} [FILES=Record<string, string>]
  * @property {FILES} files - The files.
  */
