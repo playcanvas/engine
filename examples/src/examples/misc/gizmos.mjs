@@ -234,9 +234,9 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../options.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+async function example({ pcx, canvas, deviceType, files, data, glslangPath, twgslPath, scriptsPath }) {
 
-    // Class for handling gizmos
+    // class for handling gizmos
     class GizmoHandler {
         /**
          * Gizmo type.
@@ -421,11 +421,11 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    // set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Ensure canvas is resized when window changes size
+    // ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
 
@@ -452,17 +452,90 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
      * @param {pc.Color} color - The color.
      * @returns {pc.Material} - The standard material.
      */
-    function createMaterial(color) {
+    function createColorMaterial(color) {
         const material = new pc.StandardMaterial();
         material.diffuse = color;
         return material;
+    }
+
+    /**
+     * @param {pc.Shader} shader - The shader.
+     * @returns {pc.Material} - The standard material.
+     */
+    function createShaderMaterial(shader) {
+        const material = new pc.Material();
+        material.shader = shader;
+        material.blendType = pc.BLEND_NONE;
+        material.update();
+        return material;
+    }
+
+    /**
+     * @param {{ gridSize: number }} options - Grid mesh options.
+     * @returns {pc.Mesh} - The mesh.
+     */
+    function createGridMesh(options) {
+        const gridSize = options.gridSize ?? 4;
+
+        const vertexFormat = new pc.VertexFormat(device, [{
+            semantic: pc.SEMANTIC_POSITION,
+            components: 3,
+            type: pc.TYPE_FLOAT32
+        }, {
+            semantic: pc.SEMANTIC_COLOR,
+            components: 4,
+            type: pc.TYPE_UINT8,
+            normalize: true
+        }]);
+
+
+        const numLines = gridSize + 1;
+
+        const gridData = new Float32Array(numLines * 4 * 4);
+        const clrData = new Uint32Array(gridData.buffer);
+
+        for (let i = 0; i < numLines; i++) {
+            const a = (i / (numLines - 1) - 0.5) * gridSize;
+            const b = gridSize / 2;
+            const idx = i * 16;
+            const clr = i === Math.floor(numLines / 2) ? 0xff000000 : 0xffa0a0a0;
+
+            gridData[idx + 0] = a;
+            gridData[idx + 1] = 0;
+            gridData[idx + 2] = -b;
+            clrData[idx + 3] = clr;
+
+            gridData[idx + 4] = a;
+            gridData[idx + 5] = 0;
+            gridData[idx + 6] = b;
+            clrData[idx + 7] = clr;
+
+            gridData[idx + 8] = -b;
+            gridData[idx + 9] = 0;
+            gridData[idx + 10] = a;
+            clrData[idx + 11] = clr;
+
+            gridData[idx + 12] = b;
+            gridData[idx + 13] = 0;
+            gridData[idx + 14] = a;
+            clrData[idx + 15] = clr;
+        }
+
+        const mesh = new pc.Mesh(device);
+        mesh.vertexBuffer = new pc.VertexBuffer(device, vertexFormat, numLines * 4, pc.BUFFER_STATIC, gridData.buffer);
+        mesh.primitive[0].type = pc.PRIMITIVE_LINES;
+        mesh.primitive[0].base = 0;
+        mesh.primitive[0].indexed = false;
+        mesh.primitive[0].count = numLines * 4;
+
+        return mesh;
     }
 
     // create entities
     const box = new pc.Entity('box');
     box.addComponent('render', {
         type: 'box',
-        material: createMaterial(new pc.Color(0.8, 1, 1))
+        material: createColorMaterial(new pc.Color(0.8, 1, 1))
     });
     box.setPosition(1, 0, 1);
     app.root.addChild(box);
@@ -470,7 +543,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const sphere = new pc.Entity('sphere');
     sphere.addComponent('render', {
         type: 'sphere',
-        material: createMaterial(new pc.Color(1, 0.8, 1))
+        material: createColorMaterial(new pc.Color(1, 0.8, 1))
     });
     sphere.setPosition(-1, 0, 1);
     app.root.addChild(sphere);
@@ -478,7 +551,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const cone = new pc.Entity('cone');
     cone.addComponent('render', {
         type: 'cone',
-        material: createMaterial(new pc.Color(1, 1, 0.8))
+        material: createColorMaterial(new pc.Color(1, 1, 0.8))
     });
     cone.setPosition(-1, 0, -1);
     cone.setLocalScale(1.5, 2.25, 1.5);
@@ -487,7 +560,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const capsule = new pc.Entity('capsule');
     capsule.addComponent('render', {
         type: 'capsule',
-        material: createMaterial(new pc.Color(0.8, 0.8, 1))
+        material: createColorMaterial(new pc.Color(0.8, 0.8, 1))
     });
     capsule.setPosition(1, 0, -1);
     app.root.addChild(capsule);
@@ -533,15 +606,27 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     app.root.addChild(keyLight);
     keyLight.setEulerAngles(0, 0, -60);
 
-    // create gizmoLayer
+    // create layers
+    const debugLayer = new pc.Layer({
+        name: 'Debug Layer',
+        opaqueSortMode: pc.SORTMODE_NONE,
+        transparentSortMode: pc.SORTMODE_NONE
+    });
     const gizmoLayer = new pc.Layer({
         name: 'Gizmo',
         clearDepthBuffer: true,
         opaqueSortMode: pc.SORTMODE_NONE,
         transparentSortMode: pc.SORTMODE_NONE
     });
-    app.scene.layers.push(gizmoLayer);
-    camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
+    const layers = app.scene.layers;
+    const worldLayer = layers.getLayerByName('World');
+    const idx = layers.getOpaqueIndex(worldLayer);
+    layers.insert(debugLayer, idx + 1);
+    layers.push(gizmoLayer);
+    camera.camera.layers = camera.camera.layers.concat([
+        debugLayer.id,
+        gizmoLayer.id
+    ]);
 
     // create gizmo
     const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
@@ -565,6 +650,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
         window.top.setProj(value);
     };
 
+    // key event handlers
     const keydown = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
@@ -599,7 +685,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     window.addEventListener('keyup', keyup);
     window.addEventListener('keypress', keypress);
 
-    // Gizmo and camera set handler
+    // gizmo and camera set handler
     const tmpC = new pc.Color();
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
@@ -638,9 +724,8 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
         }
     });
 
-    // Picker
+    // picker
     const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-    const worldLayer = app.scene.layers.getLayerByName("World");
     const pickerLayers = [worldLayer];
 
     const onPointerDown = (/** @type {PointerEvent} */ e) => {
@@ -663,19 +748,16 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     };
     window.addEventListener('pointerdown', onPointerDown);
 
-    const gridColor = new pc.Color(1, 1, 1, 0.5);
-    const gridHalfSize = 4;
-    /**
-     * @type {pc.Vec3[]}
-     */
-    const gridLines = [];
-    for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
-        gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
-        gridLines.push(new pc.Vec3(i - gridHalfSize, 0, -gridHalfSize), new pc.Vec3(i - gridHalfSize, 0, gridHalfSize));
-    }
-    app.on('update', () => {
-        app.drawLines(gridLines, gridColor);
+    // grid
+    const shader = pc.createShaderFromCode(device, files['shader.vert'], files['shader.frag'], 'grid-lines', {
+        vertex_position: pc.SEMANTIC_POSITION,
+        vertex_color: pc.SEMANTIC_COLOR
     });
+
+    const mesh = createGridMesh({ gridSize: 8 });
+    const material = createShaderMaterial(shader);
+    const meshInstance = new pc.MeshInstance(mesh, material, new pc.GraphNode());
+    debugLayer.addMeshInstances([meshInstance], true);
 
     app.on('destroy', () => {
         gizmoHandler.destroy();
@@ -695,6 +777,32 @@ class GizmosExample {
     static WEBGPU_ENABLED = false;
     static controls = controls;
     static example = example;
+    static FILES = {
+        'shader.vert': /* glsl */`
+attribute vec3 vertex_position;
+attribute vec4 vertex_color;
+varying vec4 vColor;
+varying vec2 vZW;
+uniform mat4 matrix_model;
+uniform mat4 matrix_viewProjection;
+void main(void) {
+    gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
+    // store z/w for later use in fragment shader
+    vColor = vertex_color;
+    vZW = gl_Position.zw;
+    // disable depth clipping
+    gl_Position.z = 0.0;
+}`,
+        'shader.frag': /* glsl */`
+precision highp float;
+varying vec4 vColor;
+varying vec2 vZW;
+void main(void) {
+    gl_FragColor = vColor;
+    // clamp depth in Z to [0, 1] range
+    gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
+}`
+    };
 }
 
 export { GizmosExample };
