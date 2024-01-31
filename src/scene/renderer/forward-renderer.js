@@ -761,7 +761,7 @@ class ForwardRenderer extends Renderer {
                 // on webgl1, depth pass renders ahead of the main camera instead of the middle of the frame
                 const depthPass = camera.camera.renderPassDepthGrab;
                 if (depthPass && webgl1 && renderAction.firstCameraUse) {
-
+                    depthPass.options.resizeSource = camera.camera.renderTarget;
                     depthPass.update(this.scene);
                     frameGraph.addRenderPass(depthPass);
                 }
