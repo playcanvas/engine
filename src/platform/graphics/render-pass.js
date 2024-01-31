@@ -126,7 +126,7 @@ class RenderPass {
     /**
      * The options specified when the render target was initialized.
      */
-    options;
+    _options;
 
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
@@ -198,6 +198,20 @@ class RenderPass {
         this.device = graphicsDevice;
     }
 
+    set options(value) {
+        this._options = value;
+
+        // sanitize options
+        if (value) {
+            this._options.scaleX = this._options.scaleX ?? 1;
+            this._options.scaleY = this._options.scaleY ?? 1;
+        }
+    }
+
+    get options() {
+        return this._options;
+    }
+
     /**
      * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
      * target to render into (output). This function should be called only for render passes which
@@ -206,12 +220,7 @@ class RenderPass {
      */
     init(renderTarget = null, options = null) {
 
-        // sanitize options
         this.options = options;
-        if (options) {
-            this.options.scaleX = this.options.scaleX ?? 1;
-            this.options.scaleY = this.options.scaleY ?? 1;
-        }
 
         // null represents the default framebuffer
         this.renderTarget = renderTarget;
@@ -252,10 +261,10 @@ class RenderPass {
 
     frameUpdate() {
         // resize the render target if needed
-        if (this.options && this.renderTarget) {
-            const resizeSource = this.options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this.options.scaleX);
-            const height = Math.floor(resizeSource.height * this.options.scaleY);
+        if (this._options && this.renderTarget) {
+            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
+            const width = Math.floor(resizeSource.width * this._options.scaleX);
+            const height = Math.floor(resizeSource.height * this._options.scaleY);
             this.renderTarget.resize(width, height);
         }
     }
