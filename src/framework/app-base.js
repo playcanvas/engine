@@ -1794,6 +1794,7 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
      * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
      * const min = new pc.Vec3(-1, -1, -1);
@@ -1801,8 +1802,8 @@ class AppBase extends EventHandler {
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      * @ignore
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
+        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
     }
 
     /**
