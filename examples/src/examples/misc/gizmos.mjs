@@ -455,6 +455,7 @@ async function example({ pcx, canvas, deviceType, files, data, glslangPath, twgs
     function createColorMaterial(color) {
         const material = new pc.StandardMaterial();
         material.diffuse = color;
+        material.update();
         return material;
     }
 
