@@ -4,6 +4,7 @@ import { ShaderUtils } from "../../platform/graphics/shader-utils.js";
 import { DITHER_NONE } from "../constants.js";
 import { shaderChunks } from "../shader-lib/chunks/chunks.js";
 import { ShaderGenerator } from "../shader-lib/programs/shader-generator.js";
+import { ShaderPass } from "../shader-pass.js";
 
 const splatCoreVS = `
     attribute vec3 vertex_position;
@@ -233,6 +234,10 @@ const splatCoreFS = /* glsl_ */ `
     varying vec4 color;
     varying float id;
 
+    #ifdef PICK_PASS
+        uniform vec4 uColor;
+    #endif
+
     vec4 evalSplat() {
 
         #ifdef DEBUG_RENDER
@@ -245,6 +250,11 @@ const splatCoreFS = /* glsl_ */ `
             float A = -dot(texCoord, texCoord);
             if (A < -4.0) discard;
             float B = exp(A) * color.a;
+
+            #ifdef PICK_PASS
+                if (B < 0.3) discard;
+                return(uColor);
+            #endif
 
             #ifndef DITHER_NONE
                 opacityDither(B, id * 0.013);
@@ -272,7 +282,11 @@ class GShaderGeneratorSplat {
 
     createShaderDefinition(device, options) {
 
+        const shaderPassInfo = ShaderPass.get(device).getByIndex(options.pass);
+        const shaderPassDefines = shaderPassInfo.shaderDefines;
+
         const defines =
+            shaderPassDefines +
             (options.debugRender ? '#define DEBUG_RENDER\n' : '') +
             (device.isWebGL1 ? '' : '#define INT_INDICES\n') +
             `#define DITHER_${options.dither.toUpperCase()}\n`;
