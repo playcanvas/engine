@@ -1,13 +1,19 @@
 import {
+    CULLFACE_BACK,
+    BLEND_NORMAL,
+    SEMANTIC_POSITION,
+    SEMANTIC_COLOR,
     createBox,
     createCone,
     createCylinder,
     createPlane,
     createMesh,
     createTorus,
+    createShaderFromCode,
     Material,
     MeshInstance,
     Entity,
+    Color,
     Quat,
     Vec3
 } from 'playcanvas';
@@ -17,6 +23,7 @@ import { MeshTriData } from './mesh-tri-data.js';
 // constants
 const SHADOW_DAMP_SCALE = 0.25;
 const SHADOW_DAMP_OFFSET = 0.75;
+const SHADOW_MESH_MAP = new Map();
 const TORUS_RENDER_SEGMENTS = 80;
 const TORUS_INTERSECT_SEGMENTS = 20;
 const LIGHT_DIR = new Vec3(1, 2, 3);
@@ -27,13 +34,43 @@ const MESH_TEMPLATES = {
     plane: createPlane,
     torus: createTorus
 };
+const SHADER = {
+    vert: /* glsl */`
+        attribute vec3 vertex_position;
+        attribute vec4 vertex_color;
+        varying vec4 vColor;
+        varying vec2 vZW;
+        uniform mat4 matrix_model;
+        uniform mat4 matrix_viewProjection;
+        void main(void) {
+            gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
+            vColor = vertex_color;
+            #ifdef GL2
+                // store z/w for later use in fragment shader
+                vZW = gl_Position.zw;
+                // disable depth clipping
+                gl_Position.z = 0.0;
+            #endif
+        }`,
+    frag: /* glsl */`
+        precision highp float;
+        varying vec4 vColor;
+        varying vec2 vZW;
+        void main(void) {
+            gl_FragColor = vColor;
+            #ifdef GL2
+                // clamp depth in Z to [0, 1] range
+                gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
+            #endif
+        }`
+};
 
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpV2 = new Vec3();
 const tmpQ1 = new Quat();
 
-function createShadowMesh(device, entity, type, templateOpts = {}) {
+function createShadowMesh(device, entity, type, color = Color.WHITE, templateOpts = {}) {
     const createTemplate = MESH_TEMPLATES[type];
     if (!createTemplate) {
         throw new Error('Invalid primitive type.');
@@ -56,12 +93,19 @@ function createShadowMesh(device, entity, type, templateOpts = {}) {
     wtm.transformVector(tmpV1, tmpV1);
     tmpV1.normalize();
     const numVertices = mesh.vertexBuffer.numVertices;
-    calculateShadowColors(tmpV1, numVertices, options.normals, options.colors);
+    const shadow = calculateShadow(tmpV1, numVertices, options.normals);
+    for (let i = 0; i < shadow.length; i++) {
+        options.colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
+    }
 
-    return createMesh(device, options.positions, options);
+    const shadowMesh = createMesh(device, options.positions, options);
+    SHADOW_MESH_MAP.set(shadowMesh, shadow);
+
+    return shadowMesh;
 }
 
-function calculateShadowColors(lightDir, numVertices, normals, colors = []) {
+function calculateShadow(lightDir, numVertices, normals) {
+    const shadow = [];
     for (let i = 0; i < numVertices; i++) {
         const x = normals[i * 3];
         const y = normals[i * 3 + 1];
@@ -69,11 +113,23 @@ function calculateShadowColors(lightDir, numVertices, normals, colors = []) {
         tmpV2.set(x, y, z);
 
         const dot = lightDir.dot(tmpV2);
-        const shadow = dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET;
-        colors.push(shadow * 255, shadow * 255, shadow * 255, 1);
+        shadow.push(dot * SHADOW_DAMP_SCALE + SHADOW_DAMP_OFFSET);
     }
 
-    return colors;
+    return shadow;
+}
+
+function setShadowMeshColor(mesh, color) {
+    if (!SHADOW_MESH_MAP.has(mesh)) {
+        return;
+    }
+    const shadow = SHADOW_MESH_MAP.get(mesh);
+    const colors = [];
+    for (let i = 0; i < shadow.length; i++) {
+        colors.push(shadow[i] * color.r * 255, shadow[i] * color.g * 255, shadow[i] * color.b * 255, color.a * 255);
+    }
+    mesh.setColors32(colors);
+    mesh.update();
 }
 
 class AxisShape {
@@ -153,9 +209,20 @@ class AxisShape {
     }
 
     _addRenderMeshes(entity, meshes) {
+        const shader = createShaderFromCode(this.device, SHADER.vert, SHADER.frag, 'axis-shape', {
+            vertex_position: SEMANTIC_POSITION,
+            vertex_color: SEMANTIC_COLOR
+        });
+
+        const material = new Material();
+        material.shader = shader;
+        material.cull = CULLFACE_BACK;
+        material.blendType = BLEND_NORMAL;
+        material.update();
+
         const meshInstances = [];
         for (let i = 0; i < meshes.length; i++) {
-            const mi = new MeshInstance(meshes[i], this._disabled ? this._disabledMaterial : this._defaultMaterial);
+            const mi = new MeshInstance(meshes[i], material);
             meshInstances.push(mi);
             this.meshInstances.push(mi);
         }
@@ -167,7 +234,8 @@ class AxisShape {
     }
 
     _addRenderShadowMesh(entity, type) {
-        const mesh = createShadowMesh(this.device, entity, type);
+        const material = this._disabled ? this._disabledMaterial : this._defaultMaterial;
+        const mesh = createShadowMesh(this.device, entity, type, material.emissive);
         this._addRenderMeshes(entity, [mesh]);
     }
 
@@ -175,9 +243,10 @@ class AxisShape {
         if (this._disabled) {
             return;
         }
-        const material = state ? this._hoverMaterial : this._defaultMaterial;
+
         for (let i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i].material = material;
+            const material = state ? this._hoverMaterial : this._defaultMaterial;
+            setShadowMeshColor(this.meshInstances[i].mesh, material.emissive);
         }
     }
 
@@ -501,7 +570,8 @@ class AxisDisk extends AxisShape {
     }
 
     _createRenderTorus(sectorAngle) {
-        return createShadowMesh(this.device, this.entity, 'torus', {
+        const material = this._disabled ? this._disabledMaterial : this._defaultMaterial;
+        return createShadowMesh(this.device, this.entity, 'torus', material.emissive, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: sectorAngle,

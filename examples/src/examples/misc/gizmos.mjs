@@ -584,9 +584,7 @@ async function example({ pcx, canvas, deviceType, files, data, glslangPath, twgs
     camera.setPosition(1, 1, 1);
     app.root.addChild(camera);
     orbitCamera.distance = 14;
-    camera.camera.nearClip = 0.1;
-    camera.camera.farClip = 15;
-
+    camera.camera.farClip = 12.3;
 
     // create 3-point lighting
     const backLight = new pc.Entity('light');
@@ -791,11 +789,13 @@ uniform mat4 matrix_model;
 uniform mat4 matrix_viewProjection;
 void main(void) {
     gl_Position = matrix_viewProjection * matrix_model * vec4(vertex_position, 1.0);
-    // store z/w for later use in fragment shader
     vColor = vertex_color;
-    vZW = gl_Position.zw;
-    // disable depth clipping
-    gl_Position.z = 0.0;
+    #ifdef GL2
+        // store z/w for later use in fragment shader
+        vZW = gl_Position.zw;
+        // disable depth clipping
+        gl_Position.z = 0.0;
+    #endif
 }`,
         'shader.frag': /* glsl */`
 precision highp float;
@@ -803,8 +803,10 @@ varying vec4 vColor;
 varying vec2 vZW;
 void main(void) {
     gl_FragColor = vColor;
-    // clamp depth in Z to [0, 1] range
-    gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
+    #ifdef GL2
+        // clamp depth in Z to [0, 1] range
+        gl_FragDepth = max(0.0, min(1.0, (vZW.x / vZW.y + 1.0) * 0.5));
+    #endif
 }`
     };
 }
