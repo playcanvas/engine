@@ -246,7 +246,13 @@ const defaultElements = [
     'x', 'y', 'z',
     'f_dc_0', 'f_dc_1', 'f_dc_2', 'opacity',
     'rot_0', 'rot_1', 'rot_2', 'rot_3',
-    'scale_0', 'scale_1', 'scale_2'
+    'scale_0', 'scale_1', 'scale_2',
+    // compressed format elements
+    'min_x', 'min_y', 'min_z',
+    'max_x', 'max_y', 'max_z',
+    'min_scale_x', 'min_scale_y', 'min_scale_z',
+    'max_scale_x', 'max_scale_y', 'max_scale_z',
+    'packed_position', 'packed_rotation', 'packed_scale', 'packed_color'
 ];
 
 const defaultElementsSet = new Set(defaultElements);
