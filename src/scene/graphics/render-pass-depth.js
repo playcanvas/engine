@@ -99,7 +99,7 @@ class RenderPassDepth extends RenderPass {
                         const meshInstance = meshInstances[j];
 
                         // only collect meshes that update the depth
-                        if (meshInstance.material?.depthWrite && !meshInstance._noDepthDrawGl1) {
+                        if (meshInstance.material?.depthWrite) {
                             tempMeshInstances.push(meshInstance);
                         }
                     }

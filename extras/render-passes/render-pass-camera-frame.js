@@ -4,6 +4,8 @@ import {
     PIXELFORMAT_RGBA8,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
+    FILTER_NEAREST,
+    PIXELFORMAT_DEPTH,
     RenderPass,
     RenderPassColorGrab,
     RenderPassForward,
@@ -132,9 +134,21 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
+        const sceneDepth = new Texture(device, {
+            name: 'SceneDepth',
+            width: 4,
+            height: 4,
+            format: PIXELFORMAT_DEPTH,  // TODO: handle stencil support
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+
         const rt = new RenderTarget({
             colorBuffer: sceneTexture,
-            depth: true,
+            depthBuffer: sceneDepth,
             samples: options.samples
         });
         this._rt = rt;
