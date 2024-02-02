@@ -696,8 +696,6 @@ class ForwardRenderer extends Renderer {
      * @param {import('../mesh-instance.js').MeshInstance[]} [options.meshInstances] - The mesh
      * instances to be rendered. Use when layer is not provided.
      * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
-     * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
-     * clustered lighting object to be used when clustered lighting is specified.
      */
     renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
 
