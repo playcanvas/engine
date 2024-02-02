@@ -324,7 +324,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             mouseState = 0;
         });
 
-        const lookRange = 1.5;
         const mouseRay = new pc.Ray();
         const planePoint = new pc.Vec3();
         const mousePos = new pc.Vec2();
@@ -336,13 +335,6 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
             mousePos.x = x;
             mousePos.y = y;
 
-            const centerX = app.graphicsDevice.width / 2;
-            const centerY = app.graphicsDevice.height / 2;
-
-            const xOffset = (x - centerX) / app.graphicsDevice.width;
-            const yOffset = (y - centerY) / app.graphicsDevice.height;
-
-            cameraEntity.lookAt(xOffset * lookRange, 5 - yOffset * lookRange, 0);
             if (cameraEntity.camera) {
                 cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip, mouseRay.direction);
                 mouseRay.origin.copy(cameraEntity.getPosition());

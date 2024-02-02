@@ -34,19 +34,11 @@ class RenderPassLightmapper extends RenderPass {
 
         const { renderer, camera, receivers, renderTarget, worldClusters, lightArray } = this;
 
-        // prepare clustered lighting
-        if (worldClusters) {
-            worldClusters.activate();
-        }
-
-        renderer.setCameraUniforms(camera, renderTarget);
-        if (device.supportsUniformBuffers) {
-            renderer.setupViewUniformBuffers(this.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, 1);
-        }
-
-        renderer._forwardTime = 0;
-        renderer._shadowMapTime = 0;
-        renderer.renderForward(camera, receivers, lightArray, SHADER_FORWARDHDR);
+        renderer.renderForwardLayer(camera, renderTarget, null, undefined, SHADER_FORWARDHDR, this.viewBindGroups, {
+            meshInstances: receivers,
+            splitLights: lightArray,
+            lightClusters: worldClusters
+        });
 
         DebugGraphics.popGpuMarker(device);
     }

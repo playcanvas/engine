@@ -11,6 +11,7 @@ import {
     LIGHTSHAPE_PUNCTUAL,
     LAYERID_DEPTH
 } from '../constants.js';
+import { WorldClustersDebug } from '../lighting/world-clusters-debug.js';
 
 import { Renderer } from './renderer.js';
 import { LightCamera } from './light-camera.js';
@@ -669,6 +670,117 @@ class ForwardRenderer extends Renderer {
         // #if _PROFILER
         this._forwardTime += now() - forwardStartTime;
         // #endif
+    }
+
+    /**
+     * Forward render mesh instances on a specified layer, using a camera and a render target.
+     * Shaders used are based on the shaderPass provided, with optional clustered lighting support.
+     *
+     * @param {import('../camera.js').Camera} camera - The
+     * camera.
+     * @param {import('../../platform/graphics/render-target.js').RenderTarget} renderTarget - The
+     * render target.
+     * @param {import('../layer.js').Layer} layer - The layer.
+     * @param {boolean} transparent - True if transparent sublayer should be rendered, opaque
+     * otherwise.
+     * @param {number} shaderPass - A type of shader to use during rendering.
+     * @param {import('../../platform/graphics/bind-group.js').BindGroup[]} viewBindGroups - An array
+     * storing the view level bing groups (can be empty array, and this function populates if per
+     * view).
+     * @param {object} [options] - Object for passing optional arguments.
+     * @param {boolean} [options.clearColors] - True if the color buffer should be cleared.
+     * @param {boolean} [options.clearDepth] - True if the depth buffer should be cleared.
+     * @param {boolean} [options.clearStencil] - True if the stencil buffer should be cleared.
+     * @param {import('../lighting/world-clusters.js').WorldClusters} [options.lightClusters] - The
+     * world clusters object to be used for clustered lighting.
+     * @param {import('../mesh-instance.js').MeshInstance[]} [options.meshInstances] - The mesh
+     * instances to be rendered. Use when layer is not provided.
+     * @param {object} [options.splitLights] - The split lights to be used for clustered lighting.
+     */
+    renderForwardLayer(camera, renderTarget, layer, transparent, shaderPass, viewBindGroups, options = {}) {
+
+        const { scene, device } = this;
+        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
+
+        this.setupViewport(camera, renderTarget);
+
+        // clearing
+        const clearColor = options.clearColors ?? false;
+        const clearDepth = options.clearDepth ?? false;
+        const clearStencil = options.clearStencil ?? false;
+        if (clearColor || clearDepth || clearStencil) {
+            this.clear(camera, clearColor, clearDepth, clearStencil);
+        }
+
+        let visible, splitLights;
+        if (layer) {
+            // #if _PROFILER
+            const sortTime = now();
+            // #endif
+
+            layer.sortVisible(camera, transparent);
+
+            // #if _PROFILER
+            this._sortTime += now() - sortTime;
+            // #endif
+
+            const culledInstances = layer.getCulledInstances(camera);
+            visible = transparent ? culledInstances.transparent : culledInstances.opaque;
+
+            // add debug mesh instances to visible list
+            scene.immediate.onPreRenderLayer(layer, visible, transparent);
+
+            // set up layer uniforms
+            if (layer.requiresLightCube) {
+                this.lightCube.update(scene.ambientLight, layer._lights);
+                this.constantLightCube.setValue(this.lightCube.colors);
+            }
+
+            splitLights = layer.splitLights;
+
+        } else {
+            visible = options.meshInstances;
+            splitLights = options.splitLights;
+        }
+
+        Debug.assert(visible, 'Either layer or options.meshInstances must be provided');
+
+        // upload clustered lights uniforms
+        const { lightClusters } = options;
+        if (clusteredLightingEnabled && lightClusters) {
+            lightClusters.activate();
+
+            // debug rendering of clusters
+            if (layer) {
+                if (!this.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
+                    this.clustersDebugRendered = true;
+                    WorldClustersDebug.render(lightClusters, this.scene);
+                }
+            }
+        }
+
+        // Set the not very clever global variable which is only useful when there's just one camera
+        scene._activeCamera = camera;
+
+        const viewCount = this.setCameraUniforms(camera, renderTarget);
+        if (device.supportsUniformBuffers) {
+            this.setupViewUniformBuffers(viewBindGroups, this.viewUniformFormat, this.viewBindGroupFormat, viewCount);
+        }
+
+        // enable flip faces if either the camera has _flipFaces enabled or the render target has flipY enabled
+        const flipFaces = !!(camera._flipFaces ^ renderTarget?.flipY);
+
+        const forwardDrawCalls = this._forwardDrawCalls;
+        this.renderForward(camera,
+                           visible,
+                           splitLights,
+                           shaderPass,
+                           layer?.onDrawCall,
+                           layer,
+                           flipFaces);
+
+        if (layer)
+            layer._forwardDrawCalls += this._forwardDrawCalls - forwardDrawCalls;
     }
 
     setSceneConstants() {
