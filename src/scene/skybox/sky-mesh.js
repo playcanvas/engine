@@ -76,7 +76,6 @@ class SkyMesh {
             this.meshInstance = meshInstance;
 
             meshInstance.cull = false;
-            meshInstance._noDepthDrawGl1 = true;
 
             // disable picker, the material has custom update shader and does not handle picker variant
             meshInstance.pick = false;
