@@ -584,7 +584,6 @@ async function example({ pcx, canvas, deviceType, files, data, glslangPath, twgs
     camera.setPosition(1, 1, 1);
     app.root.addChild(camera);
     orbitCamera.distance = 14;
-    camera.camera.farClip = 12.3;
 
     // create 3-point lighting
     const backLight = new pc.Entity('light');

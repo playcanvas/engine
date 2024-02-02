@@ -1,4 +1,5 @@
 import {
+    CULLFACE_NONE,
     CULLFACE_BACK,
     BLEND_NORMAL,
     SEMANTIC_POSITION,
@@ -18,6 +19,7 @@ import {
     Vec3
 } from 'playcanvas';
 
+import { COLOR_GRAY } from './default-colors.js';
 import { MeshTriData } from './mesh-tri-data.js';
 
 // constants
@@ -143,11 +145,13 @@ class AxisShape {
 
     _disabled;
 
-    _defaultMaterial;
+    _defaultColor = Color.WHITE;
 
-    _hoverMaterial;
+    _hoverColor = Color.BLACK;
 
-    _disabledMaterial;
+    _disabledColor = COLOR_GRAY;
+
+    _cull = CULLFACE_BACK;
 
     device;
 
@@ -170,25 +174,20 @@ class AxisShape {
 
         this._layers = options.layers ?? this._layers;
 
-        if (!(options.defaultMaterial instanceof Material)) {
-            throw new Error('No default material provided.');
+        if (options.defaultColor instanceof Color) {
+            this._defaultColor = options.defaultColor;
         }
-        this._defaultMaterial = options.defaultMaterial;
-
-        if (!(options.hoverMaterial instanceof Material)) {
-            throw new Error('No hover material provided.');
+        if (options.hoverColor instanceof Color) {
+            this._hoverColor = options.hoverColor;
         }
-        this._hoverMaterial = options.hoverMaterial;
-
-        if (!(options.disabledMaterial instanceof Material)) {
-            throw new Error('No disabled material provided.');
+        if (options.disabledColor instanceof Color) {
+            this._disabledColor = options.disabledColor;
         }
-        this._disabledMaterial = options.disabledMaterial;
     }
 
     set disabled(value) {
         for (let i = 0; i < this.meshInstances.length; i++) {
-            this.meshInstances[i].material = value ? this._disabledMaterial : this._defaultMaterial;
+            setShadowMeshColor(this.meshInstances[i].mesh, this._disabledColor);
         }
         this._disabled = value ?? false;
     }
@@ -216,7 +215,7 @@ class AxisShape {
 
         const material = new Material();
         material.shader = shader;
-        material.cull = CULLFACE_BACK;
+        material.cull = this._cull;
         material.blendType = BLEND_NORMAL;
         material.update();
 
@@ -234,8 +233,8 @@ class AxisShape {
     }
 
     _addRenderShadowMesh(entity, type) {
-        const material = this._disabled ? this._disabledMaterial : this._defaultMaterial;
-        const mesh = createShadowMesh(this.device, entity, type, material.emissive);
+        const color = this._disabled ? this._disabledColor : this._defaultColor;
+        const mesh = createShadowMesh(this.device, entity, type, color);
         this._addRenderMeshes(entity, [mesh]);
     }
 
@@ -245,8 +244,8 @@ class AxisShape {
         }
 
         for (let i = 0; i < this.meshInstances.length; i++) {
-            const material = state ? this._hoverMaterial : this._defaultMaterial;
-            setShadowMeshColor(this.meshInstances[i].mesh, material.emissive);
+            const color = state ? this._hoverColor : this._defaultColor;
+            setShadowMeshColor(this.meshInstances[i].mesh, color);
         }
     }
 
@@ -570,8 +569,8 @@ class AxisDisk extends AxisShape {
     }
 
     _createRenderTorus(sectorAngle) {
-        const material = this._disabled ? this._disabledMaterial : this._defaultMaterial;
-        return createShadowMesh(this.device, this.entity, 'torus', material.emissive, {
+        const color = this._disabled ? this._disabledColor : this._defaultColor;
+        return createShadowMesh(this.device, this.entity, 'torus', color, {
             tubeRadius: this._tubeRadius,
             ringRadius: this._ringRadius,
             sectorAngle: sectorAngle,
@@ -643,6 +642,8 @@ class AxisDisk extends AxisShape {
 }
 
 class AxisPlane extends AxisShape {
+    _cull = CULLFACE_NONE;
+
     _size = 0.2;
 
     _gap = 0.1;
