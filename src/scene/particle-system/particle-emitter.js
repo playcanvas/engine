@@ -701,7 +701,6 @@ class ParticleEmitter {
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
         this.meshInstance.cull = true;
-        this.meshInstance._noDepthDrawGl1 = true;
         if (this.localSpace) {
             this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, this.node.getWorldTransform());
         } else {
