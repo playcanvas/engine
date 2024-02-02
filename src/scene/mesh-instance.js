@@ -251,7 +251,6 @@ class MeshInstance {
         this._renderStyle = RENDERSTYLE_SOLID;
         this._receiveShadow = true;
         this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
