@@ -92,7 +92,6 @@ function engineFor(type) {
  * @returns {string} File to write as standalone example.
  */
 function generateExampleFile(category, example, exampleClass) {
-    // '@([A-Z0-9_]+)'
     let html = EXAMPLE_HTML;
 
     // title
