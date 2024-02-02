@@ -790,10 +790,17 @@ class Texture {
         options.face ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
-        if (options.mode === TEXTURELOCK_NONE) {
-            Debug.log("pc.Texture#lock: To unlock a texture, call texture.unlock(). Defaulting to 'TEXTURELOCK_READ'.", this);
-            options.mode = TEXTURELOCK_READ;
-        }
+        Debug.assert(
+            this._lockedMode === TEXTURELOCK_NONE,
+            'The texture is already locked. Call `texture.unlock()` before attempting to lock again.',
+            this
+        );
+
+        Debug.assert(
+            options.mode === TEXTURELOCK_READ || options.mode === TEXTURELOCK_WRITE,
+            'Cannot lock a texture with TEXTURELOCK_NONE. To unlock a texture, call `texture.unlock()`.',
+            this
+        );
 
         this._lockedMode = options.mode;
         this._lockedLevel = options.level;
@@ -924,7 +931,7 @@ class Texture {
      */
     unlock() {
         if (this._lockedMode === TEXTURELOCK_NONE) {
-            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
+            Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
         }
 
         // Upload the new pixel data if locked in write mode (default)
