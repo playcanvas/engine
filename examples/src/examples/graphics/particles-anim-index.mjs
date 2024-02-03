@@ -6,23 +6,39 @@ import * as pc from 'playcanvas';
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
 
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+    const assets = {
+        'particlesNumbers': new pc.Asset('particlesNumbers', 'texture', { url: assetPath + 'textures/particles-numbers.png' })
+    };
+
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ParticleSystemComponentSystem,
+        pc.ScreenComponentSystem,
+        pc.ElementComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-    // Ensure canvas is resized when window changes size
-    const resize = () => app.resizeCanvas();
-    window.addEventListener('resize', resize);
-    app.on('destroy', () => {
-        window.removeEventListener('resize', resize);
-    });
-
-    const assets = {
-        'particlesNumbers': new pc.Asset('particlesNumbers', 'texture', { url: assetPath + 'textures/particles-numbers.png' })
-    };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
