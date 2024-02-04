@@ -38,5 +38,5 @@ for (const category_ in realExamples) {
     }
 }
 // This will be minified by rollup terser plugin, just keep it readable/debuggable here
-const out = `export const exampleData = ${JSON.stringify(exampleData, null, 2)};`;
+const out = `export const exampleData = ${JSON.stringify(exampleData, null, 4)};\n`;
 fs.writeFileSync(`${MAIN_DIR}/src/example-data.mjs`, out);

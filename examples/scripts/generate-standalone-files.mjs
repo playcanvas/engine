@@ -7,7 +7,7 @@ import { toKebabCase } from '../src/app/helpers/strings.mjs';
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
-const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/templates/example.html`, 'utf-8');
+const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
 
 /**
  * @type {Record<string, Record<string, {
