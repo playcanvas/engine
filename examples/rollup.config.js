@@ -36,6 +36,9 @@ const staticFiles = [
     // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
 
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
     // external libraries used in examples
     { src: './src/lib', dest: 'dist/static/lib/' },
 
