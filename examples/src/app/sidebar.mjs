@@ -202,13 +202,13 @@ export class SideBar extends TypedComponent {
                                            {
                                                className: 'small-thumbnail',
                                                loading: "lazy",
-                                               src: thumbnailPath + `${category}_${example}_small.png`
+                                               src: thumbnailPath + `${category}_${example}_small.webp`
                                            }
                                        ),
                                        jsx("img", {
                                            className: 'large-thumbnail',
                                            loading: "lazy",
-                                           src: thumbnailPath + `${category}_${example}_large.png`
+                                           src: thumbnailPath + `${category}_${example}_large.webp`
                                        }),
                                        jsx(
                                            "div",

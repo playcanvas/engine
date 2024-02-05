@@ -23,7 +23,7 @@ function template({ path, exampleTitle, largeThumbnailName }) {
           <meta name="twitter:site" content="@playcanvas" />
           <meta name="twitter:title" content="${exampleTitle}" />
           <meta name="twitter:description" content="A PlayCanvas engine example" />
-          <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/${largeThumbnailName}.png" />
+          <meta name="twitter:image" content="https://playcanvas.github.io/thumbnails/${largeThumbnailName}.webp" />
           <meta name="twitter:url" content="https://playcanvas.github.io/${path}" />
         </head>
         <body>
