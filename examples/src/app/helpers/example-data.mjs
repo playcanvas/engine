@@ -67,6 +67,4 @@ Object.keys(exampleData).forEach((categorySlug) => {
     });
 });
 
-console.log({ categories, paths });
-
 export default { categories, paths };
