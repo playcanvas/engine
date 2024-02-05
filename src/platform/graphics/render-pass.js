@@ -91,7 +91,7 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name = '';
+    _name;
 
     /**
      * The graphics device.
@@ -193,9 +193,18 @@ class RenderPass {
      * graphics device.
      */
     constructor(graphicsDevice) {
-        DebugHelper.setName(this, this.constructor.name);
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
+    }
+
+    set name(value) {
+        this._name = value;
+    }
+
+    get name() {
+        if (!this._name)
+            this._name = this.constructor.name;
+        return this._name;
     }
 
     set options(value) {
