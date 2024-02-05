@@ -24,7 +24,6 @@ for (const category_ in realExamples) {
     }
 }
 
-
 /** @type {Record<string, Record<string, object>>} */
 const categories = {};
 /** @type {Record<string, object>} */
@@ -35,29 +34,14 @@ Object.keys(exampleData).forEach((categorySlug) => {
         examples: {}
     };
     // @ts-ignore
-    Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
+    Object.keys(exampleData[categorySlug]).forEach((exampleSlug) => {
         const name = kebabCaseToPascalCase(exampleSlug);
         // @ts-ignore
         categories[categorySlug].examples[exampleSlug] = name;
-        // @ts-ignore
-        const data = exampleData[categorySlug][exampleSlug];
-        const files = [
-            {
-                name: 'example.js',
-                text: data.example,
-                type: 'javascript'
-            }
-        ];
-        const extraFiles = data.files;
-        if (extraFiles) {
-            Object.keys(extraFiles).forEach((name) => {
-                files.push({
-                    name,
-                    text: extraFiles[name],
-                    type: 'text'
-                });
-            });
-        }
+        const files = [{
+            name: 'example.js',
+            type: 'javascript'
+        }];
         paths[`/${categorySlug}/${exampleSlug}`] = {
             path: `/${categorySlug}/${exampleSlug}`,
             files: files,
