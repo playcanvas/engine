@@ -6,6 +6,7 @@ import {
     UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY,
     UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_UVEC3ARRAY, UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_BVEC3ARRAY
 } from './constants.js';
+import { DebugGraphics } from './debug-graphics.js';
 import { DynamicBufferAllocation } from './dynamic-buffers.js';
 
 // Uniform buffer set functions - only implemented for types for which the default
@@ -319,7 +320,7 @@ class UniformBuffer {
             }
         } else {
             Debug.warnOnce(`Value was not set when assigning to uniform [${uniformFormat.name}]` +
-                            `, expected type ${uniformTypeToName[uniformFormat.type]}`);
+                            `, expected type ${uniformTypeToName[uniformFormat.type]} while rendering ${DebugGraphics.toString()}`);
         }
     }
 

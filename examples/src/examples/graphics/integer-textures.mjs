@@ -51,7 +51,7 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
 
 /**
  * @typedef {{ 'sandSimulation.frag': string, 'renderOutput.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
