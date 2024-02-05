@@ -1,3 +1,6 @@
+/**
+ * This file spawns a pool of puppeteer instances to take screenshots of each example for thumbnail.
+ */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import puppeteer from 'puppeteer';

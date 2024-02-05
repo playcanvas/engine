@@ -1,3 +1,6 @@
+/**
+ * This script is used to generate template HTML files to create embeds while sharing.
+ */
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';

@@ -1,3 +1,6 @@
+/**
+ * This script is used to generate the standalone HTML file for the iframe to view the example.
+ */
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
