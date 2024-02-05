@@ -25,24 +25,36 @@ const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const staticFiles = [
+    // static main page src
     { src: './src/static', dest: 'dist/' },
-    { src: './src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './src/example.css', dest: 'dist/iframe/example.css' },
-    { src: './src/pathes.js', dest: 'dist/iframe/pathes.js' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // static iframe src
+    { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
+    { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
+    { src: './iframe/pathes.js', dest: 'dist/iframe/pathes.js' },
+
+    // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
+
+    // playcanvas observer
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
 
     // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
 ];
 
-// ^ = beginning of line
-// \s* = whitespace
-// $ = end of line
-// .* = any character
 const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
 const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
 const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
@@ -163,7 +175,7 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
-                watch(this, 'scripts/generate-standalone-files.mjs');
+                watch(this, 'scripts/standalone-html.mjs');
                 watch(this, 'src/examples');
             }
         },
