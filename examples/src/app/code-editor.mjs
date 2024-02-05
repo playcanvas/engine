@@ -288,7 +288,7 @@ class CodeEditor extends TypedComponent {
                             text: '',
                             onClick: () => {
                                 const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
-                                window.open(`https://github.com/playcanvas/engine/blob/dev/examples/src/examples/${examplePath}.mjs`);
+                                window.open(`https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.mjs`);
                             }
                         }
                     )
