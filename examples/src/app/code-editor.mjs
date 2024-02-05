@@ -225,6 +225,8 @@ class CodeEditor extends TypedComponent {
         const options = {
             value,
             language,
+            theme: 'vs-dark',
+            loading: null,
             beforeMount: this.beforeMount.bind(this),
             onMount: this.editorDidMount.bind(this),
             onChange: this.onChange.bind(this),
@@ -233,7 +235,6 @@ class CodeEditor extends TypedComponent {
                     horizontal: 'visible'
                 },
                 readOnly: false,
-                theme: 'vs-dark',
                 minimap: {
                     enabled: showMinimap
                 }

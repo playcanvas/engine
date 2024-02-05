@@ -13,7 +13,4 @@ function main() {
     root.render(jsx(MainLayout, null));
 }
 
-window.onload = () => {
-    // Just a little timeout to give browser some time to "breathe"
-    setTimeout(main, 50);
-};
+main();
