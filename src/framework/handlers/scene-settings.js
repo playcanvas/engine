@@ -8,7 +8,6 @@ import { ResourceHandler } from './handler.js';
 class SceneSettingsHandler extends ResourceHandler {
     constructor(app) {
         super(app);
-        this._app = app;
         this.maxRetries = 0;
     }
 

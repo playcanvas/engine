@@ -31,7 +31,6 @@ class ScriptHandler extends ResourceHandler {
      */
     constructor(app) {
         super(app);
-        this._app = app;
         this._scripts = { };
         this._cache = { };
     }
