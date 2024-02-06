@@ -12,16 +12,6 @@ const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
 
-/**
- * @type {Record<string, Record<string, {
- *  example: string,
- *  nameSlug: string,
- *  categorySlug: string,
- *  files: any,
- *  controls: string
- * }>>}
- */
-const exampleData = {};
 if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/`);
 }
@@ -29,27 +19,10 @@ if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
     fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
 }
 for (const category_ in realExamples) {
-    const category = toKebabCase(category_);
-    exampleData[category] = {};
     // @ts-ignore
     const examples = realExamples[category_];
     for (const exampleName_ in examples) {
         const exampleClass = examples[exampleName_];
-        const example = toKebabCase(exampleName_).replace('-example', '');
-        const exampleFunc = exampleClass.example.toString();
-        exampleData[category][example] = {
-            example: exampleFunc,
-            nameSlug: example,
-            categorySlug: category,
-            files: undefined,
-            controls: ''
-        };
-        if (exampleClass.FILES) {
-            exampleData[category][example].files = exampleClass.FILES;
-        }
-        if (exampleClass.controls) {
-            exampleData[category][example].controls = exampleClass.controls.toString();
-        }
         const dropEnding = exampleName_.replace(/Example$/, ""); // TestExample -> Test
         const out = generateExampleFile(category_, dropEnding, exampleClass);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category_}_${dropEnding}.html`, out);
