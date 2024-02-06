@@ -332,7 +332,7 @@ class XrHitTest extends EventHandler {
     }
 
     /**
-     * True if Hit Test is available. This information is available only when session has started.
+     * True if Hit Test is available. This information is available only when the session has started.
      *
      * @type {boolean}
      */
