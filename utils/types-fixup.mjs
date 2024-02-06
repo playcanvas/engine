@@ -559,6 +559,5 @@ fs.writeFileSync(path, dts);
 
 path = './types/framework/handlers/handler.d.ts';
 dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
 dts = dts.replace('patch(', 'patch?(');
 fs.writeFileSync(path, dts);

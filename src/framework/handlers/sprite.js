@@ -4,7 +4,7 @@ import { http } from '../../platform/net/http.js';
 
 import { Sprite } from '../../scene/sprite.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 // The scope of this function is the sprite asset
 function onTextureAtlasLoaded(atlasAsset) {
@@ -23,10 +23,10 @@ function onTextureAtlasAdded(atlasAsset) {
 /**
  * Resource handler used for loading {@link Sprite} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Graphics
  */
-class SpriteHandler {
+class SpriteHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -41,6 +41,7 @@ class SpriteHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this._assets = app.assets;
         this._device = app.graphicsDevice;
         this.maxRetries = 0;

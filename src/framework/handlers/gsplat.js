@@ -1,6 +1,11 @@
 import { PlyParser } from '../parsers/ply.js';
 
-class GSplatHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class GSplatHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -15,6 +20,7 @@ class GSplatHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this.parser = new PlyParser(app.graphicsDevice, app.assets, 3);
     }
 

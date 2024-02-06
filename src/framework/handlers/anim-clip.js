@@ -4,15 +4,15 @@ import { AnimCurve } from '../anim/evaluator/anim-curve.js';
 import { AnimData } from '../anim/evaluator/anim-data.js';
 import { AnimTrack } from '../anim/evaluator/anim-track.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler used for loading {@link AnimClip} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @ignore
  */
-class AnimClipHandler {
+class AnimClipHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -21,6 +21,7 @@ class AnimClipHandler {
     handlerType = "animclip";
 
     constructor(app) {
+        super(app);
         this.maxRetries = 0;
     }
 

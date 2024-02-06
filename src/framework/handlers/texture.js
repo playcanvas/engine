@@ -17,7 +17,7 @@ import { Ktx2Parser } from '../parsers/texture/ktx2.js';
 import { DdsParser } from '../parsers/texture/dds.js';
 import { HdrParser } from '../parsers/texture/hdr.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -159,10 +159,10 @@ const _completePartialMipmapChain = function (texture) {
 /**
  * Resource handler used for loading 2D and 3D {@link Texture} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Graphics
  */
-class TextureHandler {
+class TextureHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -177,6 +177,7 @@ class TextureHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         const assets = app.assets;
         const device = app.graphicsDevice;
 

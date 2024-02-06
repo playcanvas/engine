@@ -6,15 +6,15 @@ import { Texture } from '../../platform/graphics/texture.js';
 
 import { Asset } from '../asset/asset.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler used for loading cubemap {@link Texture} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Graphics
  */
-class CubemapHandler {
+class CubemapHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -29,6 +29,7 @@ class CubemapHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this._device = app.graphicsDevice;
         this._registry = app.assets;
         this._loader = app.loader;

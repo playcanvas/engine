@@ -2,7 +2,12 @@ import { http } from '../../platform/net/http.js';
 
 import { Template } from '../template.js';
 
-class TemplateHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class TemplateHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -11,6 +16,7 @@ class TemplateHandler {
     handlerType = "template";
 
     constructor(app) {
+        super(app);
         this._app = app;
         this.maxRetries = 0;
     }

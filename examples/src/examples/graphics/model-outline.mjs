@@ -27,7 +27,6 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.ScriptHandler
     ];
 

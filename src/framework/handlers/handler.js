@@ -7,11 +7,18 @@
  */
 
 /**
- * @interface
- * @name ResourceHandler
- * @description Interface for ResourceHandlers used by {@link ResourceLoader}.
+ * @description Base class for ResourceHandlers used by {@link ResourceLoader}.
  */
 class ResourceHandler {
+    /**
+     * Create a new ResourceHandler instance.
+     *
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     */
+    constructor(app) {
+        // no implementation
+    }
+
     /**
      * @function
      * @name ResourceHandler#load

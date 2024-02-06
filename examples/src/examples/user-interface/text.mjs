@@ -33,9 +33,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
         pc.ScrollbarComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 

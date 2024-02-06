@@ -1,6 +1,11 @@
 import { http, Http } from '../../platform/net/http.js';
 
-class JsonHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class JsonHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -9,6 +14,7 @@ class JsonHandler {
     handlerType = "json";
 
     constructor(app) {
+        super(app);
         this.maxRetries = 0;
     }
 

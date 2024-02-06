@@ -1,7 +1,13 @@
 import { SceneUtils } from './scene-utils.js';
 
-class SceneSettingsHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class SceneSettingsHandler extends ResourceHandler {
     constructor(app) {
+        super(app);
         this._app = app;
         this.maxRetries = 0;
     }

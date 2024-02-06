@@ -9,7 +9,7 @@ import { standardMaterialCubemapParameters, standardMaterialTextureParameters } 
 import { AssetReference } from '../asset/asset-reference.js';
 import { JsonStandardMaterialParser } from '../parsers/material/json-standard-material.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 const PLACEHOLDER_MAP = {
     aoMap: 'white',
@@ -35,10 +35,10 @@ const PLACEHOLDER_MAP = {
 /**
  * Resource handler used for loading {@link Material} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Graphics
  */
-class MaterialHandler {
+class MaterialHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -53,6 +53,7 @@ class MaterialHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this._assets = app.assets;
         this._device = app.graphicsDevice;
 

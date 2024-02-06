@@ -1,4 +1,9 @@
-class FolderHandler {
+import { ResourceHandler } from "./handler.js";
+
+/**
+ * @augments ResourceHandler
+ */
+class FolderHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *

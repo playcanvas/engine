@@ -2,7 +2,7 @@ import { path } from '../../core/path.js';
 
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * @interface
@@ -160,10 +160,10 @@ class ContainerResource {
  * });
  * ```
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Graphics
  */
-class ContainerHandler {
+class ContainerHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -178,6 +178,7 @@ class ContainerHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }

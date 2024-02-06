@@ -5,15 +5,15 @@ import { http, Http } from '../../platform/net/http.js';
 import { Bundle } from '../bundle/bundle.js';
 import { Untar, UntarWorker } from './untar.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Loads Bundle Assets.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @ignore
  */
-class BundleHandler {
+class BundleHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -28,6 +28,7 @@ class BundleHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this._assets = app.assets;
         this._worker = null;
         this.maxRetries = 0;

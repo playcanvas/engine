@@ -1,6 +1,11 @@
 import { http, Http } from '../../platform/net/http.js';
 
-class BinaryHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class BinaryHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -9,6 +14,7 @@ class BinaryHandler {
     handlerType = "binary";
 
     constructor(app) {
+        super(app);
         this.maxRetries = 0;
     }
 

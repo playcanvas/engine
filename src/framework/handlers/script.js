@@ -5,17 +5,17 @@ import { ScriptTypes } from '../script/script-types.js';
 import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
  * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
  * files, such as third-party libraries.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Script
  */
-class ScriptHandler {
+class ScriptHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -30,6 +30,7 @@ class ScriptHandler {
      * @hideconstructor
      */
     constructor(app) {
+        super(app);
         this._app = app;
         this._scripts = { };
         this._cache = { };

@@ -10,15 +10,15 @@ import { AnimEvents } from '../anim/evaluator/anim-events.js';
 
 import { GlbParser } from '../parsers/glb-parser.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler used for loading {@link Animation} resources.
  *
- * @implements {ResourceHandler}
+ * @augments ResourceHandler
  * @category Animation
  */
-class AnimationHandler {
+class AnimationHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -28,6 +28,7 @@ class AnimationHandler {
 
     /** @hideconstructor */
     constructor(app) {
+        super(app);
         this.device = app.graphicsDevice;
         this.assets = app.assets;
         this.maxRetries = 0;

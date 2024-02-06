@@ -1,6 +1,11 @@
 import { http } from '../../platform/net/http.js';
 
-class CssHandler {
+import { ResourceHandler } from './handler.js';
+
+/**
+ * @augments ResourceHandler
+ */
+class CssHandler extends ResourceHandler {
     /**
      * Type of the resource the handler handles.
      *
@@ -9,6 +14,7 @@ class CssHandler {
     handlerType = "css";
 
     constructor(app) {
+        super(app);
         this.maxRetries = 0;
     }
 
