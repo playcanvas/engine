@@ -205,7 +205,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      * @example
-     * // start a hit testing using an arbitrary ray
+     * // start hit testing using an arbitrary ray
      * const ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
