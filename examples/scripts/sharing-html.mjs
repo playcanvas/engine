@@ -36,13 +36,18 @@ function template({ path, exampleTitle, largeThumbnailName }) {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
+
+if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
+    fs.mkdirSync(`${MAIN_DIR}/dist/`);
+}
+if (!fs.existsSync(`${MAIN_DIR}/dist/share/`)) {
+    fs.mkdirSync(`${MAIN_DIR}/dist/share/`);
+}
+
 const categoriesList = [];
 for (const category_ in realExamples) {
     const category = toKebabCase(category_);
-    const dir = `${MAIN_DIR}dist/${category}`;
-    if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir);
-    }
+
     // @ts-ignore
     const examples = realExamples[category_];
     categoriesList.push({
@@ -56,11 +61,11 @@ for (const category_ in realExamples) {
             exampleTitle: `${example.split('-').join(' ')}`,
             largeThumbnailName: `${category}_${example}_large`
         });
-        const dir = `${MAIN_DIR}/dist/${category}/${example}`;
+        const dir = `${MAIN_DIR}/dist/share/${category}_${example}`;
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir);
         }
-        fs.writeFileSync(`${MAIN_DIR}/dist/${category}/${example}/index.html`, content);
+        fs.writeFileSync(`${dir}/index.html`, content);
     }
 }
 fs.writeFileSync(`dist/examples.json`, JSON.stringify(categoriesList));

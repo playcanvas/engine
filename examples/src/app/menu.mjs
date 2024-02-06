@@ -105,7 +105,9 @@ class Menu extends TypedComponent {
                     icon: 'E256',
                     text: '',
                     onClick: () => {
-                        const tweetText = encodeURI(`Check out this @playcanvas engine example! ${location.href.replace('#/', '')}`);
+                        const url = new URL(location.href);
+                        const link = `${url.origin}/share/${url.hash.slice(2).replace(/\//g, '_')}`;
+                        const tweetText = encodeURI(`Check out this @playcanvas engine example! ${link}`);
                         window.open(`https://twitter.com/intent/tweet?text=${tweetText}`);
                     }
                 }),
