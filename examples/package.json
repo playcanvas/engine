@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "prebuild": "npm run build:standalone && npm run build:sharing",
-    "build": "npm run prebuild && cross-env NODE_ENV=production rollup -c",
+    "prebuild": "npm run -s build:standalone && npm run -s build:sharing",
+    "build": "cross-env NODE_ENV=production rollup -c",
     "build:sharing": "node ./scripts/sharing-html.mjs",
     "build:standalone": "node ./scripts/standalone-html.mjs",
     "build:thumbnails": "npm run build && node ./scripts/thumbnails.mjs",
