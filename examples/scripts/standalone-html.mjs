@@ -5,7 +5,6 @@ import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import * as realExamples from "../src/examples/index.mjs";
-import { toKebabCase } from '../src/app/helpers/strings.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
