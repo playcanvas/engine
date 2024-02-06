@@ -31,7 +31,7 @@ const staticFiles = [
     // static iframe src
     { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
     { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
-    { src: './iframe/pathes.js', dest: 'dist/iframe/pathes.js' },
+    { src: './iframe/paths.js', dest: 'dist/iframe/paths.js' },
 
     // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
