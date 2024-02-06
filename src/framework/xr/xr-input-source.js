@@ -141,7 +141,7 @@ class XrInputSource extends EventHandler {
      * Fired when hit test source receives new results. It provides transform information that
      * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
      * object that produced the hit result, the {@link Vec3} position, the {@link Quat}
-     * rotation and the {@link XRHitTestResult} object that is created by WebXR API
+     * rotation and the {@link XRHitTestResult} object that is created by the WebXR API.
      *
      * @event
      * @example
