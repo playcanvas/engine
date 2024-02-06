@@ -280,7 +280,7 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * Spherical harmonics coefficients of estimated to be ambient light. Or null if data is not available.
+     * Spherical harmonic coefficients of estimated ambient light. Or null if data is not available.
      *
      * @type {Float32Array|null}
      */
