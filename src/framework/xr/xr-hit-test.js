@@ -216,7 +216,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      * @example
-     * // start a hit testing for a touch screen taps
+     * // start hit testing for touch screen taps
      * app.xr.hitTest.start({
      *     profile: 'generic-touchscreen',
      *     callback: function (err, hitTestSource) {
