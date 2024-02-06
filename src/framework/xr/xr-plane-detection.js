@@ -192,7 +192,7 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * True if Plane Detection is available. This information is available only when session has started.
+     * True if Plane Detection is available. This information is available only when the session has started.
      *
      * @type {boolean}
      */
