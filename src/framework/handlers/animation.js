@@ -26,7 +26,10 @@ class AnimationHandler extends ResourceHandler {
      */
     handlerType = "animation";
 
-    /** @hideconstructor */
+    /**
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @hideconstructor
+     */
     constructor(app) {
         super(app);
         this.device = app.graphicsDevice;

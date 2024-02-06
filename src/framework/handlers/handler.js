@@ -16,7 +16,7 @@ class ResourceHandler {
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      */
     constructor(app) {
-        // no implementation
+        this._app = app;
     }
 
     /**
