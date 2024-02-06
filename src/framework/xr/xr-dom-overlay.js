@@ -66,8 +66,8 @@ class XrDomOverlay {
     }
 
     /**
-     * True if DOM Overlay is available. This information becomes available only when session has
-     * started and a valid root DOM element been provided.
+     * True if DOM Overlay is available. This information becomes available only when the session has
+     * started and a valid root DOM element has been provided.
      *
      * @type {boolean}
      */
