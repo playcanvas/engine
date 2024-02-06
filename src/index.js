@@ -364,11 +364,15 @@ export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
 export { XrInput } from './framework/xr/xr-input.js';
 export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrJoint } from './framework/xr/xr-joint.js';
 export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
 export { XrManager } from './framework/xr/xr-manager.js';
+export { XrMeshDetection } from './framework/xr/xr-mesh-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
 export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
 export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
+export { XrView } from './framework/xr/xr-view.js';
+export { XrViews } from './framework/xr/xr-views.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';
