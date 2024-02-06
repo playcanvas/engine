@@ -7,9 +7,9 @@ import { Mat4 } from "../../core/math/mat4.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
- * Represents XR View which represents a screen (monoscopic scenario such as mobile phones) or an eye
- * (stereoscopic scenarion such as HMD context). It provides access to view's color and depth information
- * based on capabilities of underlying AR system.
+ * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
+ * (stereoscopic scenario such as an HMD context). It provides access to the view's color and depth information
+ * based on the capabilities of underlying AR system.
  *
  * @category XR
  */
