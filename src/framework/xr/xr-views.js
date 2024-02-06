@@ -245,7 +245,7 @@ class XrViews extends EventHandler {
     }
 
     /**
-     * Get a {@link XrView} by its associated eye contant.
+     * Get an {@link XrView} by its associated eye constant.
      *
      * @param {string} eye - An XREYE_* view is associated with. Can be 'none' for monoscope views.
      * @returns {XrView|null} View or null if view of such eye is not available.
