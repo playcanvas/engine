@@ -194,7 +194,7 @@ class XrHitTest extends EventHandler {
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
-     * // start a hit testing from viewer position facing forward
+     * // start hit testing from viewer position facing forwards
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
      *     callback: function (err, hitTestSource) {
