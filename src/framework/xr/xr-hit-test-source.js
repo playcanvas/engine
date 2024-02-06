@@ -18,6 +18,19 @@ const poolQuat = [];
  * Represents XR hit test source, which provides access to hit results of real world geometry from
  * AR session.
  *
+ * ```javascript
+ * // start a hit test from a viewer origin forward
+ * app.xr.hitTest.start({
+ *     spaceType: pc.XRSPACE_VIEWER,
+ *     callback: function (err, hitTestSource) {
+ *         if (err) return;
+ *         // subscribe to hit test results
+ *         hitTestSource.on('result', function (position, rotation, inputSource, hitTestResult) {
+ *             // position and rotation of hit test result
+ *         });
+ *     }
+ * });
+ * ```
  * @augments EventHandler
  * @category XR
  */
@@ -35,13 +48,13 @@ class XrHitTestSource extends EventHandler {
 
     /**
      * Fired when the hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry. The handler is passed the {@link Vec3} position,
-     * the {@link Quat} rotation, the {@link XrInputSource} (if it is a transient hit test source)
+     * tries to match real world geometry. Callback provides the {@link Vec3} position, the
+     * {@link Quat} rotation, the {@link XrInputSource} (if it is a transient hit test source)
      * and the {@link XRHitTestResult} object that is created by WebXR API.
      *
      * @event
      * @example
-     * hitTestSource.on('result', (position, rotation) => {
+     * hitTestSource.on('result', (position, rotation, inputSource, hitTestReult) => {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });
