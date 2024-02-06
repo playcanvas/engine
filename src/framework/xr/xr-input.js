@@ -5,7 +5,8 @@ import { XrInputSource } from './xr-input-source.js';
 /**
  * Provides access to input sources for WebXR.
  *
- * Input sources represend:
+ * Input sources represent:
+ *
  * - hand held controllers - and their optional capabilities: gamepad and vibration
  * - hands - with their individual joints
  * - transient sources - such as touch screen taps and voice commands
