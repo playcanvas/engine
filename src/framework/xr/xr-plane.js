@@ -6,7 +6,7 @@ let ids = 0;
 
 /**
  * Detected Plane instance that provides position, rotation, polygon points and its semantic label.
- * Plane data is a subject to change during its lifetime.
+ * Plane data is subject to change during its lifetime.
  *
  * @category XR
  */
