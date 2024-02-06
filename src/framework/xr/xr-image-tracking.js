@@ -5,7 +5,7 @@ import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
  * Image Tracking provides the ability to track real world images using provided image samples and
- * their estimated sizes. Underlying system will assume that tracked image can move and rotate
+ * their estimated sizes. The underlying system will assume that tracked image can move and rotate
  * in the real world and will try to provide transformation estimates and its tracking state.
  *
  * @augments EventHandler
