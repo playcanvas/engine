@@ -197,7 +197,7 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * True if Image Tracking is available. This information is only available when
+     * True if Image Tracking is available. This information is only available when the
      * XR session has started, and will be true if image tracking is supported and
      * images were provided and they have been processed successfully.
      *
