@@ -3,11 +3,11 @@ import { HashRouter, Switch, Route, Redirect } from 'react-router-dom';
 import { CodeEditor } from './code-editor.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
 import { Example } from './example.mjs';
-import { iframeHideStats, iframeShowStats } from './iframeUtils.mjs';
-import { jsx } from './jsx.mjs';
+import { iframeHideStats, iframeShowStats } from '../iframeUtils.mjs';
+import { jsx } from '../jsx.mjs';
 import { Menu } from './menu.mjs';
 import { SideBar } from './sidebar.mjs';
-import { getOrientation } from './utils.mjs';
+import { getOrientation } from '../utils.mjs';
 import { Container } from '@playcanvas/pcui/react';
 
 // eslint-disable-next-line jsdoc/require-property

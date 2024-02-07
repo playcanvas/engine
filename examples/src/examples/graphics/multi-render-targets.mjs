@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'output.frag': string }} Files
- * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/components/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */

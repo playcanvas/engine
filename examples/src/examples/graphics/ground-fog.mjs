@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @param {import('../../app/components/example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
@@ -20,7 +20,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/components/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */

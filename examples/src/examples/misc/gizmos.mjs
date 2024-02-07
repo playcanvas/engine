@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @param {import('../../app/components/example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
@@ -231,7 +231,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/components/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {

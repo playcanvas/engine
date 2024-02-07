@@ -1,18 +1,18 @@
 import { withRouter } from 'react-router-dom';
-import examples from './helpers/example-data.mjs';
-import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { iframePath } from './assetPath.mjs';
+import examples from '../helpers/example-data.mjs';
+import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
+import { iframePath } from '../assetPath.mjs';
 import { DeviceSelector } from './device-selector.mjs';
 import { ErrorBoundary } from './error-boundary.mjs';
-import { jsx, fragment } from './jsx.mjs';
+import { jsx, fragment } from '../jsx.mjs';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeReady, iframeReload, iframeRequestFiles } from './iframeUtils.mjs';
-import { getOrientation } from './utils.mjs';
+import { iframeReady, iframeReload, iframeRequestFiles } from '../iframeUtils.mjs';
+import { getOrientation } from '../utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
-import './events.js';
+import '../events.js';
 
 /**
  * @template {Record<string, string>} [FILES=Record<string, string>]
@@ -37,8 +37,8 @@ import './events.js';
  * @property {import('@playcanvas/pcui')} PCUI - The PCUI vanilla module.
  * @property {import('@playcanvas/pcui/react')} ReactPCUI - The PCUI React module.
  * @property {import('react')} React - The PCUI React module.
- * @property {import('./jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
- * @property {import('./jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
+ * @property {import('../jsx.mjs').jsx} jsx - Shortcut for creating a React JSX Element.
+ * @property {import('../jsx.mjs').fragment} fragment - Shortcut for creating a React JSX fragment.
  */
 
 /**

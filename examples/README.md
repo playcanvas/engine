@@ -54,7 +54,7 @@ Each example can implement two methods to define its functionality:
 ```js
 import * as pc from 'playcanvas';
 /**
- * @param {import('../../../app/example.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/components/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath }) {

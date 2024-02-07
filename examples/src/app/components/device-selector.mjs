@@ -7,9 +7,9 @@ import {
     DEVICETYPE_NULL
 } from 'playcanvas/src/platform/graphics/constants.js';
 import { Component } from 'react';
-import { jsx } from './jsx.mjs';
+import { jsx } from '../jsx.mjs';
 import { SelectInput } from '@playcanvas/pcui/react';
-import './events.js';
+import '../events.js';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',

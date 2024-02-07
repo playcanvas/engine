@@ -1,6 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { jsx } from './jsx.mjs';
-import { MainLayout } from './MainLayout.mjs';
+import { MainLayout } from './components/MainLayout.mjs';
 import '@playcanvas/pcui/styles';
 
 function main() {
