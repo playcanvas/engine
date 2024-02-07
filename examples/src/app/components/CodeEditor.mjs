@@ -4,7 +4,7 @@ import MonacoEditor, { loader } from "@monaco-editor/react";
 
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
-import { iframeHotReload, iframeRequestFiles, iframeResize } from '../iframeUtils.mjs';
+import { iframeFire } from '../iframeUtils.mjs';
 import { removeRedundantSpaces } from '../helpers/strings.mjs';
 import '../events.js';
 
@@ -105,7 +105,7 @@ class CodeEditor extends TypedComponent {
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener("requestedFiles", this._handleRequestedFiles);
-        iframeRequestFiles();
+        iframeFire('requestFiles');
     }
 
     componentWillUnmount() {
@@ -140,7 +140,7 @@ class CodeEditor extends TypedComponent {
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, iframeHotReload);
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => iframeFire('hotReload'));
         const codePane = document.getElementById('codePane');
         if (!codePane) {
             return;
@@ -219,7 +219,7 @@ class CodeEditor extends TypedComponent {
     }
 
     render() {
-        setTimeout(iframeResize, 50);
+        iframeFire('resize');
         const { files, selectedFile, showMinimap } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
         let value = files[selectedFile];
@@ -286,7 +286,7 @@ class CodeEditor extends TypedComponent {
                             id: 'play-button',
                             icon: 'E304',
                             text: '',
-                            onClick: iframeHotReload
+                            onClick: () => iframeFire('hotReload')
                         }
                     ),
                     jsx(

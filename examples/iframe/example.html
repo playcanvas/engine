@@ -26,8 +26,9 @@
             const canvas = document.getElementById("application-canvas");
             const params = getQueryParams(window.top.location.href);
 
-            let app;
             window.ready = false; // Used in indicate if UI can render Controls
+
+            let app;
             let started = false;
             let allowRestart = true;
             let miniStats;
@@ -41,60 +42,33 @@
             if (window.controls) {
                 files['controls.mjs'] = controls.toString();
             }
-            function resolveFunction(_) {
-                if (_.call) {
-                    return _;
+            function resolveFunction(src) {
+                if (src.call) {
+                    return src;
                 }
-                return new Function('return ' + _)();
+                return new Function('return ' + src)();
             }
             const extraFiles = '@FILES';
             Object.assign(files, extraFiles);
 
-            function requestFiles() {
-                window.top.dispatchEvent(new CustomEvent("requestedFiles", {
-                    detail: {
-                        files
-                    }
-                }));
-            }
-            function fireUpdateFiles() {
-                window.top.dispatchEvent(new CustomEvent("updateFiles", {
-                    detail: {
-                        files
-                    }
-                }));
-            }
-            function fireUpdateActiveDevice() {
-                window.top.dispatchEvent(new CustomEvent("updateActiveDevice", {
-                    detail: {
-                        deviceType: app?.graphicsDevice?.deviceType
-                    }
-                }));
-            }
-            function fireExampleLoading() {
-                window.top.dispatchEvent(new CustomEvent("exampleLoading", {
-                    detail: {
-                        showDeviceSelector: '@DEVICE_SELECTOR',
-                    }
-                }));
-            }
-            function fireExampleLoad() {
-                window.top.dispatchEvent(new CustomEvent("exampleLoad", {
-                    detail: {
-                        files,
-                        description: '@DESCRIPTION'
-                    }
-                }));
+            function fire(eventName, obj) {
+                window.top.dispatchEvent(new CustomEvent(eventName, { detail: obj }));
             }
 
+            function requestFiles() {
+                fire('requestedFiles', { files });
+            }
 
             /**
              * This function is called from React whenever we click on MiniStats icon,
              * even PlayCanvas' pc itself could be undefined here.
              */
-            function showStats() {
+            function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
                 if ('@NO_MINISTATS') {
+                    return;
+                }
+                if (params.miniStats === 'false') {
                     return;
                 }
                 if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
@@ -104,19 +78,16 @@
                 if (deviceType === 'null') {
                     return;
                 }
-                if (params.miniStats === 'false') {
-                    return;
+                if (state) {
+                    if (!miniStats) {
+                        miniStats = new pcx.MiniStats(app);
+                    }
+                } else {
+                    if (!miniStats) {
+                        return;
+                    }
                 }
-                if (!miniStats) {
-                    miniStats = new pcx.MiniStats(app);
-                }
-                miniStats.enabled = true;
-            }
-            function hideStats() {
-                if (!miniStats) {
-                    return;
-                }
-                miniStats.enabled = false;
+                miniStats.enabled = state;
             }
 
             /**
@@ -146,9 +117,10 @@
                 }
                 window.ready = false;
             }
+
             window.addEventListener('requestFiles', requestFiles);
-            window.addEventListener('showStats', showStats);
-            window.addEventListener('hideStats', hideStats);
+            window.addEventListener('showStats', () => enableStats(true));
+            window.addEventListener('hideStats', () => enableStats(false));
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
 
@@ -173,7 +145,7 @@
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
-                    fireExampleLoading();
+                    fire('exampleLoading', { showDeviceSelector: '@DEVICE_SELECTOR' });
                 }
 
                 const example = resolveFunction(files['example.mjs']);
@@ -195,30 +167,29 @@
                 });
                 window.ready = true;
 
-                const startHandler = () => {
-                    if (!app?.graphicsDevice?.canvas) {
-                        console.warn('main> no canvas');
-                        return;
-                    }
-
-                    showStats();
-
-                    if (!started) { 
-                        // only one time, recalls of main() are caused by Monaco live coding
-                        fireExampleLoad();
-                    }
-                    started = true;
-
-                    fireUpdateFiles();
-                    fireUpdateActiveDevice();
-
-                    allowRestart = true;
-                };
-
                 // Wait until example has called app.start()
                 // And if it already called start, we will know by app.frame > 0
                 // app.start() is called when assets loaded in examples
                 if (app) {
+                    const startHandler = () => {
+                        if (!app?.graphicsDevice?.canvas) {
+                            console.warn('main> no canvas');
+                            return;
+                        }
+
+                        enableStats(true);
+
+                        if (!started) { 
+                            // only one time, recalls of main() are caused by Monaco live coding
+                            fire('exampleLoad', { files, description: '@DESCRIPTION' });
+                        }
+                        started = true;
+
+                        fire('updateFiles', { files });
+                        fire('updateActiveDevice', { deviceType: app?.graphicsDevice?.deviceType });
+
+                        allowRestart = true;
+                    };
                     if (app.frame) { // app already started
                         startHandler();
                     } else { // Wait for app.start()
@@ -227,10 +198,10 @@
                 } else {
                     // The example function didn't return an app instance
                     // still update the UI and assume it has started.
-                    fireExampleLoad();
+                    fire('exampleLoad', { files, description: '@DESCRIPTION' });
                     started = true;
 
-                    fireUpdateFiles();
+                    fire('updateFiles', { files });
 
                     allowRestart = true;
                 }

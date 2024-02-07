@@ -8,7 +8,7 @@ import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 
-import { iframeHideStats, iframeShowStats } from '../iframeUtils.mjs';
+import { iframeFire } from '../iframeUtils.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
 
@@ -61,9 +61,9 @@ class MainLayout extends TypedComponent {
      */
     updateShowMiniStats = (value) => {
         if (value) {
-            iframeShowStats();
+            iframeFire('showStats');
         } else {
-            iframeHideStats();
+            iframeFire('hideStats');
         }
     };
 

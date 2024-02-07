@@ -23,31 +23,6 @@ function getIframeWindow() {
     }
     return e.contentWindow;
 }
-function iframeRequestFiles() {
-    getIframeWindow()?.dispatchEvent(new CustomEvent('requestFiles'));
-}
-function iframeShowStats() {
-    getIframeWindow()?.dispatchEvent(new CustomEvent('showStats'));
-}
-function iframeHideStats() {
-    getIframeWindow()?.dispatchEvent(new CustomEvent('hideStats'));
-}
-function iframeResize() {
-    getIframeWindow()?.dispatchEvent(new Event('resize'));
-}
-function iframeReload() {
-    getIframeWindow()?.location.reload();
-}
-/**
- * Instead of reloading the entire iframe, we simply reevaluate the example function.
- * This makes the hot reload nearly instant, while iframeReload() can take seconds.
- */
-function iframeHotReload() {
-    getIframeWindow()?.dispatchEvent(new CustomEvent('hotReload'));
-}
-function iframeDestroy() {
-    getIframeWindow()?.dispatchEvent(new CustomEvent('destroy'));
-}
 function iframeReady() {
     try {
         // @ts-ignore
@@ -55,14 +30,19 @@ function iframeReady() {
     } catch (e) {}
     return false;
 }
+function iframeReload() {
+    getIframeWindow()?.location.reload();
+}
+/**
+ * @param {string} eventName - The event name
+ */
+function iframeFire(eventName) {
+    getIframeWindow()?.dispatchEvent(new CustomEvent(eventName));
+}
+
 export {
     getIframeWindow,
-    iframeRequestFiles,
-    iframeShowStats,
-    iframeHideStats,
-    iframeResize,
+    iframeReady,
     iframeReload,
-    iframeHotReload,
-    iframeDestroy,
-    iframeReady
+    iframeFire
 };
