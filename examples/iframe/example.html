@@ -27,7 +27,7 @@
             const params = getQueryParams(window.top.location.href);
 
             let app;
-            let ready = false; // Used in indicate if UI can render Controls
+            window.ready = false; // Used in indicate if UI can render Controls
             let started = false;
             let allowRestart = true;
             let miniStats;
@@ -144,7 +144,7 @@
                 if (app && app.graphicsDevice) {
                     app.destroy();
                 }
-                ready = false;
+                window.ready = false;
             }
             window.addEventListener('requestFiles', requestFiles);
             window.addEventListener('showStats', showStats);
@@ -193,7 +193,7 @@
                     pcx,
                     files,
                 });
-                ready = true;
+                window.ready = true;
 
                 const startHandler = () => {
                     if (!app?.graphicsDevice?.canvas) {
@@ -229,7 +229,9 @@
                     // still update the UI and assume it has started.
                     fireExampleLoad();
                     started = true;
+
                     fireUpdateFiles();
+
                     allowRestart = true;
                 }
             }
