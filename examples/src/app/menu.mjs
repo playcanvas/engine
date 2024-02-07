@@ -24,6 +24,7 @@ class Menu extends TypedComponent {
      */
     constructor(props) {
         super(props);
+        this._escapeKeyEvent = this._escapeKeyEvent.bind(this);
         this.handleExampleLoad = this.handleExampleLoad.bind(this);
     }
 
@@ -57,23 +58,36 @@ class Menu extends TypedComponent {
     }
 
     componentDidMount() {
-        const escapeKeyEvent = (/** @type {{ keyCode: number; }} */ e) => {
-            const canvasContainer = document.querySelector('#canvas-container');
-            if (!canvasContainer) {
-                return;
-            }
-            if (e.keyCode === 27 && canvasContainer.classList.contains('fullscreen')) {
-                this.toggleFullscreen();
-            }
-        };
         const iframe = document.querySelector('iframe');
         if (iframe) {
-            iframe.contentDocument?.addEventListener('keydown', escapeKeyEvent);
+            iframe.contentDocument?.addEventListener('keydown', this._escapeKeyEvent);
         } else {
             console.warn('Menu#useEffect> iframe undefined');
         }
-        document.addEventListener('keydown', escapeKeyEvent);
+        document.addEventListener('keydown', this._escapeKeyEvent);
         window.addEventListener('exampleLoad', this.handleExampleLoad);
+    }
+
+    componentWillUnmount() {
+        const iframe = document.querySelector('iframe');
+        if (iframe) {
+            iframe.contentDocument?.removeEventListener('keydown', this._escapeKeyEvent);
+        }
+        document.removeEventListener('keydown', this._escapeKeyEvent);
+        window.removeEventListener('exampleLoad', this.handleExampleLoad);
+    }
+
+    /**
+     * @param {KeyboardEvent} e - Keyboard event.
+     */
+    _escapeKeyEvent(e) {
+        const canvasContainer = document.querySelector('#canvas-container');
+        if (!canvasContainer) {
+            return;
+        }
+        if (e.key === 'Escape' && canvasContainer.classList.contains('fullscreen')) {
+            this.toggleFullscreen();
+        }
     }
 
     handleExampleLoad() {
@@ -131,6 +145,6 @@ class Menu extends TypedComponent {
             )
         );
     }
-};
+}
 
 export { Menu };

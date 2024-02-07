@@ -32,6 +32,8 @@ const staticFiles = [
     { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
     { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
     { src: './iframe/paths.js', dest: 'dist/iframe/paths.js' },
+    { src: './iframe/polyfill.js', dest: 'dist/iframe/polyfill.js' },
+    { src: './iframe/utils.js', dest: 'dist/iframe/utils.js' },
 
     // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
@@ -175,6 +177,7 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
+                watch(this, 'iframe/example.html');
                 watch(this, 'scripts/standalone-html.mjs');
                 watch(this, 'src/examples');
             }

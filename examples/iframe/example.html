@@ -13,104 +13,24 @@
                 '@CANVAS'
             </div>
         </div>
-        <script src='./playcanvas-observer.js'></script>
-        <script src='./paths.js'></script>
+        <script src="./playcanvas-observer.js"></script>
+        <script src="./paths.js"></script>
+        <script src="./polyfill.js"></script>
         '@IMPORTS'
         '@CONTROLS'
         '@EXAMPLE'
-        <script>
-            const ENGINE_PATH = '@ENGINE_PATH';
-            const NODE_ENV = '@NODE_ENV';
+        <script type="module">
+            import { importScript, getQueryParams, getDeviceType } from './utils.js';
 
-            /**
-             * Used in outline and posteffects to make ES5 scripts work in ES6
-             * @example
-             * // doesn't start with 'class', so not changing any behaviour
-             * debugger; // step through with F11 to debug
-             * Object.prototype.toString.call(1) === '[object Number]'
-             */
-            function enablePolyfillFunctionCall() {
-                const functionCall = Function.prototype.call;
-                function polyCall(thisArg, ...args) {
-                    if (this.toString().startsWith('class')) {
-                        return Object.assign(thisArg, new this(...args));
-                    }
-                    return functionCall.bind(this)(thisArg, ...args);
-                }
-                Function.prototype.call = polyCall;
-            }
-            enablePolyfillFunctionCall();
-
-            /**
-             * Can load UMD and ESM. UMD registers itself into globalThis, while ESM is handled
-             * to specifically to do the same, so we achieve the same result, no matter which
-             * target build/src we linked to.
-             */
-            async function loadScript(name, src) {
-                // console.log('loadScript>', { name, src });
-                const module = await import(src);
-                const isESM = Object.keys(module).length;
-                if (isESM) {
-                    window[name] = module;
-                }
-            }
-
-            /**
-             * @returns {string}
-             */
-            function getDeviceType() {
-                const last = localStorage.getItem('preferredGraphicsDevice');
-                if (last !== null) {
-                    if (last === 'webgpu' && !'@WEBGPU_ENABLED') {
-                        console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
-                        return 'webgl2';
-                    }
-                    return last;
-                } else if ('@WEBGPU_ENABLED') {
-                    let preferredDevice = 'webgpu';
-                    // Lack of Chrome's WebGPU support on Linux
-                    if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
-                        preferredDevice = 'webgl2';
-                    }
-                    return window.top.preferredGraphicsDevice || preferredDevice;
-                } else if (['webgl1', 'webgl2'].includes(window.top.preferredGraphicsDevice)) {
-                    return window.top.preferredGraphicsDevice;
-                } else {
-                    return 'webgl2';
-                }
-            }
-
-            /**
-             * Get the specified engine, picking the right choice from three sources:
-             *  - Example#ENGINE (lowest priority)
-             *  - NODE_ENV (2nd lowest priority)
-             *  - ENGINE_PATH (highest priority)
-             * If none of these sources are given, we simply pick build/playcanvas.js (ES5)
-             */
-            function getSpecifiedEngine() {
-                let specifiedEngine = '@ENGINE';
-                if (NODE_ENV === 'development') {
-                    specifiedEngine = '@DEBUG_ENGINE';
-                }
-                if (ENGINE_PATH.length) {
-                    const entryPoint = ENGINE_PATH.split('/').pop();
-                    specifiedEngine = './ENGINE_PATH/' + entryPoint;
-                }
-                return specifiedEngine;
-            }
-
-            function getQueryParameters() {
-                return Object.fromEntries(
-                    window.top.location.href.split('?').pop().split('#')[0].split('&').map(_ => _.split('='))
-                );
-            }
+            // constants
+            const canvas = document.getElementById("application-canvas");
+            const params = getQueryParams(window.top.location.href);
 
             let app;
             let ready = false; // Used in indicate if UI can render Controls
             let started = false;
+            let allowRestart = true;
             let miniStats;
-            let allowRestart = 'true';
-            const params = getQueryParameters();
             let data = new observer.Observer({});
             /**
              * Keep it function in first run for nicer debug locations.
@@ -121,18 +41,51 @@
             if (window.controls) {
                 files['controls.mjs'] = controls.toString();
             }
-            var filesObject = '@FILES';
             function resolveFunction(_) {
                 if (_.call) {
                     return _;
                 }
                 return new Function('return ' + _)();
             }
-            Object.assign(files, filesObject);
+            const extraFiles = '@FILES';
+            Object.assign(files, extraFiles);
+
             function requestFiles() {
-                const responseEvent = new CustomEvent("requestedFiles", { detail: files });
-                window.top.dispatchEvent(responseEvent);
+                window.top.dispatchEvent(new CustomEvent("requestedFiles", {
+                    detail: files
+                }));
             }
+            function fireUpdateFiles() {
+                window.top.dispatchEvent(new CustomEvent("updateFiles", {
+                    detail: {
+                        files
+                    }
+                }));
+            }
+            function fireUpdateActiveDevice() {
+                window.top.dispatchEvent(new CustomEvent("updateActiveDevice", {
+                    detail: app.graphicsDevice.deviceType
+                }));
+            }
+            function fireExampleLoading() {
+                window.top.dispatchEvent(new CustomEvent("exampleLoading", {
+                    detail: {
+                        showDeviceSelector: '@DEVICE_SELECTOR',
+                    }
+                }));
+            }
+            class ExampleLoadEvent extends CustomEvent {
+                    constructor(deviceType) {
+                        super("exampleLoad");
+                        this.files = files;
+                        this.description = '@DESCRIPTION';
+                    }
+                }
+            function fireExampleLoad() {
+                window.top.dispatchEvent(new ExampleLoadEvent());
+            }
+
+
             /**
              * This function is called from React whenever we click on MiniStats icon,
              * even PlayCanvas' pc itself could be undefined here.
@@ -163,6 +116,20 @@
                 }
                 miniStats.enabled = false;
             }
+
+            /**
+             * 
+             */
+            function hotReload() {
+                if (!allowRestart) {
+                    console.warn('hotReload> Dropping restart while still restarting');
+                    return;
+                }
+                destroy();
+                data = new observer.Observer({});
+                main(files);
+            }
+
             /**
              * This function is called from React whenever we change an example in any possible state,
              * even PlayCanvas' pc itself could be undefined here.
@@ -177,46 +144,21 @@
                 }
                 ready = false;
             }
-            function hotReload() {
-                if (!allowRestart) {
-                    console.warn('hotReload> Dropping restart while still restarting');
-                    return;
-                }
-                destroy();
-                data = new observer.Observer({});
-                main(files);
-            }
             window.addEventListener('requestFiles', requestFiles);
             window.addEventListener('showStats', showStats);
             window.addEventListener('hideStats', hideStats);
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
 
-            function updateControls() {
-                const event = new CustomEvent("updateFiles", {
-                    detail: {
-                        files
-                    }
-                });
-                window.top.dispatchEvent(event);
-            }
-            function updateActiveDevice() {
-                const event = new CustomEvent("updateActiveDevice", {
-                    detail: app.graphicsDevice.deviceType
-                });
-                window.top.dispatchEvent(event);
-            }
-
             async function main(files) {
                 allowRestart = false;
-                await loadScript('pc', getSpecifiedEngine());
-                await loadScript('pcx', './playcanvas-extras.js');
+                await importScript('pc', '@ENGINE');
+                await importScript('pcx', './playcanvas-extras.js');
 
                 window.top.pc = pc;
-                const canvas = document.getElementById("application-canvas");
-
                 window.top.observerData = data;
-                let deviceType = getDeviceType();
+
+                let deviceType = getDeviceType('@WEBGPU_ENABLED');
 
                 if (params.deviceType) {
                     console.warn("overwriting default deviceType from URL");
@@ -229,16 +171,14 @@
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
-                    const event = new CustomEvent("exampleLoading", {
-                        detail: {
-                            showDeviceSelector: '@DEVICE_SELECTOR',
-                        }
-                    });
-                    window.top.dispatchEvent(event);
+                    fireExampleLoading();
                 }
+
+                console.log(window.example.toString() === files['example.mjs']);
 
                 const example = resolveFunction(files['example.mjs']);
                 files['example.mjs'] = files['example.mjs'].toString();
+
                 app = await example({
                     canvas,
                     deviceType,
@@ -255,27 +195,24 @@
                 });
                 ready = true;
 
-                class ExampleLoadEvent extends CustomEvent {
-                    constructor(deviceType) {
-                        super("exampleLoad");
-                        this.files = files;
-                        this.description = '@DESCRIPTION';
-                    }
-                }
-
                 const startHandler = () => {
-                    if (app.graphicsDevice?.canvas) {
-                        showStats();
-                        if (!started) { // only one time, recalls of main() are caused by Monaco live coding
-                            window.top.dispatchEvent(new ExampleLoadEvent());
-                        }
-                        started = true;
-                        updateControls();
-                        updateActiveDevice();
-                        allowRestart = true;
-                    } else {
+                    if (!app?.graphicsDevice?.canvas) {
                         console.warn('main> no canvas');
+                        return;
                     }
+
+                    showStats();
+
+                    if (!started) { 
+                        // only one time, recalls of main() are caused by Monaco live coding
+                        fireExampleLoad();
+                    }
+                    started = true;
+
+                    fireUpdateFiles();
+                    fireUpdateActiveDevice();
+
+                    allowRestart = true;
                 };
 
                 // Wait until example has called app.start()
@@ -290,13 +227,15 @@
                 } else {
                     // The example function didn't return an app instance
                     // still update the UI and assume it has started.
-                    window.top.dispatchEvent(new ExampleLoadEvent());
+                    fireExampleLoad();
                     started = true;
-                    updateControls();
+                    fireUpdateFiles();
                     allowRestart = true;
                 }
             }
-            window.onload = () => main(files);
+            window.onload = async () => {
+                await main(files);
+            }
         </script>
     </body>
 </html>

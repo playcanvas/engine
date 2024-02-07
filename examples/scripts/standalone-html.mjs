@@ -100,18 +100,14 @@ function generateExampleFile(category, example, exampleClass) {
     // example
     html = html.replace(/'@EXAMPLE'/g, `<script>${exampleClass.example.toString()}</script>`);
 
-    // engine path
-    html = html.replace(/'@ENGINE_PATH'/g, JSON.stringify(process.env.ENGINE_PATH ?? ''));
-
-    // node env
-    html = html.replace(/'@NODE_ENV'/g, JSON.stringify(process.env.NODE_ENV ?? ''));
-
     // webGPU enabled
     html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);
 
     // engine
-    html = html.replace(/'@ENGINE'/g, JSON.stringify(engineFor(exampleClass.ENGINE)));
-    html = html.replace(/'@DEBUG_ENGINE'/g, JSON.stringify(engineFor('DEBUG')));
+    const engineType = process.env.NODE_ENV === 'development' ? 'DEBUG' : exampleClass.ENGINE;
+    const enginePath = process.env.ENGINE_PATH ?? '';
+    const engine = enginePath.length ? `./ENGINE_PATH/${enginePath.split('/').pop()}` : engineFor(engineType);
+    html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
     // files
     html = html.replace(/'@FILES'/g, exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}');
