@@ -1,8 +1,9 @@
 import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
+import MonacoEditor, { loader } from "@monaco-editor/react";
+
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
-import MonacoEditor, { loader } from "@monaco-editor/react";
 import { iframeHotReload, iframeRequestFiles, iframeResize } from '../iframeUtils.mjs';
 import { removeRedundantSpaces } from '../helpers/strings.mjs';
 import '../events.js';

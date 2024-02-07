@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 import * as TWEEN from '@tweenjs/tween.js'
 
 /**
- * @param {import('../../app/components/example.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {

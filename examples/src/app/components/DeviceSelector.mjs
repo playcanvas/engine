@@ -7,8 +7,9 @@ import {
     DEVICETYPE_NULL
 } from 'playcanvas/src/platform/graphics/constants.js';
 import { Component } from 'react';
-import { jsx } from '../jsx.mjs';
 import { SelectInput } from '@playcanvas/pcui/react';
+
+import { jsx } from '../jsx.mjs';
 import '../events.js';
 
 const deviceTypeNames = {

@@ -1,4 +1,5 @@
 import { Component } from "react";
+
 import { fragment, jsx } from "../jsx.mjs";
 
 // eslint-disable-next-line jsdoc/require-property

@@ -2,6 +2,7 @@ import { Component } from 'react';
 import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextInput } from '@playcanvas/pcui/react';
 import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
+
 import examples from '../helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
@@ -29,7 +30,7 @@ import { iframeDestroy } from '../iframeUtils.mjs';
  */
 const TypedComponent = Component;
 
-export class SideBar extends TypedComponent {
+class SideBar extends TypedComponent {
     /** @type {State} */
     state = {
         defaultCategories: examples.categories,
@@ -271,3 +272,6 @@ export class SideBar extends TypedComponent {
         );
     }
 }
+
+export { SideBar };
+

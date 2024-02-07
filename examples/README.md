@@ -87,7 +87,7 @@ This function allows you to define a set of PCUI based interface which can be us
 
 ```js
 /**
- * @param {import('../../app/example.mjs').ControlOptions} options - The options.
+ * @param {import('../../app/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {

@@ -2,8 +2,8 @@ import { withRouter } from 'react-router-dom';
 import examples from '../helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { iframePath } from '../assetPath.mjs';
-import { DeviceSelector } from './device-selector.mjs';
-import { ErrorBoundary } from './error-boundary.mjs';
+import { DeviceSelector } from './DeviceSelector.mjs';
+import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
@@ -410,6 +410,6 @@ class Example extends TypedComponent {
 }
 
 // @ts-ignore
-const ExamptWithRouter = withRouter(Example);
+const ExampleWithRouter = withRouter(Example);
 
-export { ExamptWithRouter as Example };
+export { ExampleWithRouter as Example };
