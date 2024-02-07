@@ -61,7 +61,7 @@
             function getDeviceType() {
                 const last = localStorage.getItem('preferredGraphicsDevice');
                 if (last !== null) {
-                    if (last === 'webgpu' && '@WEBGPU_ENABLED') {
+                    if (last === 'webgpu' && !'@WEBGPU_ENABLED') {
                         console.warn('Picked WebGPU but example is not supported on WebGPU, defaulting to WebGL2');
                         return 'webgl2';
                     }
@@ -110,7 +110,7 @@
             let started = false;
             let miniStats;
             let allowRestart = 'true';
-            const args = getQueryParameters();
+            const params = getQueryParameters();
             let data = new observer.Observer({});
             /**
              * Keep it function in first run for nicer debug locations.
@@ -149,7 +149,7 @@
                 if (deviceType === 'null') {
                     return;
                 }
-                if (args.miniStats === 'false') {
+                if (params.miniStats === 'false') {
                     return;
                 }
                 if (!miniStats) {
@@ -216,11 +216,11 @@
                 const canvas = document.getElementById("application-canvas");
 
                 window.top.observerData = data;
-                const deviceType = getDeviceType();
+                let deviceType = getDeviceType();
 
-                if (args.deviceType) {
+                if (params.deviceType) {
                     console.warn("overwriting default deviceType from URL");
-                    deviceType = args.deviceType;
+                    deviceType = params.deviceType;
                 }
                 if (!deviceType) {
                     console.warn("No deviceType given, defaulting to WebGL2");
