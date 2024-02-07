@@ -8,7 +8,7 @@ import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
-import { iframeFire } from '../iframeUtils.mjs';
+import { iframe } from '../iframe.mjs';
 
 // eslint-disable-next-line jsdoc/require-property
 /**
@@ -173,7 +173,7 @@ class SideBar extends TypedComponent {
     }
 
     onClickExample() {
-        iframeFire('destroy');
+        iframe.fire('destroy');
     }
 
     renderContents() {

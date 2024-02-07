@@ -8,7 +8,7 @@ import { jsx, fragment } from '../jsx.mjs';
 import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframeReady, iframeReload, iframeFire } from '../iframeUtils.mjs';
+import { iframe } from '../iframe.mjs';
 import { getOrientation } from '../utils.mjs';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
@@ -202,7 +202,7 @@ class Example extends TypedComponent {
         window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('updateFiles', this._handleUpdateFiles);
-        iframeFire('requestFiles');
+        iframe.fire('requestFiles');
     }
 
     componentWillUnmount() {
@@ -235,13 +235,13 @@ class Example extends TypedComponent {
         }
 
         return jsx(DeviceSelector, {
-            onSelect: () => iframeReload() // reload the iframe after updating the device
+            onSelect: () => iframe.reload() // reload the iframe after updating the device
         });
     }
 
     renderControls() {
         const { exampleLoaded, controls } = this.state;
-        const ready = exampleLoaded && controls && iframeReady();
+        const ready = exampleLoaded && controls && iframe.ready;
         if (!ready) {
             return;
         }
@@ -262,7 +262,7 @@ class Example extends TypedComponent {
 
     renderDescription() {
         const { exampleLoaded, description, orientation } = this.state;
-        const ready = exampleLoaded && iframeReady();
+        const ready = exampleLoaded && iframe.ready;
         if (!ready) {
             return;
         }

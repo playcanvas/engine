@@ -8,7 +8,7 @@ import { ErrorBoundary } from './ErrorBoundary.mjs';
 import { Menu } from './Menu.mjs';
 import { SideBar } from './Sidebar.mjs';
 
-import { iframeFire } from '../iframeUtils.mjs';
+import { iframe } from '../iframe.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
 
@@ -60,7 +60,7 @@ class MainLayout extends TypedComponent {
      * @param {boolean} value - Show MiniStats state.
      */
     updateShowMiniStats = (value) => {
-        iframeFire('stats', { state: value });
+        iframe.fire('stats', { state: value });
     };
 
     render() {
