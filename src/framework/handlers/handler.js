@@ -38,7 +38,6 @@ class ResourceHandler {
         throw new Error('not implemented');
     }
 
-    /* eslint-disable jsdoc/require-returns-check */
     /**
      * @function
      * @name ResourceHandler#open
@@ -53,7 +52,6 @@ class ResourceHandler {
     open(url, data, asset) {
         throw new Error('not implemented');
     }
-    /* eslint-enable jsdoc/require-returns-check */
 
     /**
      * @function
