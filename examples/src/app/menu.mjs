@@ -24,8 +24,8 @@ class Menu extends TypedComponent {
      */
     constructor(props) {
         super(props);
-        this._escapeKeyEvent = this._escapeKeyEvent.bind(this);
-        this.handleExampleLoad = this.handleExampleLoad.bind(this);
+        this._handleKeyDown = this._handleKeyDown.bind(this);
+        this._handleExampleLoad = this._handleExampleLoad.bind(this);
     }
 
     /** @type {EventListener | null} */
@@ -60,27 +60,27 @@ class Menu extends TypedComponent {
     componentDidMount() {
         const iframe = document.querySelector('iframe');
         if (iframe) {
-            iframe.contentDocument?.addEventListener('keydown', this._escapeKeyEvent);
+            iframe.contentDocument?.addEventListener('keydown', this._handleKeyDown);
         } else {
             console.warn('Menu#useEffect> iframe undefined');
         }
-        document.addEventListener('keydown', this._escapeKeyEvent);
-        window.addEventListener('exampleLoad', this.handleExampleLoad);
+        document.addEventListener('keydown', this._handleKeyDown);
+        window.addEventListener('exampleLoad', this._handleExampleLoad);
     }
 
     componentWillUnmount() {
         const iframe = document.querySelector('iframe');
         if (iframe) {
-            iframe.contentDocument?.removeEventListener('keydown', this._escapeKeyEvent);
+            iframe.contentDocument?.removeEventListener('keydown', this._handleKeyDown);
         }
-        document.removeEventListener('keydown', this._escapeKeyEvent);
-        window.removeEventListener('exampleLoad', this.handleExampleLoad);
+        document.removeEventListener('keydown', this._handleKeyDown);
+        window.removeEventListener('exampleLoad', this._handleExampleLoad);
     }
 
     /**
      * @param {KeyboardEvent} e - Keyboard event.
      */
-    _escapeKeyEvent(e) {
+    _handleKeyDown(e) {
         const canvasContainer = document.querySelector('#canvas-container');
         if (!canvasContainer) {
             return;
@@ -90,7 +90,7 @@ class Menu extends TypedComponent {
         }
     }
 
-    handleExampleLoad() {
+    _handleExampleLoad() {
         const showMiniStatsBtn = document.getElementById('showMiniStatsButton');
         if (!showMiniStatsBtn) {
             return;

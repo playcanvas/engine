@@ -18,7 +18,7 @@ function getIframeWindow() {
     // 2) Have a different type than expected.
     // These situations happen during refactoring etc.
     if (!(e instanceof HTMLIFrameElement)) {
-        console.warn("<iframe id='exampleIframe'> doesn't exist yet.");
+        console.warn("'exampleIframe' doesn't exist yet.");
         return null;
     }
     return e.contentWindow;
@@ -64,5 +64,5 @@ export {
     iframeReload,
     iframeHotReload,
     iframeDestroy,
-    iframeReady,
+    iframeReady
 };

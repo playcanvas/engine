@@ -6,23 +6,19 @@
 
 /**
  * @typedef {CustomEvent} LoadEvent
- * @property {Record<string, string>} files - The example files.
- * @property {string} description - The example description.
+ * @property {object} detail - The detail object.
+ * @property {Record<string, string>} detail.files - The example files.
+ * @property {string} detail.description - The example description.
  */
 
 /**
- * @typedef {CustomEvent} UpdateFilesEvent
+ * @typedef {CustomEvent} FilesEvent
  * @property {object} detail - The detail object.
  * @property {Record<string, string>} detail.files - The example files.
  */
 
 /**
- * @typedef {CustomEvent} HandleFilesEvent
- * @property {Record<string, string>} detail - The example files object.
- */
-
-/**
- * @typedef {CustomEvent} UpdateActiveDeviceEvent
+ * @typedef {CustomEvent} DeviceEvent
  * @property {object} detail - The detail object.
  * @property {string} detail.deviceType - The device type.
  */

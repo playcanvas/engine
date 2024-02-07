@@ -29,19 +29,29 @@ class MainLayout extends TypedComponent {
         orientation: getOrientation()
     };
 
+    /**
+     * @param {Props} props - Component properties.
+     */
+    constructor(props) {
+        super(props);
+        this._onLayoutChange = this._onLayoutChange.bind(this);
+    }
+
+    /**
+     * @param {Event} event - The event.
+     */
+    _onLayoutChange(event) {
+        this.setState({ ...this.state, orientation: getOrientation() });
+    }
+
     componentDidMount() {
-        this.onLayoutChange = this.onLayoutChange.bind(this);
-        window.addEventListener("resize", this.onLayoutChange);
-        window.addEventListener("orientationchange", this.onLayoutChange);
+        window.addEventListener("resize", this._onLayoutChange);
+        window.addEventListener("orientationchange", this._onLayoutChange);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.onLayoutChange);
-        window.removeEventListener("orientationchange", this.onLayoutChange);
-    }
-
-    onLayoutChange() {
-        this.setState({ ...this.state, orientation: getOrientation() });
+        window.removeEventListener("resize", this._onLayoutChange);
+        window.removeEventListener("orientationchange", this._onLayoutChange);
     }
 
     /**

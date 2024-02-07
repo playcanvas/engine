@@ -59,6 +59,39 @@ class CodeEditor extends TypedComponent {
     };
 
     /**
+     * @param {Props} props - Component properties.
+     */
+    constructor(props) {
+        super(props);
+        this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleExampleLoading = this._handleExampleLoading.bind(this);
+        this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
+    }
+
+    /**
+     * @param {LoadEvent} event - The event.
+     */
+    _handleExampleLoad(event) {
+        const { files } = event.detail;
+        this.mergeState({ files, selectedFile: 'example.mjs' });
+    }
+
+    /**
+     * @param {LoadingEvent} event - The event.
+     */
+    _handleExampleLoading(event) {
+        this.mergeState({ files: { 'example.mjs': '// reloading' } });
+    }
+
+    /**
+     * @param {FilesEvent} event - The event.
+     */
+    _handleRequestedFiles(event) {
+        const { files } = event.detail;
+        this.mergeState({ files });
+    }
+
+    /**
      * @param {Partial<State>} state - New partial state.
      */
     mergeState(state) {
@@ -68,43 +101,16 @@ class CodeEditor extends TypedComponent {
     }
 
     componentDidMount() {
-        this.handleExampleLoad = this.handleExampleLoad.bind(this);
-        this.handleExampleLoading = this.handleExampleLoading.bind(this);
-        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
-        window.addEventListener('exampleLoad', this.handleExampleLoad);
-        window.addEventListener('exampleLoading', this.handleExampleLoading);
-        window.addEventListener("requestedFiles", this.handleRequestedFiles);
+        window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('exampleLoading', this._handleExampleLoading);
+        window.addEventListener("requestedFiles", this._handleRequestedFiles);
         iframeRequestFiles();
     }
 
     componentWillUnmount() {
-        window.removeEventListener("exampleLoad", this.handleExampleLoad);
-        window.removeEventListener("exampleLoading", this.handleExampleLoading);
-        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
-    }
-
-    /**
-     * @param {LoadEvent} event - The event.
-     */
-    handleExampleLoad(event) {
-        const files = event.files;
-        this.mergeState({ files, selectedFile: 'example.mjs' });
-    }
-
-    /**
-     * @param {LoadingEvent} event - The event.
-     */
-    handleExampleLoading(event) {
-        this.mergeState({
-            files: { 'example.mjs': '// reloading' }
-        });
-    }
-
-    /**
-     * @param {HandleFilesEvent} event - The event.
-     */
-    handleRequestedFiles(event) {
-        this.mergeState({ files: event.detail });
+        window.removeEventListener("exampleLoad", this._handleExampleLoad);
+        window.removeEventListener("exampleLoading", this._handleExampleLoading);
+        window.removeEventListener("requestedFiles", this._handleRequestedFiles);
     }
 
     /**

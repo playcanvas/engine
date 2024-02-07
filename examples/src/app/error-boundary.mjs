@@ -1,6 +1,21 @@
 import { Component } from "react";
 import { fragment, jsx } from "./jsx.mjs";
-class ErrorBoundary extends Component {
+
+// eslint-disable-next-line jsdoc/require-property
+/**
+ * @typedef {object} Props
+ * @property {import('react').ReactNode} children - The children.
+ */
+
+/**
+ * @typedef {object} State
+ * @property {boolean} hasError - Has an error.
+ */
+
+/** @type {typeof Component<Props, State>} */
+const TypedComponent = Component;
+
+class ErrorBoundary extends TypedComponent {
     /**
      * @param {any} props - The properties.
      */

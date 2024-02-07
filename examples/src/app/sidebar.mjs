@@ -41,6 +41,14 @@ export class SideBar extends TypedComponent {
         orientation: getOrientation()
     };
 
+    /**
+     * @param {Props} props - Component properties.
+     */
+    constructor(props) {
+        super(props);
+        this._onLayoutChange = this._onLayoutChange.bind(this);
+    }
+
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
         const sideBar = document.getElementById("sideBar");
@@ -55,15 +63,15 @@ export class SideBar extends TypedComponent {
         }
         sideBarHeader.onclick = () => this.toggleCollapse();
         this.setupControlPanelToggleButton();
+
         // setup events
-        this.onLayoutChange = this.onLayoutChange.bind(this);
-        window.addEventListener("resize", this.onLayoutChange);
-        window.addEventListener("orientationchange", this.onLayoutChange);
+        window.addEventListener("resize", this._onLayoutChange);
+        window.addEventListener("orientationchange", this._onLayoutChange);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this.onLayoutChange);
-        window.removeEventListener("orientationchange", this.onLayoutChange);
+        window.removeEventListener("resize", this._onLayoutChange);
+        window.removeEventListener("orientationchange", this._onLayoutChange);
     }
 
     setupControlPanelToggleButton() {
@@ -118,7 +126,7 @@ export class SideBar extends TypedComponent {
         this.mergeState({ collapsed: !collapsed });
     }
 
-    onLayoutChange() {
+    _onLayoutChange() {
         this.mergeState({ orientation: getOrientation() });
     }
 

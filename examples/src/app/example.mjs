@@ -76,37 +76,51 @@ class Example extends TypedComponent {
     };
 
     /**
-     * @param {Partial<State>} state - The partial state to update.
+     * @param {Props} props - Component properties.
      */
-    mergeState(state) {
-        // new state is always calculated from the current state,
-        // avoiding any potential issues with asynchronous updates
-        this.setState(prevState => ({ ...prevState, ...state }));
+    constructor(props) {
+        super(props);
+        this._onLayoutChange = this._onLayoutChange.bind(this);
+        this._handleRequestedFiles = this._handleRequestedFiles.bind(this);
+        this._handleExampleLoading = this._handleExampleLoading.bind(this);
+        this._handleExampleLoad = this._handleExampleLoad.bind(this);
+        this._handleUpdateFiles = this._handleUpdateFiles.bind(this);
+    }
+
+    /**
+     * @param {FilesEvent} event - Event.
+     */
+    _handleRequestedFiles(event) {
+        const { files } = event.detail;
+        this.mergeState({ files });
     }
 
     /**
      * Called for resizing and changing orientation of device.
+     *
+     * @param {Event} event - The event.
      */
-    onLayoutChange() {
+    _onLayoutChange(event) {
         this.mergeState({ orientation: getOrientation() });
     }
 
     /**
-     * @param {LoadingEvent} event - Event.
+     * @param {LoadingEvent} event - The event.
      */
-    onExampleLoading(event) {
+    _handleExampleLoading(event) {
+        const { showDeviceSelector } = event.detail;
         this.mergeState({
             exampleLoaded: false,
             controls: null,
-            showDeviceSelector: event.detail.showDeviceSelector
+            showDeviceSelector: showDeviceSelector
         });
     }
 
     /**
-     * @param {LoadEvent} event - Event.
+     * @param {LoadEvent} event - The event.
      */
-    onExampleLoad(event) {
-        const { files, description } = event;
+    _handleExampleLoad(event) {
+        const { files, description } = event.detail;
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
             let controls;
@@ -134,10 +148,10 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {UpdateFilesEvent} event - Event.
+     * @param {FilesEvent} event - The event.
      */
-    onUpdateFiles(event) {
-        const files = event.detail.files;
+    _handleUpdateFiles(event) {
+        const { files } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? 'null';
         if (!files['controls.mjs']) {
             this.mergeState({
@@ -158,6 +172,15 @@ class Example extends TypedComponent {
         });
     }
 
+    /**
+     * @param {Partial<State>} state - The partial state to update.
+     */
+    mergeState(state) {
+        // new state is always calculated from the current state,
+        // avoiding any potential issues with asynchronous updates
+        this.setState(prevState => ({ ...prevState, ...state }));
+    }
+
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
         const controlPanel = document.getElementById("controlPanel");
@@ -173,27 +196,22 @@ class Example extends TypedComponent {
         controlPanelHeader.onclick = () => this.toggleCollapse();
 
         // Other events
-        this.handleRequestedFiles = this.handleRequestedFiles.bind(this);
-        this.onLayoutChange = this.onLayoutChange.bind(this);
-        this.onExampleLoading = this.onExampleLoading.bind(this);
-        this.onExampleLoad = this.onExampleLoad.bind(this);
-        this.onUpdateFiles = this.onUpdateFiles.bind(this);
-        window.addEventListener("requestedFiles", this.handleRequestedFiles);
-        window.addEventListener("resize", this.onLayoutChange);
-        window.addEventListener("orientationchange", this.onLayoutChange);
-        window.addEventListener('exampleLoading', this.onExampleLoading);
-        window.addEventListener('exampleLoad', this.onExampleLoad);
-        window.addEventListener('updateFiles', this.onUpdateFiles);
+        window.addEventListener("resize", this._onLayoutChange);
+        window.addEventListener("requestedFiles", this._handleRequestedFiles);
+        window.addEventListener("orientationchange", this._onLayoutChange);
+        window.addEventListener('exampleLoading', this._handleExampleLoading);
+        window.addEventListener('exampleLoad', this._handleExampleLoad);
+        window.addEventListener('updateFiles', this._handleUpdateFiles);
         iframeRequestFiles();
     }
 
     componentWillUnmount() {
-        window.removeEventListener("requestedFiles", this.handleRequestedFiles);
-        window.removeEventListener("resize", this.onLayoutChange);
-        window.removeEventListener("orientationchange", this.onLayoutChange);
-        window.removeEventListener('exampleLoading', this.onExampleLoading);
-        window.removeEventListener('exampleLoad', this.onExampleLoad);
-        window.removeEventListener('updateFiles', this.onUpdateFiles);
+        window.removeEventListener("resize", this._onLayoutChange);
+        window.removeEventListener("requestedFiles", this._handleRequestedFiles);
+        window.removeEventListener("orientationchange", this._onLayoutChange);
+        window.removeEventListener('exampleLoading', this._handleExampleLoading);
+        window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('updateFiles', this._handleUpdateFiles);
     }
 
     get path() {
@@ -283,14 +301,6 @@ class Example extends TypedComponent {
 
     toggleCollapse() {
         this.mergeState({ collapsed: !this.collapsed });
-    }
-
-    /**
-     * @param {HandleFilesEvent} event - Event.
-     */
-    handleRequestedFiles(event) {
-        const files = event.detail;
-        this.mergeState({ files });
     }
 
     renderPortrait() {

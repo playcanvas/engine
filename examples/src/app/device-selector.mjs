@@ -1,7 +1,10 @@
 // Don't include all of 'playcanvas' for these defines, it just
 // causes bigger bundles and prolongs the build time by ~3s.
 import {
-    DEVICETYPE_WEBGL1, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGPU, DEVICETYPE_NULL
+    DEVICETYPE_WEBGL1,
+    DEVICETYPE_WEBGL2,
+    DEVICETYPE_WEBGPU,
+    DEVICETYPE_NULL
 } from 'playcanvas/src/platform/graphics/constants.js';
 import { Component } from 'react';
 import { jsx } from './jsx.mjs';
@@ -42,9 +45,23 @@ class DeviceSelector extends TypedComponent {
      */
     constructor(props) {
         super(props);
-        window.addEventListener('updateActiveDevice', (/** @type {UpdateActiveDeviceEvent} */ event) => {
-            this.onSetActiveGraphicsDevice(event.detail.deviceType);
-        });
+        this._handleUpdateDevice = this._handleUpdateDevice.bind(this);
+    }
+
+    /**
+     * @param {DeviceEvent} event - The event.
+     */
+    _handleUpdateDevice(event) {
+        const { deviceType } = event.detail;
+        this.onSetActiveGraphicsDevice(deviceType);
+    }
+
+    componentDidMount() {
+        window.addEventListener('updateActiveDevice', this._handleUpdateDevice);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('updateActiveDevice', this._handleUpdateDevice);
     }
 
     /**
