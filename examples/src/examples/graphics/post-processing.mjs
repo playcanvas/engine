@@ -419,6 +419,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             sceneColorMap: true,            // true if the scene color should be captured
 
             // disabled by default as this is WIP
+            prepassEnabled: false,
             taaEnabled: false               // true if temporal anti-aliasing should be used
         };
 

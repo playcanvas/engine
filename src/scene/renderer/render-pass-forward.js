@@ -34,6 +34,14 @@ class RenderPassForward extends RenderPass {
      */
     renderActions = [];
 
+    /**
+     * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
+     * pre-pass.
+     *
+     * @type {boolean}
+     */
+    noDepthClear = false;
+
     constructor(device, layerComposition, scene, renderer) {
         super(device);
 
@@ -168,7 +176,7 @@ class RenderPassForward extends RenderPass {
             const fullSizeClearRect = camera.fullSizeClearRect;
 
             this.setClearColor(fullSizeClearRect && renderAction.clearColor ? camera.clearColor : undefined);
-            this.setClearDepth(fullSizeClearRect && renderAction.clearDepth ? camera.clearDepth : undefined);
+            this.setClearDepth(fullSizeClearRect && renderAction.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && renderAction.clearStencil ? camera.clearStencil : undefined);
         }
     }
