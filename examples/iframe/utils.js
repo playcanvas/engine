@@ -1,3 +1,11 @@
+export function buildFunction(str) {
+    if (str.call) {
+        return str;
+    }
+    // eslint-disable-next-line no-new-func
+    return new Function('return ' + str)();
+}
+
 /**
  * @param {string} url - The URL specified.
  * @returns {Record<string, string>} - The object of query parameters

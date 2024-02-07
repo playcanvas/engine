@@ -91,14 +91,14 @@ function generateExampleFile(category, example, exampleClass) {
     html = html.replace(/'@CANVAS'/g, exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
     // imports
-    const importsStr = `<script>${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ _) => _.toString()).join('\n\n') || ''}</script>`;
+    const importsStr = `<script>${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ o) => o.toString()).join('\n\n') || ''}</script>`;
     html = html.replace(/'@IMPORTS'/g, importsStr);
 
-    // controls
-    html = html.replace(/'@CONTROLS'/g, `<script>${exampleClass.controls?.toString() || ''}</script>`);
-
     // example
-    html = html.replace(/'@EXAMPLE'/g, `<script>${exampleClass.example.toString()}</script>`);
+    html = html.replace(/'@EXAMPLE'/g, exampleClass.example.toString());
+
+    // controls
+    html = html.replace(/'@CONTROLS'/g, exampleClass.controls?.toString() || '""');
 
     // webGPU enabled
     html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);

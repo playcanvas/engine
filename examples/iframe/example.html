@@ -17,10 +17,8 @@
         <script src="./paths.js"></script>
         <script src="./polyfill.js"></script>
         '@IMPORTS'
-        '@CONTROLS'
-        '@EXAMPLE'
         <script type="module">
-            import { importScript, getQueryParams, getDeviceType } from './utils.js';
+            import { importScript, buildFunction, getQueryParams, getDeviceType } from './utils.js';
 
             // constants
             const canvas = document.getElementById("application-canvas");
@@ -38,16 +36,11 @@
              * @type {Record<string, string | Function>}
              */
             const files = {};
+            const example = '@EXAMPLE';
+            const controls = '@CONTROLS';
             files['example.mjs'] = example.toString();
-            if (window.controls) {
-                files['controls.mjs'] = controls.toString();
-            }
-            function resolveFunction(src) {
-                if (src.call) {
-                    return src;
-                }
-                return new Function('return ' + src)();
-            }
+            files['controls.mjs'] = controls.toString();
+
             const extraFiles = '@FILES';
             Object.assign(files, extraFiles);
 
@@ -131,15 +124,9 @@
                 window.top.pc = pc;
                 window.top.observerData = data;
 
-                let deviceType = getDeviceType('@WEBGPU_ENABLED');
-
+                const deviceType = params.deviceType ?? getDeviceType('@WEBGPU_ENABLED');
                 if (params.deviceType) {
                     console.warn("overwriting default deviceType from URL");
-                    deviceType = params.deviceType;
-                }
-                if (!deviceType) {
-                    console.warn("No deviceType given, defaulting to WebGL2");
-                    deviceType = 'webgl2';
                 }
 
                 if (!started) {
@@ -147,7 +134,7 @@
                     fire('exampleLoading', { showDeviceSelector: '@DEVICE_SELECTOR' });
                 }
 
-                const example = resolveFunction(files['example.mjs']);
+                const example = buildFunction(files['example.mjs']);
                 files['example.mjs'] = files['example.mjs'].toString();
 
                 app = await example({
