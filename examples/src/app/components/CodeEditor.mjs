@@ -219,7 +219,7 @@ class CodeEditor extends TypedComponent {
     }
 
     render() {
-        iframeFire('resize');
+        setTimeout(() => iframeFire('resize'), 50);
         const { files, selectedFile, showMinimap } = this.state;
         const language = FILE_TYPE_LANGUAGES[selectedFile.split('.').pop() || 'shader'];
         let value = files[selectedFile];

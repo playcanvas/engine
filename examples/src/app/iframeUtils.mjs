@@ -34,10 +34,11 @@ function iframeReload() {
     getIframeWindow()?.location.reload();
 }
 /**
- * @param {string} eventName - The event name
+ * @param {string} eventName - The event name.
+ * @param {Record<string, any>} [detail] - The detail obj.
  */
-function iframeFire(eventName) {
-    getIframeWindow()?.dispatchEvent(new CustomEvent(eventName));
+function iframeFire(eventName, detail = {}) {
+    getIframeWindow()?.dispatchEvent(new CustomEvent(eventName, { detail }));
 }
 
 export {

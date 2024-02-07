@@ -60,11 +60,7 @@ class MainLayout extends TypedComponent {
      * @param {boolean} value - Show MiniStats state.
      */
     updateShowMiniStats = (value) => {
-        if (value) {
-            iframeFire('showStats');
-        } else {
-            iframeFire('hideStats');
-        }
+        iframeFire('stats', { state: value });
     };
 
     render() {

@@ -51,8 +51,8 @@
             const extraFiles = '@FILES';
             Object.assign(files, extraFiles);
 
-            function fire(eventName, obj) {
-                window.top.dispatchEvent(new CustomEvent(eventName, { detail: obj }));
+            function fire(eventName, detail = {}) {
+                window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
             }
 
             function requestFiles() {
@@ -119,8 +119,7 @@
             }
 
             window.addEventListener('requestFiles', requestFiles);
-            window.addEventListener('showStats', () => enableStats(true));
-            window.addEventListener('hideStats', () => enableStats(false));
+            window.addEventListener('stats', (event) => enableStats(!!event.detail?.state));
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
 
