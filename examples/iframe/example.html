@@ -81,7 +81,7 @@
             function fireExampleLoad() {
                 window.top.dispatchEvent(new CustomEvent("exampleLoad", {
                     detail: {
-                        files: files,
+                        files,
                         description: '@DESCRIPTION'
                     }
                 }));
