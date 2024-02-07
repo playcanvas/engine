@@ -4,8 +4,9 @@ import { platform } from '../../core/platform.js';
 import { XrTrackedImage } from './xr-tracked-image.js';
 
 /**
- * Image Tracking provides the ability to track real world images by provided image samples and
- * their estimated sizes.
+ * Image Tracking provides the ability to track real world images using provided image samples and
+ * their estimated sizes. The underlying system will assume that tracked image can move and rotate
+ * in the real world and will try to provide transformation estimates and its tracking state.
  *
  * @augments EventHandler
  * @category XR
@@ -80,7 +81,7 @@ class XrImageTracking extends EventHandler {
      * @returns {XrTrackedImage|null} Tracked image object that will contain tracking information.
      * Returns null if image tracking is not supported or if the XR manager is not active.
      * @example
-     * // image with width of 20cm (0.2m)
+     * // image of a book cover that has width of 20cm (0.2m)
      * app.xr.imageTracking.add(bookCoverImg, 0.2);
      */
     add(image, width) {
@@ -196,8 +197,9 @@ class XrImageTracking extends EventHandler {
     }
 
     /**
-     * True if Image Tracking is available. This property will be false if no images were provided
-     * for the AR session or there was an error processing the provided images.
+     * True if Image Tracking is available. This information is only available when the
+     * XR session has started, and will be true if image tracking is supported and
+     * images were provided and they have been processed successfully.
      *
      * @type {boolean}
      */
