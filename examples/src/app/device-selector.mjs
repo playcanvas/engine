@@ -43,8 +43,7 @@ class DeviceSelector extends TypedComponent {
     constructor(props) {
         super(props);
         window.addEventListener('updateActiveDevice', (/** @type {UpdateActiveDeviceEvent} */ event) => {
-            const activeDevice = event.detail;
-            this.onSetActiveGraphicsDevice(activeDevice);
+            this.onSetActiveGraphicsDevice(event.detail.deviceType);
         });
     }
 

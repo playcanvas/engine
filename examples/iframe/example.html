@@ -64,7 +64,9 @@
             }
             function fireUpdateActiveDevice() {
                 window.top.dispatchEvent(new CustomEvent("updateActiveDevice", {
-                    detail: app.graphicsDevice.deviceType
+                    detail: {
+                        deviceType: app?.graphicsDevice?.deviceType
+                    }
                 }));
             }
             function fireExampleLoading() {
