@@ -79,7 +79,14 @@ class Material {
 
     id = id++;
 
-    variants = {};
+    /**
+     * The cache of shader variants generated for this material. The key represents the unique
+     * variant, the value is the shader.
+     *
+     * @type {Map<string, import('../../platform/graphics/shader.js').Shader>}
+     * @ignore
+     */
+    variants = new Map();
 
     parameters = {};
 
@@ -142,11 +149,18 @@ class Material {
     stencilBack = null;
 
     /**
-     * Offsets the output depth buffer value. Useful for decals to prevent z-fighting.
+     * Offsets the output depth buffer value. Useful for decals to prevent z-fighting. Typically
+     * a small negative value (-0.1) is used to render the mesh slightly closer to the camera.
      *
      * @type {number}
      */
-    depthBias = 0;
+    set depthBias(value) {
+        this._depthState.depthBias = value;
+    }
+
+    get depthBias() {
+        return this._depthState.depthBias;
+    }
 
     /**
      * Same as {@link Material#depthBias}, but also depends on the slope of the triangle relative
@@ -154,7 +168,13 @@ class Material {
      *
      * @type {number}
      */
-    slopeDepthBias = 0;
+    set slopeDepthBias(value) {
+        this._depthState.depthBiasSlope = value;
+    }
+
+    get slopeDepthBias() {
+        return this._depthState.depthBiasSlope;
+    }
 
     _shaderVersion = 0;
 
@@ -413,9 +433,6 @@ class Material {
 
         this.cull = source.cull;
 
-        this.depthBias = source.depthBias;
-        this.slopeDepthBias = source.slopeDepthBias;
-
         this.stencilFront = source.stencilFront?.clone();
         if (source.stencilBack) {
             this.stencilBack = source.stencilFront === source.stencilBack ? this.stencilFront : source.stencilBack.clone();
@@ -472,7 +489,7 @@ class Material {
     clearVariants() {
 
         // clear variants on the material
-        this.variants = {};
+        this.variants.clear();
 
         // but also clear them from all materials that reference them
         const meshInstances = this.meshInstances;
@@ -556,7 +573,7 @@ class Material {
      * are no other materials using it).
      */
     destroy() {
-        this.variants = {};
+        this.variants.clear();
         this._shader = null;
 
         for (let i = 0; i < this.meshInstances.length; i++) {

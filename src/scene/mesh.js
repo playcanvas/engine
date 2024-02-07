@@ -15,7 +15,6 @@ import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
@@ -149,10 +148,10 @@ class GeometryVertexStream {
  *
  * Follow these links for more complex examples showing the functionality.
  *
- * - {@link http://playcanvas.github.io/#graphics/mesh-decals}
- * - {@link http://playcanvas.github.io/#graphics/mesh-deformation}
- * - {@link http://playcanvas.github.io/#graphics/mesh-generation}
- * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-decals}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-deformation}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-generation}
+ * - {@link https://playcanvas.github.io/#graphics/point-cloud-simulation}
  *
  * ### Update Vertex and Index buffers
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
@@ -163,17 +162,30 @@ class GeometryVertexStream {
  */
 class Mesh extends RefCountedObject {
     /**
+     * Internal version of aabb, incremented when local aabb changes.
+     *
+     * @ignore
+     */
+    _aabbVer = 0;
+
+    /**
+     * aabb representing object space bounds of the mesh.
+     *
+     * @type {BoundingBox}
+     */
+    _aabb = new BoundingBox();
+
+    /**
      * Create a new Mesh instance.
      *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [graphicsDevice] -
-     * The graphics device used to manage this mesh. If it is not provided, a device is obtained
-     * from the {@link Application}.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
+     * The graphics device used to manage this mesh.
      */
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        Debug.assertDeprecated(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
-        this.device = graphicsDevice || GraphicsDeviceAccess.get();
+        Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.
@@ -229,9 +241,6 @@ class Mesh extends RefCountedObject {
         this._morph = null;
         this._geometryData = null;
 
-        // AABB for object space mesh vertices
-        this._aabb = new BoundingBox();
-
         // Array of object space AABBs of vertices affected by each bone
         this.boneAabb = null;
     }
@@ -267,6 +276,7 @@ class Mesh extends RefCountedObject {
      */
     set aabb(aabb) {
         this._aabb = aabb;
+        this._aabbVer++;
     }
 
     get aabb() {
@@ -723,7 +733,9 @@ class Mesh extends RefCountedObject {
             } else {
                 // destination data is array
                 indices.length = 0;
-                indices.push(streamIndices);
+                for (let i = 0, il = streamIndices.length; i < il; i++) {
+                    indices.push(streamIndices[i]);
+                }
             }
         } else {
             // get data from IndexBuffer
@@ -770,6 +782,7 @@ class Mesh extends RefCountedObject {
                 if (stream) {
                     if (stream.componentCount === 3) {
                         this._aabb.compute(stream.data, this._geometryData.vertexCount);
+                        this._aabbVer++;
                     }
                 }
             }

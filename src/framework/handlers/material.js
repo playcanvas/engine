@@ -201,7 +201,12 @@ class MaterialHandler extends ResourceHandler {
 
         // set prefiltered textures
         if (parameterName === 'cubeMap') {
-            materialAsset.resource.prefilteredCubemaps = textures.slice(1);
+            const prefiltered = textures.slice(1);
+            if (prefiltered.every(t => t)) {
+                materialAsset.resource.prefilteredCubemaps = prefiltered;
+            } else if (prefiltered[0]) {
+                materialAsset.resource.envAtlas = prefiltered[0];
+            }
         }
     }
 

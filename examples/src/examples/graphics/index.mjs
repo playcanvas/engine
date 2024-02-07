@@ -1,121 +1,65 @@
-import AreaLightsExample from "./area-lights";
-import AreaPickerExample from "./area-picker";
-import AssetViewerExample from "./asset-viewer";
-import BatchingDynamicExample from "./batching-dynamic";
-import ReflectionBoxExample from "./reflection-box";
-import ClusteredAreaLightsExample from "./clustered-area-lights";
-import ClusteredLightingExample from "./clustered-lighting";
-import ClusteredOmniShadowsExample from "./clustered-omni-shadows";
-import ClusteredSpotShadowsExample from "./clustered-spot-shadows";
-import ContactHardeningShadowsExample from "./contact-hardening-shadows";
-// import LitMaterialExample from "./lit-material";   // note that this is also excluded in read-dir.mjs
-import GrabPassExample from "./grab-pass";
-import GroundFogExample from "./ground-fog";
-import HardwareInstancingExample from "./hardware-instancing";
-import HierarchyExample from "./hierarchy";
-import LayersExample from "./layers";
-import LightsBakedAOExample from "./lights-baked-a-o";
-import LightsBakedExample from "./lights-baked";
-import LightsExample from "./lights";
-import LightPhysicalUnitsExample from "./light-physical-units";
-import LinesExample from "./lines";
-import MaterialAnisotropicExample from "./material-anisotropic";
-import MaterialBasicExample from "./material-basic";
-import MaterialClearCoatExample from "./material-clear-coat";
-import MaterialPhysicalExample from "./material-physical";
-import MaterialTranslucentSpecularExample from "./material-translucent-specular";
-import MeshDecalsExample from "./mesh-decals";
-import MeshDeformationExample from "./mesh-deformation";
-import MeshGenerationExample from "./mesh-generation";
-import MeshMorphManyExample from "./mesh-morph-many";
-import MeshMorphExample from "./mesh-morph";
-import ModelAssetExample from "./model-asset";
-import ModelOutlineExample from "./model-outline";
-import ModelTexturedBoxExample from "./model-textured-box";
-import MultiViewExample from "./multi-view";
-import MrtExample from "./mrt";
-import PainterExample from "./painter";
-import PaintMeshExample from "./paint-mesh";
-import ParticlesAnimIndexExample from "./particles-anim-index";
-import ParticlesRandomSpritesExample from "./particles-random-sprites";
-import ParticlesSnowExample from "./particles-snow";
-import ParticlesSparkExample from "./particles-spark";
-import PointCloudSimulationExample from "./point-cloud-simulation";
-import PointCloudExample from "./point-cloud";
-import PortalExample from "./portal";
-import PostEffectsExample from "./post-effects";
-import ReflectionPlanarExample from "./reflection-planar";
-import RenderAssetExample from "./render-asset";
-import ReflectionCubemapExample from "./reflection-cubemap";
-import RenderToTextureExample from "./render-to-texture";
-import ShaderBurnExample from "./shader-burn";
-import ShaderCompileExample from "./shader-compile";
-import ShaderToonExample from "./shader-toon";
-import ShaderWobbleExample from "./shader-wobble";
-import ShadowCascadesExample from "./shadow-cascades";
-import ShapesExample from "./shapes";
-import TextureBasisExample from "./texture-basis";
-import TransformFeedbackExample from "./transform-feedback";
-import VideoTextureExample from "./video-texture";
-
-export {
-    AreaLightsExample,
-    AreaPickerExample,
-    AssetViewerExample,
-    BatchingDynamicExample,
-    ReflectionBoxExample,
-    ClusteredAreaLightsExample,
-    ClusteredLightingExample,
-    ClusteredOmniShadowsExample,
-    ClusteredSpotShadowsExample,
-    ContactHardeningShadowsExample,
-    // LitMaterialExample,
-    GrabPassExample,
-    GroundFogExample,
-    HardwareInstancingExample,
-    HierarchyExample,
-    LayersExample,
-    LightsBakedAOExample,
-    LightsBakedExample,
-    LightsExample,
-    LightPhysicalUnitsExample,
-    LinesExample,
-    MaterialAnisotropicExample,
-    MaterialBasicExample,
-    MaterialClearCoatExample,
-    MaterialPhysicalExample,
-    MaterialTranslucentSpecularExample,
-    MeshDecalsExample,
-    MeshDeformationExample,
-    MeshGenerationExample,
-    MeshMorphManyExample,
-    MeshMorphExample,
-    ModelAssetExample,
-    ModelOutlineExample,
-    ModelTexturedBoxExample,
-    MultiViewExample,
-    MrtExample,
-    PainterExample,
-    PaintMeshExample,
-    ParticlesAnimIndexExample,
-    ParticlesRandomSpritesExample,
-    ParticlesSnowExample,
-    ParticlesSparkExample,
-    PointCloudSimulationExample,
-    PointCloudExample,
-    PortalExample,
-    PostEffectsExample,
-    ReflectionPlanarExample,
-    RenderAssetExample,
-    ReflectionCubemapExample,
-    RenderToTextureExample,
-    ShaderBurnExample,
-    ShaderCompileExample,
-    ShaderToonExample,
-    ShaderWobbleExample,
-    ShadowCascadesExample,
-    ShapesExample,
-    TextureBasisExample,
-    TransformFeedbackExample,
-    VideoTextureExample
-};
+export * from "./area-lights.mjs";
+export * from "./area-picker.mjs";
+export * from "./asset-viewer.mjs";
+export * from "./batching-dynamic.mjs";
+export * from "./reflection-box.mjs";
+export * from "./clustered-area-lights.mjs";
+export * from "./clustered-lighting.mjs";
+export * from "./clustered-omni-shadows.mjs";
+export * from "./clustered-spot-shadows.mjs";
+export * from "./contact-hardening-shadows.mjs";
+export * from "./dithered-transparency.mjs";
+export * from "./lit-material.mjs";
+export * from "./grab-pass.mjs";
+export * from "./ground-fog.mjs";
+export * from "./hardware-instancing.mjs";
+export * from "./hierarchy.mjs";
+export * from "./integer-textures.mjs";
+export * from "./layers.mjs";
+export * from "./lights-baked-a-o.mjs";
+export * from "./lights-baked.mjs";
+export * from "./lights.mjs";
+export * from "./light-physical-units.mjs";
+export * from "./lines.mjs";
+export * from "./material-anisotropic.mjs";
+export * from "./material-basic.mjs";
+export * from "./material-clear-coat.mjs";
+export * from "./material-physical.mjs";
+export * from "./material-translucent-specular.mjs";
+export * from "./mesh-decals.mjs";
+export * from "./mesh-deformation.mjs";
+export * from "./mesh-generation.mjs";
+export * from "./mesh-morph-many.mjs";
+export * from "./mesh-morph.mjs";
+export * from "./model-asset.mjs";
+export * from "./model-outline.mjs";
+export * from "./model-textured-box.mjs";
+export * from "./multi-view.mjs";
+export * from "./multi-render-targets.mjs";
+export * from "./painter.mjs";
+export * from "./paint-mesh.mjs";
+export * from "./particles-anim-index.mjs";
+export * from "./particles-random-sprites.mjs";
+export * from "./particles-snow.mjs";
+export * from "./particles-spark.mjs";
+export * from "./point-cloud-simulation.mjs";
+export * from "./point-cloud.mjs";
+export * from "./portal.mjs";
+export * from "./post-processing.mjs";
+export * from "./post-effects.mjs";
+export * from "./reflection-planar.mjs";
+export * from "./render-asset.mjs";
+export * from "./render-pass.mjs";
+export * from "./reflection-cubemap.mjs";
+export * from "./render-to-texture.mjs";
+export * from "./shader-burn.mjs";
+export * from "./shader-compile.mjs";
+export * from "./shader-toon.mjs";
+export * from "./shader-wobble.mjs";
+export * from "./shadow-cascades.mjs";
+export * from "./shapes.mjs";
+export * from "./sky.mjs";
+export * from "./texture-array.mjs";
+export * from "./texture-basis.mjs";
+export * from "./transform-feedback.mjs";
+export * from "./video-texture.mjs";

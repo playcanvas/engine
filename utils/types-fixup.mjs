@@ -4,6 +4,7 @@ import fs from 'fs';
 const regex = /Class<(.*?)>/g;
 const paths = [
     './types/framework/components/script/component.d.ts',
+    './types/framework/entity.d.ts',
     './types/framework/script/script-attributes.d.ts',
     './types/framework/script/script-registry.d.ts',
     './types/framework/script/script.d.ts'
@@ -16,6 +17,10 @@ paths.forEach((path, index) => {
     if (index === 0) {
         dts += `
 import { ScriptType } from '../../script/script-type.js';
+`;
+    } else if (index === 1) {
+        dts += `
+import { ScriptType } from './script/script-type.js';
 `;
     } else {
         dts += `
@@ -455,6 +460,8 @@ const standardMaterialProps = [
     ['occludeSpecularIntensity', 'number'],
     ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
+    ['opacityDither', 'string'],
+    ['opacityShadowDither', 'string'],
     ['opacityFadesSpecular', 'boolean'],
     ['opacityMap', 'Texture|null'],
     ['opacityMapChannel', 'string'],

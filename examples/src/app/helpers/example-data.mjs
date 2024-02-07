@@ -1,42 +1,47 @@
-import exampleData from '../../../dist/example-data.js';
+import * as realExamples from "../../examples/index.mjs";
+import { toKebabCase, kebabCaseToPascalCase } from './strings.mjs';
 
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
+
+/** @type {Record<string, Record<string, { nameSlug: string, categorySlug: string}>>} */
+const exampleData = {};
+for (const category_ in realExamples) {
+    const category = toKebabCase(category_);
+    exampleData[category] = {};
+    // @ts-ignore
+    const examples = realExamples[category_];
+    for (const exampleName_ in examples) {
+        const release = process.env.NODE_ENV !== 'development';
+        if (release && examples[exampleName_].HIDDEN) {
+            console.log(`build:example:data> skip hidden example: ${category_}/${exampleName_}`);
+            continue;
+        }
+        const example = toKebabCase(exampleName_).replace('-example', '');
+        // turn: turn into simple array...
+        exampleData[category][example] = {
+            nameSlug: example,
+            categorySlug: category
+        };
+    }
 }
 
+/** @type {Record<string, Record<string, object>>} */
 const categories = {};
+/** @type {Record<string, object>} */
 const paths = {};
-
 Object.keys(exampleData).forEach((categorySlug) => {
-    const category = categorySlug.split('-').map(a => capitalizeFirstLetter(a)).join('');
+    const category = kebabCaseToPascalCase(categorySlug);
     categories[categorySlug] = {
         examples: {}
     };
-    Object.keys(exampleData[categorySlug]).forEach((exampleSlug, i) => {
-        const name = exampleSlug.split('-').map(a => capitalizeFirstLetter(a)).join('').replace('1d', '1D').replace('2d', '2D');
+    // @ts-ignore
+    Object.keys(exampleData[categorySlug]).forEach((exampleSlug) => {
+        const name = kebabCaseToPascalCase(exampleSlug);
+        // @ts-ignore
         categories[categorySlug].examples[exampleSlug] = name;
-        const files = [
-            {
-                name: 'example.js',
-                text: exampleData[categorySlug][exampleSlug].javaScriptFunction,
-                type: 'javascript'
-            },
-            {
-                name: 'example.ts',
-                text: exampleData[categorySlug][exampleSlug].typeScriptFunction,
-                type: 'typescript'
-            }
-        ];
-        const extraFiles = exampleData[categorySlug][exampleSlug].files;
-        if (extraFiles) {
-            Object.keys(extraFiles).forEach((fileName) => {
-                files.push({
-                    name: fileName,
-                    text: extraFiles[fileName],
-                    type: 'text'
-                });
-            });
-        }
+        const files = [{
+            name: 'example.js',
+            type: 'javascript'
+        }];
         paths[`/${categorySlug}/${exampleSlug}`] = {
             path: `/${categorySlug}/${exampleSlug}`,
             files: files,
@@ -46,7 +51,4 @@ Object.keys(exampleData).forEach((categorySlug) => {
     });
 });
 
-export default {
-    categories,
-    paths
-};
+export default { categories, paths };

@@ -1,4 +1,3 @@
-import { Debug } from '../../core/debug.js';
 import { Color } from '../../core/math/color.js';
 
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
@@ -87,14 +86,6 @@ class BasicMaterial extends Material {
     }
 
     getShaderVariant(device, scene, objDefs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat, vertexFormat) {
-
-        // Note: this is deprecated function Editor and possibly other projects use: they define
-        // updateShader callback on their BasicMaterial, so we handle it here.
-        if (this.updateShader) {
-            Debug.deprecated('pc.BasicMaterial.updateShader is deprecated');
-            this.updateShader(device, scene, objDefs, null, pass, sortedLights);
-            return this.shader;
-        }
 
         const options = {
             skin: objDefs && (objDefs & SHADERDEF_SKIN) !== 0,

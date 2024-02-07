@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
@@ -21,7 +23,28 @@ class FrameGraph {
      * pass to add.
      */
     addRenderPass(renderPass) {
-        this.renderPasses.push(renderPass);
+        Debug.assert(renderPass);
+        renderPass.frameUpdate();
+
+        const beforePasses = renderPass.beforePasses;
+        for (let i = 0; i < beforePasses.length; i++) {
+            const pass = beforePasses[i];
+            if (pass.enabled) {
+                this.addRenderPass(pass);
+            }
+        }
+
+        if (renderPass.enabled) {
+            this.renderPasses.push(renderPass);
+        }
+
+        const afterPasses = renderPass.afterPasses;
+        for (let i = 0; i < afterPasses.length; i++) {
+            const pass = afterPasses[i];
+            if (pass.enabled) {
+                this.addRenderPass(pass);
+            }
+        }
     }
 
     reset() {
@@ -36,7 +59,7 @@ class FrameGraph {
             const renderPass = renderPasses[i];
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default framebuffer
+            // if using a target, or null which represents the default back-buffer
             if (renderTarget !== undefined) {
 
                 // previous pass using the same render target
@@ -97,21 +120,6 @@ class FrameGraph {
                 lastCubeRenderPass = null;
             }
         }
-
-        // handle what's left in the map - last passes rendering to each render target
-        renderTargetMap.forEach((renderPass, renderTarget) => {
-
-            // default framebuffer
-            if (renderTarget === null) {
-
-                // store the multisampled buffer
-                renderPass.colorOps.store = true;
-
-                // no resolve, no mipmaps
-                renderPass.colorOps.resolve = false;
-                renderPass.colorOps.mipmaps = false;
-            }
-        });
 
         renderTargetMap.clear();
     }

@@ -1,15 +1,8 @@
-import DracoGlbExample from "./draco-glb";
-import LoadersGlExample from "./loaders-gl";
-import GlbExample from './glb';
-import GltfExportExample from './gltf-export';
-import ObjExample from './obj';
-import UsdzExportExample from './usdz-export';
-
-export {
-    DracoGlbExample,
-    LoadersGlExample,
-    GlbExample,
-    GltfExportExample,
-    ObjExample,
-    UsdzExportExample
-};
+export * from "./draco-glb.mjs";
+export * from "./loaders-gl.mjs";
+export * from './glb.mjs';
+export * from './gltf-export.mjs';
+export * from './obj.mjs';
+export * from './gsplat.mjs';
+export * from './gsplat-many.mjs';
+export * from './usdz-export.mjs';

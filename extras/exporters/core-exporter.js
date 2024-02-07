@@ -1,6 +1,6 @@
 import {
     createShaderFromCode, Texture, BlendState, drawQuadWithShader, RenderTarget,
-    PIXELFORMAT_RGBA8, FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
+    FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
 } from 'playcanvas';
 
 const textureBlitVertexShader = `
@@ -18,15 +18,28 @@ const textureBlitFragmentShader = `
         gl_FragColor = texture2D(blitTexture, uv0);
     }`;
 
+/**
+ * The base class for the exporters, implementing shared functionality.
+ *
+ * @category Exporter
+ */
 class CoreExporter {
+    /**
+     * Create a new instance of the exporter.
+     */
+    // eslint-disable-next-line no-useless-constructor
+    constructor() { }
+
     /**
      * Converts a texture to a canvas.
      *
      * @param {Texture} texture - The source texture to be converted.
      * @param {object} options - Object for passing optional arguments.
-     * @param {Color} [options.color] - The tint color to modify the texture with.
+     * @param {import('playcanvas').Color} [options.color] - The tint color to modify the texture with.
      * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
      * @returns {Promise<HTMLCanvasElement>|Promise<undefined>} - The canvas element containing the image.
+     *
+     * @ignore
      */
     textureToCanvas(texture, options = {}) {
 
@@ -74,7 +87,7 @@ class CoreExporter {
             name: 'ExtractedTexture',
             width,
             height,
-            format: PIXELFORMAT_RGBA8,
+            format: texture.format,
             cubemap: false,
             mipmaps: false,
             minFilter: FILTER_LINEAR,

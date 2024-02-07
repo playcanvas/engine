@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.66.0-dev",
+  "version": "1.69.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -21,6 +21,7 @@
   "module": "build/playcanvas.mjs/index.js",
   "types": "build/playcanvas.d.ts",
   "sideEffects": false,
+  "type": "module",
   "bugs": {
     "url": "https://github.com/playcanvas/engine/issues"
   },
@@ -68,7 +69,8 @@
     "scripts/textmesh/opentype.min.js",
     "src/polyfill/*",
     "scripts/parsers/vox-parser.js",
-    "scripts/spine/playcanvas-spine.3.8.js"
+    "scripts/spine/playcanvas-spine.3.8.js",
+    "scripts/spine/playcanvas-spine.3.8.mjs"
   ],
   "files": [
     "build/playcanvas.js",
@@ -90,40 +92,43 @@
     "README-kr.md",
     "README-zh.md"
   ],
+  "dependencies": {
+    "@types/webxr": "^0.5.7",
+    "@webgpu/types": "^0.1.38"
+  },
   "devDependencies": {
-    "@babel/core": "^7.22.10",
-    "@babel/eslint-parser": "^7.22.10",
-    "@babel/preset-env": "^7.22.10",
+    "@babel/core": "^7.23.2",
+    "@babel/eslint-parser": "^7.22.15",
+    "@babel/preset-env": "^7.23.2",
     "@playcanvas/canvas-mock": "^1.0.1",
-    "@playcanvas/eslint-config": "^1.6.0",
-    "@playcanvas/jsdoc-template": "^1.1.1",
-    "@rollup/plugin-babel": "^6.0.3",
-    "@rollup/plugin-node-resolve": "^15.1.0",
-    "@rollup/plugin-strip": "^3.0.2",
-    "@rollup/plugin-terser": "^0.4.3",
-    "@rollup/pluginutils": "^5.0.3",
-    "@types/webxr": "^0.5.3",
-    "@webgpu/types": "^0.1.34",
+    "@playcanvas/eslint-config": "^1.7.1",
+    "@playcanvas/jsdoc-template": "^1.1.2",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-strip": "^3.0.4",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/pluginutils": "^5.0.5",
     "c8": "^8.0.0",
-    "chai": "^4.3.7",
-    "eslint": "^8.47.0",
-    "fflate": "^0.8.0",
+    "chai": "^4.3.10",
+    "eslint": "^8.52.0",
+    "fflate": "^0.8.1",
     "jsdoc": "^4.0.2",
     "jsdoc-tsimport-plugin": "^1.0.5",
+    "jsdoc-typeof-plugin": "^1.0.0",
     "karma": "^6.4.2",
     "karma-chrome-launcher": "^3.2.0",
     "karma-mocha": "2.0.1",
     "karma-spec-reporter": "^0.0.36",
     "mocha": "^10.2.0",
-    "rollup": "^3.28.0",
-    "rollup-plugin-dts": "^5.3.1",
+    "rollup": "^3.29.4",
+    "rollup-plugin-dts": "^6.0.2",
     "rollup-plugin-jscc": "2.0.0",
     "rollup-plugin-visualizer": "^5.9.2",
-    "serve": "^14.2.0",
-    "sinon": "^15.2.0",
-    "typedoc": "^0.24.8",
-    "typedoc-plugin-mdn-links": "^3.0.3",
-    "typescript": "^5.1.6",
+    "serve": "^14.2.1",
+    "sinon": "^17.0.0",
+    "typedoc": "^0.25.7",
+    "typedoc-plugin-mdn-links": "^3.1.14",
+    "typescript": "^5.2.2",
     "xhr2": "^0.2.1"
   },
   "scripts": {
@@ -156,7 +161,7 @@
     "serve": "serve build -l 51000",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",
-    "test:karma": "karma start tests/karma.conf.js -- --single-run --release",
+    "test:karma": "karma start tests/karma.conf.cjs -- --single-run --release",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
   }
 }

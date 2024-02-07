@@ -401,6 +401,25 @@ body {
     background-color: #364346;
 }
 
+#descriptionPanel {
+    /* center on the bottom of the page */
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    color: #f2f2f2;
+    width: 50%;
+}
+
+#descriptionPanel.mobile {
+    bottom: 100px;
+    width: 90%;
+}
+
+#descriptionPanel a {
+    color: #f2f2f2;
+}
+
 @media only screen and (max-width: 600px) {
     #controls-wrapper {
         position: absolute;
@@ -734,4 +753,9 @@ body {
     color: #ccc;
     background-color: rgba(0, 0, 0, .5);
     font-family: "Proxima Nova", Arial, sans-serif;
+}
+
+/* Prevent that number slider bar inputs are cropped */
+.pcui-slider > .pcui-numeric-input {
+    flex: 1.5 !important;
 }

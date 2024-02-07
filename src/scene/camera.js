@@ -10,6 +10,9 @@ import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
+import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -27,7 +30,28 @@ class Camera {
     /**
      * @type {import('./shader-pass.js').ShaderPassInfo|null}
      */
-    shaderPassInfo;
+    shaderPassInfo = null;
+
+    /**
+     * @type {RenderPassColorGrab|null}
+     */
+    renderPassColorGrab = null;
+
+    /**
+     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     */
+    renderPassDepthGrab = null;
+
+    /**
+     * Render passes used to render this camera. If empty, the camera will render using the default
+     * render passes.
+     *
+     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     */
+    renderPasses = [];
+
+    /** @type {number} */
+    jitter = 0;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -79,6 +103,17 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+    }
+
+    destroy() {
+
+        this.renderPassColorGrab?.destroy();
+        this.renderPassColorGrab = null;
+
+        this.renderPassDepthGrab?.destroy();
+        this.renderPassDepthGrab = null;
+
+        this.renderPasses.length = 0;
     }
 
     /**
@@ -415,10 +450,35 @@ class Camera {
         this.sensitivity = other.sensitivity;
 
         this.shaderPassInfo = other.shaderPassInfo;
+        this.jitter = other.jitter;
 
         this._projMatDirty = true;
 
         return this;
+    }
+
+    _enableRenderPassColorGrab(device, enable) {
+        if (enable) {
+            if (!this.renderPassColorGrab) {
+                this.renderPassColorGrab = new RenderPassColorGrab(device);
+            }
+        } else {
+            this.renderPassColorGrab?.destroy();
+            this.renderPassColorGrab = null;
+        }
+    }
+
+    _enableRenderPassDepthGrab(device, renderer, enable) {
+        if (enable) {
+            if (!this.renderPassDepthGrab) {
+                this.renderPassDepthGrab = device.isWebGL1 ?
+                    new RenderPassDepth(device, renderer, this) :
+                    new RenderPassDepthGrab(device, this);
+            }
+        } else {
+            this.renderPassDepthGrab?.destroy();
+            this.renderPassDepthGrab = null;
+        }
     }
 
     _updateViewProjMat() {

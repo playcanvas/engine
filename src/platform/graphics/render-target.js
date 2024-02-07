@@ -105,8 +105,8 @@ class RenderTarget {
      * @param {boolean} [options.flipY] - When set to true the image will be flipped in Y. Default
      * is false.
      * @param {string} [options.name] - The name of the render target.
-     * @param {number} [options.samples] - Number of hardware anti-aliasing samples (WebGL2 only).
-     * Default is 1.
+     * @param {number} [options.samples] - Number of hardware anti-aliasing samples (not supported
+     * on WebGL1). Default is 1.
      * @param {boolean} [options.stencil] - If set to true, depth buffer will include stencil.
      * Defaults to false. Ignored if depthBuffer is defined or depth is false.
      * @example
@@ -198,11 +198,6 @@ class RenderTarget {
             }
         });
 
-        // mark color buffer textures as render target
-        this._colorBuffers?.forEach((colorBuffer) => {
-            colorBuffer._isRenderTarget = true;
-        });
-
         const { maxSamples } = this._device;
         this._samples = Math.min(options.samples ?? 1, maxSamples);
 
@@ -251,10 +246,7 @@ class RenderTarget {
 
         const device = this._device;
         if (device) {
-            const idx = device.targets.indexOf(this);
-            if (idx !== -1) {
-                device.targets.splice(idx, 1);
-            }
+            device.targets.delete(this);
 
             if (device.renderTarget === this) {
                 device.setRenderTarget(null);
@@ -294,6 +286,36 @@ class RenderTarget {
         this._colorBuffer = null;
     }
 
+    /**
+     * Resizes the render target to the specified width and height. Internally this resizes all the
+     * assigned texture color and depth buffers.
+     *
+     * @param {number} width - The width of the render target in pixels.
+     * @param {number} height - The height of the render target in pixels.
+     */
+    resize(width, height) {
+
+        if (this.width !== width || this.height !== height) {
+
+            // release existing
+            const device = this._device;
+            this.destroyFrameBuffers();
+            if (device.renderTarget === this) {
+                device.setRenderTarget(null);
+            }
+
+            // resize textures
+            this._depthBuffer?.resize(width, height);
+            this._colorBuffers?.forEach((colorBuffer) => {
+                colorBuffer.resize(width, height);
+            });
+
+            // initialize again
+            this.validateMrt();
+            this.impl = device.createRenderTargetImpl(this);
+        }
+    }
+
     validateMrt() {
         Debug.call(() => {
             if (this._colorBuffers) {
@@ -321,6 +343,11 @@ class RenderTarget {
     /** @ignore */
     get initialized() {
         return this.impl.initialized;
+    }
+
+    /** @ignore */
+    get device() {
+        return this._device;
     }
 
     /**

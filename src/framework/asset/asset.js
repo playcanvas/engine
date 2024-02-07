@@ -48,6 +48,85 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  */
 class Asset extends EventHandler {
     /**
+     * Fired when the asset has completed loading.
+     *
+     * @event
+     * @example
+     * asset.on('load', (asset) => {
+     *     console.log(`Asset loaded: ${asset.name}`);
+     * });
+     */
+    static EVENT_LOAD = 'load';
+
+    /**
+     * Fired just before the asset unloads the resource. This allows for the opportunity to prepare
+     * for an asset that will be unloaded. E.g. Changing the texture of a model to a default before
+     * the one it was using is unloaded.
+     *
+     * @event
+     * @example
+     * asset.on('unload', (asset) => {
+     *    console.log(`Asset about to unload: ${asset.name}`);
+     * });
+     */
+    static EVENT_UNLOAD = 'unload';
+
+    /**
+     * Fired when the asset is removed from the asset registry.
+     *
+     * @event
+     * @example
+     * asset.on('remove', (asset) => {
+     *    console.log(`Asset removed: ${asset.name}`);
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired if the asset encounters an error while loading.
+     *
+     * @event
+     * @example
+     * asset.on('error', (err, asset) => {
+     *    console.error(`Error loading asset ${asset.name}: ${err}`);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
+    /**
+     * Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
+     *
+     * @event
+     * @example
+     * asset.on('change', (asset, property, newValue, oldValue) => {
+     *    console.log(`Asset ${asset.name} has property ${property} changed from ${oldValue} to ${newValue}`);
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
+    /**
+     * Fired when we add a new localized asset id to the asset.
+     *
+     * @event
+     * @example
+     * asset.on('add:localized', (locale, assetId) => {
+     *    console.log(`Asset ${asset.name} has added localized asset ${assetId} for locale ${locale}`);
+     * });
+     */
+    static EVENT_ADDLOCALIZED = 'add:localized';
+
+    /**
+     * Fired when we remove a localized asset id from the asset.
+     *
+     * @event
+     * @example
+     * asset.on('remove:localized', (locale, assetId) => {
+     *   console.log(`Asset ${asset.name} has removed localized asset ${assetId} for locale ${locale}`);
+     * });
+     */
+    static EVENT_REMOVELOCALIZED = 'remove:localized';
+
+    /**
      * Create a new Asset record. Generally, Assets are created in the loading process and you
      * won't need to create them by hand.
      *
@@ -145,63 +224,6 @@ class Asset extends EventHandler {
 
         if (file) this.file = file;
     }
-
-    /**
-     * Fired when the asset has completed loading.
-     *
-     * @event Asset#load
-     * @param {Asset} asset - The asset that was loaded.
-     */
-
-    /**
-     * Fired just before the asset unloads the resource. This allows for the opportunity to prepare
-     * for an asset that will be unloaded. E.g. Changing the texture of a model to a default before
-     * the one it was using is unloaded.
-     *
-     * @event Asset#unload
-     * @param {Asset} asset - The asset that is due to be unloaded.
-     */
-
-    /**
-     * Fired when the asset is removed from the asset registry.
-     *
-     * @event Asset#remove
-     * @param {Asset} asset - The asset that was removed.
-     */
-
-    /**
-     * Fired if the asset encounters an error while loading.
-     *
-     * @event Asset#error
-     * @param {string} err - The error message.
-     * @param {Asset} asset - The asset that generated the error.
-     */
-
-    /**
-     * Fired when one of the asset properties `file`, `data`, `resource` or `resources` is changed.
-     *
-     * @event Asset#change
-     * @param {Asset} asset - The asset that was loaded.
-     * @param {string} property - The name of the property that changed.
-     * @param {*} value - The new property value.
-     * @param {*} oldValue - The old property value.
-     */
-
-    /**
-     * Fired when we add a new localized asset id to the asset.
-     *
-     * @event Asset#add:localized
-     * @param {string} locale - The locale.
-     * @param {number} assetId - The asset id we added.
-     */
-
-    /**
-     * Fired when we remove a localized asset id from the asset.
-     *
-     * @event Asset#remove:localized
-     * @param {string} locale - The locale.
-     * @param {number} assetId - The asset id we removed.
-     */
 
     /**
      * The asset id.

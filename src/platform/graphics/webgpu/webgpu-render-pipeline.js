@@ -1,13 +1,13 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { hash32Fnv1a } from "../../../core/hash.js";
 import { array } from "../../../core/array-utils.js";
-import { TRACEID_RENDERPIPELINE_ALLOC, TRACEID_PIPELINELAYOUT_ALLOC } from "../../../core/constants.js";
+import { TRACEID_RENDERPIPELINE_ALLOC } from "../../../core/constants.js";
 
 import { WebgpuVertexBufferLayout } from "./webgpu-vertex-buffer-layout.js";
 import { WebgpuDebug } from "./webgpu-debug.js";
+import { WebgpuPipeline } from "./webgpu-pipeline.js";
 
 let _pipelineId = 0;
-let _layoutId = 0;
 
 const _primitiveTopology = [
     'point-list',       // PRIMITIVE_POINTS
@@ -71,9 +71,6 @@ const _stencilOps = [
     'invert'                // STENCILOP_INVERT
 ];
 
-// temp array to avoid allocation
-const _bindGroupLayouts = [];
-
 /** @ignore */
 class CacheEntry {
     /**
@@ -95,12 +92,11 @@ class CacheEntry {
 /**
  * @ignore
  */
-class WebgpuRenderPipeline {
+class WebgpuRenderPipeline extends WebgpuPipeline {
     lookupHashes = new Uint32Array(13);
 
     constructor(device) {
-        /** @type {import('./webgpu-graphics-device.js').WebgpuGraphicsDevice} */
-        this.device = device;
+        super(device);
 
         /**
          * The cache of vertex buffer layouts
@@ -180,39 +176,6 @@ class WebgpuRenderPipeline {
         return cacheEntry.pipeline;
     }
 
-    // TODO: this could be cached using bindGroupKey
-
-    /**
-     * @param {import('../bind-group-format.js').BindGroupFormat[]} bindGroupFormats - An array
-     * of bind group formats.
-     * @returns {any} Returns the pipeline layout.
-     */
-    getPipelineLayout(bindGroupFormats) {
-
-        bindGroupFormats.forEach((format) => {
-            _bindGroupLayouts.push(format.bindGroupLayout);
-        });
-
-        const descr = {
-            bindGroupLayouts: _bindGroupLayouts
-        };
-
-        _layoutId++;
-        DebugHelper.setLabel(descr, `PipelineLayoutDescr-${_layoutId}`);
-
-        /** @type {GPUPipelineLayout} */
-        const pipelineLayout = this.device.wgpu.createPipelineLayout(descr);
-        DebugHelper.setLabel(pipelineLayout, `PipelineLayout-${_layoutId}`);
-        Debug.trace(TRACEID_PIPELINELAYOUT_ALLOC, `Alloc: Id ${_layoutId}`, {
-            descr,
-            bindGroupFormats
-        });
-
-        _bindGroupLayouts.length = 0;
-
-        return pipelineLayout;
-    }
-
     getBlend(blendState) {
 
         // blend needs to be undefined when blending is disabled
@@ -261,6 +224,8 @@ class WebgpuRenderPipeline {
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
+                depthStencil.depthBias = depthState.depthBias;
+                depthStencil.depthBiasSlopeScale = depthState.depthBiasSlope;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;
@@ -309,12 +274,6 @@ class WebgpuRenderPipeline {
                 buffers: vertexBufferLayout
             },
 
-            fragment: {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: []
-            },
-
             primitive: {
                 topology: primitiveTopology,
                 frontFace: 'ccw',
@@ -333,6 +292,12 @@ class WebgpuRenderPipeline {
 
         const colorAttachments = renderTarget.impl.colorAttachments;
         if (colorAttachments.length > 0) {
+
+            descr.fragment = {
+                module: webgpuShader.getFragmentShaderModule(),
+                entryPoint: webgpuShader.fragmentEntryPoint,
+                targets: []
+            };
 
             // the same write mask is used by all color buffers, to match the WebGL behavior
             let writeMask = 0;

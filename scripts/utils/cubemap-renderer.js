@@ -109,7 +109,7 @@ CubemapRenderer.prototype.initialize = function () {
         // set up its rotation
         e.setRotation(cameraRotations[i]);
 
-        // Before the first camera renders, trigger onCubemapPostRender event on the entity.
+        // Before the first camera renders, trigger onCubemapPreRender event on the entity.
         if (i === 0) {
             e.camera.onPreRender = () => {
                 this.entity.fire('onCubemapPreRender');

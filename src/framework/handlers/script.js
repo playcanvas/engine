@@ -1,5 +1,8 @@
+import { platform } from '../../core/platform.js';
 import { script } from '../script.js';
+import { ScriptType } from '../script/script-type.js';
 import { ScriptTypes } from '../script/script-types.js';
+import { registerScript } from '../script/script.js';
 import { ResourceLoader } from './loader.js';
 
 import { ResourceHandler } from './handler.js';
@@ -8,6 +11,8 @@ import { ResourceHandler } from './handler.js';
  * Resource handler for loading JavaScript files dynamically.  Two types of JavaScript files can be
  * loaded, PlayCanvas scripts which contain calls to {@link createScript}, or regular JavaScript
  * files, such as third-party libraries.
+ *
+ * @category Script
  */
 class ScriptHandler extends ResourceHandler {
     /**
@@ -24,6 +29,16 @@ class ScriptHandler extends ResourceHandler {
         this._cache = { };
     }
 
+    clearCache() {
+        for (const key in this._cache) {
+            const element = this._cache[key];
+            const parent = element.parentNode;
+            if (parent)
+                parent.removeChild(element);
+        }
+        this._cache = {};
+    }
+
     load(url, callback) {
         // Scripts don't support bundling since we concatenate them. Below is for consistency.
         if (typeof url === 'string') {
@@ -36,7 +51,7 @@ class ScriptHandler extends ResourceHandler {
         const self = this;
         script.app = this._app;
 
-        this._loadScript(url.load, (err, url, extra) => {
+        const onScriptLoad = (url.load, (err, url, extra) => {
             if (!err) {
                 if (script.legacy) {
                     let Type = null;
@@ -71,7 +86,35 @@ class ScriptHandler extends ResourceHandler {
                 callback(err);
             }
         });
+
+        // check if we're loading a module or a classic script
+        const [basePath, search] = url.load.split('?');
+        const isEsmScript = basePath.endsWith('.mjs');
+
+        if (isEsmScript) {
+
+            // The browser will hold its own cache of the script, so we need to bust it
+            let path = url.load;
+            if (path.startsWith(this._app.assets.prefix)) {
+                path = path.replace(this._app.assets.prefix, '');
+            }
+
+            const hash = this._app.assets.getByUrl(path).file.hash;
+            const searchParams = new URLSearchParams(search);
+            searchParams.set('hash', hash);
+            const urlWithHash = `${basePath}?${searchParams.toString()}`;
+
+            this._loadModule(urlWithHash, onScriptLoad);
+        } else {
+            this._loadScript(url.load, onScriptLoad);
+        }
     }
+
+    open(url, data) {
+        return data;
+    }
+
+    patch(asset, assets) { }
 
     _loadScript(url, callback) {
         const head = document.head;
@@ -96,6 +139,38 @@ class ScriptHandler extends ResourceHandler {
         element.src = url;
 
         head.appendChild(element);
+    }
+
+    _loadModule(url, callback) {
+
+        // if we're in the browser, we need to use the full URL
+        const baseUrl = platform.browser ? window.location.origin : import.meta.url;
+        const importUrl = new URL(url, baseUrl);
+
+        // @ts-ignore
+        import(importUrl.toString()).then((module) => {
+
+            for (const key in module) {
+                const scriptClass = module[key];
+                const extendsScriptType = scriptClass.prototype instanceof ScriptType;
+
+                if (extendsScriptType) {
+
+                    if (script.attributesDefinition) {
+                        for (const key in script.attributesDefinition) {
+                            scriptClass.attributes.add(key, script.attributesDefinition[key]);
+                        }
+                    }
+
+                    registerScript(scriptClass, scriptClass.name);
+                }
+            }
+
+            callback(null, url, null);
+
+        }).catch((err) => {
+            callback(err);
+        });
     }
 }
 

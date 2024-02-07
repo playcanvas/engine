@@ -1,4 +1,4 @@
-import { CUBEPROJ_NONE, DETAILMODE_MUL, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
+import { CUBEPROJ_NONE, DETAILMODE_MUL, DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from '../../../src/scene/constants.js';
 import { Color } from '../../../src/core/math/color.js';
 import { Material } from '../../../src/scene/materials/material.js';
 import { StandardMaterial } from '../../../src/scene/materials/standard-material.js';
@@ -221,6 +221,8 @@ describe('StandardMaterial', function () {
 
         expect(material.opacity).to.equal(1);
         expect(material.opacityFadesSpecular).to.equal(true);
+        expect(material.opacityDither).to.equal(DITHER_NONE);
+        expect(material.opacityShadowDither).to.equal(DITHER_NONE);
         expect(material.opacityMap).to.be.null;
         expect(material.opacityMapChannel).to.equal('a');
         expect(material.opacityMapOffset).to.be.an.instanceof(Vec2);
