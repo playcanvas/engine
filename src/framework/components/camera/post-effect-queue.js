@@ -136,7 +136,7 @@ class PostEffectQueue {
      * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
      *
-     * @param {PostEffect} effect - The post effect to add to the queue.
+     * @param {PostEffectEntry} effect - The post effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
