@@ -23,14 +23,10 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
         pc.ModelComponentSystem,
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
-        pc.ModelHandler,
+        pc.ModelHandler
     ];
 
     const app = new pc.AppBase(canvas);
