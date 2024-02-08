@@ -2,6 +2,7 @@
  * Rigid body has infinite mass and cannot move.
  *
  * @type {string}
+ * @category Physics
  */
 export const BODYTYPE_STATIC = 'static';
 
@@ -9,6 +10,7 @@ export const BODYTYPE_STATIC = 'static';
  * Rigid body is simulated according to applied forces.
  *
  * @type {string}
+ * @category Physics
  */
 export const BODYTYPE_DYNAMIC = 'dynamic';
 
@@ -17,6 +19,7 @@ export const BODYTYPE_DYNAMIC = 'dynamic';
  * their velocity or position.
  *
  * @type {string}
+ * @category Physics
  */
 export const BODYTYPE_KINEMATIC = 'kinematic';
 

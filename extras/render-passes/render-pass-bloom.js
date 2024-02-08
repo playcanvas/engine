@@ -24,7 +24,7 @@ class RenderPassBloom extends RenderPass {
 
     constructor(device, sourceTexture, format) {
         super(device);
-        this.sourceTexture = sourceTexture;
+        this._sourceTexture = sourceTexture;
         this.textureFormat = format;
 
         this.bloomRenderTarget = this.createRenderTarget(0);
@@ -87,7 +87,7 @@ class RenderPassBloom extends RenderPass {
         const device = this.device;
 
         // progressive downscale
-        let passSourceTexture = this.sourceTexture;
+        let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
             const pass = new RenderPassDownsample(device, passSourceTexture);
@@ -124,11 +124,29 @@ class RenderPassBloom extends RenderPass {
         this.destroyRenderTargets(1);
     }
 
+    set sourceTexture(value) {
+        this._sourceTexture = value;
+
+        if (this.beforePasses.length > 0) {
+            const firstPass = this.beforePasses[0];
+
+            // change resize source
+            firstPass.options.resizeSource = value;
+
+            // change downsample source
+            firstPass.sourceTexture = value;
+        }
+    }
+
+    get sourceTexture() {
+        return this._sourceTexture;
+    }
+
     frameUpdate() {
         super.frameUpdate();
 
         // create an appropriate amount of render passes
-        let numPasses = this.calcMipLevels(this.sourceTexture.width, this.sourceTexture.height, 2 ** this.lastMipLevel);
+        let numPasses = this.calcMipLevels(this._sourceTexture.width, this._sourceTexture.height, 2 ** this.lastMipLevel);
         numPasses = Math.max(1, numPasses);
 
         if (this.renderTargets.length !== numPasses) {

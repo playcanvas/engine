@@ -1,36 +1,39 @@
 /**
+ * @param {string} string - The source string.
+ * @returns {string} - The capitalized string.
+ *
  * @example
  * capitalizeFirstLetter("test") // Outputs 'Test'
- * @param {string} string 
- * @returns {string}
  */
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 /**
+ * @param {string} str - The string.
+ * @returns {string} - The kebab-case-format
+ *
  * @example
  * toKebabCase('BlendTrees1D'); // Outputs: 'blend-trees-1d'
  * toKebabCase('LightsBakedAO'); // Outputs 'lights-baked-a-o'
- * @param {string} str - The string.
- * @returns String in kebab-case-format
  */
 function toKebabCase(str) {
     return str
-      .replace(/([A-Z])([A-Z])/g, '$1-$2') // case for "...AO" -> '...-a-o'
-      .replace(/([a-z])([A-Z])/g, '$1-$2')
-      .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
-      .toLowerCase()
-      .replaceAll("1d", "-1d")
-      .replaceAll("2d", "-2d")
-      .replaceAll("3d", "-3d")
+        .replace(/([A-Z])([A-Z])/g, '$1-$2') // case for "...AO" -> '...-a-o'
+        .replace(/([a-z])([A-Z])/g, '$1-$2')
+        .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
+        .toLowerCase()
+        .replace(/1d/g, "-1d")
+        .replace(/2d/g, "-2d")
+        .replace(/3d/g, "-3d");
 }
 
 /**
+ * @param {string} str - The string.
+ * @returns {string} - The pascal case
+ *
  * @example
  * kebabCaseToPascalCase("user-interface"); // Outputs 'UserInterface'
- * @param {string} str - The string.
- * @returns {string}
  */
 function kebabCaseToPascalCase(str) {
     return str
@@ -43,10 +46,10 @@ function kebabCaseToPascalCase(str) {
 }
 
 /**
- * @example
- * countLeadingSpaces('  Hello!'); // Result: 2
  * @param {string} str - String with leading spaces.
  * @returns {number} Number of spaces.
+ * @example
+ * countLeadingSpaces('  Hello!'); // Result: 2
  */
 function countLeadingSpaces(str) {
     let count = 0;

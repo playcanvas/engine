@@ -175,7 +175,6 @@ class XrManager extends EventHandler {
      * Provides access to DOM overlay capabilities.
      *
      * @type {XrDomOverlay}
-     * @ignore
      */
     domOverlay;
 
@@ -191,7 +190,6 @@ class XrManager extends EventHandler {
      * Provides access to image tracking capabilities.
      *
      * @type {XrImageTracking}
-     * @ignore
      */
     imageTracking;
 
@@ -199,7 +197,6 @@ class XrManager extends EventHandler {
      * Provides access to plane detection capabilities.
      *
      * @type {XrPlaneDetection}
-     * @ignore
      */
     planeDetection;
 
@@ -207,7 +204,6 @@ class XrManager extends EventHandler {
      * Provides access to mesh detection capabilities.
      *
      * @type {XrMeshDetection}
-     * @ignore
      */
     meshDetection;
 
@@ -222,7 +218,6 @@ class XrManager extends EventHandler {
      * Provides access to light estimation capabilities.
      *
      * @type {XrLightEstimation}
-     * @ignore
      */
     lightEstimation;
 
@@ -230,7 +225,6 @@ class XrManager extends EventHandler {
      * Provides access to views and their capabilities.
      *
      * @type {XrViews}
-     * @ignore
      */
     views;
 

@@ -1,17 +1,38 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
-
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, assetPath, deviceType, glslangPath, twgslPath }) {
 
     const assets = {
         'snowflake': new pc.Asset('snowflake', 'texture', { url: assetPath + 'textures/snowflake.png' })
     };
+
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ParticleSystemComponentSystem
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {

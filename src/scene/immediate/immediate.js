@@ -9,7 +9,10 @@ import { createShaderFromCode } from '../shader-lib/utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
+import { Vec3 } from '../../core/math/vec3.js';
+
 const tempPoints = [];
+const vec = new Vec3();
 
 class Immediate {
     constructor(device) {
@@ -167,21 +170,42 @@ class Immediate {
         layerMeshInstances.push(meshInstance);
     }
 
-    drawWireAlignedBox(min, max, color, depthTest, layer) {
-        tempPoints.push(
-            min.x, min.y, min.z, min.x, max.y, min.z,
-            min.x, max.y, min.z, max.x, max.y, min.z,
-            max.x, max.y, min.z, max.x, min.y, min.z,
-            max.x, min.y, min.z, min.x, min.y, min.z,
-            min.x, min.y, max.z, min.x, max.y, max.z,
-            min.x, max.y, max.z, max.x, max.y, max.z,
-            max.x, max.y, max.z, max.x, min.y, max.z,
-            max.x, min.y, max.z, min.x, min.y, max.z,
-            min.x, min.y, min.z, min.x, min.y, max.z,
-            min.x, max.y, min.z, min.x, max.y, max.z,
-            max.x, max.y, min.z, max.x, max.y, max.z,
-            max.x, min.y, min.z, max.x, min.y, max.z
-        );
+    drawWireAlignedBox(min, max, color, depthTest, layer, mat) {
+        if (mat) {
+            const mulPoint = (x, y, z) => {
+                vec.set(x, y, z);
+                mat.transformPoint(vec, vec);
+                tempPoints.push(vec.x, vec.y, vec.z);
+            };
+
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, max.y, min.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(max.x, max.y, min.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, min.y, min.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(min.x, min.y, min.z);
+            mulPoint(min.x, min.y, max.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(min.x, max.y, max.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, max.y, max.z); mulPoint(max.x, min.y, max.z);
+            mulPoint(max.x, min.y, max.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(max.x, min.y, max.z);
+        } else {
+            tempPoints.push(
+                min.x, min.y, min.z, min.x, max.y, min.z,
+                min.x, max.y, min.z, max.x, max.y, min.z,
+                max.x, max.y, min.z, max.x, min.y, min.z,
+                max.x, min.y, min.z, min.x, min.y, min.z,
+                min.x, min.y, max.z, min.x, max.y, max.z,
+                min.x, max.y, max.z, max.x, max.y, max.z,
+                max.x, max.y, max.z, max.x, min.y, max.z,
+                max.x, min.y, max.z, min.x, min.y, max.z,
+                min.x, min.y, min.z, min.x, min.y, max.z,
+                min.x, max.y, min.z, min.x, max.y, max.z,
+                max.x, max.y, min.z, max.x, max.y, max.z,
+                max.x, min.y, min.z, max.x, min.y, max.z
+            );
+        }
 
         const batch = this.getBatch(layer, depthTest);
         batch.addLinesArrays(tempPoints, color);

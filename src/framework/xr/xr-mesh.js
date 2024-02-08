@@ -98,7 +98,7 @@ class XrMesh extends EventHandler {
     }
 
     /**
-     * Float 32 array of mesh vertices.
+     * Float 32 array of mesh vertices. This array contains 3 components per vertex: x,y,z coordinates.
      *
      * @type {Float32Array}
      */

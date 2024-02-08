@@ -32,6 +32,12 @@ class GSplatComponent extends Component {
     _assetReference;
 
     /**
+     * @type {import('../../../scene/gsplat/gsplat-material.js').SplatMaterialOptions|null}
+     * @private
+     */
+    _materialOptions = null;
+
+    /**
      * Create a new GSplatComponent.
      *
      * @param {import('./system.js').GSplatComponentSystem} system - The ComponentSystem that
@@ -102,6 +108,11 @@ class GSplatComponent extends Component {
 
             mi.setCustomAabb(this._customAabb);
 
+            // if we have custom shader options, apply them
+            if (this._materialOptions) {
+                this._instance.createMaterial(this._materialOptions);
+            }
+
             if (this.enabled && this.entity.enabled) {
                 this.addToLayers();
             }
@@ -110,6 +121,19 @@ class GSplatComponent extends Component {
 
     get instance() {
         return this._instance;
+    }
+
+    set materialOptions(value) {
+        this._materialOptions = Object.assign({}, value);
+
+        // apply them on the instance if it exists
+        if (this._instance) {
+            this._instance.createMaterial(this._materialOptions);
+        }
+    }
+
+    get materialOptions() {
+        return this._materialOptions;
     }
 
     /**

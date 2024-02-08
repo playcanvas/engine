@@ -198,7 +198,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
@@ -415,6 +415,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             sceneColorMap: true,            // true if the scene color should be captured
 
             // disabled by default as this is WIP
+            prepassEnabled: false,
             taaEnabled: false               // true if temporal anti-aliasing should be used
         };
 

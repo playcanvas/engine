@@ -15,7 +15,6 @@ import { IndexBuffer } from '../platform/graphics/index-buffer.js';
 import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 import { RENDERSTYLE_SOLID, RENDERSTYLE_WIREFRAME, RENDERSTYLE_POINTS } from './constants.js';
 
@@ -149,10 +148,10 @@ class GeometryVertexStream {
  *
  * Follow these links for more complex examples showing the functionality.
  *
- * - {@link http://playcanvas.github.io/#graphics/mesh-decals}
- * - {@link http://playcanvas.github.io/#graphics/mesh-deformation}
- * - {@link http://playcanvas.github.io/#graphics/mesh-generation}
- * - {@link http://playcanvas.github.io/#graphics/point-cloud-simulation}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-decals}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-deformation}
+ * - {@link https://playcanvas.github.io/#graphics/mesh-generation}
+ * - {@link https://playcanvas.github.io/#graphics/point-cloud-simulation}
  *
  * ### Update Vertex and Index buffers
  * This allows greater flexibility, but is more complex to use. It allows more advanced setups, for
@@ -185,8 +184,8 @@ class Mesh extends RefCountedObject {
     constructor(graphicsDevice) {
         super();
         this.id = id++;
-        Debug.assertDeprecated(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
-        this.device = graphicsDevice || GraphicsDeviceAccess.get();
+        Debug.assert(graphicsDevice, "Mesh constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice;
 
         /**
          * The vertex buffer holding the vertex data of the mesh.

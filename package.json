@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.68.0-dev",
+  "version": "1.69.0-dev",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -126,8 +126,8 @@
     "rollup-plugin-visualizer": "^5.9.2",
     "serve": "^14.2.1",
     "sinon": "^17.0.0",
-    "typedoc": "^0.25.1",
-    "typedoc-plugin-mdn-links": "^3.1.0",
+    "typedoc": "^0.25.7",
+    "typedoc-plugin-mdn-links": "^3.1.14",
     "typescript": "^5.2.2",
     "xhr2": "^0.2.1"
   },

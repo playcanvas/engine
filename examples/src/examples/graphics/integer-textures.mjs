@@ -51,11 +51,11 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
 
 /**
  * @typedef {{ 'sandSimulation.frag': string, 'renderOutput.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, data, deviceType, files, glslangPath, twgslPath, dracoPath }) {
+async function example({ canvas, data, deviceType, assetPath, files, glslangPath, twgslPath, dracoPath }) {
     //
     //  In this example, integer textures are used to store the state of each pixel in a simulation.
     //  The simulation is run in a shader, and the results are rendered to a texture.
@@ -82,7 +82,9 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
         fallbackUrl: dracoPath + 'draco.js'
     });
 
-    const assets = {};
+    const assets = {
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+    };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -97,10 +99,12 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
 
     createOptions.componentSystems = [
         pc.RenderComponentSystem,
-        pc.CameraComponentSystem,
-        pc.LightComponentSystem
+        pc.CameraComponentSystem
     ];
-    createOptions.resourceHandlers = [];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler
+    ];
 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
@@ -238,10 +242,14 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
 
         app.start();
 
+        // setup skydome
+        app.scene.envAtlas = assets.helipad.resource;
+        app.scene.skyboxMip = 2;
+        app.scene.exposure = 1;
+
         // Create an Entity with a camera component
         const cameraEntity = new pc.Entity();
         cameraEntity.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5),
             farClip: 500
         });
 
@@ -250,53 +258,13 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
         cameraEntity.lookAt(0, 5, 0);
         app.root.addChild(cameraEntity);
 
-        // create material used on the ground plane
-        const groundMaterial = new pc.StandardMaterial();
-        groundMaterial.gloss = 0.6;
-        groundMaterial.metalness = 0.4;
-        groundMaterial.diffuse = new pc.Color(0.95, 0.85, 0.85);
-        groundMaterial.useMetalness = true;
-        groundMaterial.useLighting = true;
-        groundMaterial.update();
-
-        // Create the ground plane
-        const ground = new pc.Entity();
-        ground.addComponent('render', {
-            castShadows: false,
-            castShadowsLightmap: false,
-            lightmapped: false,
-            type: "plane",
-            material: groundMaterial
-        });
-        app.root.addChild(ground);
-        ground.setLocalPosition(0, 0, 0);
-        ground.setLocalScale(40, 40, 40);
-
-        // Create a directional light
-        const lightEntity = new pc.Entity();
-        lightEntity.addComponent("light", {
-            type: "directional",
-            color: pc.Color.WHITE,
-            range: 100,
-            intensity: 1,
-            shadowDistance: 256,
-            castShadows: true,
-            shadowBias: 0.1
-            // normalOffsetBias: 0.2
-        });
-        lightEntity.setLocalEulerAngles(60, 40, 0);
-        lightEntity.setLocalPosition(0, 10, 0);
-        app.root.addChild(lightEntity);
-
         // create a plane called gameScreen to display the sand
         // simulation visualization texture
         const gameScreen = new pc.Entity();
         gameScreen.addComponent('render', {
-            castShadows: true,
-            receiveShadows: false,
-            castShadowsLightmap: false,
-            lightmapped: false,
-            type: "plane"
+            type: "plane",
+            castShadows: false,
+            receiveShadows: false
         });
         gameScreen.setLocalPosition(0, 5, 0);
         gameScreen.setLocalScale(PLANE_WIDTH, 1, PLANE_HEIGHT);
@@ -304,6 +272,7 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
 
         /** @type {pc.StandardMaterial} */
         const gameScreenMaterial = gameScreen.render.material;
+        gameScreenMaterial.diffuse = pc.Color.BLACK;
         gameScreenMaterial.emissiveMap = outputTexture;
         gameScreenMaterial.useLighting = false;
         gameScreenMaterial.update();
@@ -355,7 +324,6 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
             mouseState = 0;
         });
 
-        const lookRange = 1.5;
         const mouseRay = new pc.Ray();
         const planePoint = new pc.Vec3();
         const mousePos = new pc.Vec2();
@@ -367,13 +335,6 @@ async function example({ canvas, data, deviceType, files, glslangPath, twgslPath
             mousePos.x = x;
             mousePos.y = y;
 
-            const centerX = app.graphicsDevice.width / 2;
-            const centerY = app.graphicsDevice.height / 2;
-
-            const xOffset = (x - centerX) / app.graphicsDevice.width;
-            const yOffset = (y - centerY) / app.graphicsDevice.height;
-
-            cameraEntity.lookAt(xOffset * lookRange, 5 - yOffset * lookRange, 0);
             if (cameraEntity.camera) {
                 cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip, mouseRay.direction);
                 mouseRay.origin.copy(cameraEntity.getPosition());
@@ -544,7 +505,7 @@ export class IntegerTextureExample {
             varying vec2 uv0;
 
             vec3 whiteColor = vec3(1.0);
-            vec3 skyBlueColor = vec3(0.6, 0.7, 0.8);
+            vec3 skyBlueColor = vec3(0.2, 0.2, 0.2);
             vec3 yellowSandColor = vec3(0.73, 0.58, 0.26);
             vec3 orangeSandColor = vec3(0.87, 0.43, 0.22);
             vec3 graySandColor = vec3(0.13, 0.16, 0.17);

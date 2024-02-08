@@ -197,7 +197,7 @@ class XrMeshDetection extends EventHandler {
     /**
      * Array of {@link XrMesh} instances that contain transform, vertices and label information.
      *
-     * @type {XrMesh[]|null}
+     * @type {XrMesh[]}
      */
     get meshes() {
         return this._list;

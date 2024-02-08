@@ -4,32 +4,33 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx }) {
-    const { BindingTwoWay, LabelGroup, Panel, BooleanInput } = ReactPCUI;
-    class JsxControls extends React.Component {
-        render() {
-            const binding = new BindingTwoWay();
-            const link = {
-                observer,
-                path: 'mipmaps'
-            };
-            return jsx(Panel, { headerText: 'Texture Arrays' },
-                jsx(LabelGroup, { text: 'Show mipmaps' },
-                    jsx(BooleanInput, {
-                        type: "toggle",
-                        binding,
-                        link
-                    })
-                )
-            );
-        }
-    }
-    return jsx(JsxControls);
+function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+    const { InfoBox, BindingTwoWay, LabelGroup, Panel, BooleanInput } = ReactPCUI;
+    return fragment(
+        jsx(InfoBox, {
+            icon: 'E218',
+            title: 'WebGL 1.0',
+            text: 'Texture Arrays are not supported on WebGL 1.0 devices',
+            hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
+        }),
+        jsx(Panel, { headerText: 'Texture Arrays' },
+            jsx(LabelGroup, { text: 'Show mipmaps' },
+                jsx(BooleanInput, {
+                    type: "toggle",
+                    binding: new BindingTwoWay(),
+                    link: {
+                        observer,
+                        path: 'mipmaps'
+                    }
+                })
+            )
+        )
+    );
 }
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
@@ -125,6 +126,10 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
 
         app.start();
 
+        if (app.graphicsDevice.isWebGL1) {
+            return app;
+        }
+
         app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
         // Create directional light
@@ -137,12 +142,14 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         // Create the shader definition and shader from the vertex and fragment shaders
         const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
             aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0
+            aUv0: pc.SEMANTIC_TEXCOORD0,
+            aNormal: pc.SEMANTIC_NORMAL
         });
 
         const shaderGround = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['ground.frag'], 'groundsShader', {
             aPosition: pc.SEMANTIC_POSITION,
-            aUv0: pc.SEMANTIC_TEXCOORD0
+            aUv0: pc.SEMANTIC_TEXCOORD0,
+            aNormal: pc.SEMANTIC_NORMAL
         });
 
         const textureArrayOptions = {
@@ -196,11 +203,11 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
         // Create an Entity for the ground
         const ground = new pc.Entity();
         ground.addComponent("render", {
-            type: "plane",
+            type: "box",
             material: groundMaterial
         });
-        ground.setLocalScale(5, 1, 5);
-        ground.setLocalPosition(0, -2, 0);
+        ground.setLocalScale(4, 4, 4);
+        ground.setLocalPosition(0, -7, 0);
         app.root.addChild(ground);
 
         // Create a torus shape
@@ -215,17 +222,17 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
             material: material,
             meshInstances: [new pc.MeshInstance(torus, material)]
         });
-        shape.setPosition(0, 0, 0);
-        shape.setLocalScale(2, 2, 2);
+        shape.setPosition(0, -2, 0);
+        shape.setLocalScale(4, 4, 4);
 
         // Create an Entity with a camera component
         const camera = new pc.Entity();
         camera.addComponent("camera", {
-            clearColor: new pc.Color(0.4, 0.45, 0.5)
+            clearColor: new pc.Color(0.2, 0.2, 0.2)
         });
 
         // Adjust the camera position
-        camera.translate(0, 1, 2);
+        camera.translate(3, -2, 4);
         camera.lookAt(0, 0, 0);
 
         camera.addComponent("script");
@@ -252,10 +259,11 @@ async function example({ canvas, deviceType, data, files, assetPath, scriptsPath
 
             // Rotate the boxes
             shape.setEulerAngles(angle, angle * 2, angle * 4);
-            shape.render.meshInstances[0].setParameter('uIndex', Math.floor(time) % 4);
+            shape.render.meshInstances[0].setParameter('uTime', time);
         });
         data.on('mipmaps:set', (/** @type {number} */ value) => {
             groundMaterial.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
+            material.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
         });
     });
     return app;
@@ -270,41 +278,50 @@ export class TextureArrayExample {
         'shader.vert': /* glsl */`
             attribute vec3 aPosition;
             attribute vec2 aUv0;
+            attribute vec3 aNormal;
 
             uniform mat4 matrix_model;
             uniform mat4 matrix_viewProjection;
+            uniform mat3 matrix_normal;
 
             varying vec2 vUv0;
+            varying vec3 worldNormal;
 
             void main(void)
             {
                 vUv0 = aUv0;
+                worldNormal = normalize(matrix_normal * aNormal);
                 gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
             }`,
 
         'shader.frag': /* glsl */`
-            precision mediump float;
-
             varying vec2 vUv0;
-            uniform float uIndex;
+            varying vec3 worldNormal;
+            uniform float uTime;
 
             uniform mediump sampler2DArray uDiffuseMap;
 
             void main(void)
             {
-                gl_FragColor = texture(uDiffuseMap, vec3(vUv0, uIndex));
+                // sample different texture based on time along its texture v-coordinate
+                float index = (sin(uTime + vUv0.y + vUv0.x * 0.5) * 0.5 + 0.5) * 4.0;
+                vec4 data = texture(uDiffuseMap, vec3(vUv0, floor(index)));
+
+                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting
+                gl_FragColor = vec4(data.rgb, 1.0);
             }`,
 
         'ground.frag': /* glsl */`
-            precision mediump float;
-
             varying vec2 vUv0;
+            varying vec3 worldNormal;
 
             uniform mediump sampler2DArray uDiffuseMap;
 
             void main(void)
             {
-                gl_FragColor = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
+                vec4 data = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
+                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting
+                gl_FragColor = vec4(data.rgb, 1.0);
             }`
     };
     static controls = controls;

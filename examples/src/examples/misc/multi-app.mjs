@@ -5,7 +5,7 @@ import * as pc from 'playcanvas';
  * @returns {JSX.Element} The returned JSX Element.
  */
 function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, Panel, Label, Button, LabelGroup } = ReactPCUI;
+    const { BindingTwoWay, Panel, Label, Button } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'WebGPU' },
             jsx(Button, {
@@ -67,19 +67,24 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                 value: observer.get('null')
             })
         )
-    )
+    );
 }
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<null>} The example application.
  */
 async function example({ glslangPath, twgslPath, data }) {
     /**
-    * @param {string} deviceType - The device type.
-    * @returns {Promise<pc.AppBase>} The example application.
-    */
-   const createApp = async function(deviceType) {
+     * @param {string} deviceType - The device type.
+     * @returns {Promise<pc.AppBase>} The example application.
+     */
+    const createApp = async function(deviceType) {
+
+        const assets = {
+            font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
+        };
+
         let canvas = document.createElement('canvas');
         canvas.id = `app-${Math.random().toString(36).substring(7)}`; // generate a random id
         document.getElementById('appInner')?.appendChild(canvas);
@@ -107,46 +112,89 @@ async function example({ glslangPath, twgslPath, data }) {
         createOptions.componentSystems = [
             pc.RenderComponentSystem,
             pc.CameraComponentSystem,
-            pc.LightComponentSystem
+            pc.LightComponentSystem,
+            pc.ScreenComponentSystem,
+            pc.ElementComponentSystem
+        ];
+
+        createOptions.resourceHandlers = [
+            // @ts-ignore
+            pc.TextureHandler,
+            // @ts-ignore
+            pc.FontHandler
         ];
 
         const app = new pc.AppBase(canvas);
         app.init(createOptions);
         app.start();
 
-        app.setCanvasFillMode(pc.FILLMODE_NONE);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+        const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+        assetListLoader.load(() => {
 
-        // Ensure canvas is resized when window changes size
-        const resize = () => app.resizeCanvas();
-        window.addEventListener('resize', resize);
-        app.on('destroy', () => {
-            window.removeEventListener('resize', resize);
+            app.setCanvasFillMode(pc.FILLMODE_NONE);
+            app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+            // Ensure canvas is resized when window changes size
+            const resize = () => app.resizeCanvas();
+            window.addEventListener('resize', resize);
+            app.on('destroy', () => {
+                window.removeEventListener('resize', resize);
+            });
+
+            // create box entity
+            const box = new pc.Entity('cube');
+            box.addComponent('render', {
+                type: 'box'
+            });
+            app.root.addChild(box);
+
+            // create camera entity
+            const clearValue = 0.3 + Math.random() * 0.3;
+            const camera = new pc.Entity('camera');
+            camera.addComponent('camera', {
+                clearColor: new pc.Color(clearValue, clearValue, clearValue)
+            });
+            app.root.addChild(camera);
+            camera.setPosition(0, -0.4, 3);
+
+            // create directional light entity
+            const light = new pc.Entity('light');
+            light.addComponent('light');
+            app.root.addChild(light);
+            light.setEulerAngles(45, 0, 0);
+
+            // Create a 2D screen
+            const screen = new pc.Entity();
+            screen.addComponent("screen", {
+                referenceResolution: new pc.Vec2(1280, 720),
+                scaleBlend: 0.5,
+                scaleMode: pc.SCALEMODE_BLEND,
+                screenSpace: true
+            });
+            app.root.addChild(screen);
+
+            // device type as text
+            const text = app.graphicsDevice.isWebGL1 ? 'WebGL 1' : app.graphicsDevice.isWebGL2 ? 'WebGL 2' : 'WebGPU';
+
+            // Text with outline to identify the platform
+            const textOutline = new pc.Entity();
+            textOutline.setLocalPosition(0, -100, 0);
+            textOutline.addComponent("element", {
+                pivot: new pc.Vec2(0.5, 0.5),
+                anchor: new pc.Vec4(0.5, -0.2, 0.5, 0.5),
+                fontAsset: assets.font.id,
+                fontSize: 130,
+                text: text,
+                color: new pc.Color(1, 0.9, 0.9),
+                outlineColor: new pc.Color(0, 0, 0),
+                outlineThickness: 1,
+                type: pc.ELEMENTTYPE_TEXT
+            });
+            screen.addChild(textOutline);
+
+            // rotate the box according to the delta time since the last frame
+            app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
         });
-
-        // create box entity
-        const box = new pc.Entity('cube');
-        box.addComponent('render', {
-            type: 'box'
-        });
-        app.root.addChild(box);
-
-        // create camera entity
-        const camera = new pc.Entity('camera');
-        camera.addComponent('camera', {
-            clearColor: new pc.Color(0.5, 0.6, 0.9)
-        });
-        app.root.addChild(camera);
-        camera.setPosition(0, 0, 3);
-
-        // create directional light entity
-        const light = new pc.Entity('light');
-        light.addComponent('light');
-        app.root.addChild(light);
-        light.setEulerAngles(45, 0, 0);
-
-        // rotate the box according to the delta time since the last frame
-        app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
 
         return app;
     };
@@ -189,7 +237,7 @@ async function example({ glslangPath, twgslPath, data }) {
                 data.emit(`remove:${deviceType}`);
             }
         }
-    }
+    };
 
     window.addEventListener('destroy', removeAll);
     window.addEventListener('hotReload', removeAll);

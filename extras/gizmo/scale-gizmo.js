@@ -3,11 +3,8 @@ import {
 } from 'playcanvas';
 
 import { AxisBoxCenter, AxisBoxLine, AxisPlane } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
-
-// temporary variables
-const tmpV1 = new Vec3();
 
 /**
  * Scaling gizmo.
@@ -20,57 +17,64 @@ class ScaleGizmo extends TransformGizmo {
         xyz: new AxisBoxCenter(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
-            defaultColor: this._materials.axis.xyz,
-            hoverColor: this._materials.hover.xyz
+            defaultMaterial: this._materials.axis.xyz,
+            hoverMaterial: this._materials.hover.xyz,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullNone,
-            hoverColor: this._materials.hover.x.cullNone
+            defaultMaterial: this._materials.axis.x.cullNone,
+            hoverMaterial: this._materials.hover.x.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullNone,
-            hoverColor: this._materials.hover.y.cullNone
+            defaultMaterial: this._materials.axis.y.cullNone,
+            hoverMaterial: this._materials.hover.y.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullNone,
-            hoverColor: this._materials.hover.z.cullNone
+            defaultMaterial: this._materials.axis.z.cullNone,
+            hoverMaterial: this._materials.hover.z.cullNone,
+            disabledMaterial: this._materials.disabled.cullNone
         }),
         x: new AxisBoxLine(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack
+            defaultMaterial: this._materials.axis.x.cullBack,
+            hoverMaterial: this._materials.hover.x.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         y: new AxisBoxLine(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack
+            defaultMaterial: this._materials.axis.y.cullBack,
+            hoverMaterial: this._materials.hover.y.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         }),
         z: new AxisBoxLine(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack
+            defaultMaterial: this._materials.axis.z.cullBack,
+            hoverMaterial: this._materials.hover.z.cullBack,
+            disabledMaterial: this._materials.disabled.cullBack
         })
     };
 
-    _coordSpace = LOCAL_COORD_SPACE;
+    _coordSpace = GIZMO_LOCAL;
 
     /**
      * Internal mapping from each attached node to their starting scale.
@@ -79,13 +83,6 @@ class ScaleGizmo extends TransformGizmo {
      * @private
      */
     _nodeScales = new Map();
-
-    /**
-     * State for if uniform scaling is enabled for planes. Defaults to true.
-     *
-     * @type {boolean}
-     */
-    uniform = true;
 
     /**
      * @override
@@ -106,34 +103,16 @@ class ScaleGizmo extends TransformGizmo {
 
         this._createTransform();
 
-        this.on('key:down', (key, shiftKey, ctrlKey) => {
-            this.uniform = ctrlKey;
-        });
-
-        this.on('key:up', () => {
-            this.uniform = false;
-        });
-
         this.on('transform:start', () => {
             this._selectionStartPoint.sub(Vec3.ONE);
             this._storeNodeScales();
         });
 
         this.on('transform:move', (pointDelta) => {
-            const axis = this._selectedAxis;
-            const isPlane = this._selectedIsPlane;
             if (this.snap) {
                 pointDelta.mulScalar(1 / this.snapIncrement);
                 pointDelta.round();
                 pointDelta.mulScalar(this.snapIncrement);
-            }
-            if (this.uniform && isPlane) {
-                tmpV1.set(Math.abs(pointDelta.x), Math.abs(pointDelta.y), Math.abs(pointDelta.z));
-                tmpV1[axis] = 0;
-                const v = tmpV1.length();
-                tmpV1.set(v * Math.sign(pointDelta.x), v * Math.sign(pointDelta.y), v * Math.sign(pointDelta.z));
-                tmpV1[axis] = 1;
-                pointDelta.copy(tmpV1);
             }
             this._setNodeScales(pointDelta);
         });
@@ -149,6 +128,19 @@ class ScaleGizmo extends TransformGizmo {
 
     get coordSpace() {
         return this._coordSpace;
+    }
+
+    /**
+     * Uniform scaling state for planes.
+     *
+     * @type {boolean}
+     */
+    set uniform(value) {
+        this._useUniformScaling = value ?? true;
+    }
+
+    get uniform() {
+        return this._useUniformScaling;
     }
 
     /**

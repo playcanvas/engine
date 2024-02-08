@@ -3,6 +3,11 @@ import { Entity } from '../entity.js';
 import { GSplatInstance } from '../../scene/gsplat/gsplat-instance.js';
 import { GSplat } from '../../scene/gsplat/gsplat.js';
 
+/**
+ * The resource for the gsplat asset type.
+ *
+ * @category Graphics
+ */
 class GSplatResource {
     /**
      * @type {import('../../platform/graphics/graphics-device.js').GraphicsDevice}
@@ -74,6 +79,8 @@ class GSplatResource {
     }
 
     /**
+     * Instantiates an entity with a {@link GSplatComponent}.
+     *
      * @param {import('../../scene/gsplat/gsplat-material.js').SplatMaterialOptions} [options] - The options.
      * @returns {Entity} The entity with {@link GSplatComponent}.
      */

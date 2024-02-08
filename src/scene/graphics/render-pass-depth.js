@@ -24,6 +24,8 @@ class RenderPassDepth extends RenderPass {
         super(device);
         this.renderer = renderer;
         this.camera = camera;
+
+        this.setupRenderTarget();
     }
 
     destroy() {
@@ -35,22 +37,13 @@ class RenderPassDepth extends RenderPass {
         this.scene = scene;
     }
 
-    shouldReallocate(targetRT, sourceRT) {
+    setupRenderTarget() {
 
-        // need to reallocate if dimensions don't match
-        const width = sourceRT.width;
-        const height = sourceRT.height;
-        return !targetRT || width !== targetRT.width || height !== targetRT.height;
-    }
-
-    allocateRenderTarget(renderTarget, sourceRT, device) {
-
-        // allocate texture buffer
-        const texture = new Texture(device, {
+        const texture = new Texture(this.device, {
             name: _depthUniformNames[0],
             format: PIXELFORMAT_RGBA8,
-            width: sourceRT?.width ?? this.device.width,
-            height: sourceRT?.height ?? this.device.height,
+            width: 4,
+            height: 4,
             mipmaps: false,
             minFilter: FILTER_NEAREST,
             magFilter: FILTER_NEAREST,
@@ -58,61 +51,24 @@ class RenderPassDepth extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
-        if (renderTarget) {
+        const renderTarget = new RenderTarget({
+            name: `${_depthUniformNames[0]}RT}`,
+            colorBuffer: texture,
+            depth: true,
+            stencil: false
+        });
 
-            // if reallocating RT size, release previous framebuffer
-            renderTarget.destroyFrameBuffers();
+        this.init(renderTarget, {});
 
-            // assign new texture
-            renderTarget._colorBuffer = texture;
-            renderTarget._colorBuffers = [texture];
-
-        } else {
-
-            // create new render target with the texture
-            renderTarget = new RenderTarget({
-                name: `${_depthUniformNames[0]}RT}`,
-                colorBuffer: texture,
-                depth: true,
-                stencil: false
-            });
-        }
-
-        return renderTarget;
-    }
-
-    releaseRenderTarget(rt) {
-
-        if (rt) {
-            rt.destroyTextureBuffers();
-            rt.destroy();
-        }
+        // webgl1 depth rendering clear values
+        this.setClearColor(webgl1DepthClearColor);
+        this.setClearDepth(1.0);
     }
 
     before() {
 
-        const camera = this.camera;
-        const device = this.device;
-        const sourceRT = camera.renderTarget ?? device.backBuffer;
-
-        // reallocate RT if needed
-        if (this.shouldReallocate(this.renderTarget, sourceRT)) {
-            this.renderTarget?.destroyTextureBuffers();
-            const renderTarget = this.allocateRenderTarget(this.renderTarget, camera.renderTarget, device);
-
-            if (!this.renderTarget) {
-                this.init(renderTarget);
-
-                // webgl1 depth rendering clear values
-                this.setClearColor(webgl1DepthClearColor);
-                this.setClearDepth(1.0);
-
-            } else {
-                this.renderTarget = renderTarget;
-            }
-        }
-
         // assign uniform
+        const device = this.device;
         const colorBuffer = this.renderTarget.colorBuffer;
         _depthUniformNames.forEach(name => device.scope.resolve(name).setValue(colorBuffer));
     }
@@ -143,7 +99,7 @@ class RenderPassDepth extends RenderPass {
                         const meshInstance = meshInstances[j];
 
                         // only collect meshes that update the depth
-                        if (meshInstance.material?.depthWrite && !meshInstance._noDepthDrawGl1) {
+                        if (meshInstance.material?.depthWrite) {
                             tempMeshInstances.push(meshInstance);
                         }
                     }
