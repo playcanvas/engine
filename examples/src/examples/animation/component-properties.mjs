@@ -45,11 +45,8 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.AnimClipHandler,
-        // @ts-ignore
         pc.AnimStateGraphHandler
     ];
 

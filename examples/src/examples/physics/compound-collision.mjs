@@ -34,15 +34,10 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.JsonHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 

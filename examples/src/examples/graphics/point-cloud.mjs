@@ -22,10 +22,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, files, asse
         pc.CameraComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
-        pc.ContainerHandler,
+        pc.ContainerHandler
     ];
 
     const app = new pc.AppBase(canvas);
