@@ -27,19 +27,12 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
         pc.AudioListenerComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.AudioHandler,
-        // @ts-ignore
         pc.JsonHandler,
-        // @ts-ignore
         pc.AnimationHandler,
-        // @ts-ignore
         pc.ModelHandler,
-        // @ts-ignore
         pc.MaterialHandler
     ];
 

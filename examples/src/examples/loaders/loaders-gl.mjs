@@ -34,9 +34,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler
     ];
 
