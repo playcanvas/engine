@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import { loadES5 } from '../../loadES5.mjs';
 // todo simply import "@loaders.gl/core";
 // https://loaders.gl/docs/developer-guide/get-started
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
@@ -10,7 +9,7 @@ import { loadES5 } from '../../loadES5.mjs';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath, loadES5 }) {
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
@@ -127,6 +126,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 class LoadersGlExample {
     static CATEGORY = 'Loaders';
+    static example = example;
     static FILES = {
         'shader.vert': `
             // Attributes per vertex: position
@@ -162,8 +162,6 @@ class LoadersGlExample {
                 gl_FragColor = outColor;
             }`
     };
-    static example = example;
-    static imports = [ loadES5 ];
 }
 
 export { LoadersGlExample };

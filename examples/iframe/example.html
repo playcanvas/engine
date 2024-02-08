@@ -17,7 +17,7 @@
         <script src="./polyfill.js"></script>
         '@IMPORTS'
         <script type="module">
-            import { importScript, buildFunction, getQueryParams, getDeviceType } from './utils.js';
+            import { importScript, loadES5, buildFunction, getQueryParams, getDeviceType } from './utils.js';
 
             // constants
             const canvas = document.getElementById("application-canvas");
@@ -151,6 +151,7 @@
                     twgslPath,
                     pcx,
                     files,
+                    loadES5
                 });
                 window.ready = true;
 

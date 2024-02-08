@@ -67,8 +67,7 @@ This is the only function that's required to run an example. The code defined in
 You can load external scripts into an example using the `loadES5` function as follows:
 
 ```js
-import { loadES5 } from '../../loadES5.mjs';
-async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath }) {
+async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath, loadES5 }) {
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
     console.log({ CORE, DRACO })
