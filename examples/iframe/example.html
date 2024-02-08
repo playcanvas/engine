@@ -39,7 +39,9 @@
             const example = '@EXAMPLE';
             const controls = '@CONTROLS';
             files['example.mjs'] = example.toString();
-            files['controls.mjs'] = controls.toString();
+            if (controls) {
+                files['controls.mjs'] = controls.toString();
+            }
 
             const extraFiles = '@FILES';
             Object.assign(files, extraFiles);

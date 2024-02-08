@@ -65,7 +65,7 @@ function countLeadingSpaces(str) {
 
 /**
  * @param {string} code - Code with redundant spaces over many lines.
- * @returns {string} Same code, but removed reduddant spaces.
+ * @returns {string} Same code, but removed redundant spaces.
  */
 function removeRedundantSpaces(code) {
     const lines = code
