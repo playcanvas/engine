@@ -7,9 +7,9 @@ import puppeteer from 'puppeteer';
 import sharp from 'sharp';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { kebabCaseToPascalCase, toKebabCase } from '../src/app/helpers/strings.mjs';
-import * as categories from "../src/examples/index.mjs";
 import { spawn, execSync } from 'node:child_process';
+
+import { exampleMetaData } from './metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -18,24 +18,6 @@ const PORT = process.env.PORT || '12321';
 const MAIN_DIR = `${__dirname}/../`;
 const TIMEOUT = 1e8;
 const DEBUG = false;
-
-/** @type {{category: string, example: string}[]} */
-const exampleList = [];
-for (const category_ in categories) {
-    const category = toKebabCase(category_);
-    // @ts-ignore
-    const examples = categories[category_];
-    for (const example_ in examples) {
-        const example = toKebabCase(example_).replace('-example', '');
-        exampleList.push({
-            category,
-            example
-        });
-    }
-}
-if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
-    fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
-}
 
 class PuppeteerPool {
     /**
@@ -180,8 +162,12 @@ async function takeThumbnails(pool, exampleSlug, categorySlug, example, category
 }
 
 async function takeScreenshots() {
-    if (exampleList.length === 0) {
+    if (exampleMetaData.length === 0) {
         return;
+    }
+
+    if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
+        fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
     }
 
     // create browser instance with new page
@@ -189,21 +175,16 @@ async function takeScreenshots() {
     await pool.launch({ headless: 'new' });
 
     const screenshotPromises = [];
-    for (let i = 0; i < exampleList.length; i++) {
-        const exampleListItem = exampleList[i];
-        const exampleSlug = exampleListItem.example;
-        const categorySlug = exampleListItem.category;
-        const example = kebabCaseToPascalCase(exampleListItem.example);
-        const category = kebabCaseToPascalCase(exampleListItem.category);
+    for (let i = 0; i < exampleMetaData.length; i++) {
+        const { categoryKebab, categoryPascal, exampleNameKebab, exampleNamePascal } = exampleMetaData[i];
 
         // check if thumbnail exists
-        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.png`)) {
-            console.log(`skipped: ${category}/${example}`);
+        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`)) {
+            console.log(`skipped: ${categoryPascal}/${exampleNamePascal}`);
             continue;
         }
 
-        screenshotPromises.push(takeThumbnails(pool, exampleSlug, categorySlug, example, category));
-
+        screenshotPromises.push(takeThumbnails(pool, exampleNameKebab, categoryKebab, exampleNamePascal, categoryPascal));
     }
 
     // ensure all screenshots have finished.

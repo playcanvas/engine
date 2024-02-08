@@ -4,8 +4,8 @@
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import * as realExamples from '../src/examples/index.mjs';
-import { toKebabCase } from '../src/app/helpers/strings.mjs';
+
+import { exampleMetaData } from './metadata.mjs';
 
 /**
  * @param {object} options - The options.
@@ -37,35 +37,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
 
-if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/`);
-}
-if (!fs.existsSync(`${MAIN_DIR}/dist/share/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/share/`);
-}
+function generateShareFiles() {
+    if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/`);
+    }
+    if (!fs.existsSync(`${MAIN_DIR}/dist/share/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/share/`);
+    }
 
-const categoriesList = [];
-for (const category_ in realExamples) {
-    const category = toKebabCase(category_);
-
-    // @ts-ignore
-    const examples = realExamples[category_];
-    categoriesList.push({
-        name: category,
-        examples
-    });
-    for (const exampleName_ in examples) {
-        const example = toKebabCase(exampleName_).replace('-example', '');
+    for (let i = 0; i < exampleMetaData.length; i++) {
+        const { categoryKebab, exampleNameKebab } = exampleMetaData[i];
         const content = template({
-            path: `${category}/${example}`,
-            exampleTitle: `${example.split('-').join(' ')}`,
-            largeThumbnailName: `${category}_${example}_large`
+            path: `${categoryKebab}/${exampleNameKebab}`,
+            exampleTitle: `${exampleNameKebab.split('-').join(' ')}`,
+            largeThumbnailName: `${categoryKebab}_${exampleNameKebab}_large`
         });
-        const dir = `${MAIN_DIR}/dist/share/${category}_${example}`;
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir);
+        const dirPath = `${MAIN_DIR}/dist/share/${categoryKebab}_${exampleNameKebab}`;
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath);
         }
-        fs.writeFileSync(`${dir}/index.html`, content);
+        fs.writeFileSync(`${dirPath}/index.html`, content);
     }
 }
-fs.writeFileSync(`dist/examples.json`, JSON.stringify(categoriesList));
+generateShareFiles();

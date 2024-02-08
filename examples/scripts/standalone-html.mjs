@@ -4,30 +4,13 @@
 import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
-import * as realExamples from "../src/examples/index.mjs";
+
+import { exampleMetaData } from './metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
-
-if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/`);
-}
-if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
-}
-
-for (const category_ in realExamples) {
-    // @ts-ignore
-    const examples = realExamples[category_];
-    for (const exampleName_ in examples) {
-        const exampleClass = examples[exampleName_];
-        const dropEnding = exampleName_.replace(/Example$/, ""); // TestExample -> Test
-        const out = generateExampleFile(category_, dropEnding, exampleClass);
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category_}_${dropEnding}.html`, out);
-    }
-}
 
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
@@ -127,3 +110,19 @@ function generateExampleFile(category, example, exampleClass) {
 
     return html;
 }
+
+function generateStandaloneFiles() {
+    if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/`);
+    }
+    if (!fs.existsSync(`${MAIN_DIR}/dist/iframe/`)) {
+        fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
+    }
+
+    for (let i = 0; i < exampleMetaData.length; i++) {
+        const { category, exampleName, exampleClass } = exampleMetaData[i];
+        const out = generateExampleFile(category, exampleName, exampleClass);
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}_${exampleName}.html`, out);
+    }
+}
+generateStandaloneFiles();
