@@ -5,7 +5,7 @@ import MonacoEditor, { loader } from "@monaco-editor/react";
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
-import { removeRedundantSpaces } from '../helpers/strings.mjs';
+import { removeRedundantSpaces } from '../strings.mjs';
 import '../events.js';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });

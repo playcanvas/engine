@@ -1,15 +1,5 @@
-/**
- * This script is used to generate the standalone HTML file for the iframe to view the example.
- */
-import fs from 'fs';
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
 import * as realExamples from "../src/examples/index.mjs";
-import { toKebabCase, kebabCaseToPascalCase } from '../src/app/helpers/strings.mjs';
-
-// @ts-ignore
-const __filename = fileURLToPath(import.meta.url);
-const MAIN_DIR = `${dirname(__filename)}/../`;
+import { toKebabCase, kebabCaseToPascalCase } from '../src/app/strings.mjs';
 
 /**
  * @type {{
@@ -23,17 +13,26 @@ const MAIN_DIR = `${dirname(__filename)}/../`;
  * }[]}
  */
 const exampleMetaData = [];
+/**
+ * @type {Record<string, { examples: Record<string, string> }>}
+ */
+const hierachy = {};
+
 for (const category in realExamples) {
     const categoryKebab = toKebabCase(category);
     const categoryPascal = kebabCaseToPascalCase(categoryKebab);
+
+    hierachy[categoryKebab] = { examples: {} };
+
     // @ts-ignore
     const examples = realExamples[category];
     for (const name in examples) {
         const exampleClass = examples[name];
-
         const exampleName = name.replace(/Example$/, "");
         const exampleNameKebab = toKebabCase(exampleName);
         const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
+
+        hierachy[categoryKebab].examples[exampleNameKebab] = exampleNamePascal;
 
         exampleMetaData.push({
             category,
@@ -47,4 +46,4 @@ for (const category in realExamples) {
     }
 }
 
-export { exampleMetaData };
+export { exampleMetaData, hierachy };

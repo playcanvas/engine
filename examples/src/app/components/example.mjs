@@ -1,17 +1,19 @@
-import { withRouter } from 'react-router-dom';
-import examples from '../helpers/example-data.mjs';
-import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { iframePath } from '../assetPath.mjs';
-import { DeviceSelector } from './DeviceSelector.mjs';
-import { ErrorBoundary } from './ErrorBoundary.mjs';
-import { jsx, fragment } from '../jsx.mjs';
-import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import React, { Component } from 'react';
 import MonacoEditor from "@monaco-editor/react";
-import { iframe } from '../iframe.mjs';
-import { getOrientation } from '../utils.mjs';
+import { withRouter } from 'react-router-dom';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
+import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
+
+import { DeviceSelector } from './DeviceSelector.mjs';
+import { ErrorBoundary } from './ErrorBoundary.mjs';
+
+import { kebabCaseToPascalCase } from '../strings.mjs';
+import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
+import { iframePath } from '../assetPath.mjs';
+import { jsx, fragment } from '../jsx.mjs';
+import { iframe } from '../iframe.mjs';
+import { getOrientation } from '../utils.mjs';
 import '../events.js';
 
 /**
@@ -219,12 +221,11 @@ class Example extends TypedComponent {
     }
 
     get iframePath() {
-        /** @type {{ category: string; name: string }} */
-        // @ts-ignore
-        const example = examples.paths[this.path];
-        return `${iframePath}/${example.category}_${example.name}.html`;
-        // TODO: Complete standalone ES6 version, currently ignored, because focus is on MVP
-        // return `${iframePath}/index.html?category=${example.category}&example=${example.name}`;
+        const categoryKebab = this.props.match.params.category;
+        const exampleNameKebab = this.props.match.params.example;
+        const categoryPascal = kebabCaseToPascalCase(categoryKebab);
+        const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
+        return `${iframePath}/${categoryPascal}_${exampleNamePascal}.html`;
     }
 
     renderDeviceSelector() {
