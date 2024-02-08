@@ -5,7 +5,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-class PostEffect {
+class PostEffectEntry {
     constructor(effect, inputTarget) {
         this.effect = effect;
         this.inputTarget = inputTarget;
@@ -144,7 +144,7 @@ class PostEffectQueue {
         const isFirstEffect = effects.length === 0;
 
         const inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
-        const newEntry = new PostEffect(effect, inputTarget);
+        const newEntry = new PostEffectEntry(effect, inputTarget);
         effects.push(newEntry);
 
         this._sourceTarget = newEntry.inputTarget;
