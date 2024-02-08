@@ -236,7 +236,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  */
 async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
 
-    // Class for handling gizmos
+    // class for handling gizmos
     class GizmoHandler {
         /**
          * Gizmo type.
@@ -418,11 +418,11 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const app = new pc.AppBase(canvas);
     app.init(createOptions);
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    // set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
     app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Ensure canvas is resized when window changes size
+    // ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
     window.addEventListener('resize', resize);
 
@@ -449,9 +449,10 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
      * @param {pc.Color} color - The color.
      * @returns {pc.Material} - The standard material.
      */
-    function createMaterial(color) {
+    function createColorMaterial(color) {
         const material = new pc.StandardMaterial();
         material.diffuse = color;
+        material.update();
         return material;
     }
 
@@ -459,7 +460,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const box = new pc.Entity('box');
     box.addComponent('render', {
         type: 'box',
-        material: createMaterial(new pc.Color(0.8, 1, 1))
+        material: createColorMaterial(new pc.Color(0.8, 1, 1))
     });
     box.setPosition(1, 0, 1);
     app.root.addChild(box);
@@ -467,7 +468,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const sphere = new pc.Entity('sphere');
     sphere.addComponent('render', {
         type: 'sphere',
-        material: createMaterial(new pc.Color(1, 0.8, 1))
+        material: createColorMaterial(new pc.Color(1, 0.8, 1))
     });
     sphere.setPosition(-1, 0, 1);
     app.root.addChild(sphere);
@@ -475,7 +476,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const cone = new pc.Entity('cone');
     cone.addComponent('render', {
         type: 'cone',
-        material: createMaterial(new pc.Color(1, 1, 0.8))
+        material: createColorMaterial(new pc.Color(1, 1, 0.8))
     });
     cone.setPosition(-1, 0, -1);
     cone.setLocalScale(1.5, 2.25, 1.5);
@@ -484,7 +485,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const capsule = new pc.Entity('capsule');
     capsule.addComponent('render', {
         type: 'capsule',
-        material: createMaterial(new pc.Color(0.8, 0.8, 1))
+        material: createColorMaterial(new pc.Color(0.8, 0.8, 1))
     });
     capsule.setPosition(1, 0, -1);
     app.root.addChild(capsule);
@@ -530,14 +531,15 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     app.root.addChild(keyLight);
     keyLight.setEulerAngles(0, 0, -60);
 
-    // create gizmoLayer
+    // create layers
     const gizmoLayer = new pc.Layer({
         name: 'Gizmo',
         clearDepthBuffer: true,
         opaqueSortMode: pc.SORTMODE_NONE,
         transparentSortMode: pc.SORTMODE_NONE
     });
-    app.scene.layers.push(gizmoLayer);
+    const layers = app.scene.layers;
+    layers.push(gizmoLayer);
     camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
     // create gizmo
@@ -562,6 +564,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
         window.top.setProj(value);
     };
 
+    // key event handlers
     const keydown = (/** @type {KeyboardEvent} */ e) => {
         gizmoHandler.gizmo.snap = !!e.shiftKey;
         gizmoHandler.gizmo.uniform = !e.ctrlKey;
@@ -596,7 +599,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     window.addEventListener('keyup', keyup);
     window.addEventListener('keypress', keypress);
 
-    // Gizmo and camera set handler
+    // gizmo and camera set handler
     const tmpC = new pc.Color();
     data.on('*:set', (/** @type {string} */ path, value) => {
         const pathArray = path.split('.');
@@ -635,9 +638,9 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
         }
     });
 
-    // Picker
+    // picker
     const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-    const worldLayer = app.scene.layers.getLayerByName("World");
+    const worldLayer = layers.getLayerByName('World');
     const pickerLayers = [worldLayer];
 
     const onPointerDown = (/** @type {PointerEvent} */ e) => {
@@ -660,6 +663,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     };
     window.addEventListener('pointerdown', onPointerDown);
 
+    // grid
     const gridColor = new pc.Color(1, 1, 1, 0.5);
     const gridHalfSize = 4;
     /**
