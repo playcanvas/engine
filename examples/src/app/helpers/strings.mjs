@@ -23,9 +23,7 @@ function toKebabCase(str) {
         .replace(/([a-z])([A-Z])/g, '$1-$2')
         .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
         .toLowerCase()
-        .replace(/1d/g, "-1d")
-        .replace(/2d/g, "-2d")
-        .replace(/3d/g, "-3d");
+        .replace(/(\d)d/g, "-$1d");
 }
 
 /**
@@ -40,9 +38,7 @@ function kebabCaseToPascalCase(str) {
         .split('-')
         .map(capitalizeFirstLetter)
         .join('')
-        .replace('1d', '1D')
-        .replace('2d', '2D')
-        .replace('3d', '3D');
+        .replace(/(\d)d/g, '$1D');
 }
 
 /**
