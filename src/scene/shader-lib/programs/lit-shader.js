@@ -225,15 +225,10 @@ class LitShader {
         }
 
 
-
         if (this.options.pass === SHADER_PREPASS_VELOCITY) {
 
 
-
-
-
         }
-
 
 
         if (this.options.useInstancing) {
@@ -461,7 +456,7 @@ class LitShader {
     }
 
     _fsGetPrePassVelocityCode() {
-        const chunks = this.chunks;
+        // const chunks = this.chunks;
 
         // let code = this._fsGetBeginCode();
         // code += 'varying float vDepth;\n';
@@ -471,9 +466,9 @@ class LitShader {
         // code += this.frontendDecl;
         // code += this.frontendCode;
         // code += ShaderGenerator.begin();
-        //code += this.frontendFunc;
+        // code += this.frontendFunc;
         // code += "    gl_FragColor = packFloat(vDepth);\n";
-        //code += ShaderGenerator.end();
+        // code += ShaderGenerator.end();
 
 
         const code = `
@@ -482,18 +477,6 @@ class LitShader {
                 gl_FragColor = vec4(1, 0, 0, 1);
             }
             `;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         return code;

@@ -63,7 +63,6 @@ class RenderPassPrepass extends RenderPass {
         // we only need two channel texture
 
 
-
         const velocityFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F]);
         this.velocityTexture = new Texture(device, {
             name: 'VelocityTexture',
