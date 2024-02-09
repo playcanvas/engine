@@ -1,6 +1,6 @@
 import { Debug } from '../core/debug.js';
 import {
-    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW
+    SHADER_FORWARD, SHADER_FORWARDHDR, SHADER_DEPTH, SHADER_PICK, SHADER_SHADOW, SHADER_PREPASS_VELOCITY
 } from './constants.js';
 
 import { DeviceCache } from '../platform/graphics/device-cache.js';
@@ -107,6 +107,7 @@ class ShaderPass {
         add('depth', SHADER_DEPTH);
         add('pick', SHADER_PICK);
         add('shadow', SHADER_SHADOW);
+        add('prepass', SHADER_PREPASS_VELOCITY);
     }
 
     /**

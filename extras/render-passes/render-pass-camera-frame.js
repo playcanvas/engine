@@ -20,7 +20,7 @@ import { RenderPassPrepass } from "./render-pass-prepass.js";
 class RenderPassCameraFrame extends RenderPass {
     app;
 
-    prepPass;
+    prePass;
 
     scenePass;
 
@@ -165,7 +165,7 @@ class RenderPassCameraFrame extends RenderPass {
         // ------ SCENE PREPASS ------
 
         if (options.prepassEnabled) {
-            this.prepPass = new RenderPassPrepass(device, scene, renderer, cameraComponent, sceneDepth, sceneOptions);
+            this.prePass = new RenderPassPrepass(device, scene, renderer, cameraComponent, sceneDepth, sceneOptions);
         }
 
         // ------ SCENE RENDERING WITH OPTIONAL GRAB PASS ------
@@ -213,7 +213,7 @@ class RenderPassCameraFrame extends RenderPass {
 
         let sceneTextureWithTaa = sceneTexture;
         if (options.taaEnabled) {
-            this.taaPass = new RenderPassTAA(device, sceneTexture);
+            this.taaPass = new RenderPassTAA(device, sceneTexture, cameraComponent);
             sceneTextureWithTaa = this.taaPass.accumulationTexture;
         }
 
@@ -242,7 +242,7 @@ class RenderPassCameraFrame extends RenderPass {
         afterPass.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget);
 
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.prepPass, this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
+        const allPasses = [this.prePass, this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
         this.beforePasses = allPasses.filter(element => element !== undefined);
     }
 

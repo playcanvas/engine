@@ -5,6 +5,69 @@ import {
     RenderTarget
 } from "playcanvas";
 
+const fs = /* glsl */ `
+    uniform highp sampler2D uSceneDepthMap;
+    uniform sampler2D sourceTexture;
+    uniform sampler2D accumulationTexture;
+    uniform mat4 matrix_viewProjectionPrevious;
+    uniform mat4 matrix_viewProjectionInverse;
+
+    varying vec2 uv0;
+
+    vec2 reproject(vec2 uv, float depth) {
+
+        // fragment NDC
+        #ifndef WEBGPU
+            depth = depth * 2.0 - 1.0;
+        #endif
+        vec4 ndc = vec4(uv * 2.0 - 1.0, depth, 1.0);
+
+        // Transform NDC to world space of the current frame
+        vec4 worldPosition = matrix_viewProjectionInverse * ndc;
+        worldPosition /= worldPosition.w;
+    
+        // world position to screen space of the previous frame
+        vec4 screenPrevious = matrix_viewProjectionPrevious * worldPosition;
+        return (screenPrevious.xy / screenPrevious.w) * 0.5 + 0.5;
+    }
+
+    void main()
+    {
+        vec2 uv = uv0;
+
+
+
+
+        #ifdef WEBGPU
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // This hack is needed on webgpu, which makes TAA to work but the resulting image is upside-down.
+            // We could flip the image in the following pass, but ideally a better solution should be found.
+            uv.y = 1.0 - uv.y;
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        #endif
+
+
+
+
+        // current frame
+        vec4 src = texture2D(sourceTexture, uv);
+
+        // current depth
+        float depth = texture2DLodEXT(uSceneDepthMap, uv, 0.0).r;
+
+        // previous frame
+        vec2 lastUv = reproject(uv0, depth);
+        vec4 acc = texture2D(accumulationTexture, lastUv);
+
+        // handle history buffer outside of the frame
+        if (lastUv.x < 0.0 || lastUv.x > 1.0 || lastUv.y < 0.0 || lastUv.y > 1.0) {
+            gl_FragColor = src;
+        } else {
+            gl_FragColor = mix(acc, src, 0.05);
+        }
+    }
+`;
+
 class RenderPassTAA extends RenderPassShaderQuad {
     /**
      * The index of the accumulation texture to render to.
@@ -25,26 +88,18 @@ class RenderPassTAA extends RenderPassShaderQuad {
      */
     accumulationRenderTargets = [];
 
-    constructor(device, sourceTexture) {
+    constructor(device, sourceTexture, cameraComponent) {
         super(device);
         this.sourceTexture = sourceTexture;
+        this.cameraComponent = cameraComponent;
 
-        this.shader = this.createQuadShader('TaaResolveShader', `
+        this.shader = this.createQuadShader('TaaResolveShader', fs);
 
-            uniform sampler2D sourceTexture;
-            uniform sampler2D accumulationTexture;
-            varying vec2 uv0;
-
-            void main()
-            {
-                vec4 src = texture2D(sourceTexture, uv0);
-                vec4 acc = texture2D(accumulationTexture, uv0);
-                gl_FragColor = mix(acc, src, 0.05);
-            }`
-        );
-
-        this.sourceTextureId = device.scope.resolve('sourceTexture');
-        this.accumulationTextureId = device.scope.resolve('accumulationTexture');
+        const { scope } = device;
+        this.sourceTextureId = scope.resolve('sourceTexture');
+        this.accumulationTextureId = scope.resolve('accumulationTexture');
+        this.viewProjPrevId = scope.resolve('matrix_viewProjectionPrevious');
+        this.viewProjInvId = scope.resolve('matrix_viewProjectionInverse');
 
         this.setup();
     }
@@ -85,11 +140,13 @@ class RenderPassTAA extends RenderPassShaderQuad {
         });
     }
 
-    execute() {
+    before() {
         this.sourceTextureId.setValue(this.sourceTexture);
         this.accumulationTextureId.setValue(this.accumulationTextures[1 - this.accumulationIndex]);
 
-        super.execute();
+        const camera = this.cameraComponent.camera;
+        this.viewProjPrevId.setValue(camera._viewProjPrevious.data);
+        this.viewProjInvId.setValue(camera._viewProjInverse.data);
     }
 
     // called when the parent render pass gets added to the frame graph

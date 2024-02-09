@@ -429,6 +429,9 @@ class Renderer {
             viewProjMat.mul2(projMat, viewMat);
             this.viewProjId.setValue(viewProjMat.data);
 
+            // store matrices needed by TAA
+            camera._storeShaderMatrices(viewProjMat, this.device.renderVersion);
+
             this.flipYId.setValue(flipY ? -1 : 1);
 
             // View Position (world space)

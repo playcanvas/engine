@@ -212,6 +212,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
     const assets = {
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
+        fly: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/fly-camera.js' }),
         platform: new pc.Asset('statue', 'container', { url: assetPath + 'models/scifi-platform.glb' }),
         mosquito: new pc.Asset('mosquito', 'container', { url: assetPath + 'models/MosquitoInAmber.glb' }),
         font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
@@ -234,6 +235,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.graphicsDevice = device;
     createOptions.mouse = new pc.Mouse(document.body);
     createOptions.touch = new pc.TouchDevice(document.body);
+    createOptions.keyboard = new pc.Keyboard(window);
 
     createOptions.componentSystems = [
         pc.RenderComponentSystem,
@@ -340,23 +342,35 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             farClip: 500,
             fov: 80
         });
-
-        // add orbit camera script with a mouse and a touch support
         cameraEntity.addComponent("script");
-        cameraEntity.script.create("orbitCamera", {
-            attributes: {
-                inertiaFactor: 0.2,
-                focusEntity: mosquitoEntity,
-                distanceMax: 190,
-                frameOnStart: false
-            }
-        });
-        cameraEntity.script.create("orbitCameraInputMouse");
-        cameraEntity.script.create("orbitCameraInputTouch");
 
-        // position the camera in the world
-        cameraEntity.setLocalPosition(0, 40, -220);
-        cameraEntity.lookAt(0, 0, 100);
+        const useOrbit = false;
+        if (useOrbit) {
+            // add orbit camera script with a mouse and a touch support
+            cameraEntity.script.create("orbitCamera", {
+                attributes: {
+                    inertiaFactor: 0.2,
+                    focusEntity: mosquitoEntity,
+                    distanceMax: 190,
+                    frameOnStart: false
+                }
+            });
+            cameraEntity.script.create("orbitCameraInputMouse");
+            cameraEntity.script.create("orbitCameraInputTouch");
+
+            cameraEntity.setLocalPosition(0, 40, -220);
+            cameraEntity.lookAt(0, 0, 100);
+
+        } else {
+            cameraEntity.script.create("flyCamera", {
+                attributes: {
+                    speed: 100
+                }
+            });
+            cameraEntity.setLocalPosition(0, 40, 220);
+            cameraEntity.lookAt(mosquitoEntity.position);
+        }
+
         app.root.addChild(cameraEntity);
 
         // Create a 2D screen to place UI on
@@ -405,7 +419,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
         // add a label on the world layer, which will be affected by post-processing
         const worldLayer = app.scene.layers.getLayerByName("World");
-        addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
+        // addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
 
         // add a label on the UI layer, which will be rendered after the post-processing
         const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
@@ -419,8 +433,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
             sceneColorMap: true,            // true if the scene color should be captured
 
             // disabled by default as this is WIP
-            prepassEnabled: false,
-            taaEnabled: false               // true if temporal anti-aliasing should be used
+            prepassEnabled: true,
+            taaEnabled: true               // true if temporal anti-aliasing should be used
         };
 
         const setupRenderPass = () => {

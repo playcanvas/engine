@@ -11,6 +11,7 @@ import {
     DITHER_NONE,
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
+    SHADER_PREPASS_VELOCITY,
     SPECOCC_AO,
     SPECULAR_BLINN, SPECULAR_PHONG
 } from '../constants.js';
@@ -880,9 +881,9 @@ class StandardMaterial extends Material {
         // update prefiltered lighting data
         this.updateEnvUniforms(device, scene);
 
-        // Minimal options for Depth and Shadow passes
+        // Minimal options for Depth, Shadow and Prepass passes
         const shaderPassInfo = ShaderPass.get(device).getByIndex(pass);
-        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || shaderPassInfo.isShadow;
+        const minimalOptions = pass === SHADER_DEPTH || pass === SHADER_PICK || pass === SHADER_PREPASS_VELOCITY || shaderPassInfo.isShadow;
         let options = minimalOptions ? standard.optionsContextMin : standard.optionsContext;
 
         if (minimalOptions)

@@ -18,7 +18,7 @@ import {
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
 } from '../../constants.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
@@ -223,6 +223,18 @@ class LitShader {
             code += '#endif\n';
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
         }
+
+
+
+        if (this.options.pass === SHADER_PREPASS_VELOCITY) {
+
+
+
+
+
+        }
+
+
 
         if (this.options.useInstancing) {
             this.attributes.instance_line1 = SEMANTIC_ATTR12;
@@ -434,7 +446,6 @@ class LitShader {
         const chunks = this.chunks;
 
         let code = this._fsGetBeginCode();
-
         code += 'varying float vDepth;\n';
         code += this.varyings;
         code += this.varyingDefines;
@@ -447,6 +458,46 @@ class LitShader {
         code += ShaderGenerator.end();
 
         return code;
+    }
+
+    _fsGetPrePassVelocityCode() {
+        const chunks = this.chunks;
+
+        // let code = this._fsGetBeginCode();
+        // code += 'varying float vDepth;\n';
+        // code += this.varyings;
+        // code += this.varyingDefines;
+        // code += chunks.packDepthPS;
+        // code += this.frontendDecl;
+        // code += this.frontendCode;
+        // code += ShaderGenerator.begin();
+        //code += this.frontendFunc;
+        // code += "    gl_FragColor = packFloat(vDepth);\n";
+        //code += ShaderGenerator.end();
+
+
+        const code = `
+            void main(void)
+            {
+                gl_FragColor = vec4(1, 0, 0, 1);
+            }
+            `;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        return code;
+
     }
 
     _fsGetShadowPassCode() {
@@ -1578,6 +1629,8 @@ class LitShader {
             this.fshader = this._fsGetPickPassCode();
         } else if (options.pass === SHADER_DEPTH) {
             this.fshader = this._fsGetDepthPassCode();
+        } else if (options.pass === SHADER_PREPASS_VELOCITY) {
+            this.fshader = this._fsGetPrePassVelocityCode();
         } else if (this.shadowPass) {
             this.fshader = this._fsGetShadowPassCode();
         } else if (options.customFragmentShader) {
