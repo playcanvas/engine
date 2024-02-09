@@ -37,7 +37,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const MAIN_DIR = `${__dirname}/../`;
 
-function generateShareFiles() {
+function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -59,4 +59,4 @@ function generateShareFiles() {
         fs.writeFileSync(`${dirPath}/index.html`, content);
     }
 }
-generateShareFiles();
+main();

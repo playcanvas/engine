@@ -95,5 +95,7 @@ async function main() {
         ''
     ];
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, lines.join('\n'));
+
+    return 0;
 }
-main();
+main().then(process.exit);

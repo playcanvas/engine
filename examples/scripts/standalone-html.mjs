@@ -111,7 +111,7 @@ function generateExampleFile(category, example, exampleClass) {
     return html;
 }
 
-function generateStandaloneFiles() {
+function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -127,4 +127,4 @@ function generateStandaloneFiles() {
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
     });
 }
-generateStandaloneFiles();
+main();

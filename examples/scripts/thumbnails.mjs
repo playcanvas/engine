@@ -112,12 +112,12 @@ class PuppeteerPool {
 
 /**
  * @param {PuppeteerPool} pool - The pool instance.
- * @param {string} exampleSlug - Example slug.
- * @param {string} categorySlug - Category slug.
- * @param {string} example - Example kebab name.
- * @param {string} category - Category kebab name.
+ * @param {string} categoryKebab - Category kebab name.
+ * @param {string} categoryPascal - Category pascal name.
+ * @param {string} exampleNameKebab - Example kebab name.
+ * @param {string} exampleNamePascal - Example pascal name.
  */
-async function takeThumbnails(pool, exampleSlug, categorySlug, example, category) {
+async function takeThumbnails(pool, categoryKebab, categoryPascal, exampleNameKebab, exampleNamePascal) {
     const poolItem = pool.allocPoolItem();
     const page = await pool.newPage(poolItem);
     if (DEBUG) {
@@ -127,7 +127,7 @@ async function takeThumbnails(pool, exampleSlug, categorySlug, example, category
     }
 
     // navivate to example
-    const link = `http://localhost:${PORT}/iframe/${category}_${example}.html?miniStats=false`;
+    const link = `http://localhost:${PORT}/iframe/${categoryPascal}_${exampleNamePascal}.html?miniStats=false`;
     if (DEBUG) {
         console.log("goto", link);
     }
@@ -140,25 +140,25 @@ async function takeThumbnails(pool, exampleSlug, categorySlug, example, category
     await page.waitForFunction("window?.pc?.app?._time > 1000", { timeout: TIMEOUT });
 
     // screenshot page
-    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`, type: 'webp' });
+    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`, type: 'webp' });
 
     // copy and crop image for large thumbnail
-    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
+    await sharp(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`)
         .resize(320, 240)
-        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.webp`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_large.webp`);
 
     // copy and crop image for small thumbnail
-    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
+    await sharp(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`)
         .resize(64, 48)
-        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_small.webp`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}_small.webp`);
 
     // remove screenshot
-    fs.rmSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`);
+    fs.rmSync(`${MAIN_DIR}/thumbnails/${categoryKebab}_${exampleNameKebab}.webp`);
 
     // close page
     await pool.closePage(poolItem, page);
 
-    console.log(`screenshot taken for: ${category}/${example}`);
+    console.log(`screenshot taken for: ${categoryPascal}/${exampleNamePascal}`);
 }
 
 async function takeScreenshots() {
@@ -184,7 +184,7 @@ async function takeScreenshots() {
             continue;
         }
 
-        screenshotPromises.push(takeThumbnails(pool, exampleNameKebab, categoryKebab, exampleNamePascal, categoryPascal));
+        screenshotPromises.push(takeThumbnails(pool, categoryKebab, categoryPascal, exampleNameKebab, exampleNamePascal));
     }
 
     // ensure all screenshots have finished.
