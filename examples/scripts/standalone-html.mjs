@@ -111,7 +111,7 @@ function generateExampleFile(category, example, exampleClass) {
     return html;
 }
 
-function main() {
+async function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -119,12 +119,14 @@ function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    exampleMetaData.forEach(async (data) => {
+    await Promise.all(exampleMetaData.map(async (data) => {
         const { categoryPascal, exampleNamePascal, path } = data;
         const exampleImport = await import(path);
         const exampleClass = Object.values(exampleImport)[0];
         const out = generateExampleFile(categoryPascal, exampleNamePascal, exampleClass);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
-    });
+    }));
+
+    return 0;
 }
-main();
+main().then(process.exit);
