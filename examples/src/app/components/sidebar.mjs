@@ -3,7 +3,7 @@ import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextI
 import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 
-import { hierachy } from '../../../scripts/metadata.mjs';
+import { categories } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
@@ -33,7 +33,7 @@ const TypedComponent = Component;
 class SideBar extends TypedComponent {
     /** @type {State} */
     state = {
-        defaultCategories: hierachy,
+        defaultCategories: categories,
         filteredCategories: null,
         hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),

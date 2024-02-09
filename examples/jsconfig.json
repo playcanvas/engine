@@ -4,7 +4,7 @@
         "outDir": "dist",
         "noImplicitAny": true,
         "strictNullChecks": true,
-        "module": "ES2015",
+        "module": "ES2020",
         "target": "es5",
         "allowJs": true,
         "jsx": "react",

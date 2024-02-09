@@ -5,7 +5,7 @@ import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-import { exampleMetaData } from './metadata.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 /**
  * @param {object} options - The options.

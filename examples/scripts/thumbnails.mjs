@@ -9,7 +9,7 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawn, execSync } from 'node:child_process';
 
-import { exampleMetaData } from './metadata.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);

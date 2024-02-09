@@ -5,7 +5,7 @@ import fs from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-import { exampleMetaData } from './metadata.mjs';
+import { exampleMetaData } from '../cache/metadata.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -119,10 +119,12 @@ function generateStandaloneFiles() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    for (let i = 0; i < exampleMetaData.length; i++) {
-        const { category, exampleName, exampleClass } = exampleMetaData[i];
-        const out = generateExampleFile(category, exampleName, exampleClass);
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${category}_${exampleName}.html`, out);
-    }
+    exampleMetaData.forEach(async (data) => {
+        const { categoryPascal, exampleNamePascal, path } = data;
+        const exampleImport = await import(path);
+        const exampleClass = Object.values(exampleImport)[0];
+        const out = generateExampleFile(categoryPascal, exampleNamePascal, exampleClass);
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
+    });
 }
 generateStandaloneFiles();
