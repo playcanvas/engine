@@ -27,10 +27,6 @@ function stringify(obj) {
  * }[]}
  */
 const exampleMetaData = [];
-/**
- * @type {Record<string, { examples: Record<string, string> }>}
- */
-const categories = {};
 
 /**
  * @param {string} path - The source path.
@@ -73,16 +69,12 @@ async function main() {
         const categoryKebab = toKebabCase(category);
         const categoryPascal = kebabCaseToPascalCase(categoryKebab);
 
-        categories[categoryKebab] = { examples: {} };
-
         // @ts-ignore
         const examples = realExamples[category];
         for (const name in examples) {
             const exampleName = name.replace(/Example$/, "");
             const exampleNameKebab = toKebabCase(exampleName);
             const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
-
-            categories[categoryKebab].examples[exampleNameKebab] = exampleNamePascal;
 
             exampleMetaData.push({
                 path: classPathMap.get(examples[name].name),
@@ -100,7 +92,6 @@ async function main() {
 
     const lines = [
         `export const exampleMetaData = ${stringify(exampleMetaData)};`,
-        `export const categories = ${stringify(categories)};`,
         ''
     ];
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, lines.join('\n'));

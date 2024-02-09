@@ -3,7 +3,7 @@ import { BindingTwoWay, BooleanInput, Container, Label, LabelGroup, Panel, TextI
 import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 
-import { categories } from '../../../cache/metadata.mjs';
+import { exampleMetaData } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { thumbnailPath } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
@@ -30,10 +30,27 @@ import { iframe } from '../iframe.mjs';
  */
 const TypedComponent = Component;
 
+/**
+ * @returns {Record<string, { examples: Record<string, string> }>} - The category files.
+ */
+function getDefaultExampleFiles() {
+    /** @type {Record<string, { examples: Record<string, string> }>} */
+    const categories = {};
+    for (let i = 0; i < exampleMetaData.length; i++) {
+        const { categoryKebab, exampleNameKebab, exampleNamePascal } = exampleMetaData[i];
+        if (!categories[categoryKebab]) {
+            categories[categoryKebab] = { examples: {} };
+        }
+
+        categories[categoryKebab].examples[exampleNameKebab] = exampleNamePascal;
+    }
+    return categories;
+}
+
 class SideBar extends TypedComponent {
     /** @type {State} */
     state = {
-        defaultCategories: categories,
+        defaultCategories: getDefaultExampleFiles(),
         filteredCategories: null,
         hash: location.hash,
         observer: new Observer({ largeThumbnails: false }),
