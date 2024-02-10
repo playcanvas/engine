@@ -1810,3 +1810,9 @@ export const CHUNKAPI_1_58 = '1.58';
 export const CHUNKAPI_1_60 = '1.60';
 export const CHUNKAPI_1_62 = '1.62';
 export const CHUNKAPI_1_65 = '1.65';
+
+// These should be the same as their GPUBufferUsage counterparts.
+export const BUFFER_USAGE_MAP_READ = 1;
+export const BUFFER_USAGE_COPY_SRC = 4;
+export const BUFFER_USAGE_COPY_DST = 8;
+export const BUFFER_USAGE_STORAGE = 128;

@@ -26,6 +26,7 @@ import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
+import { WebgpuBuffer } from './webgpu-buffer.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -89,7 +90,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      */
     limits;
 
+    /**
+     * @ignore
+     */
     copyTextureToBufferCommands = [];
+
+    /**
+     * @ignore
+     */
+    copyBufferToBufferCommands = [];
 
     constructor(canvas, options = {}) {
         super(canvas, options);
@@ -373,6 +382,12 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     createIndexBufferImpl(indexBuffer) {
         return new WebgpuIndexBuffer(indexBuffer);
+    }
+
+    createBufferImpl(options) {
+        const buffer = new WebgpuBuffer();
+        buffer.init(this, options);
+        return buffer;
     }
 
     createShaderImpl(shader) {
@@ -669,6 +684,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.pipeline = null;
 
         this.copyTextureToBufferCommands.length = 0;
+        this.copyBufferToBufferCommands.length = 0;
 
         // TODO: add performance queries to compute passes
 
@@ -688,6 +704,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // These commands can only be called outside of a compute pass.
         for (const [textureCopyView, bufferCopyView, extent] of this.copyTextureToBufferCommands) {
             this.commandEncoder.copyTextureToBuffer(textureCopyView, bufferCopyView, extent);
+        }
+        for (const [srcBuffer, dstBuffer, size] of this.copyBufferToBufferCommands) {
+            this.commandEncoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, size);
         }
 
         // each render pass can use different number of bind groups

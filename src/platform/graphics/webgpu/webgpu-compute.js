@@ -1,7 +1,7 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { BindGroup } from "../bind-group.js";
 import { Buffer } from "../buffer.js";
-import { WebgpuBuffer } from "./webgpu-buffer.js";
+import { pixelFormatInfo, BUFFER_USAGE_COPY_DST, BUFFER_USAGE_MAP_READ } from "../constants.js";
 
 /**
  * A WebGPU implementation of the Compute.
@@ -9,7 +9,15 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
  * @ignore
  */
 class WebgpuCompute {
+    /**
+     * @ignore
+     */
     copyTextureToBufferCommands = [];
+
+    /**
+     * @ignore
+     */
+    copyBufferToBufferCommands = [];
 
     constructor(compute) {
         this.compute = compute;
@@ -48,18 +56,21 @@ class WebgpuCompute {
 
         this.compute.device.copyTextureToBufferCommands.push(...this.copyTextureToBufferCommands);
         this.copyTextureToBufferCommands.length = 0;
+
+        this.compute.device.copyBufferToBufferCommands.push(...this.copyBufferToBufferCommands);
+        this.copyBufferToBufferCommands.length = 0;
     }
 
     /**
-     * Get a buffer that contains the data of the specified texture.
+     * Get a buffer that contains the data of the specified storage texture.
      * This needs to be called before dispatch! But can be called before device.startComputePass().
      *
      * @param {import('../texture.js').Texture} texture - The texture to get the buffer for.
      * @returns {import('../buffer.js').Buffer} The buffer.
      */
-    getBuffer(texture) {
-        // Calculate bytes per pixel, assuming RGBA8 format (4 bytes per pixel)
-        const bytesPerPixel = 4;
+    getTextureBuffer(texture) {
+        const formatInfo = pixelFormatInfo.get(texture.format);
+        const bytesPerPixel = formatInfo.size;
 
         // Calculate bytes per row, ensuring it's a multiple of 256
         const bytesPerRow = Math.ceil((texture.width * bytesPerPixel) / 256) * 256;
@@ -67,9 +78,9 @@ class WebgpuCompute {
         // Calculate the size of the buffer to hold the texture data
         const bufferSize = bytesPerRow * texture.height;
 
-        const gpuBuffer = this.compute.device.wgpu.createBuffer({
+        const buffer = new Buffer(this.compute.device, {
             size: bufferSize,
-            usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+            usage: BUFFER_USAGE_COPY_DST | BUFFER_USAGE_MAP_READ
         });
 
         const textureCopyView = {
@@ -77,7 +88,7 @@ class WebgpuCompute {
             origin: { x: 0, y: 0 }
         };
         const bufferCopyView = {
-            buffer: gpuBuffer,
+            buffer: buffer.impl.buffer,
             bytesPerRow: bytesPerRow
         };
         const extent = {
@@ -87,11 +98,25 @@ class WebgpuCompute {
 
         this.copyTextureToBufferCommands.push([textureCopyView, bufferCopyView, extent]);
 
-        const buffer = new Buffer();
-        buffer.impl = new WebgpuBuffer();
-        buffer.impl.buffer = gpuBuffer;
-
         return buffer;
+    }
+
+    /**
+     * Get a buffer that contains the data of the specified buffer.
+     * This needs to be called before dispatch! But can be called before device.startComputePass().
+     *
+     * @param {import('../buffer.js').Buffer} buffer - The buffer to get the data from.
+     * @returns {import('../buffer.js').Buffer} The buffer.
+     */
+    getBuffer(buffer) {
+        const gpuBuffer = new Buffer(this.compute.device, {
+            size: buffer.size,
+            usage: BUFFER_USAGE_COPY_DST | BUFFER_USAGE_MAP_READ
+        });
+
+        this.copyBufferToBufferCommands.push([buffer.impl.buffer, gpuBuffer.impl.buffer, buffer.size]);
+
+        return gpuBuffer;
     }
 }
 

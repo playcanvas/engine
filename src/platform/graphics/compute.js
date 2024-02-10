@@ -41,14 +41,25 @@ class Compute {
     }
 
     /**
-     * Get a buffer that contains the data of the specified texture.
+     * Get a buffer that contains the data of the specified storage texture.
      * This needs to be called before dispatch! But can be called before device.startComputePass().
      *
      * @param {import('./texture.js').Texture} texture - The texture to get the buffer for.
      * @returns {import('./buffer.js').Buffer} The buffer.
      */
-    getBuffer(texture) {
-        return this.impl?.getBuffer(texture);
+    getTextureBuffer(texture) {
+        return this.impl?.getTextureBuffer(texture);
+    }
+
+    /**
+     * Get a buffer that contains the data of the specified buffer.
+     * This needs to be called before dispatch! But can be called before device.startComputePass().
+     *
+     * @param {import('./buffer.js').Buffer} buffer - The buffer to get the data from.
+     * @returns {import('./buffer.js').Buffer} The buffer.
+     */
+    getBuffer(buffer) {
+        return this.impl?.getBuffer(buffer);
     }
 }
 

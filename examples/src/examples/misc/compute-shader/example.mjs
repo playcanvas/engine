@@ -34,7 +34,6 @@ createOptions.resourceHandlers = [pc.TextureHandler];
 
 const app = new pc.AppBase(canvas);
 app.init(createOptions);
-app.start();
 
 // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -47,48 +46,68 @@ app.on('destroy', () => {
     window.removeEventListener('resize', resize);
 });
 
-const inputTexture = assets.rocks.resource;
-const width = inputTexture.width;
-const height = inputTexture.height;
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(async () => {
+    app.start();
 
-const texture = new pc.Texture(app.graphicsDevice, {
-    name: 'outputTexture',
-    width,
-    height,
-    format: pc.PIXELFORMAT_RGBA8,
-    mipmaps: false,
-    storage: true
+    // This example will use a compute shader to count the number of pixels brighter than
+    // a certain specified color. The result will be written to a buffer and read back to the CPU.
+    const inputTexture = assets.rocks.resource;
+    const compareColor = [0.5, 0.5, 0.5];
+
+    const width = inputTexture.width;
+    const height = inputTexture.height;
+    // The buffer we pass to the GPU need to be initialized with the compare color and counters of 0.
+    // Since the buffer is an uint32 array, we need to convert the color to 0-255 range.
+    const init = [compareColor[0] * 255, compareColor[1] * 255, compareColor[2] * 255, 0, 0];
+
+    const buffer = new pc.Buffer(app.graphicsDevice, {
+        size: 5 * 4, // 5 uint32s (3 color components, 1 counter, 1 counter for brighter pixels).
+        usage: pc.BUFFER_USAGE_STORAGE | pc.BUFFER_USAGE_COPY_SRC,
+        mappedAtCreation: true,
+    });
+
+    new Uint32Array(buffer.getMappedRange()).set(init);
+    buffer.unmap();
+
+    app.graphicsDevice.scope.resolve("inout").setValue(buffer);
+    app.graphicsDevice.scope.resolve("inputTexture").setValue(inputTexture);
+
+    const shaderDefinition = {
+        cshader: files['shader.wgsl'],
+        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+    };
+    const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+
+    shader.computeBindGroupFormat = new pc.BindGroupFormat(device, [], [
+        new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_FLOAT),
+    ], [
+        // No storage textures used.
+    ], [
+        new pc.BindBufferFormat('inout', pc.SHADERSTAGE_COMPUTE),
+    ]);
+
+    const compute = new pc.Compute(app.graphicsDevice, shader);
+
+    // Get a buffer for the result of our compute work.
+    // This needs to be requested before dispatching the compute work.
+    const resultBuffer = compute.getBuffer(buffer);
+
+    app.graphicsDevice.startComputePass();
+    compute.dispatch(width, height);
+    app.graphicsDevice.endComputePass();
+
+    // Map the result buffer to the CPU to read the result.
+    await resultBuffer.mapAsync();
+
+    const data = new Uint32Array(resultBuffer.getMappedRange());
+
+    console.log('number of pixels:', data[3]);
+    console.log('number of pixels brighter than', compareColor, ':', data[4]);
+
+    // Clean up the buffers we used.
+    buffer.destroy(app.graphicsDevice);
+    resultBuffer.destroy(app.graphicsDevice);
 });
-
-app.graphicsDevice.scope.resolve("outputTexture").setValue(texture);
-app.graphicsDevice.scope.resolve("inputTexture").setValue(inputTexture);
-
-const shaderDefinition = {
-    cshader: files['shader.wgsl'],
-    shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-};
-const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
-
-shader.computeBindGroupFormat = new pc.BindGroupFormat(device, [], [
-    new pc.BindTextureFormat('inputTexture', pc.SHADERSTAGE_COMPUTE, pc.TEXTUREDIMENSION_2D, pc.SAMPLETYPE_FLOAT),
-], [
-    new pc.BindStorageTextureFormat('outputTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D),
-], {
-    compute: true
-});
-
-const compute = new pc.Compute(app.graphicsDevice, shader);
-const buffer = compute.getBuffer(texture);
-
-app.graphicsDevice.startComputePass();
-compute.dispatch(width, height);
-// TODO: potentially dispatch more compute work in the same pass.
-app.graphicsDevice.endComputePass();
-
-const data = await buffer.getMappedRange();
-
-console.log(data);
-
-buffer.destroy(app.graphicsDevice);
 
 export { app };

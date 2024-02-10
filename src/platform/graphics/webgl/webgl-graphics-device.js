@@ -955,6 +955,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         return new WebglIndexBuffer(indexBuffer);
     }
 
+    createBufferImpl(options) {
+        return null;
+    }
+
     createShaderImpl(shader) {
         return new WebglShader(shader);
     }
