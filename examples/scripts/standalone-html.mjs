@@ -59,7 +59,7 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     html = html.replace(/'@TITLE'/g, `${categoryPascal}: ${exampleNamePascal}`);
 
     // es5 scripts
-    const es5Str = exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '<!-- no es5libs -->';
+    const es5Str = exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '';
     html = html.replace(/'@ES5_LIBS'/g, es5Str);
 
     // AR Link
@@ -82,31 +82,10 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     // module
     html = html.replace(/'@MODULE'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.js`));
 
-    // example
-    html = html.replace(/'@EXAMPLE'/g, exampleClass.example.toString());
-
-    // controls
-    html = html.replace(/'@CONTROLS'/g, exampleClass.controls?.toString() || '""');
-
-    // webGPU enabled
-    html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);
-
     // engine
     const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : exampleClass.ENGINE;
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
-
-    // files
-    html = html.replace(/'@FILES'/g, exampleClass.FILES ? JSON.stringify(exampleClass.FILES) : '{}');
-
-    // ministats
-    html = html.replace(/'@NO_MINISTATS'/g, `${!!exampleClass.NO_MINISTATS}`);
-
-    // device selector
-    html = html.replace(/'@DEVICE_SELECTOR'/g, `${!exampleClass.NO_DEVICE_SELECTOR}`);
-
-    // description
-    html = html.replace(/'@DESCRIPTION'/g, `${JSON.stringify(exampleClass.DESCRIPTION || '')}`);
 
     if (/'@([A-Z0-9_]+)'/g.test(html)) {
         throw new Error('HTML file still has unreplaced values');

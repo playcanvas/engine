@@ -20,7 +20,8 @@
             {
                 "imports": {
                     "playcanvas": "./empty.mjs",
-                    "playcanvas-extras": "./empty.mjs"
+                    "playcanvas-extras": "./empty.mjs",
+                    "@tweenjs/tween.js": "./empty.mjs"
                 }
             }
         </script>
@@ -47,7 +48,7 @@
             const files = {};
             const EXAMPLE = ExampleClass.example;
             const CONTROLS = ExampleClass.controls;
-            const FILES = '@FILES';
+            const FILES = ExampleClass.FILES ?? {};
 
             files['example.mjs'] = EXAMPLE.toString();
             if (CONTROLS) {
@@ -69,7 +70,7 @@
              */
             function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
-                if ('@NO_MINISTATS') {
+                if (!!ExampleClass.NO_MINISTATS) {
                     return;
                 }
                 if (params.miniStats === 'false') {
@@ -134,14 +135,14 @@
                 const pcx = window.top.pcx = window.pcx;
                 window.top.observerData = data;
 
-                const deviceType = params.deviceType ?? getDeviceType('@WEBGPU_ENABLED');
+                const deviceType = params.deviceType ?? getDeviceType(!!ExampleClass.WEBGPU_ENABLED);
                 if (params.deviceType) {
                     console.warn("overwriting default deviceType from URL");
                 }
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
-                    fire('exampleLoading', { showDeviceSelector: '@DEVICE_SELECTOR' });
+                    fire('exampleLoading', { showDeviceSelector: !ExampleClass.NO_DEVICE_SELECTOR });
                 }
 
                 const example = buildFunction(files['example.mjs']);
@@ -177,7 +178,7 @@
 
                         if (!started) { 
                             // only one time, recalls of main() are caused by Monaco live coding
-                            fire('exampleLoad', { files, description: '@DESCRIPTION' });
+                            fire('exampleLoad', { files, description: ExampleClass.DESCRIPTION || '' });
                         }
                         started = true;
 
@@ -194,7 +195,7 @@
                 } else {
                     // The example function didn't return an app instance
                     // still update the UI and assume it has started.
-                    fire('exampleLoad', { files, description: '@DESCRIPTION' });
+                    fire('exampleLoad', { files, description: ExampleClass.DESCRIPTION || '' });
                     started = true;
 
                     fire('updateFiles', { files });

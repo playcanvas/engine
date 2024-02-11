@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import * as TWEEN from '@tweenjs/tween.js'
+import * as TWEEN from '@tweenjs/tween.js';
 
 /**
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
