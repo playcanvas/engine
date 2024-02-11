@@ -1,12 +1,11 @@
 import * as pc from 'playcanvas';
-import * as TWEEN from '@tweenjs/tween.js';
 
 /**
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
-    globalThis.TWEEN = TWEEN; // animation/tween.js depends on this global
+    await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
     const assets = {
         font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),
@@ -168,8 +167,6 @@ class TweenExample {
     static CATEGORY = 'Animation';
     static WEBGPU_ENABLED = true;
     static example = example;
-    // added by examples/scripts/generate-standalone-files.mjs
-    static es5libs = ['https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js'];
 }
 
 export { TweenExample };
