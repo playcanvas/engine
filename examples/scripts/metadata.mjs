@@ -2,7 +2,6 @@ import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import * as realExamples from "../src/examples/index.mjs";
 import { toKebabCase, kebabCaseToPascalCase } from '../src/app/strings.mjs';
 
 // @ts-ignore
@@ -29,62 +28,50 @@ function stringify(obj) {
 const exampleMetaData = [];
 
 /**
- * @param {string} path - The source path.
- * @param {string[]} exclude - The list of file names to ignore.
- * @returns {string[]} - A list of scanned paths.
+ * @param {string} path - The directory path.
+ * @returns {string[]} - The file names in the directory.
  */
-function scanFiles(path, exclude = []) {
-    /**
-     * @type {string[]}
-     */
-    const files = [];
+function getDirFiles(path) {
     if (!fs.existsSync(path)) {
-        return files;
+        return [];
     }
-    const name = path.split('/').pop() ?? '';
     const stats = fs.statSync(path);
-    if (stats.isDirectory()) {
-        const children = fs.readdirSync(path);
-        for (let i = 0; i < children.length; i++) {
-            files.push(...scanFiles(`${path}/${children[i]}`, exclude));
-        }
+    if (!stats.isDirectory()) {
+        return [];
     }
-    if (stats.isFile() && exclude.indexOf(name) === -1) {
-        files.push(resolve(path));
-    }
-    return files;
-
+    return fs.readdirSync(path);
 }
 
-async function main() {
-    const classPathMap = new Map();
-    const files = scanFiles(`${MAIN_DIR}/src/examples`, ['index.mjs']);
-    const exampleImports = await Promise.all(files.map(path => import(`file://${path}`)));
-    for (let i = 0; i < exampleImports.length; i++) {
-        const exampleClass = Object.values(exampleImports[i])[0];
-        classPathMap.set(exampleClass.name, files[i]);
-    }
+function main() {
+    const rootPath = `${MAIN_DIR}/src/examples`;
+    const categories = getDirFiles(rootPath);
+    categories.forEach((category) => {
+        const categoryPath = resolve(`${rootPath}/${category}`);
+        const examplesFiles = getDirFiles(categoryPath);
 
-    for (const category in realExamples) {
         const categoryKebab = toKebabCase(category);
         const categoryPascal = kebabCaseToPascalCase(categoryKebab);
 
-        // @ts-ignore
-        const examples = realExamples[category];
-        for (const name in examples) {
-            const exampleName = name.replace(/Example$/, "");
+        examplesFiles.forEach((exampleFile) => {
+            const examplePath = resolve(`${categoryPath}/${exampleFile}`);
+            if (exampleFile === 'index.mjs') {
+                return;
+            }
+
+            const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
             const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
 
             exampleMetaData.push({
-                path: classPathMap.get(examples[name].name),
+                path: examplePath,
                 categoryKebab,
                 categoryPascal,
                 exampleNameKebab,
                 exampleNamePascal
             });
-        }
-    }
+
+        });
+    });
 
     if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
@@ -95,7 +82,5 @@ async function main() {
         ''
     ];
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, lines.join('\n'));
-
-    return 0;
 }
-main().then(process.exit);
+main();
