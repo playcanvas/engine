@@ -54,9 +54,6 @@ function main() {
 
         examplesFiles.forEach((exampleFile) => {
             const examplePath = resolve(`${categoryPath}/${exampleFile}`);
-            if (exampleFile === 'index.mjs') {
-                return;
-            }
 
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
