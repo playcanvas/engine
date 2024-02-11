@@ -16,8 +16,18 @@
         <script src="./paths.js"></script>
         <script src="./polyfill.js"></script>
         '@IMPORTS'
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": "./empty.mjs",
+                    "playcanvas-extras": "./empty.mjs"
+                }
+            }
+        </script>
         <script type="module">
-            import { importScript, loadES5, buildFunction, getQueryParams, getDeviceType } from './utils.js';
+            import { loadES5, buildFunction, getQueryParams, getDeviceType } from './utils.mjs';
+            import * as Module from '@MODULE';
+            const ExampleClass = Object.values(Module)[0];
 
             // constants
             const canvas = document.getElementById("application-canvas");
@@ -35,8 +45,8 @@
              * @type {Record<string, string | Function>}
              */
             const files = {};
-            const EXAMPLE = '@EXAMPLE';
-            const CONTROLS = '@CONTROLS';
+            const EXAMPLE = ExampleClass.example;
+            const CONTROLS = ExampleClass.controls;
             const FILES = '@FILES';
 
             files['example.mjs'] = EXAMPLE.toString();
@@ -117,12 +127,11 @@
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
 
+            // const { pcx } = await import('./playcanvas-extras.mjs');
             async function main(files) {
                 allowRestart = false;
-                await importScript('pc', '@ENGINE');
-                await importScript('pcx', './playcanvas-extras.js');
-
                 window.top.pc = pc;
+                const pcx = window.top.pcx = window.pcx;
                 window.top.observerData = data;
 
                 const deviceType = params.deviceType ?? getDeviceType('@WEBGPU_ENABLED');
@@ -137,7 +146,6 @@
 
                 const example = buildFunction(files['example.mjs']);
                 files['example.mjs'] = files['example.mjs'].toString();
-
                 app = await example({
                     canvas,
                     deviceType,
@@ -194,9 +202,13 @@
                     allowRestart = true;
                 }
             }
-            window.onload = async () => {
+
+            document.addEventListener('DOMContentLoaded', async () => {
+                await import('@ENGINE');
+                await import('./playcanvas-extras.js');
+
                 await main(files);
-            }
+            })
         </script>
     </body>
 </html>

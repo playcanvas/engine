@@ -22,22 +22,6 @@ export function getQueryParams(url) {
 }
 
 /**
- * Can load UMD and ESM. UMD registers itself into globalThis, while ESM is handled
- * to specifically to do the same, so we achieve the same result, no matter which
- * target build/src we linked to.
- *
- * @param {string} name - The name to attach to the window.
- * @param {string} src - The source url.
- */
-export async function importScript(name, src) {
-    const module = await import(src);
-    const isESM = Object.keys(module).length;
-    if (isESM) {
-        window[name] = module;
-    }
-}
-
-/**
  * @param {string} url - The URL to ES5 file.
  * @returns {Promise<Object>} - The module exports
  *

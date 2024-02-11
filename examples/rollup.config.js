@@ -29,11 +29,7 @@ const staticFiles = [
     { src: './src/static', dest: 'dist/' },
 
     // static iframe src
-    { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
-    { src: './iframe/paths.js', dest: 'dist/iframe/paths.js' },
-    { src: './iframe/polyfill.js', dest: 'dist/iframe/polyfill.js' },
-    { src: './iframe/utils.js', dest: 'dist/iframe/utils.js' },
+    { src: './iframe', dest: 'dist/iframe' },
 
     // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
@@ -256,6 +252,16 @@ if (ENGINE_PATH === '') {
     } else {
         console.warn("NODE_ENV is neither production, development nor profiler.");
     }
+} else {
+    // Outputs: dist/iframe/playcanvas.dev.js
+    const lines = [
+        'window.pc = await import(\'./ENGINE_PATH/index.js\');',
+        ''
+    ];
+    fs.writeFileSync('dist/iframe/playcanvas.dev.js', lines.join('\n'), 'utf-8');
 }
+
+// Empty module file for resolving example file import
+fs.writeFileSync('dist/iframe/empty.mjs', '', 'utf-8');
 
 export default targets;

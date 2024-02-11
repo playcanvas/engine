@@ -16,11 +16,13 @@ const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8')
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
  *
- * @param {'PERFORMANCE' | 'DEBUG' | undefined} type - The engine type.
+ * @param {'DEVELOPMENT' | 'PERFORMANCE' | 'DEBUG' | undefined} type - The engine type.
  * @returns {string} - The build file.
  */
 function engineFor(type) {
     switch (type) {
+        case 'DEVELOPMENT':
+            return './playcanvas.dev.js';
         case 'PERFORMANCE':
             return './playcanvas.prf.js';
         case 'DEBUG':
@@ -45,16 +47,16 @@ function engineFor(type) {
  * @property {boolean} WEBGPU_ENABLED - If webGPU is enabled.
  */
 /**
- * @param {string} category - The category.
- * @param {string} example - The example.
+ * @param {string} categoryPascal - The category pascal name.
+ * @param {string} exampleNamePascal - The example pascal name.
  * @param {ExampleClass} exampleClass - The example class.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(category, example, exampleClass) {
+function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     let html = EXAMPLE_HTML;
 
     // title
-    html = html.replace(/'@TITLE'/g, `${category}: ${example}`);
+    html = html.replace(/'@TITLE'/g, `${categoryPascal}: ${exampleNamePascal}`);
 
     // es5 scripts
     const es5Str = exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '<!-- no es5libs -->';
@@ -77,6 +79,9 @@ function generateExampleFile(category, example, exampleClass) {
     const importsStr = `<script>${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ o) => o.toString()).join('\n\n') || ''}</script>`;
     html = html.replace(/'@IMPORTS'/g, importsStr);
 
+    // module
+    html = html.replace(/'@MODULE'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.js`));
+
     // example
     html = html.replace(/'@EXAMPLE'/g, exampleClass.example.toString());
 
@@ -87,9 +92,8 @@ function generateExampleFile(category, example, exampleClass) {
     html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);
 
     // engine
-    const engineType = process.env.NODE_ENV === 'development' ? 'DEBUG' : exampleClass.ENGINE;
-    const enginePath = process.env.ENGINE_PATH ?? '';
-    const engine = enginePath.length ? `./ENGINE_PATH/${enginePath.split('/').pop()}` : engineFor(engineType);
+    const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : exampleClass.ENGINE;
+    const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
     // files
@@ -121,10 +125,12 @@ async function main() {
 
     await Promise.all(exampleMetaData.map(async (data) => {
         const { categoryPascal, exampleNamePascal, path } = data;
+        const script = fs.readFileSync(path, 'utf-8');
         const exampleImport = await import(`file://${path}`);
         const exampleClass = Object.values(exampleImport)[0];
         const out = generateExampleFile(categoryPascal, exampleNamePascal, exampleClass);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.js`, script);
     }));
 
     return 0;
