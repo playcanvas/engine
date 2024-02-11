@@ -15,18 +15,10 @@
         <script src="./paths.js"></script>
         <script src="./polyfill.js"></script>
         '@IMPORTS'
-        <script type="importmap">
-            {
-                "imports": {
-                    "playcanvas": "./empty.mjs",
-                    "playcanvas-extras": "./empty.mjs"
-                }
-            }
-        </script>
         <script type="module">
             import { loadES5, buildFunction, getQueryParams, getDeviceType } from './utils.mjs';
-            import * as Module from '@MODULE';
-            const ExampleClass = Object.values(Module)[0];
+            import * as module from '@MODULE';
+            const ExampleClass = Object.values(module)[0];
 
             // constants
             const canvas = document.getElementById("application-canvas");
@@ -39,20 +31,12 @@
             let allowRestart = true;
             let miniStats;
             let data = new observer.Observer({});
-            /**
-             * Keep it function in first run for nicer debug locations.
-             * @type {Record<string, string | Function>}
-             */
+            let scriptUrl;
+
             const files = {};
             const EXAMPLE = ExampleClass.example;
             const CONTROLS = ExampleClass.controls;
             const FILES = ExampleClass.FILES ?? {};
-
-            files['example.mjs'] = EXAMPLE.toString();
-            if (CONTROLS) {
-                files['controls.mjs'] = CONTROLS.toString();
-            }
-            Object.assign(files, FILES);
 
             function fire(eventName, detail = {}) {
                 window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
@@ -62,10 +46,6 @@
                 fire('requestedFiles', { files });
             }
 
-            /**
-             * This function is called from React whenever we click on MiniStats icon,
-             * even PlayCanvas' pc itself could be undefined here.
-             */
             function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
                 if (!!ExampleClass.NO_MINISTATS) {
@@ -75,6 +55,9 @@
                     return;
                 }
                 if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
+                    return;
+                }
+                if (!app) {
                     return;
                 }
                 const deviceType = app?.graphicsDevice?.deviceType;
@@ -93,9 +76,7 @@
                 miniStats.enabled = state;
             }
 
-            /**
-             * 
-             */
+
             function hotReload() {
                 if (!allowRestart) {
                     console.warn('hotReload> Dropping restart while still restarting');
@@ -106,15 +87,10 @@
                 main(files);
             }
 
-            /**
-             * This function is called from React whenever we change an example in any possible state,
-             * even PlayCanvas' pc itself could be undefined here.
-             */
+
             function destroy() {
                 miniStats?.destroy();
                 miniStats = null;
-                // Can't call app.destroy() twice without an error,
-                // so we check for app.graphicsDevice first
                 if (app && app.graphicsDevice) {
                     app.destroy();
                 }
@@ -126,11 +102,10 @@
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
 
-            // const { pcx } = await import('./playcanvas-extras.mjs');
             async function main(files) {
+                const pcx = window.pcx;
+
                 allowRestart = false;
-                window.top.pc = pc;
-                const pcx = window.top.pcx = window.pcx;
                 window.top.observerData = data;
 
                 const deviceType = params.deviceType ?? getDeviceType(!!ExampleClass.WEBGPU_ENABLED);
@@ -143,9 +118,14 @@
                     fire('exampleLoading', { showDeviceSelector: !ExampleClass.NO_DEVICE_SELECTOR });
                 }
 
-                const example = buildFunction(files['example.mjs']);
-                files['example.mjs'] = files['example.mjs'].toString();
-                app = await example({
+                const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
+                if (scriptUrl) {
+                    URL.revokeObjectURL(scriptUrl);
+                }
+                scriptUrl = URL.createObjectURL(blob);
+                const module = await import(scriptUrl);
+                const _ExampleClass = Object.values(module)[0];
+                app = await _ExampleClass.example({
                     canvas,
                     deviceType,
                     data,
@@ -206,8 +186,20 @@
                 await import('@ENGINE');
                 await import('./playcanvas-extras.js');
 
+                window.top.pc = pc;
+                window.top.pcx = window.pcx;
+
+                const res = await fetch('@MODULE');
+                const txt = await res.text();
+
+                files['example.mjs'] = txt;
+                if (CONTROLS) {
+                    files['controls.mjs'] = CONTROLS.toString();
+                }
+                Object.assign(files, FILES);
+
                 await main(files);
-            })
+            });
         </script>
     </body>
 </html>
