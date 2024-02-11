@@ -101,7 +101,8 @@ async function example({ canvas, deviceType, files, glslangPath, twgslPath }) {
 
 class WgslShaderExample {
     static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = 'force';
+    static WEBGPU_REQUIRED = true;
+    static HIDDEN = true;
     static FILES = {
         'shader.wgsl': `
             struct ub_mesh {

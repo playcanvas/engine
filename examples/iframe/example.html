@@ -59,6 +59,10 @@
              * @returns {string}
              */
             function getDeviceType() {
+                if ('@WEBGPU_REQUIRED') {
+                    return 'webgpu';
+                }
+
                 const last = localStorage.getItem('preferredGraphicsDevice');
                 if (last !== null) {
                     if (last === 'webgpu' && !'@WEBGPU_ENABLED') {
@@ -146,7 +150,7 @@
                     return;
                 }
                 const deviceType = app?.graphicsDevice?.deviceType;
-                if (deviceType === 'null') {
+                if (!deviceType || deviceType === 'null') {
                     return;
                 }
                 if (args.miniStats === 'false') {
