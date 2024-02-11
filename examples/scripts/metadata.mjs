@@ -59,7 +59,7 @@ function scanFiles(path, exclude = []) {
 async function main() {
     const classPathMap = new Map();
     const files = scanFiles(`${MAIN_DIR}/src/examples`, ['index.mjs']);
-    const exampleImports = await Promise.all(files.map(path => import(path)));
+    const exampleImports = await Promise.all(files.map(path => import(`file://${path}`)));
     for (let i = 0; i < exampleImports.length; i++) {
         const exampleClass = Object.values(exampleImports[i])[0];
         classPathMap.set(exampleClass.name, files[i]);

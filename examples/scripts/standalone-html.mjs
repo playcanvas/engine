@@ -121,7 +121,7 @@ async function main() {
 
     await Promise.all(exampleMetaData.map(async (data) => {
         const { categoryPascal, exampleNamePascal, path } = data;
-        const exampleImport = await import(path);
+        const exampleImport = await import(`file://${path}`);
         const exampleClass = Object.values(exampleImport)[0];
         const out = generateExampleFile(categoryPascal, exampleNamePascal, exampleClass);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
