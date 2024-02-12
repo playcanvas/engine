@@ -35,7 +35,11 @@
             const files = {};
             const EXAMPLE = ExampleClass.example;
             const CONTROLS = ExampleClass.controls;
+            const DESCRIPTION = ExampleClass.DESCRIPTION || '';
             const FILES = ExampleClass.FILES ?? {};
+            const NO_MINISTATS = !!ExampleClass.NO_MINISTATS;
+            const WEBGPU_ENABLED = !!ExampleClass.WEBGPU_ENABLED;
+            const SHOW_DEVICE_SELECTOR = !ExampleClass.NO_DEVICE_SELECTOR;
 
             function fire(eventName, detail = {}) {
                 window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
@@ -47,7 +51,7 @@
 
             function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
-                if (!!ExampleClass.NO_MINISTATS) {
+                if (NO_MINISTATS) {
                     return;
                 }
                 if (params.miniStats === 'false') {
@@ -79,14 +83,14 @@
                 allowRestart = false;
                 window.top.observerData = data;
 
-                const deviceType = params.deviceType ?? getDeviceType(!!ExampleClass.WEBGPU_ENABLED);
+                const deviceType = params.deviceType ?? getDeviceType(WEBGPU_ENABLED);
                 if (params.deviceType) {
                     console.warn("overwriting default deviceType from URL");
                 }
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
-                    fire('exampleLoading', { showDeviceSelector: !ExampleClass.NO_DEVICE_SELECTOR });
+                    fire('exampleLoading', { showDeviceSelector: SHOW_DEVICE_SELECTOR });
                 }
 
                 const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
@@ -127,7 +131,7 @@
 
                         if (!started) { 
                             // only one time, recalls of load() are caused by Monaco live coding
-                            fire('exampleLoad', { files, description: ExampleClass.DESCRIPTION || '' });
+                            fire('exampleLoad', { files, description: DESCRIPTION });
                         }
                         started = true;
 
@@ -144,7 +148,7 @@
                 } else {
                     // The example function didn't return an app instance
                     // still update the UI and assume it has started.
-                    fire('exampleLoad', { files, description: ExampleClass.DESCRIPTION || '' });
+                    fire('exampleLoad', { files, description: DESCRIPTION });
                     started = true;
 
                     fire('updateFiles', { files });
@@ -176,6 +180,7 @@
                 if (scriptUrl) {
                     URL.revokeObjectURL(scriptUrl);
                 }
+                destroy();
             }
 
             async function start() {
