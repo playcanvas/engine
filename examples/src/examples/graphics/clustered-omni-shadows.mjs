@@ -48,23 +48,23 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' }),
-        "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negx.png" }),
-        "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negy.png" }),
-        "xmas_negz": new pc.Asset("xmas_negz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_negz.png" }),
-        "xmas_posx": new pc.Asset("xmas_posx", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posx.png" }),
-        "xmas_posy": new pc.Asset("xmas_posy", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posy.png" }),
-        "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: assetPath + "cubemaps/xmas_faces/xmas_posz.png" })
+        'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+        "xmas_negx": new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
+        "xmas_negy": new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),
+        "xmas_negz": new pc.Asset("xmas_negz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negz.png" }),
+        "xmas_posx": new pc.Asset("xmas_posx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posx.png" }),
+        "xmas_posy": new pc.Asset("xmas_posy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posy.png" }),
+        "xmas_posz": new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

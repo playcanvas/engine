@@ -49,18 +49,18 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath, data }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        envAtlas: new pc.Asset('env-atlas', 'texture', { url: assetPath + 'cubemaps/table-mountain-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        table: new pc.Asset('table', 'container', { url: assetPath + 'models/glass-table.glb' }),
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
+        envAtlas: new pc.Asset('env-atlas', 'texture', { url: '/static/assets/cubemaps/table-mountain-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        table: new pc.Asset('table', 'container', { url: '/static/assets/models/glass-table.glb' }),
+        'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

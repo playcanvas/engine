@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     /**
      * @param {string} msg - The message.
      */
@@ -36,7 +36,7 @@ async function example({ canvas, assetPath }) {
     });
 
     const assets = {
-        glb: new pc.Asset('glb', 'container', { url: assetPath + 'models/vr-controller.glb' })
+        glb: new pc.Asset('glb', 'container', { url: '/static/assets/models/vr-controller.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

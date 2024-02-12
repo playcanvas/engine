@@ -110,23 +110,23 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        orbitCamera: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        lights: new pc.Asset('lights', 'container', { url: assetPath + 'models/Lights.glb' }),
-        sheen: new pc.Asset('sheen', 'container', { url: assetPath + 'models/SheenChair.glb' }),
-        color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
-        normal: new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.jpg' }),
-        gloss: new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.jpg' }),
-        luts: new pc.Asset('luts', 'json', { url: assetPath + 'json/area-light-luts.json' })
+        orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        lights: new pc.Asset('lights', 'container', { url: '/static/assets/models/Lights.glb' }),
+        sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
+        color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+        normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+        gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+        luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

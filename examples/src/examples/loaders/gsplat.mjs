@@ -4,12 +4,12 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, files }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js',
 
         // disable antialiasing as gaussian splats do not benefit from it and it's expensive
         antialias: false
@@ -50,8 +50,8 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        biker: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
-        orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
+        biker: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/biker.ply' }),
+        orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

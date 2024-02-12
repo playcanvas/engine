@@ -4,18 +4,18 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     pc.WasmModule.setConfig('Ammo', {
-        glueUrl:     ammoPath + 'ammo.wasm.js',
-        wasmUrl:     ammoPath + 'ammo.wasm.wasm',
-        fallbackUrl: ammoPath + 'ammo.js'
+        glueUrl:     '/static/lib/ammo/ammo.wasm.js',
+        wasmUrl:     '/static/lib/ammo/ammo.wasm.wasm',
+        fallbackUrl: '/static/lib/ammo/ammo.js'
     });
     await new Promise((resolve) => { pc.WasmModule.getInstance('Ammo', () => resolve()) });
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

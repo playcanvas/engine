@@ -234,7 +234,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // class for handling gizmos
     class GizmoHandler {
@@ -393,8 +393,8 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -428,7 +428,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
 
     // load assets
     const assets = {
-        script: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
+        script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
     };
     /**
      * @param {pc.Asset[] | number[]} assetList - The asset list.

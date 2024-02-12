@@ -201,27 +201,27 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, dracoPath, data }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
-        glueUrl: dracoPath + 'draco.wasm.js',
-        wasmUrl: dracoPath + 'draco.wasm.wasm',
-        fallbackUrl: dracoPath + 'draco.js'
+        glueUrl: '/static/lib/draco/draco.wasm.js',
+        wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+        fallbackUrl: '/static/lib/draco/draco.js'
     });
 
     const assets = {
-        orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        platform: new pc.Asset('statue', 'container', { url: assetPath + 'models/scifi-platform.glb' }),
-        mosquito: new pc.Asset('mosquito', 'container', { url: assetPath + 'models/MosquitoInAmber.glb' }),
-        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+        orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        platform: new pc.Asset('statue', 'container', { url: '/static/assets/models/scifi-platform.glb' }),
+        mosquito: new pc.Asset('mosquito', 'container', { url: '/static/assets/models/MosquitoInAmber.glb' }),
+        font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js',
 
         // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
         // to avoid the additional cost. This is only used for the UI which renders on top of the

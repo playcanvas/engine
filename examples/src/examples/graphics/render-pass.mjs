@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // A simple render pass that renders a quad with a shader. The shader tints the source texture.
     class RenderPassTint extends pc.RenderPassShaderQuad {
@@ -33,20 +33,20 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
-        glueUrl: dracoPath + 'draco.wasm.js',
-        wasmUrl: dracoPath + 'draco.wasm.wasm',
-        fallbackUrl: dracoPath + 'draco.js'
+        glueUrl: '/static/lib/draco/draco.wasm.js',
+        wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+        fallbackUrl: '/static/lib/draco/draco.js'
     });
 
     const assets = {
-        board: new pc.Asset('statue', 'container', { url: assetPath + 'models/chess-board.glb' }),
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+        board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js',
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

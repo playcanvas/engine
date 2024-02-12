@@ -22,12 +22,12 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath, files }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js',
 
         // disable antialiasing as gaussian splats do not benefit from it and it's expensive
         antialias: false
@@ -68,10 +68,10 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
     });
 
     const assets = {
-        gallery: new pc.Asset('gallery', 'container', { url: assetPath + 'models/vr-gallery.glb' }),
-        guitar: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/guitar.ply' }),
-        biker: new pc.Asset('gsplat', 'gsplat', { url: assetPath + 'splats/biker.ply' }),
-        orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' })
+        gallery: new pc.Asset('gallery', 'container', { url: '/static/assets/models/vr-gallery.glb' }),
+        guitar: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/guitar.ply' }),
+        biker: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/biker.ply' }),
+        orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

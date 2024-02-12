@@ -9,7 +9,7 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath, loadES5 }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
@@ -17,8 +17,8 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     // Note that many additional formats are supported by the library and can be used.
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     /** @type {pc.GraphicsDevice} */
@@ -108,7 +108,7 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     camera.lookAt(0, 7, 0);
     app.root.addChild(camera);
     // Load the draco model, don't wait for it.
-    loadModel(assetPath + "models/park_points.drc");
+    loadModel("/static/assets/models/park_points.drc");
     // update things each frame
     let time = 0;
     app.on("update", function (dt) {

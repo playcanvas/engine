@@ -4,18 +4,18 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
     const assets = {
-        font:   new pc.Asset('font',   'font',   { url: assetPath   + 'fonts/arial.json' }),
-        script: new pc.Asset('script', 'script', { url: scriptsPath + 'animation/tween.js' })
+        font:   new pc.Asset('font',   'font',   { url: '/static/assets/fonts/arial.json' }),
+        script: new pc.Asset('script', 'script', { url: '/static/scripts/animation/tween.js' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

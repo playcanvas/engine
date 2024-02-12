@@ -4,11 +4,11 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,9 +51,9 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
     });
 
     const assets = {
-        model: new pc.Asset('model', 'model', { url: assetPath + 'models/playbot/playbot.json' }),
-        runAnim: new pc.Asset('runAnim', 'animation', { url: assetPath + 'animations/playbot/playbot-run.json' }),
-        gravel: new pc.Asset('gravel', 'audio', { url: assetPath + 'sounds/footsteps.mp3' })
+        model: new pc.Asset('model', 'model', { url: '/static/assets/models/playbot/playbot.json' }),
+        runAnim: new pc.Asset('runAnim', 'animation', { url: '/static/assets/animations/playbot/playbot-run.json' }),
+        gravel: new pc.Asset('gravel', 'audio', { url: '/static/assets/sounds/footsteps.mp3' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

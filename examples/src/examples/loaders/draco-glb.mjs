@@ -4,18 +4,18 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     pc.WasmModule.setConfig('DracoDecoderModule', {
-        glueUrl:     dracoPath + 'draco.wasm.js',
-        wasmUrl:     dracoPath + 'draco.wasm.wasm',
-        fallbackUrl: dracoPath + 'draco.js'
+        glueUrl:     '/static/lib/draco/draco.wasm.js',
+        wasmUrl:     '/static/lib/draco/draco.wasm.wasm',
+        fallbackUrl: '/static/lib/draco/draco.js'
     });
     await new Promise((resolve) => { pc.WasmModule.getInstance('DracoDecoderModule', () => resolve()) });
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -47,7 +47,7 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     });
 
     const assets = {
-        heart: new pc.Asset('heart', 'container', { url: assetPath + 'models/heart_draco.glb' })
+        heart: new pc.Asset('heart', 'container', { url: '/static/assets/models/heart_draco.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

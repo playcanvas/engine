@@ -12,7 +12,6 @@
             </div>
         </div>
         <script src="./playcanvas-observer.js"></script>
-        <script src="./paths.js"></script>
         <script src="./polyfill.js"></script>
         <script type="module">
             import { loadES5, getQueryParams, getDeviceType, fire } from './utils.mjs';
@@ -94,18 +93,11 @@
                 const module = await import(scriptUrl);
                 const _ExampleClass = Object.values(module)[0];
                 app = await _ExampleClass.example({
+                    loadES5,
                     canvas,
                     deviceType,
                     data,
-                    assetPath,
-                    scriptsPath,
-                    ammoPath,
-                    basisPath,
-                    dracoPath,
-                    glslangPath,
-                    twgslPath,
-                    files,
-                    loadES5
+                    files
                 });
                 window.ready = true;
 

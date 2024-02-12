@@ -74,7 +74,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<null>} The example application.
  */
-async function example({ glslangPath, twgslPath, data }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     /**
      * @param {string} deviceType - The device type.
      * @returns {Promise<pc.AppBase>} The example application.
@@ -82,7 +82,7 @@ async function example({ glslangPath, twgslPath, data }) {
     const createApp = async function(deviceType) {
 
         const assets = {
-            font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
+            font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
         };
 
         let canvas = document.createElement('canvas');
@@ -94,7 +94,7 @@ async function example({ glslangPath, twgslPath, data }) {
         if (deviceType === 'webgpu') {
             device = new pc.WebgpuGraphicsDevice(canvas, {});
             try {
-                await device.initWebGpu(glslangPath + 'glslang.js', twgslPath + 'twgsl.js');
+                await device.initWebGpu('/static/lib/glslang/glslang.js', '/static/lib/twgsl/twgsl.js');
             } catch (err) {
                 throw err;
             }

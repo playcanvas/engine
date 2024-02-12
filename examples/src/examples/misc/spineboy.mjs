@@ -4,19 +4,19 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        skeleton   : new pc.Asset('skeleton'        , 'json'   , { url: assetPath + '/spine/spineboy-pro.json' }),
-        atlas      : new pc.Asset('atlas'           , 'text'   , { url: assetPath + '/spine/spineboy-pro.atlas' }),
-        texture    : new pc.Asset('spineboy-pro.png', 'texture', { url: assetPath + '/spine/spineboy-pro.png' }),
-        spinescript: new pc.Asset('spinescript'     , 'script' , { url: scriptsPath + 'spine/playcanvas-spine.3.8.js' }),
+        skeleton   : new pc.Asset('skeleton'        , 'json'   , { url: '/static/assets//spine/spineboy-pro.json' }),
+        atlas      : new pc.Asset('atlas'           , 'text'   , { url: '/static/assets//spine/spineboy-pro.atlas' }),
+        texture    : new pc.Asset('spineboy-pro.png', 'texture', { url: '/static/assets//spine/spineboy-pro.png' }),
+        spinescript: new pc.Asset('spinescript'     , 'script' , { url: '/static/scripts/spine/playcanvas-spine.3.8.js' }),
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -54,7 +54,7 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         app.start();
 
         //globalThis.pc = pc;
-        //await import(scriptsPath + "spine/playcanvas-spine.3.8.js");
+        //await import("/static/scripts/spine/playcanvas-spine.3.8.js");
 
         // create camera entity
         const camera = new pc.Entity('camera');

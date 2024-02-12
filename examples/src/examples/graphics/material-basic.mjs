@@ -4,17 +4,17 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        'font': new pc.Asset('font', 'font', { url: assetPath + 'fonts/arial.json' }),
-        'rocks': new pc.Asset("rocks", "texture", { url: assetPath + "textures/seaside-rocks01-diffuse-alpha.png" })
+        'font': new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+        'rocks': new pc.Asset("rocks", "texture", { url: "/static/assets/textures/seaside-rocks01-diffuse-alpha.png" })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

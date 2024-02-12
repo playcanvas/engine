@@ -4,11 +4,11 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, scriptsPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -45,8 +45,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-    const objurl = assetPath + 'models/monkey.obj';
-    const scripturl = scriptsPath + 'parsers/obj-model.js';
+    const objurl = '/static/assets/models/monkey.obj';
+    const scripturl = '/static/scripts/parsers/obj-model.js';
     /** @type {pc.Entity} */
     let entity;
     app.assets.loadFromUrl(scripturl, "script", function () {

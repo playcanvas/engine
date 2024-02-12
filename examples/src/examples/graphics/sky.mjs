@@ -83,19 +83,19 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, data }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-        hdri_street: new pc.Asset('hdri', 'texture', { url: assetPath + 'hdri/wide-street.hdr' }, { mipmaps: false }),
-        hdri_room: new pc.Asset('hdri', 'texture', { url: assetPath + 'hdri/empty-room.hdr' }, { mipmaps: false })
+        orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+        hdri_street: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/wide-street.hdr' }, { mipmaps: false }),
+        hdri_room: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/empty-room.hdr' }, { mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js',
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js',
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

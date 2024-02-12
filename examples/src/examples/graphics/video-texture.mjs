@@ -4,11 +4,11 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -29,7 +29,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
     app.init(createOptions);
 
     const assets = {
-        tv: new pc.Asset('tv', 'container', { url: assetPath + 'models/tv.glb' })
+        tv: new pc.Asset('tv', 'container', { url: '/static/assets/models/tv.glb' })
     };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -97,7 +97,7 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }
         // load on some browsers, especially mobile
         video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
 
-        video.src = assetPath + 'video/SampleVideo_1280x720_1mb.mp4';
+        video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
         document.body.append(video);
 
         video.addEventListener('canplaythrough', function () {

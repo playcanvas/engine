@@ -61,18 +61,18 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, data, assetPath, scriptsPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        'script1': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'script2': new pc.Asset('script', 'script', { url: scriptsPath + 'utils/cubemap-renderer.js' }),
-        'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
+        'script1': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        'script2': new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
+        'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -208,7 +208,7 @@ async function example({ canvas, deviceType, data, assetPath, scriptsPath, glsla
             video.playsInline = true;
             video.crossOrigin = "anonymous";
             video.setAttribute('style', 'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none');
-            video.src = assetPath + 'video/SampleVideo_1280x720_1mb.mp4';
+            video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
             document.body.append(video);
             video.addEventListener('canplaythrough', function () {
                 videoTexture.setSource(video);

@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     /**
      * @param {string} msg - The message.
      */
@@ -27,7 +27,7 @@ async function example({ canvas, assetPath }) {
     };
 
     const assets = {
-        font: new pc.Asset('font', 'font', { url: assetPath + 'fonts/courier.json' })
+        font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
     };
 
     const app = new pc.Application(canvas, {

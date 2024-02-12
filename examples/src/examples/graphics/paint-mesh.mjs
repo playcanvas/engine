@@ -6,19 +6,19 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // load the textures
     const assets = {
-        'helipad': new pc.Asset('helipad.dds', 'cubemap', { url: assetPath + 'cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
-        'color': new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
-        'decal': new pc.Asset('color', 'texture', { url: assetPath + 'textures/heart.png' })
+        'helipad': new pc.Asset('helipad.dds', 'cubemap', { url: '/static/assets/cubemaps/helipad.dds' }, { type: pc.TEXTURETYPE_RGBM }),
+        'color': new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+        'decal': new pc.Asset('color', 'texture', { url: '/static/assets/textures/heart.png' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

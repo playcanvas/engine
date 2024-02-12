@@ -25,19 +25,19 @@ function controls({ observer, ReactPCUI, React, jsx }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, data, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const assets = {
-        model:     new pc.Asset('model',             'container', { url: assetPath   + 'models/bitmoji.glb' }),
-        idleAnim:  new pc.Asset('idleAnim',          'container', { url: assetPath   + 'animations/bitmoji/idle.glb' }),
-        danceAnim: new pc.Asset('danceAnim',         'container', { url: assetPath   + 'animations/bitmoji/win-dance.glb' }),
-        helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: assetPath   + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bloom:     new pc.Asset('bloom',             'script',    { url: scriptsPath + 'posteffects/posteffect-bloom.js' })
+        model:     new pc.Asset('model',             'container', { url: '/static/assets/models/bitmoji.glb' }),
+        idleAnim:  new pc.Asset('idleAnim',          'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
+        danceAnim: new pc.Asset('danceAnim',         'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
+        helipad:   new pc.Asset('helipad-env-atlas', 'texture',   { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
+        bloom:     new pc.Asset('bloom',             'script',    { url: '/static/scripts/posteffects/posteffect-bloom.js' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

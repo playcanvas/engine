@@ -9,26 +9,26 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, basisPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // initialize basis
     pc.basisInitialize({
-        glueUrl:     basisPath + 'basis.wasm.js',
-        wasmUrl:     basisPath + 'basis.wasm.wasm',
-        fallbackUrl: basisPath + 'basis.js'
+        glueUrl:     '/static/lib/basis/basis.wasm.js',
+        wasmUrl:     '/static/lib/basis/basis.wasm.wasm',
+        fallbackUrl: '/static/lib/basis/basis.js'
     });
 
     const assets = {
-        color: new pc.Asset('color', 'texture', { url: assetPath + 'textures/seaside-rocks01-color.basis' }),
-        gloss: new pc.Asset('gloss', 'texture', { url: assetPath + 'textures/seaside-rocks01-gloss.basis' }),
-        normal: new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.basis' }, { type: pc.TEXTURETYPE_SWIZZLEGGGR }),
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+        color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.basis' }),
+        gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.basis' }),
+        normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.basis' }, { type: pc.TEXTURETYPE_SWIZZLEGGGR }),
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -34,7 +34,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath, data }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     data.set('settings', {
         material: {
@@ -44,18 +44,18 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     });
 
     const assets = {
-        bloom:  new pc.Asset('bloom', 'script',   { url: scriptsPath + 'posteffects/posteffect-bloom.js' }),
-        script: new pc.Asset('script', 'script',  { url: scriptsPath + 'camera/orbit-camera.js' }),
-        color:  new pc.Asset('color', 'texture',  { url: assetPath + 'textures/seaside-rocks01-color.jpg' }),
-        normal: new pc.Asset('normal', 'texture', { url: assetPath + 'textures/seaside-rocks01-normal.jpg' }),
-        gloss:  new pc.Asset('gloss', 'texture',  { url: assetPath + 'textures/seaside-rocks01-gloss.jpg' }),
-        luts:   new pc.Asset('luts', 'json',      { url: assetPath + 'json/area-light-luts.json' })
+        bloom:  new pc.Asset('bloom', 'script',   { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
+        script: new pc.Asset('script', 'script',  { url: '/static/scripts/camera/orbit-camera.js' }),
+        color:  new pc.Asset('color', 'texture',  { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+        normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+        gloss:  new pc.Asset('gloss', 'texture',  { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+        luts:   new pc.Asset('luts', 'json',      { url: '/static/assets/json/area-light-luts.json' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

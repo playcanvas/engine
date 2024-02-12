@@ -4,17 +4,17 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, scriptsPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     const assets = {
-        'script': new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),
-        'normal': new pc.Asset('normal', 'texture', { url: assetPath + 'textures/normal-map.png' })
+        'script': new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+        'normal': new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

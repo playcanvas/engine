@@ -4,19 +4,19 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
 
     // The example demonstrates loading of glb file, which contains meshes,
     // lights and cameras, and switches between the cameras every 2 seconds.
 
     const assets = {
-        scene: new pc.Asset('scene', 'container', { url: assetPath + 'models/geometry-camera-light.glb' })
+        scene: new pc.Asset('scene', 'container', { url: '/static/assets/models/geometry-camera-light.glb' })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

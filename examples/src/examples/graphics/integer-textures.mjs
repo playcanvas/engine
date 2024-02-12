@@ -55,7 +55,7 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, data, deviceType, assetPath, files, glslangPath, twgslPath, dracoPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     //
     //  In this example, integer textures are used to store the state of each pixel in a simulation.
     //  The simulation is run in a shader, and the results are rendered to a texture.
@@ -77,19 +77,19 @@ async function example({ canvas, data, deviceType, assetPath, files, glslangPath
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
-        glueUrl: dracoPath + 'draco.wasm.js',
-        wasmUrl: dracoPath + 'draco.wasm.wasm',
-        fallbackUrl: dracoPath + 'draco.js'
+        glueUrl: '/static/lib/draco/draco.wasm.js',
+        wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+        fallbackUrl: '/static/lib/draco/draco.js'
     });
 
     const assets = {
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
+        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false })
     };
 
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);

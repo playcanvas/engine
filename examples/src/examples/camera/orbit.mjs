@@ -4,11 +4,11 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, scriptsPath }) {
+async function example({ loadES5, canvas, deviceType, data, files }) {
     const gfxOptions = {
         deviceTypes: [deviceType],
-        glslangUrl: glslangPath + 'glslang.js',
-        twgslUrl: twgslPath + 'twgsl.js'
+        glslangUrl: '/static/lib/glslang/glslang.js',
+        twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
 
     const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -33,8 +33,8 @@ async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath, 
     app.init(createOptions);
 
     const assets = {
-        statue: new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' }),
-        script: new pc.Asset('script', 'script',    { url: scriptsPath + 'camera/orbit-camera.js' })
+        statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+        script: new pc.Asset('script', 'script',    { url: '/static/scripts/camera/orbit-camera.js' })
     };
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
