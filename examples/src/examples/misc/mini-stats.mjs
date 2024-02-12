@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 
 /**
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.

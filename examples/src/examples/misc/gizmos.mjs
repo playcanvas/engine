@@ -1,5 +1,4 @@
 import * as pc from 'playcanvas';
-import * as pcx from 'playcanvas-extras';
 
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -250,7 +249,7 @@ async function example({ canvas, deviceType, data, glslangPath, twgslPath, scrip
         /**
          * Object to reference each gizmo.
          *
-         * @type {pcx.Gizmo}
+         * @type {Record<string, pcx.Gizmo>}
          * @private
          */
         _gizmos;

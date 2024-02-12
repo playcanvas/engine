@@ -15,7 +15,7 @@
         <script src="./paths.js"></script>
         <script src="./polyfill.js"></script>
         <script type="module">
-            import { loadES5, buildFunction, getQueryParams, getDeviceType } from './utils.mjs';
+            import { loadES5, getQueryParams, getDeviceType, fire } from './utils.mjs';
             import * as module from '@MODULE';
             const ExampleClass = Object.values(module)[0];
 
@@ -40,14 +40,6 @@
             const NO_MINISTATS = !!ExampleClass.NO_MINISTATS;
             const WEBGPU_ENABLED = !!ExampleClass.WEBGPU_ENABLED;
             const SHOW_DEVICE_SELECTOR = !ExampleClass.NO_DEVICE_SELECTOR;
-
-            function fire(eventName, detail = {}) {
-                window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
-            }
-
-            function requestFiles() {
-                fire('requestedFiles', { files });
-            }
 
             function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
@@ -202,7 +194,7 @@
                 await load(files);
             }
 
-            window.addEventListener('requestFiles', requestFiles);
+            window.addEventListener('requestFiles', () => fire('requestedFiles', { files }));
             window.addEventListener('stats', (event) => enableStats(!!event.detail?.state));
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);

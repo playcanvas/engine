@@ -1,16 +1,4 @@
 /**
- * @param {string} str - The source string.
- * @returns {Function} - The built function.
- */
-export function buildFunction(str) {
-    if (str.call) {
-        return str;
-    }
-    // eslint-disable-next-line no-new-func
-    return new Function('return ' + str)();
-}
-
-/**
  * @param {string} url - The URL specified.
  * @returns {Record<string, string>} - The object of query parameters
  */
@@ -64,4 +52,12 @@ export function getDeviceType(webGPUEnabled) {
         default:
             return 'webgl2';
     }
+}
+
+/**
+ * @param {boolean} eventName - The name of the fired event.
+ * @param {object} detail - The detail object.
+ */
+export function fire(eventName, detail = {}) {
+    window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
 }
