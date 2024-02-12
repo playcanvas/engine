@@ -75,10 +75,6 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     // canvas
     html = html.replace(/'@CANVAS'/g, exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
-    // imports
-    const importsStr = `<script>${exampleClass.imports?.map((/** @type {{ toString: () => any; }} */ o) => o.toString()).join('\n\n') || ''}</script>`;
-    html = html.replace(/'@IMPORTS'/g, importsStr);
-
     // module
     html = html.replace(/'@MODULE'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.js`));
 
