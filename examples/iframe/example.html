@@ -199,6 +199,12 @@
 
                 await main(files);
             });
+
+            window.addEventListener('beforeunload', () => {
+                if (scriptUrl) {
+                    URL.revokeObjectURL(scriptUrl);
+                }
+            }, false);
         </script>
     </body>
 </html>
