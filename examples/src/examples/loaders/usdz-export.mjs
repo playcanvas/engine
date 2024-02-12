@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import * as pcx from 'playcanvas-extras';
 
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -16,7 +17,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data, pcx }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data }) {
 
     const assets = {
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: assetPath + 'cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),

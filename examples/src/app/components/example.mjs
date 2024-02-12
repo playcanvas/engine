@@ -29,7 +29,6 @@ import '../events.js';
  * @property {string} dracoPath - The draco path.
  * @property {string} ammoPath - The ammo path.
  * @property {string} basisPath - The basis path.
- * @property {any} pcx - The pcx.
  * @property {FILES} files - The files.
  * @property {Function} loadES5 - The async function to load ES5 files.
  */

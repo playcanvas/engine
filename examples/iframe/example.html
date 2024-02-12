@@ -75,35 +75,7 @@
                 miniStats.enabled = state;
             }
 
-
-            function hotReload() {
-                if (!allowRestart) {
-                    console.warn('hotReload> Dropping restart while still restarting');
-                    return;
-                }
-                destroy();
-                data = new observer.Observer({});
-                main(files);
-            }
-
-
-            function destroy() {
-                miniStats?.destroy();
-                miniStats = null;
-                if (app && app.graphicsDevice) {
-                    app.destroy();
-                }
-                window.ready = false;
-            }
-
-            window.addEventListener('requestFiles', requestFiles);
-            window.addEventListener('stats', (event) => enableStats(!!event.detail?.state));
-            window.addEventListener('hotReload', hotReload);
-            window.addEventListener('destroy', destroy);
-
-            async function main(files) {
-                const pcx = window.pcx;
-
+            async function load(files) {
                 allowRestart = false;
                 window.top.observerData = data;
 
@@ -122,6 +94,7 @@
                     URL.revokeObjectURL(scriptUrl);
                 }
                 scriptUrl = URL.createObjectURL(blob);
+
                 const module = await import(scriptUrl);
                 const _ExampleClass = Object.values(module)[0];
                 app = await _ExampleClass.example({
@@ -135,7 +108,6 @@
                     dracoPath,
                     glslangPath,
                     twgslPath,
-                    pcx,
                     files,
                     loadES5
                 });
@@ -147,14 +119,14 @@
                 if (app) {
                     const startHandler = () => {
                         if (!app?.graphicsDevice?.canvas) {
-                            console.warn('main> no canvas');
+                            console.warn('No canvas found.');
                             return;
                         }
 
                         enableStats(true);
 
                         if (!started) { 
-                            // only one time, recalls of main() are caused by Monaco live coding
+                            // only one time, recalls of load() are caused by Monaco live coding
                             fire('exampleLoad', { files, description: ExampleClass.DESCRIPTION || '' });
                         }
                         started = true;
@@ -181,7 +153,32 @@
                 }
             }
 
-            document.addEventListener('DOMContentLoaded', async () => {
+            function hotReload() {
+                if (!allowRestart) {
+                    console.warn('Dropping restart while still restarting');
+                    return;
+                }
+                destroy();
+                data = new observer.Observer({});
+                load(files);
+            }
+
+            function destroy() {
+                miniStats?.destroy();
+                miniStats = null;
+                if (app && app.graphicsDevice) {
+                    app.destroy();
+                }
+                window.ready = false;
+            }
+
+            function beforeunload() {
+                if (scriptUrl) {
+                    URL.revokeObjectURL(scriptUrl);
+                }
+            }
+
+            async function start() {
                 await import('@ENGINE');
                 await import('./playcanvas-extras.js');
 
@@ -197,14 +194,16 @@
                 }
                 Object.assign(files, FILES);
 
-                await main(files);
-            });
+                await load(files);
+            }
 
-            window.addEventListener('beforeunload', () => {
-                if (scriptUrl) {
-                    URL.revokeObjectURL(scriptUrl);
-                }
-            }, false);
+            window.addEventListener('requestFiles', requestFiles);
+            window.addEventListener('stats', (event) => enableStats(!!event.detail?.state));
+            window.addEventListener('hotReload', hotReload);
+            window.addEventListener('destroy', destroy);
+            window.addEventListener('beforeunload', beforeunload, false);
+            
+            document.addEventListener('DOMContentLoaded', start);
         </script>
     </body>
 </html>

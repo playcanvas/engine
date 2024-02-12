@@ -83,7 +83,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, pcx, data }) {
+async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, dracoPath, data }) {
 
     const assets = {
         orbit: new pc.Asset('script', 'script', { url: scriptsPath + 'camera/orbit-camera.js' }),

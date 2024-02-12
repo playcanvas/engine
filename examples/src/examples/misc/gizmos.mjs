@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import * as pcx from 'playcanvas-extras';
 
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -234,7 +235,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
+async function example({ canvas, deviceType, data, glslangPath, twgslPath, scriptsPath }) {
 
     // class for handling gizmos
     class GizmoHandler {
@@ -546,7 +547,7 @@ async function example({ pcx, canvas, deviceType, data, glslangPath, twgslPath, 
     const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
     gizmoHandler.switch('translate');
     gizmoHandler.add(box);
-    this.focus();
+    device.canvas.focus();
 
     // wrappers for control state changes
     const setType = (/** @type {string} */ value) => {

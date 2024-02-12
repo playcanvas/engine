@@ -1,10 +1,11 @@
 import * as pc from 'playcanvas';
+import * as pcx from 'playcanvas-extras';
 
 /**
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, glslangPath, twgslPath, pcx }) {
+async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     const gfxOptions = {
         deviceTypes: [deviceType],
         glslangUrl: glslangPath + 'glslang.js',

@@ -106,7 +106,8 @@ async function main() {
 
         // js files
         let script = fs.readFileSync(path, 'utf-8');
-        script = script.replace(/\s*import[\s\w*]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+        script = script.replace(/\s*import[\s\w*{}]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+        script = script.replace(/\s*import[\s\w*{}]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.js`, script);
     }));
 
