@@ -58,10 +58,6 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     // title
     html = html.replace(/'@TITLE'/g, `${categoryPascal}: ${exampleNamePascal}`);
 
-    // es5 scripts
-    const es5Str = exampleClass.es5libs?.map((/** @type {string} */ src) => `<script src="${src}"></script>`).join('\n') || '';
-    html = html.replace(/'@ES5_LIBS'/g, es5Str);
-
     // AR Link
     const arLinkStr = exampleClass.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
         <div style="text-align: center;">
