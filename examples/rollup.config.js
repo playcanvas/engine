@@ -261,7 +261,4 @@ if (ENGINE_PATH === '') {
     fs.writeFileSync('dist/iframe/playcanvas.dev.js', lines.join('\n'), 'utf-8');
 }
 
-// Empty module file for resolving example file import
-fs.writeFileSync('dist/iframe/empty.mjs', '', 'utf-8');
-
 export default targets;
