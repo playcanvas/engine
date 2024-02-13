@@ -252,8 +252,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class AreaPickerExample {
+class AreaPickerExample {
     static CATEGORY = 'Graphics';
     static example = example;
     static WEBGPU_ENABLED = false; // device.updateBegin() is not a function
 }
+
+export { AreaPickerExample };
+

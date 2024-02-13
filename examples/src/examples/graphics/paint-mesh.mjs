@@ -215,7 +215,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class PaintMeshExample {
+class PaintMeshExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static FILES = {
@@ -267,3 +267,6 @@ export class PaintMeshExample {
     };
     static example = example;
 }
+
+export { PaintMeshExample };
+

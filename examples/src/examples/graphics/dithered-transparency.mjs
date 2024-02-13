@@ -226,9 +226,12 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class DitheredTransparencyExample {
+class DitheredTransparencyExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;
 }
+
+export { DitheredTransparencyExample };
+

@@ -199,7 +199,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ReflectionPlanarExample {
+class ReflectionPlanarExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -236,3 +236,6 @@ export class ReflectionPlanarExample {
     };
     static example = example;
 }
+
+export { ReflectionPlanarExample };
+

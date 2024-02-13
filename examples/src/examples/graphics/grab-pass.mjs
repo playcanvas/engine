@@ -177,7 +177,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class GrabPassExample {
+class GrabPassExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -254,3 +254,6 @@ export class GrabPassExample {
     };
     static example = example;
 }
+
+export { GrabPassExample };
+

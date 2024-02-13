@@ -146,8 +146,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class VideoTextureExample {
+class VideoTextureExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = false; // Video textures don't work yet in WebGPU.
     static example = example;
 }
+
+export { VideoTextureExample };
+

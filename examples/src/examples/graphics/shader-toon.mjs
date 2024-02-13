@@ -127,7 +127,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ShaderToonExample {
+class ShaderToonExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -189,3 +189,6 @@ void main(void)
     };
     static example = example;
 }
+
+export { ShaderToonExample };
+

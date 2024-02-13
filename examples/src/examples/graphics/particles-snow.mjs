@@ -118,8 +118,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ParticlesSnowExample {
+class ParticlesSnowExample {
     static CATEGORY = 'Graphics';
     static example = example;
     static WEBGPU_ENABLED = false; // no particles visible after hot-reload
 }
+
+export { ParticlesSnowExample };
+

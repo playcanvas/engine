@@ -166,7 +166,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class PointCloudSimulationExample {
+class PointCloudSimulationExample {
     static CATEGORY = 'Graphics';
     static FILES = {
         'shader.vert': /* glsl */`
@@ -221,3 +221,6 @@ void main(void)
 
     static example = example;
 }
+
+export { PointCloudSimulationExample };
+

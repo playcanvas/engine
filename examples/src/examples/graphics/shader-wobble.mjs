@@ -128,7 +128,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ShaderWobbleExample {
+class ShaderWobbleExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -165,3 +165,6 @@ void main(void)
     };
     static example = example;
 }
+
+export { ShaderWobbleExample };
+

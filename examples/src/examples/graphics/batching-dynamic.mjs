@@ -140,8 +140,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class BatchingDynamicExample {
+class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { BatchingDynamicExample };
+

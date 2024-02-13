@@ -109,8 +109,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class MeshMorphManyExample {
+class MeshMorphManyExample {
     static CATEGORY = 'Graphics';
     static example = example;
     static WEBGPU_ENABLED = false; // doesn't morph anything
 }
+
+export { MeshMorphManyExample };
+

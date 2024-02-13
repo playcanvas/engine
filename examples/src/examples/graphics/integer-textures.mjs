@@ -386,7 +386,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class IntegerTextureExample {
+class IntegerTextureExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static DESCRIPTION = `<ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>`;
@@ -588,3 +588,6 @@ export class IntegerTextureExample {
         `
     };
 }
+
+export { IntegerTextureExample };
+

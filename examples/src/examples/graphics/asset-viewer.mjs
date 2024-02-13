@@ -257,9 +257,12 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class AssetViewerExample {
+class AssetViewerExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;
 }
+
+export { AssetViewerExample };
+

@@ -167,10 +167,13 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class GltfExportExample {
+class GltfExportExample {
     static CATEGORY = 'Loaders';
     static WEBGPU_ENABLED = true;
     static INCLUDE_AR_LINK = true;
     static controls = controls;
     static example = example;
 }
+
+export { GltfExportExample };
+

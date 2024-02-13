@@ -102,7 +102,10 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class GSplatExample {
+class GSplatExample {
     static CATEGORY = 'Loaders';
     static example = example;
 }
+
+export { GSplatExample };
+

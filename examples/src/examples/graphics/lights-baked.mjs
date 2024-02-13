@@ -150,7 +150,10 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class LightsBakedExample {
+class LightsBakedExample {
     static CATEGORY = 'Graphics';
     static example = example;
 }
+
+export { LightsBakedExample };
+

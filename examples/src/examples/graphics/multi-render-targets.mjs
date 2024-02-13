@@ -192,7 +192,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class MultiRenderTargetsExample {
+class MultiRenderTargetsExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static FILES = {
@@ -211,3 +211,6 @@ export class MultiRenderTargetsExample {
     };
     static example = example;
 }
+
+export { MultiRenderTargetsExample };
+

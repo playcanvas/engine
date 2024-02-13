@@ -138,8 +138,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ParticlesSparkExample {
+class ParticlesSparkExample {
     static CATEGORY = 'Graphics';
     static example = example;
     static WEBGPU_ENABLED = false; // no particles visible
 }
+
+export { ParticlesSparkExample };
+

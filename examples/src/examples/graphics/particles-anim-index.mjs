@@ -169,7 +169,10 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ParticlesAnimIndexExample {
+class ParticlesAnimIndexExample {
     static CATEGORY = 'Graphics';
     static example = example;
 }
+
+export { ParticlesAnimIndexExample };
+

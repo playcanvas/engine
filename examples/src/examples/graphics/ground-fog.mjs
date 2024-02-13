@@ -198,7 +198,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class GroundFogExample {
+class GroundFogExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -287,3 +287,6 @@ export class GroundFogExample {
     static controls = controls;
     static example = example;
 }
+
+export { GroundFogExample };
+

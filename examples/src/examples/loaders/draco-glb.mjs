@@ -92,8 +92,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class DracoGlbExample {
+class DracoGlbExample {
     static CATEGORY = 'Loaders';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { DracoGlbExample };
+

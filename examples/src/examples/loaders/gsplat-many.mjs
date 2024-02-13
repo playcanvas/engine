@@ -156,7 +156,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class GSplatManyExample {
+class GSplatManyExample {
     static CATEGORY = 'Loaders';
     static example = example;
     static controls = controls;
@@ -201,3 +201,6 @@ export class GSplatManyExample {
         `
     };
 }
+
+export { GSplatManyExample };
+

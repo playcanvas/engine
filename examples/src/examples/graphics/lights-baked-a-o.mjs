@@ -410,8 +410,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class LightsBakedAOExample {
+class LightsBakedAOExample {
     static CATEGORY = 'Graphics';
     static controls = controls;
     static example = example;
 }
+
+export { LightsBakedAOExample };
+

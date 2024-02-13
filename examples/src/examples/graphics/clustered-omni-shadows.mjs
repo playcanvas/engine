@@ -304,8 +304,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ClusteredOmniShadowsExample {
+class ClusteredOmniShadowsExample {
     static CATEGORY = 'Graphics';
     static controls = controls;
     static example = example;
 }
+
+export { ClusteredOmniShadowsExample };
+

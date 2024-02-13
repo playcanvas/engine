@@ -183,8 +183,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ModelOutlineExample {
+class ModelOutlineExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { ModelOutlineExample };
+

@@ -472,9 +472,12 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ContactHardeningShadowsExample {
+class ContactHardeningShadowsExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = false;
     static controls = controls;
     static example = example;
 }
+
+export { ContactHardeningShadowsExample };
+

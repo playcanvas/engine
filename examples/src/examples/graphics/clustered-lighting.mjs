@@ -239,9 +239,12 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ClusteredLightingExample {
+class ClusteredLightingExample {
     static CATEGORY = 'Graphics';
     static ENGINE = 'PERFORMANCE';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { ClusteredLightingExample };
+

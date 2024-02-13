@@ -182,7 +182,7 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class TransformFeedbackExample {
+class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = false; // No errors, but screen is completely black.
     static FILES = {
@@ -271,3 +271,6 @@ void main(void)
     };
     static example = example;
 }
+
+export { TransformFeedbackExample };
+

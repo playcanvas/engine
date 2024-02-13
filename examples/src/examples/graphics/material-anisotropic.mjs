@@ -139,8 +139,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class MaterialAnisotropicExample {
+class MaterialAnisotropicExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { MaterialAnisotropicExample };
+

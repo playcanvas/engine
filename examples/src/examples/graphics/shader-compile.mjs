@@ -199,8 +199,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ShaderCompileExample {
+class ShaderCompileExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { ShaderCompileExample };
+

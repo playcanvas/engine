@@ -272,7 +272,7 @@ async function example({ loadES5, deviceType, data, files }) {
 }
 
 
-export class TextureArrayExample {
+class TextureArrayExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
 
@@ -329,3 +329,6 @@ export class TextureArrayExample {
     static controls = controls;
     static example = example;
 }
+
+export { TextureArrayExample };
+

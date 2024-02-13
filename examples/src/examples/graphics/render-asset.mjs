@@ -107,8 +107,11 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class RenderAssetExample {
+class RenderAssetExample {
     static CATEGORY = 'Graphics';
     static WEBGPU_ENABLED = true;
     static example = example;
 }
+
+export { RenderAssetExample };
+

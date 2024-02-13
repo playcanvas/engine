@@ -178,7 +178,10 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-export class ParticlesRandomSpritesExample {
+class ParticlesRandomSpritesExample {
     static CATEGORY = 'Graphics';
     static example = example;
 }
+
+export { ParticlesRandomSpritesExample };
+
