@@ -17,24 +17,22 @@
             {
                 "imports": {
                     "config": '@CONFIG',
-                    "utils": "./utils.mjs"
+                    "utils": "./utils.mjs",
+                    "ministats": "./ministats.mjs"
                 }
             }
         </script>
         <script type="module">
-            import { loadES5, getQueryParams, getDeviceType, fire } from 'utils';
-            // import * as module from '@MODULE';
             import config from 'config';
-
-            // constants
-            const params = getQueryParams(window.top.location.href);
+            import { loadES5, getQueryParams, getDeviceType, fire } from 'utils';
+            import MiniStats from 'ministats';
+            // import * as module from '@MODULE';
 
             window.ready = false; // Used in indicate if UI can render Controls
 
             let app;
             let started = false;
             let allowRestart = true;
-            let miniStats;
             let data;
             let scriptUrl;
 
@@ -43,36 +41,6 @@
             const FILES = config.FILES ?? {};
             const NO_MINISTATS = !!config.NO_MINISTATS;
             const SHOW_DEVICE_SELECTOR = !config.NO_DEVICE_SELECTOR;
-
-            function enableStats(state) {
-                // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
-                if (NO_MINISTATS) {
-                    return;
-                }
-                if (params.miniStats === 'false') {
-                    return;
-                }
-                if (typeof pc === 'undefined' || typeof pcx === 'undefined') {
-                    return;
-                }
-                if (!app) {
-                    return;
-                }
-                const deviceType = app?.graphicsDevice?.deviceType;
-                if (deviceType === 'null') {
-                    return;
-                }
-                if (state) {
-                    if (!miniStats) {
-                        miniStats = new pcx.MiniStats(app);
-                    }
-                } else {
-                    if (!miniStats) {
-                        return;
-                    }
-                }
-                miniStats.enabled = state;
-            }
 
             async function load(files) {
                 allowRestart = false;
@@ -108,7 +76,7 @@
                             return;
                         }
 
-                        enableStats(true);
+                        MiniStats.enable(app, true);
 
                         if (!started) { 
                             // only one time, recalls of load() are caused by Monaco live coding
@@ -148,8 +116,7 @@
             }
 
             function destroy() {
-                miniStats?.destroy();
-                miniStats = null;
+                MiniStats.destroy();
                 if (app && app.graphicsDevice) {
                     app.destroy();
                 }
@@ -183,7 +150,7 @@
             }
 
             window.addEventListener('requestFiles', () => fire('requestedFiles', { files }));
-            window.addEventListener('stats', (event) => enableStats(!!event.detail?.state));
+            window.addEventListener('stats', (event) => MiniStats.enable(app, !!event.detail?.state));
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
             window.addEventListener('beforeunload', beforeunload, false);

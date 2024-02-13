@@ -1,4 +1,7 @@
 import config from 'config';
+
+const params = getQueryParams(window.top?.location.href ?? '');
+
 /**
  * @param {string} url - The URL specified.
  * @returns {Record<string, string>} - The object of query parameters
@@ -32,7 +35,6 @@ export async function loadES5(url) {
  * @returns {string} - The device type.
  */
 export function getDeviceType() {
-    const params = getQueryParams(window.top?.location.href ?? '');
     if (params.deviceType) {
         console.warn("Overwriting default deviceType from URL");
         return params.deviceType;

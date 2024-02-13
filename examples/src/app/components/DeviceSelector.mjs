@@ -125,7 +125,7 @@ class DeviceSelector extends TypedComponent {
      * @param {string} value - Selected device.
      */
     updateMiniStats(value) {
-        const disableMiniStats = value === DEVICETYPE_WEBGPU || value === DEVICETYPE_NULL;
+        const disableMiniStats = value === DEVICETYPE_NULL;
         const miniStatsEnabled = document.getElementById('showMiniStatsButton')?.ui.class.contains('selected');
         if (disableMiniStats && miniStatsEnabled) {
             document.getElementById('showMiniStatsButton')?.ui.class.remove('selected');
