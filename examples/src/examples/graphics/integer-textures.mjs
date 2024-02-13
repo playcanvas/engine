@@ -55,7 +55,9 @@ function controls({ observer, ReactPCUI, jsx, fragment }) {
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, canvas, deviceType, data, files }) {
+async function example({ loadES5, deviceType, data, files }) {
+    const canvas = document.getElementById("application-canvas");
+
     //
     //  In this example, integer textures are used to store the state of each pixel in a simulation.
     //  The simulation is run in a shader, and the results are rendered to a texture.

@@ -14,8 +14,8 @@ export function getQueryParams(url) {
  * @returns {Promise<Object>} - The module exports
  *
  * @example
- * const CORE = await load('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
- * const DRACO = await load('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
+ * const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
+ * const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
  */
 export async function loadES5(url) {
     const res = await fetch(url);

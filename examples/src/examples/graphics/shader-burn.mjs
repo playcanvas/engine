@@ -6,7 +6,9 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, canvas, deviceType, data, files }) {
+async function example({ loadES5, deviceType, data, files }) {
+    const canvas = document.getElementById("application-canvas");
+
 
     const assets = {
         'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),

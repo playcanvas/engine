@@ -4,7 +4,9 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, canvas, deviceType, data, files }) {
+async function example({ loadES5, deviceType, data, files }) {
+    const canvas = document.getElementById("application-canvas");
+
     await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
     const assets = {

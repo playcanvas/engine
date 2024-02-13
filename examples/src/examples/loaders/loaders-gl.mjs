@@ -9,7 +9,9 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, canvas, deviceType, data, files }) {
+async function example({ loadES5, deviceType, data, files }) {
+    const canvas = document.getElementById("application-canvas");
+
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
