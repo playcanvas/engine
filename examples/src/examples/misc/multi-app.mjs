@@ -74,7 +74,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<null>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     /**

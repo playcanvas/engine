@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
@@ -6,7 +7,7 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     const assets = {
@@ -15,7 +16,7 @@ export async function example({ loadES5, deviceType, data, files }) {
     };
 
     const gfxOptions = {
-        deviceTypes: [deviceType],
+        deviceTypes: [getDeviceType()],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };

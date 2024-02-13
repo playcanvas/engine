@@ -16,13 +16,14 @@
         <script type="importmap">
             {
                 "imports": {
-                    "config": '@CONFIG'
+                    "config": '@CONFIG',
+                    "utils": "./utils.mjs"
                 }
             }
         </script>
         <script type="module">
-            import { loadES5, getQueryParams, getDeviceType, fire } from './utils.mjs';
-            import * as module from '@MODULE';
+            import { loadES5, getQueryParams, getDeviceType, fire } from 'utils';
+            // import * as module from '@MODULE';
             import config from 'config';
 
             // constants
@@ -41,7 +42,6 @@
             const DESCRIPTION = config.DESCRIPTION || '';
             const FILES = config.FILES ?? {};
             const NO_MINISTATS = !!config.NO_MINISTATS;
-            const WEBGPU_ENABLED = !!config.WEBGPU_ENABLED;
             const SHOW_DEVICE_SELECTOR = !config.NO_DEVICE_SELECTOR;
 
             function enableStats(state) {
@@ -78,15 +78,15 @@
                 allowRestart = false;
                 window.top.data = window.data = data = new observer.Observer({});
 
-                const deviceType = params.deviceType ?? getDeviceType(WEBGPU_ENABLED);
-                if (params.deviceType) {
-                    console.warn("overwriting default deviceType from URL");
-                }
-
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
                     fire('exampleLoading', { showDeviceSelector: SHOW_DEVICE_SELECTOR });
                 }
+
+                const args = {
+                    files
+                };
+                Object.assign(window, args);
 
                 const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
                 if (scriptUrl) {
@@ -95,12 +95,7 @@
                 scriptUrl = URL.createObjectURL(blob);
 
                 const module = await import(scriptUrl);
-                app = await module.example({
-                    loadES5,
-                    deviceType,
-                    data,
-                    files
-                });
+                app = await module.example();
                 window.ready = true;
 
                 // Wait until example has called app.start()
@@ -179,9 +174,9 @@
                 const txt = await res.text();
 
                 files['example.mjs'] = txt;
-                if (module.controls) {
-                    files['controls.mjs'] = module.controls.toString();
-                }
+                // if (module.controls) {
+                //     files['controls.mjs'] = module.controls.toString();
+                // }
                 Object.assign(files, FILES);
 
                 await load(files);

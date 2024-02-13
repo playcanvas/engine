@@ -1,3 +1,4 @@
+import config from 'config';
 /**
  * @param {string} url - The URL specified.
  * @returns {Record<string, string>} - The object of query parameters
@@ -28,10 +29,16 @@ export async function loadES5(url) {
 }
 
 /**
- * @param {boolean} webGPUEnabled - WebGPU enabled.
  * @returns {string} - The device type.
  */
-export function getDeviceType(webGPUEnabled) {
+export function getDeviceType() {
+    const params = getQueryParams(window.top?.location.href ?? '');
+    if (params.deviceType) {
+        console.warn("Overwriting default deviceType from URL");
+        return params.deviceType;
+    }
+
+    const webGPUEnabled = !!config.WEBGPU_ENABLED;
     const savedDevice = localStorage.getItem('preferredGraphicsDevice');
     if (webGPUEnabled) {
         let preferredDevice = 'webgpu';
@@ -55,10 +62,9 @@ export function getDeviceType(webGPUEnabled) {
 }
 
 /**
- * @param {boolean} eventName - The name of the fired event.
+ * @param {string} eventName - The name of the fired event.
  * @param {object} detail - The detail object.
  */
 export function fire(eventName, detail = {}) {
-    // @ts-ignore
-    window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
+    window.top?.dispatchEvent(new CustomEvent(eventName, { detail }));
 }

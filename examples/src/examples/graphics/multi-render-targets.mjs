@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
 /**
  * @typedef {{ 'output.frag': string }} Files
@@ -6,7 +7,7 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     // set up and load draco module, as the glb we load is draco compressed
@@ -22,7 +23,7 @@ export async function example({ loadES5, deviceType, data, files }) {
     };
 
     const gfxOptions = {
-        deviceTypes: [deviceType],
+        deviceTypes: [getDeviceType()],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };

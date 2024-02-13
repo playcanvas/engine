@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
 // Color textures have been converted with the following arguments:
 //   basisu seaside-rocks01-gloss.jpg -q 255 -mipmap
@@ -9,7 +10,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     // initialize basis
@@ -27,7 +28,7 @@ export async function example({ loadES5, deviceType, data, files }) {
     };
 
     const gfxOptions = {
-        deviceTypes: [deviceType],
+        deviceTypes: [getDeviceType()],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };

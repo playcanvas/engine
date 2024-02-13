@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
 /**
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -125,7 +126,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     const assets = {
@@ -139,7 +140,7 @@ export async function example({ loadES5, deviceType, data, files }) {
     };
 
     const gfxOptions = {
-        deviceTypes: [deviceType],
+        deviceTypes: [getDeviceType()],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };

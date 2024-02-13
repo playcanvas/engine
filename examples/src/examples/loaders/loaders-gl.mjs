@@ -1,4 +1,7 @@
 import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
+import { loadES5 } from 'utils';
+
 // todo simply import "@loaders.gl/core";
 // https://loaders.gl/docs/developer-guide/get-started
 // TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
@@ -9,7 +12,7 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-export async function example({ loadES5, deviceType, data, files }) {
+export async function example() {
     const canvas = document.getElementById("application-canvas");
 
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
@@ -18,7 +21,7 @@ export async function example({ loadES5, deviceType, data, files }) {
     // This example uses draco point cloud loader library from https://loaders.gl/
     // Note that many additional formats are supported by the library and can be used.
     const gfxOptions = {
-        deviceTypes: [deviceType],
+        deviceTypes: [getDeviceType()],
         glslangUrl: '/static/lib/glslang/glslang.js',
         twgslUrl: '/static/lib/twgsl/twgsl.js'
     };
