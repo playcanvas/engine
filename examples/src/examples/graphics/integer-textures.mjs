@@ -392,8 +392,21 @@ export class IntegerTextureExample {
     static DESCRIPTION = `<ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>`;
     static example = example;
     static controls = controls;
-    static sharedShaderChunks = {
-        'sandCommon.frag': /* glsl */`
+
+    static FILES = {
+        'sandSimulation.frag': /* glsl */`
+            precision highp usampler2D;
+
+            uniform usampler2D sourceTexture;
+            uniform vec2 mousePosition;
+            uniform uint mouseButton;
+            uniform uint passNum;
+            uniform uint brush;
+            uniform float randomVal;
+            uniform float brushRadius;
+
+            varying vec2 uv0;
+
             const uint AIR = 0u;
             const uint SAND = 1u;
             const uint ORANGESAND = 2u;
@@ -436,24 +449,6 @@ export class IntegerTextureExample {
                 uint val = texelFetch(sourceTexture, c, 0).r;
                 return unpack(val);
             }
-        `
-    };
-
-    static FILES = {
-        'sandSimulation.frag': /* glsl */`
-            precision highp usampler2D;
-
-            uniform usampler2D sourceTexture;
-            uniform vec2 mousePosition;
-            uniform uint mouseButton;
-            uniform uint passNum;
-            uniform uint brush;
-            uniform float randomVal;
-            uniform float brushRadius;
-
-            varying vec2 uv0;
-
-            ${IntegerTextureExample.sharedShaderChunks['sandCommon.frag']}
                         
             void main() {
 
@@ -520,7 +515,48 @@ export class IntegerTextureExample {
 
             const float circleOutline = 0.0025;
 
-            ${IntegerTextureExample.sharedShaderChunks['sandCommon.frag']}
+            const uint AIR = 0u;
+            const uint SAND = 1u;
+            const uint ORANGESAND = 2u;
+            const uint GRAYSAND = 3u;
+            const uint WALL = 4u;
+                                    
+            bool isInBounds(ivec2 c, ivec2 size) {
+                return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;
+            }
+            
+            struct Particle {
+                uint element;        // 3 bits
+                bool movedThisFrame; // 1 bit
+                uint shade;          // 4 bits
+                uint waterMass;      // 8 bits
+            };
+
+            float rand(vec2 pos, float val) {
+                return fract(pos.x * pos.y * val * 1000.0);
+            }
+            
+            uint pack(Particle particle) {
+                uint packed = 0u;
+                packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits
+                packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit
+                packed |= (particle.shade << 4);          // Store shade in the next 4 bits
+            
+                return packed; // Second component is reserved/unused
+            }
+            
+            Particle unpack(uint packed) {
+                Particle particle;
+                particle.element = packed & 0x7u;                         // Extract lowest 3 bits
+                particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit
+                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            
+                return particle;
+            }
+
+            Particle getParticle(ivec2 c) {
+                uint val = texelFetch(sourceTexture, c, 0).r;
+                return unpack(val);
+            }
 
             void main() {
                 ivec2 size = textureSize(sourceTexture, 0);

@@ -13,9 +13,17 @@
         </div>
         <script src="./playcanvas-observer.js"></script>
         <script src="./polyfill.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "config": '@CONFIG'
+                }
+            }
+        </script>
         <script type="module">
             import { loadES5, getQueryParams, getDeviceType, fire } from './utils.mjs';
             import * as module from '@MODULE';
+            import config from 'config';
             const ExampleClass = Object.values(module)[0];
 
             // constants
@@ -27,17 +35,16 @@
             let started = false;
             let allowRestart = true;
             let miniStats;
-            let data = new observer.Observer({});
+            let data;
             let scriptUrl;
 
             const files = {};
-            const EXAMPLE = ExampleClass.example;
             const CONTROLS = ExampleClass.controls;
-            const DESCRIPTION = ExampleClass.DESCRIPTION || '';
-            const FILES = ExampleClass.FILES ?? {};
-            const NO_MINISTATS = !!ExampleClass.NO_MINISTATS;
-            const WEBGPU_ENABLED = !!ExampleClass.WEBGPU_ENABLED;
-            const SHOW_DEVICE_SELECTOR = !ExampleClass.NO_DEVICE_SELECTOR;
+            const DESCRIPTION = config.DESCRIPTION || '';
+            const FILES = config.FILES ?? {};
+            const NO_MINISTATS = !!config.NO_MINISTATS;
+            const WEBGPU_ENABLED = !!config.WEBGPU_ENABLED;
+            const SHOW_DEVICE_SELECTOR = !config.NO_DEVICE_SELECTOR;
 
             function enableStats(state) {
                 // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
@@ -71,7 +78,7 @@
 
             async function load(files) {
                 allowRestart = false;
-                window.top.observerData = data;
+                window.top.data = window.data = data = new observer.Observer({});
 
                 const deviceType = params.deviceType ?? getDeviceType(WEBGPU_ENABLED);
                 if (params.deviceType) {
@@ -145,7 +152,6 @@
                     return;
                 }
                 destroy();
-                data = new observer.Observer({});
                 load(files);
             }
 

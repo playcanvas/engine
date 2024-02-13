@@ -244,7 +244,7 @@ class Example extends TypedComponent {
             null,
             jsx(controls, {
                 // @ts-ignore
-                observer: window.observerData,
+                observer: window.data,
                 PCUI,
                 ReactPCUI,
                 React,

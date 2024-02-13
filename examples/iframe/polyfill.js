@@ -7,6 +7,11 @@
  */
 function enablePolyfillFunctionCall() {
     const functionCall = Function.prototype.call;
+    /**
+     * @param {any} thisArg - The context.
+     * @param {any[]} args - The arguments.
+     * @returns {Function} - The poly function.
+     */
     function polyCall(thisArg, ...args) {
         if (this.toString().startsWith('class')) {
             return Object.assign(thisArg, new this(...args));

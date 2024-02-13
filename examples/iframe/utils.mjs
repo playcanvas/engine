@@ -59,5 +59,6 @@ export function getDeviceType(webGPUEnabled) {
  * @param {object} detail - The detail object.
  */
 export function fire(eventName, detail = {}) {
+    // @ts-ignore
     window.top.dispatchEvent(new CustomEvent(eventName, { detail }));
 }

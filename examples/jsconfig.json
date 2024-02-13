@@ -16,6 +16,6 @@
         "esModuleInterop" : true,
         "moduleResolution" : "node"
     },
-    "include": ["src", "scripts"],
+    "include": ["src", "scripts", "iframe", "examples.config.mjs"],
     "exclude": ["node_modules", "src/lib"]
 }

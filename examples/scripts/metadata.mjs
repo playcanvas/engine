@@ -22,8 +22,7 @@ function stringify(obj) {
  *      categoryKebab: string,
  *      categoryPascal: string,
  *      exampleNameKebab: string,
- *      exampleNamePascal: string,
- *      config: object
+ *      exampleNamePascal: string
  * }[]}
  */
 const exampleMetaData = [];
@@ -43,22 +42,19 @@ function getDirFiles(path) {
     return fs.readdirSync(path);
 }
 
-async function main() {
+function main() {
     const rootPath = `${MAIN_DIR}/src/examples`;
     const categories = getDirFiles(rootPath);
-    await Promise.all(categories.map(async (category) => {
+
+    categories.forEach((category) => {
         const categoryPath = resolve(`${rootPath}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
 
         const categoryKebab = toKebabCase(category);
         const categoryPascal = kebabCaseToPascalCase(categoryKebab);
 
-        await Promise.all(examplesFiles.map(async (exampleFile) => {
+        examplesFiles.forEach((exampleFile) => {
             const examplePath = resolve(`${categoryPath}/${exampleFile}`);
-            const module = await import(`file://${examplePath}`);
-            const ExampleClass = Object.values(module)[0];
-            const config = Object.assign({}, ExampleClass);
-
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
             const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
@@ -68,23 +64,15 @@ async function main() {
                 categoryKebab,
                 categoryPascal,
                 exampleNameKebab,
-                exampleNamePascal,
-                config
+                exampleNamePascal
             });
-
-        }));
-    }));
+        });
+    });
 
     if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
     }
 
-    const lines = [
-        `export const exampleMetaData = ${stringify(exampleMetaData)};`,
-        ''
-    ];
-    fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, lines.join('\n'));
-
-    return 0;
+    fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
 }
-main().then(process.exit);
+main();
