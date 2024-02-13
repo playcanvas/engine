@@ -19,7 +19,6 @@
             const ExampleClass = Object.values(module)[0];
 
             // constants
-            const canvas = document.getElementById("application-canvas");
             const params = getQueryParams(window.top.location.href);
 
             window.ready = false; // Used in indicate if UI can render Controls
@@ -94,7 +93,6 @@
                 const _ExampleClass = Object.values(module)[0];
                 app = await _ExampleClass.example({
                     loadES5,
-                    canvas,
                     deviceType,
                     data,
                     files
