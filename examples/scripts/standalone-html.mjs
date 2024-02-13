@@ -16,7 +16,7 @@ const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8')
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
  *
- * @param {'DEVELOPMENT' | 'PERFORMANCE' | 'DEBUG' | undefined} type - The engine type.
+ * @param {string | undefined} type - The engine type.
  * @returns {string} - The build file.
  */
 function engineFor(type) {
@@ -32,34 +32,23 @@ function engineFor(type) {
 }
 
 /**
- * @typedef {object} ExampleClass
- * @property {Function} example - The example function.
- * @property {Function} [controls] - The controls function.
- * @property {object[]} [imports] - The imports array.
- * @property {string[]} [es5libs] - The ES5Libs array.
- * @property {string} DESCRIPTION - The example description.
- * @property {'PERFORMANCE' | 'DEBUG' | undefined} ENGINE - The engine type.
- * @property {object} FILES - The object of extra files to include (e.g shaders).
- * @property {boolean} INCLUDE_AR_LINK - Include AR link png.
- * @property {boolean} NO_DEVICE_SELECTOR - No device selector.
- * @property {boolean} NO_CANVAS - No canvas element.
- * @property {boolean} NO_MINISTATS - No ministats.
- * @property {boolean} WEBGPU_ENABLED - If webGPU is enabled.
- */
-/**
  * @param {string} categoryPascal - The category pascal name.
  * @param {string} exampleNamePascal - The example pascal name.
- * @param {ExampleClass} exampleClass - The example class.
+ * @param {{
+ *      INCLUDE_AR_LINK?: boolean,
+ *      NO_CANVAS?: boolean
+ *      ENGINE?: 'DEVELOPMENT' | 'PERFORMANCE' | 'DEBUG' | string | undefined
+ * }} config - The example config.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
+function generateExampleFile(categoryPascal, exampleNamePascal, config) {
     let html = EXAMPLE_HTML;
 
     // title
     html = html.replace(/'@TITLE'/g, `${categoryPascal}: ${exampleNamePascal}`);
 
     // AR Link
-    const arLinkStr = exampleClass.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
+    const arLinkStr = config.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
         <div style="text-align: center;">
             <a id="ar-link" rel="ar" download="asset.usdz">
                 <img src="./arkit.png" id="button" width="200"/>
@@ -69,13 +58,13 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     html = html.replace(/'@AR_LINK'/g, arLinkStr);
 
     // canvas
-    html = html.replace(/'@CANVAS'/g, exampleClass.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
+    html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
     // module
     html = html.replace(/'@MODULE'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.js`));
 
     // engine
-    const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : exampleClass.ENGINE;
+    const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : config.ENGINE;
     const engine = engineFor(engineType);
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engine));
 
@@ -86,8 +75,19 @@ function generateExampleFile(categoryPascal, exampleNamePascal, exampleClass) {
     return html;
 }
 
+/**
+ * @param {string} script - The script to be patched.
+ * @returns {string} - The patched script.
+ */
+function patchScript(script) {
+    // remove playcanvas & playcanvas-extras imports
+    script = script.replace(/\s*import[\s\w*{}]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+    script = script.replace(/\s*import[\s\w*{}]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
 
-async function main() {
+    return script;
+}
+
+function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -95,22 +95,16 @@ async function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    await Promise.all(exampleMetaData.map(async (data) => {
-        const { categoryPascal, exampleNamePascal, path } = data;
+    exampleMetaData.forEach((data) => {
+        const { categoryPascal, exampleNamePascal, path, config } = data;
 
         // html files
-        const exampleImport = await import(`file://${path}`);
-        const exampleClass = Object.values(exampleImport)[0];
-        const out = generateExampleFile(categoryPascal, exampleNamePascal, exampleClass);
+        const out = generateExampleFile(categoryPascal, exampleNamePascal, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.html`, out);
 
         // js files
-        let script = fs.readFileSync(path, 'utf-8');
-        script = script.replace(/\s*import[\s\w*{}]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
-        script = script.replace(/\s*import[\s\w*{}]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.js`, script);
-    }));
-
-    return 0;
+        const script = fs.readFileSync(path, 'utf-8');
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${categoryPascal}_${exampleNamePascal}.js`, patchScript(script));
+    });
 }
-main().then(process.exit);
+main();

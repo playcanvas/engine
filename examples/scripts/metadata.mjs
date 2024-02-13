@@ -23,6 +23,7 @@ function stringify(obj) {
  *      categoryPascal: string,
  *      exampleNameKebab: string,
  *      exampleNamePascal: string,
+ *      config: object
  * }[]}
  */
 const exampleMetaData = [];
@@ -42,18 +43,21 @@ function getDirFiles(path) {
     return fs.readdirSync(path);
 }
 
-function main() {
+async function main() {
     const rootPath = `${MAIN_DIR}/src/examples`;
     const categories = getDirFiles(rootPath);
-    categories.forEach((category) => {
+    await Promise.all(categories.map(async (category) => {
         const categoryPath = resolve(`${rootPath}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
 
         const categoryKebab = toKebabCase(category);
         const categoryPascal = kebabCaseToPascalCase(categoryKebab);
 
-        examplesFiles.forEach((exampleFile) => {
+        await Promise.all(examplesFiles.map(async (exampleFile) => {
             const examplePath = resolve(`${categoryPath}/${exampleFile}`);
+            const module = await import(`file://${examplePath}`);
+            const ExampleClass = Object.values(module)[0];
+            const config = Object.assign({}, ExampleClass);
 
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
@@ -64,11 +68,12 @@ function main() {
                 categoryKebab,
                 categoryPascal,
                 exampleNameKebab,
-                exampleNamePascal
+                exampleNamePascal,
+                config
             });
 
-        });
-    });
+        }));
+    }));
 
     if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
@@ -79,5 +84,7 @@ function main() {
         ''
     ];
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, lines.join('\n'));
+
+    return 0;
 }
-main();
+main().then(process.exit);
