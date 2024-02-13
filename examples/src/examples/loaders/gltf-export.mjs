@@ -3,7 +3,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return jsx(Button, {
         text: 'Download GLTF',
@@ -15,9 +15,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -166,14 +165,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class GltfExportExample {
-    static CATEGORY = 'Loaders';
-    static WEBGPU_ENABLED = true;
-    static INCLUDE_AR_LINK = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { GltfExportExample };
-

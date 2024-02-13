@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, BooleanInput, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Lights' },
@@ -110,9 +110,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
@@ -230,7 +229,6 @@ async function example({ loadES5, deviceType, data, files }) {
         plane.setLocalScale(new pc.Vec3(100, 0, 100));
         plane.setLocalPosition(0, -1.0, 0);
         app.root.addChild(plane);
-
 
         data.set('script', {
             sun: {
@@ -420,13 +418,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class LightPhysicalUnitsExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { LightPhysicalUnitsExample };
-

@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { createRef, Component } = React;
     class JsxControls extends Component {
         position = new pc.Vec2();
@@ -125,7 +125,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
 
     const assets = {
@@ -305,10 +305,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-class BlendTrees2DCartesianExample {
-    static CATEGORY = 'Animation';
-    static WEBGPU_ENABLED = true;
-    static controls = controls;
-    static example = example;
-}
-export { BlendTrees2DCartesianExample };

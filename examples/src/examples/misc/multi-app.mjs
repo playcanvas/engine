@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, Panel, Label, Button } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'WebGPU' },
@@ -74,7 +74,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<null>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
 
     /**
@@ -250,14 +250,3 @@ async function example({ loadES5, deviceType, data, files }) {
 
     return null;
 }
-
-class MultiApplicationExample {
-    static CATEGORY = 'Misc';
-    static NO_CANVAS = true;
-    static NO_MINISTATS = true;
-    static NO_DEVICE_SELECTOR = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { MultiApplicationExample };

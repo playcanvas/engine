@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: '/static/assets/textures/particles-coins.png' }),
@@ -177,11 +176,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class ParticlesRandomSpritesExample {
-    static CATEGORY = 'Graphics';
-    static example = example;
-}
-
-export { ParticlesRandomSpritesExample };
-

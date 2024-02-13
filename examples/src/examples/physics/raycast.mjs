@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     pc.WasmModule.setConfig('Ammo', {
         glueUrl:     '/static/lib/ammo/ammo.wasm.js',
@@ -222,11 +221,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class RaycastExample {
-    static CATEGORY = 'Physics';
-    static WEBGPU_ENABLED = true;
-    static example = example;
-}
-
-export { RaycastExample };

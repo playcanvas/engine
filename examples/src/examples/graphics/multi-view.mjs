@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SelectInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Debug Shader Rendering' },
@@ -36,9 +36,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -227,12 +226,4 @@ async function example({ loadES5, deviceType, data, files }) {
     return app;
 }
 
-class MultiViewExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { MultiViewExample };
 ;

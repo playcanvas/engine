@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -138,12 +137,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class MaterialAnisotropicExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static example = example;
-}
-
-export { MaterialAnisotropicExample };
-

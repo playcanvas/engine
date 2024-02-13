@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return jsx(Button, {
         text: 'Download USDZ',
@@ -16,9 +16,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -63,7 +62,6 @@ async function example({ loadES5, deviceType, data, files }) {
     assetListLoader.load(() => {
 
         app.start();
-
 
         // get the instance of the bench and set up with render component
         const entity = assets.bench.resource.instantiateRenderEntity();
@@ -120,14 +118,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class UsdzExportExample {
-    static CATEGORY = 'Loaders';
-    static WEBGPU_ENABLED = true;
-    static INCLUDE_AR_LINK = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { UsdzExportExample };
-

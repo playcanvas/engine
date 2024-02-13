@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Material' },
@@ -34,9 +34,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     data.set('settings', {
         material: {
@@ -304,12 +303,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class ClusteredAreaLightsExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static controls = controls;
-    static example = example;
-}
-
-export { ClusteredAreaLightsExample };

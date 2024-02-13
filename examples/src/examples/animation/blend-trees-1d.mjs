@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx }) {
+export function controls({ observer, ReactPCUI, React, jsx }) {
     const { BindingTwoWay, Label, LabelGroup, SliderInput, Button, BooleanInput, SelectInput, Panel, Container } = ReactPCUI;
     class JsxControls extends React.Component {
         render() {
@@ -25,7 +25,7 @@ function controls({ observer, ReactPCUI, React, jsx }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
 
     const assets = {
@@ -189,10 +189,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-class BlendTrees1DExample {
-    static CATEGORY = 'Animation';
-    static WEBGPU_ENABLED = true;
-    static controls = controls;
-    static example = example;
-}
-export { BlendTrees1DExample };

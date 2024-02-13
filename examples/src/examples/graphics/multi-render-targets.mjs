@@ -6,9 +6,8 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     // set up and load draco module, as the glb we load is draco compressed
     pc.WasmModule.setConfig('DracoDecoderModule', {
@@ -71,7 +70,6 @@ async function example({ loadES5, deviceType, data, files }) {
         app.scene.envAtlas = assets.helipad.resource;
         app.scene.skyboxMip = 1;
         app.scene.toneMapping = pc.TONEMAP_ACES;
-
 
         // get existing layers
         const worldLayer = app.scene.layers.getLayerByName("World");
@@ -191,26 +189,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class MultiRenderTargetsExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static FILES = {
-
-        // shader chunk which outputs to multiple render targets
-        // Note: gl_FragColor is not modified, and so the forward pass output is used for target 0
-        'output.frag': /* glsl */`
-            #ifdef MYMRT_PASS
-                // output world normal to target 1
-                pcFragColor1 = vec4(litArgs_worldNormal * 0.5 + 0.5, 1.0);
-
-                // output gloss to target 2
-                pcFragColor2 = vec4(vec3(litArgs_gloss) , 1.0);
-            #endif
-        `
-    };
-    static example = example;
-}
-
-export { MultiRenderTargetsExample };
-

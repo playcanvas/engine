@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
     const [type, setType] = React.useState('translate');
@@ -234,9 +234,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     // class for handling gizmos
     class GizmoHandler {
@@ -279,7 +278,6 @@ async function example({ loadES5, deviceType, data, files }) {
          * @private
          */
         _skipSetFire = false;
-
 
         /**
          * @param {pc.AppBase} app - The application.
@@ -692,12 +690,3 @@ async function example({ loadES5, deviceType, data, files }) {
 
     return app;
 }
-
-class GizmosExample {
-    static CATEGORY = 'Misc';
-    static WEBGPU_ENABLED = false;
-    static controls = controls;
-    static example = example;
-}
-
-export { GizmosExample };

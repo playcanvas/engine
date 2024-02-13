@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
 
     await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
@@ -164,11 +164,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class TweenExample {
-    static CATEGORY = 'Animation';
-    static WEBGPU_ENABLED = true;
-    static example = example;
-}
-
-export { TweenExample };

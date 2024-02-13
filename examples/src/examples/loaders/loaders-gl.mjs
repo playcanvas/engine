@@ -9,7 +9,7 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
 
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
@@ -123,45 +123,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class LoadersGlExample {
-    static CATEGORY = 'Loaders';
-    static example = example;
-    static FILES = {
-        'shader.vert': `
-            // Attributes per vertex: position
-            attribute vec4 aPosition;
-            attribute vec4 aColor;
-            
-            uniform mat4   matrix_viewProjection;
-            uniform mat4   matrix_model;
-            
-            // Color to fragment program
-            varying vec4 outColor;
-            
-            void main(void)
-            {
-                mat4 modelViewProj = matrix_viewProjection * matrix_model;
-                gl_Position = modelViewProj * aPosition;
-            
-                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
-                #ifndef WEBGPU
-                    gl_PointSize = 1.5;
-                #endif
-            
-                outColor = aColor;
-            }`,
-
-        'shader.frag': `
-            precision lowp float;
-            varying vec4 outColor;
-            
-            void main(void)
-            {
-                // just output color supplied by vertex shader
-                gl_FragColor = outColor;
-            }`
-    };
-}
-
-export { LoadersGlExample };

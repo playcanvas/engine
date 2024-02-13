@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     // This example serves as a test framework for large shader compilation speed test. Enable tracking for it.
     pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
@@ -198,12 +197,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class ShaderCompileExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-    static example = example;
-}
-
-export { ShaderCompileExample };
-

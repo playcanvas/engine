@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return fragment(
         jsx(Button, {
@@ -20,9 +20,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
@@ -291,13 +290,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class ComponentPropertiesExample {
-    static CATEGORY = 'Animation';
-    static WEBGPU_ENABLED = true;
-    static DESCRIPTION = 'This example demonstrates how to use the Anim Component to animate the properties of other Components.';
-    static controls = controls;
-    static example = example;
-}
-
-export { ComponentPropertiesExample };

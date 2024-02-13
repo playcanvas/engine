@@ -6,9 +6,8 @@ import * as pc from 'playcanvas';
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         'statue': new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
@@ -135,50 +134,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class ShaderBurnExample {
-    static CATEGORY = 'Graphics';
-    static WEBGPU_ENABLED = true;
-
-    static FILES = {
-        'shader.vert': /* glsl */`
-attribute vec3 aPosition;
-attribute vec2 aUv0;
-
-uniform mat4 matrix_model;
-uniform mat4 matrix_viewProjection;
-
-varying vec2 vUv0;
-
-void main(void)
-{
-    vUv0 = aUv0;
-    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
-}`,
-        'shader.frag': /* glsl */`
-precision mediump float;
-
-varying vec2 vUv0;
-
-uniform sampler2D uDiffuseMap;
-uniform sampler2D uHeightMap;
-uniform float uTime;
-
-void main(void)
-{
-    float height = texture2D(uHeightMap, vUv0).r;
-    vec4 color = texture2D(uDiffuseMap, vUv0);
-    if (height < uTime) {
-    discard;
-    }
-    if (height < (uTime + uTime * 0.1)) {
-    color = vec4(1.0, 0.2, 0.0, 1.0);
-    }
-    gl_FragColor = color;
-}`
-    };
-    static example = example;
-}
-
-export { ShaderBurnExample };
-

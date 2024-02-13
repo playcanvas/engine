@@ -24,7 +24,6 @@
             import { loadES5, getQueryParams, getDeviceType, fire } from './utils.mjs';
             import * as module from '@MODULE';
             import config from 'config';
-            const ExampleClass = Object.values(module)[0];
 
             // constants
             const params = getQueryParams(window.top.location.href);
@@ -39,7 +38,6 @@
             let scriptUrl;
 
             const files = {};
-            const CONTROLS = ExampleClass.controls;
             const DESCRIPTION = config.DESCRIPTION || '';
             const FILES = config.FILES ?? {};
             const NO_MINISTATS = !!config.NO_MINISTATS;
@@ -97,8 +95,7 @@
                 scriptUrl = URL.createObjectURL(blob);
 
                 const module = await import(scriptUrl);
-                const _ExampleClass = Object.values(module)[0];
-                app = await _ExampleClass.example({
+                app = await module.example({
                     loadES5,
                     deviceType,
                     data,
@@ -182,8 +179,8 @@
                 const txt = await res.text();
 
                 files['example.mjs'] = txt;
-                if (CONTROLS) {
-                    files['controls.mjs'] = CONTROLS.toString();
+                if (module.controls) {
+                    files['controls.mjs'] = module.controls.toString();
                 }
                 Object.assign(files, FILES);
 

@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const gfxOptions = {
         deviceTypes: [deviceType],
@@ -101,11 +100,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class GSplatExample {
-    static CATEGORY = 'Loaders';
-    static example = example;
-}
-
-export { GSplatExample };
-

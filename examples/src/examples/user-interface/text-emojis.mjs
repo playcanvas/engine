@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
@@ -121,7 +120,6 @@ async function example({ loadES5, deviceType, data, files }) {
         createText(150, flagsText);
         createText(100, complexText);
 
-
         // Canvas Fonts Debug - you shouldn't do this in your actual project
         const debugText = new pc.Entity();
         debugText.setLocalPosition(0, -50, 0);
@@ -177,11 +175,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class TextEmojisExample {
-    static CATEGORY = 'User Interface';
-    static WEBGPU_ENABLED = true;
-    static example = example;
-}
-
-export { TextEmojisExample };

@@ -57,7 +57,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, deviceType, assetPath, scriptsPath }) {
+export async function example({ canvas, deviceType, assetPath, scriptsPath }) {
     const app = new pc.Application(canvas, {});
 }
 ```
@@ -67,7 +67,7 @@ This is the only function that's required to run an example. The code defined in
 You can load external scripts into an example using the `loadES5` function as follows:
 
 ```js
-async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath, loadES5 }) {
+export async function example({ canvas, deviceType, files, assetPath, glslangPath, twgslPath, loadES5 }) {
     const CORE  = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
     const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
     console.log({ CORE, DRACO })
@@ -89,7 +89,7 @@ This function allows you to define a set of PCUI based interface which can be us
  * @param {import('../../app/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return fragment(
         jsx(Button, {

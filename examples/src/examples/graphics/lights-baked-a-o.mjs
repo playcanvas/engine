@@ -4,7 +4,7 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
  * @returns {JSX.Element} The returned JSX Element.
  */
-function controls({ observer, ReactPCUI, React, jsx, fragment }) {
+export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, BooleanInput, Label, LabelGroup, Panel, SliderInput } = ReactPCUI;
     return fragment(
         jsx(Panel, { headerText: 'Lightmap Filter Settings' },
@@ -154,9 +154,8 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
@@ -409,12 +408,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class LightsBakedAOExample {
-    static CATEGORY = 'Graphics';
-    static controls = controls;
-    static example = example;
-}
-
-export { LightsBakedAOExample };
-

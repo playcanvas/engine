@@ -4,9 +4,8 @@ import * as pc from 'playcanvas';
  * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ loadES5, deviceType, data, files }) {
+export async function example({ loadES5, deviceType, data, files }) {
     const canvas = document.getElementById("application-canvas");
-
 
     const assets = {
         bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
@@ -251,12 +250,3 @@ async function example({ loadES5, deviceType, data, files }) {
     });
     return app;
 }
-
-class AreaPickerExample {
-    static CATEGORY = 'Graphics';
-    static example = example;
-    static WEBGPU_ENABLED = false; // device.updateBegin() is not a function
-}
-
-export { AreaPickerExample };
-
