@@ -156,8 +156,75 @@ export const Graphics_ClusteredSpotShadows = {
 export const Graphics_GrabPass = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            attribute vec3 vertex_position;\n            attribute vec2 vertex_texCoord0;\n\n            uniform mat4 matrix_model;\n            uniform mat4 matrix_viewProjection;\n\n            varying vec2 texCoord;\n\n            void main(void)\n            {\n                // project the position\n                vec4 pos = matrix_model * vec4(vertex_position, 1.0);\n                gl_Position = matrix_viewProjection * pos;\n\n                texCoord = vertex_texCoord0;\n            }\n        ",
-        "shader.frag": "\n            // use the special uSceneColorMap texture, which is a built-in texture containing\n            // a copy of the color buffer at the point of capture, inside the Depth layer.\n            uniform sampler2D uSceneColorMap;\n\n            // normal map providing offsets\n            uniform sampler2D uOffsetMap;\n\n            // roughness map\n            uniform sampler2D uRoughnessMap;\n\n            // tint colors\n            uniform vec3 tints[4];\n\n            // engine built-in constant storing render target size in .xy and inverse size in .zw\n            uniform vec4 uScreenSize;\n\n            varying vec2 texCoord;\n\n            void main(void)\n            {\n                float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;\n\n                // sample offset texture - used to add distortion to the sampled background\n                vec2 offset = texture2D(uOffsetMap, texCoord).rg;\n                offset = 2.0 * offset - 1.0;\n\n                // offset strength\n                offset *= (0.2 + roughness) * 0.015;\n\n                // get normalized uv coordinates for canvas\n                vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;\n\n                // roughness dictates which mipmap level gets used, in 0..4 range\n                float mipmap = roughness * 5.0;\n\n                // get background pixel color with distorted offset\n                vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;\n\n                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing\n                // (note - this could be worked around by using a series of if statements in this case)\n                #ifdef GL2\n                    float tintIndex = clamp(mipmap, 0.0, 3.0);\n                    grabColor *= tints[int(tintIndex)];\n                #endif\n\n                // brighten the refracted texture a little bit\n                // brighten even more the rough parts of the glass\n                gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;\n            }\n        "
+        "shader.vert": /* glsl */`
+            attribute vec3 vertex_position;
+            attribute vec2 vertex_texCoord0;
+
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
+
+            varying vec2 texCoord;
+
+            void main(void)
+            {
+                // project the position
+                vec4 pos = matrix_model * vec4(vertex_position, 1.0);
+                gl_Position = matrix_viewProjection * pos;
+
+                texCoord = vertex_texCoord0;
+            }
+        `,
+        "shader.frag": /* glsl */`
+            // use the special uSceneColorMap texture, which is a built-in texture containing
+            // a copy of the color buffer at the point of capture, inside the Depth layer.
+            uniform sampler2D uSceneColorMap;
+
+            // normal map providing offsets
+            uniform sampler2D uOffsetMap;
+
+            // roughness map
+            uniform sampler2D uRoughnessMap;
+
+            // tint colors
+            uniform vec3 tints[4];
+
+            // engine built-in constant storing render target size in .xy and inverse size in .zw
+            uniform vec4 uScreenSize;
+
+            varying vec2 texCoord;
+
+            void main(void)
+            {
+                float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
+
+                // sample offset texture - used to add distortion to the sampled background
+                vec2 offset = texture2D(uOffsetMap, texCoord).rg;
+                offset = 2.0 * offset - 1.0;
+
+                // offset strength
+                offset *= (0.2 + roughness) * 0.015;
+
+                // get normalized uv coordinates for canvas
+                vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
+
+                // roughness dictates which mipmap level gets used, in 0..4 range
+                float mipmap = roughness * 5.0;
+
+                // get background pixel color with distorted offset
+                vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
+
+                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing
+                // (note - this could be worked around by using a series of if statements in this case)
+                #ifdef GL2
+                    float tintIndex = clamp(mipmap, 0.0, 3.0);
+                    grabColor *= tints[int(tintIndex)];
+                #endif
+
+                // brighten the refracted texture a little bit
+                // brighten even more the rough parts of the glass
+                gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
+            }
+        `
     }
 };
 
@@ -188,8 +255,86 @@ export const Graphics_HardwareInstancing = {
 export const Graphics_GroundFog = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            attribute vec3 vertex_position;\n            attribute vec2 vertex_texCoord0;\n\n            uniform mat4 matrix_model;\n            uniform mat4 matrix_viewProjection;\n            uniform float uTime;\n            uniform sampler2D uTexture;\n\n            varying vec2 texCoord0;\n            varying vec2 texCoord1;\n            varying vec2 texCoord2;\n            varying vec4 screenPos;\n            varying float depth;\n\n            void main(void)\n            {\n                // 3 scrolling texture coordinates with different direction and speed\n                texCoord0 = vertex_texCoord0 * 2.0 + vec2(uTime * 0.003, uTime * 0.01);\n                texCoord1 = vertex_texCoord0 * 1.5 + vec2(uTime * -0.02, uTime * 0.02);\n                texCoord2 = vertex_texCoord0 * 1.0 + vec2(uTime * 0.01, uTime * -0.003);\n\n                // sample the fog texture to have elevation for this vertex\n                vec2 offsetTexCoord = vertex_texCoord0 + vec2(uTime * 0.001, uTime * -0.0003);\n                float offset = texture2D(uTexture, offsetTexCoord).r;\n\n                // vertex in the world space\n                vec4 pos = matrix_model * vec4(vertex_position, 1.0);\n\n                // move it up based on the offset\n                pos.y += offset * 25.0;\n\n                // position in projected (screen) space\n                vec4 projPos = matrix_viewProjection * pos;\n                gl_Position = projPos;\n\n                // the linear depth of the vertex (in camera space)\n                depth = getLinearDepth(pos.xyz);\n\n                // screen fragment position, used to sample the depth texture\n                screenPos = projPos;\n            }\n        ",
-        "shader.frag": "\n            uniform sampler2D uTexture;\n            uniform float uSoftening;\n\n            varying vec2 texCoord0;\n            varying vec2 texCoord1;\n            varying vec2 texCoord2;\n            varying vec4 screenPos;\n            varying float depth;\n            \n            void main(void)\n            {\n                // sample the texture 3 times and compute average intensity of the fog\n                vec4 diffusTexture0 = texture2D (uTexture, texCoord0);\n                vec4 diffusTexture1 = texture2D (uTexture, texCoord1);\n                vec4 diffusTexture2 = texture2D (uTexture, texCoord2);\n                float alpha = 0.5 * (diffusTexture0.r + diffusTexture1.r + diffusTexture2.r);\n\n                // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords\n                vec2 screenCoord = getGrabScreenPos(screenPos);\n\n                // read the depth from the depth buffer\n                float sceneDepth = getLinearScreenDepth(screenCoord) * camera_params.x;\n\n                // depth of the current fragment (on the fog plane)\n                float fragmentDepth = depth * camera_params.x;\n\n                // difference between these two depths is used to adjust the alpha, to fade out\n                // the fog near the geometry\n                float depthDiff = clamp(abs(fragmentDepth - sceneDepth) * uSoftening, 0.0, 1.0);\n                alpha *= smoothstep(0.0, 1.0, depthDiff);\n\n                // final color\n                vec3 fogColor = vec3(1.0, 1.0, 1.0);\n                gl_FragColor = vec4(fogColor, alpha);\n            }\n        "
+        "shader.vert": /* glsl */`
+            attribute vec3 vertex_position;
+            attribute vec2 vertex_texCoord0;
+
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
+            uniform float uTime;
+            uniform sampler2D uTexture;
+
+            varying vec2 texCoord0;
+            varying vec2 texCoord1;
+            varying vec2 texCoord2;
+            varying vec4 screenPos;
+            varying float depth;
+
+            void main(void)
+            {
+                // 3 scrolling texture coordinates with different direction and speed
+                texCoord0 = vertex_texCoord0 * 2.0 + vec2(uTime * 0.003, uTime * 0.01);
+                texCoord1 = vertex_texCoord0 * 1.5 + vec2(uTime * -0.02, uTime * 0.02);
+                texCoord2 = vertex_texCoord0 * 1.0 + vec2(uTime * 0.01, uTime * -0.003);
+
+                // sample the fog texture to have elevation for this vertex
+                vec2 offsetTexCoord = vertex_texCoord0 + vec2(uTime * 0.001, uTime * -0.0003);
+                float offset = texture2D(uTexture, offsetTexCoord).r;
+
+                // vertex in the world space
+                vec4 pos = matrix_model * vec4(vertex_position, 1.0);
+
+                // move it up based on the offset
+                pos.y += offset * 25.0;
+
+                // position in projected (screen) space
+                vec4 projPos = matrix_viewProjection * pos;
+                gl_Position = projPos;
+
+                // the linear depth of the vertex (in camera space)
+                depth = getLinearDepth(pos.xyz);
+
+                // screen fragment position, used to sample the depth texture
+                screenPos = projPos;
+            }
+        `,
+        "shader.frag": /* glsl */`
+            uniform sampler2D uTexture;
+            uniform float uSoftening;
+
+            varying vec2 texCoord0;
+            varying vec2 texCoord1;
+            varying vec2 texCoord2;
+            varying vec4 screenPos;
+            varying float depth;
+            
+            void main(void)
+            {
+                // sample the texture 3 times and compute average intensity of the fog
+                vec4 diffusTexture0 = texture2D (uTexture, texCoord0);
+                vec4 diffusTexture1 = texture2D (uTexture, texCoord1);
+                vec4 diffusTexture2 = texture2D (uTexture, texCoord2);
+                float alpha = 0.5 * (diffusTexture0.r + diffusTexture1.r + diffusTexture2.r);
+
+                // use built-in getGrabScreenPos function to convert screen position to grab texture uv coords
+                vec2 screenCoord = getGrabScreenPos(screenPos);
+
+                // read the depth from the depth buffer
+                float sceneDepth = getLinearScreenDepth(screenCoord) * camera_params.x;
+
+                // depth of the current fragment (on the fog plane)
+                float fragmentDepth = depth * camera_params.x;
+
+                // difference between these two depths is used to adjust the alpha, to fade out
+                // the fog near the geometry
+                float depthDiff = clamp(abs(fragmentDepth - sceneDepth) * uSoftening, 0.0, 1.0);
+                alpha *= smoothstep(0.0, 1.0, depthDiff);
+
+                // final color
+                vec3 fogColor = vec3(1.0, 1.0, 1.0);
+                gl_FragColor = vec4(fogColor, alpha);
+            }
+        `
     }
 };
 
@@ -200,8 +345,198 @@ export const Graphics_IntegerTextures = {
     WEBGPU_ENABLED: true,
     DESCRIPTION: "<ul><li>Click to add sand<li>Shift-click to remove sand<li>Press space to reset.</ul>",
     FILES: {
-        "sandSimulation.frag": "\n            precision highp usampler2D;\n\n            uniform usampler2D sourceTexture;\n            uniform vec2 mousePosition;\n            uniform uint mouseButton;\n            uniform uint passNum;\n            uniform uint brush;\n            uniform float randomVal;\n            uniform float brushRadius;\n\n            varying vec2 uv0;\n\n            const uint AIR = 0u;\n            const uint SAND = 1u;\n            const uint ORANGESAND = 2u;\n            const uint GRAYSAND = 3u;\n            const uint WALL = 4u;\n                                    \n            bool isInBounds(ivec2 c, ivec2 size) {\n                return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;\n            }\n            \n            struct Particle {\n                uint element;        // 3 bits\n                bool movedThisFrame; // 1 bit\n                uint shade;          // 4 bits\n                uint waterMass;      // 8 bits\n            };\n\n            float rand(vec2 pos, float val) {\n                return fract(pos.x * pos.y * val * 1000.0);\n            }\n            \n            uint pack(Particle particle) {\n                uint packed = 0u;\n                packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits\n                packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit\n                packed |= (particle.shade << 4);          // Store shade in the next 4 bits\n            \n                return packed; // Second component is reserved/unused\n            }\n            \n            Particle unpack(uint packed) {\n                Particle particle;\n                particle.element = packed & 0x7u;                         // Extract lowest 3 bits\n                particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit\n                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            \n                return particle;\n            }\n\n            Particle getParticle(ivec2 c) {\n                uint val = texelFetch(sourceTexture, c, 0).r;\n                return unpack(val);\n            }\n                        \n            void main() {\n\n                ivec2 size = textureSize(sourceTexture, 0);\n                ivec2 coord = ivec2(uv0 * vec2(size));\n\n                if (!isInBounds(coord, size)) {\n                    gl_FragColor = WALL;\n                    return;\n                }\n            \n                float mouseDist = distance(mousePosition, uv0);\n                int dir = int(passNum % 3u) - 1;\n\n                Particle currentParticle = getParticle(coord);\n                Particle nextState = currentParticle;\n\n                if (mouseButton == 1u && mouseDist < brushRadius) {\n                    nextState.element = brush;\n                    nextState.movedThisFrame = true;\n                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);\n                } else if (mouseButton == 2u && mouseDist < brushRadius) {\n                    nextState.element = AIR;\n                    nextState.movedThisFrame = false;\n                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);\n                }\n                \n                currentParticle.movedThisFrame = false;\n                if (currentParticle.element == AIR) {\n                    Particle above = getParticle(coord + ivec2(dir, -1));\n                    if (above.element != AIR && above.element != WALL) {\n                        nextState = above;\n                        nextState.movedThisFrame = true;\n                    }\n                } else if (currentParticle.element != WALL) {\n                    Particle below = getParticle(coord + ivec2(-dir, 1));\n                    if (below.element == AIR && !below.movedThisFrame) {\n                        nextState = below;\n                        nextState.movedThisFrame = false;\n                    }\n                }\n\n                gl_FragColor = pack(nextState);\n            }\n        ",
-        "renderOutput.frag": "\n            precision highp usampler2D;\n            uniform usampler2D sourceTexture;\n            uniform vec2 mousePosition;\n            uniform float brushRadius;\n            varying vec2 uv0;\n\n            vec3 whiteColor = vec3(1.0);\n            vec3 skyBlueColor = vec3(0.2, 0.2, 0.2);\n            vec3 yellowSandColor = vec3(0.73, 0.58, 0.26);\n            vec3 orangeSandColor = vec3(0.87, 0.43, 0.22);\n            vec3 graySandColor = vec3(0.13, 0.16, 0.17);\n            vec3 grayWallColor = vec3(0.5, 0.5, 0.5);\n            vec3 waterBlueColor = vec3(0.2, 0.3, 0.8);\n\n            float circle( vec2 p, float r ) {\n                return length(p) - r;\n            }\n\n            const float circleOutline = 0.0025;\n\n            const uint AIR = 0u;\n            const uint SAND = 1u;\n            const uint ORANGESAND = 2u;\n            const uint GRAYSAND = 3u;\n            const uint WALL = 4u;\n                                    \n            bool isInBounds(ivec2 c, ivec2 size) {\n                return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;\n            }\n            \n            struct Particle {\n                uint element;        // 3 bits\n                bool movedThisFrame; // 1 bit\n                uint shade;          // 4 bits\n                uint waterMass;      // 8 bits\n            };\n\n            float rand(vec2 pos, float val) {\n                return fract(pos.x * pos.y * val * 1000.0);\n            }\n            \n            uint pack(Particle particle) {\n                uint packed = 0u;\n                packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits\n                packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit\n                packed |= (particle.shade << 4);          // Store shade in the next 4 bits\n            \n                return packed; // Second component is reserved/unused\n            }\n            \n            Particle unpack(uint packed) {\n                Particle particle;\n                particle.element = packed & 0x7u;                         // Extract lowest 3 bits\n                particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit\n                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            \n                return particle;\n            }\n\n            Particle getParticle(ivec2 c) {\n                uint val = texelFetch(sourceTexture, c, 0).r;\n                return unpack(val);\n            }\n\n            void main() {\n                ivec2 size = textureSize(sourceTexture, 0);\n                ivec2 coord = ivec2(uv0 * vec2(size));\n                Particle particle = getParticle(coord);\n                \n                vec3 gameColor = skyBlueColor;\n                if (particle.element == SAND) {\n                    gameColor = mix(yellowSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);\n                } else if (particle.element == WALL) {\n                    gameColor = grayWallColor;\n                } else if (particle.element == ORANGESAND) {\n                    gameColor = mix(orangeSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);\n                } else if (particle.element == GRAYSAND) {\n                    gameColor = mix(graySandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);\n                }\n\n                // Render a brush circle\n                float d = length(uv0 - mousePosition);\n                float wd = fwidth(d);\n                float circle = smoothstep(brushRadius + wd, brushRadius, d);\n                float circleInner = smoothstep(brushRadius - circleOutline + wd, brushRadius - circleOutline, d);\n                float brush = max(circle - circleInner, 0.0) * 0.5;\n\n                vec3 outColor = mix(gameColor, vec3(1.0), brush);\n\n                gl_FragColor = vec4(outColor, 1.0);\n            }\n        "
+        "sandSimulation.frag": /* glsl */`
+            precision highp usampler2D;
+
+            uniform usampler2D sourceTexture;
+            uniform vec2 mousePosition;
+            uniform uint mouseButton;
+            uniform uint passNum;
+            uniform uint brush;
+            uniform float randomVal;
+            uniform float brushRadius;
+
+            varying vec2 uv0;
+
+            const uint AIR = 0u;
+            const uint SAND = 1u;
+            const uint ORANGESAND = 2u;
+            const uint GRAYSAND = 3u;
+            const uint WALL = 4u;
+                                    
+            bool isInBounds(ivec2 c, ivec2 size) {
+                return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;
+            }
+            
+            struct Particle {
+                uint element;        // 3 bits
+                bool movedThisFrame; // 1 bit
+                uint shade;          // 4 bits
+                uint waterMass;      // 8 bits
+            };
+
+            float rand(vec2 pos, float val) {
+                return fract(pos.x * pos.y * val * 1000.0);
+            }
+            
+            uint pack(Particle particle) {
+                uint packed = 0u;
+                packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits
+                packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit
+                packed |= (particle.shade << 4);          // Store shade in the next 4 bits
+            
+                return packed; // Second component is reserved/unused
+            }
+            
+            Particle unpack(uint packed) {
+                Particle particle;
+                particle.element = packed & 0x7u;                         // Extract lowest 3 bits
+                particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit
+                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            
+                return particle;
+            }
+
+            Particle getParticle(ivec2 c) {
+                uint val = texelFetch(sourceTexture, c, 0).r;
+                return unpack(val);
+            }
+                        
+            void main() {
+
+                ivec2 size = textureSize(sourceTexture, 0);
+                ivec2 coord = ivec2(uv0 * vec2(size));
+
+                if (!isInBounds(coord, size)) {
+                    gl_FragColor = WALL;
+                    return;
+                }
+            
+                float mouseDist = distance(mousePosition, uv0);
+                int dir = int(passNum % 3u) - 1;
+
+                Particle currentParticle = getParticle(coord);
+                Particle nextState = currentParticle;
+
+                if (mouseButton == 1u && mouseDist < brushRadius) {
+                    nextState.element = brush;
+                    nextState.movedThisFrame = true;
+                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);
+                } else if (mouseButton == 2u && mouseDist < brushRadius) {
+                    nextState.element = AIR;
+                    nextState.movedThisFrame = false;
+                    nextState.shade = uint(rand(uv0, randomVal * float(passNum)) * 15.0);
+                }
+                
+                currentParticle.movedThisFrame = false;
+                if (currentParticle.element == AIR) {
+                    Particle above = getParticle(coord + ivec2(dir, -1));
+                    if (above.element != AIR && above.element != WALL) {
+                        nextState = above;
+                        nextState.movedThisFrame = true;
+                    }
+                } else if (currentParticle.element != WALL) {
+                    Particle below = getParticle(coord + ivec2(-dir, 1));
+                    if (below.element == AIR && !below.movedThisFrame) {
+                        nextState = below;
+                        nextState.movedThisFrame = false;
+                    }
+                }
+
+                gl_FragColor = pack(nextState);
+            }
+        `,
+        "renderOutput.frag": /* glsl */`
+            precision highp usampler2D;
+            uniform usampler2D sourceTexture;
+            uniform vec2 mousePosition;
+            uniform float brushRadius;
+            varying vec2 uv0;
+
+            vec3 whiteColor = vec3(1.0);
+            vec3 skyBlueColor = vec3(0.2, 0.2, 0.2);
+            vec3 yellowSandColor = vec3(0.73, 0.58, 0.26);
+            vec3 orangeSandColor = vec3(0.87, 0.43, 0.22);
+            vec3 graySandColor = vec3(0.13, 0.16, 0.17);
+            vec3 grayWallColor = vec3(0.5, 0.5, 0.5);
+            vec3 waterBlueColor = vec3(0.2, 0.3, 0.8);
+
+            float circle( vec2 p, float r ) {
+                return length(p) - r;
+            }
+
+            const float circleOutline = 0.0025;
+
+            const uint AIR = 0u;
+            const uint SAND = 1u;
+            const uint ORANGESAND = 2u;
+            const uint GRAYSAND = 3u;
+            const uint WALL = 4u;
+                                    
+            bool isInBounds(ivec2 c, ivec2 size) {
+                return c.x > 0 && c.x < size.x - 1 && c.y > 0 && c.y < size.y - 1;
+            }
+            
+            struct Particle {
+                uint element;        // 3 bits
+                bool movedThisFrame; // 1 bit
+                uint shade;          // 4 bits
+                uint waterMass;      // 8 bits
+            };
+
+            float rand(vec2 pos, float val) {
+                return fract(pos.x * pos.y * val * 1000.0);
+            }
+            
+            uint pack(Particle particle) {
+                uint packed = 0u;
+                packed |= (particle.element & 0x7u);      // Store element in the lowest 3 bits
+                packed |= ((particle.movedThisFrame ? 1u : 0u) << 3); // Store movedThisFrame in the next bit
+                packed |= (particle.shade << 4);          // Store shade in the next 4 bits
+            
+                return packed; // Second component is reserved/unused
+            }
+            
+            Particle unpack(uint packed) {
+                Particle particle;
+                particle.element = packed & 0x7u;                         // Extract lowest 3 bits
+                particle.movedThisFrame = ((packed >> 3) & 0x1u) != 0u;   // Extract the next bit
+                particle.shade = (packed >> 4) & 0xFu;                    // Extract the next 4 bits            
+                return particle;
+            }
+
+            Particle getParticle(ivec2 c) {
+                uint val = texelFetch(sourceTexture, c, 0).r;
+                return unpack(val);
+            }
+
+            void main() {
+                ivec2 size = textureSize(sourceTexture, 0);
+                ivec2 coord = ivec2(uv0 * vec2(size));
+                Particle particle = getParticle(coord);
+                
+                vec3 gameColor = skyBlueColor;
+                if (particle.element == SAND) {
+                    gameColor = mix(yellowSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
+                } else if (particle.element == WALL) {
+                    gameColor = grayWallColor;
+                } else if (particle.element == ORANGESAND) {
+                    gameColor = mix(orangeSandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
+                } else if (particle.element == GRAYSAND) {
+                    gameColor = mix(graySandColor, whiteColor, (float(particle.shade) / 15.0) * 0.5);
+                }
+
+                // Render a brush circle
+                float d = length(uv0 - mousePosition);
+                float wd = fwidth(d);
+                float circle = smoothstep(brushRadius + wd, brushRadius, d);
+                float circleInner = smoothstep(brushRadius - circleOutline + wd, brushRadius - circleOutline, d);
+                float brush = max(circle - circleInner, 0.0) * 0.5;
+
+                vec3 outColor = mix(gameColor, vec3(1.0), brush);
+
+                gl_FragColor = vec4(outColor, 1.0);
+            }
+        `
     }
 };
 
@@ -344,7 +679,15 @@ export const Graphics_MeshMorphMany = {
 export const Graphics_MultiRenderTargets = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "output.frag": "\n            #ifdef MYMRT_PASS\n                // output world normal to target 1\n                pcFragColor1 = vec4(litArgs_worldNormal * 0.5 + 0.5, 1.0);\n\n                // output gloss to target 2\n                pcFragColor2 = vec4(vec3(litArgs_gloss) , 1.0);\n            #endif\n        "
+        "output.frag": /* glsl */`
+            #ifdef MYMRT_PASS
+                // output world normal to target 1
+                pcFragColor1 = vec4(litArgs_worldNormal * 0.5 + 0.5, 1.0);
+
+                // output gloss to target 2
+                pcFragColor2 = vec4(vec3(litArgs_gloss) , 1.0);
+            #endif
+        `
     }
 };
 
@@ -361,8 +704,50 @@ export const Graphics_Painter = {
 export const Graphics_PaintMesh = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            // Attributes per vertex: position and uv\n            attribute vec4 aPosition;\n            attribute vec2 aUv0;\n        \n            // model matrix of the mesh\n            uniform mat4 matrix_model;\n\n            // decal view-projection matrix (orthographic)\n            uniform mat4 matrix_decal_viewProj;\n\n            // decal projected position to fragment program\n            varying vec4 decalPos;\n\n            void main(void)\n            {\n                // handle upside-down uv coordinates on WebGPU\n                vec2 uv = getImageEffectUV(aUv0);\n\n                // We render in texture space, so a position of this fragment is its uv-coordinates.\n                // Change the range of uv coordinates from 0..1 to projection space -1 to 1.\n                gl_Position = vec4(uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 0, 1.0);\n\n                // transform the vertex position to world space and then to decal space, and pass it\n                // to the fragment shader to sample the decal texture\n                vec4 worldPos = matrix_model * aPosition;\n                decalPos = matrix_decal_viewProj * worldPos;\n            }",
-        "shader.frag": "\n            precision lowp float;\n            varying vec4 decalPos;\n            uniform sampler2D uDecalMap;\n\n            void main(void)\n            {\n                // decal space position from -1..1 range, to texture space range 0..1\n                vec4 p = decalPos * 0.5 + 0.5;\n \n                // if the position is outside out 0..1 projection box, ignore the pixel\n                if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0)\n                    discard;\n\n                gl_FragColor = texture2D(uDecalMap, p.xy);\n            }"
+        "shader.vert": /* glsl */`
+            // Attributes per vertex: position and uv
+            attribute vec4 aPosition;
+            attribute vec2 aUv0;
+        
+            // model matrix of the mesh
+            uniform mat4 matrix_model;
+
+            // decal view-projection matrix (orthographic)
+            uniform mat4 matrix_decal_viewProj;
+
+            // decal projected position to fragment program
+            varying vec4 decalPos;
+
+            void main(void)
+            {
+                // handle upside-down uv coordinates on WebGPU
+                vec2 uv = getImageEffectUV(aUv0);
+
+                // We render in texture space, so a position of this fragment is its uv-coordinates.
+                // Change the range of uv coordinates from 0..1 to projection space -1 to 1.
+                gl_Position = vec4(uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 0, 1.0);
+
+                // transform the vertex position to world space and then to decal space, and pass it
+                // to the fragment shader to sample the decal texture
+                vec4 worldPos = matrix_model * aPosition;
+                decalPos = matrix_decal_viewProj * worldPos;
+            }`,
+        "shader.frag": /* glsl */`
+            precision lowp float;
+            varying vec4 decalPos;
+            uniform sampler2D uDecalMap;
+
+            void main(void)
+            {
+                // decal space position from -1..1 range, to texture space range 0..1
+                vec4 p = decalPos * 0.5 + 0.5;
+ 
+                // if the position is outside out 0..1 projection box, ignore the pixel
+                if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z < 0.0 || p.z > 1.0)
+                    discard;
+
+                gl_FragColor = texture2D(uDecalMap, p.xy);
+            }`
     }
 };
 
@@ -378,8 +763,54 @@ export const Graphics_ParticlesSnow = {
  */
 export const Graphics_PointCloudSimulation = {
     FILES: {
-        "shader.vert": "\n// Attributes per vertex: position\nattribute vec4 aPosition;\n\nuniform mat4   matrix_viewProjection;\nuniform mat4   matrix_model;\n\n// position of the camera\nuniform vec3 view_position;\n\n// Color to fragment program\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // Transform the geometry\n    mat4 modelViewProj = matrix_viewProjection * matrix_model;\n    gl_Position = modelViewProj * aPosition;\n\n    // vertex in world space\n    vec4 vertexWorld = matrix_model * aPosition;\n\n    // point sprite size depends on its distance to camera\n    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0\n    #ifndef WEBGPU\n        float dist = 25.0 - length(vertexWorld.xyz - view_position);\n        gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);\n    #endif\n\n    // color depends on position of particle\n    outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1.0);\n}",
-        "shader.frag": "\nprecision mediump float;\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // color supplied by vertex shader\n    gl_FragColor = outColor;\n\n    // Using gl_PointCoord in WebGPU fails to compile with: \"unknown SPIR-V builtin: 16\"\n    #ifndef WEBGPU\n        // make point round instead of square - make pixels outside of the circle black, using provided gl_PointCoord\n        vec2 dist = gl_PointCoord.xy - vec2(0.5, 0.5);\n        gl_FragColor.a = 1.0 - smoothstep(0.4, 0.5, sqrt(dot(dist, dist)));\n    #endif\n}"
+        "shader.vert": /* glsl */`
+// Attributes per vertex: position
+attribute vec4 aPosition;
+
+uniform mat4   matrix_viewProjection;
+uniform mat4   matrix_model;
+
+// position of the camera
+uniform vec3 view_position;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    // Transform the geometry
+    mat4 modelViewProj = matrix_viewProjection * matrix_model;
+    gl_Position = modelViewProj * aPosition;
+
+    // vertex in world space
+    vec4 vertexWorld = matrix_model * aPosition;
+
+    // point sprite size depends on its distance to camera
+    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+    #ifndef WEBGPU
+        float dist = 25.0 - length(vertexWorld.xyz - view_position);
+        gl_PointSize = clamp(dist * 2.0 - 1.0, 1.0, 15.0);
+    #endif
+
+    // color depends on position of particle
+    outColor = vec4(vertexWorld.y * 0.1, 0.1, vertexWorld.z * 0.1, 1.0);
+}`,
+        "shader.frag": /* glsl */`
+precision mediump float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // color supplied by vertex shader
+    gl_FragColor = outColor;
+
+    // Using gl_PointCoord in WebGPU fails to compile with: \"unknown SPIR-V builtin: 16\"
+    #ifndef WEBGPU
+        // make point round instead of square - make pixels outside of the circle black, using provided gl_PointCoord
+        vec2 dist = gl_PointCoord.xy - vec2(0.5, 0.5);
+        gl_FragColor.a = 1.0 - smoothstep(0.4, 0.5, sqrt(dot(dist, dist)));
+    #endif
+}`
     }
 };
 
@@ -402,8 +833,52 @@ export const Graphics_PostEffects = {
  */
 export const Graphics_PointCloud = {
     FILES: {
-        "shader.vert": "\n// Attributes per vertex: position\nattribute vec4 aPosition;\n\nuniform mat4   matrix_viewProjection;\nuniform mat4   matrix_model;\n\n// time\nuniform float uTime;\n\n// Color to fragment program\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // Transform the geometry\n    mat4 modelViewProj = matrix_viewProjection * matrix_model;\n    gl_Position = modelViewProj * aPosition;\n\n    // vertex in world space\n    vec4 vertexWorld = matrix_model * aPosition;\n\n    // use sine way to generate intensity value based on time and also y-coordinate of model\n    float intensity = abs(sin(0.6 * vertexWorld.y + uTime * 1.0));\n\n    // intensity smoothly drops to zero for smaller values than 0.9\n    intensity = smoothstep(0.9, 1.0, intensity);\n\n    // point size depends on intensity\n    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0\n    #ifndef WEBGPU\n        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);\n    #endif\n\n    // color mixes red and yellow based on intensity\n    outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);\n}",
-        "shader.frag": "\nprecision lowp float;\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // just output color supplied by vertex shader\n    gl_FragColor = outColor;\n}"
+        "shader.vert": /* glsl */`
+// Attributes per vertex: position
+attribute vec4 aPosition;
+
+uniform mat4   matrix_viewProjection;
+uniform mat4   matrix_model;
+
+// time
+uniform float uTime;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    // Transform the geometry
+    mat4 modelViewProj = matrix_viewProjection * matrix_model;
+    gl_Position = modelViewProj * aPosition;
+
+    // vertex in world space
+    vec4 vertexWorld = matrix_model * aPosition;
+
+    // use sine way to generate intensity value based on time and also y-coordinate of model
+    float intensity = abs(sin(0.6 * vertexWorld.y + uTime * 1.0));
+
+    // intensity smoothly drops to zero for smaller values than 0.9
+    intensity = smoothstep(0.9, 1.0, intensity);
+
+    // point size depends on intensity
+    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+    #ifndef WEBGPU
+        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
+    #endif
+
+    // color mixes red and yellow based on intensity
+    outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
+}`,
+        "shader.frag": /* glsl */`
+precision lowp float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // just output color supplied by vertex shader
+    gl_FragColor = outColor;
+}`
     }
 };
 
@@ -448,8 +923,34 @@ export const Graphics_ReflectionCubemap = {
 export const Graphics_ReflectionPlanar = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            attribute vec3 aPosition;\n            attribute vec2 aUv0;\n\n            uniform mat4 matrix_model;\n            uniform mat4 matrix_viewProjection;\n\n            void main(void)\n            {\n                gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);;\n            }",
-        "shader.frag": "\n\n            // engine built-in constant storing render target size in .xy and inverse size in .zw\n            uniform vec4 uScreenSize;\n\n            // reflection texture\n            uniform sampler2D uDiffuseMap;\n\n            void main(void)\n            {\n                // sample reflection texture\n                vec2 coord = gl_FragCoord.xy * uScreenSize.zw;\n                coord.y = 1.0 - coord.y;\n                vec4 reflection = texture2D(uDiffuseMap, coord);\n\n                gl_FragColor = vec4(reflection.xyz * 0.7, 1);\n            }"
+        "shader.vert": /* glsl */`
+            attribute vec3 aPosition;
+            attribute vec2 aUv0;
+
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
+
+            void main(void)
+            {
+                gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);;
+            }`,
+        "shader.frag": /* glsl */`
+
+            // engine built-in constant storing render target size in .xy and inverse size in .zw
+            uniform vec4 uScreenSize;
+
+            // reflection texture
+            uniform sampler2D uDiffuseMap;
+
+            void main(void)
+            {
+                // sample reflection texture
+                vec2 coord = gl_FragCoord.xy * uScreenSize.zw;
+                coord.y = 1.0 - coord.y;
+                vec4 reflection = texture2D(uDiffuseMap, coord);
+
+                gl_FragColor = vec4(reflection.xyz * 0.7, 1);
+            }`
     }
 };
 
@@ -466,8 +967,41 @@ export const Graphics_RenderPass = {
 export const Graphics_ShaderBurn = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\nattribute vec3 aPosition;\nattribute vec2 aUv0;\n\nuniform mat4 matrix_model;\nuniform mat4 matrix_viewProjection;\n\nvarying vec2 vUv0;\n\nvoid main(void)\n{\n    vUv0 = aUv0;\n    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);\n}",
-        "shader.frag": "\nprecision mediump float;\n\nvarying vec2 vUv0;\n\nuniform sampler2D uDiffuseMap;\nuniform sampler2D uHeightMap;\nuniform float uTime;\n\nvoid main(void)\n{\n    float height = texture2D(uHeightMap, vUv0).r;\n    vec4 color = texture2D(uDiffuseMap, vUv0);\n    if (height < uTime) {\n    discard;\n    }\n    if (height < (uTime + uTime * 0.1)) {\n    color = vec4(1.0, 0.2, 0.0, 1.0);\n    }\n    gl_FragColor = color;\n}"
+        "shader.vert": /* glsl */`
+attribute vec3 aPosition;
+attribute vec2 aUv0;
+
+uniform mat4 matrix_model;
+uniform mat4 matrix_viewProjection;
+
+varying vec2 vUv0;
+
+void main(void)
+{
+    vUv0 = aUv0;
+    gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+}`,
+        "shader.frag": /* glsl */`
+precision mediump float;
+
+varying vec2 vUv0;
+
+uniform sampler2D uDiffuseMap;
+uniform sampler2D uHeightMap;
+uniform float uTime;
+
+void main(void)
+{
+    float height = texture2D(uHeightMap, vUv0).r;
+    vec4 color = texture2D(uDiffuseMap, vUv0);
+    if (height < uTime) {
+    discard;
+    }
+    if (height < (uTime + uTime * 0.1)) {
+    color = vec4(1.0, 0.2, 0.0, 1.0);
+    }
+    gl_FragColor = color;
+}`
     }
 };
 
@@ -498,8 +1032,35 @@ export const Graphics_ShadowCascades = {
 export const Graphics_ShaderWobble = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\nattribute vec3 aPosition;\nattribute vec2 aUv0;\n\nuniform mat4 matrix_model;\nuniform mat4 matrix_viewProjection;\nuniform float uTime;\n\nvarying vec2 vUv0;\n\nvoid main(void)\n{\n    vec4 pos = matrix_model * vec4(aPosition, 1.0);\n    pos.x += sin(uTime + pos.y * 4.0) * 0.1;\n    pos.y += cos(uTime + pos.x * 4.0) * 0.1;\n    vUv0 = aUv0;\n    gl_Position = matrix_viewProjection * pos;\n}",
-        "shader.frag": "\nprecision mediump float;\n\nuniform sampler2D uDiffuseMap;\n\nvarying vec2 vUv0;\n\nvoid main(void)\n{\n    gl_FragColor = texture2D(uDiffuseMap, vUv0);\n}"
+        "shader.vert": /* glsl */`
+attribute vec3 aPosition;
+attribute vec2 aUv0;
+
+uniform mat4 matrix_model;
+uniform mat4 matrix_viewProjection;
+uniform float uTime;
+
+varying vec2 vUv0;
+
+void main(void)
+{
+    vec4 pos = matrix_model * vec4(aPosition, 1.0);
+    pos.x += sin(uTime + pos.y * 4.0) * 0.1;
+    pos.y += cos(uTime + pos.x * 4.0) * 0.1;
+    vUv0 = aUv0;
+    gl_Position = matrix_viewProjection * pos;
+}`,
+        "shader.frag": /* glsl */`
+precision mediump float;
+
+uniform sampler2D uDiffuseMap;
+
+varying vec2 vUv0;
+
+void main(void)
+{
+    gl_FragColor = texture2D(uDiffuseMap, vUv0);
+}`
     }
 };
 
@@ -516,8 +1077,60 @@ export const Graphics_Shapes = {
 export const Graphics_ShaderToon = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n// Attributes per vertex: position, normal and texture coordinates\nattribute vec4 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aUv;\n\nuniform mat4   matrix_viewProjection;\nuniform mat4   matrix_model;\nuniform mat4   matrix_view;\nuniform mat3   matrix_normal;\nuniform vec3   uLightPos;\n\n// Color to fragment program\nvarying float vertOutTexCoord;\nvarying vec2 texCoord;\n\nvoid main(void)\n{\n    mat4 modelView = matrix_view * matrix_model;\n    mat4 modelViewProj = matrix_viewProjection * matrix_model;\n\n    // Get surface normal in eye coordinates\n    vec3 eyeNormal = normalize(matrix_normal * aNormal);\n\n    // Get vertex position in eye coordinates\n    vec4 vertexPos = modelView * aPosition;\n    vec3 vertexEyePos = vertexPos.xyz / vertexPos.w;\n\n    // Get vector to light source\n    vec3 lightDir = normalize(uLightPos - vertexEyePos);\n\n    // Dot product gives us diffuse intensity. The diffuse intensity will be\n    // used as the 1D color texture coordinate to look for the color of the\n    // resulting fragment (see fragment shader).\n    vertOutTexCoord = max(0.0, dot(eyeNormal, lightDir));\n    texCoord = aUv;\n\n    // Transform the geometry\n    gl_Position = modelViewProj * aPosition;\n}",
-        "shader.frag": "\nprecision mediump float;\nuniform sampler2D uTexture;\nvarying float vertOutTexCoord;\nvarying vec2 texCoord;\nvoid main(void)\n{\n    float v = vertOutTexCoord;\n    v = float(int(v * 6.0)) / 6.0;\n    // vec4 color = texture2D (uTexture, texCoord); // try this to use the diffuse color.\n    vec4 color = vec4(0.5, 0.47, 0.43, 1.0);\n    gl_FragColor = color * vec4(v, v, v, 1.0);\n}\n"
+        "shader.vert": /* glsl */`
+// Attributes per vertex: position, normal and texture coordinates
+attribute vec4 aPosition;
+attribute vec3 aNormal;
+attribute vec2 aUv;
+
+uniform mat4   matrix_viewProjection;
+uniform mat4   matrix_model;
+uniform mat4   matrix_view;
+uniform mat3   matrix_normal;
+uniform vec3   uLightPos;
+
+// Color to fragment program
+varying float vertOutTexCoord;
+varying vec2 texCoord;
+
+void main(void)
+{
+    mat4 modelView = matrix_view * matrix_model;
+    mat4 modelViewProj = matrix_viewProjection * matrix_model;
+
+    // Get surface normal in eye coordinates
+    vec3 eyeNormal = normalize(matrix_normal * aNormal);
+
+    // Get vertex position in eye coordinates
+    vec4 vertexPos = modelView * aPosition;
+    vec3 vertexEyePos = vertexPos.xyz / vertexPos.w;
+
+    // Get vector to light source
+    vec3 lightDir = normalize(uLightPos - vertexEyePos);
+
+    // Dot product gives us diffuse intensity. The diffuse intensity will be
+    // used as the 1D color texture coordinate to look for the color of the
+    // resulting fragment (see fragment shader).
+    vertOutTexCoord = max(0.0, dot(eyeNormal, lightDir));
+    texCoord = aUv;
+
+    // Transform the geometry
+    gl_Position = modelViewProj * aPosition;
+}`,
+        "shader.frag": /* glsl */`
+precision mediump float;
+uniform sampler2D uTexture;
+varying float vertOutTexCoord;
+varying vec2 texCoord;
+void main(void)
+{
+    float v = vertOutTexCoord;
+    v = float(int(v * 6.0)) / 6.0;
+    // vec4 color = texture2D (uTexture, texCoord); // try this to use the diffuse color.
+    vec4 color = vec4(0.5, 0.47, 0.43, 1.0);
+    gl_FragColor = color * vec4(v, v, v, 1.0);
+}
+`
     }
 };
 
@@ -541,9 +1154,52 @@ export const Graphics_TextureBasis = {
 export const Graphics_TextureArray = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            attribute vec3 aPosition;\n            attribute vec2 aUv0;\n            attribute vec3 aNormal;\n\n            uniform mat4 matrix_model;\n            uniform mat4 matrix_viewProjection;\n            uniform mat3 matrix_normal;\n\n            varying vec2 vUv0;\n            varying vec3 worldNormal;\n\n            void main(void)\n            {\n                vUv0 = aUv0;\n                worldNormal = normalize(matrix_normal * aNormal);\n                gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);\n            }",
-        "shader.frag": "\n            varying vec2 vUv0;\n            varying vec3 worldNormal;\n            uniform float uTime;\n\n            uniform mediump sampler2DArray uDiffuseMap;\n\n            void main(void)\n            {\n                // sample different texture based on time along its texture v-coordinate\n                float index = (sin(uTime + vUv0.y + vUv0.x * 0.5) * 0.5 + 0.5) * 4.0;\n                vec4 data = texture(uDiffuseMap, vec3(vUv0, floor(index)));\n\n                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting\n                gl_FragColor = vec4(data.rgb, 1.0);\n            }",
-        "ground.frag": "\n            varying vec2 vUv0;\n            varying vec3 worldNormal;\n\n            uniform mediump sampler2DArray uDiffuseMap;\n\n            void main(void)\n            {\n                vec4 data = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));\n                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting\n                gl_FragColor = vec4(data.rgb, 1.0);\n            }"
+        "shader.vert": /* glsl */`
+            attribute vec3 aPosition;
+            attribute vec2 aUv0;
+            attribute vec3 aNormal;
+
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
+            uniform mat3 matrix_normal;
+
+            varying vec2 vUv0;
+            varying vec3 worldNormal;
+
+            void main(void)
+            {
+                vUv0 = aUv0;
+                worldNormal = normalize(matrix_normal * aNormal);
+                gl_Position = matrix_viewProjection * matrix_model * vec4(aPosition, 1.0);
+            }`,
+        "shader.frag": /* glsl */`
+            varying vec2 vUv0;
+            varying vec3 worldNormal;
+            uniform float uTime;
+
+            uniform mediump sampler2DArray uDiffuseMap;
+
+            void main(void)
+            {
+                // sample different texture based on time along its texture v-coordinate
+                float index = (sin(uTime + vUv0.y + vUv0.x * 0.5) * 0.5 + 0.5) * 4.0;
+                vec4 data = texture(uDiffuseMap, vec3(vUv0, floor(index)));
+
+                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting
+                gl_FragColor = vec4(data.rgb, 1.0);
+            }`,
+        "ground.frag": /* glsl */`
+            varying vec2 vUv0;
+            varying vec3 worldNormal;
+
+            uniform mediump sampler2DArray uDiffuseMap;
+
+            void main(void)
+            {
+                vec4 data = texture(uDiffuseMap, vec3(vUv0, step(vUv0.x, 0.5) + 2.0 * step(vUv0.y, 0.5)));
+                data.rgb *= 0.8 * max(dot(worldNormal, vec3(0.1, 1.0, 0.5)), 0.0) + 0.5; // simple lighting
+                gl_FragColor = vec4(data.rgb, 1.0);
+            }`
     }
 };
 
@@ -553,9 +1209,88 @@ export const Graphics_TextureArray = {
 export const Graphics_TransformFeedback = {
     WEBGPU_ENABLED: false,
     FILES: {
-        "shaderFeedback.vert": "\n// vertex shader used to move particles during transform-feedback simulation step\n\n// input and output is vec4, containing position in .xyz and lifetime in .w\nattribute vec4 vertex_position;\nvarying vec4 out_vertex_position;\n\n// parameters controlling simulation\nuniform float deltaTime;\nuniform float areaSize;\n\n// texture storing random direction vectors\nuniform sampler2D directionSampler;\n\n// function returning random number based on vec2 seed parameter\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nvoid main(void) {\n\n    // texture contains direction of particle movement - read it based on particle's position\n    vec2 texCoord = vertex_position.xz / areaSize + 0.5;\n    vec3 dir = texture2D(directionSampler, texCoord).xyz;\n    dir = dir * 2.0 - 1.0;\n\n    // move particle along direction with some speed\n    float speed = 20.0 * deltaTime;\n    vec3 pos = vertex_position.xyz + dir * speed;\n\n    // age the particle\n    float liveTime = vertex_position.w;\n    liveTime -= deltaTime;\n\n    // if particle is too old, regenerate it\n    if (liveTime <= 0.0) {\n\n        // random life time\n        liveTime = rand(pos.xy) * 2.0;\n\n        // random position\n        pos.x = rand(pos.xz) * areaSize - 0.5 * areaSize;\n        pos.y = rand(pos.xy) * 4.0;\n        pos.z = rand(pos.yz) * areaSize - 0.5 * areaSize;\n    }\n\n    // write out updated particle\n    out_vertex_position = vec4(pos, liveTime);\n}",
-        "shaderCloud.vert": "\n// vertex shader used to render point sprite particles\n\n// Attributes per vertex: position\nattribute vec4 aPosition;\n\nuniform mat4   matrix_viewProjection;\n\n// Color to fragment program\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // Transform the geometry (ignore life time which is stored in .w of position)\n    vec4 worldPosition = vec4(aPosition.xyz, 1);\n    gl_Position = matrix_viewProjection * worldPosition;\n\n    // point sprite size\n    gl_PointSize = 2.0;\n\n    // color depends on position of particle\n    outColor = vec4(worldPosition.y * 0.25, 0.1, worldPosition.z * 0.2, 1);\n}",
-        "shaderCloud.frag": "\n// fragment shader used to render point sprite particles\nprecision mediump float;\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // color supplied by vertex shader\n    gl_FragColor = outColor;\n}"
+        "shaderFeedback.vert": /* glsl */`
+// vertex shader used to move particles during transform-feedback simulation step
+
+// input and output is vec4, containing position in .xyz and lifetime in .w
+attribute vec4 vertex_position;
+varying vec4 out_vertex_position;
+
+// parameters controlling simulation
+uniform float deltaTime;
+uniform float areaSize;
+
+// texture storing random direction vectors
+uniform sampler2D directionSampler;
+
+// function returning random number based on vec2 seed parameter
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main(void) {
+
+    // texture contains direction of particle movement - read it based on particle's position
+    vec2 texCoord = vertex_position.xz / areaSize + 0.5;
+    vec3 dir = texture2D(directionSampler, texCoord).xyz;
+    dir = dir * 2.0 - 1.0;
+
+    // move particle along direction with some speed
+    float speed = 20.0 * deltaTime;
+    vec3 pos = vertex_position.xyz + dir * speed;
+
+    // age the particle
+    float liveTime = vertex_position.w;
+    liveTime -= deltaTime;
+
+    // if particle is too old, regenerate it
+    if (liveTime <= 0.0) {
+
+        // random life time
+        liveTime = rand(pos.xy) * 2.0;
+
+        // random position
+        pos.x = rand(pos.xz) * areaSize - 0.5 * areaSize;
+        pos.y = rand(pos.xy) * 4.0;
+        pos.z = rand(pos.yz) * areaSize - 0.5 * areaSize;
+    }
+
+    // write out updated particle
+    out_vertex_position = vec4(pos, liveTime);
+}`,
+        "shaderCloud.vert": /* glsl */`
+// vertex shader used to render point sprite particles
+
+// Attributes per vertex: position
+attribute vec4 aPosition;
+
+uniform mat4   matrix_viewProjection;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    // Transform the geometry (ignore life time which is stored in .w of position)
+    vec4 worldPosition = vec4(aPosition.xyz, 1);
+    gl_Position = matrix_viewProjection * worldPosition;
+
+    // point sprite size
+    gl_PointSize = 2.0;
+
+    // color depends on position of particle
+    outColor = vec4(worldPosition.y * 0.25, 0.1, worldPosition.z * 0.2, 1);
+}`,
+        "shaderCloud.frag": /* glsl */`
+// fragment shader used to render point sprite particles
+precision mediump float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // color supplied by vertex shader
+    gl_FragColor = outColor;
+}`
     }
 };
 
@@ -599,8 +1334,43 @@ export const Loaders_DracoGlb = {
  */
 export const Loaders_GsplatMany = {
     FILES: {
-        "shader.vert": "\n            uniform float uTime;\n            varying float height;\n\n            void main(void)\n            {\n                // evaluate center of the splat in object space\n                vec3 centerLocal = evalCenter();\n\n                // modify it\n                float heightIntensity = centerLocal.y * 0.2;\n                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3 * heightIntensity;\n\n                // output y-coordinate\n                height = centerLocal.y;\n\n                // evaluate the rest of the splat using world space center\n                vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);\n                gl_Position = evalSplat(centerWorld);\n            }\n        ",
-        "shader.frag": "\n            uniform float uTime;\n            varying float height;\n\n            void main(void)\n            {\n                // get splat color and alpha\n                gl_FragColor = evalSplat();\n\n                // modify it\n                vec3 gold = vec3(1.0, 0.85, 0.0);\n                float sineValue = abs(sin(uTime * 5.0 + height));\n                float blend = smoothstep(0.9, 1.0, sineValue);\n                gl_FragColor.xyz = mix(gl_FragColor.xyz, gold, blend);\n            }\n        "
+        "shader.vert": /* glsl */`
+            uniform float uTime;
+            varying float height;
+
+            void main(void)
+            {
+                // evaluate center of the splat in object space
+                vec3 centerLocal = evalCenter();
+
+                // modify it
+                float heightIntensity = centerLocal.y * 0.2;
+                centerLocal.x += sin(uTime * 5.0 + centerLocal.y) * 0.3 * heightIntensity;
+
+                // output y-coordinate
+                height = centerLocal.y;
+
+                // evaluate the rest of the splat using world space center
+                vec4 centerWorld = matrix_model * vec4(centerLocal, 1.0);
+                gl_Position = evalSplat(centerWorld);
+            }
+        `,
+        "shader.frag": /* glsl */`
+            uniform float uTime;
+            varying float height;
+
+            void main(void)
+            {
+                // get splat color and alpha
+                gl_FragColor = evalSplat();
+
+                // modify it
+                vec3 gold = vec3(1.0, 0.85, 0.0);
+                float sineValue = abs(sin(uTime * 5.0 + height));
+                float blend = smoothstep(0.9, 1.0, sineValue);
+                gl_FragColor.xyz = mix(gl_FragColor.xyz, gold, blend);
+            }
+        `
     }
 };
 
@@ -625,8 +1395,38 @@ export const Loaders_UsdzExport = {
  */
 export const Loaders_LoadersGl = {
     FILES: {
-        "shader.vert": "\n            // Attributes per vertex: position\n            attribute vec4 aPosition;\n            attribute vec4 aColor;\n            \n            uniform mat4   matrix_viewProjection;\n            uniform mat4   matrix_model;\n            \n            // Color to fragment program\n            varying vec4 outColor;\n            \n            void main(void)\n            {\n                mat4 modelViewProj = matrix_viewProjection * matrix_model;\n                gl_Position = modelViewProj * aPosition;\n            \n                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0\n                #ifndef WEBGPU\n                    gl_PointSize = 1.5;\n                #endif\n            \n                outColor = aColor;\n            }",
-        "shader.frag": "\n            precision lowp float;\n            varying vec4 outColor;\n            \n            void main(void)\n            {\n                // just output color supplied by vertex shader\n                gl_FragColor = outColor;\n            }"
+        "shader.vert": /* glsl */`
+            // Attributes per vertex: position
+            attribute vec4 aPosition;
+            attribute vec4 aColor;
+            
+            uniform mat4   matrix_viewProjection;
+            uniform mat4   matrix_model;
+            
+            // Color to fragment program
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                mat4 modelViewProj = matrix_viewProjection * matrix_model;
+                gl_Position = modelViewProj * aPosition;
+            
+                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+                #ifndef WEBGPU
+                    gl_PointSize = 1.5;
+                #endif
+            
+                outColor = aColor;
+            }`,
+        "shader.frag": /* glsl */`
+            precision lowp float;
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                // just output color supplied by vertex shader
+                gl_FragColor = outColor;
+            }`
     }
 };
 
@@ -737,8 +1537,65 @@ export const UserInterface_LayoutGroup = {
 export const UserInterface_CustomShader = {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n/**\n * Simple Screen-Space Vertex Shader with one UV coordinate.\n * This shader is useful for simple UI shaders.\n * \n * Usage: the following attributes must be configured when creating a new pc.Shader:\n *   vertex_position: pc.SEMANTIC_POSITION\n *   vertex_texCoord0: pc.SEMANTIC_TEXCOORD0\n */\n\n// Default PlayCanvas uniforms\nuniform mat4 matrix_viewProjection;\nuniform mat4 matrix_model;\n\n// Additional inputs\nattribute vec3 vertex_position;\nattribute vec2 vertex_texCoord0;\n\n// Additional shader outputs\nvarying vec2 vUv0;\n\nvoid main(void) {\n    // UV is simply passed along as varying\n    vUv0 = vertex_texCoord0;\n\n    // Position for screen-space\n    gl_Position = matrix_model * vec4(vertex_position, 1.0);\n    gl_Position.zw = vec2(0.0, 1.0);\n}",
-        "shader.frag": "\n/**\n * Simple Color-Inverse Fragment Shader with intensity control.\n * \n * Usage: the following parameters must be set:\n *   uDiffuseMap: image texture.\n *   amount: float that controls the amount of the inverse-color effect. 0 means none (normal color), while 1 means full inverse.\n *\n * Additionally, the Vertex shader that is paired with this Fragment shader must specify:\n *   varying vec2 vUv0: for the UV.\n */\n\n// The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured\n// on a per-device basis before loading the Shader. Please check the accompanying TypeScript code and look for 'app.graphicsDevice.precision'.\n\n// precision mediump float;\n\n// Additional varying from vertex shader\nvarying vec2 vUv0;\n\n// Custom Parameters (must be set from code via material.setParameter())\nuniform sampler2D uDiffuseMap;\nuniform float amount;\n\nvoid main(void)\n{\n    vec4 color = texture2D(uDiffuseMap, vUv0);\n    vec3 roloc = 1.0 - color.rgb;\n    gl_FragColor = vec4(mix(color.rgb, roloc, amount), color.a);\n}"
+        "shader.vert": /* glsl */`
+/**
+ * Simple Screen-Space Vertex Shader with one UV coordinate.
+ * This shader is useful for simple UI shaders.
+ * 
+ * Usage: the following attributes must be configured when creating a new pc.Shader:
+ *   vertex_position: pc.SEMANTIC_POSITION
+ *   vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
+ */
+
+// Default PlayCanvas uniforms
+uniform mat4 matrix_viewProjection;
+uniform mat4 matrix_model;
+
+// Additional inputs
+attribute vec3 vertex_position;
+attribute vec2 vertex_texCoord0;
+
+// Additional shader outputs
+varying vec2 vUv0;
+
+void main(void) {
+    // UV is simply passed along as varying
+    vUv0 = vertex_texCoord0;
+
+    // Position for screen-space
+    gl_Position = matrix_model * vec4(vertex_position, 1.0);
+    gl_Position.zw = vec2(0.0, 1.0);
+}`,
+        "shader.frag": /* glsl */`
+/**
+ * Simple Color-Inverse Fragment Shader with intensity control.
+ * 
+ * Usage: the following parameters must be set:
+ *   uDiffuseMap: image texture.
+ *   amount: float that controls the amount of the inverse-color effect. 0 means none (normal color), while 1 means full inverse.
+ *
+ * Additionally, the Vertex shader that is paired with this Fragment shader must specify:
+ *   varying vec2 vUv0: for the UV.
+ */
+
+// The following line is for setting the shader precision for floats. It is commented out because, ideally, it must be configured
+// on a per-device basis before loading the Shader. Please check the accompanying TypeScript code and look for 'app.graphicsDevice.precision'.
+
+// precision mediump float;
+
+// Additional varying from vertex shader
+varying vec2 vUv0;
+
+// Custom Parameters (must be set from code via material.setParameter())
+uniform sampler2D uDiffuseMap;
+uniform float amount;
+
+void main(void)
+{
+    vec4 color = texture2D(uDiffuseMap, vUv0);
+    vec3 roloc = 1.0 - color.rgb;
+    gl_FragColor = vec4(mix(color.rgb, roloc, amount), color.a);
+}`
     }
 };
 
