@@ -113,6 +113,7 @@ class ZoneComponent extends Component {
      * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
      * attached to.
      */
+    // eslint-disable-next-line no-useless-constructor
     constructor(system, entity) {
         super(system, entity);
     }
