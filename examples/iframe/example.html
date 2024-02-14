@@ -66,43 +66,43 @@
                 app = await module.example();
                 window.ready = true;
 
-                // Wait until example has called app.start()
-                // And if it already called start, we will know by app.frame > 0
-                // app.start() is called when assets loaded in examples
-                if (app) {
-                    const startHandler = () => {
+                const start = (app) => {
+                    if (app) {
                         if (!app?.graphicsDevice?.canvas) {
                             console.warn('No canvas found.');
                             return;
                         }
-
+    
                         MiniStats.enable(app, true);
-
-                        if (!started) { 
-                            // only one time, recalls of load() are caused by Monaco live coding
-                            fire('exampleLoad', { files, description: DESCRIPTION });
-                        }
-                        started = true;
-
-                        fire('updateFiles', { files });
-                        fire('updateActiveDevice', { deviceType: app?.graphicsDevice?.deviceType });
-
-                        allowRestart = true;
-                    };
-                    if (app.frame) { // app already started
-                        startHandler();
-                    } else { // Wait for app.start()
-                        app.once('start', startHandler);
                     }
-                } else {
-                    // The example function didn't return an app instance
-                    // still update the UI and assume it has started.
-                    fire('exampleLoad', { files, description: DESCRIPTION });
+
+                    if (!started) { 
+                        // Sets code editor component files
+                        // Sets example component files (for controls + description)
+                        // Sets mini stats enabled state based on UI
+                        fire('exampleLoad', { files, description: DESCRIPTION });
+                    }
                     started = true;
 
+                    // Updates controls UI
                     fire('updateFiles', { files });
 
+                    if (app) {
+                        // Updates device UI
+                        fire('updateActiveDevice', { deviceType: app?.graphicsDevice?.deviceType });
+                    }
+
                     allowRestart = true;
+                };
+
+                if (app) {
+                    if (app.frame) {
+                        start(app);
+                    } else {
+                        app.once('start', () => start(app))
+                    }
+                } else {
+                    start(null);
                 }
             }
 
@@ -130,7 +130,7 @@
                 destroy();
             }
 
-            async function start() {
+            async function main() {
                 await import('@ENGINE');
                 await import('./playcanvas-extras.js');
 
@@ -155,7 +155,7 @@
             window.addEventListener('destroy', destroy);
             window.addEventListener('beforeunload', beforeunload, false);
             
-            document.addEventListener('DOMContentLoaded', start);
+            document.addEventListener('DOMContentLoaded', main);
         </script>
     </body>
 </html>
