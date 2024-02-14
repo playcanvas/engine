@@ -26,7 +26,6 @@
             import config from 'config';
             import { loadES5, getQueryParams, getDeviceType, fire } from 'utils';
             import MiniStats from 'ministats';
-            // import * as module from '@MODULE';
 
             window.ready = false; // Used in indicate if UI can render Controls
 
@@ -130,6 +129,11 @@
                 destroy();
             }
 
+            async function readFile(src) {
+                const res = await fetch(src);
+                return await res.text();
+            }
+
             async function main() {
                 await import('@ENGINE');
                 await import('./playcanvas-extras.js');
@@ -137,13 +141,9 @@
                 window.top.pc = pc;
                 window.top.pcx = window.pcx;
 
-                const res = await fetch('@MODULE');
-                const txt = await res.text();
+                files['example.mjs'] = await readFile('@EXAMPLE');
+                files['controls.mjs'] = await readFile('@CONTROLS');
 
-                files['example.mjs'] = txt;
-                // if (module.controls) {
-                //     files['controls.mjs'] = module.controls.toString();
-                // }
                 Object.assign(files, FILES);
 
                 await load(files);

@@ -23,7 +23,7 @@ export function controls({ observer, ReactPCUI, React, jsx }) {
 }
 
 /**
- * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

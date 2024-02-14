@@ -65,11 +65,11 @@ function generateExampleFile(categoryPascal, exampleNamePascal, config) {
     // canvas
     html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
-    // module
-    html = html.replace(/'@MODULE'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.mjs`));
-
-    // config
-    html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${categoryPascal}_${exampleNamePascal}.config.mjs`));
+    // js files
+    const name = `${categoryPascal}_${exampleNamePascal}`;
+    html = html.replace(/'@EXAMPLE'/g, JSON.stringify(`./${name}.example.mjs`));
+    html = html.replace(/'@CONTROLS'/g, JSON.stringify(`./${name}.controls.mjs`));
+    html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${name}.config.mjs`));
 
     // engine
     const engineType = process.env.ENGINE_PATH ? 'DEVELOPMENT' : process.env.NODE_ENV === 'development' ? 'DEBUG' : config.ENGINE;
@@ -104,7 +104,7 @@ function main() {
     }
 
     exampleMetaData.forEach((data) => {
-        const { categoryPascal, exampleNamePascal, path } = data;
+        const { categoryPascal, exampleNamePascal, examplePath, controlsPath } = data;
         const name = `${categoryPascal}_${exampleNamePascal}`;
 
         // html files
@@ -113,8 +113,10 @@ function main() {
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
         // js files
-        const script = fs.readFileSync(path, 'utf-8');
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.mjs`, patchScript(script));
+        let script = fs.readFileSync(examplePath, 'utf-8');
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
+        script = fs.readFileSync(controlsPath, 'utf-8');
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
 
         // config files
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, `export default ${stringify(config[name] ?? {})};\n`);
