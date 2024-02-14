@@ -6,9 +6,9 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return fragment(
         jsx(Button, {
-            text: 'Flash',
+            text: "Flash",
             onClick: () => {
-                observer.set('flash', !observer.get('flash'));
+                observer.set("flash", !observer.get("flash"));
             }
         })
     );

@@ -5,7 +5,7 @@
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return jsx(Button, {
-        text: 'Download USDZ',
-        onClick: () => observer.emit('download'),
+        text: "Download USDZ",
+        onClick: () => observer.emit("download")
     });
 }

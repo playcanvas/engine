@@ -1,4 +1,4 @@
-import * as pc from 'playcanvas';
+import * as pc from "playcanvas";
 
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -7,69 +7,85 @@ import * as pc from 'playcanvas';
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, VectorInput, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
     return fragment(
-        jsx(Panel, { headerText: 'Sky' },
-            jsx(LabelGroup, { text: 'Preset' },
+        jsx(
+            Panel,
+            { headerText: "Sky" },
+            jsx(
+                LabelGroup,
+                { text: "Preset" },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.preset' },
+                    link: { observer, path: "data.skybox.preset" },
                     type: "string",
                     options: [
-                        { v: 'Street Dome', t: 'Street Dome' },
-                        { v: 'Street Infinite', t: 'Street Infinite' },
-                        { v: 'Room', t: 'Room' }
+                        { v: "Street Dome", t: "Street Dome" },
+                        { v: "Street Infinite", t: "Street Infinite" },
+                        { v: "Room", t: "Room" }
                     ]
                 })
             ),
-            jsx(LabelGroup, { text: 'Type' },
+            jsx(
+                LabelGroup,
+                { text: "Type" },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.type' },
+                    link: { observer, path: "data.skybox.type" },
                     type: "string",
                     options: [
-                        { v: pc.SKYTYPE_INFINITE, t: 'Infinite' },
-                        { v: pc.SKYTYPE_BOX, t: 'Box' },
-                        { v: pc.SKYTYPE_DOME, t: 'Dome' }
+                        { v: pc.SKYTYPE_INFINITE, t: "Infinite" },
+                        { v: pc.SKYTYPE_BOX, t: "Box" },
+                        { v: pc.SKYTYPE_DOME, t: "Dome" }
                     ]
                 })
             ),
-            jsx(LabelGroup, { text: 'Exposure' },
+            jsx(
+                LabelGroup,
+                { text: "Exposure" },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.exposure' },
+                    link: { observer, path: "data.skybox.exposure" },
                     min: 0,
                     max: 3,
                     precision: 2
                 })
             ),
-            jsx(LabelGroup, { text: 'Rotation' },
+            jsx(
+                LabelGroup,
+                { text: "Rotation" },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.rotation' },
+                    link: { observer, path: "data.skybox.rotation" },
                     min: 0,
                     max: 360,
                     precision: 0
                 })
             ),
-            jsx(LabelGroup, { text: 'Scale' },
+            jsx(
+                LabelGroup,
+                { text: "Scale" },
                 jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.scale' },
+                    link: { observer, path: "data.skybox.scale" },
                     value: [1, 1, 1],
                     precision: 1
                 })
             ),
-            jsx(LabelGroup, { text: 'Position' },
+            jsx(
+                LabelGroup,
+                { text: "Position" },
                 jsx(VectorInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.position' },
+                    link: { observer, path: "data.skybox.position" },
                     value: [0, 0, 0],
                     precision: 1
                 })
             ),
-            jsx(LabelGroup, { text: 'Tripod Y' },
+            jsx(
+                LabelGroup,
+                { text: "Tripod Y" },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'data.skybox.tripodY' },
+                    link: { observer, path: "data.skybox.tripodY" },
                     min: 0,
                     max: 1,
                     precision: 2

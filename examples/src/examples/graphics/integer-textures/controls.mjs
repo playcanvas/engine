@@ -1,4 +1,4 @@
-import * as pc from 'playcanvas';
+import * as pc from "playcanvas";
 
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -9,40 +9,48 @@ export function controls({ observer, ReactPCUI, jsx, fragment }) {
 
     return fragment(
         jsx(InfoBox, {
-            icon: 'E218',
-            title: 'WebGL 1.0',
-            text: 'Integer textures are not supported on WebGL 1.0 devices',
+            icon: "E218",
+            title: "WebGL 1.0",
+            text: "Integer textures are not supported on WebGL 1.0 devices",
             hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
         }),
-        jsx(Panel, { headerText: 'Sand simulation' },
-            jsx(LabelGroup, { text: 'Brush' },
+        jsx(
+            Panel,
+            { headerText: "Sand simulation" },
+            jsx(
+                LabelGroup,
+                { text: "Brush" },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'options.brush' },
+                    link: { observer, path: "options.brush" },
                     type: "string",
                     value: 1,
                     options: [
-                        { v: 1, t: 'Sand' },
-                        { v: 2, t: 'Orange Sand' },
-                        { v: 3, t: 'Gray Sand' },
-                        { v: 4, t: 'Stone' }
+                        { v: 1, t: "Sand" },
+                        { v: 2, t: "Orange Sand" },
+                        { v: 3, t: "Gray Sand" },
+                        { v: 4, t: "Stone" }
                     ]
                 })
             ),
-            jsx(LabelGroup, { text: 'Brush size' },
+            jsx(
+                LabelGroup,
+                { text: "Brush size" },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: 'options.brushSize' },
+                    link: { observer, path: "options.brushSize" },
                     value: 8,
                     min: 1,
                     max: 16,
                     precision: 0
                 })
             ),
-            jsx(Container, { flex: true, flexGrow: 1 },
+            jsx(
+                Container,
+                { flex: true, flexGrow: 1 },
                 jsx(Button, {
-                    text: 'Reset',
-                    onClick: () => observer.emit('reset')
+                    text: "Reset",
+                    onClick: () => observer.emit("reset")
                 })
             )
         )

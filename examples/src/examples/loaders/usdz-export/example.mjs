@@ -1,85 +1,80 @@
-import * as pc from 'playcanvas';
-import { getDeviceType } from 'utils';
+import * as pc from "playcanvas";
+import { getDeviceType } from "utils";
 
-/**
- * @returns {Promise<pc.AppBase>} The example application.
- */
-export async function example() {
-    const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById("application-canvas");
 
-    const assets = {
-        helipad: new pc.Asset('helipad-env-atlas', 'texture', { url: '/static/assets/cubemaps/helipad-env-atlas.png' }, { type: pc.TEXTURETYPE_RGBP, mipmaps: false }),
-        bench: new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' })
-    };
+const assets = {
+    helipad: new pc.Asset(
+        "helipad-env-atlas",
+        "texture",
+        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
+    ),
+    bench: new pc.Asset("bench", "container", { url: "/static/assets/models/bench_wooden_01.glb" })
+};
 
-    const gfxOptions = {
-        deviceTypes: [getDeviceType()],
-        glslangUrl: '/static/lib/glslang/glslang.js',
-        twgslUrl: '/static/lib/twgsl/twgsl.js'
-    };
+const gfxOptions = {
+    deviceTypes: [getDeviceType()],
+    glslangUrl: "/static/lib/glslang/glslang.js",
+    twgslUrl: "/static/lib/twgsl/twgsl.js"
+};
 
-    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
-    const createOptions = new pc.AppOptions();
-    createOptions.graphicsDevice = device;
+const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+const createOptions = new pc.AppOptions();
+createOptions.graphicsDevice = device;
 
-    createOptions.componentSystems = [
-        pc.RenderComponentSystem,
-        pc.CameraComponentSystem,
-        pc.LightComponentSystem
-    ];
-    createOptions.resourceHandlers = [
-        pc.TextureHandler,
-        pc.ContainerHandler
-    ];
+createOptions.componentSystems = [pc.RenderComponentSystem, pc.CameraComponentSystem, pc.LightComponentSystem];
+createOptions.resourceHandlers = [pc.TextureHandler, pc.ContainerHandler];
 
-    const app = new pc.AppBase(canvas);
-    app.init(createOptions);
+const app = new pc.AppBase(canvas);
+app.init(createOptions);
 
-    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+// Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-    // Ensure canvas is resized when window changes size
-    const resize = () => app.resizeCanvas();
-    window.addEventListener('resize', resize);
-    app.on('destroy', () => {
-        window.removeEventListener('resize', resize);
+// Ensure canvas is resized when window changes size
+const resize = () => app.resizeCanvas();
+window.addEventListener("resize", resize);
+app.on("destroy", () => {
+    window.removeEventListener("resize", resize);
+});
+
+const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
+assetListLoader.load(() => {
+    app.start();
+
+    // get the instance of the bench and set up with render component
+    const entity = assets.bench.resource.instantiateRenderEntity();
+    app.root.addChild(entity);
+
+    // Create an Entity with a camera component
+    const camera = new pc.Entity();
+    camera.addComponent("camera", {
+        clearColor: new pc.Color(0.2, 0.1, 0.1),
+        farClip: 100
     });
+    camera.translate(-3, 1, 2);
+    camera.lookAt(0, 0.5, 0);
+    app.root.addChild(camera);
 
-    const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-    assetListLoader.load(() => {
+    // set skybox
+    app.scene.envAtlas = assets.helipad.resource;
+    app.scene.toneMapping = pc.TONEMAP_ACES;
+    app.scene.skyboxMip = 1;
 
-        app.start();
+    // a link element, created in the html part of the examples.
+    const link = document.getElementById("ar-link");
 
-        // get the instance of the bench and set up with render component
-        const entity = assets.bench.resource.instantiateRenderEntity();
-        app.root.addChild(entity);
+    // convert the loaded entity into asdz file
+    const options = {
+        maxTextureSize: 1024
+    };
 
-        // Create an Entity with a camera component
-        const camera = new pc.Entity();
-        camera.addComponent("camera", {
-            clearColor: new pc.Color(0.2, 0.1, 0.1),
-            farClip: 100
-        });
-        camera.translate(-3, 1, 2);
-        camera.lookAt(0, 0.5, 0);
-        app.root.addChild(camera);
-
-        // set skybox
-        app.scene.envAtlas = assets.helipad.resource;
-        app.scene.toneMapping = pc.TONEMAP_ACES;
-        app.scene.skyboxMip = 1;
-
-        // a link element, created in the html part of the examples.
-        const link = document.getElementById('ar-link');
-
-        // convert the loaded entity into asdz file
-        const options = {
-            maxTextureSize: 1024
-        };
-
-        new pcx.UsdzExporter().build(entity, options).then((arrayBuffer) => {
-            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
+    new pcx.UsdzExporter()
+        .build(entity, options)
+        .then((arrayBuffer) => {
+            const blob = new Blob([arrayBuffer], { type: "application/octet-stream" });
 
             // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
             // the download of the .asdz file triggers its opening in QuickLook AT mode.
@@ -90,19 +85,20 @@ export async function example() {
 
             // @ts-ignore
             link.href = URL.createObjectURL(blob);
-        }).catch(console.error);
+        })
+        .catch(console.error);
 
-        // when clicking on the download UI button, trigger the download
-        data.on('download', function () {
-            link.click();
-        });
-
-        // spin the meshe
-        app.on("update", function (dt) {
-            if (entity) {
-                entity.rotate(0, -12 * dt, 0);
-            }
-        });
+    // when clicking on the download UI button, trigger the download
+    data.on("download", function () {
+        link.click();
     });
-    return app;
-}
+
+    // spin the meshe
+    app.on("update", function (dt) {
+        if (entity) {
+            entity.rotate(0, -12 * dt, 0);
+        }
+    });
+});
+
+export { app };
