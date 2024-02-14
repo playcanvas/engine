@@ -2,14 +2,7 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 import { loadES5 } from 'utils';
 
-// todo simply import "@loaders.gl/core";
-// https://loaders.gl/docs/developer-guide/get-started
-// TODO: https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/es6/
-
 /**
- * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../app/components/Example.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

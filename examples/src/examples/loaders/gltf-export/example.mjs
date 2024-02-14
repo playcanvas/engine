@@ -1,19 +1,7 @@
 import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
-/**
- * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
- * @returns {JSX.Element} The returned JSX Element.
- */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { Button } = ReactPCUI;
-    return jsx(Button, {
-        text: 'Download GLTF',
-        onClick: () => observer.emit('download')
-    });
-}
 
 /**
- * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

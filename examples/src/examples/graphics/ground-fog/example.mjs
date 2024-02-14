@@ -2,27 +2,6 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 
 /**
- * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
- * @returns {JSX.Element} The returned JSX Element.
- */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { BindingTwoWay, BooleanInput, LabelGroup } = ReactPCUI;
-    return jsx(LabelGroup, { text: 'softness' },
-        jsx(BooleanInput, {
-            type: 'toggle',
-            binding: new BindingTwoWay(),
-            link: {
-                observer,
-                path: 'data.softness'
-            }
-        })
-    )
-}
-
-/**
- * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../app/components/Example.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

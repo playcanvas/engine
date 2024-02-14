@@ -1,13 +1,7 @@
 import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 
-// Color textures have been converted with the following arguments:
-//   basisu seaside-rocks01-gloss.jpg -q 255 -mipmap
-// The normalmap has been converted with the following arguments:
-//   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
-
 /**
- * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

@@ -2,37 +2,6 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 
 /**
- * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
- * @returns {JSX.Element} The returned JSX Element.
- */
-export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
-    const { InfoBox, BindingTwoWay, LabelGroup, Panel, BooleanInput } = ReactPCUI;
-    return fragment(
-        jsx(InfoBox, {
-            icon: 'E218',
-            title: 'WebGL 1.0',
-            text: 'Texture Arrays are not supported on WebGL 1.0 devices',
-            hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
-        }),
-        jsx(Panel, { headerText: 'Texture Arrays' },
-            jsx(LabelGroup, { text: 'Show mipmaps' },
-                jsx(BooleanInput, {
-                    type: "toggle",
-                    binding: new BindingTwoWay(),
-                    link: {
-                        observer,
-                        path: 'mipmaps'
-                    }
-                })
-            )
-        )
-    );
-}
-
-/**
- * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../app/components/Example.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {
@@ -271,4 +240,3 @@ export async function example() {
     });
     return app;
 }
-

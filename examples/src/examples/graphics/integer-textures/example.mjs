@@ -2,58 +2,6 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 
 /**
- * @param {import('../../app/components/Example.mjs').ControlOptions} options - The options.
- * @returns {JSX.Element} The returned JSX Element.
- */
-export function controls({ observer, ReactPCUI, jsx, fragment }) {
-    const { BindingTwoWay, Container, Button, InfoBox, LabelGroup, Panel, SliderInput, SelectInput } = ReactPCUI;
-
-    return fragment(
-        jsx(InfoBox, {
-            icon: 'E218',
-            title: 'WebGL 1.0',
-            text: 'Integer textures are not supported on WebGL 1.0 devices',
-            hidden: !(pc.app?.graphicsDevice.isWebGL1 ?? false)
-        }),
-        jsx(Panel, { headerText: 'Sand simulation' },
-            jsx(LabelGroup, { text: 'Brush' },
-                jsx(SelectInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'options.brush' },
-                    type: "string",
-                    value: 1,
-                    options: [
-                        { v: 1, t: 'Sand' },
-                        { v: 2, t: 'Orange Sand' },
-                        { v: 3, t: 'Gray Sand' },
-                        { v: 4, t: 'Stone' }
-                    ]
-                })
-            ),
-            jsx(LabelGroup, { text: 'Brush size' },
-                jsx(SliderInput, {
-                    binding: new BindingTwoWay(),
-                    link: { observer, path: 'options.brushSize' },
-                    value: 8,
-                    min: 1,
-                    max: 16,
-                    precision: 0
-                })
-            ),
-            jsx(Container, { flex: true, flexGrow: 1 },
-                jsx(Button, {
-                    text: 'Reset',
-                    onClick: () => observer.emit('reset')
-                })
-            )
-        )
-    );
-}
-
-/**
- * @typedef {{ 'sandSimulation.frag': string, 'renderOutput.frag': string }} Files
- * @typedef {import('../../app/components/Example.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

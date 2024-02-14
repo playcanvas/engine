@@ -2,9 +2,6 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from 'utils';
 
 /**
- * @typedef {{ 'output.frag': string }} Files
- * @typedef {import('../../app/components/Example.mjs').ExampleOptions<Files>} Options
- * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {

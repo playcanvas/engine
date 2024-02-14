@@ -63,37 +63,21 @@ function main() {
             const exampleNameKebab = toKebabCase(exampleName);
             const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
 
-//             let contents = fs.readFileSync(examplePath, 'utf-8');
-//             const regex = /(\s*import[\s\w*{}]+["']\w+["']\s*;?[\s\r\n]*)/g;
-//             let imports;
-//             const top = [];
-//             while (imports = regex.exec(contents)) {
-//                 top.push(imports[1].trim());
-//             }
-
-//             const header = `/**
-//  * @returns {Promise<pc.AppBase>} The example application.
-//  */`;
-
-//             contents = contents.replace(/(\s*import[\s\w*{}]+["']\w+["']\s*;?[\s\r\n]*)/g, '');
-//             fs.writeFileSync(exampleFile)
-
-
-            // exampleMetaData.push({
-            //     examplePath,
-            //     controlsPath,
-            //     categoryKebab,
-            //     categoryPascal,
-            //     exampleNameKebab,
-            //     exampleNamePascal
-            // });
+            exampleMetaData.push({
+                examplePath,
+                controlsPath,
+                categoryKebab,
+                categoryPascal,
+                exampleNameKebab,
+                exampleNamePascal
+            });
         });
     });
 
-    // if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
-    //     fs.mkdirSync(`${MAIN_DIR}/cache`);
-    // }
+    if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
+        fs.mkdirSync(`${MAIN_DIR}/cache`);
+    }
 
-    // fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
+    fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
 }
 main();

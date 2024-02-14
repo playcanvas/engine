@@ -1,7 +1,6 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../app/components/Example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 export async function example() {
