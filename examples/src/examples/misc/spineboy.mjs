@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
@@ -24,19 +24,13 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.JsonHandler,
-        // @ts-ignore
         pc.TextHandler
     ];
 
@@ -107,7 +101,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class SpineboyExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Spineboy';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

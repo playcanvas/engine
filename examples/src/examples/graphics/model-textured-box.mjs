@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
@@ -21,15 +21,11 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler
     ];
 
@@ -113,7 +109,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 export class ModelTexturedBoxExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Textured Box';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

@@ -41,6 +41,18 @@ Object.defineProperty(OrbitCamera.prototype, "distance", {
     }
 });
 
+// Property to get and set the camera orthoHeight
+// Clamped above 0
+Object.defineProperty(OrbitCamera.prototype, "orthoHeight", {
+    get: function () {
+        return this.entity.camera.orthoHeight;
+    },
+
+    set: function (value) {
+        this.entity.camera.orthoHeight = Math.max(0, value);
+    }
+});
+
 
 // Property to get and set the pitch of the camera around the pivot point (degrees)
 // Clamped between this.pitchAngleMin and this.pitchAngleMax
@@ -298,6 +310,15 @@ OrbitCamera.prototype._buildAabb = function (entity) {
         }
     }
 
+    var gsplats = entity.findComponents("gsplat");
+    for (i = 0; i < gsplats.length; i++) {
+        var gsplat = gsplats[i];
+        var instance = gsplat.instance;
+        if (instance) {
+            meshInstances.push(instance.meshInstance);
+        }
+    }
+
     for (i = 0; i < meshInstances.length; i++) {
         if (i === 0) {
             this._modelsAabb.copy(meshInstances[i].aabb);
@@ -472,7 +493,11 @@ OrbitCameraInputMouse.prototype.onMouseMove = function (event) {
 
 
 OrbitCameraInputMouse.prototype.onMouseWheel = function (event) {
-    this.orbitCamera.distance -= event.wheel * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+    if (this.entity.camera.projection === pc.PROJECTION_PERSPECTIVE) {
+        this.orbitCamera.distance -= event.wheel * this.distanceSensitivity * (this.orbitCamera.distance * 0.1);
+    } else {
+        this.orbitCamera.orthoHeight -= event.wheel * this.distanceSensitivity;
+    }
     event.event.preventDefault();
 };
 

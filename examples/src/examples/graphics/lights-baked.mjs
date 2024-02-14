@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, glslangPath, twgslPath }) {
@@ -16,15 +16,11 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
 
-    // @ts-ignore
     createOptions.lightmapper = pc.Lightmapper;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
 
@@ -154,7 +150,5 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class LightsBakedExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights Baked';
     static example = example;
-    static WEBGPU_ENABLED = false; // house is black
 }

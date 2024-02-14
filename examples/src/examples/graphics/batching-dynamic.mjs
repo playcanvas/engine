@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, glslangPath, twgslPath }) {
@@ -16,15 +16,11 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
     const createOptions = new pc.AppOptions();
     createOptions.graphicsDevice = device;
 
-    // @ts-ignore
     createOptions.batchManager = pc.BatchManager;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
 
@@ -144,7 +140,6 @@ async function example({ canvas, deviceType, glslangPath, twgslPath }) {
 
 export class BatchingDynamicExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Batching Dynamic';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

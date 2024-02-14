@@ -20,12 +20,12 @@ const _colorUniformNames = ['uSceneColorMap', 'texture_grabPass'];
 class RenderPassColorGrab extends RenderPass {
     colorRenderTarget = null;
 
-    camera = null;
-
-    constructor(device, camera) {
-        super(device);
-        this.camera = camera;
-    }
+    /**
+     * The source render target to grab the color from.
+     *
+     * @type {RenderTarget|null}
+     */
+    source = null;
 
     destroy() {
         super.destroy();
@@ -92,18 +92,18 @@ class RenderPassColorGrab extends RenderPass {
         }
     }
 
-    before() {
+    frameUpdate() {
 
-        const camera = this.camera;
         const device = this.device;
 
-        // based on the RT the camera renders to, otherwise framebuffer
-        const sourceFormat = camera.renderTarget?.colorBuffer.format ?? this.device.backBufferFormat;
+        // resize based on the source render target
+        const sourceRt = this.source;
+        const sourceFormat = sourceRt?.colorBuffer.format ?? this.device.backBufferFormat;
 
         // allocate / resize existing RT as needed
-        if (this.shouldReallocate(this.colorRenderTarget, camera.renderTarget?.colorBuffer, sourceFormat)) {
+        if (this.shouldReallocate(this.colorRenderTarget, sourceRt?.colorBuffer, sourceFormat)) {
             this.releaseRenderTarget(this.colorRenderTarget);
-            this.colorRenderTarget = this.allocateRenderTarget(this.colorRenderTarget, camera.renderTarget, device, sourceFormat);
+            this.colorRenderTarget = this.allocateRenderTarget(this.colorRenderTarget, sourceRt, device, sourceFormat);
         }
 
         // assign uniform
@@ -117,18 +117,19 @@ class RenderPassColorGrab extends RenderPass {
         const device = this.device;
         DebugGraphics.pushGpuMarker(device, 'GRAB-COLOR');
 
+        const sourceRt = this.source;
         const colorBuffer = this.colorRenderTarget.colorBuffer;
 
         if (device.isWebGPU) {
 
-            device.copyRenderTarget(this.camera.renderTarget, this.colorRenderTarget, true, false);
+            device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 
             // generate mipmaps
             device.mipmapRenderer.generate(this.colorRenderTarget.colorBuffer.impl);
 
         } else if (device.isWebGL2) {
 
-            device.copyRenderTarget(device.renderTarget, this.colorRenderTarget, true, false);
+            device.copyRenderTarget(sourceRt, this.colorRenderTarget, true, false);
 
             // generate mipmaps
             device.activeTexture(device.maxCombinedTextures - 1);

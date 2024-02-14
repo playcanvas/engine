@@ -85,8 +85,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data }) {
@@ -122,19 +121,13 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.CubemapHandler
     ];
 
@@ -343,7 +336,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class LightsExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Lights';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

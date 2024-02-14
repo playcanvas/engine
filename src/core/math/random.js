@@ -16,7 +16,7 @@ const random = {
      * @param {import('./vec2.js').Vec2} point - The returned generated point.
      * @ignore
      */
-    circlePoint: function (point) {
+    circlePoint(point) {
         const r = Math.sqrt(Math.random());
         const theta = Math.random() * 2 * Math.PI;
         point.x = r * Math.cos(theta);
@@ -32,7 +32,7 @@ const random = {
      * @param {number} numPoints - The total number of points of the set.
      * @ignore
      */
-    circlePointDeterministic: function (point, index, numPoints) {
+    circlePointDeterministic(point, index, numPoints) {
         const theta = index * _goldenAngle;
         const r = Math.sqrt(index) / Math.sqrt(numPoints);
 
@@ -56,7 +56,7 @@ const random = {
      * 0 and 1. Defaults to 1.
      * @ignore
      */
-    spherePointDeterministic: function (point, index, numPoints, start = 0, end = 1) {
+    spherePointDeterministic(point, index, numPoints, start = 0, end = 1) {
 
         // y coordinate needs to go from -1 (top) to 1 (bottom) for the full sphere
         // evaluate its value for this point and specified start and end
@@ -83,7 +83,7 @@ const random = {
      * @returns {number} The pseudo-random value.
      * @ignore
      */
-    radicalInverse: function (i) {
+    radicalInverse(i) {
         let bits = ((i << 16) | (i >>> 16)) >>> 0;
         bits = (((bits & 0x55555555) << 1) | ((bits & 0xAAAAAAAA) >>> 1)) >>> 0;
         bits = (((bits & 0x33333333) << 2) | ((bits & 0xCCCCCCCC) >>> 2)) >>> 0;

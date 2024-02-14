@@ -11,7 +11,6 @@ import {
     BUFFER_STATIC, TYPE_FLOAT32, TYPE_UINT32, SEMANTIC_ATTR15, ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST,
     PIXELFORMAT_RGBA16F, PIXELFORMAT_RGB32F, PIXELFORMAT_RGBA32F
 } from '../platform/graphics/constants.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 
 /**
  * Contains a list of {@link MorphTarget}, a combined delta AABB and some associated data.
@@ -42,8 +41,8 @@ class Morph extends RefCountedObject {
     constructor(targets, graphicsDevice, { preferHighPrecision = false } = {}) {
         super();
 
-        Debug.assertDeprecated(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
-        this.device = graphicsDevice || GraphicsDeviceAccess.get();
+        Debug.assert(graphicsDevice, "Morph constructor takes a GraphicsDevice as a parameter, and it was not provided.");
+        this.device = graphicsDevice;
 
         this.preferHighPrecision = preferHighPrecision;
 
