@@ -25,7 +25,7 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     ],
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'gizmo.type' },
-                    onSelect: this.setType
+                    onSelect: window.setType
                 })
             ),
             (type === 'translate' || type === 'rotate') &&
