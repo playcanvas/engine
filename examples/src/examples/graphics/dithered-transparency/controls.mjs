@@ -1,4 +1,4 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -9,13 +9,13 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "Settings" },
+            { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: "Opacity" },
+                { text: 'Opacity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.opacity" },
+                    link: { observer, path: 'data.opacity' },
                     min: 0.0,
                     max: 1,
                     precision: 2
@@ -23,29 +23,29 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Dither Color" },
+                { text: 'Dither Color' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.opacityDither" },
-                    type: "string",
+                    link: { observer, path: 'data.opacityDither' },
+                    type: 'string',
                     options: [
-                        { v: pc.DITHER_NONE, t: "None" },
-                        { v: pc.DITHER_BAYER8, t: "Bayer8" },
-                        { v: pc.DITHER_BLUENOISE, t: "BlueNoise" }
+                        { v: pc.DITHER_NONE, t: 'None' },
+                        { v: pc.DITHER_BAYER8, t: 'Bayer8' },
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
                     ]
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "Dither Shadow" },
+                { text: 'Dither Shadow' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.opacityShadowDither" },
-                    type: "string",
+                    link: { observer, path: 'data.opacityShadowDither' },
+                    type: 'string',
                     options: [
-                        { v: pc.DITHER_NONE, t: "None" },
-                        { v: pc.DITHER_BAYER8, t: "Bayer8" },
-                        { v: pc.DITHER_BLUENOISE, t: "BlueNoise" }
+                        { v: pc.DITHER_NONE, t: 'None' },
+                        { v: pc.DITHER_BAYER8, t: 'Bayer8' },
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
                     ]
                 })
             )

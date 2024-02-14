@@ -1,30 +1,30 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
     /** @type {HTMLDivElement} */
-    let el = document.querySelector(".message");
+    let el = document.querySelector('.message');
     if (!el) {
-        el = document.createElement("div");
-        el.classList.add("message");
-        el.style.position = "absolute";
-        el.style.bottom = "96px";
-        el.style.right = "0";
-        el.style.padding = "8px 16px";
-        el.style.fontFamily = "Helvetica, Arial, sans-serif";
-        el.style.color = "#fff";
-        el.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+        el = document.createElement('div');
+        el.classList.add('message');
+        el.style.position = 'absolute';
+        el.style.bottom = '96px';
+        el.style.right = '0';
+        el.style.padding = '8px 16px';
+        el.style.fontFamily = 'Helvetica, Arial, sans-serif';
+        el.style.color = '#fff';
+        el.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
         document.body.append(el);
     }
     el.textContent = msg;
 };
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const app = new pc.Application(canvas, {
@@ -39,9 +39,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // use device pixel ratio
@@ -53,15 +53,15 @@ assetListLoader.load(() => {
 
     // create camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0, 0, 0, 0),
         farClip: 10000
     });
     app.root.addChild(camera);
 
     const l = new pc.Entity();
-    l.addComponent("light", {
-        type: "spot",
+    l.addComponent('light', {
+        type: 'spot',
         range: 30
     });
     l.translate(0, 10, 0);
@@ -73,20 +73,20 @@ assetListLoader.load(() => {
                 camera.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                     planeDetection: true,
                     callback: function (err) {
-                        if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                        if (err) message('WebXR Immersive AR failed to start: ' + err.message);
                     }
                 });
             } else {
-                message("Immersive AR is not available");
+                message('Immersive AR is not available');
             }
         };
 
-        app.mouse.on("mousedown", function () {
+        app.mouse.on('mousedown', function () {
             if (!app.xr.active) activate();
         });
 
         if (app.touch) {
-            app.touch.on("touchend", function (evt) {
+            app.touch.on('touchend', function (evt) {
                 if (!app.xr.active) {
                     // if not in VR, activate
                     activate();
@@ -101,30 +101,30 @@ assetListLoader.load(() => {
         }
 
         // end session by keyboard ESC
-        app.keyboard.on("keydown", function (evt) {
+        app.keyboard.on('keydown', function (evt) {
             if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
                 app.xr.end();
             }
         });
 
-        app.xr.on("start", function () {
-            message("Immersive AR session has started");
+        app.xr.on('start', function () {
+            message('Immersive AR session has started');
 
             // trigger manual scanning on session start
             // app.xr.initiateRoomCapture((err) => { });
         });
-        app.xr.on("end", function () {
-            message("Immersive AR session has ended");
+        app.xr.on('end', function () {
+            message('Immersive AR session has ended');
         });
-        app.xr.on("available:" + pc.XRTYPE_AR, function (available) {
+        app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
             if (available) {
                 if (app.xr.planeDetection.supported) {
-                    message("Touch screen to start AR session and look at the floor or walls");
+                    message('Touch screen to start AR session and look at the floor or walls');
                 } else {
-                    message("AR Plane Detection is not supported");
+                    message('AR Plane Detection is not supported');
                 }
             } else {
-                message("Immersive AR is unavailable");
+                message('Immersive AR is unavailable');
             }
         });
 
@@ -197,10 +197,10 @@ assetListLoader.load(() => {
         const materialWireframe = new pc.StandardMaterial();
         materialWireframe.emissive = new pc.Color(1, 1, 1);
 
-        app.xr.planeDetection.on("add", (xrPlane) => {
+        app.xr.planeDetection.on('add', (xrPlane) => {
             // entity
             const entity = new pc.Entity();
-            entity.addComponent("render");
+            entity.addComponent('render');
             app.root.addChild(entity);
             entities.set(xrPlane, entity);
 
@@ -209,11 +209,11 @@ assetListLoader.load(() => {
             // label
             const label = new pc.Entity();
             label.setLocalPosition(0, 0, 0);
-            label.addComponent("element", {
+            label.addComponent('element', {
                 pivot: new pc.Vec2(0.5, 0.5),
                 fontAsset: assets.font.id,
                 fontSize: 0.05,
-                text: xrPlane.label || "-",
+                text: xrPlane.label || '-',
                 width: 1,
                 height: 0.1,
                 color: new pc.Color(1, 0, 0),
@@ -227,13 +227,13 @@ assetListLoader.load(() => {
             entity.setPosition(xrPlane.getPosition());
             entity.setRotation(xrPlane.getRotation());
 
-            xrPlane.on("change", () => {
+            xrPlane.on('change', () => {
                 updateMesh(xrPlane, entity);
             });
         });
 
         // when XrPlane is removed, destroy related entity
-        app.xr.planeDetection.on("remove", (xrPlane) => {
+        app.xr.planeDetection.on('remove', (xrPlane) => {
             const entity = entities.get(xrPlane);
             if (entity) {
                 entity.destroy();
@@ -246,7 +246,7 @@ assetListLoader.load(() => {
         const vec3C = new pc.Vec3();
         const transform = new pc.Mat4();
 
-        app.on("update", () => {
+        app.on('update', () => {
             if (app.xr.active && app.xr.planeDetection.supported) {
                 // iterate through each XrMesh
                 for (let i = 0; i < app.xr.planeDetection.planes.length; i++) {
@@ -284,14 +284,14 @@ assetListLoader.load(() => {
         });
 
         if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
-            message("Immersive AR is not available");
+            message('Immersive AR is not available');
         } else if (!app.xr.planeDetection.supported) {
-            message("AR Plane Detection is not supported");
+            message('AR Plane Detection is not supported');
         } else {
-            message("Touch screen to start AR session and look at the floor or walls");
+            message('Touch screen to start AR session and look at the floor or walls');
         }
     } else {
-        message("WebXR is not supported");
+        message('WebXR is not supported');
     }
 });
 

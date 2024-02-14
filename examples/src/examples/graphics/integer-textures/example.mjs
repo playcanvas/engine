@@ -1,7 +1,7 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 //
 //  In this example, integer textures are used to store the state of each pixel in a simulation.
@@ -23,25 +23,25 @@ const TEXTURE_HEIGHT = 512;
 const TEXTURE_WIDTH = TEXTURE_HEIGHT * TEXTURE_RATIO;
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -64,9 +64,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // Helpers to create integer pixel buffers and render targets which we will ping-pong between
@@ -107,7 +107,7 @@ const sandRenderTarget = pixelRenderTargets[1];
 // Create an output texture and render target to render
 // a visual representation of the simulation
 const outputTexture = new pc.Texture(device, {
-    name: "OutputTexture",
+    name: 'OutputTexture',
     width: TEXTURE_WIDTH,
     height: TEXTURE_HEIGHT,
     format: pc.PIXELFORMAT_RGBA8,
@@ -123,15 +123,15 @@ const outputRenderTarget = createPixelRenderTarget(2, outputTexture);
 const sandShader = pc.createShaderFromCode(
     device,
     pc.RenderPassShaderQuad.quadVertexShader,
-    files["sandSimulation.frag"],
-    "SandShader",
+    files['sandSimulation.frag'],
+    'SandShader',
     { aPosition: pc.SEMANTIC_POSITION },
     // Note that we are changing the shader output type to 'uint'
     // This means we only have to return a single integer value from the shader,
     // whereas the default is to return a vec4. This option allows you to pass
     // an array of types to specify the output type for each color attachment.
     // Unspecified types are assumed to be 'vec4'.
-    { fragmentOutputTypes: ["uint"] }
+    { fragmentOutputTypes: ['uint'] }
 );
 
 // This shader reads the integer textures
@@ -139,8 +139,8 @@ const sandShader = pc.createShaderFromCode(
 const outputShader = pc.createShaderFromCode(
     device,
     pc.RenderPassShaderQuad.quadVertexShader,
-    files["renderOutput.frag"],
-    "RenderOutputShader",
+    files['renderOutput.frag'],
+    'RenderOutputShader',
     { aPosition: pc.SEMANTIC_POSITION }
     // For the output shader, we don't need to specify the output type,
     // as we are returning a vec4 by default.
@@ -186,11 +186,11 @@ const resetData = () => {
 };
 
 resetData();
-data.on("reset", resetData);
+data.on('reset', resetData);
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
-    data.set("options", {
+    data.set('options', {
         brush: 1,
         brushSize: 8
     });
@@ -204,7 +204,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         farClip: 500
     });
 
@@ -216,8 +216,8 @@ assetListLoader.load(() => {
     // create a plane called gameScreen to display the sand
     // simulation visualization texture
     const gameScreen = new pc.Entity();
-    gameScreen.addComponent("render", {
-        type: "plane",
+    gameScreen.addComponent('render', {
+        type: 'plane',
         castShadows: false,
         receiveShadows: false
     });
@@ -251,16 +251,16 @@ assetListLoader.load(() => {
                     resetData();
                     break;
                 case pc.KEY_1:
-                    data.set("options.brush", 1);
+                    data.set('options.brush', 1);
                     break;
                 case pc.KEY_2:
-                    data.set("options.brush", 2);
+                    data.set('options.brush', 2);
                     break;
                 case pc.KEY_3:
-                    data.set("options.brush", 3);
+                    data.set('options.brush', 3);
                     break;
                 case pc.KEY_4:
-                    data.set("options.brush", 4);
+                    data.set('options.brush', 4);
                     break;
             }
         },
@@ -306,7 +306,7 @@ assetListLoader.load(() => {
     });
 
     let passNum = 0;
-    app.on("update", function (/** @type {number} */) {
+    app.on('update', function (/** @type {number} */) {
         if (device.isWebGL1) {
             // WebGL1 does not support integer textures
             return;
@@ -315,27 +315,27 @@ assetListLoader.load(() => {
         mouseUniform[0] = mousePos.x;
         mouseUniform[1] = mousePos.y;
 
-        const brushRadius = data.get("options.brushSize") / Math.max(TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        const brush = data.get("options.brush") ?? 1;
+        const brushRadius = data.get('options.brushSize') / Math.max(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        const brush = data.get('options.brush') ?? 1;
 
         // Run the sand simulation shader
         for (let i = 0; i < STEPS_PER_FRAME; i++) {
-            device.scope.resolve("sourceTexture").setValue(sourceTexture);
-            device.scope.resolve("mousePosition").setValue(mouseUniform);
-            device.scope.resolve("mouseButton").setValue(mouseState);
-            device.scope.resolve("brush").setValue(brush);
-            device.scope.resolve("brushRadius").setValue(brushRadius);
-            device.scope.resolve("passNum").setValue(passNum);
-            device.scope.resolve("randomVal").setValue(Math.random());
+            device.scope.resolve('sourceTexture').setValue(sourceTexture);
+            device.scope.resolve('mousePosition').setValue(mouseUniform);
+            device.scope.resolve('mouseButton').setValue(mouseState);
+            device.scope.resolve('brush').setValue(brush);
+            device.scope.resolve('brushRadius').setValue(brushRadius);
+            device.scope.resolve('passNum').setValue(passNum);
+            device.scope.resolve('randomVal').setValue(Math.random());
             pc.drawQuadWithShader(device, sandRenderTarget, sandShader);
             device.copyRenderTarget(sandRenderTarget, sourceRenderTarget, true, false);
             passNum = (passNum + 1) % 16;
         }
 
         // Render a visual representation of the simulation
-        device.scope.resolve("sourceTexture").setValue(sandRenderTarget.colorBuffer);
-        device.scope.resolve("mousePosition").setValue(mouseUniform);
-        device.scope.resolve("brushRadius").setValue(brushRadius);
+        device.scope.resolve('sourceTexture').setValue(sandRenderTarget.colorBuffer);
+        device.scope.resolve('mousePosition').setValue(mouseUniform);
+        device.scope.resolve('brushRadius').setValue(brushRadius);
         pc.drawQuadWithShader(device, outputRenderTarget, outputShader);
     });
 });

@@ -1,19 +1,19 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-await import("https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js");
+await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/animation/tween.js" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/animation/tween.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -38,9 +38,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -59,7 +59,7 @@ assetListLoader.load(() => {
      */
     const createText = function (fontAsset, message, x, y, z, rot) {
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -73,17 +73,17 @@ assetListLoader.load(() => {
     };
 
     const easingFunctions = [
-        "Linear",
-        "Quadratic",
-        "Cubic",
-        "Quartic",
-        "Quintic",
-        "Sinusoidal",
-        "Exponential",
-        "Circular",
-        "Elastic",
-        "Back",
-        "Bounce"
+        'Linear',
+        'Quadratic',
+        'Cubic',
+        'Quartic',
+        'Quintic',
+        'Sinusoidal',
+        'Exponential',
+        'Circular',
+        'Elastic',
+        'Back',
+        'Bounce'
     ];
     /** @type {Array<pc.Vec3>} */
     const points = [];
@@ -94,16 +94,16 @@ assetListLoader.load(() => {
         // Create an entity with a sphere render component
         const sphere = new pc.Entity();
 
-        sphere.addComponent("render", {
-            type: "sphere"
+        sphere.addComponent('render', {
+            type: 'sphere'
         });
         const material = sphere.render.material;
         material.diffuse.set(1, 0, 0);
         material.specular.set(0.6, 0.6, 0.6);
         material.gloss = 0.2;
 
-        sphere.addComponent("script");
-        sphere.script.create("tween", {
+        sphere.addComponent('script');
+        sphere.script.create('tween', {
             attributes: {
                 tweens: [
                     {
@@ -113,7 +113,7 @@ assetListLoader.load(() => {
                         easingFunction: i,
                         easingType: 2, // InOut type
                         end: new pc.Vec4(4, -i, 0, 0),
-                        path: "localPosition", // Update the entity's local position
+                        path: 'localPosition', // Update the entity's local position
                         repeat: -1, // Repeat infinitely
                         repeatDelay: 0, // No delay between repeats
                         start: new pc.Vec4(0, -i, 0, 0),
@@ -136,21 +136,21 @@ assetListLoader.load(() => {
 
     // Create an entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional"
+    light.addComponent('light', {
+        type: 'directional'
     });
     light.setLocalEulerAngles(70, 30, 0);
     app.root.addChild(light);
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0.65, -5.5, 20);
     app.root.addChild(camera);
 
-    app.on("update", function () {
+    app.on('update', function () {
         app.drawLines(points, colors);
     });
 });

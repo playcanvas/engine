@@ -1,34 +1,34 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("DracoDecoderModule", () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    board: new pc.Asset("statue", "container", { url: "/static/assets/models/chess-board.glb" })
+    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -54,23 +54,23 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
-    data.set("settings", {
+    data.set('settings', {
         shaderPassName: pc.SHADERPASS_FORWARD
     });
 
     // get few existing layers and create a new layer for the spot light
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-    const spotLightLayer = new pc.Layer({ name: "SpotLightLayer" });
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+    const spotLightLayer = new pc.Layer({ name: 'SpotLightLayer' });
     app.scene.layers.insert(spotLightLayer, 0);
 
     // get the instance of the chess board and set up with render component
@@ -85,8 +85,8 @@ assetListLoader.load(() => {
     app.root.addChild(boardEntity);
 
     // Create left camera, using default layers (including the World)
-    const cameraLeft = new pc.Entity("LeftCamera");
-    cameraLeft.addComponent("camera", {
+    const cameraLeft = new pc.Entity('LeftCamera');
+    cameraLeft.addComponent('camera', {
         farClip: 500,
         rect: new pc.Vec4(0, 0, 0.5, 0.5)
     });
@@ -94,8 +94,8 @@ assetListLoader.load(() => {
 
     // Create right orthographic camera, using spot light layer and skybox layer,
     // so that it receives the light from the spot light but not from the directional light
-    const cameraRight = new pc.Entity("RightCamera");
-    cameraRight.addComponent("camera", {
+    const cameraRight = new pc.Entity('RightCamera');
+    cameraRight.addComponent('camera', {
         layers: [spotLightLayer.id, skyboxLayer.id],
         farClip: 500,
         rect: new pc.Vec4(0.5, 0, 0.5, 0.5),
@@ -107,8 +107,8 @@ assetListLoader.load(() => {
     app.root.addChild(cameraRight);
 
     // Create top camera, using default layers (including the World)
-    const cameraTop = new pc.Entity("TopCamera");
-    cameraTop.addComponent("camera", {
+    const cameraTop = new pc.Entity('TopCamera');
+    cameraTop.addComponent('camera', {
         farClip: 500,
         rect: new pc.Vec4(0, 0.5, 1, 0.5)
     });
@@ -117,8 +117,8 @@ assetListLoader.load(() => {
     app.root.addChild(cameraTop);
 
     // add orbit camera script with a mouse and a touch support
-    cameraTop.addComponent("script");
-    cameraTop.script.create("orbitCamera", {
+    cameraTop.addComponent('script');
+    cameraTop.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: app.root,
@@ -126,13 +126,13 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    cameraTop.script.create("orbitCameraInputMouse");
-    cameraTop.script.create("orbitCameraInputTouch");
+    cameraTop.script.create('orbitCameraInputMouse');
+    cameraTop.script.create('orbitCameraInputTouch');
 
     // Create a directional light which casts shadows
     const dirLight = new pc.Entity();
-    dirLight.addComponent("light", {
-        type: "directional",
+    dirLight.addComponent('light', {
+        type: 'directional',
         layers: [worldLayer.id],
         color: pc.Color.WHITE,
         intensity: 5,
@@ -147,8 +147,8 @@ assetListLoader.load(() => {
 
     // Create a single directional light which casts shadows
     const spotLight = new pc.Entity();
-    spotLight.addComponent("light", {
-        type: "spot",
+    spotLight.addComponent('light', {
+        type: 'spot',
         layers: [spotLightLayer.id],
         color: pc.Color.YELLOW,
         intensity: 7,
@@ -168,14 +168,14 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
 
     // handle HUD changes - update the debug mode for the top and right cameras
-    data.on("*:set", (/** @type {string} */ path, value) => {
+    data.on('*:set', (/** @type {string} */ path, value) => {
         cameraTop.camera.setShaderPass(value);
         cameraRight.camera.setShaderPass(value);
     });
 
     // update function called once per frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // orbit camera left around

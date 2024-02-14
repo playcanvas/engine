@@ -1,26 +1,26 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const observer = data;
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    channels: new pc.Asset("channels", "texture", { url: "/static/assets/textures/channels.png" }),
-    heart: new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/normal-map.png" }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    channels: new pc.Asset('channels', 'texture', { url: '/static/assets/textures/channels.png' }),
+    heart: new pc.Asset('heart', 'texture', { url: '/static/assets/textures/heart.png' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -46,16 +46,16 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
-    data.set("settings", {
+    data.set('settings', {
         shadowAtlasResolution: 1024, // shadow map resolution storing all shadows
         shadowType: pc.SHADOW_PCF3, // shadow filter type
         shadowsEnabled: true,
@@ -87,13 +87,13 @@ assetListLoader.load(() => {
     lighting.maxLightsPerCell = maxLights;
 
     // enable clustered shadows (it's enabled by default as well)
-    lighting.shadowsEnabled = observer.get("settings.shadowsEnabled");
+    lighting.shadowsEnabled = observer.get('settings.shadowsEnabled');
 
     // enable clustered cookies
-    lighting.cookiesEnabled = observer.get("settings.cookiesEnabled");
+    lighting.cookiesEnabled = observer.get('settings.cookiesEnabled');
 
     // resolution of the shadow and cookie atlas
-    lighting.shadowAtlasResolution = observer.get("settings.shadowAtlasResolution");
+    lighting.shadowAtlasResolution = observer.get('settings.shadowAtlasResolution');
     lighting.cookieAtlasResolution = 1500;
 
     const splitOptions = [
@@ -140,7 +140,7 @@ assetListLoader.load(() => {
     function createPrimitive(primitiveType, position, scale, mat) {
         // create the primitive using the material
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             castShadows: true,
             material: mat
@@ -155,7 +155,7 @@ assetListLoader.load(() => {
     }
 
     // create some visible geometry
-    const ground = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(500, 1, 500), groundMaterial);
+    const ground = createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(500, 1, 500), groundMaterial);
 
     const numTowers = 8;
     for (let i = 0; i < numTowers; i++) {
@@ -166,14 +166,14 @@ assetListLoader.load(() => {
         for (let y = 0; y <= 10; y++) {
             const elevationRadius = radius * (1 - y / numCubes);
             const pos = new pc.Vec3(elevationRadius * Math.sin(fraction), y * 6, elevationRadius * Math.cos(fraction));
-            const prim = createPrimitive("box", pos, new pc.Vec3(scale, scale, scale), cubeMaterial);
+            const prim = createPrimitive('box', pos, new pc.Vec3(scale, scale, scale), cubeMaterial);
             prim.setLocalEulerAngles(Math.random() * 360, Math.random() * 360, Math.random() * 360);
         }
         scale -= 1.5;
     }
     /** @type {pc.Entity[]} */
     const spotLightList = [];
-    const cookieChannels = ["r", "g", "b", "a", "rgb"];
+    const cookieChannels = ['r', 'g', 'b', 'a', 'rgb'];
 
     /**
      * Helper function to create a light.
@@ -185,10 +185,10 @@ assetListLoader.load(() => {
         const lightSpot = new pc.Entity(`Spot-${index}`);
         const heartTexture = Math.random() < 0.5;
         const cookieTexture = heartTexture ? assets.heart : assets.channels;
-        const cookieChannel = heartTexture ? "a" : cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
+        const cookieChannel = heartTexture ? 'a' : cookieChannels[Math.floor(Math.random() * cookieChannels.length)];
 
-        lightSpot.addComponent("light", {
-            type: "spot",
+        lightSpot.addComponent('light', {
+            type: 'spot',
             color: color,
             intensity: 3,
             innerConeAngle: 30,
@@ -213,8 +213,8 @@ assetListLoader.load(() => {
         material.emissive = color;
         material.update();
 
-        lightSpot.addComponent("render", {
-            type: "cone",
+        lightSpot.addComponent('render', {
+            type: 'cone',
             material: material,
             castShadows: false
         });
@@ -232,7 +232,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         farClip: 2000,
         nearClip: 1
@@ -241,8 +241,8 @@ assetListLoader.load(() => {
     camera.setLocalPosition(300 * Math.sin(0), 150, 300 * Math.cos(0));
 
     // add orbit camera script with mouse and touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: ground,
@@ -250,25 +250,25 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
 
     // handle HUD changes - update properties on the scene
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
-        if (pathArray[1] === "static") {
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
+        if (pathArray[1] === 'static') {
             lightsStatic = value;
             updateLightCount();
-        } else if (pathArray[1] === "atlasSplit") {
+        } else if (pathArray[1] === 'atlasSplit') {
             // assign atlas split option
             lighting.atlasSplit = splitOptions[value];
-        } else if (pathArray[1] === "debug") {
+        } else if (pathArray[1] === 'debug') {
             // debug rendering of lighting clusters on world layer
-            lighting.debugLayer = value ? app.scene.layers.getLayerByName("World").id : undefined;
-        } else if (pathArray[1] === "debugAtlas") {
+            lighting.debugLayer = value ? app.scene.layers.getLayerByName('World').id : undefined;
+        } else if (pathArray[1] === 'debugAtlas') {
             // show debug atlas
             debugAtlas = value;
-        } else if (pathArray[1] === "shadowIntensity") {
+        } else if (pathArray[1] === 'shadowIntensity') {
             for (let i = 0; i < spotLightList.length; i++) {
                 spotLightList[i].light.shadowIntensity = value;
             }
@@ -280,7 +280,7 @@ assetListLoader.load(() => {
 
     function updateLightCount() {
         // update the number on HUD
-        data.set("settings.numLights", spotLightList.length);
+        data.set('settings.numLights', spotLightList.length);
 
         // shadow update mode (need to force render shadow when we add / remove light, as they all move)
         spotLightList.forEach((spot) => {
@@ -289,7 +289,7 @@ assetListLoader.load(() => {
     }
 
     // add light button handler
-    data.on("add", function () {
+    data.on('add', function () {
         if (spotLightList.length < maxLights) {
             createLight(spotLightList.length);
             updateLightCount();
@@ -297,7 +297,7 @@ assetListLoader.load(() => {
     });
 
     // remove light button handler
-    data.on("remove", function () {
+    data.on('remove', function () {
         if (spotLightList.length) {
             const light = spotLightList.pop();
             app.root.removeChild(light);
@@ -308,7 +308,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         // don't move lights around when they're static
         if (!lightsStatic) {
             time += dt * 0.15;

@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    snowflake: new pc.Asset("snowflake", "texture", { url: "/static/assets/textures/snowflake.png" })
+    snowflake: new pc.Asset('snowflake', 'texture', { url: '/static/assets/textures/snowflake.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,14 +41,14 @@ assetListLoader.load(() => {
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0, 0, 0)
     });
     cameraEntity.rotateLocal(0, 0, 0);
@@ -56,8 +56,8 @@ assetListLoader.load(() => {
 
     // Create a directional light
     const lightDirEntity = new pc.Entity();
-    lightDirEntity.addComponent("light", {
-        type: "directional",
+    lightDirEntity.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         intensity: 1
     });
@@ -94,7 +94,7 @@ assetListLoader.load(() => {
     // load snowflake texture
     // app.assets.loadFromUrl('/static/assets/textures/snowflake.png', 'texture', function () {
     // when texture is loaded add particlesystem component to entity
-    entity.addComponent("particlesystem", {
+    entity.addComponent('particlesystem', {
         numParticles: 100,
         lifetime: 10,
         rate: 0.1,

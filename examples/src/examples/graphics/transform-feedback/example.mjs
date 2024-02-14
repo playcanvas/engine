@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -20,7 +20,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -33,9 +33,9 @@ assetListLoader.load(() => {
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -74,7 +74,7 @@ assetListLoader.load(() => {
 
     // Create main camera, which renders the world
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     app.root.addChild(camera);
@@ -85,9 +85,9 @@ assetListLoader.load(() => {
     const areaSize = 30;
 
     // resolve parameters to simulation shader parameters
-    const areaSizeUniform = app.graphicsDevice.scope.resolve("areaSize");
-    const deltaTimeUniform = app.graphicsDevice.scope.resolve("deltaTime");
-    const directionSampler = app.graphicsDevice.scope.resolve("directionSampler");
+    const areaSizeUniform = app.graphicsDevice.scope.resolve('areaSize');
+    const deltaTimeUniform = app.graphicsDevice.scope.resolve('deltaTime');
+    const directionSampler = app.graphicsDevice.scope.resolve('directionSampler');
 
     // @ts-ignore engine-tsd
     if (app.graphicsDevice.isWebGL2) {
@@ -116,8 +116,8 @@ assetListLoader.load(() => {
         // Create the shader from the vertex and fragment shaders which is used to render point sprites
         shader = new pc.Shader(app.graphicsDevice, {
             attributes: { aPosition: pc.SEMANTIC_POSITION },
-            vshader: files["shaderCloud.vert"],
-            fshader: files["shaderCloud.frag"]
+            vshader: files['shaderCloud.vert'],
+            fshader: files['shaderCloud.frag']
         });
 
         // Create a new material with the new shader and additive alpha blending
@@ -131,8 +131,8 @@ assetListLoader.load(() => {
 
         // create an entity used to render the mesh instance using a render component
         const entity = new pc.Entity();
-        entity.addComponent("render", {
-            type: "asset",
+        entity.addComponent('render', {
+            type: 'asset',
             meshInstances: [meshInstance]
         });
         app.root.addChild(entity);
@@ -141,14 +141,14 @@ assetListLoader.load(() => {
         tf = new pc.TransformFeedback(mesh.vertexBuffer);
         shader = pc.TransformFeedback.createShader(
             app.graphicsDevice,
-            files["shaderFeedback.vert"],
-            "transformShaderExample"
+            files['shaderFeedback.vert'],
+            'transformShaderExample'
         );
     }
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // rotate camera around
         time += dt;
         camera.setLocalPosition(9 * Math.sin(time * 0.2), 6, 25 * Math.cos(time * 0.2));

@@ -1,28 +1,28 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    orbitCamera: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
+    orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    lights: new pc.Asset("lights", "container", { url: "/static/assets/models/Lights.glb" }),
-    sheen: new pc.Asset("sheen", "container", { url: "/static/assets/models/SheenChair.glb" }),
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" }),
-    luts: new pc.Asset("luts", "json", { url: "/static/assets/json/area-light-luts.json" })
+    lights: new pc.Asset('lights', 'container', { url: '/static/assets/models/Lights.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -49,9 +49,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -82,7 +82,7 @@ assetListLoader.load(() => {
     });
     sheen2.setLocalScale(new pc.Vec3(3, 3, 3));
     sheen2.setLocalPosition(4, -1.0, 0);
-    assets.sheen.resource.applyMaterialVariant(sheen2, "Peacock Velvet");
+    assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
     app.root.addChild(sheen2);
 
     const lights = assets.lights.resource.instantiateRenderEntity({
@@ -90,7 +90,7 @@ assetListLoader.load(() => {
     });
     // enable all lights from the glb
     /** @type {Array<pc.LightComponent>} */
-    const lightComponents = lights.findComponents("light");
+    const lightComponents = lights.findComponents('light');
     lightComponents.forEach((component) => {
         component.enabled = true;
     });
@@ -111,15 +111,15 @@ assetListLoader.load(() => {
     material.update();
 
     const plane = new pc.Entity();
-    plane.addComponent("render", {
-        type: "plane",
+    plane.addComponent('render', {
+        type: 'plane',
         material: material
     });
     plane.setLocalScale(new pc.Vec3(100, 0, 100));
     plane.setLocalPosition(0, -1.0, 0);
     app.root.addChild(plane);
 
-    data.set("script", {
+    data.set('script', {
         sun: {
             luminance: 100000
         },
@@ -148,17 +148,17 @@ assetListLoader.load(() => {
         }
     });
 
-    app.scene.physicalUnits = data.get("script.scene.physicalUnits");
+    app.scene.physicalUnits = data.get('script.scene.physicalUnits');
     app.scene.envAtlas = assets.helipad.resource;
 
-    app.scene.skyboxLuminance = data.get("script.sky.luminance");
+    app.scene.skyboxLuminance = data.get('script.sky.luminance');
 
     const directionalLight = new pc.Entity();
-    directionalLight.addComponent("light", {
-        type: "directional",
+    directionalLight.addComponent('light', {
+        type: 'directional',
         color: pc.Color.WHITE,
         castShadows: true,
-        luminance: data.get("script.sun.luminance"),
+        luminance: data.get('script.sun.luminance'),
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
         shadowResolution: 2048
@@ -167,11 +167,11 @@ assetListLoader.load(() => {
     app.root.addChild(directionalLight);
 
     const omniLight = new pc.Entity();
-    omniLight.addComponent("light", {
-        type: "omni",
+    omniLight.addComponent('light', {
+        type: 'omni',
         color: pc.Color.WHITE,
         castShadows: false,
-        luminance: data.get("script.point.luminance"),
+        luminance: data.get('script.point.luminance'),
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
         shadowResolution: 2048
@@ -180,15 +180,15 @@ assetListLoader.load(() => {
     app.root.addChild(omniLight);
 
     const spotLight = new pc.Entity();
-    spotLight.addComponent("light", {
-        type: "spot",
+    spotLight.addComponent('light', {
+        type: 'spot',
         color: pc.Color.WHITE,
         castShadows: false,
-        luminance: data.get("script.spot.luminance"),
+        luminance: data.get('script.spot.luminance'),
         shadowBias: 0.2,
         normalOffsetBias: 0.05,
         shadowResolution: 2048,
-        outerConeAngle: data.get("script.spot.aperture"),
+        outerConeAngle: data.get('script.spot.aperture'),
         innerConeAngle: 0
     });
     spotLight.setEulerAngles(0, 0, 0);
@@ -196,12 +196,12 @@ assetListLoader.load(() => {
     app.root.addChild(spotLight);
 
     const areaLight = new pc.Entity();
-    areaLight.addComponent("light", {
-        type: "spot",
+    areaLight.addComponent('light', {
+        type: 'spot',
         shape: pc.LIGHTSHAPE_RECT,
         color: pc.Color.YELLOW,
         range: 9999,
-        luminance: data.get("script.rect.luminance"),
+        luminance: data.get('script.rect.luminance'),
         falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
         innerConeAngle: 80,
         outerConeAngle: 85,
@@ -221,8 +221,8 @@ assetListLoader.load(() => {
 
     const brightShape = new pc.Entity();
     // primitive shape that matches light source shape
-    brightShape.addComponent("render", {
-        type: "plane",
+    brightShape.addComponent('render', {
+        type: 'plane',
         material: brightMaterial,
         castShadows: false
     });
@@ -231,17 +231,17 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
-        aperture: data.get("script.camera.aperture"),
-        shutter: 1 / data.get("script.camera.shutter"),
-        sensitivity: data.get("script.camera.sensitivity")
+        aperture: data.get('script.camera.aperture'),
+        shutter: 1 / data.get('script.camera.shutter'),
+        sensitivity: data.get('script.camera.sensitivity')
     });
     camera.setLocalPosition(0, 5, 11);
 
     camera.camera.requestSceneColorMap(true);
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: sheen1,
@@ -250,34 +250,34 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        if (path === "script.sun.luminance") {
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        if (path === 'script.sun.luminance') {
             directionalLight.light.luminance = value;
-        } else if (path === "script.sky.luminance") {
+        } else if (path === 'script.sky.luminance') {
             app.scene.skyboxLuminance = value;
-        } else if (path === "script.spot.luminance") {
+        } else if (path === 'script.spot.luminance') {
             spotLight.light.luminance = value;
-        } else if (path === "script.spot.aperture") {
+        } else if (path === 'script.spot.aperture') {
             spotLight.light.outerConeAngle = value;
-        } else if (path === "script.point.luminance") {
+        } else if (path === 'script.point.luminance') {
             omniLight.light.luminance = value;
-        } else if (path === "script.rect.luminance") {
+        } else if (path === 'script.rect.luminance') {
             areaLight.light.luminance = value;
             brightMaterial.emissiveIntensity = value;
             brightMaterial.update();
-        } else if (path === "script.camera.aperture") {
+        } else if (path === 'script.camera.aperture') {
             camera.camera.aperture = value;
-        } else if (path === "script.camera.shutter") {
+        } else if (path === 'script.camera.shutter') {
             camera.camera.shutter = 1 / value;
-        } else if (path === "script.camera.sensitivity") {
+        } else if (path === 'script.camera.sensitivity') {
             camera.camera.sensitivity = value;
-        } else if (path === "script.scene.physicalUnits") {
+        } else if (path === 'script.scene.physicalUnits') {
             app.scene.physicalUnits = value;
-        } else if (path === "script.scene.sky") {
+        } else if (path === 'script.scene.sky') {
             if (value) {
                 app.scene.setSkybox(assets.helipad.resources);
             } else {
@@ -288,20 +288,20 @@ assetListLoader.load(() => {
 
     let resizeControlPanel = true;
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById("controlPanel");
+            const panel = window.top.document.getElementById('controlPanel');
             if (panel) {
-                panel.style.width = "360px";
+                panel.style.width = '360px';
                 resizeControlPanel = false;
             }
         }
 
-        if (data.get("script.camera.animate")) {
-            data.set("script.camera.aperture", 3 + (1 + Math.sin(time)) * 5.0);
+        if (data.get('script.camera.animate')) {
+            data.set('script.camera.aperture', 3 + (1 + Math.sin(time)) * 5.0);
         }
     });
 });

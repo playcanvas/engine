@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -24,9 +24,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.start();
@@ -48,7 +48,7 @@ function createPrimitive(primitiveType, position, scale) {
 
     // create primitive with a render component
     const primitive = new pc.Entity();
-    primitive.addComponent("render", {
+    primitive.addComponent('render', {
         type: primitiveType,
         material: material
     });
@@ -78,7 +78,7 @@ function createChildren(parent, gridSize, scale, scaleDelta, spacing, levels) {
         const offset = spacing * (gridSize - 1) * 0.5;
         for (let x = 0; x < gridSize; x++) {
             for (let y = 0; y < gridSize; y++) {
-                const shape = Math.random() < 0.5 ? "box" : "sphere";
+                const shape = Math.random() < 0.5 ? 'box' : 'sphere';
                 const position = new pc.Vec3(x * spacing - offset, spacing, y * spacing - offset);
                 const entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));
 
@@ -102,11 +102,11 @@ const scale = 1.7;
 const scaleDelta = 0.25;
 const spacing = 7;
 createChildren(root, gridSize, scale, scaleDelta, spacing, levels);
-console.log("number of created entities: " + entities.length);
+console.log('number of created entities: ' + entities.length);
 
 // Create main camera
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
 camera.setLocalPosition(90 * Math.sin(0), 40, 90 * Math.cos(0));
@@ -115,8 +115,8 @@ app.root.addChild(camera);
 
 // Create an Entity with a omni light component
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "omni",
+light.addComponent('light', {
+    type: 'omni',
     color: new pc.Color(1, 1, 1),
     range: 150
 });
@@ -125,7 +125,7 @@ app.root.addChild(light);
 
 // update each frame
 let time = 0;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     time += dt;
 
     // rotation quaternion changing with time

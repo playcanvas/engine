@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -35,9 +35,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -52,7 +52,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 7, 25);
@@ -66,14 +66,14 @@ assetListLoader.load(() => {
     let x = 0;
     const y = 0;
 
-    mouse.on("mousemove", function (event) {
+    mouse.on('mousemove', function (event) {
         if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
             x += event.dx;
 
             entity.setLocalEulerAngles(0.2 * y, 0.2 * x, 0);
         }
     });
-    app.on("destroy", () => mouse.detach());
+    app.on('destroy', () => mouse.detach());
 });
 
 export { app };

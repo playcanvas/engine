@@ -1,21 +1,21 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("DracoDecoderModule", () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -34,13 +34,13 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assets = {
-    heart: new pc.Asset("heart", "container", { url: "/static/assets/models/heart_draco.glb" })
+    heart: new pc.Asset('heart', 'container', { url: '/static/assets/models/heart_draco.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -58,7 +58,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
     camera.translate(0, 0.5, 4);
@@ -66,14 +66,14 @@ assetListLoader.load(() => {
 
     // Create an entity with a omni light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         intensity: 3
     });
     light.setLocalPosition(1, 1, 5);
     app.root.addChild(light);
 
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         if (entity) {
             entity.rotate(4 * dt, -20 * dt, 0);
         }

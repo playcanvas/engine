@@ -7,20 +7,20 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const binding = new BindingTwoWay();
     const link = {
         observer,
-        path: "jogToggle"
+        path: 'jogToggle'
     };
     return fragment(
         jsx(Button, {
-            text: "Jump",
-            onClick: () => observer.emit("jump")
+            text: 'Jump',
+            onClick: () => observer.emit('jump')
         }),
         jsx(
             LabelGroup,
             {
-                text: "Run: "
+                text: 'Run: '
             },
             jsx(BooleanInput, {
-                type: "toggle",
+                type: 'toggle',
                 binding,
                 link
             })

@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -35,9 +35,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -50,7 +50,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera");
+    camera.addComponent('camera');
     camera.translate(0, 0, 9);
     app.root.addChild(camera);
 
@@ -68,9 +68,9 @@ assetListLoader.load(() => {
         material.update();
 
         const sphere = new pc.Entity();
-        sphere.addComponent("render", {
+        sphere.addComponent('render', {
             material: material,
-            type: "sphere"
+            type: 'sphere'
         });
         sphere.setLocalPosition(x - (NUM_SPHERES - 1) * 0.5, y - (NUM_SPHERES - 1) * 0.5, z);
         sphere.setLocalScale(0.9, 0.9, 0.9);
@@ -88,7 +88,7 @@ assetListLoader.load(() => {
     const createText = function (fontAsset, message, x, y, z, rot) {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -107,8 +107,8 @@ assetListLoader.load(() => {
         }
     }
 
-    createText(assets.font, "Glossiness", 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
-    createText(assets.font, "Metalness", -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
+    createText(assets.font, 'Glossiness', 0, -(NUM_SPHERES + 1) * 0.5, 0, 0);
+    createText(assets.font, 'Metalness', -(NUM_SPHERES + 1) * 0.5, 0, 0, 90);
 
     // rotate the skybox using mouse input
     const mouse = new pc.Mouse(document.body);
@@ -117,7 +117,7 @@ assetListLoader.load(() => {
     let y = 0;
     const rot = new pc.Quat();
 
-    mouse.on("mousemove", function (event) {
+    mouse.on('mousemove', function (event) {
         if (event.buttons[pc.MOUSEBUTTON_LEFT]) {
             x += event.dx;
             y += event.dy;
@@ -126,7 +126,7 @@ assetListLoader.load(() => {
             app.scene.skyboxRotation = rot;
         }
     });
-    app.on("destroy", () => mouse.detach());
+    app.on('destroy', () => mouse.detach());
 });
 
 export { app };

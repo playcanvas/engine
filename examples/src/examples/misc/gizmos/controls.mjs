@@ -1,4 +1,4 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -7,7 +7,7 @@ import * as pc from "playcanvas";
 export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { BindingTwoWay, LabelGroup, Panel, ColorPicker, SliderInput, SelectInput } = ReactPCUI;
 
-    const [type, setType] = React.useState("translate");
+    const [type, setType] = React.useState('translate');
     const [proj, setProj] = React.useState(pc.PROJECTION_PERSPECTIVE);
 
     // @ts-ignore
@@ -19,50 +19,50 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "Transform" },
+            { headerText: 'Transform' },
             jsx(
                 LabelGroup,
-                { text: "Type" },
+                { text: 'Type' },
                 jsx(SelectInput, {
                     options: [
-                        { v: "translate", t: "Translate" },
-                        { v: "rotate", t: "Rotate" },
-                        { v: "scale", t: "Scale" }
+                        { v: 'translate', t: 'Translate' },
+                        { v: 'rotate', t: 'Rotate' },
+                        { v: 'scale', t: 'Scale' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.type" },
+                    link: { observer, path: 'gizmo.type' },
                     onSelect: setType
                 })
             ),
-            (type === "translate" || type === "rotate") &&
+            (type === 'translate' || type === 'rotate') &&
                 jsx(
                     LabelGroup,
-                    { text: "Coord Space" },
+                    { text: 'Coord Space' },
                     jsx(SelectInput, {
                         options: [
-                            { v: "world", t: "World" },
-                            { v: "local", t: "Local" }
+                            { v: 'world', t: 'World' },
+                            { v: 'local', t: 'Local' }
                         ],
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.coordSpace" }
+                        link: { observer, path: 'gizmo.coordSpace' }
                     })
                 ),
             jsx(
                 LabelGroup,
-                { text: "Size" },
+                { text: 'Size' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.size" },
+                    link: { observer, path: 'gizmo.size' },
                     min: 0.1,
                     max: 2.0
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "Snap Increment" },
+                { text: 'Snap Increment' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.snapIncrement" },
+                    link: { observer, path: 'gizmo.snapIncrement' },
                     min: 1,
                     max: 10,
                     precision: 0
@@ -71,66 +71,66 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "Color" },
+            { headerText: 'Color' },
             jsx(
                 LabelGroup,
-                { text: "X Axis" },
+                { text: 'X Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.xAxisColor" }
+                    link: { observer, path: 'gizmo.xAxisColor' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "Y Axis" },
+                { text: 'Y Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.yAxisColor" }
+                    link: { observer, path: 'gizmo.yAxisColor' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "Z Axis" },
+                { text: 'Z Axis' },
                 jsx(ColorPicker, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "gizmo.zAxisColor" }
+                    link: { observer, path: 'gizmo.zAxisColor' }
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "Intersection" },
-            (type === "translate" || type === "scale") &&
+            { headerText: 'Intersection' },
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Line Tolerance" },
+                    { text: 'Line Tolerance' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisLineTolerance" },
+                        link: { observer, path: 'gizmo.axisLineTolerance' },
                         min: 0,
                         max: 0.5,
                         precision: 2
                     })
                 ),
-            type === "scale" &&
+            type === 'scale' &&
                 jsx(
                     LabelGroup,
-                    { text: "Center Tolerance" },
+                    { text: 'Center Tolerance' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisCenterTolerance" },
+                        link: { observer, path: 'gizmo.axisCenterTolerance' },
                         min: 0,
                         max: 0.5,
                         precision: 2
                     })
                 ),
-            type === "rotate" &&
+            type === 'rotate' &&
                 jsx(
                     LabelGroup,
-                    { text: "Ring Tolerance" },
+                    { text: 'Ring Tolerance' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.ringTolerance" },
+                        link: { observer, path: 'gizmo.ringTolerance' },
                         min: 0,
                         max: 0.5,
                         precision: 2
@@ -139,149 +139,149 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "Render" },
-            (type === "translate" || type === "scale") &&
+            { headerText: 'Render' },
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Gap" },
+                    { text: 'Gap' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisGap" }
+                        link: { observer, path: 'gizmo.axisGap' }
                     })
                 ),
-            (type === "translate" || type === "scale") &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Line Thickness" },
+                    { text: 'Line Thickness' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisLineThickness" }
+                        link: { observer, path: 'gizmo.axisLineThickness' }
                     })
                 ),
-            (type === "translate" || type === "scale") &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Line Length" },
+                    { text: 'Line Length' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisLineLength" }
+                        link: { observer, path: 'gizmo.axisLineLength' }
                     })
                 ),
-            type === "scale" &&
+            type === 'scale' &&
                 jsx(
                     LabelGroup,
-                    { text: "Box Size" },
+                    { text: 'Box Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisBoxSize" }
+                        link: { observer, path: 'gizmo.axisBoxSize' }
                     })
                 ),
-            type === "translate" &&
+            type === 'translate' &&
                 jsx(
                     LabelGroup,
-                    { text: "Arrow Thickness" },
+                    { text: 'Arrow Thickness' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisArrowThickness" }
+                        link: { observer, path: 'gizmo.axisArrowThickness' }
                     })
                 ),
-            type === "translate" &&
+            type === 'translate' &&
                 jsx(
                     LabelGroup,
-                    { text: "Arrow Length" },
+                    { text: 'Arrow Length' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisArrowLength" }
+                        link: { observer, path: 'gizmo.axisArrowLength' }
                     })
                 ),
-            (type === "translate" || type === "scale") &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Plane Size" },
+                    { text: 'Plane Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisPlaneSize" }
+                        link: { observer, path: 'gizmo.axisPlaneSize' }
                     })
                 ),
-            (type === "translate" || type === "scale") &&
+            (type === 'translate' || type === 'scale') &&
                 jsx(
                     LabelGroup,
-                    { text: "Plane Gap" },
+                    { text: 'Plane Gap' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisPlaneGap" }
+                        link: { observer, path: 'gizmo.axisPlaneGap' }
                     })
                 ),
-            type === "scale" &&
+            type === 'scale' &&
                 jsx(
                     LabelGroup,
-                    { text: "Center Size" },
+                    { text: 'Center Size' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.axisCenterSize" }
+                        link: { observer, path: 'gizmo.axisCenterSize' }
                     })
                 ),
-            type === "rotate" &&
+            type === 'rotate' &&
                 jsx(
                     LabelGroup,
-                    { text: "XYZ Tube Radius" },
+                    { text: 'XYZ Tube Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.xyzTubeRadius" }
+                        link: { observer, path: 'gizmo.xyzTubeRadius' }
                     })
                 ),
-            type === "rotate" &&
+            type === 'rotate' &&
                 jsx(
                     LabelGroup,
-                    { text: "XYZ Ring Radius" },
+                    { text: 'XYZ Ring Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.xyzRingRadius" }
+                        link: { observer, path: 'gizmo.xyzRingRadius' }
                     })
                 ),
-            type === "rotate" &&
+            type === 'rotate' &&
                 jsx(
                     LabelGroup,
-                    { text: "Face Tube Radius" },
+                    { text: 'Face Tube Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.faceTubeRadius" }
+                        link: { observer, path: 'gizmo.faceTubeRadius' }
                     })
                 ),
-            type === "rotate" &&
+            type === 'rotate' &&
                 jsx(
                     LabelGroup,
-                    { text: "Face Ring Radius" },
+                    { text: 'Face Ring Radius' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "gizmo.faceRingRadius" },
+                        link: { observer, path: 'gizmo.faceRingRadius' },
                         max: 2
                     })
                 )
         ),
         jsx(
             Panel,
-            { headerText: "Camera" },
+            { headerText: 'Camera' },
             jsx(
                 LabelGroup,
-                { text: "Projection" },
+                { text: 'Projection' },
                 jsx(SelectInput, {
                     options: [
-                        { v: pc.PROJECTION_PERSPECTIVE + 1, t: "Perspective" },
-                        { v: pc.PROJECTION_ORTHOGRAPHIC + 1, t: "Orthographic" }
+                        { v: pc.PROJECTION_PERSPECTIVE + 1, t: 'Perspective' },
+                        { v: pc.PROJECTION_ORTHOGRAPHIC + 1, t: 'Orthographic' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "camera.proj" },
+                    link: { observer, path: 'camera.proj' },
                     onSelect: value => setProj((parseInt(value) || 1) - 1)
                 })
             ),
             proj === pc.PROJECTION_PERSPECTIVE &&
                 jsx(
                     LabelGroup,
-                    { text: "FOV" },
+                    { text: 'FOV' },
                     jsx(SliderInput, {
                         binding: new BindingTwoWay(),
-                        link: { observer, path: "camera.fov" },
+                        link: { observer, path: 'camera.fov' },
                         min: 30,
                         max: 100
                     })

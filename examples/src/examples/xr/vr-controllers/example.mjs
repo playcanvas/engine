@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
     /** @type {HTMLDivElement} */
-    let el = document.querySelector(".message");
+    let el = document.querySelector('.message');
     if (!el) {
-        el = document.createElement("div");
-        el.classList.add("message");
+        el = document.createElement('div');
+        el.classList.add('message');
         document.body.append(el);
     }
     el.textContent = msg;
@@ -27,13 +27,13 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assets = {
-    glb: new pc.Asset("glb", "container", { url: "/static/assets/models/vr-controller.glb" })
+    glb: new pc.Asset('glb', 'container', { url: '/static/assets/models/vr-controller.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -44,14 +44,14 @@ assetListLoader.load(() => {
 
     // create camera
     const c = new pc.Entity();
-    c.addComponent("camera", {
+    c.addComponent('camera', {
         clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255)
     });
     app.root.addChild(c);
 
     const l = new pc.Entity();
-    l.addComponent("light", {
-        type: "directional",
+    l.addComponent('light', {
+        type: 'directional',
         castShadows: true,
         shadowBias: 0.05,
         normalOffsetBias: 0.05,
@@ -67,8 +67,8 @@ assetListLoader.load(() => {
      */
     const createCube = function (x, y, z) {
         const cube = new pc.Entity();
-        cube.addComponent("render", {
-            type: "box",
+        cube.addComponent('render', {
+            type: 'box',
             material: new pc.StandardMaterial()
         });
         cube.translate(x, y, z);
@@ -79,8 +79,8 @@ assetListLoader.load(() => {
     // create controller model
     const createController = function (inputSource) {
         const entity = new pc.Entity();
-        entity.addComponent("model", {
-            type: "asset",
+        entity.addComponent('model', {
+            type: 'asset',
             asset: assets.glb.resource.model,
             castShadows: true
         });
@@ -91,7 +91,7 @@ assetListLoader.load(() => {
 
         // destroy input source related entity
         // when input source is removed
-        inputSource.on("remove", function () {
+        inputSource.on('remove', function () {
             controllers.splice(controllers.indexOf(entity), 1);
             entity.destroy();
         });
@@ -110,20 +110,20 @@ assetListLoader.load(() => {
             if (app.xr.isAvailable(pc.XRTYPE_VR)) {
                 c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
                     callback: function (err) {
-                        if (err) message("Immersive VR failed to start: " + err.message);
+                        if (err) message('Immersive VR failed to start: ' + err.message);
                     }
                 });
             } else {
-                message("Immersive VR is not available");
+                message('Immersive VR is not available');
             }
         };
 
-        app.mouse.on("mousedown", function () {
+        app.mouse.on('mousedown', function () {
             if (!app.xr.active) activate();
         });
 
         if (app.touch) {
-            app.touch.on("touchend", function (evt) {
+            app.touch.on('touchend', function (evt) {
                 if (!app.xr.active) {
                     // if not in VR, activate
                     activate();
@@ -138,22 +138,22 @@ assetListLoader.load(() => {
         }
 
         // end session by keyboard ESC
-        app.keyboard.on("keydown", function (evt) {
+        app.keyboard.on('keydown', function (evt) {
             if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
                 app.xr.end();
             }
         });
 
         // when new input source added
-        app.xr.input.on("add", function (inputSource) {
-            message("Controller Added");
+        app.xr.input.on('add', function (inputSource) {
+            message('Controller Added');
             createController(inputSource);
         });
 
-        message("Tap on screen to enter VR, and see controllers");
+        message('Tap on screen to enter VR, and see controllers');
 
         // update position and rotation for each controller
-        app.on("update", function () {
+        app.on('update', function () {
             for (let i = 0; i < controllers.length; i++) {
                 const inputSource = controllers[i].inputSource;
                 if (inputSource.grip) {
@@ -168,7 +168,7 @@ assetListLoader.load(() => {
             }
         });
     } else {
-        message("WebXR is not supported");
+        message('WebXR is not supported');
     }
 });
 

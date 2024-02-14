@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -39,9 +39,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -50,14 +50,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -67,9 +67,9 @@ assetListLoader.load(() => {
 
     // Create a text element that wraps text over several lines
     const loremIpsum =
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';
     const text = new pc.Entity();
-    text.addComponent("element", {
+    text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         autoWidth: false,
         fontAsset: assets.font.id,
@@ -93,7 +93,7 @@ assetListLoader.load(() => {
             text.element.rangeEnd = 0;
         }
     }, 75);
-    app.on("destroy", () => clearInterval(id));
+    app.on('destroy', () => clearInterval(id));
 });
 
 export { app };

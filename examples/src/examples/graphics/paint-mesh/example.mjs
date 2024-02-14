@@ -1,24 +1,24 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // load the textures
 const assets = {
     helipad: new pc.Asset(
-        "helipad.dds",
-        "cubemap",
-        { url: "/static/assets/cubemaps/helipad.dds" },
+        'helipad.dds',
+        'cubemap',
+        { url: '/static/assets/cubemaps/helipad.dds' },
         { type: pc.TEXTURETYPE_RGBM }
     ),
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    decal: new pc.Asset("color", "texture", { url: "/static/assets/textures/heart.png" })
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    decal: new pc.Asset('color', 'texture', { url: '/static/assets/textures/heart.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -37,9 +37,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -59,15 +59,15 @@ assetListLoader.load(() => {
      */
     const createHighQualitySphere = function (material, layer) {
         // Create Entity and add it to the scene
-        const entity = new pc.Entity("HighResSphere");
+        const entity = new pc.Entity('HighResSphere');
         app.root.addChild(entity);
 
         // create hight resolution sphere
         const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
         // Add a render component with the mesh
-        entity.addComponent("render", {
-            type: "asset",
+        entity.addComponent('render', {
+            type: 'asset',
             layers: layer,
             meshInstances: [new pc.MeshInstance(mesh, material)]
         });
@@ -84,15 +84,15 @@ assetListLoader.load(() => {
     });
 
     // create a layer for rendering to decals
-    const decalLayer = new pc.Layer({ name: "decalLayer" });
+    const decalLayer = new pc.Layer({ name: 'decalLayer' });
     app.scene.layers.insert(decalLayer, 0);
 
     // Create a camera, which renders decals using a decalLayer, and renders before the main camera
     // Note that this camera does not need its position set, as it's only used to trigger
     // the rendering, but the camera matrix is not used for the rendering (our custom shader
     // does not need it).
-    const decalCamera = new pc.Entity("DecalCamera");
-    decalCamera.addComponent("camera", {
+    const decalCamera = new pc.Entity('DecalCamera');
+    decalCamera.addComponent('camera', {
         clearColorBuffer: false,
         layers: [decalLayer.id],
         renderTarget: renderTarget,
@@ -101,8 +101,8 @@ assetListLoader.load(() => {
     app.root.addChild(decalCamera);
 
     // Create main camera, which renders entities in world layer - this is where we show mesh with decals
-    const camera = new pc.Entity("MainCamera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('MainCamera');
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1, 1)
     });
     camera.translate(20, 10, 40);
@@ -118,12 +118,12 @@ assetListLoader.load(() => {
     material.update();
 
     // sphere with the texture
-    const worldLayer = app.scene.layers.getLayerByName("World");
+    const worldLayer = app.scene.layers.getLayerByName('World');
     const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
     meshEntity.setLocalScale(15, 15, 15);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     });
@@ -133,7 +133,7 @@ assetListLoader.load(() => {
     decalMaterial.cull = pc.CULLFACE_NONE;
     decalMaterial.shader = shader;
     decalMaterial.blendType = pc.BLEND_NORMAL;
-    decalMaterial.setParameter("uDecalMap", assets.decal.resource);
+    decalMaterial.setParameter('uDecalMap', assets.decal.resource);
 
     // To render into uv space of the mesh, we need to render the mesh using our custom shader into
     // the texture. In order to do this, we creates a new entity, containing the same mesh instances,
@@ -141,8 +141,8 @@ assetListLoader.load(() => {
     const meshInstances = meshEntity.render.meshInstances.map((srcMeshInstance) => {
         return new pc.MeshInstance(srcMeshInstance.mesh, decalMaterial);
     });
-    const cloneEntity = new pc.Entity("cloneEntity");
-    cloneEntity.addComponent("render", {
+    const cloneEntity = new pc.Entity('cloneEntity');
+    cloneEntity.addComponent('render', {
         meshInstances: meshInstances,
         layers: [decalLayer.id],
         castShadows: false,
@@ -152,8 +152,8 @@ assetListLoader.load(() => {
 
     // Create an entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         intensity: 3
     });
     app.root.addChild(light);
@@ -163,7 +163,7 @@ assetListLoader.load(() => {
     let time = 0;
     let decalTime = 0;
     const decalFrequency = 0.5;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt * 0.7;
 
         // a decal projection box is an orthographic projection from some position. We calculate position
@@ -189,7 +189,7 @@ assetListLoader.load(() => {
             // final matrix is a combination of view and projection matrix. Make it available to the shader.
             const viewProj = new pc.Mat4();
             viewProj.mul2(projMatrix, viewMatrix);
-            decalMaterial.setParameter("matrix_decal_viewProj", viewProj.data);
+            decalMaterial.setParameter('matrix_decal_viewProj', viewProj.data);
         } else {
             // otherwise the decal camera is disabled
             decalCamera.enabled = false;

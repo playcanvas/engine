@@ -1,9 +1,9 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-data.set("settings", {
+data.set('settings', {
     material: {
         gloss: 0.8,
         metalness: 0.7
@@ -11,18 +11,18 @@ data.set("settings", {
 });
 
 const assets = {
-    bloom: new pc.Asset("bloom", "script", { url: "/static/scripts/posteffects/posteffect-bloom.js" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" }),
-    luts: new pc.Asset("luts", "json", { url: "/static/assets/json/area-light-luts.json" })
+    bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -48,9 +48,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -111,7 +111,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: groundMaterial
         });
@@ -137,7 +137,7 @@ assetListLoader.load(() => {
      */
     function createAreaLight(type, shape, position, scale, color, intensity, range) {
         const light = new pc.Entity();
-        light.addComponent("light", {
+        light.addComponent('light', {
             type: type,
             shape: shape,
             color: color,
@@ -150,7 +150,7 @@ assetListLoader.load(() => {
 
         light.setLocalScale(scale);
         light.setLocalPosition(position);
-        if (type === "spot") {
+        if (type === 'spot') {
             light.rotate(-90, 0, 0);
         }
         app.root.addChild(light);
@@ -163,14 +163,14 @@ assetListLoader.load(() => {
 
         // primitive shape that matches light source shape
         const lightPrimitive =
-            shape === pc.LIGHTSHAPE_SPHERE ? "sphere" : shape === pc.LIGHTSHAPE_DISK ? "cylinder" : "box";
+            shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cylinder' : 'box';
 
         // primitive scale - flatten it to disk / rectangle
         const primitiveScale = new pc.Vec3(1, shape !== pc.LIGHTSHAPE_SPHERE ? 0.001 : 1, 1);
 
         // bright primitive representing the area light source
         const brightShape = new pc.Entity();
-        brightShape.addComponent("render", {
+        brightShape.addComponent('render', {
             type: lightPrimitive,
             material: brightMaterial
         });
@@ -178,9 +178,9 @@ assetListLoader.load(() => {
         light.addChild(brightShape);
 
         // black primitive representing the back of the light source which is not emitting light
-        if (type === "spot") {
+        if (type === 'spot') {
             const blackShape = new pc.Entity();
-            blackShape.addComponent("render", {
+            blackShape.addComponent('render', {
                 type: lightPrimitive,
                 material: blackMaterial
             });
@@ -201,11 +201,11 @@ assetListLoader.load(() => {
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
     // create ground plane
-    const ground = createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
+    const ground = createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(45, 1, 45), assets);
 
     // Create the camera, which renders entities
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1),
         fov: 60,
         farClip: 1000
@@ -213,8 +213,8 @@ assetListLoader.load(() => {
     camera.setLocalPosition(3, 3, 12);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: ground,
@@ -222,12 +222,12 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // add bloom postprocessing
-    camera.script.create("bloom", {
+    camera.script.create('bloom', {
         attributes: {
             bloomIntensity: 1.5,
             bloomThreshold: 0.6,
@@ -242,20 +242,20 @@ assetListLoader.load(() => {
             const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
             const rand = Math.random();
             if (rand < 0.3) {
-                createAreaLight("omni", pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2, 6);
+                createAreaLight('omni', pc.LIGHTSHAPE_SPHERE, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2, 6);
             } else if (rand < 0.6) {
-                createAreaLight("spot", pc.LIGHTSHAPE_DISK, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2.5, 5);
+                createAreaLight('spot', pc.LIGHTSHAPE_DISK, pos, new pc.Vec3(1.5, 1.5, 1.5), color, 2.5, 5);
             } else {
-                createAreaLight("spot", pc.LIGHTSHAPE_RECT, pos, new pc.Vec3(2, 1, 1), color, 2.5, 5);
+                createAreaLight('spot', pc.LIGHTSHAPE_RECT, pos, new pc.Vec3(2, 1, 1), color, 2.5, 5);
             }
         }
     }
 
     // handle HUD changes - update properties on the material
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
-        if (pathArray[2] === "gloss") groundMaterial.gloss = value;
-        if (pathArray[2] === "metalness") groundMaterial.metalness = value;
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'gloss') groundMaterial.gloss = value;
+        if (pathArray[2] === 'metalness') groundMaterial.metalness = value;
         groundMaterial.update();
     });
 });

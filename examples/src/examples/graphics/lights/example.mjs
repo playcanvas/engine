@@ -1,7 +1,7 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 function createMaterial(colors) {
     const material = new pc.StandardMaterial();
@@ -13,20 +13,20 @@ function createMaterial(colors) {
 }
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    heart: new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" }),
-    xmas_negx: new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
-    xmas_negy: new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),
-    xmas_negz: new pc.Asset("xmas_negz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negz.png" }),
-    xmas_posx: new pc.Asset("xmas_posx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posx.png" }),
-    xmas_posy: new pc.Asset("xmas_posy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posy.png" }),
-    xmas_posz: new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    heart: new pc.Asset('heart', 'texture', { url: '/static/assets/textures/heart.png' }),
+    xmas_negx: new pc.Asset('xmas_negx', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negx.png' }),
+    xmas_negy: new pc.Asset('xmas_negy', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negy.png' }),
+    xmas_negz: new pc.Asset('xmas_negz', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negz.png' }),
+    xmas_posx: new pc.Asset('xmas_posx', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posx.png' }),
+    xmas_posy: new pc.Asset('xmas_posy', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posy.png' }),
+    xmas_posz: new pc.Asset('xmas_posz', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posz.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -46,9 +46,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -68,7 +68,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 15, 35);
@@ -83,8 +83,8 @@ assetListLoader.load(() => {
 
     // Create an Entity for the ground
     const ground = new pc.Entity();
-    ground.addComponent("render", {
-        type: "box",
+    ground.addComponent('render', {
+        type: 'box',
         material: material
     });
     ground.setLocalScale(70, 1, 70);
@@ -92,7 +92,7 @@ assetListLoader.load(() => {
     app.root.addChild(ground);
 
     // setup light data
-    data.set("lights", {
+    data.set('lights', {
         spot: {
             enabled: true,
             intensity: 0.8,
@@ -117,9 +117,9 @@ assetListLoader.load(() => {
 
     // Create an spot light
     lights.spot = new pc.Entity();
-    lights.spot.addComponent("light", {
+    lights.spot.addComponent('light', {
         ...{
-            type: "spot",
+            type: 'spot',
             color: pc.Color.WHITE,
             innerConeAngle: 30,
             outerConeAngle: 31,
@@ -130,14 +130,14 @@ assetListLoader.load(() => {
             shadowResolution: 2048,
             // heart texture's alpha channel as a cookie texture
             cookie: assets.heart.resource,
-            cookieChannel: "a"
+            cookieChannel: 'a'
         },
-        ...data.get("lights.spot")
+        ...data.get('lights.spot')
     });
 
     const cone = new pc.Entity();
-    cone.addComponent("render", {
-        type: "cone",
+    cone.addComponent('render', {
+        type: 'cone',
         castShadows: false,
         material: createMaterial({ emissive: pc.Color.WHITE })
     });
@@ -146,7 +146,7 @@ assetListLoader.load(() => {
 
     // construct the cubemap asset for the omni light cookie texture
     // Note: the textures array could contain 6 texture asset names to load instead as well
-    const cubemapAsset = new pc.Asset("xmas_cubemap", "cubemap", null, {
+    const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
         textures: [
             assets.xmas_posx.id,
             assets.xmas_negx.id,
@@ -161,19 +161,19 @@ assetListLoader.load(() => {
 
     // Create a omni light
     lights.omni = new pc.Entity();
-    lights.omni.addComponent("light", {
+    lights.omni.addComponent('light', {
         ...{
-            type: "omni",
+            type: 'omni',
             color: pc.Color.YELLOW,
             castShadows: true,
             range: 111,
             cookieAsset: cubemapAsset,
-            cookieChannel: "rgb"
+            cookieChannel: 'rgb'
         },
-        ...data.get("lights.omni")
+        ...data.get('lights.omni')
     });
-    lights.omni.addComponent("render", {
-        type: "sphere",
+    lights.omni.addComponent('render', {
+        type: 'sphere',
         castShadows: false,
         material: createMaterial({ diffuse: pc.Color.BLACK, emissive: pc.Color.YELLOW })
     });
@@ -181,9 +181,9 @@ assetListLoader.load(() => {
 
     // Create a directional light
     lights.directional = new pc.Entity();
-    lights.directional.addComponent("light", {
+    lights.directional.addComponent('light', {
         ...{
-            type: "directional",
+            type: 'directional',
             color: pc.Color.CYAN,
             range: 100,
             shadowDistance: 50,
@@ -191,25 +191,25 @@ assetListLoader.load(() => {
             shadowBias: 0.1,
             normalOffsetBias: 0.2
         },
-        ...data.get("lights.directional")
+        ...data.get('lights.directional')
     });
     app.root.addChild(lights.directional);
 
     // Allow user to toggle individual lights
     app.keyboard.on(
-        "keydown",
+        'keydown',
         function (e) {
             // if the user is editing an input field, ignore key presses
-            if (e.element.constructor.name === "HTMLInputElement") return;
+            if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
                 case pc.KEY_1:
-                    data.set("lights.omni.enabled", !data.get("lights.omni.enabled"));
+                    data.set('lights.omni.enabled', !data.get('lights.omni.enabled'));
                     break;
                 case pc.KEY_2:
-                    data.set("lights.spot.enabled", !data.get("lights.spot.enabled"));
+                    data.set('lights.spot.enabled', !data.get('lights.spot.enabled'));
                     break;
                 case pc.KEY_3:
-                    data.set("lights.directional.enabled", !data.get("lights.directional.enabled"));
+                    data.set('lights.directional.enabled', !data.get('lights.directional.enabled'));
                     break;
             }
         },
@@ -218,7 +218,7 @@ assetListLoader.load(() => {
 
     // Simple update loop to rotate the light
     let angleRad = 1;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         angleRad += 0.3 * dt;
         if (entity) {
             lights.spot.lookAt(new pc.Vec3(0, -5, 0));
@@ -232,9 +232,9 @@ assetListLoader.load(() => {
         }
     });
 
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
-        if (pathArray[2] === "enabled") {
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
+        if (pathArray[2] === 'enabled') {
             lights[pathArray[1]].enabled = value;
         } else {
             // @ts-ignore

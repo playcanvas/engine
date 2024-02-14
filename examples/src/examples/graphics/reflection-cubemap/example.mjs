@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/utils/cubemap-renderer.js" })
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -40,9 +40,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -65,15 +65,15 @@ assetListLoader.load(() => {
      */
     const createHighQualitySphere = function (material, layer) {
         // Create Entity and add it to the scene
-        const entity = new pc.Entity("ShinyBall");
+        const entity = new pc.Entity('ShinyBall');
         app.root.addChild(entity);
 
         // create hight resolution sphere
         const mesh = pc.createSphere(app.graphicsDevice, { latitudeBands: 200, longitudeBands: 200 });
 
         // Add a render component with the mesh
-        entity.addComponent("render", {
-            type: "asset",
+        entity.addComponent('render', {
+            type: 'asset',
             layers: layer,
             meshInstances: [new pc.MeshInstance(mesh, material)]
         });
@@ -101,7 +101,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             layers: layer,
             material: material
@@ -116,13 +116,13 @@ assetListLoader.load(() => {
     }
 
     // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-    const immediateLayer = app.scene.layers.getLayerByName("Immediate");
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+    const immediateLayer = app.scene.layers.getLayerByName('Immediate');
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // create a layer for object that do not render into texture
-    const excludedLayer = new pc.Layer({ name: "Excluded" });
+    const excludedLayer = new pc.Layer({ name: 'Excluded' });
     app.scene.layers.push(excludedLayer);
 
     // create material for the shiny ball
@@ -134,7 +134,7 @@ assetListLoader.load(() => {
     shinyBall.setLocalScale(10, 10, 10);
 
     // add camera component to shiny ball - this defines camera properties for cubemap rendering
-    shinyBall.addComponent("camera", {
+    shinyBall.addComponent('camera', {
         // optimization - clear the surface even though all pixels are overwritten,
         // as this has performance benefits on tiled architectures
         clearColorBuffer: true,
@@ -150,8 +150,8 @@ assetListLoader.load(() => {
     });
 
     // add cubemapRenderer script component which takes care of rendering dynamic cubemap
-    shinyBall.addComponent("script");
-    shinyBall.script.create("cubemapRenderer", {
+    shinyBall.addComponent('script');
+    shinyBall.script.create('cubemapRenderer', {
         attributes: {
             resolution: 256,
             mipmaps: true,
@@ -177,7 +177,7 @@ assetListLoader.load(() => {
      * @type {pc.Entity[]}
      */
     const entities = [];
-    const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+    const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
     for (let i = 0; i < 6; i++) {
         const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
         const color = new pc.Color(Math.random(), Math.random(), Math.random());
@@ -185,13 +185,13 @@ assetListLoader.load(() => {
     }
 
     // create green plane as a base to cast shadows on
-    createPrimitive("plane", new pc.Vec3(0, -8, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [
+    createPrimitive('plane', new pc.Vec3(0, -8, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [
         worldLayer.id
     ]);
 
     // Create main camera, which renders entities in world, excluded and skybox layers
-    const camera = new pc.Entity("MainCamera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('MainCamera');
+    camera.addComponent('camera', {
         fov: 60,
         layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, immediateLayer.id, uiLayer.id]
     });
@@ -199,8 +199,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: pc.Color.YELLOW,
         range: 40,
         castShadows: true,
@@ -243,7 +243,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // rotate primitives around their center and also orbit them around the shiny sphere

@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -31,30 +31,30 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-const objurl = "/static/assets/models/monkey.obj";
-const scripturl = "/static/scripts/parsers/obj-model.js";
+const objurl = '/static/assets/models/monkey.obj';
+const scripturl = '/static/scripts/parsers/obj-model.js';
 /** @type {pc.Entity} */
 let entity;
-app.assets.loadFromUrl(scripturl, "script", function () {
+app.assets.loadFromUrl(scripturl, 'script', function () {
     // OBJ Parser is not enabled by default in engine. Add the parser to the model resource handler
     // set up obj parser
     // @ts-ignore globally loaded ObjModelParser
-    app.loader.getHandler("model").addParser(new ObjModelParser(app.graphicsDevice), function (url) {
-        return pc.path.getExtension(url) === ".obj";
+    app.loader.getHandler('model').addParser(new ObjModelParser(app.graphicsDevice), function (url) {
+        return pc.path.getExtension(url) === '.obj';
     });
 
-    app.assets.loadFromUrl(objurl, "model", function (err, asset) {
+    app.assets.loadFromUrl(objurl, 'model', function (err, asset) {
         app.start();
 
         entity = new pc.Entity();
-        entity.addComponent("model");
+        entity.addComponent('model');
         entity.model.model = asset.resource;
         app.root.addChild(entity);
 
@@ -71,7 +71,7 @@ app.assets.loadFromUrl(scripturl, "script", function () {
 
 // Create an Entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5)
 });
 camera.translate(0, 0, 5);
@@ -79,15 +79,15 @@ app.root.addChild(camera);
 
 // Create an Entity with a omni light component
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "omni",
+light.addComponent('light', {
+    type: 'omni',
     color: new pc.Color(1, 1, 1),
     range: 100
 });
 light.translate(5, 0, 15);
 app.root.addChild(light);
 
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     if (entity) {
         entity.rotate(0, 100 * dt, 0);
     }

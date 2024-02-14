@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -33,14 +33,14 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // Create an Entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0)
 });
 
@@ -80,7 +80,7 @@ updateMesh(mesh);
 mesh.aabb = new pc.BoundingBox(new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15));
 
 // Create the shader from the vertex and fragment shaders
-const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
     aPosition: pc.SEMANTIC_POSITION,
     aUv0: pc.SEMANTIC_TEXCOORD0
 });
@@ -96,8 +96,8 @@ const meshInstance = new pc.MeshInstance(mesh, material);
 
 // Create Entity to render the mesh instances using a render component
 const entity = new pc.Entity();
-entity.addComponent("render", {
-    type: "asset",
+entity.addComponent('render', {
+    type: 'asset',
     meshInstances: [meshInstance],
     material: material,
     castShadows: false
@@ -107,7 +107,7 @@ app.root.addChild(entity);
 // Set an update function on the app's update event
 let time = 0,
     previousTime;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     previousTime = time;
     time += dt;
 

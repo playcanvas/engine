@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -29,9 +29,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -55,7 +55,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 7, 24);
@@ -63,8 +63,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a omni light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 1, 1),
         range: 100,
         castShadows: true
@@ -72,7 +72,7 @@ assetListLoader.load(() => {
     light.translate(5, 0, 15);
     app.root.addChild(light);
 
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         if (entity) {
             entity.rotate(0, 10 * dt, 0);
         }

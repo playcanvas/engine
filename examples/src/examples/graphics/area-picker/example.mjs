@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    bloom: new pc.Asset("bloom", "script", { url: "/static/scripts/posteffects/posteffect-bloom.js" }),
+    bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -37,9 +37,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -60,7 +60,7 @@ assetListLoader.load(() => {
     const size = 30;
     const halfSize = size * 0.5;
     for (let i = 0; i < 300; i++) {
-        const shape = Math.random() < 0.5 ? "cylinder" : "sphere";
+        const shape = Math.random() < 0.5 ? 'cylinder' : 'sphere';
         const position = new pc.Vec3(
             Math.random() * size - halfSize,
             Math.random() * size - halfSize,
@@ -103,7 +103,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -117,13 +117,13 @@ assetListLoader.load(() => {
 
     // Create main camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
 
     // add bloom postprocessing (this is ignored by the picker)
-    camera.addComponent("script");
-    camera.script.create("bloom", {
+    camera.addComponent('script');
+    camera.script.create('bloom', {
         attributes: {
             bloomIntensity: 1,
             bloomThreshold: 0.7,
@@ -169,12 +169,12 @@ assetListLoader.load(() => {
     const highlights = [];
 
     // the layers picker renders
-    const worldLayer = app.scene.layers.getLayerByName("World");
+    const worldLayer = app.scene.layers.getLayerByName('World');
     const pickerLayers = [worldLayer];
 
     // update each frame
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt * 0.1;
 
         // orbit the camera around

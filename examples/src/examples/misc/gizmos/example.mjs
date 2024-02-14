@@ -1,7 +1,7 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // class for handling gizmos
 class GizmoHandler {
@@ -11,7 +11,7 @@ class GizmoHandler {
      * @type {string}
      * @private
      */
-    _type = "translate";
+    _type = 'translate';
 
     /**
      * Object to reference each gizmo.
@@ -60,12 +60,12 @@ class GizmoHandler {
         for (const type in this._gizmos) {
             const gizmo = this._gizmos[type];
             gizmo.on(
-                "pointer:down",
+                'pointer:down',
                 (/** @type {number} */ x, /** @type {number} */ y, /** @type {pc.MeshInstance} */ meshInstance) => {
                     this._ignorePicker = !!meshInstance;
                 }
             );
-            gizmo.on("pointer:up", () => {
+            gizmo.on('pointer:up', () => {
                 this._ignorePicker = false;
             });
         }
@@ -89,7 +89,7 @@ class GizmoHandler {
     _updateData(type) {
         const gizmo = this.gizmo;
         this._skipSetFire = true;
-        data.set("gizmo", {
+        data.set('gizmo', {
             type: type,
             size: gizmo.size,
             snapIncrement: gizmo.snapIncrement,
@@ -148,7 +148,7 @@ class GizmoHandler {
      */
     switch(type) {
         this.gizmo.detach();
-        this._type = type ?? "translate";
+        this._type = type ?? 'translate';
         this.gizmo.attach(this._nodes);
         this._updateData(type);
     }
@@ -162,8 +162,8 @@ class GizmoHandler {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -189,11 +189,11 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
+window.addEventListener('resize', resize);
 
 // load assets
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" })
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
 };
 /**
  * @param {pc.Asset[] | number[]} assetList - The asset list.
@@ -222,75 +222,75 @@ function createColorMaterial(color) {
 }
 
 // create entities
-const box = new pc.Entity("box");
-box.addComponent("render", {
-    type: "box",
+const box = new pc.Entity('box');
+box.addComponent('render', {
+    type: 'box',
     material: createColorMaterial(new pc.Color(0.8, 1, 1))
 });
 box.setPosition(1, 0, 1);
 app.root.addChild(box);
 
-const sphere = new pc.Entity("sphere");
-sphere.addComponent("render", {
-    type: "sphere",
+const sphere = new pc.Entity('sphere');
+sphere.addComponent('render', {
+    type: 'sphere',
     material: createColorMaterial(new pc.Color(1, 0.8, 1))
 });
 sphere.setPosition(-1, 0, 1);
 app.root.addChild(sphere);
 
-const cone = new pc.Entity("cone");
-cone.addComponent("render", {
-    type: "cone",
+const cone = new pc.Entity('cone');
+cone.addComponent('render', {
+    type: 'cone',
     material: createColorMaterial(new pc.Color(1, 1, 0.8))
 });
 cone.setPosition(-1, 0, -1);
 cone.setLocalScale(1.5, 2.25, 1.5);
 app.root.addChild(cone);
 
-const capsule = new pc.Entity("capsule");
-capsule.addComponent("render", {
-    type: "capsule",
+const capsule = new pc.Entity('capsule');
+capsule.addComponent('render', {
+    type: 'capsule',
     material: createColorMaterial(new pc.Color(0.8, 0.8, 1))
 });
 capsule.setPosition(1, 0, -1);
 app.root.addChild(capsule);
 
 // create camera entity
-data.set("camera", {
+data.set('camera', {
     proj: pc.PROJECTION_PERSPECTIVE + 1,
     dist: 1,
     fov: 45,
     orthoHeight: 10
 });
-const camera = new pc.Entity("camera");
-camera.addComponent("camera", {
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
-camera.addComponent("script");
-const orbitCamera = camera.script.create("orbitCamera");
-camera.script.create("orbitCameraInputMouse");
-camera.script.create("orbitCameraInputTouch");
+camera.addComponent('script');
+const orbitCamera = camera.script.create('orbitCamera');
+camera.script.create('orbitCameraInputMouse');
+camera.script.create('orbitCameraInputTouch');
 camera.setPosition(1, 1, 1);
 app.root.addChild(camera);
 orbitCamera.distance = 14;
 
 // create 3-point lighting
-const backLight = new pc.Entity("light");
-backLight.addComponent("light", {
+const backLight = new pc.Entity('light');
+backLight.addComponent('light', {
     intensity: 0.5
 });
 app.root.addChild(backLight);
 backLight.setEulerAngles(-60, 0, 90);
 
-const fillLight = new pc.Entity("light");
-fillLight.addComponent("light", {
+const fillLight = new pc.Entity('light');
+fillLight.addComponent('light', {
     intensity: 0.5
 });
 app.root.addChild(fillLight);
 fillLight.setEulerAngles(45, 0, 0);
 
-const keyLight = new pc.Entity("light");
-keyLight.addComponent("light", {
+const keyLight = new pc.Entity('light');
+keyLight.addComponent('light', {
     intensity: 1
 });
 app.root.addChild(keyLight);
@@ -298,7 +298,7 @@ keyLight.setEulerAngles(0, 0, -60);
 
 // create layers
 const gizmoLayer = new pc.Layer({
-    name: "Gizmo",
+    name: 'Gizmo',
     clearDepthBuffer: true,
     opaqueSortMode: pc.SORTMODE_NONE,
     transparentSortMode: pc.SORTMODE_NONE
@@ -309,20 +309,20 @@ camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 
 // create gizmo
 const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
-gizmoHandler.switch("translate");
+gizmoHandler.switch('translate');
 gizmoHandler.add(box);
 device.canvas.focus();
 
 // wrappers for control state changes
 const setType = (/** @type {string} */ value) => {
-    data.set("gizmo.type", value);
+    data.set('gizmo.type', value);
 
     // call method from top context (same as controls)
     // @ts-ignore
     window.top.setType(value);
 };
 const setProj = (/** @type {number} */ value) => {
-    data.set("camera.proj", value + 1);
+    data.set('camera.proj', value + 1);
 
     // call method from top context (same as controls)
     // @ts-ignore
@@ -340,57 +340,57 @@ const keyup = (/** @type {KeyboardEvent} */ e) => {
 };
 const keypress = (/** @type {KeyboardEvent} */ e) => {
     switch (e.key) {
-        case "x":
-            data.set("gizmo.coordSpace", data.get("gizmo.coordSpace") === "world" ? "local" : "world");
+        case 'x':
+            data.set('gizmo.coordSpace', data.get('gizmo.coordSpace') === 'world' ? 'local' : 'world');
             break;
-        case "1":
-            setType("translate");
+        case '1':
+            setType('translate');
             break;
-        case "2":
-            setType("rotate");
+        case '2':
+            setType('rotate');
             break;
-        case "3":
-            setType("scale");
+        case '3':
+            setType('scale');
             break;
-        case "p":
+        case 'p':
             setProj(pc.PROJECTION_PERSPECTIVE);
             break;
-        case "o":
+        case 'o':
             setProj(pc.PROJECTION_ORTHOGRAPHIC);
             break;
     }
 };
-window.addEventListener("keydown", keydown);
-window.addEventListener("keyup", keyup);
-window.addEventListener("keypress", keypress);
+window.addEventListener('keydown', keydown);
+window.addEventListener('keyup', keyup);
+window.addEventListener('keypress', keypress);
 
 // gizmo and camera set handler
 const tmpC = new pc.Color();
-data.on("*:set", (/** @type {string} */ path, value) => {
-    const pathArray = path.split(".");
+data.on('*:set', (/** @type {string} */ path, value) => {
+    const pathArray = path.split('.');
 
     switch (pathArray[0]) {
-        case "camera":
+        case 'camera':
             switch (pathArray[1]) {
-                case "proj":
+                case 'proj':
                     camera.camera.projection = value - 1;
                     break;
-                case "fov":
+                case 'fov':
                     camera.camera.fov = value;
                     break;
             }
             return;
-        case "gizmo":
+        case 'gizmo':
             if (gizmoHandler.skipSetFire) {
                 return;
             }
             switch (pathArray[1]) {
-                case "type":
+                case 'type':
                     gizmoHandler.switch(value);
                     break;
-                case "xAxisColor":
-                case "yAxisColor":
-                case "zAxisColor":
+                case 'xAxisColor':
+                case 'yAxisColor':
+                case 'zAxisColor':
                     // @ts-ignore
                     tmpC.set(...value);
                     gizmoHandler.gizmo[pathArray[1]] = tmpC;
@@ -405,7 +405,7 @@ data.on("*:set", (/** @type {string} */ path, value) => {
 
 // picker
 const picker = new pc.Picker(app, canvas.clientWidth, canvas.clientHeight);
-const worldLayer = layers.getLayerByName("World");
+const worldLayer = layers.getLayerByName('World');
 const pickerLayers = [worldLayer];
 
 const onPointerDown = (/** @type {PointerEvent} */ e) => {
@@ -426,7 +426,7 @@ const onPointerDown = (/** @type {PointerEvent} */ e) => {
 
     gizmoHandler.add(selection[0].node, !e.ctrlKey && !e.metaKey);
 };
-window.addEventListener("pointerdown", onPointerDown);
+window.addEventListener('pointerdown', onPointerDown);
 
 // grid
 const gridColor = new pc.Color(1, 1, 1, 0.5);
@@ -439,18 +439,18 @@ for (let i = 0; i < gridHalfSize * 2 + 1; i++) {
     gridLines.push(new pc.Vec3(-gridHalfSize, 0, i - gridHalfSize), new pc.Vec3(gridHalfSize, 0, i - gridHalfSize));
     gridLines.push(new pc.Vec3(i - gridHalfSize, 0, -gridHalfSize), new pc.Vec3(i - gridHalfSize, 0, gridHalfSize));
 }
-app.on("update", () => {
+app.on('update', () => {
     app.drawLines(gridLines, gridColor);
 });
 
-app.on("destroy", () => {
+app.on('destroy', () => {
     gizmoHandler.destroy();
 
-    window.removeEventListener("resize", resize);
-    window.removeEventListener("keydown", keydown);
-    window.removeEventListener("keyup", keyup);
-    window.removeEventListener("keypress", keypress);
-    window.removeEventListener("pointerdown", onPointerDown);
+    window.removeEventListener('resize', resize);
+    window.removeEventListener('keydown', keydown);
+    window.removeEventListener('keyup', keyup);
+    window.removeEventListener('keypress', keypress);
+    window.removeEventListener('pointerdown', onPointerDown);
 });
 
 export { app };

@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    clouds: new pc.Asset("clouds", "texture", { url: "/static/assets/textures/clouds.jpg" })
+    clouds: new pc.Asset('clouds', 'texture', { url: '/static/assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -29,9 +29,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -47,27 +47,27 @@ assetListLoader.load(() => {
 
     // Create a Entity with a Box model component
     const box = new pc.Entity();
-    box.addComponent("render", {
-        type: "box",
+    box.addComponent('render', {
+        type: 'box',
         material: material
     });
 
     // Create an Entity with a omni light component and a sphere model component.
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 0, 0),
         radius: 10
     });
-    light.addComponent("render", {
-        type: "sphere"
+    light.addComponent('render', {
+        type: 'sphere'
     });
     // Scale the sphere down to 0.1m
     light.setLocalScale(0.1, 0.1, 0.1);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
 
@@ -81,7 +81,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let angle = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         angle += dt;
         if (angle > 360) {
             angle = 0;

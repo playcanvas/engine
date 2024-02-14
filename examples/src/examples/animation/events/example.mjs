@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    model: new pc.Asset("model", "container", { url: "/static/assets/models/bitmoji.glb" }),
-    walkAnim: new pc.Asset("walkAnim", "container", { url: "/static/assets/animations/bitmoji/walk.glb" }),
+    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bloom: new pc.Asset("bloom", "script", { url: "/static/scripts/posteffects/posteffect-bloom.js" })
+    bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
 };
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,9 +51,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -66,14 +66,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     cameraEntity.translate(0, 1, 0);
 
     // add bloom postprocessing (this is ignored by the picker)
-    cameraEntity.addComponent("script");
-    cameraEntity.script.create("bloom", {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('bloom', {
         attributes: {
             bloomIntensity: 1,
             bloomThreshold: 0.7,
@@ -98,8 +98,8 @@ assetListLoader.load(() => {
 
             const box = new pc.Entity();
             boxes[`${i}${j}`] = box;
-            box.addComponent("render", {
-                type: "box",
+            box.addComponent('render', {
+                type: 'box',
                 material: material
             });
             box.setPosition(i, -0.5, j);
@@ -127,7 +127,7 @@ assetListLoader.load(() => {
     });
 
     // add an anim component to the entity
-    modelEntity.addComponent("anim", {
+    modelEntity.addComponent('anim', {
         activate: true
     });
     modelEntity.setLocalPosition(-3, 0, 0);
@@ -138,7 +138,7 @@ assetListLoader.load(() => {
     app.root.addChild(modelEntityParent);
 
     // rotate the model in a circle around the center of the scene
-    app.on("update", (/** @type {number} */ dt) => {
+    app.on('update', (/** @type {number} */ dt) => {
         modelEntityParent.rotate(0, 13.8 * dt, 0);
     });
 
@@ -148,25 +148,25 @@ assetListLoader.load(() => {
     walkTrack.events = new pc.AnimEvents([
         {
             time: walkTrack.duration * 0.1,
-            name: "foot_step",
-            bone: "R_foot0002_bind_JNT"
+            name: 'foot_step',
+            bone: 'R_foot0002_bind_JNT'
         },
         {
             time: walkTrack.duration * 0.6,
-            name: "foot_step",
-            bone: "L_foot0002_bind_JNT"
+            name: 'foot_step',
+            bone: 'L_foot0002_bind_JNT'
         }
     ]);
 
     // add the animation track to the anim component, with a defined speed
-    modelEntity.anim.assignAnimation("Walk", walkTrack, undefined, 0.62);
+    modelEntity.anim.assignAnimation('Walk', walkTrack, undefined, 0.62);
 
-    modelEntity.anim.on("foot_step", (event) => {
+    modelEntity.anim.on('foot_step', (event) => {
         // highlight the box that is under the foot's bone position
         highlightBox(modelEntity.findByName(event.bone).getPosition());
     });
 
-    app.on("update", () => {
+    app.on('update', () => {
         // on update, iterate over any currently highlighted boxes and reduce their emissive property
         highlightedBoxes.forEach((box) => {
             const material = box.render.material;

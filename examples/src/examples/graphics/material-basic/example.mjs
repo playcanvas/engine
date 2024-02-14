@@ -1,17 +1,17 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
-    rocks: new pc.Asset("rocks", "texture", { url: "/static/assets/textures/seaside-rocks01-diffuse-alpha.png" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+    rocks: new pc.Asset('rocks', 'texture', { url: '/static/assets/textures/seaside-rocks01-diffuse-alpha.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -30,9 +30,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -41,7 +41,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1, 1)
     });
     camera.translate(2, 1, 8);
@@ -79,9 +79,9 @@ assetListLoader.load(() => {
         material.blendType = blendModes[y];
 
         const box = new pc.Entity();
-        box.addComponent("render", {
+        box.addComponent('render', {
             material: material,
-            type: "box",
+            type: 'box',
 
             // Note: basic material cannot currently cast shadows, disable it
             castShadows: false
@@ -110,7 +110,7 @@ assetListLoader.load(() => {
     const createText = function (fontAsset, message, x, y, z, rot) {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -123,13 +123,13 @@ assetListLoader.load(() => {
         app.root.addChild(text);
     };
 
-    createText(assets.font, "Alpha Test", 0, -(NUM_BOXES + 1) * 0.5, 0, 0);
-    createText(assets.font, "Alpha Blend", -(NUM_BOXES + 1) * 0.5, 0, 0, 90);
+    createText(assets.font, 'Alpha Test', 0, -(NUM_BOXES + 1) * 0.5, 0, 0);
+    createText(assets.font, 'Alpha Blend', -(NUM_BOXES + 1) * 0.5, 0, 0, 90);
 
     // Set an update function on the app's update event
     let time = 0;
     const rot = new pc.Quat();
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
         // rotate the boxes

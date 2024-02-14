@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -32,9 +32,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -45,15 +45,15 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 7, 24);
 
     // Create an Entity with a omni light component and a sphere model component.
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 1, 1),
         radius: 10
     });
@@ -64,7 +64,7 @@ assetListLoader.load(() => {
     app.root.addChild(light);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aNormal: pc.SEMANTIC_NORMAL,
         aUv: pc.SEMANTIC_TEXCOORD0
@@ -84,7 +84,7 @@ assetListLoader.load(() => {
      */
     let originalTexture = null;
     /** @type {Array<pc.RenderComponent>} */
-    const renders = entity.findComponents("render");
+    const renders = entity.findComponents('render');
     renders.forEach((render) => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
@@ -100,12 +100,12 @@ assetListLoader.load(() => {
 
     // material parameters
     const lightPosArray = [light.getPosition().x, light.getPosition().y, light.getPosition().z];
-    material.setParameter("uLightPos", lightPosArray);
-    material.setParameter("uTexture", originalTexture);
+    material.setParameter('uLightPos', lightPosArray);
+    material.setParameter('uTexture', originalTexture);
     material.update();
 
     // rotate the statue
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         entity.rotate(0, 60 * dt, 0);
     });
 });

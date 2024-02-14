@@ -1,25 +1,25 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("Ammo", {
-    glueUrl: "/static/lib/ammo/ammo.wasm.js",
-    wasmUrl: "/static/lib/ammo/ammo.wasm.wasm",
-    fallbackUrl: "/static/lib/ammo/ammo.js"
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("Ammo", () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -53,9 +53,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -80,8 +80,8 @@ assetListLoader.load(() => {
 
     // Create light
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional"
+    light.addComponent('light', {
+        type: 'directional'
     });
 
     app.root.addChild(light);
@@ -89,7 +89,7 @@ assetListLoader.load(() => {
 
     // Create camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.5, 0.5, 0.8)
     });
 
@@ -112,23 +112,23 @@ assetListLoader.load(() => {
         app.root.addChild(e);
         e.setPosition(x, y, z);
 
-        e.addComponent("render", {
+        e.addComponent('render', {
             type: type,
             material: material
         });
-        e.addComponent("rigidbody", {
-            type: "static"
+        e.addComponent('rigidbody', {
+            type: 'static'
         });
-        e.addComponent("collision", {
+        e.addComponent('collision', {
             type: type,
-            height: type === "capsule" ? 2 : 1
+            height: type === 'capsule' ? 2 : 1
         });
 
         return e;
     }
 
     // Create two rows of physical geometric shapes
-    const types = ["box", "capsule", "cone", "cylinder", "sphere"];
+    const types = ['box', 'capsule', 'cone', 'cylinder', 'sphere'];
     types.forEach(function (type, idx) {
         createPhysicalShape(type, green, idx * 2 + 1, 2, 0);
     });
@@ -148,11 +148,11 @@ assetListLoader.load(() => {
     // Set an update function on the application's update event
     let time = 0;
     let y = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // Reset all shapes to green
-        app.root.findComponents("render").forEach(function (/** @type {pc.RenderComponent}*/ render) {
+        app.root.findComponents('render').forEach(function (/** @type {pc.RenderComponent}*/ render) {
             render.material = green;
         });
 
@@ -199,7 +199,7 @@ assetListLoader.load(() => {
     const createText = function (fontAsset, message, x, y, z, rot) {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -212,8 +212,8 @@ assetListLoader.load(() => {
         app.root.addChild(text);
     };
 
-    createText(assets.font, "raycastFirst", 0.5, 3.75, 0, 0);
-    createText(assets.font, "raycastAll", 0.5, -0.25, 0, 0);
+    createText(assets.font, 'raycastFirst', 0.5, 3.75, 0, 0);
+    createText(assets.font, 'raycastAll', 0.5, -0.25, 0, 0);
 });
 
 export { app };

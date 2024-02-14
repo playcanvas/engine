@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -40,9 +40,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -56,7 +56,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera");
+    camera.addComponent('camera');
     camera.translate(0, 0, 8);
     camera.rotate(0, 0, 0);
     app.root.addChild(camera);
@@ -64,8 +64,8 @@ assetListLoader.load(() => {
     // Create an entities with a directional light components
     for (let i = 0; i < 3; i++) {
         const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "directional"
+        light.addComponent('light', {
+            type: 'directional'
         });
         app.root.addChild(light);
         light.rotateLocal(60 + 10 * i, 30 + 90 * i, 0);
@@ -94,9 +94,9 @@ assetListLoader.load(() => {
 
         const sphere = new pc.Entity();
 
-        sphere.addComponent("render", {
+        sphere.addComponent('render', {
             material: material,
-            type: "sphere"
+            type: 'sphere'
         });
         sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, z - (NUM_SPHERES_Z - 1) * 0.5, 0);
         sphere.setLocalScale(0.7, 0.7, 0.7);
@@ -114,7 +114,7 @@ assetListLoader.load(() => {
     const createText = function (fontAsset, message, x, y, z, rotx, roty) {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -133,8 +133,8 @@ assetListLoader.load(() => {
         }
     }
 
-    createText(assets.font, "Spec Fade On", -NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
-    createText(assets.font, "Spec Fade Off", NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
+    createText(assets.font, 'Spec Fade On', -NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
+    createText(assets.font, 'Spec Fade Off', NUM_SPHERES_X * 0.25, (NUM_SPHERES_Z + 1) * -0.5, 0, -0, 0);
 });
 
 export { app };

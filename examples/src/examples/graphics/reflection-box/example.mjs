@@ -1,18 +1,18 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    script1: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    script2: new pc.Asset("script", "script", { url: "/static/scripts/utils/cubemap-renderer.js" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/normal-map.png" })
+    script1: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    script2: new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -38,16 +38,16 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     app.start();
 
-    data.set("settings", {
+    data.set('settings', {
         updateFrequency: 10,
         gloss: 0.8,
         metalness: 0.9,
@@ -56,11 +56,11 @@ assetListLoader.load(() => {
     });
 
     // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // create a layer for object that do not render into reflection cubemap
-    const excludedLayer = new pc.Layer({ name: "Excluded" });
+    const excludedLayer = new pc.Layer({ name: 'Excluded' });
     app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
     // create an envAtlas texture, which will hold a prefiltered lighting generated from the cubemap.
@@ -135,20 +135,20 @@ assetListLoader.load(() => {
 
         // create a HTML element with the video
         /** @type {HTMLVideoElement} */
-        const video = document.createElement("video");
-        video.id = "vid";
+        const video = document.createElement('video');
+        video.id = 'vid';
         video.loop = true;
         video.muted = true;
         video.autoplay = true;
         video.playsInline = true;
-        video.crossOrigin = "anonymous";
+        video.crossOrigin = 'anonymous';
         video.setAttribute(
-            "style",
-            "display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none"
+            'style',
+            'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
         );
-        video.src = "/static/assets/video/SampleVideo_1280x720_1mb.mp4";
+        video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
         document.body.append(video);
-        video.addEventListener("canplaythrough", function () {
+        video.addEventListener('canplaythrough', function () {
             videoTexture.setSource(video);
         });
     }
@@ -169,7 +169,7 @@ assetListLoader.load(() => {
     function createPrimitive(primitiveType, position, scale, material) {
         // create the primitive using the material
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material,
             layers: [worldLayer.id, excludedLayer.id],
@@ -184,30 +184,30 @@ assetListLoader.load(() => {
     }
 
     // create the ground plane from the boxes
-    createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800), roomMaterial);
-    createPrimitive("box", new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800), roomMaterial);
+    createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800), roomMaterial);
+    createPrimitive('box', new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800), roomMaterial);
 
     // walls
-    createPrimitive("box", new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800), roomMaterial);
-    createPrimitive("box", new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800), roomMaterial);
-    createPrimitive("box", new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0), roomMaterial);
-    createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0), roomMaterial);
+    createPrimitive('box', new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800), roomMaterial);
+    createPrimitive('box', new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800), roomMaterial);
+    createPrimitive('box', new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0), roomMaterial);
+    createPrimitive('box', new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0), roomMaterial);
 
     // emissive pillars
-    createPrimitive("box", new pc.Vec3(400, 200, -50), new pc.Vec3(20, 400, 20), emissiveMaterial);
-    createPrimitive("box", new pc.Vec3(400, 200, 50), new pc.Vec3(20, 400, 20), emissiveMaterial);
-    createPrimitive("box", new pc.Vec3(-400, 200, 50), new pc.Vec3(20, 400, 20), emissiveMaterial);
-    createPrimitive("box", new pc.Vec3(-400, 200, -50), new pc.Vec3(20, 400, 20), emissiveMaterial);
-    createPrimitive("box", new pc.Vec3(0, 400, 50), new pc.Vec3(800, 20, 20), emissiveMaterial);
-    createPrimitive("box", new pc.Vec3(0, 400, -50), new pc.Vec3(800, 20, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(400, 200, -50), new pc.Vec3(20, 400, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(400, 200, 50), new pc.Vec3(20, 400, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(-400, 200, 50), new pc.Vec3(20, 400, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(-400, 200, -50), new pc.Vec3(20, 400, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(0, 400, 50), new pc.Vec3(800, 20, 20), emissiveMaterial);
+    createPrimitive('box', new pc.Vec3(0, 400, -50), new pc.Vec3(800, 20, 20), emissiveMaterial);
 
     // screen
-    createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(500, 250, 5), screenMaterial);
+    createPrimitive('box', new pc.Vec3(0, 200, 400), new pc.Vec3(500, 250, 5), screenMaterial);
 
     // shiny sphere
     const sphereEntity = new pc.Entity();
-    sphereEntity.addComponent("render", {
-        type: "sphere",
+    sphereEntity.addComponent('render', {
+        type: 'sphere',
         material: sphereMaterial,
         castShadows: false,
         receiveShadows: false
@@ -218,8 +218,8 @@ assetListLoader.load(() => {
 
     // create an omni light white orbits the room to avoid it being completely dark
     const lightOmni = new pc.Entity();
-    lightOmni.addComponent("light", {
-        type: "omni",
+    lightOmni.addComponent('light', {
+        type: 'omni',
         layers: [excludedLayer.id], // add it to excluded layer, we don't want the light captured in the reflection
         castShadows: false,
         color: pc.Color.WHITE,
@@ -228,8 +228,8 @@ assetListLoader.load(() => {
     });
 
     // add a white sphere to light so that we can see where it is. This sphere is excluded from the reflections.
-    lightOmni.addComponent("render", {
-        type: "sphere",
+    lightOmni.addComponent('render', {
+        type: 'sphere',
         layers: [excludedLayer.id],
         material: lightMaterial,
         castShadows: false,
@@ -239,8 +239,8 @@ assetListLoader.load(() => {
     app.root.addChild(lightOmni);
 
     // create an Entity with a camera component
-    const camera = new pc.Entity("MainCamera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('MainCamera');
+    camera.addComponent('camera', {
         fov: 100,
         layers: [worldLayer.id, excludedLayer.id, uiLayer.id],
         farClip: 1500
@@ -248,24 +248,24 @@ assetListLoader.load(() => {
     camera.setLocalPosition(270, 90, -260);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             distanceMax: 390,
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // create a probe object with cubemapRenderer script which takes care of rendering dynamic cubemap
-    const probe = new pc.Entity("probeCamera");
-    probe.addComponent("script");
+    const probe = new pc.Entity('probeCamera');
+    probe.addComponent('script');
 
     // add camera component to the probe - this defines camera properties for cubemap rendering
-    probe.addComponent("camera", {
+    probe.addComponent('camera', {
         // optimization - no need to clear as all pixels get overwritten
         clearColorBuffer: false,
 
@@ -285,7 +285,7 @@ assetListLoader.load(() => {
     // Add a cubemap renderer script, which renders to a cubemap of size 128 with mipmaps, which is directly useable
     // as a lighting source for envAtlas generation
     // Position it in the center of the room.
-    probe.script.create("cubemapRenderer", {
+    probe.script.create('cubemapRenderer', {
         attributes: {
             resolution: 128,
             mipmaps: true,
@@ -296,7 +296,7 @@ assetListLoader.load(() => {
     app.root.addChild(probe);
 
     // handle onCubemapPostRender event fired by the cubemapRenderer when all faces of the cubemap are done rendering
-    probe.on("onCubemapPostRender", () => {
+    probe.on('onCubemapPostRender', () => {
         // prefilter just rendered cubemap into envAtlas, so that it can be used for reflection during the rest of the frame
         // @ts-ignore
         pc.EnvLighting.generateAtlas(probe.script.cubemapRenderer.cubeMap, {
@@ -308,7 +308,7 @@ assetListLoader.load(() => {
     let time = 0;
     let updateProbeCount = 1;
     let updateVideo = true;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt * 0.3;
 
         // Update the video data to the texture every other frame
@@ -321,7 +321,7 @@ assetListLoader.load(() => {
         lightOmni.setLocalPosition(300 * Math.sin(time), 300, 300 * Math.cos(time));
 
         // update the reflection probe as needed
-        const updateFrequency = data.get("settings.updateFrequency");
+        const updateFrequency = data.get('settings.updateFrequency');
         updateProbeCount--;
         if (updateFrequency === 0) updateProbeCount = 1;
 
@@ -334,10 +334,10 @@ assetListLoader.load(() => {
         }
 
         // update material properties based on settings
-        const gloss = data.get("settings.gloss");
-        const metalness = data.get("settings.metalness");
-        const bumpiness = data.get("settings.bumpiness");
-        const reflectivity = data.get("settings.reflectivity");
+        const gloss = data.get('settings.gloss');
+        const metalness = data.get('settings.metalness');
+        const bumpiness = data.get('settings.bumpiness');
+        const reflectivity = data.get('settings.reflectivity');
 
         roomMaterial.gloss = gloss;
         roomMaterial.metalness = metalness;

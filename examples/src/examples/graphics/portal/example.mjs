@@ -1,24 +1,24 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    portal: new pc.Asset("portal", "container", { url: "/static/assets/models/portal.glb" }),
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    bitmoji: new pc.Asset("bitmoji", "container", { url: "/static/assets/models/bitmoji.glb" })
+    portal: new pc.Asset('portal', 'container', { url: '/static/assets/models/portal.glb' }),
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    bitmoji: new pc.Asset('bitmoji', 'container', { url: '/static/assets/models/bitmoji.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,9 +43,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -61,7 +61,7 @@ assetListLoader.load(() => {
     ////////////////////////////////
     // Script to rotate the scene //
     ////////////////////////////////
-    const Rotator = pc.createScript("rotator");
+    const Rotator = pc.createScript('rotator');
 
     let t = 0;
 
@@ -73,7 +73,7 @@ assetListLoader.load(() => {
     //////////////////////////////////////////////////
     // Script to set up rendering the portal itself //
     //////////////////////////////////////////////////
-    const Portal = pc.createScript("portal");
+    const Portal = pc.createScript('portal');
 
     // initialize code called once per entity
     Portal.prototype.initialize = function () {
@@ -84,7 +84,7 @@ assetListLoader.load(() => {
 
         // set the stencil and other parameters on all materials
         /** @type {Array<pc.RenderComponent>} */
-        const renders = this.entity.findComponents("render");
+        const renders = this.entity.findComponents('render');
         renders.forEach((render) => {
             for (const meshInstance of render.meshInstances) {
                 const mat = meshInstance.material;
@@ -102,12 +102,12 @@ assetListLoader.load(() => {
     // Script to set stencil options for entities inside or outside the portal //
     /////////////////////////////////////////////////////////////////////////////
 
-    const PortalGeometry = pc.createScript("portalGeometry");
+    const PortalGeometry = pc.createScript('portalGeometry');
 
-    PortalGeometry.attributes.add("inside", {
-        type: "boolean",
+    PortalGeometry.attributes.add('inside', {
+        type: 'boolean',
         default: true,
-        title: "True indicating the geometry is inside the portal, false for outside"
+        title: 'True indicating the geometry is inside the portal, false for outside'
     });
 
     PortalGeometry.prototype.initialize = function () {
@@ -120,7 +120,7 @@ assetListLoader.load(() => {
 
         // set the stencil parameters on all materials
         /** @type {Array<pc.RenderComponent>} */
-        const renders = this.entity.findComponents("render");
+        const renders = this.entity.findComponents('render');
         renders.forEach((render) => {
             for (const meshInstance of render.meshInstances) {
                 meshInstance.material.stencilBack = meshInstance.material.stencilFront = stencil;
@@ -131,22 +131,22 @@ assetListLoader.load(() => {
     /////////////////////////////////////////////////////////////////////////////
 
     // find world layer - majority of objects render to this layer
-    const worldLayer = app.scene.layers.getLayerByName("World");
+    const worldLayer = app.scene.layers.getLayerByName('World');
 
     // find skybox layer - to enable it for the camera
-    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
+    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
 
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // portal layer - this is where the portal geometry is written to the stencil
     // buffer, and this needs to render first, so insert it before the world layer
-    const portalLayer = new pc.Layer({ name: "Portal" });
+    const portalLayer = new pc.Layer({ name: 'Portal' });
     app.scene.layers.insert(portalLayer, 0);
 
     // Create an Entity with a camera component
     // this camera renders both world and portal layers
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         layers: [worldLayer.id, portalLayer.id, skyboxLayer.id, uiLayer.id]
     });
     camera.setLocalPosition(7, 5.5, 7.1);
@@ -155,8 +155,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1)
     });
     light.setEulerAngles(45, 35, 0);
@@ -164,22 +164,22 @@ assetListLoader.load(() => {
 
     // Create a root for the graphical scene
     const group = new pc.Entity();
-    group.addComponent("script");
-    group.script.create("rotator");
+    group.addComponent('script');
+    group.script.create('rotator');
     app.root.addChild(group);
 
     // Create the portal entity - this plane is written to stencil buffer,
     // which is then used to test for inside / outside. This needs to render
     // before all elements requiring stencil buffer, so add to to a portalLayer.
     // This is the plane that fills the inside of the portal geometry.
-    const portal = new pc.Entity("Portal");
-    portal.addComponent("render", {
-        type: "plane",
+    const portal = new pc.Entity('Portal');
+    portal.addComponent('render', {
+        type: 'plane',
         material: new pc.StandardMaterial(),
         layers: [portalLayer.id]
     });
-    portal.addComponent("script");
-    portal.script.create("portal"); // comment out this line to see the geometry
+    portal.addComponent('script');
+    portal.script.create('portal'); // comment out this line to see the geometry
     portal.setLocalPosition(0, 0.4, -0.3);
     portal.setLocalEulerAngles(90, 0, 0);
     portal.setLocalScale(3.7, 1, 6.7);
@@ -193,8 +193,8 @@ assetListLoader.load(() => {
 
     // Create a statue entity, whic is visible inside the portal only
     const statue = assets.statue.resource.instantiateRenderEntity();
-    statue.addComponent("script");
-    statue.script.create("portalGeometry", {
+    statue.addComponent('script');
+    statue.script.create('portalGeometry', {
         attributes: {
             inside: true
         }
@@ -205,8 +205,8 @@ assetListLoader.load(() => {
 
     // Create a bitmoji entity, whic is visible outside the portal only
     const bitmoji = assets.bitmoji.resource.instantiateRenderEntity();
-    bitmoji.addComponent("script");
-    bitmoji.script.create("portalGeometry", {
+    bitmoji.addComponent('script');
+    bitmoji.script.create('portalGeometry', {
         attributes: {
             inside: false
         }

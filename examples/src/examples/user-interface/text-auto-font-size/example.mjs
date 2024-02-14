@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,9 +42,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -53,14 +53,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -70,7 +70,7 @@ assetListLoader.load(() => {
 
     // Create a container entity with an image component
     const autoFontSizeContainer = new pc.Entity();
-    autoFontSizeContainer.addComponent("element", {
+    autoFontSizeContainer.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         width: 220,
@@ -80,7 +80,7 @@ assetListLoader.load(() => {
     });
     // Create a text element with auto font size, and place it inside the container
     const autoFontSizeText = new pc.Entity();
-    autoFontSizeText.addComponent("element", {
+    autoFontSizeText.addComponent('element', {
         // place the text taking the entire parent space
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0, 0, 1, 1),
@@ -92,7 +92,7 @@ assetListLoader.load(() => {
         autoFitHeight: true,
         minFontSize: 10,
         maxFontSize: 100,
-        text: "Auto font size!",
+        text: 'Auto font size!',
         type: pc.ELEMENTTYPE_TEXT
     });
     screen.addChild(autoFontSizeContainer);
@@ -100,7 +100,7 @@ assetListLoader.load(() => {
 
     // update the container's size to showcase the auto-sizing feature
     let time = 0;
-    app.on("update", (dt) => {
+    app.on('update', (dt) => {
         time += dt;
         autoFontSizeContainer.element.width = 280 + Math.sin(time) * 80;
         autoFontSizeContainer.element.height = 60 + Math.sin(time * 0.5) * 50;

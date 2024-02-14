@@ -4,5 +4,5 @@
  */
 export function controls({ jsx, ReactPCUI }) {
     const { Label } = ReactPCUI;
-    return jsx(Label, { value: "N/A" });
+    return jsx(Label, { value: 'N/A' });
 }

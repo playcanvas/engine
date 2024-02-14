@@ -1,17 +1,17 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    checkboard: new pc.Asset("checkboard", "texture", { url: "/static/assets/textures/checkboard.png" }),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    checkboard: new pc.Asset('checkboard', 'texture', { url: '/static/assets/textures/checkboard.png' }),
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -40,9 +40,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -51,7 +51,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     camera.rotateLocal(-30, 0, 0);
@@ -66,8 +66,8 @@ assetListLoader.load(() => {
     material.update();
 
     const ground = new pc.Entity();
-    ground.addComponent("render", {
-        type: "box",
+    ground.addComponent('render', {
+        type: 'box',
         material: material
     });
     ground.setLocalScale(50, 1, 50);
@@ -76,8 +76,8 @@ assetListLoader.load(() => {
 
     // Create an entity with a light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         castShadows: true,
         intensity: 1,
@@ -92,7 +92,7 @@ assetListLoader.load(() => {
     // Create a 2D screen
     const screen = new pc.Entity();
     screen.setLocalScale(0.01, 0.01, 0.01);
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         screenSpace: true
     });
@@ -135,8 +135,8 @@ assetListLoader.load(() => {
         // Create a capsule entity to represent a player in the 3d world
         const entity = new pc.Entity();
         entity.setLocalScale(new pc.Vec3(0.5, 0.5, 0.5));
-        entity.addComponent("render", {
-            type: "capsule"
+        entity.addComponent('render', {
+            type: 'capsule'
         });
         app.root.addChild(entity);
 
@@ -144,7 +144,7 @@ assetListLoader.load(() => {
         // normally, this would be taking inputs, running physics simulation, etc
         let angle = startingAngle;
         const height = 0.5;
-        app.on("update", function (dt) {
+        app.on('update', function (dt) {
             angle += dt * speed;
             if (angle > 360) {
                 angle -= 360;
@@ -159,7 +159,7 @@ assetListLoader.load(() => {
 
         // Create a text element that will hover the player's head
         const playerInfo = new pc.Entity();
-        playerInfo.addComponent("element", {
+        playerInfo.addComponent('element', {
             pivot: new pc.Vec2(0.5, 0),
             anchor: new pc.Vec4(0, 0, 0, 0),
             width: 150,
@@ -170,7 +170,7 @@ assetListLoader.load(() => {
         screen.addChild(playerInfo);
 
         const name = new pc.Entity();
-        name.addComponent("element", {
+        name.addComponent('element', {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0, 0.4, 1, 1),
             margin: new pc.Vec4(0, 0, 0, 0),
@@ -180,18 +180,18 @@ assetListLoader.load(() => {
             useInput: true,
             type: pc.ELEMENTTYPE_TEXT
         });
-        name.addComponent("button", {
+        name.addComponent('button', {
             imageEntity: name
         });
-        name.button.on("click", function () {
+        name.button.on('click', function () {
             const color = new pc.Color(Math.random(), Math.random(), Math.random());
             name.element.color = color;
-            entity.render.material.setParameter("material_diffuse", [color.r, color.g, color.b]);
+            entity.render.material.setParameter('material_diffuse', [color.r, color.g, color.b]);
         });
         playerInfo.addChild(name);
 
         const healthBar = new pc.Entity();
-        healthBar.addComponent("element", {
+        healthBar.addComponent('element', {
             pivot: new pc.Vec2(0.5, 0),
             anchor: new pc.Vec4(0, 0, 1, 0.4),
             margin: new pc.Vec4(0, 0, 0, 0),
@@ -202,7 +202,7 @@ assetListLoader.load(() => {
         playerInfo.addChild(healthBar);
 
         // update the player text's position to always hover the player
-        app.on("update", function () {
+        app.on('update', function () {
             // get the desired world position
             const worldPosition = entity.getPosition();
             worldPosition.y += 0.6; // slightly above the player's head

@@ -7,28 +7,28 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "Settings" },
+            { headerText: 'Settings' },
             jsx(
                 LabelGroup,
-                { text: "Update" },
+                { text: 'Update' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.updateFrequency" },
-                    type: "number",
+                    link: { observer, path: 'settings.updateFrequency' },
+                    type: 'number',
                     options: [
-                        { v: 0, t: "Once" },
-                        { v: 1, t: "Every frame" },
-                        { v: 10, t: "Every 10 frames" },
-                        { v: 30, t: "Every 30 frames" }
+                        { v: 0, t: 'Once' },
+                        { v: 1, t: 'Every frame' },
+                        { v: 10, t: 'Every 10 frames' },
+                        { v: 30, t: 'Every 30 frames' }
                     ]
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "Gloss" },
+                { text: 'Gloss' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.gloss" },
+                    link: { observer, path: 'settings.gloss' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -36,10 +36,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Metalness" },
+                { text: 'Metalness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.metalness" },
+                    link: { observer, path: 'settings.metalness' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -47,10 +47,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Reflectivity" },
+                { text: 'Reflectivity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.reflectivity" },
+                    link: { observer, path: 'settings.reflectivity' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -58,10 +58,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Bumpiness" },
+                { text: 'Bumpiness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.bumpiness" },
+                    link: { observer, path: 'settings.bumpiness' },
                     min: 0,
                     max: 1,
                     precision: 2

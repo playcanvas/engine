@@ -1,4 +1,4 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 /**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -9,13 +9,13 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "Scene Rendering" },
+            { headerText: 'Scene Rendering' },
             jsx(
                 LabelGroup,
-                { text: "resolution" },
+                { text: 'resolution' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.scene.scale" },
+                    link: { observer, path: 'data.scene.scale' },
                     min: 0.2,
                     max: 1,
                     precision: 1
@@ -23,10 +23,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "background" },
+                { text: 'background' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.scene.background" },
+                    link: { observer, path: 'data.scene.background' },
                     min: 0,
                     max: 50,
                     precision: 1
@@ -34,10 +34,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "emissive" },
+                { text: 'emissive' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.scene.emissive" },
+                    link: { observer, path: 'data.scene.emissive' },
                     min: 0,
                     max: 400,
                     precision: 1
@@ -45,39 +45,39 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Tonemapping" },
+                { text: 'Tonemapping' },
                 jsx(SelectInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.scene.tonemapping" },
-                    type: "number",
+                    link: { observer, path: 'data.scene.tonemapping' },
+                    type: 'number',
                     options: [
-                        { v: pc.TONEMAP_LINEAR, t: "LINEAR" },
-                        { v: pc.TONEMAP_FILMIC, t: "FILMIC" },
-                        { v: pc.TONEMAP_HEJL, t: "HEJL" },
-                        { v: pc.TONEMAP_ACES, t: "ACES" },
-                        { v: pc.TONEMAP_ACES2, t: "ACES2" }
+                        { v: pc.TONEMAP_LINEAR, t: 'LINEAR' },
+                        { v: pc.TONEMAP_FILMIC, t: 'FILMIC' },
+                        { v: pc.TONEMAP_HEJL, t: 'HEJL' },
+                        { v: pc.TONEMAP_ACES, t: 'ACES' },
+                        { v: pc.TONEMAP_ACES2, t: 'ACES2' }
                     ]
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "BLOOM" },
+            { headerText: 'BLOOM' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.bloom.enabled" }
+                    link: { observer, path: 'data.bloom.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "intensity" },
+                { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.bloom.intensity" },
+                    link: { observer, path: 'data.bloom.intensity' },
                     min: 0,
                     max: 100,
                     precision: 0
@@ -85,10 +85,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "last mip level" },
+                { text: 'last mip level' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.bloom.lastMipLevel" },
+                    link: { observer, path: 'data.bloom.lastMipLevel' },
                     min: 1,
                     max: 10,
                     precision: 0
@@ -97,22 +97,22 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "Grading" },
+            { headerText: 'Grading' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.grading.enabled" }
+                    link: { observer, path: 'data.grading.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "saturation" },
+                { text: 'saturation' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.grading.saturation" },
+                    link: { observer, path: 'data.grading.saturation' },
                     min: 0,
                     max: 3,
                     precision: 2
@@ -120,10 +120,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "brightness" },
+                { text: 'brightness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.grading.brightness" },
+                    link: { observer, path: 'data.grading.brightness' },
                     min: 0,
                     max: 3,
                     precision: 2
@@ -131,10 +131,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "contrast" },
+                { text: 'contrast' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.grading.contrast" },
+                    link: { observer, path: 'data.grading.contrast' },
                     min: 0,
                     max: 3,
                     precision: 2
@@ -143,22 +143,22 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "Vignette" },
+            { headerText: 'Vignette' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.vignette.enabled" }
+                    link: { observer, path: 'data.vignette.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "inner" },
+                { text: 'inner' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.vignette.inner" },
+                    link: { observer, path: 'data.vignette.inner' },
                     min: 0,
                     max: 3,
                     precision: 2
@@ -166,10 +166,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "outer" },
+                { text: 'outer' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.vignette.outer" },
+                    link: { observer, path: 'data.vignette.outer' },
                     min: 0,
                     max: 3,
                     precision: 2
@@ -177,10 +177,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "curvature" },
+                { text: 'curvature' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.vignette.curvature" },
+                    link: { observer, path: 'data.vignette.curvature' },
                     min: 0.01,
                     max: 10,
                     precision: 2
@@ -188,10 +188,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "intensity" },
+                { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.vignette.intensity" },
+                    link: { observer, path: 'data.vignette.intensity' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -200,22 +200,22 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "Fringing" },
+            { headerText: 'Fringing' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.fringing.enabled" }
+                    link: { observer, path: 'data.fringing.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "intensity" },
+                { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.fringing.intensity" },
+                    link: { observer, path: 'data.fringing.intensity' },
                     min: 0,
                     max: 100,
                     precision: 0
@@ -224,22 +224,22 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "TAA (Work in Progress)" },
+            { headerText: 'TAA (Work in Progress)' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.taa.enabled" }
+                    link: { observer, path: 'data.taa.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "jitter" },
+                { text: 'jitter' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.taa.jitter" },
+                    link: { observer, path: 'data.taa.jitter' },
                     min: 0,
                     max: 5,
                     precision: 2

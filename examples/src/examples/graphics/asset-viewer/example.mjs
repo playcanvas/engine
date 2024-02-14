@@ -1,28 +1,28 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    orbitCamera: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
+    orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset("dish", "container", { url: "/static/assets/models/IridescentDishWithOlives.glb" }),
-    mosquito: new pc.Asset("mosquito", "container", { url: "/static/assets/models/MosquitoInAmber.glb" }),
-    sheen: new pc.Asset("sheen", "container", { url: "/static/assets/models/SheenChair.glb" }),
-    lamp: new pc.Asset("lamp", "container", { url: "/static/assets/models/StainedGlassLamp.glb" }),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
-    checkerboard: new pc.Asset("checkerboard", "texture", { url: "/static/assets/textures/checkboard.png" })
+    dish: new pc.Asset('dish', 'container', { url: '/static/assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: '/static/assets/models/MosquitoInAmber.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
+    lamp: new pc.Asset('lamp', 'container', { url: '/static/assets/models/StainedGlassLamp.glb' }),
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: '/static/assets/textures/checkboard.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -56,9 +56,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -79,7 +79,7 @@ assetListLoader.load(() => {
     const createText = (fontAsset, message, x, z) => {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.2,
@@ -113,33 +113,33 @@ assetListLoader.load(() => {
 
     // create the scene by instantiating glbs
     const mosquito = createVisual(assets.mosquito.resource, new pc.Vec3(0, 0.5, 0), 25);
-    createText(assets.font, "KHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission", 0, 2);
+    createText(assets.font, 'KHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission', 0, 2);
 
     const dish = createVisual(assets.dish.resource, new pc.Vec3(-4, -0.5, 0), 9);
     createText(
         assets.font,
-        "KHR_materials_specular\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission",
+        'KHR_materials_specular\nKHR_materials_volume\nKHR_materials_ior\nKHR_materials_transmission',
         -4,
         2
     );
 
     const sheen1 = createVisual(assets.sheen.resource, new pc.Vec3(8, -1.0, 0), 4);
-    createText(assets.font, "Mango Velvet", 8, 1);
+    createText(assets.font, 'Mango Velvet', 8, 1);
 
     const sheen2 = createVisual(assets.sheen.resource, new pc.Vec3(4, -1.0, 0), 4);
-    assets.sheen.resource.applyMaterialVariant(sheen2, "Peacock Velvet");
-    createText(assets.font, "KHR_materials_sheen\nKHR_materials_variants", 5.5, 2);
-    createText(assets.font, "Peacock Velvet", 4, 1);
+    assets.sheen.resource.applyMaterialVariant(sheen2, 'Peacock Velvet');
+    createText(assets.font, 'KHR_materials_sheen\nKHR_materials_variants', 5.5, 2);
+    createText(assets.font, 'Peacock Velvet', 4, 1);
 
     const lamp = createVisual(assets.lamp.resource, new pc.Vec3(-8, -1.0, 0), 5);
-    createText(assets.font, "Lamp on", -8, 1);
+    createText(assets.font, 'Lamp on', -8, 1);
 
     const lamp2 = createVisual(assets.lamp.resource, new pc.Vec3(-11, -1.0, 0), 5);
-    assets.lamp.resource.applyMaterialVariant(lamp2, "Lamp off");
-    createText(assets.font, "Lamp off", -11, 1);
+    assets.lamp.resource.applyMaterialVariant(lamp2, 'Lamp off');
+    createText(assets.font, 'Lamp off', -11, 1);
     createText(
         assets.font,
-        "KHR_materials_transmission\nKHR_materials_ior\nKHR_materials_volume\nKHR_materials_variants\nKHR_materials_clearcoat",
+        'KHR_materials_transmission\nKHR_materials_ior\nKHR_materials_volume\nKHR_materials_variants\nKHR_materials_clearcoat',
         -9.5,
         2
     );
@@ -151,8 +151,8 @@ assetListLoader.load(() => {
     material.diffuseMapTiling = new pc.Vec2(16, 6);
     material.update();
     const plane = new pc.Entity();
-    plane.addComponent("render", {
-        type: "plane",
+    plane.addComponent('render', {
+        type: 'plane',
         material: material
     });
     plane.setLocalScale(new pc.Vec3(25, 0, 10));
@@ -161,25 +161,25 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {});
+    camera.addComponent('camera', {});
     camera.setLocalPosition(0, 55, 160);
 
     camera.camera.requestSceneColorMap(true);
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             distanceMin: 8,
             distanceMax: 50
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     const directionalLight = new pc.Entity();
-    directionalLight.addComponent("light", {
-        type: "directional",
+    directionalLight.addComponent('light', {
+        type: 'directional',
         color: pc.Color.WHITE,
         castShadows: true,
         intensity: 1,
@@ -197,10 +197,10 @@ assetListLoader.load(() => {
     app.scene.skyboxIntensity = 1.5;
 
     window.addEventListener(
-        "touchstart",
+        'touchstart',
         (event) => {
             const touch = event.touches[0];
-            const entity = data.get("selection.focusEntity");
+            const entity = data.get('selection.focusEntity');
             let newEntity = entity;
             if (touch.clientX <= canvas.width * 0.2) {
                 newEntity = Math.max(0, entity - 1);
@@ -208,7 +208,7 @@ assetListLoader.load(() => {
                 newEntity = Math.min(entity + 1, assetList.length);
             }
             if (entity !== newEntity) {
-                data.set("selection.focusEntity", newEntity);
+                data.set('selection.focusEntity', newEntity);
             }
         },
         false
@@ -234,12 +234,12 @@ assetListLoader.load(() => {
     // focus on mosquito
     jumpToAsset(3);
 
-    data.on("previous", function () {
+    data.on('previous', function () {
         jumpToAsset(-1);
     });
 
     // remove light button handler
-    data.on("next", function () {
+    data.on('next', function () {
         jumpToAsset(1);
     });
 });

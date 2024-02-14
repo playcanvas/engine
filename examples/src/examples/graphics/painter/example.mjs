@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -35,9 +35,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 /**
@@ -52,7 +52,7 @@ app.on("destroy", () => {
 function createPrimitive(primitiveType, position, scale, layer, material) {
     // create primitive
     const primitive = new pc.Entity();
-    primitive.addComponent("render", {
+    primitive.addComponent('render', {
         type: primitiveType,
         layers: layer,
         material: material,
@@ -83,7 +83,7 @@ const renderTarget = new pc.RenderTarget({
 });
 
 // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
-const paintLayer = new pc.Layer({ name: "paintLayer" });
+const paintLayer = new pc.Layer({ name: 'paintLayer' });
 app.scene.layers.insert(paintLayer, 0);
 
 // create a material we use for the paint brush - it uses emissive color to control its color, which is assigned later
@@ -103,7 +103,7 @@ function getBrush() {
     if (brushes.length === 0) {
         // create new brush - use sphere primitive, but could use plane with a texture as well
         // Note: plane would need to be rotated by -90 degrees along x-axis to face camera and be visible
-        brush = createPrimitive("sphere", new pc.Vec3(2, 1, 0), new pc.Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
+        brush = createPrimitive('sphere', new pc.Vec3(2, 1, 0), new pc.Vec3(1, 1, 1), [paintLayer.id], brushMaterial);
     } else {
         // reuse already allocated brush
         brush = brushes.pop();
@@ -114,7 +114,7 @@ function getBrush() {
 
 // Create orthographic camera, which renders brushes in paintLayer, and renders before the main camera
 const paintCamera = new pc.Entity();
-paintCamera.addComponent("camera", {
+paintCamera.addComponent('camera', {
     clearColorBuffer: false,
     projection: pc.PROJECTION_ORTHOGRAPHIC,
     layers: [paintLayer.id],
@@ -129,7 +129,7 @@ app.root.addChild(paintCamera);
 
 // Create main camera, which renders entities in world layer - this is where we show the render target on the box
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)
 });
 camera.translate(0, 0, 30);
@@ -143,8 +143,8 @@ material.useLighting = false;
 material.update();
 
 // create a box which we use to display rendered texture in the world layer
-const worldLayer = app.scene.layers.getLayerByName("World");
-const box = createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15), [worldLayer.id], material);
+const worldLayer = app.scene.layers.getLayerByName('World');
+const box = createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(15, 15, 15), [worldLayer.id], material);
 
 let progress = 1;
 /** @type {number | undefined} */
@@ -158,7 +158,7 @@ const pos = new pc.Vec3();
 const usedBrushes = [];
 
 // update things each frame
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     // if the last brush stroke is finished, generate new random one
     if (progress >= 1) {
         progress = 0;

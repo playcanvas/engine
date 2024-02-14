@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -30,9 +30,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // set up options for mini-stats, start with the default options
@@ -53,69 +53,69 @@ options.startSizeIndex = 2;
 options.stats = [
     // frame update time in ms
     {
-        name: "Update",
-        stats: ["frame.updateTime"],
+        name: 'Update',
+        stats: ['frame.updateTime'],
         decimalPlaces: 1,
-        unitsName: "ms",
+        unitsName: 'ms',
         watermark: 33
     },
 
     // total number of draw calls
     {
-        name: "DrawCalls",
-        stats: ["drawCalls.total"],
+        name: 'DrawCalls',
+        stats: ['drawCalls.total'],
         watermark: 2000
     },
 
     // total number of triangles, in 1000s
     {
-        name: "triCount",
-        stats: ["frame.triangles"],
+        name: 'triCount',
+        stats: ['frame.triangles'],
         decimalPlaces: 1,
         multiplier: 1 / 1000,
-        unitsName: "k",
+        unitsName: 'k',
         watermark: 500
     },
 
     // number of materials used in a frame
     {
-        name: "materials",
-        stats: ["frame.materials"],
+        name: 'materials',
+        stats: ['frame.materials'],
         watermark: 2000
     },
 
     // frame time it took to do frustum culling
     {
-        name: "cull",
-        stats: ["frame.cullTime"],
+        name: 'cull',
+        stats: ['frame.cullTime'],
         decimalPlaces: 1,
         watermark: 1,
-        unitsName: "ms"
+        unitsName: 'ms'
     },
 
     // used VRAM, displayed using 2 colors - red for textures, green for geometry
     {
-        name: "VRAM",
-        stats: ["vram.tex", "vram.geom"],
+        name: 'VRAM',
+        stats: ['vram.tex', 'vram.geom'],
         decimalPlaces: 1,
         multiplier: 1 / (1024 * 1024),
-        unitsName: "MB",
+        unitsName: 'MB',
         watermark: 100
     },
 
     // frames per second
     {
-        name: "FPS",
-        stats: ["frame.fps"],
+        name: 'FPS',
+        stats: ['frame.fps'],
         watermark: 60
     },
 
     // delta time
     {
-        name: "Frame",
-        stats: ["frame.ms"],
+        name: 'Frame',
+        stats: ['frame.ms'],
         decimalPlaces: 1,
-        unitsName: "ms",
+        unitsName: 'ms',
         watermark: 33
     }
 ];
@@ -125,15 +125,15 @@ const miniStats = new pcx.MiniStats(app, options);
 
 // add directional lights to the scene
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "directional"
+light.addComponent('light', {
+    type: 'directional'
 });
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
 // Create an entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
@@ -155,7 +155,7 @@ function createPrimitive(primitiveType, position, scale) {
 
     // create primitive
     const primitive = new pc.Entity();
-    primitive.addComponent("model", {
+    primitive.addComponent('model', {
         type: primitiveType
     });
     primitive.model.material = material;
@@ -185,13 +185,13 @@ let entity;
 let vertexBuffer;
 /** @type {{ destroy: () => void}} */
 let texture;
-app.on("update", function () {
+app.on('update', function () {
     // execute some tasks multiple times per frame
     for (let i = 0; i < step; i++) {
         // allocating resources
         if (adding) {
             // add entity (they used shared geometry internally, and we create individual material for each)
-            const shape = Math.random() < 0.5 ? "box" : "sphere";
+            const shape = Math.random() < 0.5 ? 'box' : 'sphere';
             const position = new pc.Vec3(Math.random() * 10, Math.random() * 10, Math.random() * 10);
             const scale = 0.5 + Math.random();
             entity = createPrimitive(shape, position, new pc.Vec3(scale, scale, scale));

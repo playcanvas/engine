@@ -7,70 +7,70 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "WebGPU" },
+            { headerText: 'WebGPU' },
             jsx(Button, {
-                text: "Add",
-                onClick: () => observer.emit("add:webgpu")
+                text: 'Add',
+                onClick: () => observer.emit('add:webgpu')
             }),
             jsx(Button, {
-                text: "Remove",
-                onClick: () => observer.emit("remove:webgpu")
+                text: 'Remove',
+                onClick: () => observer.emit('remove:webgpu')
             }),
             jsx(Label, {
                 binding: new BindingTwoWay(),
-                link: { observer, path: "webgpu" },
-                value: observer.get("webgpu")
+                link: { observer, path: 'webgpu' },
+                value: observer.get('webgpu')
             })
         ),
         jsx(
             Panel,
-            { headerText: "WebGL 2" },
+            { headerText: 'WebGL 2' },
             jsx(Button, {
-                text: "Add",
-                onClick: () => observer.emit("add:webgl2")
+                text: 'Add',
+                onClick: () => observer.emit('add:webgl2')
             }),
             jsx(Button, {
-                text: "Remove",
-                onClick: () => observer.emit("remove:webgl2")
+                text: 'Remove',
+                onClick: () => observer.emit('remove:webgl2')
             }),
             jsx(Label, {
                 binding: new BindingTwoWay(),
-                link: { observer, path: "webgl2" },
-                value: observer.get("webgl2")
+                link: { observer, path: 'webgl2' },
+                value: observer.get('webgl2')
             })
         ),
         jsx(
             Panel,
-            { headerText: "WebGL 1" },
+            { headerText: 'WebGL 1' },
             jsx(Button, {
-                text: "Add",
-                onClick: () => observer.emit("add:webgl1")
+                text: 'Add',
+                onClick: () => observer.emit('add:webgl1')
             }),
             jsx(Button, {
-                text: "Remove",
-                onClick: () => observer.emit("remove:webgl1")
+                text: 'Remove',
+                onClick: () => observer.emit('remove:webgl1')
             }),
             jsx(Label, {
                 binding: new BindingTwoWay(),
-                link: { observer, path: "webgl1" },
-                value: observer.get("webgl1")
+                link: { observer, path: 'webgl1' },
+                value: observer.get('webgl1')
             })
         ),
         jsx(
             Panel,
-            { headerText: "Null" },
+            { headerText: 'Null' },
             jsx(Button, {
-                text: "Add",
-                onClick: () => observer.emit("add:null")
+                text: 'Add',
+                onClick: () => observer.emit('add:null')
             }),
             jsx(Button, {
-                text: "Remove",
-                onClick: () => observer.emit("remove:null")
+                text: 'Remove',
+                onClick: () => observer.emit('remove:null')
             }),
             jsx(Label, {
                 binding: new BindingTwoWay(),
-                link: { observer, path: "null" },
-                value: observer.get("null")
+                link: { observer, path: 'null' },
+                value: observer.get('null')
             })
         )
     );

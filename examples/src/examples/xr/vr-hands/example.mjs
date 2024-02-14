@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
     /** @type {HTMLDivElement} */
-    let el = document.querySelector(".message");
+    let el = document.querySelector('.message');
     if (!el) {
-        el = document.createElement("div");
-        el.classList.add("message");
+        el = document.createElement('div');
+        el.classList.add('message');
         document.body.append(el);
     }
     el.textContent = msg;
@@ -26,9 +26,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // use device pixel ratio
@@ -40,14 +40,14 @@ app.start();
 
 // create camera
 const c = new pc.Entity();
-c.addComponent("camera", {
+c.addComponent('camera', {
     clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255)
 });
 app.root.addChild(c);
 
 const l = new pc.Entity();
-l.addComponent("light", {
-    type: "directional"
+l.addComponent('light', {
+    type: 'directional'
 });
 l.setEulerAngles(45, 135, 0);
 app.root.addChild(l);
@@ -58,8 +58,8 @@ app.root.addChild(l);
  */
 const createCube = function (x, y, z) {
     const cube = new pc.Entity();
-    cube.addComponent("render", {
-        type: "box",
+    cube.addComponent('render', {
+        type: 'box',
         material: new pc.StandardMaterial()
     });
     cube.translate(x, y, z);
@@ -83,8 +83,8 @@ const createController = function (inputSource) {
         for (let i = 0; i < inputSource.hand.joints.length; i++) {
             const joint = inputSource.hand.joints[i];
             const jointEntity = new pc.Entity();
-            jointEntity.addComponent("model", {
-                type: "box",
+            jointEntity.addComponent('model', {
+                type: 'box',
                 material: material
             });
             // @ts-ignore engine-tsd
@@ -94,14 +94,14 @@ const createController = function (inputSource) {
             entity.addChild(jointEntity);
         }
         // when tracking lost, paint joints to red
-        inputSource.hand.on("trackinglost", function () {
+        inputSource.hand.on('trackinglost', function () {
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.diffuse.set(1, 0, 0);
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.update();
         });
         // when tracking recovered, paint joints to white
-        inputSource.hand.on("tracking", function () {
+        inputSource.hand.on('tracking', function () {
             // @ts-ignore engine-tsd
             entity.joints[0].model.material.diffuse.set(1, 1, 1);
             // @ts-ignore engine-tsd
@@ -109,8 +109,8 @@ const createController = function (inputSource) {
         });
     } else {
         // other inputs
-        entity.addComponent("model", {
-            type: "box",
+        entity.addComponent('model', {
+            type: 'box',
             castShadows: true
         });
         entity.setLocalScale(0.05, 0.05, 0.05);
@@ -123,7 +123,7 @@ const createController = function (inputSource) {
 
     // destroy input source related entity
     // when input source is removed
-    inputSource.on("remove", function () {
+    inputSource.on('remove', function () {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
     });
@@ -142,20 +142,20 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
             c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
                 callback: function (err) {
-                    if (err) message("Immersive VR failed to start: " + err.message);
+                    if (err) message('Immersive VR failed to start: ' + err.message);
                 }
             });
         } else {
-            message("Immersive VR is not available");
+            message('Immersive VR is not available');
         }
     };
 
-    app.mouse.on("mousedown", function () {
+    app.mouse.on('mousedown', function () {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on("touchend", function (evt) {
+        app.touch.on('touchend', function (evt) {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -170,26 +170,26 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on("keydown", function (evt) {
+    app.keyboard.on('keydown', function (evt) {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on("add", function (inputSource) {
-        message("Controller Added");
+    app.xr.input.on('add', function (inputSource) {
+        message('Controller Added');
         createController(inputSource);
     });
 
     if (window.XRHand) {
-        message("Tap on screen to enter VR, and switch to hand input");
+        message('Tap on screen to enter VR, and switch to hand input');
     } else {
-        message("WebXR Hands Input is not supported by your platform");
+        message('WebXR Hands Input is not supported by your platform');
     }
 
     // update position and rotation for each controller
-    app.on("update", function () {
+    app.on('update', function () {
         for (let i = 0; i < controllers.length; i++) {
             const inputSource = controllers[i].inputSource;
 
@@ -216,7 +216,7 @@ if (app.xr.supported) {
         }
     });
 } else {
-    message("WebXR is not supported");
+    message('WebXR is not supported');
 }
 
 export { app };

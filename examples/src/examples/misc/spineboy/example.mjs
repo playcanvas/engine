@@ -1,19 +1,19 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    skeleton: new pc.Asset("skeleton", "json", { url: "/static/assets//spine/spineboy-pro.json" }),
-    atlas: new pc.Asset("atlas", "text", { url: "/static/assets//spine/spineboy-pro.atlas" }),
-    texture: new pc.Asset("spineboy-pro.png", "texture", { url: "/static/assets//spine/spineboy-pro.png" }),
-    spinescript: new pc.Asset("spinescript", "script", { url: "/static/scripts/spine/playcanvas-spine.3.8.js" })
+    skeleton: new pc.Asset('skeleton', 'json', { url: '/static/assets//spine/spineboy-pro.json' }),
+    atlas: new pc.Asset('atlas', 'text', { url: '/static/assets//spine/spineboy-pro.atlas' }),
+    texture: new pc.Asset('spineboy-pro.png', 'texture', { url: '/static/assets//spine/spineboy-pro.png' }),
+    spinescript: new pc.Asset('spinescript', 'script', { url: '/static/scripts/spine/playcanvas-spine.3.8.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -32,9 +32,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -45,8 +45,8 @@ assetListLoader.load(async () => {
     // await import("/static/scripts/spine/playcanvas-spine.3.8.js");
 
     // create camera entity
-    const camera = new pc.Entity("camera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('camera');
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.5, 0.6, 0.9)
     });
     app.root.addChild(camera);
@@ -58,7 +58,7 @@ assetListLoader.load(async () => {
      */
     const createSpineInstance = (position, scale, timeScale) => {
         const spineEntity = new pc.Entity();
-        spineEntity.addComponent("spine", {
+        spineEntity.addComponent('spine', {
             atlasAsset: assets.atlas.id,
             skeletonAsset: assets.skeleton.id,
             textureAssets: [assets.texture.id]
@@ -70,7 +70,7 @@ assetListLoader.load(async () => {
         // play spine animation
         // @ts-ignore
         // debugger;
-        spineEntity.spine.state.setAnimation(0, "portal", true);
+        spineEntity.spine.state.setAnimation(0, 'portal', true);
 
         // @ts-ignore
         spineEntity.spine.state.timeScale = timeScale;

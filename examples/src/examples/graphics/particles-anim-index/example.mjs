@@ -1,18 +1,18 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    particlesNumbers: new pc.Asset("particlesNumbers", "texture", {
-        url: "/static/assets/textures/particles-numbers.png"
+    particlesNumbers: new pc.Asset('particlesNumbers', 'texture', {
+        url: '/static/assets/textures/particles-numbers.png'
     })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,7 +43,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.75, 0.75, 0.75)
     });
     cameraEntity.rotateLocal(0, 0, 0);
@@ -51,8 +51,8 @@ assetListLoader.load(() => {
 
     // Create a directional light
     const lightDirEntity = new pc.Entity();
-    lightDirEntity.addComponent("light", {
-        type: "directional",
+    lightDirEntity.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         intensity: 1
     });
@@ -60,8 +60,8 @@ assetListLoader.load(() => {
 
     // Create a screen to display the particle texture
     const screenEntity = new pc.Entity();
-    screenEntity.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true });
-    screenEntity.screen.scaleMode = "blend";
+    screenEntity.addComponent('screen', { resolution: new pc.Vec2(640, 480), screenSpace: true });
+    screenEntity.screen.scaleMode = 'blend';
     screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
     // Create a panel to display the full particle texture
@@ -122,7 +122,7 @@ assetListLoader.load(() => {
         // set the animation index of the first particle system to 0
         animIndex: 0
     });
-    particleEntity1.addComponent("particlesystem", options);
+    particleEntity1.addComponent('particlesystem', options);
 
     options = Object.assign(particleSystemConfiguration, {
         // states that each animation in the sprite sheet has 4 frames
@@ -130,7 +130,7 @@ assetListLoader.load(() => {
         // set the animation index of the second particle system to 1
         animIndex: 1
     });
-    particleEntity2.addComponent("particlesystem", options);
+    particleEntity2.addComponent('particlesystem', options);
 
     options = Object.assign(particleSystemConfiguration, {
         // states that each animation in the sprite sheet has 4 frames
@@ -138,7 +138,7 @@ assetListLoader.load(() => {
         // set the animation index of the third particle system to 2
         animIndex: 2
     });
-    particleEntity3.addComponent("particlesystem", options);
+    particleEntity3.addComponent('particlesystem', options);
 
     options = Object.assign(particleSystemConfiguration, {
         // states that each animation in the sprite sheet has 4 frames
@@ -146,15 +146,15 @@ assetListLoader.load(() => {
         // set the animation index of the fourth particle system to 3
         animIndex: 3
     });
-    particleEntity4.addComponent("particlesystem", options);
+    particleEntity4.addComponent('particlesystem', options);
 
     // add the full particle texture to the panel
-    panel.addComponent("element", {
+    panel.addComponent('element', {
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         pivot: new pc.Vec2(0.5, 0.5),
         width: 100,
         height: 100,
-        type: "image",
+        type: 'image',
         textureAsset: assets.particlesNumbers
     });
 

@@ -1,19 +1,19 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // The example demonstrates loading of glb file, which contains meshes,
 // lights and cameras, and switches between the cameras every 2 seconds.
 
 const assets = {
-    scene: new pc.Asset("scene", "container", { url: "/static/assets/models/geometry-camera-light.glb" })
+    scene: new pc.Asset('scene', 'container', { url: '/static/assets/models/geometry-camera-light.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -32,9 +32,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -55,7 +55,7 @@ assetListLoader.load(() => {
     app.root.addChild(entity);
 
     // find all cameras - by default they are disabled
-    camerasComponents = entity.findComponents("camera");
+    camerasComponents = entity.findComponents('camera');
     camerasComponents.forEach((component) => {
         // set the aspect ratio to automatic to work with any window size
         component.aspectRatioMode = pc.ASPECT_AUTO;
@@ -67,7 +67,7 @@ assetListLoader.load(() => {
     });
 
     /** @type {pc.LightComponent[]} */
-    const lightComponents = entity.findComponents("light");
+    const lightComponents = entity.findComponents('light');
     // enable all lights from the glb
     lightComponents.forEach((component) => {
         component.enabled = true;
@@ -75,7 +75,7 @@ assetListLoader.load(() => {
 
     let time = 0;
     let activeCamera = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time -= dt;
 
         // change the camera every few seconds

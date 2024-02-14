@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset("bench", "container", { url: "/static/assets/models/bench_wooden_01.glb" })
+    bench: new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -35,9 +35,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -50,7 +50,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.1, 0.1),
         farClip: 100
     });
@@ -64,7 +64,7 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 1;
 
     // a link element, created in the html part of the examples.
-    const link = document.getElementById("ar-link");
+    const link = document.getElementById('ar-link');
 
     // convert the loaded entity into asdz file
     const options = {
@@ -74,14 +74,14 @@ assetListLoader.load(() => {
     new pcx.UsdzExporter()
         .build(entity, options)
         .then((arrayBuffer) => {
-            const blob = new Blob([arrayBuffer], { type: "application/octet-stream" });
+            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
             // On iPhone Safari, this link creates a clickable AR link on the screen. When this is clicked,
             // the download of the .asdz file triggers its opening in QuickLook AT mode.
             // In other browsers, this simply downloads the generated .asdz file.
 
             // @ts-ignore
-            link.download = "bench.usdz";
+            link.download = 'bench.usdz';
 
             // @ts-ignore
             link.href = URL.createObjectURL(blob);
@@ -89,12 +89,12 @@ assetListLoader.load(() => {
         .catch(console.error);
 
     // when clicking on the download UI button, trigger the download
-    data.on("download", function () {
+    data.on('download', function () {
         link.click();
     });
 
     // spin the meshe
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         if (entity) {
             entity.rotate(0, -12 * dt, 0);
         }

@@ -1,19 +1,19 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" }),
-    red_button_atlas: new pc.Asset("red_button_atlas", "texture", {
-        url: "/static/assets/button/red_button_atlas.png"
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' }),
+    red_button_atlas: new pc.Asset('red_button_atlas', 'texture', {
+        url: '/static/assets/button/red_button_atlas.png'
     })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,9 +42,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -53,14 +53,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -70,11 +70,11 @@ assetListLoader.load(() => {
 
     // Create a simple button
     const button = new pc.Entity();
-    button.addComponent("button", {
+    button.addComponent('button', {
         active: true,
         transitionMode: pc.BUTTON_TRANSITION_MODE_SPRITE_CHANGE
     });
-    button.addComponent("element", {
+    button.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         height: 64,
         pivot: [0.5, 0.5],
@@ -86,7 +86,7 @@ assetListLoader.load(() => {
 
     // Create a label for the button
     const label = new pc.Entity();
-    label.addComponent("element", {
+    label.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         color: new pc.Color(1, 1, 1),
         fontAsset: assets.font.id,
@@ -94,7 +94,7 @@ assetListLoader.load(() => {
         height: 64,
         opacity: 0.5,
         pivot: [0.5, 0.5],
-        text: "CLICK ME",
+        text: 'CLICK ME',
         type: pc.ELEMENTTYPE_TEXT,
         width: 128,
         wrapLines: true
@@ -102,16 +102,16 @@ assetListLoader.load(() => {
     button.addChild(label);
 
     // Change the background color every time the button is clicked
-    button.button.on("click", function () {
+    button.button.on('click', function () {
         const r = Math.random();
         camera.camera.clearColor = new pc.Color(r, r, r);
     });
 
     // Move the button's label with the animation of the sprite
-    button.button.on("pressedstart", function () {
+    button.button.on('pressedstart', function () {
         label.translateLocal(0, -4, 0);
     });
-    button.button.on("pressedend", function () {
+    button.button.on('pressedend', function () {
         label.translateLocal(0, 4, 0);
     });
 
@@ -159,17 +159,17 @@ assetListLoader.load(() => {
             renderMode: pc.SPRITE_RENDERMODE_SIMPLE
         });
 
-        const spriteAsset = new pc.Asset("sprite", "sprite", { url: "" });
+        const spriteAsset = new pc.Asset('sprite', 'sprite', { url: '' });
         spriteAsset.resource = sprite;
         spriteAsset.loaded = true;
         app.assets.add(spriteAsset);
         return spriteAsset;
     };
 
-    button.element.spriteAsset = createSpriteAsset("0").id;
-    button.button.hoverSpriteAsset = createSpriteAsset("1");
-    button.button.pressedSpriteAsset = createSpriteAsset("2");
-    button.button.inactiveSpriteAsset = createSpriteAsset("3");
+    button.element.spriteAsset = createSpriteAsset('0').id;
+    button.button.hoverSpriteAsset = createSpriteAsset('1');
+    button.button.pressedSpriteAsset = createSpriteAsset('2');
+    button.button.inactiveSpriteAsset = createSpriteAsset('3');
 });
 
 export { app };

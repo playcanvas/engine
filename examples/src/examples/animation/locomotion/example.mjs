@@ -1,38 +1,38 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("Ammo", {
-    glueUrl: "/static/lib/ammo/ammo.wasm.js",
-    wasmUrl: "/static/lib/ammo/ammo.wasm.wasm",
-    fallbackUrl: "/static/lib/ammo/ammo.js"
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("Ammo", () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    playcanvasGreyTexture: new pc.Asset("playcanvasGreyTexture", "texture", {
-        url: "/static/assets/textures/playcanvas-grey.png"
+    playcanvasGreyTexture: new pc.Asset('playcanvasGreyTexture', 'texture', {
+        url: '/static/assets/textures/playcanvas-grey.png'
     }),
-    model: new pc.Asset("model", "container", { url: "/static/assets/models/bitmoji.glb" }),
-    idleAnim: new pc.Asset("idleAnim", "container", { url: "/static/assets/animations/bitmoji/idle.glb" }),
-    walkAnim: new pc.Asset("walkAnim", "container", { url: "/static/assets/animations/bitmoji/walk.glb" }),
-    jogAnim: new pc.Asset("jogAnim", "container", { url: "/static/assets/animations/bitmoji/run.glb" }),
-    jumpAnim: new pc.Asset("jumpAnim", "container", { url: "/static/assets/animations/bitmoji/jump-flip.glb" }),
+    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
+    walkAnim: new pc.Asset('walkAnim', 'container', { url: '/static/assets/animations/bitmoji/walk.glb' }),
+    jogAnim: new pc.Asset('jogAnim', 'container', { url: '/static/assets/animations/bitmoji/run.glb' }),
+    jumpAnim: new pc.Asset('jumpAnim', 'container', { url: '/static/assets/animations/bitmoji/jump-flip.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -68,9 +68,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -83,8 +83,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.name = "Camera";
-    cameraEntity.addComponent("camera", {
+    cameraEntity.name = 'Camera';
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.15, 0.2)
     });
 
@@ -94,8 +94,8 @@ assetListLoader.load(() => {
 
     // Create an entity with a light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         castShadows: true,
         intensity: 2,
@@ -120,7 +120,7 @@ assetListLoader.load(() => {
     characterEntity.addChild(renderEntity);
 
     // add an anim component to the entity
-    characterEntity.addComponent("anim", {
+    characterEntity.addComponent('anim', {
         activate: true
     });
 
@@ -128,112 +128,112 @@ assetListLoader.load(() => {
     const animStateGraphData = {
         layers: [
             {
-                name: "locomotion",
+                name: 'locomotion',
                 states: [
                     {
-                        name: "START"
+                        name: 'START'
                     },
                     {
-                        name: "Idle",
+                        name: 'Idle',
                         speed: 1.0
                     },
                     {
-                        name: "Walk",
+                        name: 'Walk',
                         speed: 1.0
                     },
                     {
-                        name: "Jump",
+                        name: 'Jump',
                         speed: 1
                     },
                     {
-                        name: "Jog",
+                        name: 'Jog',
                         speed: 1.0
                     },
                     {
-                        name: "END"
+                        name: 'END'
                     }
                 ],
                 transitions: [
                     {
-                        from: "START",
-                        to: "Idle",
+                        from: 'START',
+                        to: 'Idle',
                         time: 0,
                         priority: 0
                     },
                     {
-                        from: "Idle",
-                        to: "Walk",
+                        from: 'Idle',
+                        to: 'Walk',
                         time: 0.1,
                         priority: 0,
                         conditions: [
                             {
-                                parameterName: "speed",
+                                parameterName: 'speed',
                                 predicate: pc.ANIM_GREATER_THAN,
                                 value: 0
                             }
                         ]
                     },
                     {
-                        from: "ANY",
-                        to: "Jump",
+                        from: 'ANY',
+                        to: 'Jump',
                         time: 0.1,
                         priority: 0,
                         conditions: [
                             {
-                                parameterName: "jump",
+                                parameterName: 'jump',
                                 predicate: pc.ANIM_EQUAL_TO,
                                 value: true
                             }
                         ]
                     },
                     {
-                        from: "Jump",
-                        to: "Idle",
+                        from: 'Jump',
+                        to: 'Idle',
                         time: 0.2,
                         priority: 0,
                         exitTime: 0.8
                     },
                     {
-                        from: "Jump",
-                        to: "Walk",
+                        from: 'Jump',
+                        to: 'Walk',
                         time: 0.2,
                         priority: 0,
                         exitTime: 0.8
                     },
                     {
-                        from: "Walk",
-                        to: "Idle",
+                        from: 'Walk',
+                        to: 'Idle',
                         time: 0.1,
                         priority: 0,
                         conditions: [
                             {
-                                parameterName: "speed",
+                                parameterName: 'speed',
                                 predicate: pc.ANIM_LESS_THAN_EQUAL_TO,
                                 value: 0
                             }
                         ]
                     },
                     {
-                        from: "Walk",
-                        to: "Jog",
+                        from: 'Walk',
+                        to: 'Jog',
                         time: 0.1,
                         priority: 0,
                         conditions: [
                             {
-                                parameterName: "speed",
+                                parameterName: 'speed',
                                 predicate: pc.ANIM_GREATER_THAN,
                                 value: 1
                             }
                         ]
                     },
                     {
-                        from: "Jog",
-                        to: "Walk",
+                        from: 'Jog',
+                        to: 'Walk',
                         time: 0.1,
                         priority: 0,
                         conditions: [
                             {
-                                parameterName: "speed",
+                                parameterName: 'speed',
                                 predicate: pc.ANIM_LESS_THAN,
                                 value: 2
                             }
@@ -244,12 +244,12 @@ assetListLoader.load(() => {
         ],
         parameters: {
             speed: {
-                name: "speed",
+                name: 'speed',
                 type: pc.ANIM_PARAMETER_INTEGER,
                 value: 0
             },
             jump: {
-                name: "jump",
+                name: 'jump',
                 type: pc.ANIM_PARAMETER_TRIGGER,
                 value: false
             }
@@ -261,24 +261,24 @@ assetListLoader.load(() => {
 
     // assign the loaded animation assets to each of the states present in the state graph
     const locomotionLayer = characterEntity.anim.baseLayer;
-    locomotionLayer.assignAnimation("Idle", assets.idleAnim.resource.animations[0].resource);
-    locomotionLayer.assignAnimation("Walk", assets.walkAnim.resource.animations[0].resource);
-    locomotionLayer.assignAnimation("Jog", assets.jogAnim.resource.animations[0].resource);
-    locomotionLayer.assignAnimation("Jump", assets.jumpAnim.resource.animations[0].resource);
+    locomotionLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
+    locomotionLayer.assignAnimation('Walk', assets.walkAnim.resource.animations[0].resource);
+    locomotionLayer.assignAnimation('Jog', assets.jogAnim.resource.animations[0].resource);
+    locomotionLayer.assignAnimation('Jump', assets.jumpAnim.resource.animations[0].resource);
 
     app.root.addChild(characterEntity);
 
     const planeEntity = new pc.Entity();
-    planeEntity.name = "Plane";
-    planeEntity.addComponent("render", {
-        type: "plane"
+    planeEntity.name = 'Plane';
+    planeEntity.addComponent('render', {
+        type: 'plane'
     });
-    planeEntity.addComponent("collision", {
-        type: "box",
+    planeEntity.addComponent('collision', {
+        type: 'box',
         halfExtents: new pc.Vec3(7.5, 0, 7.5)
     });
-    planeEntity.addComponent("rigidbody", {
-        type: "static"
+    planeEntity.addComponent('rigidbody', {
+        type: 'static'
     });
     planeEntity.setLocalScale(15, 1, 15);
     planeEntity.setPosition(0, 0, 0);
@@ -288,15 +288,15 @@ assetListLoader.load(() => {
     planeEntity.render.meshInstances[0].material = material;
     app.root.addChild(planeEntity);
 
-    data.on("jump", function () {
-        const isJumping = characterEntity.anim.baseLayer.activeState === "Jump";
+    data.on('jump', function () {
+        const isJumping = characterEntity.anim.baseLayer.activeState === 'Jump';
         if (!isJumping) {
-            characterEntity.anim.setTrigger("jump");
+            characterEntity.anim.setTrigger('jump');
         }
     });
 
     // create a Locomotion script and initialize some variables
-    const Locomotion = pc.createScript("Locomotion");
+    const Locomotion = pc.createScript('Locomotion');
 
     let characterDirection;
     /** @type {pc.Vec3} */
@@ -306,8 +306,8 @@ assetListLoader.load(() => {
     Locomotion.prototype.initialize = function () {
         characterDirection = new pc.Vec3(1, 0, 0);
         targetPosition = new pc.Vec3(2, 0, 2);
-        document.addEventListener("mousedown", this.onMouseDown);
-        this.on("destroy", this.destroy, this);
+        document.addEventListener('mousedown', this.onMouseDown);
+        this.on('destroy', this.destroy, this);
     };
 
     // @ts-ignore engine-tsd
@@ -315,18 +315,18 @@ assetListLoader.load(() => {
         if (event.button !== 0) return;
         // Set the character target position to a position on the plane that the user has clicked
         /** @type {pc.Entity} */
-        const cameraEntity = app.root.findByName("Camera");
+        const cameraEntity = app.root.findByName('Camera');
         const near = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.nearClip);
         const far = cameraEntity.camera.screenToWorld(event.x, event.y, cameraEntity.camera.farClip);
         const result = app.systems.rigidbody.raycastFirst(far, near);
         if (result) {
             targetPosition = new pc.Vec3(result.point.x, 0, result.point.z);
-            characterEntity.anim.setInteger("speed", data.get("jogToggle") ? 2 : 1);
+            characterEntity.anim.setInteger('speed', data.get('jogToggle') ? 2 : 1);
         }
     };
 
     Locomotion.prototype.destroy = function () {
-        document.removeEventListener("mousedown", this.onMouseDown);
+        document.removeEventListener('mousedown', this.onMouseDown);
     };
 
     /**
@@ -336,12 +336,12 @@ assetListLoader.load(() => {
      */
     function speedForState(state) {
         switch (state) {
-            case "Walk":
+            case 'Walk':
                 return 1.0;
-            case "Jog":
+            case 'Jog':
                 return 4.0;
-            case "Jump":
-            case "Idle":
+            case 'Jump':
+            case 'Idle':
             default:
                 return 0.0;
         }
@@ -351,7 +351,7 @@ assetListLoader.load(() => {
 
     // update code called every frame
     Locomotion.prototype.update = function (/** @type {number} */ dt) {
-        if (characterEntity.anim.getInteger("speed")) {
+        if (characterEntity.anim.getInteger('speed')) {
             // Update position if target position is not the same as entity position. Base the movement speed on the current state
             // Move the character along X & Z axis based on click target position & make character face click direction
             let moveSpeed = speedForState(characterEntity.anim.baseLayer.activeState);
@@ -371,13 +371,13 @@ assetListLoader.load(() => {
             } else {
                 currentPosition.copy(targetPosition);
                 characterEntity.setPosition(currentPosition);
-                characterEntity.anim.setInteger("speed", 0);
+                characterEntity.anim.setInteger('speed', 0);
             }
         }
     };
 
-    characterEntity.addComponent("script");
-    characterEntity.script.create("Locomotion", {});
+    characterEntity.addComponent('script');
+    characterEntity.script.create('Locomotion', {});
 });
 
 export { app };

@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    spark: new pc.Asset("spark", "texture", { url: "/static/assets/textures/spark.png" })
+    spark: new pc.Asset('spark', 'texture', { url: '/static/assets/textures/spark.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -34,9 +34,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -45,7 +45,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0, 0, 0.05)
     });
     cameraEntity.rotateLocal(0, 0, 0);
@@ -53,8 +53,8 @@ assetListLoader.load(() => {
 
     // Create a directional light
     const lightDirEntity = new pc.Entity();
-    lightDirEntity.addComponent("light", {
-        type: "directional",
+    lightDirEntity.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         intensity: 1
     });
@@ -105,12 +105,12 @@ assetListLoader.load(() => {
     ]);
 
     // Create entity for particle system
-    const entity = new pc.Entity("Sparks");
+    const entity = new pc.Entity('Sparks');
     app.root.addChild(entity);
     entity.setLocalPosition(0, 0, 0);
 
     // when texture is loaded add particlesystem component to entity
-    entity.addComponent("particlesystem", {
+    entity.addComponent('particlesystem', {
         numParticles: 200,
         lifetime: 2,
         rate: 0.01,

@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -20,7 +20,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset("tv", "container", { url: "/static/assets/models/tv.glb" })
+    tv: new pc.Asset('tv', 'container', { url: '/static/assets/models/tv.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -33,24 +33,24 @@ assetListLoader.load(() => {
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 0, 15);
 
     // Create an Entity with a omni light
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 1, 1),
         range: 30
     });
@@ -71,8 +71,8 @@ assetListLoader.load(() => {
 
     // Create our HTML element with the video
     /** @type {HTMLVideoElement} */
-    const video = document.createElement("video");
-    video.id = "vid";
+    const video = document.createElement('video');
+    video.id = 'vid';
     video.loop = true;
 
     // Muted so that we can autoplay
@@ -82,19 +82,19 @@ assetListLoader.load(() => {
     // Inline needed for iOS otherwise it plays at fullscreen
     video.playsInline = true;
 
-    video.crossOrigin = "anonymous";
+    video.crossOrigin = 'anonymous';
 
     // Make sure that the video is in view on the page otherwise it doesn't
     // load on some browsers, especially mobile
     video.setAttribute(
-        "style",
-        "display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none"
+        'style',
+        'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
 
-    video.src = "/static/assets/video/SampleVideo_1280x720_1mb.mp4";
+    video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
     document.body.append(video);
 
-    video.addEventListener("canplaythrough", function () {
+    video.addEventListener('canplaythrough', function () {
         videoTexture.setSource(video);
     });
 
@@ -114,7 +114,7 @@ assetListLoader.load(() => {
     video.load();
 
     const mouse = new pc.Mouse(document.body);
-    mouse.on("mousedown", function (event) {
+    mouse.on('mousedown', function (event) {
         if (entity && event.buttons[pc.MOUSEBUTTON_LEFT]) {
             video.muted = !video.muted;
         }
@@ -122,7 +122,7 @@ assetListLoader.load(() => {
 
     let upload = false;
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // rotate the tv object

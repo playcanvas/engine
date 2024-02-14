@@ -1,17 +1,17 @@
-import * as pc from "playcanvas";
-import { getDeviceType, loadES5 } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType, loadES5 } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-const CORE = await loadES5("https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js");
-const DRACO = await loadES5("https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js");
+const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
+const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
 
 // This example uses draco point cloud loader library from https://loaders.gl/
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 /** @type {pc.GraphicsDevice} */
@@ -32,16 +32,16 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 /**
  * @param {string} url - The url to load.
  */
 async function loadModel(url) {
-    console.log("loader.gl example url", url);
+    console.log('loader.gl example url', url);
     // load the url using the draco format loader
     // @ts-ignore: cannot find CORE and DRACO
     const modelData = await CORE.load(url, DRACO.DracoLoader);
@@ -64,7 +64,7 @@ async function loadModel(url) {
     mesh.setColors32(colors32);
     mesh.update(pc.PRIMITIVE_POINTS);
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "MyShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'MyShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aColor: pc.SEMANTIC_COLOR
     });
@@ -77,7 +77,7 @@ async function loadModel(url) {
 
     // Add an entity with a render component to render the mesh
     const entity = new pc.Entity();
-    entity.addComponent("render", {
+    entity.addComponent('render', {
         material: material,
         meshInstances: [new pc.MeshInstance(mesh, material)]
     });
@@ -86,7 +86,7 @@ async function loadModel(url) {
 }
 // Create an Entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1),
     farClip: 100
 });
@@ -94,10 +94,10 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 // Load the draco model, don't wait for it.
-loadModel("/static/assets/models/park_points.drc");
+loadModel('/static/assets/models/park_points.drc');
 // update things each frame
 let time = 0;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     time += dt;
     // orbit the camera
     if (camera) {

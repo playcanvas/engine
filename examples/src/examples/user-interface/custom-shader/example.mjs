@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    playcanvas: new pc.Asset("playcanvas", "texture", { url: "/static/assets/textures/playcanvas.png" })
+    playcanvas: new pc.Asset('playcanvas', 'texture', { url: '/static/assets/textures/playcanvas.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -39,9 +39,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -50,14 +50,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -68,9 +68,9 @@ assetListLoader.load(() => {
     // Create the shader from the vertex and fragment shader
     const shader = pc.createShaderFromCode(
         app.graphicsDevice,
-        files["shader.vert"],
-        files["shader.frag"],
-        "myUIShader",
+        files['shader.vert'],
+        files['shader.frag'],
+        'myUIShader',
         {
             vertex_position: pc.SEMANTIC_POSITION,
             vertex_texCoord0: pc.SEMANTIC_TEXCOORD0
@@ -82,12 +82,12 @@ assetListLoader.load(() => {
     material.shader = shader;
     material.blendType = pc.BLEND_ADDITIVEALPHA;
     material.depthWrite = true;
-    material.setParameter("uDiffuseMap", assets.playcanvas.resource);
+    material.setParameter('uDiffuseMap', assets.playcanvas.resource);
     material.update();
 
     // Create the UI image element with the custom material
     const entity = new pc.Entity();
-    entity.addComponent("element", {
+    entity.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         width: 350,
@@ -99,10 +99,10 @@ assetListLoader.load(() => {
 
     // update the material's 'amount' parameter to animate the inverse effect
     let time = 0;
-    app.on("update", (dt) => {
+    app.on('update', (dt) => {
         time += dt;
         // animate the amount as a sine wave varying from 0 to 1
-        material.setParameter("amount", (Math.sin(time * 4) + 1) * 0.5);
+        material.setParameter('amount', (Math.sin(time * 4) + 1) * 0.5);
     });
 });
 

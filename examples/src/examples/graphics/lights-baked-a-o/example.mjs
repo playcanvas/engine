@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    house: new pc.Asset("house", "container", { url: "/static/assets/models/house.glb" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" })
+    house: new pc.Asset('house', 'container', { url: '/static/assets/models/house.glb' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -45,9 +45,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -69,7 +69,7 @@ assetListLoader.load(() => {
 
     // change its materials to lightmapping
     /** @type {Array<pc.RenderComponent>} */
-    const renders = house.findComponents("render");
+    const renders = house.findComponents('render');
     renders.forEach((render) => {
         render.castShadows = true;
         render.castShadowsLightmap = true;
@@ -77,9 +77,9 @@ assetListLoader.load(() => {
     });
 
     // directional light
-    const lightDirectional = new pc.Entity("Directional");
-    lightDirectional.addComponent("light", {
-        type: "directional",
+    const lightDirectional = new pc.Entity('Directional');
+    lightDirectional.addComponent('light', {
+        type: 'directional',
 
         // disable to not have shadow map updated every frame,
         // as the scene does not have dynamically lit objects
@@ -99,9 +99,9 @@ assetListLoader.load(() => {
     lightDirectional.setLocalEulerAngles(-55, 0, -30);
 
     // Create an entity with a omni light component that is configured as a baked light
-    const lightOmni = new pc.Entity("Omni");
-    lightOmni.addComponent("light", {
-        type: "omni",
+    const lightOmni = new pc.Entity('Omni');
+    lightOmni.addComponent('light', {
+        type: 'omni',
         affectDynamic: false,
         affectLightmapped: true,
         bake: true,
@@ -119,9 +119,9 @@ assetListLoader.load(() => {
     app.root.addChild(lightOmni);
 
     // Create an entity with a spot light component that is configured as a baked light
-    const lightSpot = new pc.Entity("Spot");
-    lightSpot.addComponent("light", {
-        type: "spot",
+    const lightSpot = new pc.Entity('Spot');
+    lightSpot.addComponent('light', {
+        type: 'spot',
         affectDynamic: false,
         affectLightmapped: true,
         bake: true,
@@ -140,7 +140,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         farClip: 100,
         nearClip: 1
@@ -148,16 +148,16 @@ assetListLoader.load(() => {
     camera.setLocalPosition(40, 20, 40);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: house,
             distanceMax: 60
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // lightmap baking properties
@@ -172,16 +172,16 @@ assetListLoader.load(() => {
     let needBake = false;
 
     // handle data changes from HUD to modify baking properties
-    data.on("*:set", (/** @type {string} */ path, value) => {
+    data.on('*:set', (/** @type {string} */ path, value) => {
         let bakeSettingChanged = true;
-        const pathArray = path.split(".");
+        const pathArray = path.split('.');
 
         // ambient light
-        if (pathArray[1] === "ambient") {
-            if (pathArray[2] === "cubemap") {
+        if (pathArray[1] === 'ambient') {
+            if (pathArray[2] === 'cubemap') {
                 // enable / disable cubemap
                 app.scene.envAtlas = value ? assets.helipad.resource : null;
-            } else if (pathArray[2] === "hemisphere") {
+            } else if (pathArray[2] === 'hemisphere') {
                 // switch between smaller upper hemisphere and full sphere
                 app.scene.ambientBakeSpherePart = value ? 0.4 : 1;
             } else {
@@ -189,13 +189,13 @@ assetListLoader.load(() => {
                 // @ts-ignore engine-tsd
                 app.scene[pathArray[2]] = value;
             }
-        } else if (pathArray[1] === "directional") {
+        } else if (pathArray[1] === 'directional') {
             // @ts-ignore engine-tsd
             lightDirectional.light[pathArray[2]] = value;
-        } else if (pathArray[1] === "settings") {
+        } else if (pathArray[1] === 'settings') {
             // @ts-ignore engine-tsd
             app.scene[pathArray[2]] = value;
-        } else if (pathArray[1] === "other") {
+        } else if (pathArray[1] === 'other') {
             // @ts-ignore engine-tsd
             lightOmni.light[pathArray[2]] = value;
             // @ts-ignore engine-tsd
@@ -210,7 +210,7 @@ assetListLoader.load(() => {
     });
 
     // bake properties connected to the HUD
-    data.set("data", {
+    data.set('data', {
         settings: {
             lightmapFilterEnabled: true,
             lightmapFilterRange: 10,
@@ -234,19 +234,19 @@ assetListLoader.load(() => {
             enabled: true
         },
         stats: {
-            duration: ""
+            duration: ''
         }
     });
 
     // Set an update function on the app's update event
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // bake lightmaps when HUD properties change
         if (needBake) {
             needBake = false;
             app.lightmapper.bake(null, bakeType);
 
             // update stats with the bake duration
-            data.set("data.stats.duration", app.lightmapper.stats.totalRenderTime.toFixed(1) + "ms");
+            data.set('data.stats.duration', app.lightmapper.stats.totalRenderTime.toFixed(1) + 'ms');
         }
     });
 });

@@ -1,21 +1,21 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    particlesCoinsTexture: new pc.Asset("particlesCoinsTexture", "texture", {
-        url: "/static/assets/textures/particles-coins.png"
+    particlesCoinsTexture: new pc.Asset('particlesCoinsTexture', 'texture', {
+        url: '/static/assets/textures/particles-coins.png'
     }),
-    particlesBonusTexture: new pc.Asset("particlesBonusTexture", "texture", {
-        url: "/static/assets/textures/particles-bonus.png"
+    particlesBonusTexture: new pc.Asset('particlesBonusTexture', 'texture', {
+        url: '/static/assets/textures/particles-bonus.png'
     })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -47,16 +47,16 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.23, 0.5, 0.75)
     });
     cameraEntity.rotateLocal(0, 0, 0);
@@ -64,8 +64,8 @@ assetListLoader.load(() => {
 
     // Create a directional light
     const lightDirEntity = new pc.Entity();
-    lightDirEntity.addComponent("light", {
-        type: "directional",
+    lightDirEntity.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         intensity: 1
     });
@@ -73,8 +73,8 @@ assetListLoader.load(() => {
 
     // Create a screen to display the particle systems textures
     const screenEntity = new pc.Entity();
-    screenEntity.addComponent("screen", { resolution: new pc.Vec2(640, 480), screenSpace: true });
-    screenEntity.screen.scaleMode = "blend";
+    screenEntity.addComponent('screen', { resolution: new pc.Vec2(640, 480), screenSpace: true });
+    screenEntity.screen.scaleMode = 'blend';
     screenEntity.screen.referenceResolution = new pc.Vec2(1280, 720);
 
     // Create a panel to display the full particle textures
@@ -130,7 +130,7 @@ assetListLoader.load(() => {
 
     // add particlesystem component to particle entity
     particleEntity1.addComponent(
-        "particlesystem",
+        'particlesystem',
         Object.assign(particleSystemConfiguration(assets.particlesCoinsTexture, 4, 6), {
             // set the number of animations in the sprite sheet to 4
             animNumAnimations: 4,
@@ -142,18 +142,18 @@ assetListLoader.load(() => {
     );
 
     // display the full coin texture to the left of the panel
-    panel.addComponent("element", {
+    panel.addComponent('element', {
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         pivot: new pc.Vec2(1.75, 1.0),
         width: 150,
         height: 225,
-        type: "image",
+        type: 'image',
         textureAsset: assets.particlesCoinsTexture
     });
 
     // add particlesystem component to particle entity
     particleEntity2.addComponent(
-        "particlesystem",
+        'particlesystem',
         Object.assign(particleSystemConfiguration(assets.particlesBonusTexture, 4, 2), {
             // set the number of animations in the sprite sheet to 7
             animNumAnimations: 7,
@@ -165,12 +165,12 @@ assetListLoader.load(() => {
     );
 
     // display the full bonus item texture to the left of the panel
-    panel2.addComponent("element", {
+    panel2.addComponent('element', {
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         pivot: new pc.Vec2(-0.5, 1.0),
         width: 200,
         height: 100,
-        type: "image",
+        type: 'image',
         textureAsset: assets.particlesBonusTexture
     });
 

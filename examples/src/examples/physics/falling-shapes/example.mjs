@@ -1,25 +1,25 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("Ammo", {
-    glueUrl: "/static/lib/ammo/ammo.wasm.js",
-    wasmUrl: "/static/lib/ammo/ammo.wasm.wasm",
-    fallbackUrl: "/static/lib/ammo/ammo.js"
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("Ammo", () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    torus: new pc.Asset("torus", "container", { url: "/static/assets/models/torus.glb" })
+    torus: new pc.Asset('torus', 'container', { url: '/static/assets/models/torus.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -53,9 +53,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -85,8 +85,8 @@ assetListLoader.load(() => {
     // ***********    Create our floor   *******************
 
     const floor = new pc.Entity();
-    floor.addComponent("render", {
-        type: "box",
+    floor.addComponent('render', {
+        type: 'box',
         material: gray
     });
 
@@ -94,14 +94,14 @@ assetListLoader.load(() => {
     floor.setLocalScale(10, 1, 10);
 
     // add a rigidbody component so that other objects collide with it
-    floor.addComponent("rigidbody", {
-        type: "static",
+    floor.addComponent('rigidbody', {
+        type: 'static',
         restitution: 0.5
     });
 
     // add a collision component
-    floor.addComponent("collision", {
-        type: "box",
+    floor.addComponent('collision', {
+        type: 'box',
         halfExtents: new pc.Vec3(5, 0.5, 5)
     });
 
@@ -112,8 +112,8 @@ assetListLoader.load(() => {
 
     // make our scene prettier by adding a directional light
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         castShadows: true,
         shadowBias: 0.2,
@@ -132,7 +132,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.5, 0.5, 0.8),
         farClip: 50
     });
@@ -156,20 +156,20 @@ assetListLoader.load(() => {
         // add a render component (visible mesh)
         if (!template) {
             template = new pc.Entity();
-            template.addComponent("render", {
+            template.addComponent('render', {
                 type: type
             });
         }
 
         // ...a rigidbody component of type 'dynamic' so that it is simulated by the physics engine...
-        template.addComponent("rigidbody", {
-            type: "dynamic",
+        template.addComponent('rigidbody', {
+            type: 'dynamic',
             mass: 50,
             restitution: 0.5
         });
 
         // ... and a collision component
-        template.addComponent("collision", collisionOptions);
+        template.addComponent('collision', collisionOptions);
 
         return template;
     };
@@ -177,27 +177,27 @@ assetListLoader.load(() => {
     // ***********    Create templates    *******************
 
     // Create a template for a falling box
-    const boxTemplate = createTemplate("box", {
-        type: "box",
+    const boxTemplate = createTemplate('box', {
+        type: 'box',
         halfExtents: new pc.Vec3(0.5, 0.5, 0.5)
     });
 
     // A sphere...
-    const sphereTemplate = createTemplate("sphere", {
-        type: "sphere",
+    const sphereTemplate = createTemplate('sphere', {
+        type: 'sphere',
         radius: 0.5
     });
 
     // A capsule...
-    const capsuleTemplate = createTemplate("capsule", {
-        type: "capsule",
+    const capsuleTemplate = createTemplate('capsule', {
+        type: 'capsule',
         radius: 0.5,
         height: 2
     });
 
     // A cylinder...
-    const cylinderTemplate = createTemplate("cylinder", {
-        type: "cylinder",
+    const cylinderTemplate = createTemplate('cylinder', {
+        type: 'cylinder',
         radius: 0.5,
         height: 1
     });
@@ -209,7 +209,7 @@ assetListLoader.load(() => {
     createTemplate(
         null,
         {
-            type: "mesh",
+            type: 'mesh',
             renderAsset: container.renders[0]
         },
         meshTemplate
@@ -232,7 +232,7 @@ assetListLoader.load(() => {
     let count = 40;
 
     // Set an update function on the application's update event
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // create a falling box every 0.2 seconds
         if (count > 0) {
             timer -= dt;
@@ -258,7 +258,7 @@ assetListLoader.load(() => {
         }
 
         // Show active bodies in red and frozen bodies in gray
-        app.root.findComponents("rigidbody").forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
+        app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
             body.entity.render.meshInstances[0].material = body.isActive() ? red : gray;
         });
     });

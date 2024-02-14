@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -24,9 +24,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.start();
@@ -35,11 +35,11 @@ app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
 // Create a new layer to put in front of everything
 const layer = new pc.Layer({
-    name: "Front Layer"
+    name: 'Front Layer'
 });
 
 // get the world layer index
-const worldLayer = app.scene.layers.getLayerByName("World");
+const worldLayer = app.scene.layers.getLayerByName('World');
 const idx = app.scene.layers.getTransparentIndex(worldLayer);
 
 // insert the new layer after the world layer
@@ -48,7 +48,7 @@ app.scene.layers.insert(layer, idx + 1);
 // Create an Entity with a camera component
 // Make sure it renders both World and Front Layer
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
     layers: [worldLayer.id, layer.id]
 });
@@ -58,8 +58,8 @@ app.root.addChild(camera);
 // Create an Entity with a omni light component
 // Make sure it lights both World and Front Layer
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "omni",
+light.addComponent('light', {
+    type: 'omni',
     color: new pc.Color(1, 1, 1),
     range: 100,
     layers: [worldLayer.id, layer.id]
@@ -82,8 +82,8 @@ blue.update();
 
 // red box is rendered first in World layer
 const redBox = new pc.Entity();
-redBox.addComponent("render", {
-    type: "box",
+redBox.addComponent('render', {
+    type: 'box',
     material: red
 });
 redBox.setLocalScale(5, 5, 5);
@@ -94,15 +94,15 @@ app.root.addChild(redBox);
 // and is in a later layer
 // it is visible even though it should be inside the red box
 const blueBox = new pc.Entity();
-blueBox.addComponent("render", {
-    type: "box",
+blueBox.addComponent('render', {
+    type: 'box',
     material: blue,
     layers: [layer.id] // try removing this line, the blue box will appear inside the red one
 });
 blueBox.setLocalScale(2.5, 2.5, 2.5);
 app.root.addChild(blueBox);
 
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     if (redBox) {
         redBox.rotate(0, 10 * dt, 0);
     }

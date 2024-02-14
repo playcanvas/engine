@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,9 +41,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -54,7 +54,7 @@ assetListLoader.load(() => {
     const camera = new pc.Entity();
     app.root.addChild(camera);
 
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
 
@@ -62,7 +62,7 @@ assetListLoader.load(() => {
     const screen = new pc.Entity();
     app.root.addChild(screen);
 
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         screenSpace: true,
         referenceResolution: new pc.Vec2(1280, 720),
         scaleMode: pc.SCALEMODE_BLEND,
@@ -73,7 +73,7 @@ assetListLoader.load(() => {
      * @returns {pc.Entity} The returned entity.
      */
     function createScrollbar(horizontal) {
-        const handle = new pc.Entity("Handle");
+        const handle = new pc.Entity('Handle');
         const handleOptions = {
             type: pc.ELEMENTTYPE_IMAGE,
             color: new pc.Color(1, 1, 1),
@@ -94,8 +94,8 @@ assetListLoader.load(() => {
             // @ts-ignore engine-tsd
             handleOptions.pivot = new pc.Vec2(1, 1); // Top right
         }
-        handle.addComponent("element", handleOptions);
-        handle.addComponent("button", {
+        handle.addComponent('element', handleOptions);
+        handle.addComponent('button', {
             active: true,
             imageEntity: handle,
             hitPadding: new pc.Vec4(0, 0, 0, 0),
@@ -106,7 +106,7 @@ assetListLoader.load(() => {
             fadeDuration: 0
         });
 
-        const scrollbar = new pc.Entity(horizontal ? "HorizontalScrollbar" : "VerticalScrollbar");
+        const scrollbar = new pc.Entity(horizontal ? 'HorizontalScrollbar' : 'VerticalScrollbar');
 
         scrollbar.addChild(handle);
 
@@ -136,8 +136,8 @@ assetListLoader.load(() => {
             // @ts-ignore engine-tsd
             scrollbarOptions.margin = new pc.Vec4(-scrollbarSize, scrollbarSize, 0, 0);
         }
-        scrollbar.addComponent("element", scrollbarOptions);
-        scrollbar.addComponent("scrollbar", {
+        scrollbar.addComponent('element', scrollbarOptions);
+        scrollbar.addComponent('scrollbar', {
             orientation: horizontal ? pc.ORIENTATION_HORIZONTAL : pc.ORIENTATION_VERTICAL,
             value: 0,
             handleSize: 0.5,
@@ -148,8 +148,8 @@ assetListLoader.load(() => {
     }
 
     // Create some text content
-    const text = new pc.Entity("Text");
-    text.addComponent("element", {
+    const text = new pc.Entity('Text');
+    text.addComponent('element', {
         alignment: new pc.Vec2(0, 0),
         anchor: new pc.Vec4(0, 1, 0, 1),
         autoHeight: true,
@@ -159,20 +159,20 @@ assetListLoader.load(() => {
         lineHeight: 36,
         pivot: new pc.Vec2(0, 1),
         text:
-            "This is a scroll view control. You can scroll the content by dragging the vertical " +
-            "or horizontal scroll bars, by dragging the content itself, by using the mouse wheel, or " +
-            "by using a trackpad. Notice the elastic bounce if you drag the content beyond the " +
-            "limits of the scroll view.",
+            'This is a scroll view control. You can scroll the content by dragging the vertical ' +
+            'or horizontal scroll bars, by dragging the content itself, by using the mouse wheel, or ' +
+            'by using a trackpad. Notice the elastic bounce if you drag the content beyond the ' +
+            'limits of the scroll view.',
         type: pc.ELEMENTTYPE_TEXT,
         width: 600,
         wrapLines: true
     });
 
     // Group to hold the content inside the scroll view's viewport
-    const content = new pc.Entity("Content");
+    const content = new pc.Entity('Content');
     content.addChild(text);
 
-    content.addComponent("element", {
+    content.addComponent('element', {
         anchor: new pc.Vec4(0, 1, 0, 1),
         height: 400,
         pivot: new pc.Vec2(0, 1),
@@ -182,10 +182,10 @@ assetListLoader.load(() => {
     });
 
     // Scroll view viewport
-    const viewport = new pc.Entity("Viewport");
+    const viewport = new pc.Entity('Viewport');
     viewport.addChild(content);
 
-    viewport.addComponent("element", {
+    viewport.addComponent('element', {
         anchor: new pc.Vec4(0, 0, 1, 1),
         color: new pc.Color(0.2, 0.2, 0.2),
         margin: new pc.Vec4(0, 20, 20, 0),
@@ -201,7 +201,7 @@ assetListLoader.load(() => {
     const verticalScrollbar = createScrollbar(false);
 
     // Create a scroll view
-    const scrollview = new pc.Entity("ScrollView");
+    const scrollview = new pc.Entity('ScrollView');
     scrollview.addChild(viewport);
     scrollview.addChild(horizontalScrollbar);
     scrollview.addChild(verticalScrollbar);
@@ -209,7 +209,7 @@ assetListLoader.load(() => {
     // You must add the scrollview entity to the hierarchy BEFORE adding the scrollview component
     screen.addChild(scrollview);
 
-    scrollview.addComponent("element", {
+    scrollview.addComponent('element', {
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         height: 200,
         pivot: new pc.Vec2(0.5, 0.5),
@@ -218,7 +218,7 @@ assetListLoader.load(() => {
         width: 400
     });
 
-    scrollview.addComponent("scrollview", {
+    scrollview.addComponent('scrollview', {
         bounceAmount: 0.1,
         contentEntity: content,
         friction: 0.05,

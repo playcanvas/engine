@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -26,9 +26,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.start();
@@ -49,11 +49,11 @@ material2.useMetalness = true;
 material2.update();
 
 // create a single BatchGroup. Make it dynamic to allow batched meshes to be freely moved every frame.
-const batchGroup = app.batcher.addGroup("Meshes", true, 100);
+const batchGroup = app.batcher.addGroup('Meshes', true, 100);
 
 // create various primitive instances using one of the two materials
 const numInstances = 500;
-const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
 /** @type {pc.Entity[]} */
 const entities = [];
 for (let i = 0; i < numInstances; i++) {
@@ -63,7 +63,7 @@ for (let i = 0; i < numInstances; i++) {
     const entity = new pc.Entity();
 
     // create render component
-    entity.addComponent("render", {
+    entity.addComponent('render', {
         type: shapeName,
         material: Math.random() < 0.5 ? material1 : material2,
         castShadows: true,
@@ -82,8 +82,8 @@ for (let i = 0; i < numInstances; i++) {
 
 // Create an Entity for the ground
 const ground = new pc.Entity();
-ground.addComponent("render", {
-    type: "box",
+ground.addComponent('render', {
+    type: 'box',
     material: material2
 });
 ground.setLocalScale(150, 1, 150);
@@ -92,7 +92,7 @@ app.root.addChild(ground);
 
 // Create an entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.2, 0.2, 0.2)
 });
 app.root.addChild(camera);
@@ -100,8 +100,8 @@ app.root.addChild(camera);
 // Create an entity with a directional light component
 // Add it as a child of a camera to rotate with the camera
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "directional",
+light.addComponent('light', {
+    type: 'directional',
     castShadows: true,
     shadowBias: 0.2,
     normalOffsetBias: 0.06,
@@ -112,7 +112,7 @@ light.setLocalEulerAngles(15, 30, 0);
 
 // Set an update function on the app's update event
 let time = 0;
-app.on("update", function (/** @type {number} */ dt) {
+app.on('update', function (/** @type {number} */ dt) {
     time += dt;
 
     // move all entities along orbits

@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -26,9 +26,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.start();
@@ -41,14 +41,14 @@ material.useMetalness = true;
 material.update();
 
 // All render component primitive shape types
-const shapes = ["box", "cone", "cylinder", "sphere", "capsule", "torus"];
+const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule', 'torus'];
 
 for (let i = 0; i < 40; i++) {
     const shape = shapes[Math.floor(Math.random() * shapes.length)];
 
     // Create an entity with a render component that is set up to be lightmapped with baked direct lighting
     const entity = new pc.Entity();
-    entity.addComponent("render", {
+    entity.addComponent('render', {
         castShadows: false,
         castShadowsLightmap: true,
         lightmapped: true,
@@ -62,11 +62,11 @@ for (let i = 0; i < 40; i++) {
 }
 
 const ground = new pc.Entity();
-ground.addComponent("render", {
+ground.addComponent('render', {
     castShadows: false,
     castShadowsLightmap: false,
     lightmapped: true,
-    type: "plane",
+    type: 'plane',
     material: material
 });
 app.root.addChild(ground);
@@ -75,7 +75,7 @@ ground.setLocalScale(40, 40, 40);
 
 // Create an entity with a directional light component that is configured as a baked light
 const light = new pc.Entity();
-light.addComponent("light", {
+light.addComponent('light', {
     affectDynamic: false,
     affectLightmapped: true,
     bake: true,
@@ -86,14 +86,14 @@ light.addComponent("light", {
     shadowResolution: 2048,
     shadowType: pc.SHADOW_PCF3,
     color: pc.Color.GREEN,
-    type: "directional"
+    type: 'directional'
 });
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
 // Create an entity with an omni light component that is configured as a baked light
 const lightPoint = new pc.Entity();
-lightPoint.addComponent("light", {
+lightPoint.addComponent('light', {
     affectDynamic: false,
     affectLightmapped: true,
     bake: true,
@@ -105,14 +105,14 @@ lightPoint.addComponent("light", {
     shadowType: pc.SHADOW_PCF3,
     color: pc.Color.RED,
     range: 100,
-    type: "point"
+    type: 'point'
 });
 lightPoint.setLocalPosition(0, 2, 0);
 app.root.addChild(lightPoint);
 
 // Create an entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.4, 0.45, 0.5),
     farClip: 100,
     nearClip: 0.05
@@ -131,7 +131,7 @@ app.lightmapper.bake(null, pc.BAKE_COLORDIR);
 
 // Set an update function on the app's update event
 let time = 4;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     time += dt;
 
     // orbit camera

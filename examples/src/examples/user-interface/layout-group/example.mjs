@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -40,9 +40,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -51,14 +51,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -68,7 +68,7 @@ assetListLoader.load(() => {
 
     // Create Layout Group Entity
     const group = new pc.Entity();
-    group.addComponent("element", {
+    group.addComponent('element', {
         // a Layout Group needs a 'group' element component
         type: pc.ELEMENTTYPE_GROUP,
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -77,7 +77,7 @@ assetListLoader.load(() => {
         width: 350,
         height: 150
     });
-    group.addComponent("layoutgroup", {
+    group.addComponent('layoutgroup', {
         orientation: pc.ORIENTATION_HORIZONTAL,
         spacing: new pc.Vec2(10, 10),
         // fit_both for width and height, making all child elements take the entire space
@@ -92,20 +92,20 @@ assetListLoader.load(() => {
     for (let i = 0; i < 15; ++i) {
         // create a random-colored panel
         const child = new pc.Entity();
-        child.addComponent("element", {
+        child.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             pivot: [0.5, 0.5],
             color: new pc.Color(Math.random(), Math.random(), Math.random()),
             type: pc.ELEMENTTYPE_IMAGE
         });
-        child.addComponent("layoutchild", {
+        child.addComponent('layoutchild', {
             excludeFromLayout: false
         });
         group.addChild(child);
 
         // add a text label
         const childLabel = new pc.Entity();
-        childLabel.addComponent("element", {
+        childLabel.addComponent('element', {
             // center-position and attach to the borders of parent
             // meaning this text element will scale along with parent
             anchor: [0, 0, 1, 1],

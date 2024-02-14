@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/normal-map.png" }),
-    xmas_negx: new pc.Asset("xmas_negx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negx.png" }),
-    xmas_negy: new pc.Asset("xmas_negy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negy.png" }),
-    xmas_negz: new pc.Asset("xmas_negz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_negz.png" }),
-    xmas_posx: new pc.Asset("xmas_posx", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posx.png" }),
-    xmas_posy: new pc.Asset("xmas_posy", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posy.png" }),
-    xmas_posz: new pc.Asset("xmas_posz", "texture", { url: "/static/assets/cubemaps/xmas_faces/xmas_posz.png" })
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+    xmas_negx: new pc.Asset('xmas_negx', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negx.png' }),
+    xmas_negy: new pc.Asset('xmas_negy', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negy.png' }),
+    xmas_negz: new pc.Asset('xmas_negz', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_negz.png' }),
+    xmas_posx: new pc.Asset('xmas_posx', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posx.png' }),
+    xmas_posy: new pc.Asset('xmas_posy', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posy.png' }),
+    xmas_posz: new pc.Asset('xmas_posz', 'texture', { url: '/static/assets/cubemaps/xmas_faces/xmas_posz.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,9 +43,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -55,7 +55,7 @@ assetListLoader.load(() => {
     // set up some general scene rendering properties
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
-    data.set("settings", {
+    data.set('settings', {
         shadowAtlasResolution: 1300, // shadow map resolution storing all shadows
         shadowType: pc.SHADOW_PCF3, // shadow filter type
         shadowsEnabled: true,
@@ -81,7 +81,7 @@ assetListLoader.load(() => {
     lighting.cookiesEnabled = true;
 
     // resolution of the shadow and cookie atlas
-    lighting.shadowAtlasResolution = data.get("settings.shadowAtlasResolution");
+    lighting.shadowAtlasResolution = data.get('settings.shadowAtlasResolution');
     lighting.cookieAtlasResolution = 2048;
 
     /**
@@ -110,7 +110,7 @@ assetListLoader.load(() => {
 
         // create the primitive using the material
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -124,14 +124,14 @@ assetListLoader.load(() => {
     }
 
     // create the ground plane from the boxes
-    createPrimitive("box", new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800));
-    createPrimitive("box", new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800));
+    createPrimitive('box', new pc.Vec3(0, 0, 0), new pc.Vec3(800, 2, 800));
+    createPrimitive('box', new pc.Vec3(0, 400, 0), new pc.Vec3(800, 2, 800));
 
     // walls
-    createPrimitive("box", new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800));
-    createPrimitive("box", new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800));
-    createPrimitive("box", new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0));
-    createPrimitive("box", new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0));
+    createPrimitive('box', new pc.Vec3(400, 200, 0), new pc.Vec3(2, 400, 800));
+    createPrimitive('box', new pc.Vec3(-400, 200, 0), new pc.Vec3(2, 400, 800));
+    createPrimitive('box', new pc.Vec3(0, 200, 400), new pc.Vec3(800, 400, 0));
+    createPrimitive('box', new pc.Vec3(0, 200, -400), new pc.Vec3(800, 400, 0));
 
     const numTowers = 7;
     for (let i = 0; i < numTowers; i++) {
@@ -140,7 +140,7 @@ assetListLoader.load(() => {
         const radius = i % 2 ? 340 : 210;
         for (let y = 0; y <= 7; y++) {
             const prim = createPrimitive(
-                "box",
+                'box',
                 new pc.Vec3(radius * Math.sin(fraction), 2 + y * 25, radius * Math.cos(fraction)),
                 new pc.Vec3(scale, scale, scale)
             );
@@ -151,7 +151,7 @@ assetListLoader.load(() => {
 
     // construct the cubemap asset for the omni light cookie texture
     // Note: the textures array could contain 6 texture asset names to load instead as well
-    const cubemapAsset = new pc.Asset("xmas_cubemap", "cubemap", null, {
+    const cubemapAsset = new pc.Asset('xmas_cubemap', 'cubemap', null, {
         textures: [
             assets.xmas_posx.id,
             assets.xmas_negx.id,
@@ -172,9 +172,9 @@ assetListLoader.load(() => {
     const omniLights = [];
     const numLights = 10;
     for (let i = 0; i < numLights; i++) {
-        const lightOmni = new pc.Entity("Omni");
-        lightOmni.addComponent("light", {
-            type: "omni",
+        const lightOmni = new pc.Entity('Omni');
+        lightOmni.addComponent('light', {
+            type: 'omni',
             color: pc.Color.WHITE,
             intensity: 10 / numLights,
             range: 350,
@@ -184,7 +184,7 @@ assetListLoader.load(() => {
 
             // cookie texture
             cookieAsset: cubemapAsset,
-            cookieChannel: "rgb"
+            cookieChannel: 'rgb'
         });
 
         // attach a render component with a small sphere to it
@@ -192,8 +192,8 @@ assetListLoader.load(() => {
         material.emissive = pc.Color.WHITE;
         material.update();
 
-        lightOmni.addComponent("render", {
-            type: "sphere",
+        lightOmni.addComponent('render', {
+            type: 'sphere',
             material: material,
             castShadows: false
         });
@@ -206,7 +206,7 @@ assetListLoader.load(() => {
 
     // create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         fov: 80,
         clearColor: new pc.Color(0.1, 0.1, 0.1),
         farClip: 1500
@@ -216,8 +216,8 @@ assetListLoader.load(() => {
     camera.setLocalPosition(300, 120, 25);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: app.root,
@@ -225,20 +225,20 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // handle HUD changes - update properties on the scene
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
         // @ts-ignore
         lighting[pathArray[1]] = value;
     });
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt * 0.3;
         const radius = 250;
         for (let i = 0; i < omniLights.length; i++) {

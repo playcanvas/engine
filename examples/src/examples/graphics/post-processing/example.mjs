@@ -1,32 +1,32 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 const assets = {
-    orbit: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    platform: new pc.Asset("statue", "container", { url: "/static/assets/models/scifi-platform.glb" }),
-    mosquito: new pc.Asset("mosquito", "container", { url: "/static/assets/models/MosquitoInAmber.glb" }),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
+    orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    platform: new pc.Asset('statue', 'container', { url: '/static/assets/models/scifi-platform.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: '/static/assets/models/MosquitoInAmber.glb' }),
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js",
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js',
 
     // The scene is rendered to an antialiased texture, so we disable antialiasing on the canvas
     // to avoid the additional cost. This is only used for the UI which renders on top of the
@@ -59,9 +59,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -74,7 +74,7 @@ assetListLoader.load(() => {
     app.scene.exposure = 0.3;
 
     // disable skydome rendering itself, we don't need it as we use camera clear color
-    app.scene.layers.getLayerByName("Skybox").enabled = false;
+    app.scene.layers.getLayerByName('Skybox').enabled = false;
 
     // render in HDR mode
     app.scene.toneMapping = pc.TONEMAP_LINEAR;
@@ -87,8 +87,8 @@ assetListLoader.load(() => {
 
     // get a list of emissive materials from the scene to allow their intensity to be changed
     const emissiveMaterials = [];
-    const emissiveNames = new Set(["Light_Upper_Light-Upper_0", "Emissive_Cyan__0"]);
-    platformEntity.findComponents("render").forEach((render) => {
+    const emissiveNames = new Set(['Light_Upper_Light-Upper_0', 'Emissive_Cyan__0']);
+    platformEntity.findComponents('render').forEach((render) => {
         if (emissiveNames.has(render.entity.name)) {
             render.meshInstances.forEach(meshInstance => emissiveMaterials.push(meshInstance.material));
         }
@@ -110,8 +110,8 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
-            type: "box",
+        primitive.addComponent('render', {
+            type: 'box',
             material: material
         });
 
@@ -131,14 +131,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         farClip: 500,
         fov: 80
     });
 
     // add orbit camera script with a mouse and a touch support
-    cameraEntity.addComponent("script");
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: mosquitoEntity,
@@ -146,8 +146,8 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
     // position the camera in the world
     cameraEntity.setLocalPosition(0, 40, -220);
@@ -156,7 +156,7 @@ assetListLoader.load(() => {
 
     // Create a 2D screen to place UI on
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -167,8 +167,8 @@ assetListLoader.load(() => {
     // add a shadow casting directional light
     const lightColor = new pc.Color(1, 0.7, 0.1);
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: lightColor,
         intensity: 80,
         range: 400,
@@ -184,7 +184,7 @@ assetListLoader.load(() => {
     // a helper function to add a label to the screen
     const addLabel = (name, text, x, y, layer) => {
         const label = new pc.Entity(name);
-        label.addComponent("element", {
+        label.addComponent('element', {
             text: text,
             color: new pc.Color(100, 50, 80), // very bright color to affect the bloom
             anchor: new pc.Vec4(x, y, 0.5, 0.5),
@@ -199,12 +199,12 @@ assetListLoader.load(() => {
     };
 
     // add a label on the world layer, which will be affected by post-processing
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    addLabel("WorldUI", "Text on the World layer affected by post-processing", 0.1, 0.9, worldLayer);
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    addLabel('WorldUI', 'Text on the World layer affected by post-processing', 0.1, 0.9, worldLayer);
 
     // add a label on the UI layer, which will be rendered after the post-processing
     const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
-    addLabel("TopUI", "Text on theUI layer after the post-processing", 0.1, 0.1, uiLayer);
+    addLabel('TopUI', 'Text on theUI layer after the post-processing', 0.1, 0.1, uiLayer);
 
     // ------ Custom render passes set up ------
 
@@ -237,7 +237,7 @@ assetListLoader.load(() => {
     const applySettings = () => {
         // if settings require render passes to be re-created
         const noPasses = cameraEntity.camera.renderPasses.length === 0;
-        const taaEnabled = data.get("data.taa.enabled");
+        const taaEnabled = data.get('data.taa.enabled');
         if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
             currentOptions.taaEnabled = taaEnabled;
 
@@ -251,10 +251,10 @@ assetListLoader.load(() => {
         // apply all runtime settings
 
         // SCENE
-        composePass.toneMapping = data.get("data.scene.tonemapping");
-        renderPassCamera.renderTargetScale = data.get("data.scene.scale");
+        composePass.toneMapping = data.get('data.scene.tonemapping');
+        renderPassCamera.renderTargetScale = data.get('data.scene.scale');
 
-        const background = data.get("data.scene.background");
+        const background = data.get('data.scene.background');
         cameraEntity.camera.clearColor = new pc.Color(
             lightColor.r * background,
             lightColor.g * background,
@@ -262,46 +262,46 @@ assetListLoader.load(() => {
         );
         light.light.intensity = background;
 
-        const emissive = data.get("data.scene.emissive");
+        const emissive = data.get('data.scene.emissive');
         emissiveMaterials.forEach((material) => {
             material.emissiveIntensity = emissive;
             material.update();
         });
 
         // taa - enable camera jitter if taa is enabled
-        cameraEntity.camera.jitter = taaEnabled ? data.get("data.taa.jitter") : 0;
+        cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
 
         // bloom
-        composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get("data.bloom.intensity") / 100);
-        renderPassCamera.lastMipLevel = data.get("data.bloom.lastMipLevel");
-        renderPassCamera.bloomEnabled = data.get("data.bloom.enabled");
+        composePass.bloomIntensity = pc.math.lerp(0, 0.1, data.get('data.bloom.intensity') / 100);
+        renderPassCamera.lastMipLevel = data.get('data.bloom.lastMipLevel');
+        renderPassCamera.bloomEnabled = data.get('data.bloom.enabled');
 
         // grading
-        composePass.gradingSaturation = data.get("data.grading.saturation");
-        composePass.gradingBrightness = data.get("data.grading.brightness");
-        composePass.gradingContrast = data.get("data.grading.contrast");
-        composePass.gradingEnabled = data.get("data.grading.enabled");
+        composePass.gradingSaturation = data.get('data.grading.saturation');
+        composePass.gradingBrightness = data.get('data.grading.brightness');
+        composePass.gradingContrast = data.get('data.grading.contrast');
+        composePass.gradingEnabled = data.get('data.grading.enabled');
 
         // vignette
-        composePass.vignetteEnabled = data.get("data.vignette.enabled");
-        composePass.vignetteInner = data.get("data.vignette.inner");
-        composePass.vignetteOuter = data.get("data.vignette.outer");
-        composePass.vignetteCurvature = data.get("data.vignette.curvature");
-        composePass.vignetteIntensity = data.get("data.vignette.intensity");
+        composePass.vignetteEnabled = data.get('data.vignette.enabled');
+        composePass.vignetteInner = data.get('data.vignette.inner');
+        composePass.vignetteOuter = data.get('data.vignette.outer');
+        composePass.vignetteCurvature = data.get('data.vignette.curvature');
+        composePass.vignetteIntensity = data.get('data.vignette.intensity');
 
         // fringing
-        composePass.fringingEnabled = data.get("data.fringing.enabled");
-        composePass.fringingIntensity = data.get("data.fringing.intensity");
+        composePass.fringingEnabled = data.get('data.fringing.enabled');
+        composePass.fringingIntensity = data.get('data.fringing.intensity');
     };
 
     // apply UI changes
     let initialValuesSetup = false;
-    data.on("*:set", () => {
+    data.on('*:set', () => {
         if (initialValuesSetup) applySettings();
     });
 
     // set initial values
-    data.set("data", {
+    data.set('data', {
         scene: {
             scale: 1.8,
             background: 6,
@@ -342,7 +342,7 @@ assetListLoader.load(() => {
 
     // update things every frame
     let angle = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         angle += dt;
 
         // scale the boxes

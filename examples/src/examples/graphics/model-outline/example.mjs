@@ -1,15 +1,15 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    outline: new pc.Asset("outline", "script", { url: "/static/scripts/posteffects/posteffect-outline.js" })
+    outline: new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })
 };
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 const createOptions = new pc.AppOptions();
@@ -56,7 +56,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             layers: layer,
             material: material
@@ -73,7 +73,7 @@ assetListLoader.load(() => {
     // create texture and render target for rendering into, including depth buffer
     function createRenderTarget() {
         const texture = new pc.Texture(app.graphicsDevice, {
-            name: "OutlineObjects",
+            name: 'OutlineObjects',
             width: app.graphicsDevice.width,
             height: app.graphicsDevice.height,
             format: pc.PIXELFORMAT_RGBA8,
@@ -90,27 +90,27 @@ assetListLoader.load(() => {
     let renderTarget = createRenderTarget();
 
     // create a layer for rendering to texture, and add it to the beginning of layers to render into it first
-    const outlineLayer = new pc.Layer({ name: "OutlineLayer" });
+    const outlineLayer = new pc.Layer({ name: 'OutlineLayer' });
     app.scene.layers.insert(outlineLayer, 0);
 
     // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // create ground plane and 3 primitives, visible in both layers
-    createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.5, 0.3), [
         worldLayer.id
     ]);
-    createPrimitive("sphere", new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 0, 0), [worldLayer.id]);
-    createPrimitive("box", new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 1, 0), [
+    createPrimitive('sphere', new pc.Vec3(-2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 0, 0), [worldLayer.id]);
+    createPrimitive('box', new pc.Vec3(2, 1, 0), new pc.Vec3(2, 2, 2), new pc.Color(1, 1, 0), [
         worldLayer.id,
         outlineLayer.id
     ]);
-    createPrimitive("cone", new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id]);
+    createPrimitive('cone', new pc.Vec3(0, 1, -2), new pc.Vec3(2, 2, 2), new pc.Color(0, 1, 1), [worldLayer.id]);
 
     // Create main camera, which renders entities in world layer
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.4),
         layers: [worldLayer.id, uiLayer.id]
     });
@@ -119,7 +119,7 @@ assetListLoader.load(() => {
 
     // Create outline camera, which renders entities in outline layer into the render target
     const outlineCamera = new pc.Entity();
-    outlineCamera.addComponent("camera", {
+    outlineCamera.addComponent('camera', {
         clearColor: new pc.Color(0.0, 0.0, 0.0, 0.0),
         layers: [outlineLayer.id],
         renderTarget: renderTarget
@@ -136,8 +136,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a omni light component and add it to both layers
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 1, 1),
         range: 20,
         castShadows: true,
@@ -159,14 +159,14 @@ assetListLoader.load(() => {
         outlineCamera.camera.renderTarget = renderTarget;
         outline.texture = renderTarget.colorBuffer;
     };
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // rotate the camera around the objects

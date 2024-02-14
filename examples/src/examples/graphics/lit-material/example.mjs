@@ -1,26 +1,26 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    orbitCamera: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
+    orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -55,9 +55,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -68,27 +68,27 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             distanceMin: 2,
             distanceMax: 15
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     camera.translate(0, 1, 4);
     camera.lookAt(0, 0, 0);
     app.root.addChild(camera);
 
     // Create an Entity with a omni light component and a sphere model component.
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: pc.Color.WHITE,
         intensity: 1,
         range: 10
@@ -97,12 +97,12 @@ assetListLoader.load(() => {
     app.root.addChild(light);
 
     const material = new pc.LitMaterial();
-    material.setParameter("texture_envAtlas", assets.helipad.resource);
-    material.setParameter("material_reflectivity", 1.0);
-    material.setParameter("material_normalMapIntensity", 1.0);
-    material.setParameter("texture_diffuseMap", assets.color.resource);
-    material.setParameter("texture_glossMap", assets.gloss.resource);
-    material.setParameter("texture_normalMap", assets.normal.resource);
+    material.setParameter('texture_envAtlas', assets.helipad.resource);
+    material.setParameter('material_reflectivity', 1.0);
+    material.setParameter('material_normalMapIntensity', 1.0);
+    material.setParameter('texture_diffuseMap', assets.color.resource);
+    material.setParameter('texture_glossMap', assets.gloss.resource);
+    material.setParameter('texture_normalMap', assets.normal.resource);
     material.shadingModel = pc.SPECULAR_BLINN;
     material.useSkybox = true;
     material.hasSpecular = true;
@@ -138,8 +138,8 @@ assetListLoader.load(() => {
 
     // create primitive
     const primitive = new pc.Entity();
-    primitive.addComponent("render", {
-        type: "sphere",
+    primitive.addComponent('render', {
+        type: 'sphere',
         material: material
     });
 
@@ -147,14 +147,14 @@ assetListLoader.load(() => {
     app.root.addChild(primitive);
 
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
-        material.setParameter("material_specularRgb", [
+        material.setParameter('material_specularRgb', [
             (Math.sin(time) + 1.0) * 0.5,
             (Math.cos(time * 0.5) + 1.0) * 0.5,
             (Math.sin(time * 0.7) + 1.0) * 0.5
         ]);
-        material.setParameter("material_normalMapIntensity", (Math.sin(time) + 1.0) * 0.5);
+        material.setParameter('material_normalMapIntensity', (Math.sin(time) + 1.0) * 0.5);
     });
 });
 

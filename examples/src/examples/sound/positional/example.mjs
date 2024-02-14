@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -43,25 +43,25 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assets = {
-    model: new pc.Asset("model", "model", { url: "/static/assets/models/playbot/playbot.json" }),
-    runAnim: new pc.Asset("runAnim", "animation", { url: "/static/assets/animations/playbot/playbot-run.json" }),
-    gravel: new pc.Asset("gravel", "audio", { url: "/static/assets/sounds/footsteps.mp3" })
+    model: new pc.Asset('model', 'model', { url: '/static/assets/models/playbot/playbot.json' }),
+    runAnim: new pc.Asset('runAnim', 'animation', { url: '/static/assets/animations/playbot/playbot-run.json' }),
+    gravel: new pc.Asset('gravel', 'audio', { url: '/static/assets/sounds/footsteps.mp3' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
 assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(1, 0, 0)
     });
-    camera.addComponent("audiolistener");
+    camera.addComponent('audiolistener');
     camera.rotateLocal(-30, 0, 0);
     camera.translateLocal(0, 0, 5);
     app.root.addChild(camera);
@@ -72,8 +72,8 @@ assetListLoader.load(() => {
     material.update();
 
     const ground = new pc.Entity();
-    ground.addComponent("render", {
-        type: "box",
+    ground.addComponent('render', {
+        type: 'box',
         material: material
     });
     ground.setLocalScale(50, 1, 50);
@@ -82,8 +82,8 @@ assetListLoader.load(() => {
 
     // Create an entity with a light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         castShadows: true,
         intensity: 2,
@@ -101,10 +101,10 @@ assetListLoader.load(() => {
     const entity = new pc.Entity();
 
     // add sound component
-    entity.addComponent("sound");
+    entity.addComponent('sound');
 
     // add footsteps slot
-    entity.sound.addSlot("footsteps", {
+    entity.sound.addSlot('footsteps', {
         asset: assets.gravel.id,
         pitch: 1.7,
         loop: true,
@@ -112,14 +112,14 @@ assetListLoader.load(() => {
     });
 
     // add model
-    entity.addComponent("model", {
-        type: "asset",
+    entity.addComponent('model', {
+        type: 'asset',
         asset: assets.model,
         castShadows: true
     });
 
     // add animation
-    entity.addComponent("animation", {
+    entity.addComponent('animation', {
         assets: [assets.runAnim],
         speed: 0.8
     });
@@ -130,7 +130,7 @@ assetListLoader.load(() => {
     let angle = 135;
     const radius = 3;
     const height = 0; // 1.1;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         angle += 30 * dt;
         if (angle > 360) {
             angle -= 360;

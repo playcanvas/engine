@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,9 +41,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -52,14 +52,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -70,12 +70,12 @@ assetListLoader.load(() => {
     // Basic Text
     const textBasic = new pc.Entity();
     textBasic.setLocalPosition(0, 200, 0);
-    textBasic.addComponent("element", {
+    textBasic.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
         fontSize: 42,
-        text: "Basic Text",
+        text: 'Basic Text',
         type: pc.ELEMENTTYPE_TEXT
     });
     screen.addChild(textBasic);
@@ -83,7 +83,7 @@ assetListLoader.load(() => {
     // Markup Text with wrap
     const textMarkup = new pc.Entity();
     textMarkup.setLocalPosition(0, 50, 0);
-    textMarkup.addComponent("element", {
+    textMarkup.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
@@ -102,12 +102,12 @@ assetListLoader.load(() => {
     // Text with outline
     const textOutline = new pc.Entity();
     textOutline.setLocalPosition(0, -100, 0);
-    textOutline.addComponent("element", {
+    textOutline.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
         fontSize: 62,
-        text: "Outline",
+        text: 'Outline',
         color: new pc.Color(0, 0, 0),
         outlineColor: new pc.Color(1, 1, 1),
         outlineThickness: 0.75,
@@ -118,12 +118,12 @@ assetListLoader.load(() => {
     // Text with drop shadow
     const textDropShadow = new pc.Entity();
     textDropShadow.setLocalPosition(0, -200, 0);
-    textDropShadow.addComponent("element", {
+    textDropShadow.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
         fontSize: 62,
-        text: "Drop Shadow",
+        text: 'Drop Shadow',
         shadowColor: new pc.Color(1, 0, 0),
         shadowOffset: new pc.Vec2(0.25, -0.25),
         type: pc.ELEMENTTYPE_TEXT

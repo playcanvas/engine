@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
     /** @type {HTMLDivElement} */
-    let el = document.querySelector(".message");
+    let el = document.querySelector('.message');
     if (!el) {
-        el = document.createElement("div");
-        el.classList.add("message");
-        el.style.position = "absolute";
-        el.style.bottom = "96px";
-        el.style.right = "0";
-        el.style.padding = "8px 16px";
-        el.style.fontFamily = "Helvetica, Arial, sans-serif";
-        el.style.color = "#fff";
-        el.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+        el = document.createElement('div');
+        el.classList.add('message');
+        el.style.position = 'absolute';
+        el.style.bottom = '96px';
+        el.style.right = '0';
+        el.style.padding = '8px 16px';
+        el.style.fontFamily = 'Helvetica, Arial, sans-serif';
+        el.style.color = '#fff';
+        el.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
         document.body.append(el);
     }
     el.textContent = msg;
@@ -35,9 +35,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // use device pixel ratio
@@ -47,15 +47,15 @@ app.start();
 
 // create camera
 const c = new pc.Entity();
-c.addComponent("camera", {
+c.addComponent('camera', {
     clearColor: new pc.Color(0, 0, 0, 0),
     farClip: 10000
 });
 app.root.addChild(c);
 
 const l = new pc.Entity();
-l.addComponent("light", {
-    type: "spot",
+l.addComponent('light', {
+    type: 'spot',
     range: 30
 });
 l.translate(0, 10, 0);
@@ -70,8 +70,8 @@ const material = new pc.StandardMaterial();
  */
 const createCube = function (x, y, z) {
     const cube = new pc.Entity();
-    cube.addComponent("render", {
-        type: "box"
+    cube.addComponent('render', {
+        type: 'box'
     });
     cube.render.material = material;
     cube.setLocalScale(0.5, 0.5, 0.5);
@@ -93,20 +93,20 @@ if (app.xr.supported) {
             c.camera.startXr(pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
                 cameraColor: true, // request access to camera color
                 callback: function (err) {
-                    if (err) message("WebXR Immersive AR failed to start: " + err.message);
+                    if (err) message('WebXR Immersive AR failed to start: ' + err.message);
                 }
             });
         } else {
-            message("Immersive AR is not available");
+            message('Immersive AR is not available');
         }
     };
 
-    app.mouse.on("mousedown", function () {
+    app.mouse.on('mousedown', function () {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on("touchend", function (evt) {
+        app.touch.on('touchend', function (evt) {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -121,31 +121,31 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on("keydown", function (evt) {
+    app.keyboard.on('keydown', function (evt) {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
-    app.xr.on("start", function () {
-        message("Immersive AR session has started");
+    app.xr.on('start', function () {
+        message('Immersive AR session has started');
     });
-    app.xr.on("end", function () {
-        message("Immersive AR session has ended");
+    app.xr.on('end', function () {
+        message('Immersive AR session has ended');
     });
-    app.xr.on("available:" + pc.XRTYPE_AR, function (available) {
+    app.xr.on('available:' + pc.XRTYPE_AR, function (available) {
         if (available) {
             if (!app.xr.views.supportedColor) {
-                message("AR Camera Color is not supported");
+                message('AR Camera Color is not supported');
             } else {
-                message("Touch screen to start AR session");
+                message('Touch screen to start AR session');
             }
         } else {
-            message("Immersive AR is not available");
+            message('Immersive AR is not available');
         }
     });
 
-    app.on("update", () => {
+    app.on('update', () => {
         // if camera color is available
         if (app.xr.views.availableColor) {
             for (let i = 0; i < app.xr.views.list.length; i++) {
@@ -166,7 +166,7 @@ if (app.xr.supported) {
         }
     });
 
-    app.xr.on("end", () => {
+    app.xr.on('end', () => {
         if (!material.diffuseMap) return;
 
         // clear camera color texture when XR session ends
@@ -175,14 +175,14 @@ if (app.xr.supported) {
     });
 
     if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
-        message("Immersive AR is not available");
+        message('Immersive AR is not available');
     } else if (!app.xr.views.supportedColor) {
-        message("AR Camera Color is not supported");
+        message('AR Camera Color is not supported');
     } else {
-        message("Touch screen to start AR session");
+        message('Touch screen to start AR session');
     }
 } else {
-    message("WebXR is not supported");
+    message('WebXR is not supported');
 }
 
 export { app };

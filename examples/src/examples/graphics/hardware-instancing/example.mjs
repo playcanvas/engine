@@ -1,21 +1,21 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -34,9 +34,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -55,7 +55,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {});
+    camera.addComponent('camera', {});
     app.root.addChild(camera);
 
     // Move the camera back to see the cubes
@@ -69,10 +69,10 @@ assetListLoader.load(() => {
     material.update();
 
     // Create a Entity with a cylinder render component and the instancing material
-    const cylinder = new pc.Entity("InstancingEntity");
-    cylinder.addComponent("render", {
+    const cylinder = new pc.Entity('InstancingEntity');
+    cylinder.addComponent('render', {
         material: material,
-        type: "cylinder"
+        type: 'cylinder'
     });
 
     // add the box entity to the hierarchy
@@ -123,7 +123,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let angle = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // orbit camera around
         angle += dt * 0.2;
         camera.setLocalPosition(8 * Math.sin(angle), 0, 8 * Math.cos(angle));

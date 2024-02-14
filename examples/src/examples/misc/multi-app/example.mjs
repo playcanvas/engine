@@ -1,4 +1,4 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 /**
  * @param {string} deviceType - The device type.
@@ -6,25 +6,21 @@ import * as pc from "playcanvas";
  */
 const createApp = async function (deviceType) {
     const assets = {
-        font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+        font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
     };
 
-    const canvas = document.createElement("canvas");
+    const canvas = document.createElement('canvas');
     canvas.id = `app-${Math.random().toString(36).substring(7)}`; // generate a random id
-    document.getElementById("appInner")?.appendChild(canvas);
+    document.getElementById('appInner')?.appendChild(canvas);
 
     // Don't use createGraphicsDevice as it automatically falls back, which we don't want
     let device;
-    if (deviceType === "webgpu") {
+    if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        try {
-            await device.initWebGpu("/static/lib/glslang/glslang.js", "/static/lib/twgsl/twgsl.js");
-        } catch (err) {
-            throw err;
-        }
-    } else if (deviceType === "webgl1" || deviceType === "webgl2") {
+        await device.initWebGpu('/static/lib/glslang/glslang.js', '/static/lib/twgsl/twgsl.js');
+    } else if (deviceType === 'webgl1' || deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas, {
-            preferWebGl2: deviceType === "webgl2"
+            preferWebGl2: deviceType === 'webgl2'
         });
     } else {
         device = new pc.NullGraphicsDevice(canvas, {});
@@ -59,36 +55,36 @@ const createApp = async function (deviceType) {
 
         // Ensure canvas is resized when window changes size
         const resize = () => app.resizeCanvas();
-        window.addEventListener("resize", resize);
-        app.on("destroy", () => {
-            window.removeEventListener("resize", resize);
+        window.addEventListener('resize', resize);
+        app.on('destroy', () => {
+            window.removeEventListener('resize', resize);
         });
 
         // create box entity
-        const box = new pc.Entity("cube");
-        box.addComponent("render", {
-            type: "box"
+        const box = new pc.Entity('cube');
+        box.addComponent('render', {
+            type: 'box'
         });
         app.root.addChild(box);
 
         // create camera entity
         const clearValue = 0.3 + Math.random() * 0.3;
-        const camera = new pc.Entity("camera");
-        camera.addComponent("camera", {
+        const camera = new pc.Entity('camera');
+        camera.addComponent('camera', {
             clearColor: new pc.Color(clearValue, clearValue, clearValue)
         });
         app.root.addChild(camera);
         camera.setPosition(0, -0.4, 3);
 
         // create directional light entity
-        const light = new pc.Entity("light");
-        light.addComponent("light");
+        const light = new pc.Entity('light');
+        light.addComponent('light');
         app.root.addChild(light);
         light.setEulerAngles(45, 0, 0);
 
         // Create a 2D screen
         const screen = new pc.Entity();
-        screen.addComponent("screen", {
+        screen.addComponent('screen', {
             referenceResolution: new pc.Vec2(1280, 720),
             scaleBlend: 0.5,
             scaleMode: pc.SCALEMODE_BLEND,
@@ -97,12 +93,12 @@ const createApp = async function (deviceType) {
         app.root.addChild(screen);
 
         // device type as text
-        const text = app.graphicsDevice.isWebGL1 ? "WebGL 1" : app.graphicsDevice.isWebGL2 ? "WebGL 2" : "WebGPU";
+        const text = app.graphicsDevice.isWebGL1 ? 'WebGL 1' : app.graphicsDevice.isWebGL2 ? 'WebGL 2' : 'WebGPU';
 
         // Text with outline to identify the platform
         const textOutline = new pc.Entity();
         textOutline.setLocalPosition(0, -100, 0);
-        textOutline.addComponent("element", {
+        textOutline.addComponent('element', {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, -0.2, 0.5, 0.5),
             fontAsset: assets.font.id,
@@ -116,7 +112,7 @@ const createApp = async function (deviceType) {
         screen.addChild(textOutline);
 
         // rotate the box according to the delta time since the last frame
-        app.on("update", (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
+        app.on('update', (/** @type {number} */ dt) => box.rotate(10 * dt, 20 * dt, 30 * dt));
     });
 
     return app;
@@ -164,9 +160,9 @@ const removeAll = () => {
     }
 };
 
-window.addEventListener("destroy", removeAll);
-window.addEventListener("hotReload", removeAll);
+window.addEventListener('destroy', removeAll);
+window.addEventListener('hotReload', removeAll);
 
 // Start with a webgl2 and webgpu app
-data.emit("add:webgl2");
-data.emit("add:webgpu");
+data.emit('add:webgl2');
+data.emit('add:webgpu');

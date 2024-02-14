@@ -1,19 +1,19 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    orbit: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    hdri_street: new pc.Asset("hdri", "texture", { url: "/static/assets/hdri/wide-street.hdr" }, { mipmaps: false }),
-    hdri_room: new pc.Asset("hdri", "texture", { url: "/static/assets/hdri/empty-room.hdr" }, { mipmaps: false })
+    orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    hdri_street: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/wide-street.hdr' }, { mipmaps: false }),
+    hdri_room: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/empty-room.hdr' }, { mipmaps: false })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -34,9 +34,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -51,14 +51,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         farClip: 500,
         fov: 60
     });
 
     // add orbit camera script with a mouse and a touch support
-    cameraEntity.addComponent("script");
-    cameraEntity.script.create("orbitCamera", {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: statueEntity,
@@ -66,8 +66,8 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
     // position the camera in the world
     cameraEntity.setLocalPosition(-4, 5, 22);
@@ -77,7 +77,7 @@ assetListLoader.load(() => {
     // skydome presets
     const presetStreetDome = {
         skybox: {
-            preset: "Street Dome",
+            preset: 'Street Dome',
             type: pc.SKYTYPE_DOME,
             scale: [200, 200, 200],
             position: [0, 0, 0],
@@ -89,7 +89,7 @@ assetListLoader.load(() => {
 
     const presetStreetInfinite = {
         skybox: {
-            preset: "Street Infinite",
+            preset: 'Street Infinite',
             type: pc.SKYTYPE_INFINITE,
             scale: [1, 1, 1],
             position: [0, 0, 0],
@@ -101,7 +101,7 @@ assetListLoader.load(() => {
 
     const presetRoom = {
         skybox: {
-            preset: "Room",
+            preset: 'Room',
             type: pc.SKYTYPE_BOX,
             scale: [44, 24, 28],
             position: [0, 0, 0],
@@ -127,34 +127,34 @@ assetListLoader.load(() => {
     };
 
     // when UI value changes, update skybox data
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
 
-        if (pathArray[2] === "preset" && pathArray.length === 3) {
+        if (pathArray[2] === 'preset' && pathArray.length === 3) {
             // apply preset
-            if (data.get("data.skybox.preset") === value) {
+            if (data.get('data.skybox.preset') === value) {
                 // apply preset data
                 data.set(
-                    "data",
-                    value === "Room" ? presetRoom : value === "Street Dome" ? presetStreetDome : presetStreetInfinite
+                    'data',
+                    value === 'Room' ? presetRoom : value === 'Street Dome' ? presetStreetDome : presetStreetInfinite
                 );
 
                 // update hdri texture
-                applyHdri(value === "Room" ? assets.hdri_room.resource : assets.hdri_street.resource);
+                applyHdri(value === 'Room' ? assets.hdri_room.resource : assets.hdri_street.resource);
             }
         } else {
             // apply individual settings
-            app.scene.sky.type = data.get("data.skybox.type");
-            app.scene.sky.node.setLocalScale(new pc.Vec3(data.get("data.skybox.scale") ?? [1, 1, 1]));
-            app.scene.sky.node.setLocalPosition(new pc.Vec3(data.get("data.skybox.position") ?? [0, 0, 0]));
-            app.scene.sky.center = new pc.Vec3(0, data.get("data.skybox.tripodY") ?? 0, 0);
-            app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get("data.skybox.rotation"), 0);
-            app.scene.exposure = data.get("data.skybox.exposure");
+            app.scene.sky.type = data.get('data.skybox.type');
+            app.scene.sky.node.setLocalScale(new pc.Vec3(data.get('data.skybox.scale') ?? [1, 1, 1]));
+            app.scene.sky.node.setLocalPosition(new pc.Vec3(data.get('data.skybox.position') ?? [0, 0, 0]));
+            app.scene.sky.center = new pc.Vec3(0, data.get('data.skybox.tripodY') ?? 0, 0);
+            app.scene.skyboxRotation = new pc.Quat().setFromEulerAngles(0, data.get('data.skybox.rotation'), 0);
+            app.scene.exposure = data.get('data.skybox.exposure');
         }
     });
 
     // apply initial preset
-    data.set("data.skybox.preset", "Street Dome");
+    data.set('data.skybox.preset', 'Street Dome');
 });
 
 export { app };

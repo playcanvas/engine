@@ -1,28 +1,28 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // This example serves as a test framework for large shader compilation speed test. Enable tracking for it.
 pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
 
 const assets = {
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" }),
-    luts: new pc.Asset("luts", "json", { url: "/static/assets/json/area-light-luts.json" }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -44,9 +44,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -93,7 +93,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -122,11 +122,11 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     // create ground plane
-    createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
 
     // Create the camera, which renders entities
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 60,
         farClip: 100000
@@ -140,7 +140,7 @@ assetListLoader.load(() => {
         for (let y = -10; y <= 10; y += 6) {
             const pos = new pc.Vec3(x, 0.6, y);
             const color = new pc.Color(0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7, 0.3 + Math.random() * 0.7);
-            createPrimitive("sphere", pos, new pc.Vec3(1, 1, 1), color, assets, true);
+            createPrimitive('sphere', pos, new pc.Vec3(1, 1, 1), color, assets, true);
         }
     }
 
@@ -151,8 +151,8 @@ assetListLoader.load(() => {
     for (let i = 0; i < count; i++) {
         const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
         const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "spot",
+        light.addComponent('light', {
+            type: 'spot',
             color: color,
             intensity: 4,
             range: 16,
@@ -164,8 +164,8 @@ assetListLoader.load(() => {
         material.emissive = color;
         material.update();
 
-        light.addComponent("render", {
-            type: "sphere",
+        light.addComponent('render', {
+            type: 'sphere',
             material: material
         });
         light.setLocalScale(0.5, 0.5, 0.5);
@@ -176,7 +176,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
         // orbit spot lights around

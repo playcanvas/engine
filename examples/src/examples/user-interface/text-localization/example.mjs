@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/courier.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -38,9 +38,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -54,34 +54,34 @@ assetListLoader.load(() => {
         data: [
             {
                 info: {
-                    locale: "en-US"
+                    locale: 'en-US'
                 },
                 messages: {
-                    HELLO: "Hi"
+                    HELLO: 'Hi'
                 }
             },
             {
                 info: {
-                    locale: "fr-FR"
+                    locale: 'fr-FR'
                 },
                 messages: {
-                    HELLO: "Salut"
+                    HELLO: 'Salut'
                 }
             },
             {
                 info: {
-                    locale: "es-ES"
+                    locale: 'es-ES'
                 },
                 messages: {
-                    HELLO: "Hola"
+                    HELLO: 'Hola'
                 }
             },
             {
                 info: {
-                    locale: "pt-BR"
+                    locale: 'pt-BR'
                 },
                 messages: {
-                    HELLO: "Oi!"
+                    HELLO: 'Oi!'
                 }
             }
         ]
@@ -89,14 +89,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -106,13 +106,13 @@ assetListLoader.load(() => {
 
     // Create a basic text element
     const text = new pc.Entity();
-    text.addComponent("element", {
+    text.addComponent('element', {
         anchor: [0.5, 0.5, 0.5, 0.5],
         autoWidth: false,
         fontAsset: assets.font.id,
         fontSize: 128,
         pivot: [0.5, 0.5],
-        key: "HELLO",
+        key: 'HELLO',
         type: pc.ELEMENTTYPE_TEXT,
         width: 640
     });
@@ -127,8 +127,8 @@ assetListLoader.load(() => {
     function createButton(labelText, x, y) {
         // Create a simple button
         const button = new pc.Entity();
-        button.addComponent("button");
-        button.addComponent("element", {
+        button.addComponent('button');
+        button.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             height: 40,
             pivot: [0.5, 0.5],
@@ -139,7 +139,7 @@ assetListLoader.load(() => {
 
         // Create a label for the button
         const label = new pc.Entity();
-        label.addComponent("element", {
+        label.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             color: new pc.Color(0, 0, 0),
             fontAsset: assets.font.id,
@@ -154,7 +154,7 @@ assetListLoader.load(() => {
         button.addChild(label);
 
         // Change the locale to the button text
-        button.button.on("click", function () {
+        button.button.on('click', function () {
             app.i18n.locale = labelText;
         });
 
@@ -163,10 +163,10 @@ assetListLoader.load(() => {
         return button;
     }
 
-    screen.addChild(createButton("en-US", -225, -100));
-    screen.addChild(createButton("fr-FR", -75, -100));
-    screen.addChild(createButton("es-ES", 75, -100));
-    screen.addChild(createButton("pt-BR", 225, -100));
+    screen.addChild(createButton('en-US', -225, -100));
+    screen.addChild(createButton('fr-FR', -75, -100));
+    screen.addChild(createButton('es-ES', 75, -100));
+    screen.addChild(createButton('pt-BR', 225, -100));
 });
 
 export { app };

@@ -7,13 +7,13 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "Material" },
+            { headerText: 'Material' },
             jsx(
                 LabelGroup,
-                { text: "Gloss" },
+                { text: 'Gloss' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.material.gloss" },
+                    link: { observer, path: 'settings.material.gloss' },
                     min: 0,
                     max: 1,
                     precision: 2
@@ -21,10 +21,10 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
-                { text: "Metalness" },
+                { text: 'Metalness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "settings.material.metalness" },
+                    link: { observer, path: 'settings.material.metalness' },
                     min: 0,
                     max: 1,
                     precision: 2

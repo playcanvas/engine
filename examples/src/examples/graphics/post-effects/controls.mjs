@@ -7,38 +7,38 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     return fragment(
         jsx(
             Panel,
-            { headerText: "BLOOM [KEY_1]" },
+            { headerText: 'BLOOM [KEY_1]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bloom.enabled" }
+                    link: { observer, path: 'scripts.bloom.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "intensity" },
+                { text: 'intensity' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bloom.bloomIntensity" }
+                    link: { observer, path: 'scripts.bloom.bloomIntensity' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "threshold" },
+                { text: 'threshold' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bloom.bloomThreshold" }
+                    link: { observer, path: 'scripts.bloom.bloomThreshold' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "blur amount" },
+                { text: 'blur amount' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bloom.blurAmount" },
+                    link: { observer, path: 'scripts.bloom.blurAmount' },
                     min: 1,
                     max: 30
                 })
@@ -46,148 +46,148 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
         ),
         jsx(
             Panel,
-            { headerText: "SEPIA [KEY_2]" },
+            { headerText: 'SEPIA [KEY_2]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.sepia.enabled" }
+                    link: { observer, path: 'scripts.sepia.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "amount" },
+                { text: 'amount' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.sepia.amount" }
+                    link: { observer, path: 'scripts.sepia.amount' }
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "VIGNETTE [KEY_3]" },
+            { headerText: 'VIGNETTE [KEY_3]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.vignette.enabled" }
+                    link: { observer, path: 'scripts.vignette.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "darkness" },
+                { text: 'darkness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.vignette.darkness" }
+                    link: { observer, path: 'scripts.vignette.darkness' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "offset" },
+                { text: 'offset' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.vignette.offset" },
+                    link: { observer, path: 'scripts.vignette.offset' },
                     max: 2
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "BOKEH [KEY_4]" },
+            { headerText: 'BOKEH [KEY_4]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bokeh.enabled" }
+                    link: { observer, path: 'scripts.bokeh.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "aperture" },
+                { text: 'aperture' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bokeh.aperture" },
+                    link: { observer, path: 'scripts.bokeh.aperture' },
                     max: 0.2
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "max blur" },
+                { text: 'max blur' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.bokeh.maxBlur" },
+                    link: { observer, path: 'scripts.bokeh.maxBlur' },
                     max: 0.1
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "SSAO [KEY_5]" },
+            { headerText: 'SSAO [KEY_5]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.ssao.enabled" }
+                    link: { observer, path: 'scripts.ssao.enabled' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "radius" },
+                { text: 'radius' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.ssao.radius" },
+                    link: { observer, path: 'scripts.ssao.radius' },
                     max: 10
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "samples" },
+                { text: 'samples' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.ssao.samples" },
+                    link: { observer, path: 'scripts.ssao.samples' },
                     max: 32
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "brightness" },
+                { text: 'brightness' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.ssao.brightness" }
+                    link: { observer, path: 'scripts.ssao.brightness' }
                 })
             ),
             jsx(
                 LabelGroup,
-                { text: "downscale" },
+                { text: 'downscale' },
                 jsx(SelectInput, {
                     options: [
-                        { v: 1, t: "None" },
-                        { v: 2, t: "50%" },
-                        { v: "4", t: "25%" }
+                        { v: 1, t: 'None' },
+                        { v: 2, t: '50%' },
+                        { v: '4', t: '25%' }
                     ],
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "scripts.ssao.downscale" }
+                    link: { observer, path: 'scripts.ssao.downscale' }
                 })
             )
         ),
         jsx(
             Panel,
-            { headerText: "POST-PROCESS UI [KEY_6]" },
+            { headerText: 'POST-PROCESS UI [KEY_6]' },
             jsx(
                 LabelGroup,
-                { text: "enabled" },
+                { text: 'enabled' },
                 jsx(BooleanInput, {
-                    type: "toggle",
+                    type: 'toggle',
                     binding: new BindingTwoWay(),
-                    link: { observer, path: "data.postProcessUI.enabled" }
+                    link: { observer, path: 'data.postProcessUI.enabled' }
                 })
             )
         )

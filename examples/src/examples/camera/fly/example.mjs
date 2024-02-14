@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -32,13 +32,13 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/fly-camera.js" })
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/fly-camera.js' })
 };
 
 /**
@@ -77,8 +77,8 @@ function createMaterial(color) {
 function createBox(position, size, material) {
     // create an entity and add a model component of type 'box'
     const box = new pc.Entity();
-    box.addComponent("render", {
-        type: "box",
+    box.addComponent('render', {
+        type: 'box',
         material: material
     });
 
@@ -108,8 +108,8 @@ createBox(new pc.Vec3(0, -0.5, 0), new pc.Vec3(10, 0.1, 10), white);
 
 // make our scene prettier by adding a directional light
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "omni",
+light.addComponent('light', {
+    type: 'omni',
     color: new pc.Color(1, 1, 1),
     range: 100
 });
@@ -122,15 +122,15 @@ app.root.addChild(light);
 
 // Create an Entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.5, 0.5, 0.8),
     nearClip: 0.3,
     farClip: 30
 });
 
 // add the fly camera script to the camera
-camera.addComponent("script");
-camera.script.create("flyCamera");
+camera.addComponent('script');
+camera.script.create('flyCamera');
 
 // add the camera to the hierarchy
 app.root.addChild(camera);

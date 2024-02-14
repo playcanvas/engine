@@ -1,32 +1,32 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("Ammo", {
-    glueUrl: "/static/lib/ammo/ammo.wasm.js",
-    wasmUrl: "/static/lib/ammo/ammo.wasm.wasm",
-    fallbackUrl: "/static/lib/ammo/ammo.js"
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("Ammo", () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    model: new pc.Asset("model", "container", { url: "/static/assets/models/bitmoji.glb" }),
-    idleAnim: new pc.Asset("idleAnim", "container", { url: "/static/assets/animations/bitmoji/idle.glb" }),
+    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -60,9 +60,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -76,7 +76,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a light component
     const lightEntity = new pc.Entity();
-    lightEntity.addComponent("light", {
+    lightEntity.addComponent('light', {
         castShadows: true,
         intensity: 1.5,
         normalOffsetBias: 0.2,
@@ -108,8 +108,8 @@ assetListLoader.load(() => {
     const gray = createMaterial(new pc.Color(0.7, 0.7, 0.7));
 
     const floor = new pc.Entity();
-    floor.addComponent("render", {
-        type: "box",
+    floor.addComponent('render', {
+        type: 'box',
         material: gray
     });
 
@@ -118,14 +118,14 @@ assetListLoader.load(() => {
     floor.translateLocal(0, -0.5, 0);
 
     // Add a rigidbody component so that other objects collide with it
-    floor.addComponent("rigidbody", {
-        type: "static",
+    floor.addComponent('rigidbody', {
+        type: 'static',
         restitution: 0.5
     });
 
     // Add a collision component
-    floor.addComponent("collision", {
-        type: "box",
+    floor.addComponent('collision', {
+        type: 'box',
         halfExtents: new pc.Vec3(5, 0.5, 5)
     });
 
@@ -138,7 +138,7 @@ assetListLoader.load(() => {
     });
 
     // Add an anim component to the entity
-    modelEntity.addComponent("anim", {
+    modelEntity.addComponent('anim', {
         activate: true
     });
 
@@ -146,21 +146,21 @@ assetListLoader.load(() => {
     const animStateGraphData = {
         layers: [
             {
-                name: "characterState",
+                name: 'characterState',
                 states: [
                     {
-                        name: "START"
+                        name: 'START'
                     },
                     {
-                        name: "Idle",
+                        name: 'Idle',
                         speed: 1.0,
                         loop: true
                     }
                 ],
                 transitions: [
                     {
-                        from: "START",
-                        to: "Idle"
+                        from: 'START',
+                        to: 'Idle'
                     }
                 ]
             }
@@ -173,26 +173,26 @@ assetListLoader.load(() => {
 
     // Add a rigid body and collision for the head with offset as the model's origin is
     // at the feet on the floor
-    modelEntity.addComponent("rigidbody", {
-        type: "static",
+    modelEntity.addComponent('rigidbody', {
+        type: 'static',
         restitution: 0.5
     });
 
-    modelEntity.addComponent("collision", {
-        type: "sphere",
+    modelEntity.addComponent('collision', {
+        type: 'sphere',
         radius: 0.3,
         linearOffset: [0, 1.25, 0]
     });
 
     // load the state graph asset resource into the anim component
     const characterStateLayer = modelEntity.anim.baseLayer;
-    characterStateLayer.assignAnimation("Idle", assets.idleAnim.resource.animations[0].resource);
+    characterStateLayer.assignAnimation('Idle', assets.idleAnim.resource.animations[0].resource);
 
     app.root.addChild(modelEntity);
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera");
+    cameraEntity.addComponent('camera');
     cameraEntity.translate(0, 2, 5);
     const lookAtPosition = modelEntity.getPosition();
     cameraEntity.lookAt(lookAtPosition.x, lookAtPosition.y + 0.75, lookAtPosition.z);
@@ -201,21 +201,21 @@ assetListLoader.load(() => {
 
     // create a ball template that we can clone in the update loop
     const ball = new pc.Entity();
-    ball.tags.add("shape");
+    ball.tags.add('shape');
     ball.setLocalScale(0.4, 0.4, 0.4);
     ball.translate(0, -1, 0);
-    ball.addComponent("render", {
-        type: "sphere"
+    ball.addComponent('render', {
+        type: 'sphere'
     });
 
-    ball.addComponent("rigidbody", {
-        type: "dynamic",
+    ball.addComponent('rigidbody', {
+        type: 'dynamic',
         mass: 50,
         restitution: 0.5
     });
 
-    ball.addComponent("collision", {
-        type: "sphere",
+    ball.addComponent('collision', {
+        type: 'sphere',
         radius: 0.2
     });
 
@@ -226,7 +226,7 @@ assetListLoader.load(() => {
     let count = 40;
 
     // Set an update function on the application's update event
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // create a falling box every 0.2 seconds
         if (count > 0) {
             timer -= dt;
@@ -244,7 +244,7 @@ assetListLoader.load(() => {
         }
 
         // Show active bodies in red and frozen bodies in gray
-        app.root.findByTag("shape").forEach(function (/** @type {pc.Entity} */ entity) {
+        app.root.findByTag('shape').forEach(function (/** @type {pc.Entity} */ entity) {
             entity.render.meshInstances[0].material = entity.rigidbody.isActive() ? red : gray;
         });
 
@@ -255,7 +255,7 @@ assetListLoader.load(() => {
             pc.Color.GREEN,
             16,
             true,
-            app.scene.layers.getLayerByName("World")
+            app.scene.layers.getLayerByName('World')
         );
     });
 });

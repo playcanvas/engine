@@ -1,35 +1,35 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("DracoDecoderModule", () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const assets = {
-    orbitCamera: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
+    orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    cube: new pc.Asset("cube", "container", { url: "/static/assets/models/playcanvas-cube.glb" }),
-    luts: new pc.Asset("luts", "json", { url: "/static/assets/json/area-light-luts.json" }),
-    asset: new pc.Asset("asset", "container", { url: "/static/assets/models/robot-arm.glb" })
+    cube: new pc.Asset('cube', 'container', { url: '/static/assets/models/playcanvas-cube.glb' }),
+    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
+    asset: new pc.Asset('asset', 'container', { url: '/static/assets/models/robot-arm.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -64,9 +64,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -94,15 +94,15 @@ assetListLoader.load(() => {
     planeMaterial.update();
 
     const plane = new pc.Entity();
-    plane.addComponent("render", {
-        type: "plane",
+    plane.addComponent('render', {
+        type: 'plane',
         material: planeMaterial
     });
     plane.setLocalScale(new pc.Vec3(100, 0, 100));
     plane.setLocalPosition(0, 0, 0);
     app.root.addChild(plane);
 
-    data.set("script", {
+    data.set('script', {
         cycle: true,
         animate: true,
         area: {
@@ -126,13 +126,13 @@ assetListLoader.load(() => {
     });
 
     const occluder = assets.asset.resource.instantiateRenderEntity();
-    occluder.addComponent("anim", {
+    occluder.addComponent('anim', {
         activate: true
     });
     occluder.setLocalScale(3, 3, 3);
     app.root.addChild(occluder);
 
-    occluder.anim.assignAnimation("Idle", assets.asset.resource.animations[0].resource);
+    occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
     occluder.anim.baseLayer.weight = 1.0;
     occluder.anim.speed = 0.1;
     // const animLayer = occluder.anim.addLayer('Idle', 1.0, )
@@ -140,17 +140,17 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     const areaLight = new pc.Entity();
-    areaLight.addComponent("light", {
-        type: "spot",
+    areaLight.addComponent('light', {
+        type: 'spot',
         shape: pc.LIGHTSHAPE_RECT,
         color: new pc.Color(0.25, 1, 0.25),
         castShadows: true,
         range: 150,
         shadowResolution: 2048,
         shadowDistance: 100,
-        penumbraSize: data.get("script.area.size"),
-        shadowType: data.get("script.area.shadowType"),
-        intensity: data.get("script.area.intensity"),
+        penumbraSize: data.get('script.area.size'),
+        shadowType: data.get('script.area.shadowType'),
+        intensity: data.get('script.area.intensity'),
         falloffMode: pc.LIGHTFALLOFF_INVERSESQUARED,
         innerConeAngle: 45,
         outerConeAngle: 50,
@@ -170,8 +170,8 @@ assetListLoader.load(() => {
 
     const brightShape = new pc.Entity();
     // primitive shape that matches light source shape
-    brightShape.addComponent("render", {
-        type: "plane",
+    brightShape.addComponent('render', {
+        type: 'plane',
         material: brightMaterial,
         castShadows: false
     });
@@ -179,14 +179,14 @@ assetListLoader.load(() => {
     app.root.addChild(areaLight);
 
     const directionalLight = new pc.Entity();
-    directionalLight.addComponent("light", {
-        type: "directional",
+    directionalLight.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 1, 1),
         castShadows: true,
         numCascades: 1,
-        penumbraSize: data.get("script.directional.size"),
-        shadowType: data.get("script.directional.shadowType"),
-        intensity: data.get("script.directional.intensity"),
+        penumbraSize: data.get('script.directional.size'),
+        shadowType: data.get('script.directional.shadowType'),
+        intensity: data.get('script.directional.intensity'),
         shadowBias: 0.5,
         shadowDistance: 50,
         normalOffsetBias: 0.1,
@@ -195,14 +195,14 @@ assetListLoader.load(() => {
     directionalLight.setEulerAngles(65, 35, 0);
     app.root.addChild(directionalLight);
 
-    const lightOmni = new pc.Entity("Omni");
-    lightOmni.addComponent("light", {
-        type: "omni",
+    const lightOmni = new pc.Entity('Omni');
+    lightOmni.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 0.25, 0.25),
         range: 25,
-        penumbraSize: data.get("script.point.size"),
-        shadowType: data.get("script.point.shadowType"),
-        intensity: data.get("script.point.intensity"),
+        penumbraSize: data.get('script.point.size'),
+        shadowType: data.get('script.point.shadowType'),
+        intensity: data.get('script.point.intensity'),
         castShadows: true,
         shadowBias: 0.2,
         normalOffsetBias: 0.2,
@@ -218,8 +218,8 @@ assetListLoader.load(() => {
     omniMaterial.update();
 
     const omniShape = new pc.Entity();
-    omniShape.addComponent("render", {
-        type: "sphere",
+    omniShape.addComponent('render', {
+        type: 'sphere',
         material: omniMaterial,
         castShadows: false
     });
@@ -229,14 +229,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.setLocalPosition(0, 5, 11);
 
     camera.camera.requestSceneColorMap(true);
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: occluder,
@@ -244,69 +244,69 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
-    data.on("*:set", (/** @type {string} */ path, value) => {
+    data.on('*:set', (/** @type {string} */ path, value) => {
         switch (path) {
-            case "script.area.enabled":
+            case 'script.area.enabled':
                 areaLight.enabled = value;
                 break;
-            case "script.area.intensity":
+            case 'script.area.intensity':
                 areaLight.light.intensity = value;
                 brightMaterial.emissiveIntensity = value;
                 brightMaterial.update();
                 break;
-            case "script.area.size":
+            case 'script.area.size':
                 areaLight.light.penumbraSize = value;
                 break;
-            case "script.area.shadowType":
+            case 'script.area.shadowType':
                 areaLight.light.shadowType = parseInt(value);
                 break;
-            case "script.directional.enabled":
+            case 'script.directional.enabled':
                 directionalLight.enabled = value;
                 break;
-            case "script.directional.intensity":
+            case 'script.directional.intensity':
                 directionalLight.light.intensity = value;
                 break;
-            case "script.directional.size":
+            case 'script.directional.size':
                 directionalLight.light.penumbraSize = value;
                 break;
-            case "script.directional.shadowType":
+            case 'script.directional.shadowType':
                 directionalLight.light.shadowType = parseInt(value);
                 break;
-            case "script.point.enabled":
+            case 'script.point.enabled':
                 lightOmni.enabled = value;
                 break;
-            case "script.point.intensity":
+            case 'script.point.intensity':
                 lightOmni.light.intensity = value;
                 break;
-            case "script.point.size":
+            case 'script.point.size':
                 lightOmni.light.penumbraSize = value;
                 break;
-            case "script.point.shadowType":
+            case 'script.point.shadowType':
                 lightOmni.light.shadowType = parseInt(value);
                 break;
         }
     });
 
-    const areaLightElement = window.top.document.getElementById("area-light");
-    const pointLightElement = window.top.document.getElementById("point-light");
-    const directionalLightElement = window.top.document.getElementById("directional-light");
+    const areaLightElement = window.top.document.getElementById('area-light');
+    const pointLightElement = window.top.document.getElementById('point-light');
+    const directionalLightElement = window.top.document.getElementById('directional-light');
 
     let resizeControlPanel = true;
     let time = 0;
     let timeDiff = 0;
     let index = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         if (time === 0) {
             // @ts-ignore engine-tsd
             camera.script.orbitCamera.distance = 25;
         }
         timeDiff += dt;
 
-        if (data.get("script.cycle")) {
+        if (data.get('script.cycle')) {
             if (timeDiff / 5 > 1) {
                 index = (index + 1) % 3;
                 timeDiff = 0;
@@ -327,12 +327,12 @@ assetListLoader.load(() => {
                 directionalLightElement.ui.enabled = true;
             }
 
-            areaLight.enabled = data.get("script.area.enabled");
-            directionalLight.enabled = data.get("script.directional.enabled");
-            lightOmni.enabled = data.get("script.point.enabled");
+            areaLight.enabled = data.get('script.area.enabled');
+            directionalLight.enabled = data.get('script.directional.enabled');
+            lightOmni.enabled = data.get('script.point.enabled');
         }
 
-        if (data.get("script.animate")) {
+        if (data.get('script.animate')) {
             time += dt;
             const x = Math.sin(time * 0.2);
             const z = Math.cos(time * 0.2);
@@ -344,9 +344,9 @@ assetListLoader.load(() => {
 
         // resize control panel to fit the content better
         if (resizeControlPanel) {
-            const panel = window.top.document.getElementById("controlPanel");
+            const panel = window.top.document.getElementById('controlPanel');
             if (panel) {
-                panel.style.width = "360px";
+                panel.style.width = '360px';
                 resizeControlPanel = false;
             }
         }

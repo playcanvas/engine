@@ -1,7 +1,7 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 function generateMipmaps(width, height) {
     const colors = [
@@ -43,19 +43,19 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset("rockyTrail", "texture", { url: "/static/assets/textures/rocky_trail_diff_1k.jpg" }),
-    rockBoulder: new pc.Asset("rockBoulder", "texture", {
-        url: "/static/assets/textures/rock_boulder_cracked_diff_1k.jpg"
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: '/static/assets/textures/rocky_trail_diff_1k.jpg' }),
+    rockBoulder: new pc.Asset('rockBoulder', 'texture', {
+        url: '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
     }),
-    coastSand: new pc.Asset("coastSand", "texture", { url: "/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg" }),
-    aerialRocks: new pc.Asset("aeralRocks", "texture", { url: "/static/assets/textures/aerial_rocks_02_diff_1k.jpg" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" })
+    coastSand: new pc.Asset('coastSand', 'texture', { url: '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -82,9 +82,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -99,13 +99,13 @@ assetListLoader.load(() => {
 
     // Create directional light
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional"
+    light.addComponent('light', {
+        type: 'directional'
     });
     light.setLocalEulerAngles(45, 0, 45);
 
     // Create the shader definition and shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0,
         aNormal: pc.SEMANTIC_NORMAL
@@ -113,9 +113,9 @@ assetListLoader.load(() => {
 
     const shaderGround = pc.createShaderFromCode(
         app.graphicsDevice,
-        files["shader.vert"],
-        files["ground.frag"],
-        "groundsShader",
+        files['shader.vert'],
+        files['ground.frag'],
+        'groundsShader',
         {
             aPosition: pc.SEMANTIC_POSITION,
             aUv0: pc.SEMANTIC_TEXCOORD0,
@@ -124,7 +124,7 @@ assetListLoader.load(() => {
     );
 
     const textureArrayOptions = {
-        name: "textureArrayImages",
+        name: 'textureArrayImages',
         format: pc.PIXELFORMAT_R8_G8_B8_A8,
         width: 1024,
         height: 1024,
@@ -157,26 +157,26 @@ assetListLoader.load(() => {
         return textures;
     });
     textureArrayOptions.levels = levels;
-    textureArrayOptions.name = "textureArrayData";
+    textureArrayOptions.name = 'textureArrayData';
     const mipmapTextureArray = new pc.Texture(app.graphicsDevice, textureArrayOptions);
 
     // Create a new material with the new shader
     const material = new pc.Material();
     material.shader = shader;
-    material.setParameter("uDiffuseMap", textureArray);
+    material.setParameter('uDiffuseMap', textureArray);
     material.update();
 
     // Create a another material with the new shader
     const groundMaterial = new pc.Material();
     groundMaterial.shader = shaderGround;
     groundMaterial.cull = pc.CULLFACE_NONE;
-    groundMaterial.setParameter("uDiffuseMap", textureArray);
+    groundMaterial.setParameter('uDiffuseMap', textureArray);
     groundMaterial.update();
 
     // Create an Entity for the ground
     const ground = new pc.Entity();
-    ground.addComponent("render", {
-        type: "box",
+    ground.addComponent('render', {
+        type: 'box',
         material: groundMaterial
     });
     ground.setLocalScale(4, 4, 4);
@@ -191,7 +191,7 @@ assetListLoader.load(() => {
         sides: 40
     });
     const shape = new pc.Entity();
-    shape.addComponent("render", {
+    shape.addComponent('render', {
         material: material,
         meshInstances: [new pc.MeshInstance(torus, material)]
     });
@@ -200,7 +200,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
 
@@ -208,15 +208,15 @@ assetListLoader.load(() => {
     camera.translate(3, -2, 4);
     camera.lookAt(0, 0, 0);
 
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2, // Override default of 0 (no inertia),
             distanceMax: 10.0
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
 
     // Add the new Entities to the hierarchy
     app.root.addChild(light);
@@ -226,17 +226,17 @@ assetListLoader.load(() => {
     // Set an update function on the app's update event
     let angle = 0;
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
         angle = (angle + dt * 10) % 360;
 
         // Rotate the boxes
         shape.setEulerAngles(angle, angle * 2, angle * 4);
-        shape.render.meshInstances[0].setParameter("uTime", time);
+        shape.render.meshInstances[0].setParameter('uTime', time);
     });
-    data.on("mipmaps:set", (/** @type {number} */ value) => {
-        groundMaterial.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
-        material.setParameter("uDiffuseMap", value ? mipmapTextureArray : textureArray);
+    data.on('mipmaps:set', (/** @type {number} */ value) => {
+        groundMaterial.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
+        material.setParameter('uDiffuseMap', value ? mipmapTextureArray : textureArray);
     });
 });
 

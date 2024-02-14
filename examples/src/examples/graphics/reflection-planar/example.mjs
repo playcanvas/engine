@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     envatlas: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/utils/planar-renderer.js" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/utils/planar-renderer.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -36,9 +36,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -77,7 +77,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             layers: layer,
             material: material
@@ -92,16 +92,16 @@ assetListLoader.load(() => {
     }
 
     // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // create a layer for objects that do not render into texture
-    const excludedLayer = new pc.Layer({ name: "Excluded" });
+    const excludedLayer = new pc.Layer({ name: 'Excluded' });
     app.scene.layers.insert(excludedLayer, app.scene.layers.getTransparentIndex(worldLayer) + 1);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     });
@@ -111,7 +111,7 @@ assetListLoader.load(() => {
     const groundMaterial = new pc.Material();
     groundMaterial.shader = shader;
     createPrimitive(
-        "plane",
+        'plane',
         new pc.Vec3(0, 0, 0),
         new pc.Vec3(40, 1, 40),
         new pc.Color(0.5, 0.5, 0.5),
@@ -128,7 +128,7 @@ assetListLoader.load(() => {
      * @type {pc.Entity[]}
      */
     const entities = [];
-    const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+    const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
     for (let i = 0; i < 6; i++) {
         const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
         const color = new pc.Color(Math.random(), Math.random(), Math.random());
@@ -136,24 +136,24 @@ assetListLoader.load(() => {
     }
 
     // Create main camera, which renders entities in world, excluded and skybox layers
-    const camera = new pc.Entity("MainCamera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('MainCamera');
+    camera.addComponent('camera', {
         fov: 60,
         layers: [worldLayer.id, excludedLayer.id, skyboxLayer.id, uiLayer.id]
     });
     app.root.addChild(camera);
 
     // create reflection camera, which renders entities in world and skybox layers only
-    const reflectionCamera = new pc.Entity("ReflectionCamera");
-    reflectionCamera.addComponent("camera", {
+    const reflectionCamera = new pc.Entity('ReflectionCamera');
+    reflectionCamera.addComponent('camera', {
         fov: 60,
         layers: [worldLayer.id, skyboxLayer.id],
         priority: -1 // render reflections before the main camera
     });
 
     // add planarRenderer script which renders the reflection texture
-    reflectionCamera.addComponent("script");
-    reflectionCamera.script.create("planarRenderer", {
+    reflectionCamera.addComponent('script');
+    reflectionCamera.script.create('planarRenderer', {
         attributes: {
             sceneCameraEntity: camera,
             scale: 1,
@@ -167,7 +167,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // rotate primitives around their center and also orbit them around the shiny sphere
@@ -188,7 +188,7 @@ assetListLoader.load(() => {
         // trigger reflection camera update (must be called after all parameters of the main camera are updated)
         // @ts-ignore engine-tsd
         const reflectionTexture = reflectionCamera.script.planarRenderer.frameUpdate();
-        groundMaterial.setParameter("uDiffuseMap", reflectionTexture);
+        groundMaterial.setParameter('uDiffuseMap', reflectionTexture);
         groundMaterial.update();
     });
 });

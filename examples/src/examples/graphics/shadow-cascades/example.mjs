@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    terrain: new pc.Asset("terrain", "container", { url: "/static/assets/models/terrain.glb" }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    terrain: new pc.Asset('terrain', 'container', { url: '/static/assets/models/terrain.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,7 +41,7 @@ const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets
 assetListLoader.load(() => {
     app.start();
 
-    data.set("settings", {
+    data.set('settings', {
         light: {
             numCascades: 4, // number of cascades
             shadowResolution: 2048, // shadow map resolution storing 4 cascades
@@ -58,9 +58,9 @@ assetListLoader.load(() => {
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     // setup skydome
@@ -78,7 +78,7 @@ assetListLoader.load(() => {
     // get the clouds so that we can animate them
     /** @type {Array<pc.Entity>} */
     const srcClouds = terrain.find((node) => {
-        const isCloud = node.name.includes("Icosphere");
+        const isCloud = node.name.includes('Icosphere');
 
         if (isCloud) {
             // no shadow receiving for clouds
@@ -107,11 +107,11 @@ assetListLoader.load(() => {
 
     // find a tree in the middle to use as a focus point
     // @ts-ignore
-    const tree = terrain.findOne("name", "Arbol 2.002");
+    const tree = terrain.findOne('name', 'Arbol 2.002');
 
     // create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.9, 0.9, 0.9),
         farClip: 1000
     });
@@ -120,23 +120,23 @@ assetListLoader.load(() => {
     camera.setLocalPosition(300, 160, 25);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: tree,
             distanceMax: 600
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // Create a directional light casting cascaded shadows
     const dirLight = new pc.Entity();
-    dirLight.addComponent("light", {
+    dirLight.addComponent('light', {
         ...{
-            type: "directional",
+            type: 'directional',
             color: pc.Color.WHITE,
             shadowBias: 0.3,
             normalOffsetBias: 0.2,
@@ -146,7 +146,7 @@ assetListLoader.load(() => {
             castShadows: true,
             shadowDistance: 1000
         },
-        ...data.get("settings.light")
+        ...data.get('settings.light')
     });
     app.root.addChild(dirLight);
     dirLight.setLocalEulerAngles(45, 350, 20);
@@ -155,10 +155,10 @@ assetListLoader.load(() => {
     let updateEveryFrame = true;
 
     // handle HUD changes - update properties on the light
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
 
-        if (pathArray[2] === "everyFrame") {
+        if (pathArray[2] === 'everyFrame') {
             updateEveryFrame = value;
         } else {
             // @ts-ignore
@@ -169,7 +169,7 @@ assetListLoader.load(() => {
     const cloudSpeed = 0.2;
     let frameNumber = 0;
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
         // on the first frame, when camera is updated, move it further away from the focus tree

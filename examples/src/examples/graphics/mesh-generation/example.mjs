@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    playcanvasGrey: new pc.Asset("playcanvasGrey", "texture", { url: "/static/assets/textures/playcanvas-grey.png" })
+    playcanvasGrey: new pc.Asset('playcanvasGrey', 'texture', { url: '/static/assets/textures/playcanvas-grey.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -29,9 +29,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -49,8 +49,8 @@ assetListLoader.load(() => {
     function createLight(color, scale) {
         // Create an Entity with a omni light component, which is casting shadows (using rendering to cubemap)
         const light = new pc.Entity();
-        light.addComponent("light", {
-            type: "omni",
+        light.addComponent('light', {
+            type: 'omni',
             color: color,
             radius: 10,
             castShadows: false
@@ -62,8 +62,8 @@ assetListLoader.load(() => {
         material.update();
 
         // add sphere at the position of light
-        light.addComponent("render", {
-            type: "sphere",
+        light.addComponent('render', {
+            type: 'sphere',
             material: material
         });
 
@@ -84,7 +84,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
 
@@ -170,14 +170,14 @@ assetListLoader.load(() => {
 
     // Create the entity with render component using meshInstances
     const entity = new pc.Entity();
-    entity.addComponent("render", {
+    entity.addComponent('render', {
         meshInstances: [meshInstance]
     });
     app.root.addChild(entity);
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // Move the lights along circles, also keep separate list of their position for faster update in next block of code

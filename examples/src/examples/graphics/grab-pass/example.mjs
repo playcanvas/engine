@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/normal-map.png" }),
-    roughness: new pc.Asset("roughness", "texture", { url: "/static/assets/textures/pc-gray.png" }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+    roughness: new pc.Asset('roughness', 'texture', { url: '/static/assets/textures/pc-gray.png' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -38,9 +38,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -79,7 +79,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -98,7 +98,7 @@ assetListLoader.load(() => {
      */
     const primitives = [];
     const count = 7;
-    const shapes = ["box", "cone", "cylinder", "sphere", "capsule"];
+    const shapes = ['box', 'cone', 'cylinder', 'sphere', 'capsule'];
     for (let i = 0; i < count; i++) {
         const shapeName = shapes[Math.floor(Math.random() * shapes.length)];
         const color = new pc.Color(Math.random(), Math.random(), Math.random());
@@ -108,8 +108,8 @@ assetListLoader.load(() => {
     }
 
     // Create the camera, which renders entities
-    const camera = new pc.Entity("SceneCamera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('SceneCamera');
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
     app.root.addChild(camera);
@@ -120,11 +120,11 @@ assetListLoader.load(() => {
     camera.camera.requestSceneColorMap(true);
 
     // create a primitive which uses refraction shader to distort the view behind it
-    const glass = createPrimitive("box", new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
+    const glass = createPrimitive('box', new pc.Vec3(1, 3, 0), new pc.Vec3(10, 10, 10), new pc.Color(1, 1, 1));
     glass.render.castShadows = false;
     glass.render.receiveShadows = false;
 
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader");
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader');
 
     // reflection material using the shader
     const refractionMaterial = new pc.Material();
@@ -132,14 +132,14 @@ assetListLoader.load(() => {
     glass.render.material = refractionMaterial;
 
     // set an offset map on the material
-    refractionMaterial.setParameter("uOffsetMap", assets.normal.resource);
+    refractionMaterial.setParameter('uOffsetMap', assets.normal.resource);
 
     // set roughness map
-    refractionMaterial.setParameter("uRoughnessMap", assets.roughness.resource);
+    refractionMaterial.setParameter('uRoughnessMap', assets.roughness.resource);
 
     // tint colors
     refractionMaterial.setParameter(
-        "tints[0]",
+        'tints[0]',
         new Float32Array([
             1,
             0.7,
@@ -162,7 +162,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += dt;
 
         // rotate the primitives

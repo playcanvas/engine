@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -20,7 +20,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -31,14 +31,14 @@ assetListLoader.load(() => {
 
     // Ensure canvas is resized when window changes size
     const resize = () => app.resizeCanvas();
-    window.addEventListener("resize", resize);
-    app.on("destroy", () => {
-        window.removeEventListener("resize", resize);
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
     });
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     camera.translate(0, 7, 24);
@@ -52,7 +52,7 @@ assetListLoader.load(() => {
     app.root.addChild(entity);
 
     // Create the shader definition and shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     });
@@ -62,7 +62,7 @@ assetListLoader.load(() => {
     material.shader = shader;
 
     // find all render components
-    const renderComponents = entity.findComponents("render");
+    const renderComponents = entity.findComponents('render');
 
     // for all render components
     renderComponents.forEach(function (/** @type {pc.RenderComponent} */ render) {
@@ -76,10 +76,10 @@ assetListLoader.load(() => {
     });
 
     let currentTime = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // Update the time and pass it to shader
         currentTime += dt;
-        material.setParameter("uTime", currentTime);
+        material.setParameter('uTime', currentTime);
 
         // Rotate the model
         entity.rotate(0, 15 * dt, 0);

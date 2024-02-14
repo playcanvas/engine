@@ -1,25 +1,25 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    model: new pc.Asset("model", "container", { url: "/static/assets/models/bitmoji.glb" }),
-    idleAnim: new pc.Asset("idleAnim", "container", { url: "/static/assets/animations/bitmoji/idle.glb" }),
-    danceAnim: new pc.Asset("danceAnim", "container", { url: "/static/assets/animations/bitmoji/win-dance.glb" }),
+    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
+    danceAnim: new pc.Asset('danceAnim', 'container', { url: '/static/assets/animations/bitmoji/win-dance.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bloom: new pc.Asset("bloom", "script", { url: "/static/scripts/posteffects/posteffect-bloom.js" })
+    bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -50,9 +50,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -64,14 +64,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.1, 0.1, 0.1)
     });
     cameraEntity.translate(0, 0.75, 3);
 
     // add bloom postprocessing (this is ignored by the picker)
-    cameraEntity.addComponent("script");
-    cameraEntity.script.create("bloom", {
+    cameraEntity.addComponent('script');
+    cameraEntity.script.create('bloom', {
         attributes: {
             bloomIntensity: 1,
             bloomThreshold: 0.7,
@@ -82,7 +82,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a light component
     const lightEntity = new pc.Entity();
-    lightEntity.addComponent("light", {
+    lightEntity.addComponent('light', {
         castShadows: true,
         intensity: 1.5,
         normalOffsetBias: 0.02,
@@ -100,7 +100,7 @@ assetListLoader.load(() => {
     });
 
     // add an anim component to the entity
-    modelEntity.addComponent("anim", {
+    modelEntity.addComponent('anim', {
         activate: true
     });
 
@@ -108,25 +108,25 @@ assetListLoader.load(() => {
     const animStateGraphData = {
         layers: [
             {
-                name: "characterState",
+                name: 'characterState',
                 states: [
                     {
-                        name: "START"
+                        name: 'START'
                     },
                     {
-                        name: "Movement",
+                        name: 'Movement',
                         speed: 1.0,
                         loop: true,
                         blendTree: {
-                            type: "1D",
-                            parameter: "blend",
+                            type: '1D',
+                            parameter: 'blend',
                             children: [
                                 {
-                                    name: "Idle",
+                                    name: 'Idle',
                                     point: 0.0
                                 },
                                 {
-                                    name: "Dance",
+                                    name: 'Dance',
                                     point: 1.0,
                                     speed: 0.85
                                 }
@@ -136,16 +136,16 @@ assetListLoader.load(() => {
                 ],
                 transitions: [
                     {
-                        from: "START",
-                        to: "Movement"
+                        from: 'START',
+                        to: 'Movement'
                     }
                 ]
             }
         ],
         parameters: {
             blend: {
-                name: "blend",
-                type: "FLOAT",
+                name: 'blend',
+                type: 'FLOAT',
                 value: 0
             }
         }
@@ -156,13 +156,13 @@ assetListLoader.load(() => {
 
     // load the state graph asset resource into the anim component
     const characterStateLayer = modelEntity.anim.baseLayer;
-    characterStateLayer.assignAnimation("Movement.Idle", assets.idleAnim.resource.animations[0].resource);
-    characterStateLayer.assignAnimation("Movement.Dance", assets.danceAnim.resource.animations[0].resource);
+    characterStateLayer.assignAnimation('Movement.Idle', assets.idleAnim.resource.animations[0].resource);
+    characterStateLayer.assignAnimation('Movement.Dance', assets.danceAnim.resource.animations[0].resource);
 
     app.root.addChild(modelEntity);
 
-    data.on("blend:set", (/** @type {number} */ blend) => {
-        modelEntity.anim.setFloat("blend", blend);
+    data.on('blend:set', (/** @type {number} */ blend) => {
+        modelEntity.anim.setFloat('blend', blend);
     });
 
     app.start();

@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js",
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js',
 
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
@@ -36,16 +36,16 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assets = {
-    gallery: new pc.Asset("gallery", "container", { url: "/static/assets/models/vr-gallery.glb" }),
-    guitar: new pc.Asset("gsplat", "gsplat", { url: "/static/assets/splats/guitar.ply" }),
-    biker: new pc.Asset("gsplat", "gsplat", { url: "/static/assets/splats/biker.ply" }),
-    orbit: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" })
+    gallery: new pc.Asset('gallery', 'container', { url: '/static/assets/models/vr-gallery.glb' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/guitar.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/biker.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -60,7 +60,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
     camera.setLocalPosition(-3, 1, 2);
@@ -79,16 +79,16 @@ assetListLoader.load(() => {
     };
 
     const guitar = createSplatInstance(
-        "guitar",
+        'guitar',
         assets.guitar.resource,
         0,
         0.8,
         0,
         0.4,
-        files["shader.vert"],
-        files["shader.frag"]
+        files['shader.vert'],
+        files['shader.frag']
     );
-    const biker1 = createSplatInstance("biker1", assets.biker.resource, -1.5, 0.05, 0, 0.7);
+    const biker1 = createSplatInstance('biker1', assets.biker.resource, -1.5, 0.05, 0, 0.7);
 
     // clone the biker and add the clone to the scene
     const biker2 = biker1.clone();
@@ -97,8 +97,8 @@ assetListLoader.load(() => {
     app.root.addChild(biker2);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: guitar,
@@ -106,17 +106,17 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     let useCustomShader = true;
-    data.on("shader:set", () => {
+    data.on('shader:set', () => {
         // Apply custom or default material options to the splats when the button is clicked. Note
         // that this uses non-public API, which is subject to change when a proper API is added.
         const materialOptions = {
-            fragment: files["shader.frag"],
-            vertex: files["shader.vert"]
+            fragment: files['shader.frag'],
+            vertex: files['shader.vert']
         };
         biker1.gsplat.materialOptions = useCustomShader ? materialOptions : null;
         biker2.gsplat.materialOptions = useCustomShader ? materialOptions : null;
@@ -124,11 +124,11 @@ assetListLoader.load(() => {
     });
 
     let currentTime = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         currentTime += dt;
 
         const material = guitar.gsplat.material;
-        material.setParameter("uTime", currentTime);
+        material.setParameter('uTime', currentTime);
     });
 });
 

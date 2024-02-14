@@ -1,7 +1,7 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // A simple render pass that renders a quad with a shader. The shader tints the source texture.
 class RenderPassTint extends pc.RenderPassShaderQuad {
@@ -11,7 +11,7 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
         this.tint = pc.Color.WHITE.clone();
 
         this.shader = this.createQuadShader(
-            "TintShader",
+            'TintShader',
             `
                 uniform sampler2D sourceTexture;
                 uniform vec3 tint;
@@ -24,33 +24,33 @@ class RenderPassTint extends pc.RenderPassShaderQuad {
     }
 
     execute() {
-        this.device.scope.resolve("sourceTexture").setValue(this.sourceTexture);
-        this.device.scope.resolve("tint").setValue([this.tint.r, this.tint.g, this.tint.b]);
+        this.device.scope.resolve('sourceTexture').setValue(this.sourceTexture);
+        this.device.scope.resolve('tint').setValue([this.tint.r, this.tint.g, this.tint.b]);
         super.execute();
     }
 }
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset("statue", "container", { url: "/static/assets/models/chess-board.glb" }),
+    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -70,9 +70,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -93,7 +93,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component, and attach postprocessing effects scripts on it
     const cameraEntity = new pc.Entity();
-    cameraEntity.addComponent("camera", {
+    cameraEntity.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         farClip: 500
     });
@@ -105,7 +105,7 @@ assetListLoader.load(() => {
 
     // the scene gets rendered to a texture first
     const texture = new pc.Texture(device, {
-        name: "RTTexture",
+        name: 'RTTexture',
         width: 4,
         height: 4,
         format: pc.PIXELFORMAT_RGBA8,
@@ -122,7 +122,7 @@ assetListLoader.load(() => {
     });
 
     // layers used in rendering
-    const worldLayer = app.scene.layers.getLayerByName("World");
+    const worldLayer = app.scene.layers.getLayerByName('World');
     const uiLayer = app.scene.layers.getLayerById(pc.LAYERID_UI);
 
     // use the render pass to render the world and ui layers to the created texture
@@ -146,7 +146,7 @@ assetListLoader.load(() => {
 
     // update things every frame
     let angle = 3;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         angle += dt;
 
         // move the focus position in the world

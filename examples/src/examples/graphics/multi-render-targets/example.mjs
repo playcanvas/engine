@@ -1,29 +1,29 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset("statue", "container", { url: "/static/assets/models/chess-board.glb" }),
+    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -50,9 +50,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -65,12 +65,12 @@ assetListLoader.load(() => {
     app.scene.toneMapping = pc.TONEMAP_ACES;
 
     // get existing layers
-    const worldLayer = app.scene.layers.getLayerByName("World");
-    const skyboxLayer = app.scene.layers.getLayerByName("Skybox");
-    const uiLayer = app.scene.layers.getLayerByName("UI");
+    const worldLayer = app.scene.layers.getLayerByName('World');
+    const skyboxLayer = app.scene.layers.getLayerByName('Skybox');
+    const uiLayer = app.scene.layers.getLayerByName('UI');
 
     // create a layer for object that render into texture, add it right after the world layer
-    const rtLayer = new pc.Layer({ name: "RTLayer" });
+    const rtLayer = new pc.Layer({ name: 'RTLayer' });
     app.scene.layers.insert(rtLayer, 1);
 
     /**
@@ -95,9 +95,9 @@ assetListLoader.load(() => {
     };
 
     // create textures and render target for rendering into, including depth buffer
-    const texture0 = createTexture("RT-texture-0", 512, 512);
-    const texture1 = createTexture("RT-texture-1", 512, 512);
-    const texture2 = createTexture("RT-texture-2", 512, 512);
+    const texture0 = createTexture('RT-texture-0', 512, 512);
+    const texture1 = createTexture('RT-texture-1', 512, 512);
+    const texture2 = createTexture('RT-texture-2', 512, 512);
 
     // render to multiple targets if supported
     const colorBuffers = app.graphicsDevice.supportsMrt ? [texture0, texture1, texture2] : [texture0];
@@ -110,8 +110,8 @@ assetListLoader.load(() => {
     });
 
     // Create texture camera, which renders entities in RTLayer into the texture
-    const textureCamera = new pc.Entity("TextureCamera");
-    textureCamera.addComponent("camera", {
+    const textureCamera = new pc.Entity('TextureCamera');
+    textureCamera.addComponent('camera', {
         layers: [rtLayer.id],
         farClip: 500,
 
@@ -126,7 +126,7 @@ assetListLoader.load(() => {
 
     // if MRT is supported, set the shader pass to use MRT output
     if (app.graphicsDevice.supportsMrt) {
-        textureCamera.camera.setShaderPass("MyMRT");
+        textureCamera.camera.setShaderPass('MyMRT');
     }
 
     // get the instance of the chess board. Render it into RTLayer only.
@@ -138,9 +138,9 @@ assetListLoader.load(() => {
     // override output shader chunk for the material of the chess board, to inject our
     // custom shader chunk which outputs to multiple render targets during our custom
     // shader pass
-    const outputChunk = files["output.frag"];
+    const outputChunk = files['output.frag'];
     /** @type {Array<pc.RenderComponent>} */
-    const renders = boardEntity.findComponents("render");
+    const renders = boardEntity.findComponents('render');
     renders.forEach((render) => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
@@ -151,14 +151,14 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         layers: [worldLayer.id, skyboxLayer.id, uiLayer.id]
     });
     app.root.addChild(camera);
 
     // update things every frame
     let angle = 1;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         angle += dt;
 
         // orbit the camera around

@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
     /** @type {HTMLDivElement} */
-    let el = document.querySelector(".message");
+    let el = document.querySelector('.message');
     if (!el) {
-        el = document.createElement("div");
-        el.classList.add("message");
+        el = document.createElement('div');
+        el.classList.add('message');
         document.body.append(el);
     }
     el.textContent = msg;
@@ -25,9 +25,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // use device pixel ratio
@@ -41,15 +41,15 @@ app.root.addChild(cameraParent);
 
 // create camera
 const c = new pc.Entity();
-c.addComponent("camera", {
+c.addComponent('camera', {
     clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255),
     farClip: 10000
 });
 cameraParent.addChild(c);
 
 const l = new pc.Entity();
-l.addComponent("light", {
-    type: "spot",
+l.addComponent('light', {
+    type: 'spot',
     range: 30
 });
 l.translate(0, 10, 0);
@@ -62,8 +62,8 @@ app.root.addChild(l);
  */
 const createCube = function (x, y, z) {
     const cube = new pc.Entity();
-    cube.addComponent("render", {
-        type: "box",
+    cube.addComponent('render', {
+        type: 'box',
         material: new pc.StandardMaterial()
     });
     cube.setLocalScale(1, 1, 1);
@@ -75,8 +75,8 @@ const controllers = [];
 // create controller box
 const createController = function (inputSource) {
     const entity = new pc.Entity();
-    entity.addComponent("model", {
-        type: "box"
+    entity.addComponent('model', {
+        type: 'box'
     });
     entity.setLocalScale(0.05, 0.05, 0.05);
     cameraParent.addChild(entity);
@@ -86,7 +86,7 @@ const createController = function (inputSource) {
 
     // destroy input source related entity
     // when input source is removed
-    inputSource.on("remove", function () {
+    inputSource.on('remove', function () {
         controllers.splice(controllers.indexOf(entity), 1);
         entity.destroy();
     });
@@ -105,20 +105,20 @@ if (app.xr.supported) {
         if (app.xr.isAvailable(pc.XRTYPE_VR)) {
             c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
                 callback: function (err) {
-                    if (err) message("Immersive VR failed to start: " + err.message);
+                    if (err) message('Immersive VR failed to start: ' + err.message);
                 }
             });
         } else {
-            message("Immersive VR is not available");
+            message('Immersive VR is not available');
         }
     };
 
-    app.mouse.on("mousedown", function () {
+    app.mouse.on('mousedown', function () {
         if (!app.xr.active) activate();
     });
 
     if (app.touch) {
-        app.touch.on("touchend", function (evt) {
+        app.touch.on('touchend', function (evt) {
             if (!app.xr.active) {
                 // if not in VR, activate
                 activate();
@@ -133,18 +133,18 @@ if (app.xr.supported) {
     }
 
     // end session by keyboard ESC
-    app.keyboard.on("keydown", function (evt) {
+    app.keyboard.on('keydown', function (evt) {
         if (evt.key === pc.KEY_ESCAPE && app.xr.active) {
             app.xr.end();
         }
     });
 
     // when new input source added
-    app.xr.input.on("add", function (inputSource) {
+    app.xr.input.on('add', function (inputSource) {
         createController(inputSource);
     });
 
-    message("Tap on screen to enter VR, use left thumbstick to move and right thumbstick to rotate");
+    message('Tap on screen to enter VR, use left thumbstick to move and right thumbstick to rotate');
 
     const movementSpeed = 1.5; // 1.5 m/s
     const rotateSpeed = 45;
@@ -159,7 +159,7 @@ if (app.xr.supported) {
     const lineColor = new pc.Color(1, 1, 1);
 
     // update position and rotation for each controller
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         let i, inputSource;
 
         // first we update movement
@@ -247,7 +247,7 @@ if (app.xr.supported) {
         }
     });
 } else {
-    message("WebXR is not supported");
+    message('WebXR is not supported');
 }
 
 export { app };

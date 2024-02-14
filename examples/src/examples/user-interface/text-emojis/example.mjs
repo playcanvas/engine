@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,9 +42,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -53,14 +53,14 @@ assetListLoader.load(() => {
 
     // Create a camera
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(30 / 255, 30 / 255, 30 / 255)
     });
     app.root.addChild(camera);
 
     // Create a 2D screen
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -69,9 +69,9 @@ assetListLoader.load(() => {
     app.root.addChild(screen);
 
     // some sample text
-    const firstLineText = "PlayCanvas supports Emojis via CanvasFont!";
-    const flagsText = "Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦";
-    const complexText = "Complex emoji: 👨🏿3️⃣👁️‍🗨️";
+    const firstLineText = 'PlayCanvas supports Emojis via CanvasFont!';
+    const flagsText = 'Flags: 🇺🇸🇩🇪🇮🇪🇮🇹🏴‍☠️🇨🇦';
+    const complexText = 'Complex emoji: 👨🏿3️⃣👁️‍🗨️';
 
     // Create a canvas font asset
     const size = 64;
@@ -79,7 +79,7 @@ assetListLoader.load(() => {
 
     const canvasFont = new pc.CanvasFont(app, {
         color: new pc.Color(1, 1, 1), // white
-        fontName: "Arial",
+        fontName: 'Arial',
         fontSize: size,
         width: 256,
         height: 256
@@ -98,7 +98,7 @@ assetListLoader.load(() => {
     function createText(y, text) {
         const canvasElementEntity = new pc.Entity();
         canvasElementEntity.setLocalPosition(0, y, 0);
-        canvasElementEntity.addComponent("element", {
+        canvasElementEntity.addComponent('element', {
             pivot: new pc.Vec2(0.5, 0.5),
             anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
             fontSize: elSize,
@@ -115,7 +115,7 @@ assetListLoader.load(() => {
     // Canvas Fonts Debug - you shouldn't do this in your actual project
     const debugText = new pc.Entity();
     debugText.setLocalPosition(0, -50, 0);
-    debugText.addComponent("element", {
+    debugText.addComponent('element', {
         pivot: new pc.Vec2(0.5, 0.5),
         anchor: new pc.Vec4(0.5, 0.5, 0.5, 0.5),
         fontAsset: assets.font.id,
@@ -128,7 +128,7 @@ assetListLoader.load(() => {
     // Create Layout Group Entity
     const group = new pc.Entity();
     group.setLocalPosition(0, -150, 0);
-    group.addComponent("element", {
+    group.addComponent('element', {
         // a Layout Group needs a 'group' element component
         type: pc.ELEMENTTYPE_GROUP,
         anchor: [0.5, 0.5, 0.5, 0.5],
@@ -137,7 +137,7 @@ assetListLoader.load(() => {
         width: 300,
         height: 100
     });
-    group.addComponent("layoutgroup", {
+    group.addComponent('layoutgroup', {
         orientation: pc.ORIENTATION_HORIZONTAL,
         // fit_both for width and height, making all child elements take the entire space
         widthFitting: pc.FITTING_BOTH,
@@ -153,13 +153,13 @@ assetListLoader.load(() => {
 
         // create a random-colored panel
         const child = new pc.Entity();
-        child.addComponent("element", {
+        child.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             pivot: [0.5, 0.5],
             texture: texture,
             type: pc.ELEMENTTYPE_IMAGE
         });
-        child.addComponent("layoutchild", {
+        child.addComponent('layoutchild', {
             excludeFromLayout: false
         });
         group.addChild(child);

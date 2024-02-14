@@ -1,12 +1,12 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -26,22 +26,22 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 // Create an entity with a directional light component
 const light = new pc.Entity();
-light.addComponent("light", {
-    type: "directional"
+light.addComponent('light', {
+    type: 'directional'
 });
 app.root.addChild(light);
 light.setLocalEulerAngles(45, 30, 0);
 
 // Create an entity with a camera component
 const camera = new pc.Entity();
-camera.addComponent("camera", {
+camera.addComponent('camera', {
     clearColor: new pc.Color(0.1, 0.1, 0.1)
 });
 app.root.addChild(camera);
@@ -160,7 +160,7 @@ const createMorphInstance = function (x, y, z) {
     app.root.addChild(entity);
 
     // Add a render component with meshInstance
-    entity.addComponent("render", {
+    entity.addComponent('render', {
         material: material,
         meshInstances: [meshInstance]
     });
@@ -177,7 +177,7 @@ for (let k = 0; k < 3; k++) {
 
 // update function called once per frame
 let time = 0;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     time += dt;
 
     for (let m = 0; m < morphInstances.length; m++) {

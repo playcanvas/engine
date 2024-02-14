@@ -1,35 +1,35 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 
 const assets = {
-    board: new pc.Asset("statue", "container", { url: "/static/assets/models/chess-board.glb" }),
-    bloom: new pc.Asset("bloom", "script", { url: "/static/scripts/posteffects/posteffect-bloom.js" }),
-    bokeh: new pc.Asset("bokeh", "script", { url: "/static/scripts/posteffects/posteffect-bokeh.js" }),
-    sepia: new pc.Asset("sepia", "script", { url: "/static/scripts/posteffects/posteffect-sepia.js" }),
-    vignette: new pc.Asset("vignette", "script", { url: "/static/scripts/posteffects/posteffect-vignette.js" }),
-    ssao: new pc.Asset("ssao", "script", { url: "/static/scripts/posteffects/posteffect-ssao.js" }),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" }),
+    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
+    bloom: new pc.Asset('bloom', 'script', { url: '/static/scripts/posteffects/posteffect-bloom.js' }),
+    bokeh: new pc.Asset('bokeh', 'script', { url: '/static/scripts/posteffects/posteffect-bokeh.js' }),
+    sepia: new pc.Asset('sepia', 'script', { url: '/static/scripts/posteffects/posteffect-sepia.js' }),
+    vignette: new pc.Asset('vignette', 'script', { url: '/static/scripts/posteffects/posteffect-vignette.js' }),
+    ssao: new pc.Asset('ssao', 'script', { url: '/static/scripts/posteffects/posteffect-ssao.js' }),
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -56,9 +56,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -90,7 +90,7 @@ assetListLoader.load(() => {
 
         // create the primitive using the material
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material,
             castShadows: false,
@@ -112,12 +112,12 @@ assetListLoader.load(() => {
     app.root.addChild(boardEntity);
 
     // create a sphere which represents the point of focus for the bokeh filter
-    const focusPrimitive = createPrimitive("sphere", pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 1.5, false);
+    const focusPrimitive = createPrimitive('sphere', pc.Vec3.ZERO, new pc.Vec3(3, 3, 3), 1.5, false);
 
     // add an omni light as a child of this sphere
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: pc.Color.YELLOW,
         intensity: 2,
         range: 150,
@@ -128,12 +128,12 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component, and attach postprocessing effects scripts on it
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5),
         farClip: 500
     });
-    camera.addComponent("script");
-    data.set("scripts", {
+    camera.addComponent('script');
+    data.set('scripts', {
         ssao: {
             enabled: true,
             radius: 5,
@@ -163,7 +163,7 @@ assetListLoader.load(() => {
         }
     });
 
-    Object.keys(data.get("scripts")).forEach((key) => {
+    Object.keys(data.get('scripts')).forEach((key) => {
         camera.script.create(key, {
             attributes: data.get(`scripts.${key}`)
         });
@@ -176,28 +176,28 @@ assetListLoader.load(() => {
 
     // Allow user to toggle individual post effects
     app.keyboard.on(
-        "keydown",
+        'keydown',
         function (e) {
             // if the user is editing an input field, ignore key presses
-            if (e.element.constructor.name === "HTMLInputElement") return;
+            if (e.element.constructor.name === 'HTMLInputElement') return;
             switch (e.key) {
                 case pc.KEY_1:
-                    data.set("scripts.bloom.enabled", !data.get("scripts.bloom.enabled"));
+                    data.set('scripts.bloom.enabled', !data.get('scripts.bloom.enabled'));
                     break;
                 case pc.KEY_2:
-                    data.set("scripts.sepia.enabled", !data.get("scripts.sepia.enabled"));
+                    data.set('scripts.sepia.enabled', !data.get('scripts.sepia.enabled'));
                     break;
                 case pc.KEY_3:
-                    data.set("scripts.vignette.enabled", !data.get("scripts.vignette.enabled"));
+                    data.set('scripts.vignette.enabled', !data.get('scripts.vignette.enabled'));
                     break;
                 case pc.KEY_4:
-                    data.set("scripts.bokeh.enabled", !data.get("scripts.bokeh.enabled"));
+                    data.set('scripts.bokeh.enabled', !data.get('scripts.bokeh.enabled'));
                     break;
                 case pc.KEY_5:
-                    data.set("scripts.ssao.enabled", !data.get("scripts.ssao.enabled"));
+                    data.set('scripts.ssao.enabled', !data.get('scripts.ssao.enabled'));
                     break;
                 case pc.KEY_6:
-                    data.set("data.postProcessUI.enabled", !data.get("data.postProcessUI.enabled"));
+                    data.set('data.postProcessUI.enabled', !data.get('data.postProcessUI.enabled'));
                     break;
             }
         },
@@ -206,7 +206,7 @@ assetListLoader.load(() => {
 
     // Create a 2D screen to place UI on
     const screen = new pc.Entity();
-    screen.addComponent("screen", {
+    screen.addComponent('screen', {
         referenceResolution: new pc.Vec2(1280, 720),
         scaleBlend: 0.5,
         scaleMode: pc.SCALEMODE_BLEND,
@@ -216,7 +216,7 @@ assetListLoader.load(() => {
 
     // create a text element to show which effects are enabled
     const text = new pc.Entity();
-    text.addComponent("element", {
+    text.addComponent('element', {
         anchor: new pc.Vec4(0.1, 0.1, 0.5, 0.5),
         fontAsset: assets.font,
         fontSize: 28,
@@ -227,11 +227,11 @@ assetListLoader.load(() => {
     screen.addChild(text);
 
     // Display some UI text which the post processing can be tested against
-    text.element.text = "Test UI Text";
+    text.element.text = 'Test UI Text';
 
     // update things every frame
     let angle = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         angle += dt;
 
         // rotate the skydome
@@ -251,15 +251,15 @@ assetListLoader.load(() => {
         camera.lookAt(focusPosition);
 
         // display the depth texture if it was rendered
-        if (data.get("scripts.bokeh.enabled") || data.get("scripts.ssao.enabled")) {
+        if (data.get('scripts.bokeh.enabled') || data.get('scripts.ssao.enabled')) {
             // @ts-ignore engine-tsd
             app.drawDepthTexture(0.7, -0.7, 0.5, -0.5);
         }
     });
 
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const pathArray = path.split(".");
-        if (pathArray[0] === "scripts") {
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const pathArray = path.split('.');
+        if (pathArray[0] === 'scripts') {
             camera.script[pathArray[1]][pathArray[2]] = value;
         } else {
             camera.camera.disablePostEffectsLayer =

@@ -1,26 +1,26 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/seaside-rocks01-normal.jpg" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.jpg" }),
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    luts: new pc.Asset("luts", "json", { url: "/static/assets/json/area-light-luts.json" }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,9 +41,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -79,7 +79,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity();
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -110,7 +110,7 @@ assetListLoader.load(() => {
         app.root.addChild(lightParent);
 
         const light = new pc.Entity();
-        light.addComponent("light", {
+        light.addComponent('light', {
             type: type,
             shape: shape,
             color: color,
@@ -137,20 +137,20 @@ assetListLoader.load(() => {
 
         const brightShape = new pc.Entity();
         // primitive shape that matches light source shape
-        brightShape.addComponent("render", {
-            type: shape === pc.LIGHTSHAPE_SPHERE ? "sphere" : shape === pc.LIGHTSHAPE_DISK ? "cone" : "plane",
+        brightShape.addComponent('render', {
+            type: shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cone' : 'plane',
             material: brightMaterial,
-            castShadows: type !== "directional"
+            castShadows: type !== 'directional'
         });
         brightShape.setLocalScale(
-            type === "directional" ? scale * range : scale,
-            shape === pc.LIGHTSHAPE_DISK ? 0.001 : type === "directional" ? scale * range : scale,
-            type === "directional" ? scale * range : scale
+            type === 'directional' ? scale * range : scale,
+            shape === pc.LIGHTSHAPE_DISK ? 0.001 : type === 'directional' ? scale * range : scale,
+            type === 'directional' ? scale * range : scale
         );
         lightParent.addChild(brightShape);
 
         // add black primitive shape if not omni-directional or global directional
-        if (type === "spot") {
+        if (type === 'spot') {
             // black material
             const blackMaterial = new pc.StandardMaterial();
             blackMaterial.diffuse = new pc.Color(0, 0, 0);
@@ -159,8 +159,8 @@ assetListLoader.load(() => {
             blackMaterial.update();
 
             const blackShape = new pc.Entity();
-            blackShape.addComponent("render", {
-                type: shape === pc.LIGHTSHAPE_SPHERE ? "sphere" : shape === pc.LIGHTSHAPE_DISK ? "cone" : "plane",
+            blackShape.addComponent('render', {
+                type: shape === pc.LIGHTSHAPE_SPHERE ? 'sphere' : shape === pc.LIGHTSHAPE_DISK ? 'cone' : 'plane',
                 material: blackMaterial
             });
             blackShape.setLocalPosition(0, 0.01 / scale, 0);
@@ -191,7 +191,7 @@ assetListLoader.load(() => {
     app.scene.envAtlas = assets.helipad.resource;
 
     // create ground plane
-    createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(20, 20, 20), new pc.Color(0.3, 0.3, 0.3), assets);
 
     // get the instance of the statue and set up with render component
     const statue = assets.statue.resource.instantiateRenderEntity();
@@ -200,7 +200,7 @@ assetListLoader.load(() => {
 
     // Create the camera, which renders entities
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2),
         fov: 60,
         farClip: 100000
@@ -211,7 +211,7 @@ assetListLoader.load(() => {
 
     // Create lights with light source shape
     const light1 = createAreaLight(
-        "spot",
+        'spot',
         pc.LIGHTSHAPE_RECT,
         new pc.Vec3(-3, 4, 0),
         4,
@@ -221,7 +221,7 @@ assetListLoader.load(() => {
         10
     );
     const light2 = createAreaLight(
-        "omni",
+        'omni',
         pc.LIGHTSHAPE_SPHERE,
         new pc.Vec3(5, 2, -2),
         2,
@@ -231,7 +231,7 @@ assetListLoader.load(() => {
         10
     );
     const light3 = createAreaLight(
-        "directional",
+        'directional',
         pc.LIGHTSHAPE_DISK,
         new pc.Vec3(0, 0, 0),
         0.2,
@@ -243,7 +243,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
         const factor1 = (Math.sin(time) + 1) * 0.5;

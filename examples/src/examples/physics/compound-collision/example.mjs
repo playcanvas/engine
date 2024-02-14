@@ -1,21 +1,21 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
-pc.WasmModule.setConfig("Ammo", {
-    glueUrl: "/static/lib/ammo/ammo.wasm.js",
-    wasmUrl: "/static/lib/ammo/ammo.wasm.wasm",
-    fallbackUrl: "/static/lib/ammo/ammo.js"
+pc.WasmModule.setConfig('Ammo', {
+    glueUrl: '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("Ammo", () => resolve());
+    pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -51,9 +51,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
@@ -81,19 +81,19 @@ const scene = [
         // collision component is added to a compound collision shape on the
         // Chair entity. You can use compound collision shapes to define
         // complex, rigid shapes.
-        name: "Chair",
+        name: 'Chair',
         pos: [0, 1, 0],
         components: [
             {
-                type: "collision",
+                type: 'collision',
                 options: {
-                    type: "compound"
+                    type: 'compound'
                 }
             },
             {
-                type: "rigidbody",
+                type: 'rigidbody',
                 options: {
-                    type: "dynamic",
+                    type: 'dynamic',
                     friction: 0.5,
                     mass: 10,
                     restitution: 0.5
@@ -102,25 +102,25 @@ const scene = [
         ],
         children: [
             {
-                name: "Seat",
+                name: 'Seat',
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "box",
+                            type: 'box',
                             halfExtents: [0.25, 0.025, 0.25]
                         }
                     }
                 ],
                 children: [
                     {
-                        name: "Seat Model",
+                        name: 'Seat Model',
                         scl: [0.5, 0.05, 0.5],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "box",
+                                    type: 'box',
                                     material: gray
                                 }
                             }
@@ -129,26 +129,26 @@ const scene = [
                 ]
             },
             {
-                name: "Seat Back",
+                name: 'Seat Back',
                 pos: [0, 0.3, -0.2],
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "box",
+                            type: 'box',
                             halfExtents: [0.25, 0.2, 0.025]
                         }
                     }
                 ],
                 children: [
                     {
-                        name: "Seat Back Model",
+                        name: 'Seat Back Model',
                         scl: [0.5, 0.4, 0.05],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "box",
+                                    type: 'box',
                                     material: gray
                                 }
                             }
@@ -157,13 +157,13 @@ const scene = [
                 ]
             },
             {
-                name: "Leg 1",
+                name: 'Leg 1',
                 pos: [0.2, -0.25, 0.2],
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "cylinder",
+                            type: 'cylinder',
                             height: 0.5,
                             radius: 0.025
                         }
@@ -171,13 +171,13 @@ const scene = [
                 ],
                 children: [
                     {
-                        name: "Leg 1 Model",
+                        name: 'Leg 1 Model',
                         scl: [0.05, 0.5, 0.05],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "cylinder",
+                                    type: 'cylinder',
                                     material: gray
                                 }
                             }
@@ -186,13 +186,13 @@ const scene = [
                 ]
             },
             {
-                name: "Leg 2",
+                name: 'Leg 2',
                 pos: [-0.2, -0.25, 0.2],
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "cylinder",
+                            type: 'cylinder',
                             height: 0.5,
                             radius: 0.025
                         }
@@ -200,13 +200,13 @@ const scene = [
                 ],
                 children: [
                     {
-                        name: "Leg 2 Model",
+                        name: 'Leg 2 Model',
                         scl: [0.05, 0.5, 0.05],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "cylinder",
+                                    type: 'cylinder',
                                     material: gray
                                 }
                             }
@@ -215,13 +215,13 @@ const scene = [
                 ]
             },
             {
-                name: "Leg 3",
+                name: 'Leg 3',
                 pos: [0.2, 0, -0.2],
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "cylinder",
+                            type: 'cylinder',
                             height: 1,
                             radius: 0.025
                         }
@@ -229,13 +229,13 @@ const scene = [
                 ],
                 children: [
                     {
-                        name: "Leg 3 Model",
+                        name: 'Leg 3 Model',
                         scl: [0.05, 1, 0.05],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "cylinder",
+                                    type: 'cylinder',
                                     material: gray
                                 }
                             }
@@ -244,13 +244,13 @@ const scene = [
                 ]
             },
             {
-                name: "Leg 4",
+                name: 'Leg 4',
                 pos: [-0.2, 0, -0.2],
                 components: [
                     {
-                        type: "collision",
+                        type: 'collision',
                         options: {
-                            type: "cylinder",
+                            type: 'cylinder',
                             height: 1,
                             radius: 0.025
                         }
@@ -258,13 +258,13 @@ const scene = [
                 ],
                 children: [
                     {
-                        name: "Leg 4 Model",
+                        name: 'Leg 4 Model',
                         scl: [0.05, 1, 0.05],
                         components: [
                             {
-                                type: "render",
+                                type: 'render',
                                 options: {
-                                    type: "cylinder",
+                                    type: 'cylinder',
                                     material: gray
                                 }
                             }
@@ -275,33 +275,33 @@ const scene = [
         ]
     },
     {
-        name: "Ground",
+        name: 'Ground',
         pos: [0, -0.5, 0],
         components: [
             {
-                type: "collision",
+                type: 'collision',
                 options: {
-                    type: "box",
+                    type: 'box',
                     halfExtents: [5, 0.5, 5]
                 }
             },
             {
-                type: "rigidbody",
+                type: 'rigidbody',
                 options: {
-                    type: "static",
+                    type: 'static',
                     restitution: 0.5
                 }
             }
         ],
         children: [
             {
-                name: "Ground Model",
+                name: 'Ground Model',
                 scl: [10, 1, 10],
                 components: [
                     {
-                        type: "render",
+                        type: 'render',
                         options: {
-                            type: "box",
+                            type: 'box',
                             material: gray
                         }
                     }
@@ -310,13 +310,13 @@ const scene = [
         ]
     },
     {
-        name: "Directional Light",
+        name: 'Directional Light',
         rot: [45, 130, 0],
         components: [
             {
-                type: "light",
+                type: 'light',
                 options: {
-                    type: "directional",
+                    type: 'directional',
                     castShadows: true,
                     shadowDistance: 8,
                     shadowBias: 0.1,
@@ -327,12 +327,12 @@ const scene = [
         ]
     },
     {
-        name: "Camera",
+        name: 'Camera',
         pos: [0, 4, 7],
         rot: [-30, 0, 0],
         components: [
             {
-                type: "camera",
+                type: 'camera',
                 options: {
                     color: [0.5, 0.5, 0.5]
                 }
@@ -389,7 +389,7 @@ let numChairs = 0;
 // Clone the chair entity hierarchy and add it to the scene root
 function spawnChair() {
     /** @type {pc.Entity} */
-    const chair = app.root.findByName("Chair");
+    const chair = app.root.findByName('Chair');
     const clone = chair.clone();
     clone.setLocalPosition(Math.random() * 1 - 0.5, Math.random() * 2 + 1, Math.random() * 1 - 0.5);
     app.root.addChild(clone);
@@ -398,7 +398,7 @@ function spawnChair() {
 
 // Set an update function on the application's update event
 let time = 0;
-app.on("update", function (dt) {
+app.on('update', function (dt) {
     // Add a new chair every 250 ms
     time += dt;
     if (time > 0.25 && numChairs < 20) {
@@ -407,8 +407,8 @@ app.on("update", function (dt) {
     }
 
     // Show active bodies in red and frozen bodies in gray
-    app.root.findComponents("rigidbody").forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
-        body.entity.findComponents("render").forEach(function (/** @type {pc.RenderComponent} */ render) {
+    app.root.findComponents('rigidbody').forEach(function (/** @type {pc.RigidBodyComponent} */ body) {
+        body.entity.findComponents('render').forEach(function (/** @type {pc.RenderComponent} */ render) {
             render.material = body.isActive() ? red : gray;
         });
     });

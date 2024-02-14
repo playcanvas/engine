@@ -1,23 +1,23 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     envAtlas: new pc.Asset(
-        "env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/table-mountain-env-atlas.png" },
+        'env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset("table", "container", { url: "/static/assets/models/glass-table.glb" }),
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" })
+    table: new pc.Asset('table', 'container', { url: '/static/assets/models/glass-table.glb' }),
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -47,9 +47,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -78,7 +78,7 @@ assetListLoader.load(() => {
 
         // create primitive
         const primitive = new pc.Entity(primitiveType);
-        primitive.addComponent("render", {
+        primitive.addComponent('render', {
             type: primitiveType,
             material: material
         });
@@ -92,7 +92,7 @@ assetListLoader.load(() => {
     }
 
     // create a ground plane
-    createPrimitive("plane", new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.5, 0.5, 0.5));
+    createPrimitive('plane', new pc.Vec3(0, 0, 0), new pc.Vec3(30, 1, 30), new pc.Color(0.5, 0.5, 0.5));
 
     // create an instance of the table
     const tableEntity = assets.table.resource.instantiateRenderEntity();
@@ -101,7 +101,7 @@ assetListLoader.load(() => {
 
     // get all materials that have blending enabled
     const materials = [];
-    tableEntity.findComponents("render").forEach((render) => {
+    tableEntity.findComponents('render').forEach((render) => {
         render.meshInstances.forEach((meshInstance) => {
             if (meshInstance.material.blendType !== pc.BLEND_NONE) {
                 materials.push(meshInstance.material);
@@ -110,8 +110,8 @@ assetListLoader.load(() => {
     });
 
     // Create the camera
-    const camera = new pc.Entity("Camera");
-    camera.addComponent("camera", {
+    const camera = new pc.Entity('Camera');
+    camera.addComponent('camera', {
         fov: 70
     });
     camera.translate(-14, 12, 12);
@@ -122,8 +122,8 @@ assetListLoader.load(() => {
     camera.camera.requestSceneColorMap(true);
 
     // add orbit camera script with a mouse and a touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: tableEntity,
@@ -131,13 +131,13 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
 
     // Create an Entity with a directional light, casting soft VSM shadow
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: pc.Color.WHITE,
         range: 200,
         castShadows: true,
@@ -151,14 +151,14 @@ assetListLoader.load(() => {
     app.root.addChild(light);
 
     // handle UI changes
-    data.on("*:set", (/** @type {string} */ path, value) => {
-        const propertyName = path.split(".")[1];
+    data.on('*:set', (/** @type {string} */ path, value) => {
+        const propertyName = path.split('.')[1];
         materials.forEach((material) => {
             // apply the value to the material
             material[propertyName] = value;
 
             // turn on / off blending depending on the dithering of the color
-            if (propertyName === "opacityDither") {
+            if (propertyName === 'opacityDither') {
                 material.blendType = value === pc.DITHER_NONE ? pc.BLEND_NORMAL : pc.BLEND_NONE;
             }
             material.update();
@@ -166,7 +166,7 @@ assetListLoader.load(() => {
     });
 
     // initial values
-    data.set("data", {
+    data.set('data', {
         opacity: 0.5,
         opacityDither: pc.DITHER_BAYER8,
         opacityShadowDither: pc.DITHER_BAYER8

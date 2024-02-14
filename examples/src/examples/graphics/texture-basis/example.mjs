@@ -1,36 +1,36 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // initialize basis
 pc.basisInitialize({
-    glueUrl: "/static/lib/basis/basis.wasm.js",
-    wasmUrl: "/static/lib/basis/basis.wasm.wasm",
-    fallbackUrl: "/static/lib/basis/basis.js"
+    glueUrl: '/static/lib/basis/basis.wasm.js',
+    wasmUrl: '/static/lib/basis/basis.wasm.wasm',
+    fallbackUrl: '/static/lib/basis/basis.js'
 });
 
 const assets = {
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.basis" }),
-    gloss: new pc.Asset("gloss", "texture", { url: "/static/assets/textures/seaside-rocks01-gloss.basis" }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.basis' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.basis' }),
     normal: new pc.Asset(
-        "normal",
-        "texture",
-        { url: "/static/assets/textures/seaside-rocks01-normal.basis" },
+        'normal',
+        'texture',
+        { url: '/static/assets/textures/seaside-rocks01-normal.basis' },
         { type: pc.TEXTURETYPE_SWIZZLEGGGR }
     ),
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -50,9 +50,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -67,8 +67,8 @@ assetListLoader.load(() => {
 
     // Create directional light
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional"
+    light.addComponent('light', {
+        type: 'directional'
     });
     light.setLocalEulerAngles(45, 0, 45);
 
@@ -94,7 +94,7 @@ assetListLoader.load(() => {
         sides: 40
     });
     const shape = new pc.Entity();
-    shape.addComponent("render", {
+    shape.addComponent('render', {
         material: material,
         meshInstances: [new pc.MeshInstance(torus, material)]
     });
@@ -103,7 +103,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
 
@@ -117,7 +117,7 @@ assetListLoader.load(() => {
 
     // Set an update function on the app's update event
     let angle = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         angle = (angle + dt * 10) % 360;
 
         // Rotate the boxes

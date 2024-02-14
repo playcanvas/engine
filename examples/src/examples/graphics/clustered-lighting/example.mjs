@@ -1,17 +1,17 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    script: new pc.Asset("script", "script", { url: "/static/scripts/camera/orbit-camera.js" }),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/normal-map.png" })
+    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -37,9 +37,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -82,8 +82,8 @@ assetListLoader.load(() => {
 
     // ground plane
     const ground = new pc.Entity();
-    ground.addComponent("render", {
-        type: "plane",
+    ground.addComponent('render', {
+        type: 'plane',
         material: material
     });
     ground.setLocalScale(150, 150, 150);
@@ -92,7 +92,7 @@ assetListLoader.load(() => {
     // high polycount cylinder
     const cylinderMesh = pc.createCylinder(app.graphicsDevice, { capSegments: 200 });
     const cylinder = new pc.Entity();
-    cylinder.addComponent("render", {
+    cylinder.addComponent('render', {
         material: material,
         meshInstances: [new pc.MeshInstance(cylinderMesh, material)],
         castShadows: true
@@ -106,8 +106,8 @@ assetListLoader.load(() => {
     for (let i = 0; i < count; i++) {
         const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
         const lightPoint = new pc.Entity();
-        lightPoint.addComponent("light", {
-            type: "omni",
+        lightPoint.addComponent('light', {
+            type: 'omni',
             color: color,
             range: 12,
             castShadows: false,
@@ -119,8 +119,8 @@ assetListLoader.load(() => {
         material.emissive = color;
         material.update();
 
-        lightPoint.addComponent("render", {
-            type: "sphere",
+        lightPoint.addComponent('render', {
+            type: 'sphere',
             material: material,
             castShadows: true
         });
@@ -136,8 +136,8 @@ assetListLoader.load(() => {
     for (let i = 0; i < count; i++) {
         const color = new pc.Color(Math.random(), Math.random(), Math.random(), 1);
         const lightSpot = new pc.Entity();
-        lightSpot.addComponent("light", {
-            type: "spot",
+        lightSpot.addComponent('light', {
+            type: 'spot',
             color: color,
             innerConeAngle: 5,
             outerConeAngle: 6 + Math.random() * 40,
@@ -150,8 +150,8 @@ assetListLoader.load(() => {
         material.emissive = color;
         material.update();
 
-        lightSpot.addComponent("render", {
-            type: "cone",
+        lightSpot.addComponent('render', {
+            type: 'cone',
             material: material
         });
         lightSpot.setLocalScale(5, 5, 5);
@@ -164,8 +164,8 @@ assetListLoader.load(() => {
 
     // Create a single directional light which casts shadows
     dirLight = new pc.Entity();
-    dirLight.addComponent("light", {
-        type: "directional",
+    dirLight.addComponent('light', {
+        type: 'directional',
         color: pc.Color.WHITE,
         intensity: 0.15,
         range: 300,
@@ -178,7 +178,7 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.05, 0.05, 0.05),
         farClip: 500,
         nearClip: 0.1
@@ -187,8 +187,8 @@ assetListLoader.load(() => {
     camera.lookAt(new pc.Vec3(0, 40, 0));
 
     // add orbit camera script with mouse and touch support
-    camera.addComponent("script");
-    camera.script.create("orbitCamera", {
+    camera.addComponent('script');
+    camera.script.create('orbitCamera', {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: app.root,
@@ -196,13 +196,13 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    camera.script.create("orbitCameraInputMouse");
-    camera.script.create("orbitCameraInputTouch");
+    camera.script.create('orbitCameraInputMouse');
+    camera.script.create('orbitCameraInputTouch');
     app.root.addChild(camera);
 
     // Set an update function on the app's update event
     let time = 0;
-    app.on("update", function (/** @type {number} */ dt) {
+    app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
         // move lights along sin based waves around the cylinder

@@ -1,17 +1,17 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    statue: new pc.Asset("statue", "container", { url: "/static/assets/models/statue.glb" }),
-    clouds: new pc.Asset("clouds", "texture", { url: "/static/assets/textures/clouds.jpg" })
+    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
+    clouds: new pc.Asset('clouds', 'texture', { url: '/static/assets/textures/clouds.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -33,9 +33,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -46,15 +46,15 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.4, 0.45, 0.5)
     });
     camera.translate(0, 7, 24);
 
     // Create an Entity with a omni light component and a sphere model component.
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(1, 1, 1),
         radius: 10
     });
@@ -65,7 +65,7 @@ assetListLoader.load(() => {
     app.root.addChild(light);
 
     // Create the shader from the vertex and fragment shaders
-    const shader = pc.createShaderFromCode(app.graphicsDevice, files["shader.vert"], files["shader.frag"], "myShader", {
+    const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
         aPosition: pc.SEMANTIC_POSITION,
         aUv0: pc.SEMANTIC_TEXCOORD0
     });
@@ -73,7 +73,7 @@ assetListLoader.load(() => {
     // Create a new material with the new shader
     const material = new pc.Material();
     material.shader = shader;
-    material.setParameter("uHeightMap", assets.clouds.resource);
+    material.setParameter('uHeightMap', assets.clouds.resource);
 
     // create a hierarchy of entities with render components, representing the statue model
     const entity = assets.statue.resource.instantiateRenderEntity();
@@ -85,7 +85,7 @@ assetListLoader.load(() => {
      */
     let originalTexture = null;
     /** @type {Array<pc.RenderComponent>} */
-    const renders = entity.findComponents("render");
+    const renders = entity.findComponents('render');
     renders.forEach((render) => {
         const meshInstances = render.meshInstances;
         for (let i = 0; i < meshInstances.length; i++) {
@@ -100,11 +100,11 @@ assetListLoader.load(() => {
     });
 
     // material is set up, update it
-    material.setParameter("uDiffuseMap", originalTexture);
+    material.setParameter('uDiffuseMap', originalTexture);
     material.update();
 
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         time += 0.2 * dt;
 
         // reverse time
@@ -114,7 +114,7 @@ assetListLoader.load(() => {
         }
 
         // set time parameter for the shader
-        material.setParameter("uTime", t);
+        material.setParameter('uTime', t);
         material.update();
     });
 });

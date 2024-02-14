@@ -1,24 +1,24 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset("normal", "texture", { url: "/static/assets/textures/flakes5n.png" }),
-    diffuse: new pc.Asset("diffuse", "texture", { url: "/static/assets/textures/flakes5c.png" }),
-    other: new pc.Asset("other", "texture", { url: "/static/assets/textures/flakes5o.png" })
+    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/flakes5n.png' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: '/static/assets/textures/flakes5c.png' }),
+    other: new pc.Asset('other', 'texture', { url: '/static/assets/textures/flakes5o.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -39,9 +39,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -54,14 +54,14 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera");
+    camera.addComponent('camera');
     camera.translate(0, 0, 3);
     app.root.addChild(camera);
 
     // Create an entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional",
+    light.addComponent('light', {
+        type: 'directional',
         color: new pc.Color(1, 0.8, 0.25)
     });
     app.root.addChild(light);
@@ -77,9 +77,9 @@ assetListLoader.load(() => {
     const createSphere = function (x, y, z, material) {
         const sphere = new pc.Entity();
 
-        sphere.addComponent("render", {
+        sphere.addComponent('render', {
             material: material,
-            type: "sphere"
+            type: 'sphere'
         });
         sphere.setLocalPosition(x, y, z);
         sphere.setLocalScale(0.7, 0.7, 0.7);
@@ -89,9 +89,9 @@ assetListLoader.load(() => {
     const material = new pc.StandardMaterial();
     material.diffuseMap = assets.diffuse.resource;
     material.metalnessMap = assets.other.resource;
-    material.metalnessMapChannel = "r";
+    material.metalnessMapChannel = 'r';
     material.glossMap = assets.other.resource;
-    material.glossMapChannel = "g";
+    material.glossMapChannel = 'g';
     material.normalMap = assets.normal.resource;
     material.diffuse = new pc.Color(0.6, 0.6, 0.9);
     material.diffuseTint = true;
@@ -106,9 +106,9 @@ assetListLoader.load(() => {
     const clearCoatMaterial = new pc.StandardMaterial();
     clearCoatMaterial.diffuseMap = assets.diffuse.resource;
     clearCoatMaterial.metalnessMap = assets.other.resource;
-    clearCoatMaterial.metalnessMapChannel = "r";
+    clearCoatMaterial.metalnessMapChannel = 'r';
     clearCoatMaterial.glossMap = assets.other.resource;
-    clearCoatMaterial.glossMapChannel = "g";
+    clearCoatMaterial.glossMapChannel = 'g';
     clearCoatMaterial.normalMap = assets.normal.resource;
     clearCoatMaterial.diffuse = new pc.Color(0.6, 0.6, 0.9);
     clearCoatMaterial.diffuseTint = true;
@@ -124,7 +124,7 @@ assetListLoader.load(() => {
 
     // update things each frame
     let time = 0;
-    app.on("update", function (dt) {
+    app.on('update', function (dt) {
         // rotate camera around the objects
         time += dt;
         camera.setLocalPosition(3 * Math.sin(time * 0.5), 0, 3 * Math.cos(time * 0.5));

@@ -1,16 +1,16 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
-    heart: new pc.Asset("heart", "texture", { url: "/static/assets/textures/heart.png" })
+    heart: new pc.Asset('heart', 'texture', { url: '/static/assets/textures/heart.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -29,9 +29,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -50,8 +50,8 @@ assetListLoader.load(() => {
 
     // create plane primitive
     const primitive = new pc.Entity();
-    primitive.addComponent("render", {
-        type: "plane",
+    primitive.addComponent('render', {
+        type: 'plane',
         material: planeMaterial
     });
 
@@ -61,8 +61,8 @@ assetListLoader.load(() => {
 
     // Create an Entity with a omni light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "omni",
+    light.addComponent('light', {
+        type: 'omni',
         color: new pc.Color(0.2, 0.2, 0.2),
         intensity: 2.5,
         range: 30,
@@ -75,7 +75,7 @@ assetListLoader.load(() => {
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.2, 0.2)
     });
 
@@ -84,8 +84,8 @@ assetListLoader.load(() => {
 
     // Create bouncing ball model and add it to hierarchy
     const ball = new pc.Entity();
-    ball.addComponent("render", {
-        type: "sphere"
+    ball.addComponent('render', {
+        type: 'sphere'
     });
     app.root.addChild(ball);
 
@@ -207,8 +207,8 @@ assetListLoader.load(() => {
 
     // Create Entity with a render component to render the mesh instance
     const entity = new pc.Entity();
-    entity.addComponent("render", {
-        type: "asset",
+    entity.addComponent('render', {
+        type: 'asset',
         meshInstances: [meshInstance],
         castShadows: false
     });
@@ -217,7 +217,7 @@ assetListLoader.load(() => {
     // Set an update function on the app's update event
     let time = 0;
     let decalIndex = 0;
-    app.on("update", (/** @type {number} */ dt) => {
+    app.on('update', (/** @type {number} */ dt) => {
         const previousTime = time;
         time += dt;
 

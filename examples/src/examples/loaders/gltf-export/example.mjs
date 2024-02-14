@@ -1,36 +1,36 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 // set up and load draco module, as the glb we load is draco compressed
-pc.WasmModule.setConfig("DracoDecoderModule", {
-    glueUrl: "/static/lib/draco/draco.wasm.js",
-    wasmUrl: "/static/lib/draco/draco.wasm.wasm",
-    fallbackUrl: "/static/lib/draco/draco.js"
+pc.WasmModule.setConfig('DracoDecoderModule', {
+    glueUrl: '/static/lib/draco/draco.wasm.js',
+    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: '/static/lib/draco/draco.js'
 });
 await new Promise((resolve) => {
-    pc.WasmModule.getInstance("DracoDecoderModule", () => resolve());
+    pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
 });
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset("bench", "container", { url: "/static/assets/models/bench_wooden_01.glb" }),
-    model: new pc.Asset("model", "container", { url: "/static/assets/models/bitmoji.glb" }),
-    board: new pc.Asset("statue", "container", { url: "/static/assets/models/chess-board.glb" }),
-    boombox: new pc.Asset("statue", "container", { url: "/static/assets/models/boom-box.glb" }),
-    color: new pc.Asset("color", "texture", { url: "/static/assets/textures/seaside-rocks01-color.jpg" })
+    bench: new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' }),
+    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
+    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
+    boombox: new pc.Asset('statue', 'container', { url: '/static/assets/models/boom-box.glb' }),
+    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -50,9 +50,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -83,9 +83,9 @@ assetListLoader.load(() => {
     material.diffuse = pc.Color.RED;
     material.update();
 
-    const entity = new pc.Entity("TwoMeshInstances");
-    entity.addComponent("render", {
-        type: "asset",
+    const entity = new pc.Entity('TwoMeshInstances');
+    entity.addComponent('render', {
+        type: 'asset',
         meshInstances: [
             new pc.MeshInstance(pc.createSphere(app.graphicsDevice), material),
             new pc.MeshInstance(pc.createCone(app.graphicsDevice), material)
@@ -99,17 +99,17 @@ assetListLoader.load(() => {
     basicMaterial.color.set(0.5, 1.0, 0.7);
     basicMaterial.colorMap = assets.color.resource;
 
-    const capsule = new pc.Entity("capsule");
-    capsule.addComponent("render", {
+    const capsule = new pc.Entity('capsule');
+    capsule.addComponent('render', {
         material: basicMaterial,
-        type: "capsule"
+        type: 'capsule'
     });
     capsule.setLocalPosition(0.5, 2.0, -0.5);
     app.root.addChild(capsule);
 
     // Create an Entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera", {
+    camera.addComponent('camera', {
         clearColor: new pc.Color(0.2, 0.1, 0.1),
         farClip: 100
     });
@@ -124,7 +124,7 @@ assetListLoader.load(() => {
     app.scene.exposure = 1.5;
 
     // a link element, created in the html part of the examples.
-    const link = document.getElementById("ar-link");
+    const link = document.getElementById('ar-link');
 
     // export the whole scene into a glb format
     const options = {
@@ -134,10 +134,10 @@ assetListLoader.load(() => {
     new pcx.GltfExporter()
         .build(app.root, options)
         .then((arrayBuffer) => {
-            const blob = new Blob([arrayBuffer], { type: "application/octet-stream" });
+            const blob = new Blob([arrayBuffer], { type: 'application/octet-stream' });
 
             // @ts-ignore
-            link.download = "scene.glb";
+            link.download = 'scene.glb';
 
             // @ts-ignore
             link.href = URL.createObjectURL(blob);
@@ -145,7 +145,7 @@ assetListLoader.load(() => {
         .catch(console.error);
 
     // when clicking on the download UI button, trigger the download
-    data.on("download", function () {
+    data.on('download', function () {
         link.click();
     });
 });

@@ -1,22 +1,22 @@
-import * as pc from "playcanvas";
-import { getDeviceType } from "utils";
+import * as pc from 'playcanvas';
+import { getDeviceType } from 'utils';
 
-const canvas = document.getElementById("application-canvas");
+const canvas = document.getElementById('application-canvas');
 
 const assets = {
     helipad: new pc.Asset(
-        "helipad-env-atlas",
-        "texture",
-        { url: "/static/assets/cubemaps/helipad-env-atlas.png" },
+        'helipad-env-atlas',
+        'texture',
+        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    font: new pc.Asset("font", "font", { url: "/static/assets/fonts/arial.json" })
+    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: "/static/lib/glslang/glslang.js",
-    twgslUrl: "/static/lib/twgsl/twgsl.js"
+    glslangUrl: '/static/lib/glslang/glslang.js',
+    twgslUrl: '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -42,9 +42,9 @@ app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
 // Ensure canvas is resized when window changes size
 const resize = () => app.resizeCanvas();
-window.addEventListener("resize", resize);
-app.on("destroy", () => {
-    window.removeEventListener("resize", resize);
+window.addEventListener('resize', resize);
+app.on('destroy', () => {
+    window.removeEventListener('resize', resize);
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -57,15 +57,15 @@ assetListLoader.load(() => {
 
     // Create an entity with a camera component
     const camera = new pc.Entity();
-    camera.addComponent("camera");
+    camera.addComponent('camera');
     camera.translate(0, 6, 6);
     camera.rotate(-48, 0, 0);
     app.root.addChild(camera);
 
     // Create an entity with a directional light component
     const light = new pc.Entity();
-    light.addComponent("light", {
-        type: "directional"
+    light.addComponent('light', {
+        type: 'directional'
     });
     app.root.addChild(light);
     const e = light.getLocalEulerAngles();
@@ -89,9 +89,9 @@ assetListLoader.load(() => {
 
         const sphere = new pc.Entity();
 
-        sphere.addComponent("render", {
+        sphere.addComponent('render', {
             material: material,
-            type: "sphere"
+            type: 'sphere'
         });
         sphere.setLocalPosition(x - (NUM_SPHERES_X - 1) * 0.5, y, z - (NUM_SPHERES_Z - 1) * 0.5);
         sphere.setLocalScale(0.7, 0.7, 0.7);
@@ -109,7 +109,7 @@ assetListLoader.load(() => {
     const createText = function (fontAsset, message, x, y, z, rotx, roty) {
         // Create a text element-based entity
         const text = new pc.Entity();
-        text.addComponent("element", {
+        text.addComponent('element', {
             anchor: [0.5, 0.5, 0.5, 0.5],
             fontAsset: fontAsset,
             fontSize: 0.5,
@@ -128,8 +128,8 @@ assetListLoader.load(() => {
         }
     }
 
-    createText(assets.font, "Anisotropy", 0, 0, (NUM_SPHERES_Z + 1) * 0.5, -90, 0);
-    createText(assets.font, "Roughness", -(NUM_SPHERES_X + 1) * 0.5, 0, 0, -90, 90);
+    createText(assets.font, 'Anisotropy', 0, 0, (NUM_SPHERES_Z + 1) * 0.5, -90, 0);
+    createText(assets.font, 'Roughness', -(NUM_SPHERES_X + 1) * 0.5, 0, 0, -90, 90);
 });
 
 export { app };

@@ -6,9 +6,9 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
     const { Button } = ReactPCUI;
     return fragment(
         jsx(Button, {
-            text: "Custom Shader",
+            text: 'Custom Shader',
             onClick: () => {
-                observer.set("shader", !observer.get("shader"));
+                observer.set('shader', !observer.get('shader'));
             }
         })
     );
