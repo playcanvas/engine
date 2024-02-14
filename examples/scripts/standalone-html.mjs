@@ -89,8 +89,8 @@ function generateExampleFile(categoryPascal, exampleNamePascal, config) {
  */
 function patchScript(script) {
     // remove playcanvas & playcanvas-extras imports
-    script = script.replace(/\s*import[\s\w*{}]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
-    script = script.replace(/\s*import[\s\w*{}]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
+    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas["']\s*;?[\s\r\n]*/g, '');
+    script = script.replace(/\s*import[\s\w*{},]+["']playcanvas-extras["']\s*;?[\s\r\n]*/g, '');
 
     return script;
 }

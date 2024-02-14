@@ -63,6 +63,26 @@ function main() {
             const exampleNameKebab = toKebabCase(exampleName);
             const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
 
+//             let contents = fs.readFileSync(examplePath, 'utf-8');
+//             const regex = /(\s*import[\s\w*{},]+["']\w+["']\s*;?[\s\r\n]*)/g;
+//             let imports;
+//             const top = [];
+//             while (imports = regex.exec(contents)) {
+//                 top.push(imports[1].trim());
+//             }
+
+//             const header = `/**
+//  * @returns {Promise<pc.AppBase>} The example application.
+//  */`;
+
+//             contents = contents.replace(/(\s*import[\s\w*{},]+["']\w+["']\s*;?[\s\r\n]*)/g, '');
+//             fs.writeFileSync(examplePath, contents, 'utf-8');
+//             import(examplePath).then((module) => {
+//                 if (module.example) {
+//                     fs.writeFileSync(examplePath, `${top.join('\n')}\n\n${module.example.toString().split('\n').slice(1, -2).join('\n')}\n\nexport { app };\n`);
+//                 }
+//             });
+
             exampleMetaData.push({
                 examplePath,
                 controlsPath,

@@ -4,8 +4,8 @@
         "outDir": "dist",
         "noImplicitAny": true,
         "strictNullChecks": true,
-        "module": "ES2020",
-        "target": "es5",
+        "module": "esnext",
+        "target": "es2020",
         "allowJs": true,
         "jsx": "react",
         "lib": [

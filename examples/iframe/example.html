@@ -62,7 +62,7 @@
                 scriptUrl = URL.createObjectURL(blob);
 
                 const module = await import(scriptUrl);
-                app = await module.example();
+                // app = await module.example();
                 window.ready = true;
 
                 const start = (app) => {
