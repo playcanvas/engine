@@ -74,6 +74,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
     }
 
+    updateBegin() {
+    }
+
+    updateEnd() {
+    }
+
+    readPixels(x, y, w, h, pixels) {
+    }
+
     createVertexBufferImpl(vertexBuffer, format) {
         return new NullVertexBuffer(vertexBuffer, format);
     }
@@ -124,12 +133,6 @@ class NullGraphicsDevice extends GraphicsDevice {
     }
 
     clear(options) {
-    }
-
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
     }
 
     setViewport(x, y, w, h) {

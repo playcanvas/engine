@@ -13,8 +13,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, data, pcx }) {
@@ -35,17 +34,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler
     ];
 
@@ -127,8 +121,8 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class UsdzExportExample {
     static CATEGORY = 'Loaders';
-    static NAME = 'USDZ Export';
     static WEBGPU_ENABLED = true;
+    static INCLUDE_AR_LINK = true;
     static controls = controls;
     static example = example;
 }

@@ -1,7 +1,7 @@
 import { platform } from '../../core/platform.js';
 import { EventHandler } from '../../core/event-handler.js';
 
-import { XRSPACE_VIEWER, XRTYPE_AR } from './constants.js';
+import { XRSPACE_VIEWER } from './constants.js';
 import { XrHitTestSource } from './xr-hit-test-source.js';
 
 /**
@@ -14,13 +14,86 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  */
 
 /**
- * Hit Test provides ability to get position and rotation of ray intersecting point with
- * representation of real world geometry by underlying AR system.
+ * The Hit Test interface allows initiating hit testing against real-world geometry from various
+ * sources: the view, input sources, or an arbitrary ray in space. Results reflect the underlying
+ * AR system's understanding of the real world.
  *
  * @augments EventHandler
  * @category XR
  */
 class XrHitTest extends EventHandler {
+    /**
+     * Fired when hit test becomes available.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('available', () => {
+     *     console.log('Hit Testing is available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when hit test becomes unavailable.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('unavailable', () => {
+     *     console.log('Hit Testing is unavailable');
+     * });
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Fired when new {@link XrHitTestSource} is added to the list. The handler is passed the
+     * {@link XrHitTestSource} object that has been added.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('add', (hitTestSource) => {
+     *     // new hit test source is added
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when {@link XrHitTestSource} is removed to the list. The handler is passed the
+     * {@link XrHitTestSource} object that has been removed.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('remove', (hitTestSource) => {
+     *     // hit test source is removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
+     * that produced the hit result, the {@link Vec3} position, the {@link Quat} rotation and the
+     * {@link XrInputSource} (if it is a transient hit test source).
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('result', (hitTestSource, position, rotation, inputSource) => {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
+    static EVENT_RESULT = 'result';
+
+    /**
+     * Fired when failed create hit test source. The handler is passed the Error object.
+     *
+     * @event
+     * @example
+     * app.xr.hitTest.on('error', (err) => {
+     *     console.error(err.message);
+     * });
+     */
+    static EVENT_ERROR = 'error';
+
     /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
@@ -34,10 +107,10 @@ class XrHitTest extends EventHandler {
     _supported = platform.browser && !!(window.XRSession && window.XRSession.prototype.requestHitTestSource);
 
     /**
-     * @type {XRSession}
+     * @type {boolean}
      * @private
      */
-    _session = null;
+    _available = false;
 
     /**
      * List of active {@link XrHitTestSource}.
@@ -63,100 +136,25 @@ class XrHitTest extends EventHandler {
         }
     }
 
-    /**
-     * Fired when new {@link XrHitTestSource} is added to the list.
-     *
-     * @event XrHitTest#add
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been added.
-     * @example
-     * app.xr.hitTest.on('add', function (hitTestSource) {
-     *     // new hit test source is added
-     * });
-     */
-
-    /**
-     * Fired when {@link XrHitTestSource} is removed to the list.
-     *
-     * @event XrHitTest#remove
-     * @param {XrHitTestSource} hitTestSource - Hit test source that has been removed.
-     * @example
-     * app.xr.hitTest.on('remove', function (hitTestSource) {
-     *     // hit test source is removed
-     * });
-     */
-
-    /**
-     * Fired when hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry.
-     *
-     * @event XrHitTest#result
-     * @param {XrHitTestSource} hitTestSource - Hit test source that produced the hit result.
-     * @param {import('../../core/math/vec3.js').Vec3} position - Position of hit test.
-     * @param {import('../../core/math/quat.js').Quat} rotation - Rotation of hit test.
-     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - If is transient hit
-     * test source, then it will provide related input source.
-     * @example
-     * app.xr.hitTest.on('result', function (hitTestSource, position, rotation, inputSource) {
-     *     target.setPosition(position);
-     *     target.setRotation(rotation);
-     * });
-     */
-
-    /**
-     * Fired when failed create hit test source.
-     *
-     * @event XrHitTest#error
-     * @param {Error} error - Error object related to failure of creating hit test source.
-     */
-
     /** @private */
     _onSessionStart() {
-        if (this.manager.type !== XRTYPE_AR)
-            return;
-
-        this._session = this.manager.session;
+        const available = this.manager.session.enabledFeatures.indexOf('hit-test') !== -1;
+        if (!available) return;
+        this._available = available;
+        this.fire('available');
     }
 
     /** @private */
     _onSessionEnd() {
-        if (!this._session)
-            return;
-
-        this._session = null;
+        if (!this._available) return;
+        this._available = false;
 
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].onStop();
         }
         this.sources = [];
-    }
 
-    /**
-     * Checks if hit testing is available.
-     *
-     * @param {Function} callback - Error callback.
-     * @param {*} fireError - Event handler on while to fire error event.
-     * @returns {boolean} True if hit test is available.
-     * @private
-     */
-    isAvailable(callback, fireError) {
-        let err;
-
-        if (!this._supported)
-            err = new Error('XR HitTest is not supported');
-
-        if (!this._session)
-            err = new Error('XR Session is not started (1)');
-
-        if (this.manager.type !== XRTYPE_AR)
-            err = new Error('XR HitTest is available only for AR');
-
-        if (err) {
-            if (callback) callback(err);
-            if (fireError) fireError.fire('error', err);
-            return false;
-        }
-
-        return true;
+        this.fire('unavailable');
     }
 
     /**
@@ -196,17 +194,18 @@ class XrHitTest extends EventHandler {
      * @param {XrHitTestStartCallback} [options.callback] - Optional callback function called once
      * hit test source is created or failed.
      * @example
+     * // start hit testing from viewer position facing forwards
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_VIEWER,
      *     callback: function (err, hitTestSource) {
      *         if (err) return;
      *         hitTestSource.on('result', function (position, rotation) {
      *             // position and rotation of hit test result
-     *             // based on Ray facing forward from the Viewer reference space
      *         });
      *     }
      * });
      * @example
+     * // start hit testing using an arbitrary ray
      * const ray = new pc.Ray(new pc.Vec3(0, 0, 0), new pc.Vec3(0, -1, 0));
      * app.xr.hitTest.start({
      *     spaceType: pc.XRSPACE_LOCAL,
@@ -217,6 +216,7 @@ class XrHitTest extends EventHandler {
      *     }
      * });
      * @example
+     * // start hit testing for touch screen taps
      * app.xr.hitTest.start({
      *     profile: 'generic-touchscreen',
      *     callback: function (err, hitTestSource) {
@@ -229,8 +229,15 @@ class XrHitTest extends EventHandler {
      * });
      */
     start(options = {}) {
-        if (!this.isAvailable(options.callback, this))
+        if (!this._supported) {
+            options.callback?.(new Error('XR HitTest is not supported'), null);
             return;
+        }
+
+        if (!this._available) {
+            options.callback?.(new Error('XR HitTest is not available'), null);
+            return;
+        }
 
         if (!options.profile && !options.spaceType)
             options.spaceType = XRSPACE_VIEWER;
@@ -246,20 +253,20 @@ class XrHitTest extends EventHandler {
         const callback = options.callback;
 
         if (options.spaceType) {
-            this._session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
-                if (!this._session) {
+            this.manager.session.requestReferenceSpace(options.spaceType).then((referenceSpace) => {
+                if (!this.manager.session) {
                     const err = new Error('XR Session is not started (2)');
                     if (callback) callback(err);
                     this.fire('error', err);
                     return;
                 }
 
-                this._session.requestHitTestSource({
+                this.manager.session.requestHitTestSource({
                     space: referenceSpace,
                     entityTypes: options.entityTypes || undefined,
                     offsetRay: xrRay
                 }).then((xrHitTestSource) => {
-                    this._onHitTestSource(xrHitTestSource, false, callback);
+                    this._onHitTestSource(xrHitTestSource, false, options.inputSource, callback);
                 }).catch((ex) => {
                     if (callback) callback(ex);
                     this.fire('error', ex);
@@ -269,12 +276,12 @@ class XrHitTest extends EventHandler {
                 this.fire('error', ex);
             });
         } else {
-            this._session.requestHitTestSourceForTransientInput({
+            this.manager.session.requestHitTestSourceForTransientInput({
                 profile: options.profile,
                 entityTypes: options.entityTypes || undefined,
                 offsetRay: xrRay
             }).then((xrHitTestSource) => {
-                this._onHitTestSource(xrHitTestSource, true, callback);
+                this._onHitTestSource(xrHitTestSource, true, options.inputSource, callback);
             }).catch((ex) => {
                 if (callback) callback(ex);
                 this.fire('error', ex);
@@ -285,11 +292,12 @@ class XrHitTest extends EventHandler {
     /**
      * @param {XRHitTestSource} xrHitTestSource - Hit test source.
      * @param {boolean} transient - True if hit test source is created from transient input source.
+     * @param {import('./xr-input-source.js').XrInputSource|null} inputSource - Input Source with which hit test source is associated with.
      * @param {Function} callback - Callback called once hit test source is created.
      * @private
      */
-    _onHitTestSource(xrHitTestSource, transient, callback) {
-        if (!this._session) {
+    _onHitTestSource(xrHitTestSource, transient, inputSource, callback) {
+        if (!this.manager.session) {
             xrHitTestSource.cancel();
             const err = new Error('XR Session is not started (3)');
             if (callback) callback(err);
@@ -297,7 +305,7 @@ class XrHitTest extends EventHandler {
             return;
         }
 
-        const hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient);
+        const hitTestSource = new XrHitTestSource(this.manager, xrHitTestSource, transient, inputSource ?? null);
         this.sources.push(hitTestSource);
 
         if (callback) callback(null, hitTestSource);
@@ -321,6 +329,15 @@ class XrHitTest extends EventHandler {
      */
     get supported() {
         return this._supported;
+    }
+
+    /**
+     * True if Hit Test is available. This information is available only when the session has started.
+     *
+     * @type {boolean}
+     */
+    get available() {
+        return this._available;
     }
 }
 

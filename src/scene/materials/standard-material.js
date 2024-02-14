@@ -8,6 +8,7 @@ import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor
 import {
     CUBEPROJ_BOX, CUBEPROJ_NONE,
     DETAILMODE_MUL,
+    DITHER_NONE,
     FRESNEL_SCHLICK,
     SHADER_DEPTH, SHADER_PICK,
     SPECOCC_AO,
@@ -375,6 +376,22 @@ let _params = new Set();
  * @property {boolean} opacityFadesSpecular Used to specify whether specular and reflections are
  * faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use
  * {@link Material#alphaFade} to fade out materials.
+ * @property {string} opacityDither Used to specify whether opacity is dithered, which allows
+ * transparency without alpha blending. Can be:
+ *
+ * - {@link DITHER_NONE}: Opacity dithering is disabled.
+ * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ *
+ * Defaults to {@link DITHER_NONE}.
+ * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
+ * allows shadow transparency without alpha blending.  Can be:
+ *
+ * - {@link DITHER_NONE}: Opacity dithering is disabled.
+ * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ *
+ * Defaults to {@link DITHER_NONE}.
  * @property {number} alphaFade Used to fade out materials when
  * {@link StandardMaterial#opacityFadesSpecular} is set to false.
  * @property {import('../../platform/graphics/texture.js').Texture|null} normalMap The main
@@ -1228,6 +1245,8 @@ function _defineMaterialProps() {
     _defineFlag('glossInvert', false);
     _defineFlag('sheenGlossInvert', false);
     _defineFlag('clearCoatGlossInvert', false);
+    _defineFlag('opacityDither', DITHER_NONE);
+    _defineFlag('opacityShadowDither', DITHER_NONE);
 
     _defineTex2D('diffuse');
     _defineTex2D('specular');

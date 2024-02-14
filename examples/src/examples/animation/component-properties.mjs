@@ -17,7 +17,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, data, assetPath, glslangPath, twgslPath }) {
@@ -39,21 +39,14 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.AnimClipHandler,
-        // @ts-ignore
         pc.AnimStateGraphHandler
     ];
 
@@ -299,8 +292,8 @@ async function example({ canvas, deviceType, data, assetPath, glslangPath, twgsl
 
 class ComponentPropertiesExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Component Properties';
     static WEBGPU_ENABLED = true;
+    static DESCRIPTION = 'This example demonstrates how to use the Anim Component to animate the properties of other Components.';
     static controls = controls;
     static example = example;
 }

@@ -1,8 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, glslangPath, twgslPath }) {
@@ -34,27 +33,17 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, g
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.ModelComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.JsonHandler
     ];
 
@@ -237,7 +226,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, ammoPath, g
 
 class VehicleExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Vehicle';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

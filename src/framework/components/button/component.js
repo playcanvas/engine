@@ -66,6 +66,203 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  */
 class ButtonComponent extends Component {
     /**
+     * Fired when the mouse is pressed while the cursor is on the component. The handler is passed
+     * a {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mousedown', (event) => {
+     *     console.log(`Mouse down on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEDOWN = 'mousedown';
+
+    /**
+     * Fired when the mouse is released while the cursor is on the component. The handler is passed
+     * a {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseup', (event) => {
+     *     console.log(`Mouse up on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEUP = 'mouseup';
+
+    /**
+     * Fired when the mouse cursor enters the component. The handler is passed a
+     * {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseenter', (event) => {
+     *     console.log(`Mouse entered entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEENTER = 'mouseenter';
+
+    /**
+     * Fired when the mouse cursor leaves the component. The handler is passed a
+     * {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('mouseleave', (event) => {
+     *     console.log(`Mouse left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSELEAVE = 'mouseleave';
+
+    /**
+     * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
+     * the component. The handler is passed a {@link ElementMouseEvent} or {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('click', (event) => {
+     *     console.log(`Clicked entity ${entity.name}`);
+     * });
+     */
+    static EVENT_CLICK = 'click';
+
+    /**
+     * Fired when a touch starts on the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchstart', (event) => {
+     *     console.log(`Touch started on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHSTART = 'touchstart';
+
+    /**
+     * Fired when a touch ends on the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchend', (event) => {
+     *     console.log(`Touch ended on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHEND = 'touchend';
+
+    /**
+     * Fired when a touch is canceled on the component. The handler is passed a
+     * {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchcancel', (event) => {
+     *     console.log(`Touch canceled on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHCANCEL = 'touchcancel';
+
+    /**
+     * Fired when a touch leaves the component. The handler is passed a {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('touchleave', (event) => {
+     *     console.log(`Touch left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHLEAVE = 'touchleave';
+
+    /**
+     * Fired when a xr select starts on the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectstart', (event) => {
+     *     console.log(`Select started on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when a xr select ends on the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectend', (event) => {
+     *     console.log(`Select ended on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when a xr select now hovering over the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectenter', (event) => {
+     *     console.log(`Select entered entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTENTER = 'selectenter';
+
+    /**
+     * Fired when a xr select not hovering over the component. The handler is passed a
+     * {@link ElementSelectEvent}.
+     *
+     * @event
+     * @example
+     * entity.button.on('selectleave', (event) => {
+     *     console.log(`Select left entity ${entity.name}`);
+     * });
+     */
+    static EVENT_SELECTLEAVE = 'selectleave';
+
+    /**
+     * Fired when the button changes state to be hovered.
+     *
+     * @event
+     * @example
+     * entity.button.on('hoverstart', () => {
+     *     console.log(`Entity ${entity.name} hovered`);
+     * });
+     */
+    static EVENT_HOVERSTART = 'hoverstart';
+
+    /**
+     * Fired when the button changes state to be not hovered.
+     *
+     * @event
+     * @example
+     * entity.button.on('hoverend', () => {
+     *     console.log(`Entity ${entity.name} unhovered`);
+     * });
+     */
+    static EVENT_HOVEREND = 'hoverend';
+
+    /**
+     * Fired when the button changes state to be pressed.
+     *
+     * @event
+     * @example
+     * entity.button.on('pressedstart', () => {
+     *     console.log(`Entity ${entity.name} pressed`);
+     * });
+     */
+    static EVENT_PRESSEDSTART = 'pressedstart';
+
+    /**
+     * Fired when the button changes state to be not pressed.
+     *
+     * @event
+     * @example
+     * entity.button.on('pressedend', () => {
+     *     console.log(`Entity ${entity.name} unpressed`);
+     * });
+     */
+    static EVENT_PRESSEDEND = 'pressedend';
+
+    /**
      * Create a new ButtonComponent instance.
      *
      * @param {import('./system.js').ButtonComponentSystem} system - The ComponentSystem that
@@ -547,121 +744,5 @@ class ButtonComponent extends Component {
 function toColor3(color4) {
     return new Color(color4.r, color4.g, color4.b);
 }
-
-/**
- * Fired when the mouse is pressed while the cursor is on the component.
- *
- * @event ButtonComponent#mousedown
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse is released while the cursor is on the component.
- *
- * @event ButtonComponent#mouseup
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse cursor enters the component.
- *
- * @event ButtonComponent#mouseenter
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse cursor leaves the component.
- *
- * @event ButtonComponent#mouseleave
- * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
- */
-
-/**
- * Fired when the mouse is pressed and released on the component or when a touch starts and ends on
- * the component.
- *
- * @event ButtonComponent#click
- * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch starts on the component.
- *
- * @event ButtonComponent#touchstart
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch ends on the component.
- *
- * @event ButtonComponent#touchend
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch is canceled on the component.
- *
- * @event ButtonComponent#touchcancel
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a touch leaves the component.
- *
- * @event ButtonComponent#touchleave
- * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
- */
-
-/**
- * Fired when a xr select starts on the component.
- *
- * @event ButtonComponent#selectstart
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select ends on the component.
- *
- * @event ButtonComponent#selectend
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select now hovering over the component.
- *
- * @event ButtonComponent#selectenter
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when a xr select not hovering over the component.
- *
- * @event ButtonComponent#selectleave
- * @param {import('../../input/element-input.js').ElementSelectEvent} event - The event.
- */
-
-/**
- * Fired when the button changes state to be hovered.
- *
- * @event ButtonComponent#hoverstart
- */
-
-/**
- * Fired when the button changes state to be not hovered.
- *
- * @event ButtonComponent#hoverend
- */
-
-/**
- * Fired when the button changes state to be pressed.
- *
- * @event ButtonComponent#pressedstart
- */
-
-/**
- * Fired when the button changes state to be not pressed.
- *
- * @event ButtonComponent#pressedend
- */
 
 export { ButtonComponent };

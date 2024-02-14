@@ -82,7 +82,7 @@ class RenderComponent extends Component {
      * @type {AssetReference}
      * @private
      */
-    _assetReference = [];
+    _assetReference;
 
     /**
      * @type {AssetReference[]}

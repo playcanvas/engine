@@ -7,6 +7,40 @@ import { EventHandler } from './event-handler.js';
  * @augments EventHandler
  */
 class Tags extends EventHandler {
+    /**
+     * Fired for each individual tag that is added.
+     *
+     * @event
+     * @example
+     * tags.on('add', (tag, parent) => {
+     *    console.log(`${tag} added to ${parent.name}`);
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired for each individual tag that is removed.
+     *
+     * @event
+     * @example
+     * tags.on('remove', (tag, parent) => {
+     *   console.log(`${tag} removed from ${parent.name}`);
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when tags have been added or removed. It will fire once on bulk changes, while `add`
+     * and `remove` will fire on each tag operation.
+     *
+     * @event
+     * @example
+     * tags.on('change', (parent) => {
+     *    console.log(`Tags changed on ${parent.name}`);
+     * });
+     */
+    static EVENT_CHANGE = 'change';
+
     /** @private */
     _index = {};
 
@@ -23,26 +57,6 @@ class Tags extends EventHandler {
 
         this._parent = parent;
     }
-
-    /**
-     * @event Tags#add
-     * @param {string} tag - Name of a tag added to a set.
-     * @param {object} parent - Parent object who tags belong to.
-     */
-
-    /**
-     * @event Tags#remove
-     * @param {string} tag - Name of a tag removed from a set.
-     * @param {object} parent - Parent object who tags belong to.
-     */
-
-    /**
-     * Fires when tags have been added or removed. It will fire once on bulk changes, while
-     * `add`/`remove` will fire on each tag operation.
-     *
-     * @event Tags#change
-     * @param {object} [parent] - Parent object who tags belong to.
-     */
 
     /**
      * Add a tag, duplicates are ignored. Can be array or comma separated arguments for multiple tags.

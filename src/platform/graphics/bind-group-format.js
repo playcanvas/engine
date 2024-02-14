@@ -2,8 +2,8 @@ import { TRACEID_BINDGROUPFORMAT_ALLOC } from '../../core/constants.js';
 import { Debug, DebugHelper } from '../../core/debug.js';
 
 import {
-    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8
+    TEXTUREDIMENSION_2D, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D, TEXTUREDIMENSION_2D_ARRAY,
+    SAMPLETYPE_FLOAT, PIXELFORMAT_RGBA8, SAMPLETYPE_INT, SAMPLETYPE_UINT
 } from './constants.js';
 
 let id = 0;
@@ -11,7 +11,8 @@ let id = 0;
 const textureDimensionInfo = {
     [TEXTUREDIMENSION_2D]: 'texture2D',
     [TEXTUREDIMENSION_CUBE]: 'textureCube',
-    [TEXTUREDIMENSION_3D]: 'texture3D'
+    [TEXTUREDIMENSION_3D]: 'texture3D',
+    [TEXTUREDIMENSION_2D_ARRAY]: 'texture2DArray'
 };
 
 /**
@@ -179,11 +180,27 @@ class BindGroupFormat {
         let bindIndex = this.bufferFormats.length;
         this.textureFormats.forEach((format) => {
 
-            const textureType = textureDimensionInfo[format.textureDimension];
-            Debug.assert(textureType, "Unsupported texture type");
+            let textureType = textureDimensionInfo[format.textureDimension];
+            Debug.assert(textureType, "Unsupported texture type", format.textureDimension);
 
-            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name};\n` +
-                    `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n`;
+            // handle texture2DArray by renaming the texture object and defining a replacement macro
+            let namePostfix = '';
+            let extraCode = '';
+            if (textureType === 'texture2DArray') {
+                namePostfix = '_texture';
+                extraCode = `#define ${format.name} sampler2DArray(${format.name}${namePostfix}, ${format.name}_sampler)\n`;
+            }
+
+            if (format.sampleType === SAMPLETYPE_INT) {
+                textureType = `i${textureType}`;
+            } else if (format.sampleType === SAMPLETYPE_UINT) {
+                textureType = `u${textureType}`;
+            }
+
+            code += `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform ${textureType} ${format.name}${namePostfix};\n` +
+                    `layout(set = ${bindGroup}, binding = ${bindIndex++}) uniform sampler ${format.name}_sampler;\n` +
+                    extraCode;
+
         });
 
         return code;

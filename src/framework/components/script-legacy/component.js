@@ -10,7 +10,7 @@ class ScriptLegacyComponent extends Component {
     }
 
     send(name, functionName) {
-        Debug.deprecated('ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: http://developer.playcanvas.com/user-manual/scripting/communication/');
+        Debug.deprecated('ScriptLegacyComponent.send() is deprecated and will be removed soon. Please use: https://developer.playcanvas.com/user-manual/scripting/communication/');
 
         const args = Array.prototype.slice.call(arguments, 2);
         const instances = this.entity.script.instances;

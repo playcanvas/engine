@@ -224,6 +224,8 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
             if (depth) {
                 depthStencil.depthWriteEnabled = depthState.write;
                 depthStencil.depthCompare = _compareFunction[depthState.func];
+                depthStencil.depthBias = depthState.depthBias;
+                depthStencil.depthBiasSlopeScale = depthState.depthBiasSlope;
             } else {
                 // if render target does not have depth buffer
                 depthStencil.depthWriteEnabled = false;
@@ -272,12 +274,6 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
                 buffers: vertexBufferLayout
             },
 
-            fragment: {
-                module: webgpuShader.getFragmentShaderModule(),
-                entryPoint: webgpuShader.fragmentEntryPoint,
-                targets: []
-            },
-
             primitive: {
                 topology: primitiveTopology,
                 frontFace: 'ccw',
@@ -296,6 +292,12 @@ class WebgpuRenderPipeline extends WebgpuPipeline {
 
         const colorAttachments = renderTarget.impl.colorAttachments;
         if (colorAttachments.length > 0) {
+
+            descr.fragment = {
+                module: webgpuShader.getFragmentShaderModule(),
+                entryPoint: webgpuShader.fragmentEntryPoint,
+                targets: []
+            };
 
             // the same write mask is used by all color buffers, to match the WebGL behavior
             let writeMask = 0;

@@ -1,3 +1,13 @@
+/**
+ * This module provides the core functionality for the PlayCanvas Engine. It includes the main
+ * classes and methods used to create and manage a PlayCanvas application. It provides APIs for
+ * graphics, audio, input, physics, asset management, scripting and much more. It also includes an
+ * application framework and entity-component system, making it easy to manage the lifetime of your
+ * application.
+ *
+ * @module Engine
+ */
+
 // POLYFILLS
 import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
@@ -10,7 +20,6 @@ import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
-import './polyfill/OESVertexArrayObject.js';
 
 // CORE
 export * from './core/constants.js';
@@ -21,6 +30,7 @@ export { path } from './core/path.js';
 export { platform } from './core/platform.js';
 export { string } from './core/string.js';
 export { EventHandler } from './core/event-handler.js';
+export { EventHandle } from './core/event-handle.js';
 export { IndexedList } from './core/indexed-list.js';
 export { WasmModule } from './core/wasm-module.js';
 export { ReadStream } from './core/read-stream.js';
@@ -36,6 +46,7 @@ export { math } from './core/math/math.js';
 export { Color } from './core/math/color.js';
 export { Curve } from './core/math/curve.js';
 export { CurveSet } from './core/math/curve-set.js';
+export { FloatPacking } from './core/math/float-packing.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
@@ -64,9 +75,12 @@ export { DepthState } from './platform/graphics/depth-state.js';
 export { GraphicsDevice } from './platform/graphics/graphics-device.js';
 export { IndexBuffer } from './platform/graphics/index-buffer.js';
 export { RenderTarget } from './platform/graphics/render-target.js';
+export { RenderPass } from './platform/graphics/render-pass.js';
 export { ScopeId } from './platform/graphics/scope-id.js';
 export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
+export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';   // used by splats in extras
+export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by splats in extras
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
@@ -121,7 +135,6 @@ export { Layer } from './scene/layer.js';
 export { LayerComposition } from './scene/composition/layer-composition.js';
 export { Light } from './scene/light.js';
 export { LightingParams } from './scene/lighting/lighting-params.js';
-export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
 export { MeshInstance } from './scene/mesh-instance.js';
@@ -148,15 +161,28 @@ export { Skeleton } from './scene/animation/skeleton.js';
 // SCENE / GRAPHICS
 export { EnvLighting } from './scene/graphics/env-lighting.js';
 export { PostEffect } from './scene/graphics/post-effect.js';
+export { RenderPassColorGrab } from './scene/graphics/render-pass-color-grab.js';
+export { RenderPassShaderQuad } from './scene/graphics/render-pass-shader-quad.js';
 export { shFromCubemap } from './scene/graphics/prefilter-cubemap.js';
 export { reprojectTexture } from './scene/graphics/reproject-texture.js';
 
+// SCENE / RENDERER
+export { RenderPassForward } from './scene/renderer/render-pass-forward.js';
+
 // SCENE / SHADER-LIB
 export { createShader, createShaderFromCode } from './scene/shader-lib/utils.js';
+export { getProgramLibrary } from './scene/shader-lib/get-program-library.js';      // used by splats in extras
+export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { ProgramLibrary } from './scene/shader-lib/program-library.js';
 export { shaderChunks } from './scene/shader-lib/chunks/chunks.js';
 export { shaderChunksLightmapper } from './scene/shader-lib/chunks/chunks-lightmapper.js';
 export { ChunkBuilder } from './scene/shader-lib/chunk-builder.js';     // used by shed
+export { ShaderGenerator } from './scene/shader-lib/programs/shader-generator.js';  // used by splats in extras
+
+// SCENE / SPLAT
+export { GSplatData } from './scene/gsplat/gsplat-data.js';
+export { GSplat } from './scene/gsplat/gsplat.js';
+export { GSplatInstance } from './scene/gsplat/gsplat-instance.js';
 
 // FRAMEWORK
 export * from './framework/constants.js';
@@ -189,6 +215,8 @@ export { ElementComponentSystem } from './framework/components/element/system.js
 export { ElementDragHelper } from './framework/components/element/element-drag-helper.js';
 export { Entity } from './framework/entity.js';
 export { EntityReference } from './framework/utils/entity-reference.js';
+export { GSplatComponent } from './framework/components/gsplat/component.js';
+export { GSplatComponentSystem } from './framework/components/gsplat/system.js';
 export { ImageElement } from './framework/components/element/image-element.js';
 export * from './framework/components/joint/constants.js';
 export { JointComponent } from './framework/components/joint/component.js';
@@ -288,11 +316,13 @@ export { CssHandler } from './framework/handlers/css.js';
 export { CubemapHandler } from './framework/handlers/cubemap.js';
 export { FolderHandler } from './framework/handlers/folder.js';
 export { FontHandler } from './framework/handlers/font.js';
+export { GSplatResource } from './framework/parsers/gsplat-resource.js';
 export { HierarchyHandler } from './framework/handlers/hierarchy.js';
 export { HtmlHandler } from './framework/handlers/html.js';
 export { JsonHandler } from './framework/handlers/json.js';
 export { MaterialHandler } from './framework/handlers/material.js';
 export { ModelHandler } from './framework/handlers/model.js';
+export { GSplatHandler } from './framework/handlers/gsplat.js';
 export { RenderHandler } from './framework/handlers/render.js';
 export { ResourceHandler } from './framework/handlers/handler.js';
 export { ResourceLoader } from './framework/handlers/loader.js';
@@ -323,20 +353,26 @@ export { I18n } from './framework/i18n/i18n.js';
 
 // FRAMEWORK / XR
 export * from './framework/xr/constants.js';
-export { XrInput } from './framework/xr/xr-input.js';
-export { XrInputSource } from './framework/xr/xr-input-source.js';
-export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
 export { XrDepthSensing } from './framework/xr/xr-depth-sensing.js';
-export { XrManager } from './framework/xr/xr-manager.js';
+export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrFinger } from './framework/xr/xr-finger.js';
+export { XrHand } from './framework/xr/xr-hand.js';
 export { XrHitTest } from './framework/xr/xr-hit-test.js';
 export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
-export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
-export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
-export { XrAnchors } from './framework/xr/xr-anchors.js';
-export { XrAnchor } from './framework/xr/xr-anchor.js';
-export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrInput } from './framework/xr/xr-input.js';
+export { XrInputSource } from './framework/xr/xr-input-source.js';
+export { XrJoint } from './framework/xr/xr-joint.js';
+export { XrLightEstimation } from './framework/xr/xr-light-estimation.js';
+export { XrManager } from './framework/xr/xr-manager.js';
+export { XrMeshDetection } from './framework/xr/xr-mesh-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
+export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
+export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
+export { XrView } from './framework/xr/xr-view.js';
+export { XrViews } from './framework/xr/xr-views.js';
 
 // BACKWARDS COMPATIBILITY
 export * from './deprecated/deprecated.js';

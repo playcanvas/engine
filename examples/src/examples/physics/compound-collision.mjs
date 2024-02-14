@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath }) {
@@ -25,31 +25,19 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.JsonHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 
@@ -70,8 +58,8 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
 
     app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
     /**
-     * @param {pc.Color} color 
-     * @returns {pc.StandardMaterial}
+     * @param {pc.Color} color - The diffuse color.
+     * @returns {pc.StandardMaterial} The standard material.
      */
     function createMaterial(color) {
         const material = new pc.StandardMaterial();
@@ -420,7 +408,6 @@ async function example({ canvas, deviceType, ammoPath, glslangPath, twgslPath })
 
 class CompoundCollisionExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Compound Collision';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

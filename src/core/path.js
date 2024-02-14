@@ -1,5 +1,3 @@
-import { Debug } from './debug.js';
-
 /**
  * File path API.
  *
@@ -16,7 +14,7 @@ const path = {
     /**
      * Join two or more sections of file path together, inserting a delimiter if needed.
      *
-     * @param {...string} section - Section of path to join. 2 or more can be provided as parameters.
+     * @param {...string} sections - Sections of the path to join.
      * @returns {string} The joined file path.
      * @example
      * const path = pc.path.join('foo', 'bar');
@@ -25,16 +23,12 @@ const path = {
      * const path = pc.path.join('alpha', 'beta', 'gamma');
      * console.log(path); // Prints 'alpha/beta/gamma'
      */
-    join: function () {
-        const num = arguments.length;
-        let result = arguments[0];
+    join(...sections) {
+        let result = sections[0];
 
-        for (let index = 0; index < num - 1; ++index) {
-            const one = arguments[index];
-            Debug.assert(one !== undefined);
-
-            const two = arguments[index + 1];
-            Debug.assert(two !== undefined);
+        for (let i = 0; i < sections.length - 1; i++) {
+            const one = sections[i];
+            const two = sections[i + 1];
 
             if (two[0] === path.delimiter) {
                 result = two;
@@ -44,7 +38,7 @@ const path = {
             if (one && two && one[one.length - 1] !== path.delimiter && two[0] !== path.delimiter) {
                 result += (path.delimiter + two);
             } else {
-                result += (two);
+                result += two;
             }
         }
 
@@ -57,7 +51,7 @@ const path = {
      * @param {string} pathname - The path to normalize.
      * @returns {string} The normalized path.
      */
-    normalize: function (pathname) {
+    normalize(pathname) {
         const lead = pathname.startsWith(path.delimiter);
         const trail = pathname.endsWith(path.delimiter);
 
@@ -101,7 +95,7 @@ const path = {
      * @returns {string[]} The split path which is an array of two strings, the path and the
      * filename.
      */
-    split: function (pathname) {
+    split(pathname) {
         const lastDelimiterIndex = pathname.lastIndexOf(path.delimiter);
         if (lastDelimiterIndex !== -1) {
             return [pathname.substring(0, lastDelimiterIndex), pathname.substring(lastDelimiterIndex + 1)];
@@ -119,7 +113,7 @@ const path = {
      * pc.path.getBasename("/path/to/file.txt"); // returns "file.txt"
      * pc.path.getBasename("/path/to/dir"); // returns "dir"
      */
-    getBasename: function (pathname) {
+    getBasename(pathname) {
         return path.split(pathname)[1];
     },
 
@@ -130,7 +124,7 @@ const path = {
      * @param {string} pathname - The path to get the directory from.
      * @returns {string} The directory part of the path.
      */
-    getDirectory: function (pathname) {
+    getDirectory(pathname) {
         return path.split(pathname)[0];
     },
 
@@ -145,7 +139,7 @@ const path = {
      * pc.path.getExtension("/path/to/file.jpg"); // returns ".jpg"
      * pc.path.getExtension("/path/to/file.txt?function=getExtension"); // returns ".txt"
      */
-    getExtension: function (pathname) {
+    getExtension(pathname) {
         const ext = pathname.split('?')[0].split('.').pop();
         if (ext !== pathname) {
             return '.' + ext;
@@ -168,7 +162,7 @@ const path = {
      * pc.path.isRelativePath("/path/to/file.jpg"); // returns false
      * pc.path.isRelativePath("http://path/to/file.jpg"); // returns false
      */
-    isRelativePath: function (pathname) {
+    isRelativePath(pathname) {
         return pathname.charAt(0) !== '/' && pathname.match(/:\/\//) === null;
     },
 
@@ -183,7 +177,7 @@ const path = {
      * pc.path.extractPath("../path/to/file.txt"); // returns "../path/to"
      * pc.path.extractPath("/path/to/file.txt");   // returns "/path/to"
      */
-    extractPath: function (pathname) {
+    extractPath(pathname) {
         let result = '';
         const parts = pathname.split('/');
         let i = 0;

@@ -48,13 +48,73 @@ const _vec3 = new Vec3();
  *
  * Relevant 'Engine-only' examples:
  *
- * - [Falling shapes](http://playcanvas.github.io/#physics/falling-shapes)
- * - [Vehicle physics](http://playcanvas.github.io/#physics/vehicle)
+ * - [Falling shapes](https://playcanvas.github.io/#/physics/falling-shapes)
+ * - [Vehicle physics](https://playcanvas.github.io/#/physics/vehicle)
  *
  * @augments Component
  * @category Physics
  */
 class RigidBodyComponent extends Component {
+    /**
+     * Fired when a contact occurs between two rigid bodies. The handler is passed a
+     * {@link ContactResult} object containing details of the contact between the two rigid bodies.
+     *
+     * @event
+     * @example
+     * entity.rigidbody.on('contact', (result) => {
+     *    console.log(`Contact between ${entity.name} and ${result.other.name}`);
+     * });
+     */
+    static EVENT_CONTACT = 'contact';
+
+    /**
+     * Fired when two rigid bodies start touching. The handler is passed a {@link ContactResult}
+     * object containing details of the contact between the two rigid bodies.
+     *
+     * @event
+     * @example
+     * entity.rigidbody.on('collisionstart', (result) => {
+     *     console.log(`Collision started between ${entity.name} and ${result.other.name}`);
+     * });
+     */
+    static EVENT_COLLISIONSTART = 'collisionstart';
+
+    /**
+     * Fired when two rigid bodies stop touching. The handler is passed a {@link ContactResult}
+     * object containing details of the contact between the two rigid bodies.
+     *
+     * @event
+     * @example
+     * entity.rigidbody.on('collisionend', (result) => {
+     *     console.log(`Collision ended between ${entity.name} and ${result.other.name}`);
+     * });
+     */
+    static EVENT_COLLISIONEND = 'collisionend';
+
+    /**
+     * Fired when a rigid body enters a trigger volume. The handler is passed an {@link Entity}
+     * representing the trigger volume that this rigid body entered.
+     *
+     * @event
+     * @example
+     * entity.rigidbody.on('triggerenter', (trigger) => {
+     *     console.log(`Entity ${entity.name} entered trigger volume ${trigger.name}`);
+     * });
+     */
+    static EVENT_TRIGGERENTER = 'triggerenter';
+
+    /**
+     * Fired when a rigid body exits a trigger volume. The handler is passed an {@link Entity}
+     * representing the trigger volume that this rigid body exited.
+     *
+     * @event
+     * @example
+     * entity.rigidbody.on('triggerleave', (trigger) => {
+     *     console.log(`Entity ${entity.name} exited trigger volume ${trigger.name}`);
+     * });
+     */
+    static EVENT_TRIGGERLEAVE = 'triggerleave';
+
     /** @private */
     _angularDamping = 0;
 
@@ -110,41 +170,6 @@ class RigidBodyComponent extends Component {
     constructor(system, entity) { // eslint-disable-line no-useless-constructor
         super(system, entity);
     }
-
-    /**
-     * Fired when a contact occurs between two rigid bodies.
-     *
-     * @event RigidBodyComponent#contact
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
-     */
-
-    /**
-     * Fired when two rigid bodies start touching.
-     *
-     * @event RigidBodyComponent#collisionstart
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
-     */
-
-    /**
-     * Fired when two rigid bodies stop touching.
-     *
-     * @event RigidBodyComponent#collisionend
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} that stopped touching this rigid body.
-     */
-
-    /**
-     * Fired when a rigid body enters a trigger volume.
-     *
-     * @event RigidBodyComponent#triggerenter
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} with trigger volume that this rigid body entered.
-     */
-
-    /**
-     * Fired when a rigid body exits a trigger volume.
-     *
-     * @event RigidBodyComponent#triggerleave
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} with trigger volume that this rigid body exited.
-     */
 
     /** @ignore */
     static onLibraryLoaded() {
@@ -503,8 +528,12 @@ class RigidBodyComponent extends Component {
         }
 
         if (shape) {
-            if (this._body)
-                this.system.onRemove(entity, this);
+            if (this._body) {
+                this.system.removeBody(this._body);
+                this.system.destroyBody(this._body);
+
+                this._body = null;
+            }
 
             const mass = this._type === BODYTYPE_DYNAMIC ? this._mass : 0;
 

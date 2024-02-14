@@ -28,6 +28,61 @@ function capTime(time, duration) {
  */
 class SoundInstance extends EventHandler {
     /**
+     * Fired when the instance starts playing its source.
+     *
+     * @event
+     * @example
+     * instance.on('play', () => {
+     *     console.log('Instance started playing');
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when the instance is paused.
+     *
+     * @event
+     * @example
+     * instance.on('pause', () => {
+     *     console.log('Instance paused');
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when the instance is resumed.
+     *
+     * @event
+     * @example
+     * instance.on('resume', () => {
+     *     console.log('Instance resumed');
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when the instance is stopped.
+     *
+     * @event
+     * @example
+     * instance.on('stop', () => {
+     *     console.log('Instance stopped');
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when the sound currently played by the instance ends.
+     *
+     * @event
+     * @example
+     * instance.on('end', () => {
+     *     console.log('Instance ended');
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
      * Gets the source that plays the sound resource. If the Web Audio API is not supported the
      * type of source is [Audio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio).
      * Source is only available after calling play.
@@ -243,36 +298,6 @@ class SoundInstance extends EventHandler {
             this._createSource();
         }
     }
-
-    /**
-     * Fired when the instance starts playing its source.
-     *
-     * @event SoundInstance#play
-     */
-
-    /**
-     * Fired when the instance is paused.
-     *
-     * @event SoundInstance#pause
-     */
-
-    /**
-     * Fired when the instance is resumed.
-     *
-     * @event SoundInstance#resume
-     */
-
-    /**
-     * Fired when the instance is stopped.
-     *
-     * @event SoundInstance#stop
-     */
-
-    /**
-     * Fired when the sound currently played by the instance ends.
-     *
-     * @event SoundInstance#end
-     */
 
     /**
      * Gets or sets the current time of the sound that is playing. If the value provided is bigger

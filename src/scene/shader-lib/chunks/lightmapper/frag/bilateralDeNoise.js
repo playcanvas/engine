@@ -45,7 +45,7 @@ uniform float kernel[MSIZE];
 
 void main(void) {
     
-    vec4 pixelRgbm = texture2D(source, vUv0);
+    vec4 pixelRgbm = texture2DLodEXT(source, vUv0, 0.0);
 
     // lightmap specific optimization - skip pixels that were not baked
     // this also allows dilate filter that work on the output of this to work correctly, as it depends on .a being zero
@@ -72,7 +72,7 @@ void main(void) {
             
             // sample the pixel with offset
             vec2 coord = vUv0 + vec2(float(i), float(j)) * pixelOffset;
-            vec4 rgbm = texture2D(source, coord);
+            vec4 rgbm = texture2DLodEXT(source, coord, 0.0);
 
             // lightmap - only use baked pixels
             if (rgbm.a > 0.0) {

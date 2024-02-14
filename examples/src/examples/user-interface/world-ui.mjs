@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
@@ -26,27 +26,17 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ButtonComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.FontHandler,
-        // @ts-ignore
         pc.ScriptHandler
     ];
 
@@ -186,7 +176,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
 
 class WorldUiExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'World UI';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

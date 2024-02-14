@@ -15,7 +15,7 @@ const BitPacking = {
      * @param {number} [mask] - Mask for the value to limit the number of storage bits. Defaults to 1.
      * @returns {number} Returns the storage updated with the value.
      */
-    set: function (storage, value, shift, mask = 1) {
+    set(storage, value, shift, mask = 1) {
         // clear the space
         const data = storage & ~(mask << shift);
 
@@ -31,7 +31,7 @@ const BitPacking = {
      * @param {number} [mask] - Mask for the value to limit the number of storage bits. Defaults to 1.
      * @returns {number} Returns the extracted value.
      */
-    get: function (storage, shift, mask = 1) {
+    get(storage, shift, mask = 1) {
         return (storage >> shift) & mask;
     },
 
@@ -43,7 +43,7 @@ const BitPacking = {
      * @param {number} [mask] - Mask to limit the number of storage bits. Defaults to 1.
      * @returns {boolean} Returns true if all bits in the mask are set in the storage.
      */
-    all: function (storage, shift, mask = 1) {
+    all(storage, shift, mask = 1) {
         const shifted = mask << shift;
         return (storage & shifted) === shifted;
     },
@@ -56,7 +56,7 @@ const BitPacking = {
      * @param {number} [mask] - Mask to limit the number of storage bits. Defaults to 1.
      * @returns {boolean} Returns true if any bits in the mask are set in the storage.
      */
-    any: function (storage, shift, mask = 1) {
+    any(storage, shift, mask = 1) {
         return (storage & (mask << shift)) !== 0;
     }
 };

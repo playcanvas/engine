@@ -1,13 +1,29 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, pcx }) {
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, pcx }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.ModelComponentSystem,
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
     app.start();
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
@@ -211,8 +227,11 @@ async function example({ canvas, pcx }) {
                 // ensure texture is uploaded (actual VRAM is allocated)
                 texture.lock();
                 texture.unlock();
-                // @ts-ignore engine-tsd
-                app.graphicsDevice.setTexture(texture, 0);
+
+                if (!app.graphicsDevice.isWebGPU) {
+                    // @ts-ignore engine-tsd
+                    app.graphicsDevice.setTexture(texture, 0);
+                }
 
             } else {    // de-allocating resources
 
@@ -244,10 +263,8 @@ async function example({ canvas, pcx }) {
 
 class MiniStatsExample {
     static CATEGORY = 'Misc';
-    static NAME = 'Mini Stats';
-    static WEBGPU_ENABLED = true;
     static ENGINE = 'PERFORMANCE';
-    static MINISTATS = true;
+    static NO_MINISTATS = true;
     static example = example;
 }
 

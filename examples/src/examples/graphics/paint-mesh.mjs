@@ -2,14 +2,11 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files, assetPath }) {
-
-    // Create the app and start the update loop
-    const app = new pc.Application(canvas);
+async function example({ canvas, files, deviceType, assetPath, glslangPath, twgslPath }) {
 
     // load the textures
     const assets = {
@@ -18,21 +15,44 @@ async function example({ canvas, files, assetPath }) {
         'decal': new pc.Asset('color', 'texture', { url: assetPath + 'textures/heart.png' })
     };
 
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem
+    ];
+    createOptions.resourceHandlers = [
+        pc.TextureHandler,
+        pc.CubemapHandler
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
+
+    // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
+    app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+    app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+    // Ensure canvas is resized when window changes size
+    const resize = () => app.resizeCanvas();
+    window.addEventListener('resize', resize);
+    app.on('destroy', () => {
+        window.removeEventListener('resize', resize);
+    });
+
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
 
         app.start();
-
-        // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-
-        // Ensure canvas is resized when window changes size
-        const resize = () => app.resizeCanvas();
-        window.addEventListener('resize', resize);
-        app.on('destroy', () => {
-            window.removeEventListener('resize', resize);
-        });
 
         app.scene.setSkybox(assets.helipad.resources);
         app.scene.toneMapping = pc.TONEMAP_ACES;
@@ -111,16 +131,11 @@ async function example({ canvas, files, assetPath }) {
         const meshEntity = createHighQualitySphere(material, [worldLayer.id]);
         meshEntity.setLocalScale(15, 15, 15);
 
-        // Create the shader definition and shader from the vertex and fragment shaders
-        const shaderDefinition = {
-            attributes: {
-                aPosition: pc.SEMANTIC_POSITION,
-                aUv0: pc.SEMANTIC_TEXCOORD0
-            },
-            vshader: files['shader.vert'],
-            fshader: files['shader.frag']
-        };
-        const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
+        // Create the shader from the vertex and fragment shaders
+        const shader = pc.createShaderFromCode(app.graphicsDevice, files['shader.vert'], files['shader.frag'], 'myShader', {
+            aPosition: pc.SEMANTIC_POSITION,
+            aUv0: pc.SEMANTIC_TEXCOORD0
+        });
 
         // Create a decal material with the new shader
         const decalMaterial = new pc.Material();
@@ -200,8 +215,7 @@ async function example({ canvas, files, assetPath }) {
 
 export class PaintMeshExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Paint Mesh';
-
+    static WEBGPU_ENABLED = true;
     static FILES = {
         'shader.vert': /* glsl */`
             // Attributes per vertex: position and uv
@@ -219,9 +233,12 @@ export class PaintMeshExample {
 
             void main(void)
             {
+                // handle upside-down uv coordinates on WebGPU
+                vec2 uv = getImageEffectUV(aUv0);
+
                 // We render in texture space, so a position of this fragment is its uv-coordinates.
-                // Changes the range of uv coordinates from 0..1 to projection space -1 to 1.
-                gl_Position = vec4(aUv0.x * 2.0 - 1.0, aUv0.y * 2.0 - 1.0, 0, 1.0);
+                // Change the range of uv coordinates from 0..1 to projection space -1 to 1.
+                gl_Position = vec4(uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 0, 1.0);
 
                 // transform the vertex position to world space and then to decal space, and pass it
                 // to the fragment shader to sample the decal texture

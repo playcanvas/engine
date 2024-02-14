@@ -6,6 +6,7 @@ import { EventHandler } from '../../core/event-handler.js';
  * {@link AppBase#scripts}.
  *
  * @augments EventHandler
+ * @category Script
  */
 class ScriptRegistry extends EventHandler {
     /**

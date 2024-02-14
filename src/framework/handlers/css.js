@@ -1,15 +1,10 @@
 import { http } from '../../platform/net/http.js';
 
-class CssHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "css";
+import { ResourceHandler } from './handler.js';
 
-    constructor(app) {
-        this.maxRetries = 0;
+class CssHandler extends ResourceHandler {
+    constructor() {
+        super('css');
     }
 
     load(url, callback) {
@@ -30,13 +25,6 @@ class CssHandler {
                 callback(`Error loading css resource: ${url.original} [${err}]`);
             }
         });
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

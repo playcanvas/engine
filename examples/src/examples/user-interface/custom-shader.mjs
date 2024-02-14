@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
@@ -27,21 +27,14 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ButtonComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 
@@ -120,7 +113,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 class CustomShaderExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Custom Shader';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

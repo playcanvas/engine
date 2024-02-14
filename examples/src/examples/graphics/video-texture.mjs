@@ -1,14 +1,32 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
+async function example({ canvas, deviceType, glslangPath, twgslPath, assetPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
 
-    // Create the application and start the update loop
-    const app = new pc.Application(canvas, {});
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        pc.TextureHandler,
+        pc.ContainerHandler
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assets = {
         tv: new pc.Asset('tv', 'container', { url: assetPath + 'models/tv.glb' })
@@ -128,6 +146,6 @@ async function example({ canvas, assetPath }) {
 
 export class VideoTextureExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Video Texture';
+    static WEBGPU_ENABLED = false; // Video textures don't work yet in WebGPU.
     static example = example;
 }
