@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 const assets = {
     statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })

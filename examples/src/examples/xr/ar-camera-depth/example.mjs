@@ -1,6 +1,9 @@
 import * as pc from 'playcanvas';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 /**
  * @param {string} msg - The message.

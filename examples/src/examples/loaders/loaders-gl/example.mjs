@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { getDeviceType, loadES5 } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
 const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');

@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 const assets = {
     font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })

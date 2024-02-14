@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 // A simple render pass that renders a quad with a shader. The shader tints the source texture.
 class RenderPassTint extends pc.RenderPassShaderQuad {

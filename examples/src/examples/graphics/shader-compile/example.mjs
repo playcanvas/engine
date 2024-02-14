@@ -2,6 +2,9 @@ import * as pc from 'playcanvas';
 import { getDeviceType } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
+if (!(canvas instanceof HTMLCanvasElement)) {
+    throw new Error('No canvas found');
+}
 
 // This example serves as a test framework for large shader compilation speed test. Enable tracking for it.
 pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
