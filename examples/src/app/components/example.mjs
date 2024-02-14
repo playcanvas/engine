@@ -83,6 +83,26 @@ class Example extends TypedComponent {
     }
 
     /**
+     * @param {string} src - The source string.
+     * @returns {Promise<Function>} - The controls jsx object.
+     */
+    async _buildControls(src) {
+        const blob = new Blob([src], { type: 'text/javascript' });
+        if (this._controlsUrl) {
+            URL.revokeObjectURL(this._controlsUrl);
+        }
+        this._controlsUrl = URL.createObjectURL(blob);
+        let controls;
+        try {
+            const module = await import(this._controlsUrl);
+            controls = module.controls;
+        } catch (e) {
+            controls = () => jsx('pre', null, e.message);
+        }
+        return controls;
+    }
+
+    /**
      * @param {FilesEvent} event - Event.
      */
     _handleRequestedFiles(event) {
@@ -114,17 +134,11 @@ class Example extends TypedComponent {
     /**
      * @param {LoadEvent} event - The event.
      */
-    _handleExampleLoad(event) {
+    async _handleExampleLoad(event) {
         const { files, description } = event.detail;
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
-            let controls;
-            try {
-                // eslint-disable-next-line no-new-func
-                controls = new Function('return ' + controlsSrc)();
-            } catch (e) {
-                controls = () => jsx('pre', null, 'error: ' + e.toString());
-            }
+            const controls = await this._buildControls(controlsSrc);
             this.mergeState({
                 exampleLoaded: true,
                 controls,
@@ -145,7 +159,7 @@ class Example extends TypedComponent {
     /**
      * @param {FilesEvent} event - The event.
      */
-    _handleUpdateFiles(event) {
+    async _handleUpdateFiles(event) {
         const { files } = event.detail;
         const controlsSrc = files['controls.mjs'] ?? 'null';
         if (!files['controls.mjs']) {
@@ -154,13 +168,7 @@ class Example extends TypedComponent {
                 controls: null
             });
         }
-        let controls;
-        try {
-            // eslint-disable-next-line no-new-func
-            controls = new Function('return ' + controlsSrc)();
-        } catch (e) {
-            controls = () => jsx('pre', null, e.toString());
-        }
+        const controls = await this._buildControls(controlsSrc);
         this.mergeState({
             exampleLoaded: true,
             controls
