@@ -22,8 +22,7 @@ function controls({ observer, ReactPCUI, React, jsx }) {
 }
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, data, glslangPath, twgslPath }) {
@@ -46,27 +45,17 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data, glsla
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.AnimClipHandler,
-        // @ts-ignore
         pc.AnimStateGraphHandler
     ];
 
@@ -200,7 +189,6 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, data, glsla
 }
 class BlendTrees1DExample {
     static CATEGORY = 'Animation';
-    static NAME = 'Blend Trees 1D';
     static WEBGPU_ENABLED = true;
     static controls = controls;
     static example = example;

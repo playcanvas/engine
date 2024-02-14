@@ -1,15 +1,10 @@
 import { http, Http } from '../../platform/net/http.js';
 
-class JsonHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "json";
+import { ResourceHandler } from './handler.js';
 
-    constructor(app) {
-        this.maxRetries = 0;
+class JsonHandler extends ResourceHandler {
+    constructor() {
+        super('json');
     }
 
     load(url, callback) {
@@ -37,13 +32,6 @@ class JsonHandler {
                 callback(`Error loading JSON resource: ${url.original} [${err}]`);
             }
         });
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

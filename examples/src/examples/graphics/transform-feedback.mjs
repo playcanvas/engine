@@ -2,13 +2,33 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'shaderFeedback.vert': string, 'shaderCloud.vert': string, 'shaderCloud.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, files, assetPath }) {
-    // Create the app and start the update loop
-    const app = new pc.Application(canvas, {});
+async function example({ canvas, deviceType, glslangPath, twgslPath, files, assetPath }) {
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        pc.TextureHandler,
+        pc.ContainerHandler
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     const assets = {
         'statue': new pc.Asset('statue', 'container', { url: assetPath + 'models/statue.glb' })
@@ -162,7 +182,7 @@ async function example({ canvas, files, assetPath }) {
 
 export class TransformFeedbackExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Transform Feedback';
+    static WEBGPU_ENABLED = false; // No errors, but screen is completely black.
     static FILES = {
         'shaderFeedback.vert': /* glsl */`
 // vertex shader used to move particles during transform-feedback simulation step

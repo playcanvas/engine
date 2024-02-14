@@ -1,8 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas }) {
@@ -57,11 +56,16 @@ async function example({ canvas }) {
     l.translate(0, 10, 0);
     app.root.addChild(l);
 
+    const material = new pc.StandardMaterial();
+    material.diffuse = new pc.Color(Math.random(), Math.random(), Math.random());
+
     const target = new pc.Entity();
     target.addComponent("render", {
-        type: "cylinder"
+        type: "cylinder",
+        material: material
     });
-    target.setLocalScale(0.5, 0.01, 0.5);
+    target.setLocalScale(0.1, 0.01, 0.1);
+    target.render.meshInstances[0].setParameter('material_diffuse', [ Math.random(), Math.random(), Math.random() ]);
     app.root.addChild(target);
 
     if (app.xr.supported) {
@@ -140,6 +144,36 @@ async function example({ canvas }) {
             }
         });
 
+        if (app.xr.hitTest.supported) {
+            app.xr.input.on('add', (inputSource) => {
+                inputSource.hitTestStart({
+                    entityTypes: [pc.XRTRACKABLE_POINT, pc.XRTRACKABLE_PLANE],
+                    callback: (err, hitTestSource) => {
+                        if (err) return;
+
+                        let target = new pc.Entity();
+                        target.addComponent("render", {
+                            type: "cylinder",
+                            material: material
+                        });
+                        target.setLocalScale(0.1, 0.01, 0.1);
+                        target.render.meshInstances[0].setParameter('material_diffuse', [ Math.random(), Math.random(), Math.random() ]);
+                        app.root.addChild(target);
+
+                        hitTestSource.on('result', (position, rotation) => {
+                            target.setPosition(position);
+                            target.setRotation(rotation);
+                        });
+
+                        hitTestSource.once('remove', () => {
+                            target.destroy();
+                            target = null;
+                        });
+                    }
+                });
+            });
+        }
+
         if (!app.xr.isAvailable(pc.XRTYPE_AR)) {
             message("Immersive AR is not available");
         } else if (!app.xr.hitTest.supported) {
@@ -155,7 +189,6 @@ async function example({ canvas }) {
 
 class ArHitTestExample {
     static CATEGORY = 'XR';
-    static NAME = 'AR Hit Test';
     static example = example;
 }
 

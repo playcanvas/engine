@@ -115,6 +115,9 @@ vec4 getPosition() {
     vec4 screenPos;
     #ifdef UV1LAYOUT
     screenPos = vec4(vertex_texCoord1.xy * 2.0 - 1.0, 0.5, 1);
+        #ifdef WEBGPU
+        screenPos.y *= -1.0;
+        #endif
     #else
     #ifdef SCREENSPACE
     screenPos = posW;

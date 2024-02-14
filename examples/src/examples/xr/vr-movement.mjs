@@ -1,8 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas }) {
@@ -260,7 +259,6 @@ async function example({ canvas }) {
 
 class VrMovementExample {
     static CATEGORY = 'XR';
-    static NAME = 'VR Movement';
     static example = example;
 }
 

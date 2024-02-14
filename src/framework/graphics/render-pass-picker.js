@@ -32,7 +32,7 @@ class RenderPassPicker extends RenderPass {
         const device = this.device;
         DebugGraphics.pushGpuMarker(device, 'PICKER');
 
-        const { renderer, camera, scene, layers, mapping } = this;
+        const { renderer, camera, scene, layers, mapping, renderTarget } = this;
         const srcLayers = scene.layers.layerList;
         const subLayerEnabled = scene.layers.subLayerEnabled;
         const isTransparent = scene.layers.subLayerList;
@@ -53,18 +53,23 @@ class RenderPassPicker extends RenderPass {
                 // if the layer is rendered by the camera
                 if (srcLayer.camerasSet.has(camera.camera)) {
 
+                    const transparent = isTransparent[i];
+                    DebugGraphics.pushGpuMarker(device, `${srcLayer.name}(${transparent ? 'TRANSP' : 'OPAQUE'})`);
+
                     // if the layer clears the depth
                     if (srcLayer._clearDepthBuffer) {
                         renderer.clear(camera.camera, false, true, false);
                     }
 
-                    const culledInstances = srcLayer.getCulledInstances(camera.camera);
-                    const meshInstances = isTransparent[i] ? culledInstances.transparent : culledInstances.opaque;
+                    // Use mesh instances from the layer. Ideally we'd just pick culled instances for the camera,
+                    // but we have no way of knowing if culling has been performed since changes to the layer.
+                    // Disadvantage here is that we render all mesh instances, even those not visible by the camera.
+                    const meshInstances = srcLayer.meshInstances;
 
                     // only need mesh instances with a pick flag
                     for (let j = 0; j < meshInstances.length; j++) {
                         const meshInstance = meshInstances[j];
-                        if (meshInstance.pick) {
+                        if (meshInstance.pick && meshInstance.transparent === transparent) {
                             tempMeshInstances.push(meshInstance);
 
                             // keep the index -> meshInstance index mapping
@@ -72,17 +77,23 @@ class RenderPassPicker extends RenderPass {
                         }
                     }
 
-                    renderer.renderForward(camera.camera, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
-                        const miId = meshInstance.id;
-                        pickColor[0] = ((miId >> 16) & 0xff) / 255;
-                        pickColor[1] = ((miId >> 8) & 0xff) / 255;
-                        pickColor[2] = (miId & 0xff) / 255;
-                        pickColor[3] = ((miId >> 24) & 0xff) / 255;
-                        pickColorId.setValue(pickColor);
-                        device.setBlendState(BlendState.NOBLEND);
-                    });
+                    if (tempMeshInstances.length > 0) {
 
-                    tempMeshInstances.length = 0;
+                        renderer.setCameraUniforms(camera.camera, renderTarget);
+                        renderer.renderForward(camera.camera, tempMeshInstances, lights, SHADER_PICK, (meshInstance) => {
+                            const miId = meshInstance.id;
+                            pickColor[0] = ((miId >> 16) & 0xff) / 255;
+                            pickColor[1] = ((miId >> 8) & 0xff) / 255;
+                            pickColor[2] = (miId & 0xff) / 255;
+                            pickColor[3] = ((miId >> 24) & 0xff) / 255;
+                            pickColorId.setValue(pickColor);
+                            device.setBlendState(BlendState.NOBLEND);
+                        });
+
+                        tempMeshInstances.length = 0;
+                    }
+
+                    DebugGraphics.popGpuMarker(device);
                 }
             }
         }

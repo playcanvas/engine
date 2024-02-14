@@ -251,7 +251,6 @@ class MeshInstance {
         this._renderStyle = RENDERSTYLE_SOLID;
         this._receiveShadow = true;
         this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
@@ -279,6 +278,12 @@ class MeshInstance {
          * @private
          */
         this._morphInstance = null;
+
+        /**
+         * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+         * @ignore
+         */
+        this.gsplatInstance = null;
 
         this.instancingData = null;
 
@@ -788,10 +793,15 @@ class MeshInstance {
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      *
-     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
-     * (usually world matrices). Pass null to turn off hardware instancing.
+     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer -
+     * Vertex buffer to hold per-instance vertex data (usually world matrices). Pass null to turn
+     * off hardware instancing.
+     * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
+     * instance will be culled by the  camera frustum. This often involves setting
+     * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
+     * the whole instance is always rendered.
      */
-    setInstancing(vertexBuffer) {
+    setInstancing(vertexBuffer, cull = false) {
         if (vertexBuffer) {
             this.instancingData = new InstancingData(vertexBuffer.numVertices);
             this.instancingData.vertexBuffer = vertexBuffer;
@@ -799,8 +809,8 @@ class MeshInstance {
             // mark vertex buffer as instancing data
             vertexBuffer.format.instancing = true;
 
-            // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
-            this.cull = false;
+            // set up culling
+            this.cull = cull;
         } else {
             this.instancingData = null;
             this.cull = true;

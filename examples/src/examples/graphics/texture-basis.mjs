@@ -6,7 +6,7 @@ import * as pc from 'playcanvas';
 //   basisu seaside-rocks01-normal.jpg -normal_map -swizzle gggr -renorm -q 255 -mipmap
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, basisPath }) {
@@ -37,17 +37,12 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
     createOptions.graphicsDevice = device;
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler
     ];
 
@@ -140,7 +135,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath, 
 
 export class TextureBasisExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Texture Basis';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

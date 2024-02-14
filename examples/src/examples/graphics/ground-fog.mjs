@@ -20,7 +20,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
@@ -46,21 +46,14 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler
     ];
 
@@ -205,7 +198,6 @@ async function example({ canvas, deviceType, files, assetPath, scriptsPath, glsl
 
 export class GroundFogExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Ground Fog';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

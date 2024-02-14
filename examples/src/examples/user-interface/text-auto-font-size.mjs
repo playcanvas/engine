@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }) {
@@ -25,27 +25,17 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
     createOptions.elementInput = new pc.ElementInput(canvas);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.ScreenComponentSystem,
-        // @ts-ignore
         pc.ButtonComponentSystem,
-        // @ts-ignore
         pc.ElementComponentSystem,
-        // @ts-ignore
         pc.LayoutGroupComponentSystem,
-        // @ts-ignore
         pc.ScrollViewComponentSystem,
-        // @ts-ignore
         pc.ScrollbarComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.FontHandler
     ];
 
@@ -128,7 +118,6 @@ async function example({ canvas, deviceType, assetPath, glslangPath, twgslPath }
 
 class TextAutoFontSizeExample {
     static CATEGORY = 'User Interface';
-    static NAME = 'Text Auto Font Size';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

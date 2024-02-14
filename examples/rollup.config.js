@@ -12,6 +12,9 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
+import { buildTarget } from '../utils/rollup-build-target.mjs';
+import { scriptTarget } from '../utils/rollup-script-target.mjs';
+
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
 
@@ -22,25 +25,36 @@ const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const staticFiles = [
+    // static main page src
     { src: './src/static', dest: 'dist/' },
-    { src: './src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './src/example.css', dest: 'dist/iframe/example.css' },
-    { src: './src/pathes.js', dest: 'dist/iframe/pathes.js' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // static iframe src
+    { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
+    { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
+    { src: './iframe/pathes.js', dest: 'dist/iframe/pathes.js' },
+
+    // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: '../build/playcanvas.js', dest: 'dist/iframe/playcanvas.js' },
-    { src: '../build/playcanvas.dbg.js', dest: 'dist/iframe/playcanvas.dbg.js' },
-    { src: '../build/playcanvas.prf.js', dest: 'dist/iframe/playcanvas.prf.js' },
-    { src: '../build/playcanvas-extras.js', dest: 'dist/iframe/playcanvas-extras.js' },
+
+    // playcanvas observer
     { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
+
+    // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
 ];
 
-// ^ = beginning of line
-// \s* = whitespace
-// $ = end of line
-// .* = any character
 const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
 const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
 const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
@@ -54,7 +68,7 @@ const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
  *    import './polyfill/OESVertexArrayObject.js';
  *`);
  * @param {string} content - The file content to test.
- * @returns {boolean}
+ * @returns {boolean} Whether content is a module.
  */
 function isModuleWithExternalDependencies(content) {
     const a = regexpExportStarFrom.test(content);
@@ -64,7 +78,8 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-let { NODE_ENV = '', ENGINE_PATH = '' } = process.env;
+const { NODE_ENV = '' } = process.env;
+let { ENGINE_PATH = '' } = process.env;
 
 // If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
 // requires no additional build shells.
@@ -99,7 +114,7 @@ function timestamp() {
 }
 
 /**
- * @param {import('rollup').Plugin} - The Rollup plugin.
+ * @param {import('rollup').Plugin} plugin - The Rollup plugin.
  * @param {string} src - File or path to watch.
  */
 function watch(plugin, src) {
@@ -160,7 +175,7 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
-                watch(this, 'scripts/generate-standalone-files.mjs');
+                watch(this, 'scripts/standalone-html.mjs');
                 watch(this, 'src/examples');
             }
         },
@@ -178,34 +193,8 @@ const aliasEntries = {
     '@playcanvas/pcui/styles': PCUI_STYLES_PATH
 };
 
-/**
- * Build an ES5 target that rollup is supposed to build.
- *
- * @param {string} name - The name, like `pcx` or `VoxParser`.
- * @param {string} input - The input file, like `extras/index.js`.
- * @param {string} output - The output file, like `dist/iframe/playcanvas-extras.js`.
- * @returns {RollupOptions} One rollup target.
- */
-function scriptTarget(name, input, output) {
-    return {
-        input: input,
-        output: {
-            name: name,
-            file: output,
-            format: 'umd',
-            indent: '\t',
-            globals: { playcanvas: 'pc' }
-        },
-        plugins: [
-            resolve()
-        ],
-        external: ['playcanvas'],
-        cache: false
-    };
-}
-
 /** @type {RollupOptions[]} */
-const builds = [
+const targets = [
     {
         // A debug build is ~2.3MB and a release build ~0.6MB
         input: 'src/app/index.mjs',
@@ -241,4 +230,29 @@ const builds = [
     scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
 ];
 
-export default builds;
+// We skip building PlayCanvas ourselves when ENGINE_PATH is given.
+// In that case we have a watcher which copies all necessary files.
+if (ENGINE_PATH === '') {
+    /** @type {buildTarget} */
+    const pushTarget = (...args) => {
+        targets.push(buildTarget(...args));
+    };
+    if (NODE_ENV === 'production') {
+        // Outputs: dist/iframe/playcanvas.js
+        pushTarget('release', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.js
+        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.js
+        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+    } else if (NODE_ENV === 'development') {
+        // Outputs: dist/iframe/playcanvas.dbg.js
+        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+    } else if (NODE_ENV === 'profiler') {
+        // Outputs: dist/iframe/playcanvas.prf.js
+        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+    } else {
+        console.warn("NODE_ENV is neither production, development nor profiler.");
+    }
+}
+
+export default targets;

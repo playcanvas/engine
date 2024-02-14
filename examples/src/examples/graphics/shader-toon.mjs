@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
@@ -26,17 +26,12 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler
     ];
 
@@ -132,7 +127,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class ShaderToonExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Shader Toon';
     static WEBGPU_ENABLED = true;
 
     static FILES = {

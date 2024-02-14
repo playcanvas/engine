@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 
 /**
  * @typedef {{ 'shader.vert': string, 'shader.frag': string }} Files
- * @typedef {import('../../options.mjs').ExampleOptions<Files>} Options
+ * @typedef {import('../../app/example.mjs').ExampleOptions<Files>} Options
  * @param {Options} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
@@ -27,13 +27,10 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
     createOptions.touch = new pc.TouchDevice(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler
     ];
 
@@ -180,7 +177,6 @@ async function example({ canvas, deviceType, files, assetPath, glslangPath, twgs
 
 export class GrabPassExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Grab Pass';
     static WEBGPU_ENABLED = true;
 
     static FILES = {
