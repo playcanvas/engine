@@ -4,10 +4,14 @@ import { getQueryParams } from 'utils';
 const params = getQueryParams(window.top?.location.href ?? '');
 
 export default class MiniStats {
+    /** @type {import('playcanvas-extras').MiniStats | null} */
     static instance = null;
 
+    /**
+     * @param {import('playcanvas').AppBase} app - The app instance.
+     * @param {any} state - The enabled state.
+     */
     static enable(app, state) {
-        // examples/misc/mini-stats.mjs creates its own instance of ministats, prevent two mini-stats here
         if (config.NO_MINISTATS) {
             return;
         }
@@ -28,10 +32,9 @@ export default class MiniStats {
             if (!MiniStats.instance) {
                 MiniStats.instance = new pcx.MiniStats(app);
             }
-        } else {
-            if (!MiniStats.instance) {
-                return;
-            }
+        }
+        if (!MiniStats.instance) {
+            return;
         }
         MiniStats.instance.enabled = state;
     }
