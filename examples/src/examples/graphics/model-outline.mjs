@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath }) {
@@ -21,17 +21,12 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.ScriptHandler
     ];
 
@@ -188,7 +183,6 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
 
 export class ModelOutlineExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Model Outline';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

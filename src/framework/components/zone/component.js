@@ -45,7 +45,7 @@ class ZoneComponent extends Component {
     /**
      * Holds all entities added this frame to the zone.
      *
-     * @type {Entity[]}
+     * @type {import('../../entity.js').Entity[]}
      * @private
      */
     _frameAdded = [];
@@ -53,92 +53,69 @@ class ZoneComponent extends Component {
     /**
      * Holds all entities removed this frame from the zone.
      *
-     * @type {Entity[]}
+     * @type {import('../../entity.js').Entity[]}
      * @private
      */
     _frameRemoved = [];
 
     /**
-     * Create a new RigidBodyComponent instance.
+     * Fired when the zone component is enabled. This event does not take into account the enabled
+     * state of the entity or any of its ancestors.
+     *
+     * @event
+     * @example
+     * entity.zone.on('enable', () => {
+     *     console.log(`Zone component of entity '${entity.name}' has been enabled`);
+     * });
+     */
+    static EVENT_ENABLE = 'enable';
+
+    /**
+     * Fired when the zone component is disabled. This event does not take into account the enabled
+     * state of the entity or any of its ancestors.
+     *
+     * @event
+     * @example
+     * entity.zone.on('disable', () => {
+     *     console.log(`Zone component of entity '${entity.name}' has been disabled`);
+     * });
+     */
+    static EVENT_DISABLE = 'disable';
+
+    /**
+     * Fired when the enabled state of the zone component changes. This event does not take into
+     * account the enabled state of the entity or any of its ancestors.
+     *
+     * @event
+     * @example
+     * entity.zone.on('state', (enabled) => {
+     *     console.log(`Zone component of entity '${entity.name}' has been ${enabled ? 'enabled' : 'disabled'}`);
+     * });
+     */
+    static EVENT_STATE = 'state';
+
+    /**
+     * Fired when a zone component is removed from an entity.
+     *
+     * @event
+     * @example
+     * entity.zone.on('remove', () => {
+     *     console.log(`Zone component removed from entity '${entity.name}'`);
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Create a new ZoneComponent instance.
      *
      * @param {import('./system.js').ZoneComponentSystem} system - The ComponentSystem that
-     * created this component.
-     * @param {import('../../entity.js').Entity} entity - The entity this component is attached to.
+     * created this Component.
+     * @param {import('../../entity.js').Entity} entity - The Entity that this Component is
+     * attached to.
      */
-    // eslint-disable-next-line no-useless-constructor
     constructor(system, entity) {
         super(system, entity);
     }
-
-    /**
-     * Fired when Component becomes enabled. Note: this event does not take in account entity or
-     * any of its parent enabled state.
-     *
-     * @event ZoneComponent#enable
-     * @example
-     * entity.zone.on('enable', function () {
-     *     // component is enabled
-     * });
-     * @ignore
-     */
-
-    /**
-     * Fired when Component becomes disabled. Note: this event does not take in account entity or
-     * any of its parent enabled state.
-     *
-     * @event ZoneComponent#disable
-     * @example
-     * entity.zone.on('disable', function () {
-     *     // component is disabled
-     * });
-     * @ignore
-     */
-
-    /**
-     * Fired when Component changes state to enabled or disabled. Note: this event does not take in
-     * account entity or any of its parent enabled state.
-     *
-     * @event ZoneComponent#state
-     * @param {boolean} enabled - True if now enabled, False if disabled.
-     * @example
-     * entity.zone.on('state', function (enabled) {
-     *     // component changed state
-     * });
-     * @ignore
-     */
-
-    /**
-     * Fired when a zone is removed from an entity.
-     *
-     * @event ZoneComponent#remove
-     * @example
-     * entity.zone.on('remove', function () {
-     *     // zone has been removed from an entity
-     * });
-     * @ignore
-     */
-
-    /**
-     * Fired after an entity enters the zone.
-     *
-     * @event ZoneComponent#entityEnter
-     * @param {import('../../entity').Entity} entity - The entity entering the zone.
-     * @example
-     * entity.zone.on('entityEnter', function (entity) {
-     *     // entity entered the zone
-     * });
-     */
-
-    /**
-     * Fired after an entity leaves the zone.
-     *
-     * @event ZoneComponent#entityLeave
-     * @param {import('../../entity').Entity} entity - The entity leaving the zone.
-     * @example
-     * entity.zone.on('entityLeave', function (entity) {
-     *     // entity left the zone
-     * });
-     */
 
     /**
      * Toggle life cycle listeners for this component.

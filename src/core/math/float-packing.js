@@ -9,7 +9,7 @@ const int32View = new Int32Array(floatView.buffer);
  * Utility static class providing functionality to pack float values to various storage
  * representations.
  *
- * @ignore
+ * @category Math
  */
 class FloatPacking {
     /**
@@ -71,6 +71,8 @@ class FloatPacking {
      * @param {Uint8ClampedArray} array - The array to store the packed value in.
      * @param {number} offset - The start offset in the array to store the packed value at.
      * @param {number} numBytes - The number of bytes to pack the value to.
+     *
+     * @ignore
      */
     static float2Bytes(value, array, offset, numBytes) {
         const enc1 = (255.0 * value) % 1;
@@ -101,6 +103,8 @@ class FloatPacking {
      * @param {number} min - Range minimum.
      * @param {number} max - Range maximum.
      * @param {number} numBytes - The number of bytes to pack the value to.
+     *
+     * @ignore
      */
     static float2BytesRange(value, array, offset, min, max, numBytes) {
         // #if _DEBUG
@@ -124,6 +128,8 @@ class FloatPacking {
      * @param {Uint8ClampedArray} array - The array to store the packed value in.
      * @param {number} offset - The start offset in the array to store the packed value at.
      * @param {number} numBytes - The number of bytes to pack the value to.
+     *
+     * @ignore
      */
     static float2MantissaExponent(value, array, offset, numBytes) {
         // exponent is increased by one, so that 2^exponent is larger than the value

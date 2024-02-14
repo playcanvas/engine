@@ -35,6 +35,28 @@ if (platform.browser && window.XRHand) {
  */
 class XrHand extends EventHandler {
     /**
+     * Fired when tracking becomes available.
+     *
+     * @event
+     * @example
+     * hand.on('tracking', () => {
+     *     console.log('Hand tracking is available');
+     * });
+     */
+    static EVENT_TRACKING = 'tracking';
+
+    /**
+     * Fired when tracking is lost.
+     *
+     * @event
+     * @example
+     * hand.on('trackinglost', () => {
+     *     console.log('Hand tracking is lost');
+     * });
+     */
+    static EVENT_TRACKINGLOST = 'trackinglost';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -124,18 +146,6 @@ class XrHand extends EventHandler {
             }
         }
     }
-
-    /**
-     * Fired when tracking becomes available.
-     *
-     * @event XrHand#tracking
-     */
-
-    /**
-     * Fired when tracking is lost.
-     *
-     * @event XrHand#trackinglost
-     */
 
     /**
      * @param {*} frame - XRFrame from requestAnimationFrame callback.
@@ -247,9 +257,9 @@ class XrHand extends EventHandler {
     }
 
     /**
-     * Returns joint by XRHand id from list in specs: https://immersive-web.github.io/webxr-hand-input/.
+     * Returns joint by its XRHand id.
      *
-     * @param {string} id - Id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/.
+     * @param {string} id - Id of a joint based on specs ID's in XRHand: https://immersive-web.github.io/webxr-hand-input/#skeleton-joints-section.
      * @returns {XrJoint|null} Joint or null if not available.
      */
     getJointById(id) {

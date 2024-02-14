@@ -30,6 +30,7 @@ let _createdLoadingScreen = false;
  * PlayCanvas loading screen.
  *
  * @namespace
+ * @category Script
  */
 const script = {
     // set during script load to be used for initializing script
@@ -60,7 +61,7 @@ const script = {
      * });
      * @ignore
      */
-    create: function (name, callback) {
+    create(name, callback) {
         if (!_legacy)
             return;
 
@@ -131,7 +132,7 @@ const script = {
      * });
      * @ignore
      */
-    attribute: function (name, type, defaultValue, options) {
+    attribute(name, type, defaultValue, options) {
         // only works when parsing the script...
     },
 
@@ -153,7 +154,7 @@ const script = {
      *     app.on("start", hideSplashScreen);
      * });
      */
-    createLoadingScreen: function (callback) {
+    createLoadingScreen(callback) {
         if (_createdLoadingScreen)
             return;
 

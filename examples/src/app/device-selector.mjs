@@ -6,17 +6,18 @@ import {
 import { Component } from 'react';
 import { jsx } from './jsx.mjs';
 import { SelectInput } from '@playcanvas/pcui/react';
+import './events.js';
 
 const deviceTypeNames = {
     [DEVICETYPE_WEBGL1]: 'WebGL 1',
     [DEVICETYPE_WEBGL2]: 'WebGL 2',
     [DEVICETYPE_WEBGPU]: 'WebGPU',
-    [DEVICETYPE_NULL  ]: 'Null',
+    [DEVICETYPE_NULL]: 'Null'
 };
 
 /**
  * @typedef {object} Props
- * @property {Function} onSelect
+ * @property {Function} onSelect - On select handler.
  */
 
 /**
@@ -33,15 +34,15 @@ class DeviceSelector extends TypedComponent {
     state = {
         fallbackOrder: null,
         disabledOptions: null,
-        activeDevice: this.preferredGraphicsDevice,
+        activeDevice: this.preferredGraphicsDevice
     };
 
     /**
-     * @param {Props} props 
+     * @param {Props} props - Component properties.
      */
     constructor(props) {
         super(props);
-        window.addEventListener('updateActiveDevice', event => {
+        window.addEventListener('updateActiveDevice', (/** @type {UpdateActiveDeviceEvent} */ event) => {
             const activeDevice = event.detail;
             this.onSetActiveGraphicsDevice(activeDevice);
         });
@@ -61,10 +62,12 @@ class DeviceSelector extends TypedComponent {
      */
     set preferredGraphicsDevice(value) {
         localStorage.setItem('preferredGraphicsDevice', value);
+        // @ts-ignore
         window.preferredGraphicsDevice = value;
     }
 
     get preferredGraphicsDevice() {
+        // @ts-ignore
         return window.preferredGraphicsDevice;
     }
 
@@ -106,14 +109,14 @@ class DeviceSelector extends TypedComponent {
      */
     updateMiniStats(value) {
         const disableMiniStats = value === DEVICETYPE_WEBGPU || value === DEVICETYPE_NULL;
-        const miniStatsEnabled = document.getElementById('showMiniStatsButton').ui.class.contains('selected');
+        const miniStatsEnabled = document.getElementById('showMiniStatsButton')?.ui.class.contains('selected');
         if (disableMiniStats && miniStatsEnabled) {
-            document.getElementById('showMiniStatsButton').ui.class.remove('selected');
+            document.getElementById('showMiniStatsButton')?.ui.class.remove('selected');
         }
     }
 
     /**
-     * @param {string} value 
+     * @param {string} value - Is graphics device active
      */
     onSetActiveGraphicsDevice(value) {
         if (!this.preferredGraphicsDevice) {
@@ -124,7 +127,7 @@ class DeviceSelector extends TypedComponent {
     }
 
     /**
-     * @param {string} value - The newly picked graphics device. 
+     * @param {string} value - The newly picked graphics device.
      */
     onSetPreferredGraphicsDevice(value) {
         this.mergeState({ disabledOptions: null, activeDevice: value });
@@ -141,14 +144,14 @@ class DeviceSelector extends TypedComponent {
                 { t: deviceTypeNames[DEVICETYPE_WEBGL1], v: DEVICETYPE_WEBGL1 },
                 { t: deviceTypeNames[DEVICETYPE_WEBGL2], v: DEVICETYPE_WEBGL2 },
                 { t: deviceTypeNames[DEVICETYPE_WEBGPU], v: DEVICETYPE_WEBGPU },
-                { t: deviceTypeNames[DEVICETYPE_NULL  ], v: DEVICETYPE_NULL   },
+                { t: deviceTypeNames[DEVICETYPE_NULL], v: DEVICETYPE_NULL }
             ],
             value: activeDevice,
             fallbackOrder,
             disabledOptions,
             onSelect: this.onSetPreferredGraphicsDevice.bind(this),
             prefix: 'Active Device: '
-        })
+        });
     }
 }
 

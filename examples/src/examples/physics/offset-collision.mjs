@@ -1,8 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @typedef {import('../../options.mjs').ExampleOptions} ExampleOptions
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, twgslPath }) {
@@ -32,31 +31,19 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
     createOptions.keyboard = new pc.Keyboard(document.body);
 
     createOptions.componentSystems = [
-        // @ts-ignore
         pc.RenderComponentSystem,
-        // @ts-ignore
         pc.CameraComponentSystem,
-        // @ts-ignore
         pc.LightComponentSystem,
-        // @ts-ignore
         pc.ScriptComponentSystem,
-        // @ts-ignore
         pc.CollisionComponentSystem,
-        // @ts-ignore
         pc.RigidBodyComponentSystem,
-        // @ts-ignore
         pc.AnimComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.AnimClipHandler,
-        // @ts-ignore
         pc.AnimStateGraphHandler
     ];
 
@@ -213,6 +200,7 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
         const ball = new pc.Entity();
         ball.tags.add('shape');
         ball.setLocalScale(0.4, 0.4, 0.4);
+        ball.translate(0, -1, 0);
         ball.addComponent("render", {
             type: "sphere"
         });
@@ -273,7 +261,6 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
 
 class OffsetCollisionExample {
     static CATEGORY = 'Physics';
-    static NAME = 'Offset Collision';
     static WEBGPU_ENABLED = true;
     static example = example;
 }

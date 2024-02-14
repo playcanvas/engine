@@ -11,7 +11,7 @@ const events = {
      * pc.events.attach(obj);
      * @ignore
      */
-    attach: function (target) {
+    attach(target) {
         const ev = events;
         target._addCallback = ev._addCallback;
         target.on = ev.on;

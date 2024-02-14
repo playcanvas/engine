@@ -1,4 +1,3 @@
-import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
@@ -18,7 +17,13 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_ITEXTURE2D, UNIFORMTYPE_UTEXTURE2D,
+    UNIFORMTYPE_ITEXTURECUBE, UNIFORMTYPE_UTEXTURECUBE, UNIFORMTYPE_ITEXTURE3D, UNIFORMTYPE_UTEXTURE3D, UNIFORMTYPE_ITEXTURE2D_ARRAY,
+    UNIFORMTYPE_UTEXTURE2D_ARRAY, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY,
+    UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY,
+    UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation,
+    UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
     DEVICETYPE_WEBGL2,
     DEVICETYPE_WEBGL1
@@ -353,6 +358,20 @@ class WebglGraphicsDevice extends GraphicsDevice {
             Debug.log("Antialiasing has been turned off due to rendering issues on AppleWebKit 15.4");
         }
 
+        // #5856 - turn off antialiasing on Windows Firefox
+        if (platform.browserName === 'firefox' && platform.name === 'windows') {
+            const ua = (typeof navigator !== 'undefined') ? navigator.userAgent : '';
+            const match = ua.match(/Firefox\/(\d+(\.\d+)*)/);
+            const firefoxVersion = match ? match[1] : null;
+            if (firefoxVersion) {
+                const version = parseFloat(firefoxVersion);
+                if (version >= 120 || version === 115) {
+                    options.antialias = false;
+                    Debug.log("Antialiasing has been turned off due to rendering issues on Windows Firefox esr115 and 120+. Current version: " + firefoxVersion);
+                }
+            }
+        }
+
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
@@ -383,8 +402,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this._deviceType = this.isWebGL2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
 
         // pixel format of the framebuffer
-        const alphaBits = gl.getParameter(gl.ALPHA_BITS);
-        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+        this.updateBackbufferFormat(null);
 
         const isChrome = platform.browserName === 'chrome';
         const isSafari = platform.browserName === 'safari';
@@ -395,11 +413,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
-
-        // init polyfill for VAOs under webgl1
-        if (!this.isWebGL2) {
-            setupVertexArrayObject(gl);
-        }
 
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
@@ -526,7 +539,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.UNSIGNED_SHORT,
             gl.INT,
             gl.UNSIGNED_INT,
-            gl.FLOAT
+            gl.FLOAT,
+            gl.HALF_FLOAT
         ];
 
         this.pcUniformType = {};
@@ -547,10 +561,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.pcUniformType[gl.FLOAT_MAT4]   = UNIFORMTYPE_MAT4;
         this.pcUniformType[gl.SAMPLER_2D]   = UNIFORMTYPE_TEXTURE2D;
         this.pcUniformType[gl.SAMPLER_CUBE] = UNIFORMTYPE_TEXTURECUBE;
+        this.pcUniformType[gl.UNSIGNED_INT]         = UNIFORMTYPE_UINT;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC2]    = UNIFORMTYPE_UVEC2;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC3]    = UNIFORMTYPE_UVEC3;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC4]    = UNIFORMTYPE_UVEC4;
+
         if (this.isWebGL2) {
             this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = UNIFORMTYPE_TEXTURE2D_SHADOW;
             this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = UNIFORMTYPE_TEXTURECUBE_SHADOW;
+            this.pcUniformType[gl.SAMPLER_2D_ARRAY]    = UNIFORMTYPE_TEXTURE2D_ARRAY;
             this.pcUniformType[gl.SAMPLER_3D]          = UNIFORMTYPE_TEXTURE3D;
+
+            this.pcUniformType[gl.INT_SAMPLER_2D]           = UNIFORMTYPE_ITEXTURE2D;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURE2D;
+
+            this.pcUniformType[gl.INT_SAMPLER_CUBE]         = UNIFORMTYPE_ITEXTURECUBE;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURECUBE;
+
+            this.pcUniformType[gl.INT_SAMPLER_3D]           = UNIFORMTYPE_ITEXTURE3D;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_3D]  = UNIFORMTYPE_UTEXTURE3D;
+
+            this.pcUniformType[gl.INT_SAMPLER_2D_ARRAY]     = UNIFORMTYPE_ITEXTURE2D_ARRAY;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D_ARRAY] = UNIFORMTYPE_UTEXTURE2D_ARRAY;
         }
 
         this.targetToSlot = {};
@@ -672,6 +704,85 @@ class WebglGraphicsDevice extends GraphicsDevice {
             gl.uniform4fv(uniform.locationId, value);
         };
 
+        this.commitFunction[UNIFORMTYPE_UINT] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1ui(uniform.locationId, value);
+                uniform.value = value;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC2]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC3]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC4] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            scopeW = value[3];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+                gl.uniform4uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+                uniformValue[3] = scopeW;
+            }
+        };
+
+        this.commitFunction[UNIFORMTYPE_INTARRAY] = function (uniform, value) {
+            gl.uniform1iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UINTARRAY] = function (uniform, value) {
+            gl.uniform1uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BOOLARRAY] = this.commitFunction[UNIFORMTYPE_INTARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC2ARRAY]  = function (uniform, value) {
+            gl.uniform2iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC2ARRAY]  = function (uniform, value) {
+            gl.uniform2uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC2ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC3ARRAY]  = function (uniform, value) {
+            gl.uniform3iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC3ARRAY]  = function (uniform, value) {
+            gl.uniform3uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC3ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC3ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC4ARRAY]  = function (uniform, value) {
+            gl.uniform4iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC4ARRAY]  = function (uniform, value) {
+            gl.uniform4uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC4ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC4ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_MAT4ARRAY]  = function (uniform, value) {
+            gl.uniformMatrix4fv(uniform.locationId, false, value);
+        };
+
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
 
         // Calculate an estimate of the maximum number of bones that can be uploaded to the GPU
@@ -786,10 +897,24 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.backBuffer.impl.suppliedColorFramebuffer = frameBuffer;
     }
 
+    // Update framebuffer format based on the current framebuffer, as this is use to create matching multi-sampled framebuffer
+    updateBackbufferFormat(framebuffer) {
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+        const alphaBits = this.gl.getParameter(this.gl.ALPHA_BITS);
+        this.backBufferFormat = alphaBits ? PIXELFORMAT_RGBA8 : PIXELFORMAT_RGB8;
+    }
+
     updateBackbuffer() {
 
         const resolutionChanged = this.canvas.width !== this.backBufferSize.x || this.canvas.height !== this.backBufferSize.y;
         if (this._defaultFramebufferChanged || resolutionChanged) {
+
+            // if the default framebuffer changes (entering or exiting XR for example)
+            if (this._defaultFramebufferChanged) {
+                this.updateBackbufferFormat(this._defaultFramebuffer);
+            }
+
             this._defaultFramebufferChanged = false;
             this.backBufferSize.set(this.canvas.width, this.canvas.height);
 
@@ -823,14 +948,14 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
     // #if _DEBUG
     pushMarker(name) {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             window.spector.setMarker(`${label} #`);
         }
     }
 
     popMarker() {
-        if (window.spector) {
+        if (platform.browser && window.spector) {
             const label = DebugGraphics.toString();
             if (label.length)
                 window.spector.setMarker(`${label} #`);
@@ -918,11 +1043,13 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.extStandardDerivatives = true;
             this.extTextureFloat = true;
             this.extTextureHalfFloat = true;
+            this.textureHalfFloatFilterable = true;
             this.extTextureLod = true;
             this.extUintElement = true;
             this.extVertexArrayObject = true;
             this.extColorBufferFloat = this.getExtension('EXT_color_buffer_float');
             this.extDepthTexture = true;
+            this.textureRG11B10Renderable = true;
         } else {
             this.extBlendMinmax = this.getExtension("EXT_blend_minmax");
             this.extDrawBuffers = this.getExtension('WEBGL_draw_buffers');
@@ -938,7 +1065,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
             this.extStandardDerivatives = this.getExtension("OES_standard_derivatives");
             this.extTextureFloat = this.getExtension("OES_texture_float");
-            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
             this.extTextureLod = this.getExtension('EXT_shader_texture_lod');
             this.extUintElement = this.getExtension("OES_element_index_uint");
             this.extVertexArrayObject = this.getExtension("OES_vertex_array_object");
@@ -952,11 +1078,17 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
             this.extColorBufferFloat = null;
             this.extDepthTexture = gl.getExtension('WEBGL_depth_texture');
+
+            this.extTextureHalfFloat = this.getExtension("OES_texture_half_float");
+            this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+            this.textureHalfFloatFilterable = !!this.extTextureHalfFloatLinear;
         }
 
         this.extDebugRendererInfo = this.getExtension('WEBGL_debug_renderer_info');
+
         this.extTextureFloatLinear = this.getExtension("OES_texture_float_linear");
-        this.extTextureHalfFloatLinear = this.getExtension("OES_texture_half_float_linear");
+        this.textureFloatFilterable = !!this.extTextureFloatLinear;
+
         this.extFloatBlend = this.getExtension("EXT_float_blend");
         this.extTextureFilterAnisotropic = this.getExtension('EXT_texture_filter_anisotropic', 'WEBKIT_EXT_texture_filter_anisotropic');
         this.extCompressedTextureETC1 = this.getExtension('WEBGL_compressed_texture_etc1');
@@ -1073,7 +1205,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendEquation(gl.FUNC_ADD);
         gl.colorMask(true, true, true, true);
 
-        this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
 
         gl.enable(gl.CULL_FACE);
@@ -1413,23 +1544,21 @@ class WebglGraphicsDevice extends GraphicsDevice {
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
-        const rt = renderPass.renderTarget || this.backBuffer;
+        const rt = renderPass.renderTarget ?? this.backBuffer;
         this.renderTarget = rt;
         Debug.assert(rt);
 
         this.updateBegin();
 
+        // the pass always start using full size of the target
+        const { width, height } = rt;
+        this.setViewport(0, 0, width, height);
+        this.setScissor(0, 0, width, height);
+
         // clear the render target
         const colorOps = renderPass.colorOps;
         const depthStencilOps = renderPass.depthStencilOps;
         if (colorOps?.clear || depthStencilOps.clearDepth || depthStencilOps.clearStencil) {
-
-            // the pass always clears full target
-            const rt = renderPass.renderTarget;
-            const width = rt ? rt.width : this.width;
-            const height = rt ? rt.height : this.height;
-            this.setViewport(0, 0, width, height);
-            this.setScissor(0, 0, width, height);
 
             let clearFlags = 0;
             const clearOptions = {};
@@ -1868,7 +1997,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
                         locZero = true;
                     }
 
-                    gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                    if (e.asInt) {
+                        gl.vertexAttribIPointer(loc, e.numComponents, this.glType[e.dataType], e.stride, e.offset);
+                    } else {
+                        gl.vertexAttribPointer(loc, e.numComponents, this.glType[e.dataType], e.normalize, e.stride, e.offset);
+                    }
+
                     gl.enableVertexAttribArray(loc);
 
                     if (vertexBuffer.format.instancing) {
@@ -2000,10 +2134,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 // #if _DEBUG
                 const samplerName = sampler.scopeId.name;
                 if (samplerName === 'uSceneDepthMap' || samplerName === 'uDepthMap') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene depth texture is not available. Use CameraComponent.requestSceneDepthMap / enable Depth Grabpass on the Camera Component to enable it.`);
                 }
                 if (samplerName === 'uSceneColorMap' || samplerName === 'texture_grabPass') {
-                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap to enable it.`);
+                    Debug.warnOnce(`A sampler ${samplerName} is used by the shader but a scene color texture is not available. Use CameraComponent.requestSceneColorMap / enable Color Grabpass on the Camera Component to enable it.`);
                 }
                 // #endif
 
@@ -2350,37 +2484,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    /**
-     * Toggles the polygon offset render state.
-     *
-     * @param {boolean} on - True to enable polygon offset and false to disable it.
-     * @ignore
-     */
-    setDepthBias(on) {
-        if (this.depthBiasEnabled === on) return;
-
-        this.depthBiasEnabled = on;
-
-        if (on) {
-            this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
-        } else {
-            this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
-        }
-    }
-
-    /**
-     * Specifies the scale factor and units to calculate depth values. The offset is added before
-     * the depth test is performed and before the value is written into the depth buffer.
-     *
-     * @param {number} constBias - The multiplier by which an implementation-specific value is
-     * multiplied with to create a constant depth offset.
-     * @param {number} slopeBias - The scale factor for the variable depth offset for each polygon.
-     * @ignore
-     */
-    setDepthBiasValues(constBias, slopeBias) {
-        this.gl.polygonOffset(slopeBias, constBias);
-    }
-
     setStencilTest(enable) {
         if (this.stencil !== enable) {
             const gl = this.gl;
@@ -2579,6 +2682,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
                 }
             }
 
+            // depth bias
+            const { depthBias, depthBiasSlope } = depthState;
+            if (depthBias || depthBiasSlope) {
+
+                // enable bias
+                if (!this.depthBiasEnabled) {
+                    this.depthBiasEnabled = true;
+                    this.gl.enable(this.gl.POLYGON_OFFSET_FILL);
+                }
+
+                // values
+                gl.polygonOffset(depthBiasSlope, depthBias);
+
+            } else {
+
+                // disable bias
+                if (this.depthBiasEnabled) {
+                    this.depthBiasEnabled = false;
+                    this.gl.disable(this.gl.POLYGON_OFFSET_FILL);
+                }
+            }
+
             // update internal state
             currentDepthState.copy(depthState);
         }
@@ -2630,39 +2755,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
             this.attributesInvalidated = true;
         }
         return true;
-    }
-
-    /**
-     * Get a supported HDR pixel format given a set of hardware support requirements.
-     *
-     * @param {boolean} preferLargest - If true, prefer the highest precision format. Otherwise prefer the lowest precision format.
-     * @param {boolean} renderable - If true, only include pixel formats that can be used as render targets.
-     * @param {boolean} updatable - If true, only include formats that can be updated by the CPU.
-     * @param {boolean} filterable - If true, only include formats that support texture filtering.
-     *
-     * @returns {number} The HDR pixel format or null if there are none.
-     * @ignore
-     */
-    getHdrFormat(preferLargest, renderable, updatable, filterable) {
-        // Note that for WebGL2, PIXELFORMAT_RGB16F and PIXELFORMAT_RGB32F are not renderable according to this:
-        // https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
-        // For WebGL1, only PIXELFORMAT_RGBA16F and PIXELFORMAT_RGBA32F are tested for being renderable.
-        const f16Valid = this.extTextureHalfFloat &&
-            (!renderable || this.textureHalfFloatRenderable) &&
-            (!updatable || this.textureHalfFloatUpdatable) &&
-            (!filterable || this.extTextureHalfFloatLinear);
-        const f32Valid = this.extTextureFloat &&
-            (!renderable || this.textureFloatRenderable) &&
-            (!filterable || this.extTextureFloatLinear);
-
-        if (f16Valid && f32Valid) {
-            return preferLargest ? PIXELFORMAT_RGBA32F : PIXELFORMAT_RGBA16F;
-        } else if (f16Valid) {
-            return PIXELFORMAT_RGBA16F;
-        } else if (f32Valid) {
-            return PIXELFORMAT_RGBA32F;
-        } /* else */
-        return null;
     }
 
     /**

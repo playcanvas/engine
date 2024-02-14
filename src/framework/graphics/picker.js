@@ -63,8 +63,8 @@ class Picker {
      *
      * @param {number} x - The left edge of the rectangle.
      * @param {number} y - The top edge of the rectangle.
-     * @param {number} [width] - The width of the rectangle.
-     * @param {number} [height] - The height of the rectangle.
+     * @param {number} [width] - The width of the rectangle. Defaults to 1.
+     * @param {number} [height] - The height of the rectangle. Defaults to 1.
      * @returns {import('../../scene/mesh-instance.js').MeshInstance[]} An array of mesh instances
      * that are in the selection.
      * @example
@@ -74,26 +74,18 @@ class Picker {
      * // Get all models in rectangle with corners at (10,20) and (20,40)
      * const selection = picker.getSelection(10, 20, 10, 20);
      */
-    getSelection(x, y, width, height) {
+    getSelection(x, y, width = 1, height = 1) {
         const device = this.device;
 
-        if (typeof x === 'object') {
-            Debug.deprecated(`Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.`);
+        Debug.assert(typeof x !== 'object', `Picker.getSelection:param 'rect' is deprecated, use 'x, y, width, height' instead.`);
 
-            const rect = x;
-            x = rect.x;
-            y = rect.y;
-            width = rect.width;
-            height = rect.height;
-        } else {
-            y = this.renderTarget.height - (y + (height || 1));
-        }
+        y = this.renderTarget.height - (y + height);
 
         // make sure we have nice numbers to work with
         x = Math.floor(x);
         y = Math.floor(y);
-        width = Math.floor(Math.max(width || 1, 1));
-        height = Math.floor(Math.max(height || 1, 1));
+        width = Math.floor(Math.max(width, 1));
+        height = Math.floor(Math.max(height, 1));
 
         // read pixels from the render target
         device.setRenderTarget(this.renderTarget);
@@ -113,7 +105,7 @@ class Picker {
             const index = a << 24 | r << 16 | g << 8 | b;
 
             // White is 'no selection'
-            if (index !== 0xffffffff) {
+            if (index !== -1) {
                 tempSet.add(mapping.get(index));
             }
         }

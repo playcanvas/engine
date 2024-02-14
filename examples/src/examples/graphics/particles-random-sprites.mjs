@@ -1,16 +1,44 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
-async function example({ canvas, assetPath }) {
+async function example({ canvas, assetPath, deviceType, glslangPath, twgslPath }) {
 
-    const app = new pc.Application(canvas, {
-        mouse: new pc.Mouse(document.body),
-        touch: new pc.TouchDevice(document.body),
-        elementInput: new pc.ElementInput(canvas)
-    });
+    const assets = {
+        'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: assetPath + 'textures/particles-coins.png' }),
+        'particlesBonusTexture': new pc.Asset('particlesBonusTexture', 'texture', { url: assetPath + 'textures/particles-bonus.png' })
+    };
+
+    const gfxOptions = {
+        deviceTypes: [deviceType],
+        glslangUrl: glslangPath + 'glslang.js',
+        twgslUrl: twgslPath + 'twgsl.js'
+    };
+
+    const device = await pc.createGraphicsDevice(canvas, gfxOptions);
+    const createOptions = new pc.AppOptions();
+    createOptions.graphicsDevice = device;
+    createOptions.mouse = new pc.Mouse(document.body);
+    createOptions.touch = new pc.TouchDevice(document.body);
+    createOptions.elementInput = new pc.ElementInput(canvas);
+
+    createOptions.componentSystems = [
+        pc.RenderComponentSystem,
+        pc.CameraComponentSystem,
+        pc.LightComponentSystem,
+        pc.ParticleSystemComponentSystem,
+        pc.ScreenComponentSystem,
+        pc.ElementComponentSystem,
+    ];
+    createOptions.resourceHandlers = [
+        // @ts-ignore
+        pc.TextureHandler,
+    ];
+
+    const app = new pc.AppBase(canvas);
+    app.init(createOptions);
 
     // Set the canvas to fill the window and automatically change resolution to be the same as the canvas size
     app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
@@ -22,11 +50,6 @@ async function example({ canvas, assetPath }) {
     app.on('destroy', () => {
         window.removeEventListener('resize', resize);
     });
-
-    const assets = {
-        'particlesCoinsTexture': new pc.Asset('particlesCoinsTexture', 'texture', { url: assetPath + 'textures/particles-coins.png' }),
-        'particlesBonusTexture': new pc.Asset('particlesBonusTexture', 'texture', { url: assetPath + 'textures/particles-bonus.png' })
-    };
 
     const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
     assetListLoader.load(() => {
@@ -155,6 +178,5 @@ async function example({ canvas, assetPath }) {
 
 export class ParticlesRandomSpritesExample {
     static CATEGORY = 'Graphics';
-    static NAME = 'Particles: Random Sprites';
     static example = example;
 }

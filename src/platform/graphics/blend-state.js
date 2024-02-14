@@ -251,6 +251,14 @@ class BlendState {
      * @readonly
      */
     static ALPHABLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA));
+
+    /**
+     * A blend state that does simple additive blending.
+     *
+     * @type {BlendState}
+     * @readonly
+     */
+    static ADDBLEND = Object.freeze(new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE));
 }
 
 export { BlendState };
