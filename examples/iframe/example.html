@@ -16,16 +16,16 @@
         <script type="importmap">
             {
                 "imports": {
-                    "config": '@CONFIG',
-                    "utils": "./utils.mjs",
-                    "ministats": "./ministats.mjs"
+                    "@examples/config": '@CONFIG',
+                    "@examples/utils": "./utils.mjs",
+                    "@examples/ministats": "./ministats.mjs"
                 }
             }
         </script>
         <script type="module">
-            import config from 'config';
-            import { loadES5, getQueryParams, getDeviceType, fire } from 'utils';
-            import MiniStats from 'ministats';
+            import config from '@examples/config';
+            import { loadES5, getQueryParams, getDeviceType, fire } from '@examples/utils';
+            import MiniStats from '@examples/ministats';
 
             window.ready = false; // Used in indicate if UI can render Controls
 

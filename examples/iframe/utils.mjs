@@ -1,4 +1,4 @@
-import config from 'config';
+import config from '@examples/config';
 
 const params = getQueryParams(window.top?.location.href ?? '');
 

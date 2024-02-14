@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType, loadES5 } from 'utils';
+import { getDeviceType, loadES5 } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 

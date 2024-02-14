@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from 'utils';
+import { getDeviceType } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 

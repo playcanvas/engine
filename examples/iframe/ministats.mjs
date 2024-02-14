@@ -1,5 +1,5 @@
-import config from 'config';
-import { getQueryParams } from 'utils';
+import config from '@examples/config';
+import { getQueryParams } from '@examples/utils';
 
 const params = getQueryParams(window.top?.location.href ?? '');
 
