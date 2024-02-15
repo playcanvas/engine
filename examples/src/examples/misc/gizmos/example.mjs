@@ -314,7 +314,7 @@ camera.camera.layers = camera.camera.layers.concat(gizmoLayer.id);
 const gizmoHandler = new GizmoHandler(app, camera.camera, gizmoLayer);
 gizmoHandler.switch('translate');
 gizmoHandler.add(box);
-device.canvas.focus();
+window.focus();
 
 // wrappers for control state changes
 const setType = (/** @type {string} */ value) => {
