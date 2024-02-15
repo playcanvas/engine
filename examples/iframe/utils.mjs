@@ -14,16 +14,24 @@ export function getQueryParams(url) {
 }
 
 /**
+ * @param {string} url - The URL of the file.
+ * @returns {Promise<string>} - The contents of the file.
+ */
+export async function fetchFile(url) {
+    const res = await fetch(url);
+    return res.text();
+}
+
+/**
  * @param {string} url - The URL to ES5 file.
- * @returns {Promise<Object>} - The module exports
+ * @returns {Promise<Object>} - The module exports.
  *
  * @example
  * const CORE = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/core@2.3.6/dist/dist.min.js');
  * const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.6/dist/dist.min.js');
  */
 export async function loadES5(url) {
-    const res = await fetch(url);
-    const txt = await res.text();
+    const txt = await fetchFile(url);
     const module = {
         exports: {}
     };

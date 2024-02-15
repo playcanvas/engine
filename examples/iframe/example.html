@@ -1,7 +1,7 @@
 <!-- N.B. All single quote strings starting with '@' and are in all caps denote placeholders for replacement code  -->
 <html>
     <head>
-        <link rel="stylesheet" href="./example.css">
+        <link rel="stylesheet" href="./example.css" />
         <title>'@TITLE'</title>
     </head>
     <body>
@@ -18,13 +18,15 @@
                 "imports": {
                     "@examples/config": '@CONFIG',
                     "@examples/utils": "./utils.mjs",
+                    "@examples/files": "./files.mjs",
                     "@examples/ministats": "./ministats.mjs"
                 }
             }
         </script>
         <script type="module">
             import config from '@examples/config';
-            import { loadES5, getQueryParams, getDeviceType, fire } from '@examples/utils';
+            import { fetchFile, loadES5, getQueryParams, getDeviceType, fire } from '@examples/utils';
+            import files from '@examples/files';
             import MiniStats from '@examples/ministats';
 
             window.ready = false; // Used in indicate if UI can render Controls
@@ -35,11 +37,33 @@
             let data;
             let scriptUrl;
 
-            const files = {};
-            const DESCRIPTION = config.DESCRIPTION || '';
-            const FILES = config.FILES ?? {};
-            const NO_MINISTATS = !!config.NO_MINISTATS;
-            const SHOW_DEVICE_SELECTOR = !config.NO_DEVICE_SELECTOR;
+            function start(app) {
+                if (app) {
+                    if (!app?.graphicsDevice?.canvas) {
+                        console.warn('No canvas found.');
+                        return;
+                    }
+                    MiniStats.enable(app, true);
+                }
+
+                if (!started) {
+                    // Sets code editor component files
+                    // Sets example component files (for controls + description)
+                    // Sets mini stats enabled state based on UI
+                    fire('exampleLoad', { files, description: config.DESCRIPTION || '' });
+                }
+                started = true;
+
+                // Updates controls UI
+                fire('updateFiles', { files });
+
+                if (app) {
+                    // Updates device UI
+                    fire('updateActiveDevice', { deviceType: app?.graphicsDevice?.deviceType });
+                }
+
+                allowRestart = true;
+            };
 
             async function load(files) {
                 allowRestart = false;
@@ -47,13 +71,8 @@
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload
-                    fire('exampleLoading', { showDeviceSelector: SHOW_DEVICE_SELECTOR });
+                    fire('exampleLoading', { showDeviceSelector: !config.NO_DEVICE_SELECTOR });
                 }
-
-                const args = {
-                    files
-                };
-                Object.assign(window, args);
 
                 const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
                 if (scriptUrl) {
@@ -71,40 +90,11 @@
                 }
                 window.ready = true;
 
-                const start = (app) => {
-                    if (app) {
-                        if (!app?.graphicsDevice?.canvas) {
-                            console.warn('No canvas found.');
-                            return;
-                        }
-    
-                        MiniStats.enable(app, true);
-                    }
-
-                    if (!started) { 
-                        // Sets code editor component files
-                        // Sets example component files (for controls + description)
-                        // Sets mini stats enabled state based on UI
-                        fire('exampleLoad', { files, description: DESCRIPTION });
-                    }
-                    started = true;
-
-                    // Updates controls UI
-                    fire('updateFiles', { files });
-
-                    if (app) {
-                        // Updates device UI
-                        fire('updateActiveDevice', { deviceType: app?.graphicsDevice?.deviceType });
-                    }
-
-                    allowRestart = true;
-                };
-
                 if (app) {
                     if (app.frame) {
                         start(app);
                     } else {
-                        app.once('start', () => start(app))
+                        app.once('start', () => start(app));
                     }
                 } else {
                     start(null);
@@ -128,16 +118,11 @@
                 window.ready = false;
             }
 
-            function beforeunload() {
+            function exit() {
                 if (scriptUrl) {
                     URL.revokeObjectURL(scriptUrl);
                 }
                 destroy();
-            }
-
-            async function readFile(src) {
-                const res = await fetch(src);
-                return await res.text();
             }
 
             async function main() {
@@ -147,10 +132,11 @@
                 window.top.pc = pc;
                 window.top.pcx = window.pcx;
 
-                files['example.mjs'] = await readFile('@EXAMPLE');
-                files['controls.mjs'] = await readFile('@CONTROLS');
+                files['example.mjs'] = await fetchFile('@EXAMPLE');
+                files['controls.mjs'] = await fetchFile('@CONTROLS');
 
-                Object.assign(files, FILES);
+                Object.assign(files, config.FILES ?? {});
+                window.files = files;
 
                 await load(files);
             }
@@ -159,8 +145,8 @@
             window.addEventListener('stats', (event) => MiniStats.enable(app, !!event.detail?.state));
             window.addEventListener('hotReload', hotReload);
             window.addEventListener('destroy', destroy);
-            window.addEventListener('beforeunload', beforeunload, false);
-            
+            window.addEventListener('beforeunload', exit, false);
+
             document.addEventListener('DOMContentLoaded', main);
         </script>
     </body>
