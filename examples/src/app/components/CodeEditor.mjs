@@ -140,7 +140,9 @@ class CodeEditor extends TypedComponent {
         window.editor = editor;
         monacoEditor = editor;
         // Hot reload code via Shift + Enter
-        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => iframe.fire('hotReload'));
+        editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+            iframe.fire('hotReload');
+        });
         const codePane = document.getElementById('codePane');
         if (!codePane) {
             return;
@@ -185,12 +187,6 @@ class CodeEditor extends TypedComponent {
     onChange(value) {
         const { files, selectedFile } = this.state;
         files[selectedFile] = value;
-        const event = new CustomEvent("updateFiles", {
-            detail: {
-                files
-            }
-        });
-        window.dispatchEvent(event);
     }
 
     /**
