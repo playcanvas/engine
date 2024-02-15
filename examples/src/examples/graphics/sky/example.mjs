@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,16 +7,16 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-    hdri_street: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/wide-street.hdr' }, { mipmaps: false }),
-    hdri_room: new pc.Asset('hdri', 'texture', { url: '/static/assets/hdri/empty-room.hdr' }, { mipmaps: false })
+    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
+    hdri_street: new pc.Asset('hdri', 'texture', { url: rootPath + '/static/assets/hdri/wide-street.hdr' }, { mipmaps: false }),
+    hdri_room: new pc.Asset('hdri', 'texture', { url: rootPath + '/static/assets/hdri/empty-room.hdr' }, { mipmaps: false })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

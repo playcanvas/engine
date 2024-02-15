@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -10,18 +10,18 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/flakes5n.png' }),
-    diffuse: new pc.Asset('diffuse', 'texture', { url: '/static/assets/textures/flakes5c.png' }),
-    other: new pc.Asset('other', 'texture', { url: '/static/assets/textures/flakes5o.png' })
+    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/flakes5n.png' }),
+    diffuse: new pc.Asset('diffuse', 'texture', { url: rootPath + '/static/assets/textures/flakes5c.png' }),
+    other: new pc.Asset('other', 'texture', { url: rootPath + '/static/assets/textures/flakes5o.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

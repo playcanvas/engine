@@ -2,7 +2,7 @@ import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
 import MonacoEditor, { loader } from '@monaco-editor/react';
 
-import { pcTypes } from '../assetPath.mjs';
+import { pcTypes } from '../paths.mjs';
 import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';

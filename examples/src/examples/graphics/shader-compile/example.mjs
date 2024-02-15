@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -10,22 +10,22 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 pc.Tracing.set(pc.TRACEID_SHADER_COMPILE, true);
 
 const assets = {
-    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/seaside-rocks01-normal.jpg' }),
-    gloss: new pc.Asset('gloss', 'texture', { url: '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
-    luts: new pc.Asset('luts', 'json', { url: '/static/assets/json/area-light-luts.json' }),
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-normal.jpg' }),
+    gloss: new pc.Asset('gloss', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-gloss.jpg' }),
+    luts: new pc.Asset('luts', 'json', { url: rootPath + '/static/assets/json/area-light-luts.json' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

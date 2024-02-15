@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,16 +7,16 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    skeleton: new pc.Asset('skeleton', 'json', { url: '/static/assets//spine/spineboy-pro.json' }),
-    atlas: new pc.Asset('atlas', 'text', { url: '/static/assets//spine/spineboy-pro.atlas' }),
-    texture: new pc.Asset('spineboy-pro.png', 'texture', { url: '/static/assets//spine/spineboy-pro.png' }),
-    spinescript: new pc.Asset('spinescript', 'script', { url: '/static/scripts/spine/playcanvas-spine.3.8.js' })
+    skeleton: new pc.Asset('skeleton', 'json', { url: rootPath + '/static/assets//spine/spineboy-pro.json' }),
+    atlas: new pc.Asset('atlas', 'text', { url: rootPath + '/static/assets//spine/spineboy-pro.atlas' }),
+    texture: new pc.Asset('spineboy-pro.png', 'texture', { url: rootPath + '/static/assets//spine/spineboy-pro.png' }),
+    spinescript: new pc.Asset('spinescript', 'script', { url: rootPath + '/static/scripts/spine/playcanvas-spine.3.8.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

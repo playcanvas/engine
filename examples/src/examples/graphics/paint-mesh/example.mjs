@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import files from '@examples/files';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -12,17 +12,17 @@ const assets = {
     helipad: new pc.Asset(
         'helipad.dds',
         'cubemap',
-        { url: '/static/assets/cubemaps/helipad.dds' },
+        { url: rootPath + '/static/assets/cubemaps/helipad.dds' },
         { type: pc.TEXTURETYPE_RGBM }
     ),
-    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' }),
-    decal: new pc.Asset('color', 'texture', { url: '/static/assets/textures/heart.png' })
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' }),
+    decal: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/heart.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -2,7 +2,7 @@ import { Component } from 'react';
 import { Button, Container } from '@playcanvas/pcui/react';
 
 import { jsx } from '../jsx.mjs';
-import { logo } from '../assetPath.mjs';
+import { logo } from '../paths.mjs';
 
 /**
  * @typedef {object} Props

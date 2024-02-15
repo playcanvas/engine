@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,13 +7,13 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    snowflake: new pc.Asset('snowflake', 'texture', { url: '/static/assets/textures/snowflake.png' })
+    snowflake: new pc.Asset('snowflake', 'texture', { url: rootPath + '/static/assets/textures/snowflake.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -95,7 +95,7 @@ assetListLoader.load(() => {
     entity.setLocalPosition(0, 3, 0);
 
     // load snowflake texture
-    // app.assets.loadFromUrl('/static/assets/textures/snowflake.png', 'texture', function () {
+    // app.assets.loadFromUrl(rootPath + '/static/assets/textures/snowflake.png', 'texture', function () {
     // when texture is loaded add particlesystem component to entity
     entity.addComponent('particlesystem', {
         numParticles: 100,

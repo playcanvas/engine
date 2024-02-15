@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,8 +8,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -52,9 +52,9 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    model: new pc.Asset('model', 'model', { url: '/static/assets/models/playbot/playbot.json' }),
-    runAnim: new pc.Asset('runAnim', 'animation', { url: '/static/assets/animations/playbot/playbot-run.json' }),
-    gravel: new pc.Asset('gravel', 'audio', { url: '/static/assets/sounds/footsteps.mp3' })
+    model: new pc.Asset('model', 'model', { url: rootPath + '/static/assets/models/playbot/playbot.json' }),
+    runAnim: new pc.Asset('runAnim', 'animation', { url: rootPath + '/static/assets/animations/playbot/playbot-run.json' }),
+    gravel: new pc.Asset('gravel', 'audio', { url: rootPath + '/static/assets/sounds/footsteps.mp3' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

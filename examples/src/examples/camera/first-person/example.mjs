@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,8 +8,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -45,14 +45,14 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' }),
-    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/first-person-camera.js' })
+    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/first-person-camera.js' })
 };
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: '/static/lib/ammo/ammo.js'
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {

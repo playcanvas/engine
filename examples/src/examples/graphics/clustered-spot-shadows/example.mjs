@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,22 +8,22 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const observer = data;
 const assets = {
-    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-    channels: new pc.Asset('channels', 'texture', { url: '/static/assets/textures/channels.png' }),
-    heart: new pc.Asset('heart', 'texture', { url: '/static/assets/textures/heart.png' }),
-    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    channels: new pc.Asset('channels', 'texture', { url: rootPath + '/static/assets/textures/channels.png' }),
+    heart: new pc.Asset('heart', 'texture', { url: rootPath + '/static/assets/textures/heart.png' }),
+    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

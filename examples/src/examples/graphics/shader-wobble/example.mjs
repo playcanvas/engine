@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import files from '@examples/files';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,13 +8,13 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    statue: new pc.Asset('statue', 'container', { url: '/static/assets/models/statue.glb' })
+    statue: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/statue.glb' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

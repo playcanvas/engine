@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import files from '@examples/files';
-import { getDeviceType, loadES5 } from '@examples/utils';
+import { getDeviceType, loadES5, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -14,8 +14,8 @@ const DRACO = await loadES5('https://cdn.jsdelivr.net/npm/@loaders.gl/draco@2.3.
 // Note that many additional formats are supported by the library and can be used.
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 /** @type {pc.GraphicsDevice} */
@@ -98,7 +98,7 @@ camera.translate(-20, 15, 20);
 camera.lookAt(0, 7, 0);
 app.root.addChild(camera);
 // Load the draco model, don't wait for it.
-loadModel('/static/assets/models/park_points.drc');
+loadModel(rootPath + '/static/assets/models/park_points.drc');
 // update things each frame
 let time = 0;
 app.on('update', function (dt) {

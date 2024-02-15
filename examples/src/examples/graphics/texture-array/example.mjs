@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import files from '@examples/files';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -47,19 +47,19 @@ function generateMipmaps(width, height) {
 }
 
 const assets = {
-    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: '/static/assets/textures/rocky_trail_diff_1k.jpg' }),
+    rockyTrail: new pc.Asset('rockyTrail', 'texture', { url: rootPath + '/static/assets/textures/rocky_trail_diff_1k.jpg' }),
     rockBoulder: new pc.Asset('rockBoulder', 'texture', {
-        url: '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
+        url: rootPath + '/static/assets/textures/rock_boulder_cracked_diff_1k.jpg'
     }),
-    coastSand: new pc.Asset('coastSand', 'texture', { url: '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }),
-    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }),
-    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
+    coastSand: new pc.Asset('coastSand', 'texture', { url: rootPath + '/static/assets/textures/coast_sand_rocks_02_diff_1k.jpg' }),
+    aerialRocks: new pc.Asset('aeralRocks', 'texture', { url: rootPath + '/static/assets/textures/aerial_rocks_02_diff_1k.jpg' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

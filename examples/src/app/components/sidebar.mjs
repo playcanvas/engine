@@ -5,7 +5,7 @@ import { Observer } from '@playcanvas/observer';
 
 import { exampleMetaData } from '../../../cache/metadata.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { thumbnailPath } from '../assetPath.mjs';
+import { thumbnailPath } from '../paths.mjs';
 import { jsx } from '../jsx.mjs';
 import { getOrientation } from '../utils.mjs';
 import { iframe } from '../iframe.mjs';

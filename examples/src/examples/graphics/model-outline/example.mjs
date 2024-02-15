@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,12 +7,12 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    outline: new pc.Asset('outline', 'script', { url: '/static/scripts/posteffects/posteffect-outline.js' })
+    outline: new pc.Asset('outline', 'script', { url: rootPath + '/static/scripts/posteffects/posteffect-outline.js' })
 };
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
 const createOptions = new pc.AppOptions();

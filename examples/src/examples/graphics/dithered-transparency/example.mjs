@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -10,17 +10,17 @@ const assets = {
     envAtlas: new pc.Asset(
         'env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/table-mountain-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/table-mountain-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    table: new pc.Asset('table', 'container', { url: '/static/assets/models/glass-table.glb' }),
-    script: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
+    table: new pc.Asset('table', 'container', { url: rootPath + '/static/assets/models/glass-table.glb' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

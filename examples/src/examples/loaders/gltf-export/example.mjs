@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,9 +8,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 // set up and load draco module, as the glb we load is draco compressed
 pc.WasmModule.setConfig('DracoDecoderModule', {
-    glueUrl: '/static/lib/draco/draco.wasm.js',
-    wasmUrl: '/static/lib/draco/draco.wasm.wasm',
-    fallbackUrl: '/static/lib/draco/draco.js'
+    glueUrl: rootPath + '/static/lib/draco/draco.wasm.js',
+    wasmUrl: rootPath + '/static/lib/draco/draco.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/draco/draco.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('DracoDecoderModule', () => resolve());
@@ -20,20 +20,20 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    bench: new pc.Asset('bench', 'container', { url: '/static/assets/models/bench_wooden_01.glb' }),
-    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-    board: new pc.Asset('statue', 'container', { url: '/static/assets/models/chess-board.glb' }),
-    boombox: new pc.Asset('statue', 'container', { url: '/static/assets/models/boom-box.glb' }),
-    color: new pc.Asset('color', 'texture', { url: '/static/assets/textures/seaside-rocks01-color.jpg' })
+    bench: new pc.Asset('bench', 'container', { url: rootPath + '/static/assets/models/bench_wooden_01.glb' }),
+    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
+    board: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/chess-board.glb' }),
+    boombox: new pc.Asset('statue', 'container', { url: rootPath + '/static/assets/models/boom-box.glb' }),
+    color: new pc.Asset('color', 'texture', { url: rootPath + '/static/assets/textures/seaside-rocks01-color.jpg' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

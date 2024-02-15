@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,8 +8,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -41,8 +41,8 @@ app.on('destroy', () => {
 
 app.scene.ambientLight = new pc.Color(0.2, 0.2, 0.2);
 
-const objurl = '/static/assets/models/monkey.obj';
-const scripturl = '/static/scripts/parsers/obj-model.js';
+const objurl = rootPath + '/static/assets/models/monkey.obj';
+const scripturl = rootPath + '/static/scripts/parsers/obj-model.js';
 /** @type {pc.Entity} */
 let entity;
 app.assets.loadFromUrl(scripturl, 'script', function () {

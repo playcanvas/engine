@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,25 +7,25 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    orbitCamera: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
+    orbitCamera: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    dish: new pc.Asset('dish', 'container', { url: '/static/assets/models/IridescentDishWithOlives.glb' }),
-    mosquito: new pc.Asset('mosquito', 'container', { url: '/static/assets/models/MosquitoInAmber.glb' }),
-    sheen: new pc.Asset('sheen', 'container', { url: '/static/assets/models/SheenChair.glb' }),
-    lamp: new pc.Asset('lamp', 'container', { url: '/static/assets/models/StainedGlassLamp.glb' }),
-    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
-    checkerboard: new pc.Asset('checkerboard', 'texture', { url: '/static/assets/textures/checkboard.png' })
+    dish: new pc.Asset('dish', 'container', { url: rootPath + '/static/assets/models/IridescentDishWithOlives.glb' }),
+    mosquito: new pc.Asset('mosquito', 'container', { url: rootPath + '/static/assets/models/MosquitoInAmber.glb' }),
+    sheen: new pc.Asset('sheen', 'container', { url: rootPath + '/static/assets/models/SheenChair.glb' }),
+    lamp: new pc.Asset('lamp', 'container', { url: rootPath + '/static/assets/models/StainedGlassLamp.glb' }),
+    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
+    checkerboard: new pc.Asset('checkerboard', 'texture', { url: rootPath + '/static/assets/textures/checkboard.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

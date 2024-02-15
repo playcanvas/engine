@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -9,14 +9,14 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 await import('https://cdnjs.cloudflare.com/ajax/libs/tween.js/20.0.0/tween.umd.js');
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/arial.json' }),
-    script: new pc.Asset('script', 'script', { url: '/static/scripts/animation/tween.js' })
+    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/arial.json' }),
+    script: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/animation/tween.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

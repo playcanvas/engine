@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -27,7 +28,7 @@ const message = function (msg) {
 };
 
 const assets = {
-    font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
+    font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
 };
 
 const app = new pc.Application(canvas, {

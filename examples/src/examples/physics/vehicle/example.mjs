@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,9 +7,9 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: '/static/lib/ammo/ammo.js'
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
 });
 
 await new Promise((resolve) => {
@@ -20,19 +20,19 @@ const assets = {
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     ),
-    script1: new pc.Asset('script1', 'script', { url: '/static/scripts/camera/tracking-camera.js' }),
-    script2: new pc.Asset('script2', 'script', { url: '/static/scripts/physics/render-physics.js' }),
-    script3: new pc.Asset('script3', 'script', { url: '/static/scripts/physics/action-physics-reset.js' }),
-    script4: new pc.Asset('script4', 'script', { url: '/static/scripts/physics/vehicle.js' })
+    script1: new pc.Asset('script1', 'script', { url: rootPath + '/static/scripts/camera/tracking-camera.js' }),
+    script2: new pc.Asset('script2', 'script', { url: rootPath + '/static/scripts/physics/render-physics.js' }),
+    script3: new pc.Asset('script3', 'script', { url: rootPath + '/static/scripts/physics/action-physics-reset.js' }),
+    script4: new pc.Asset('script4', 'script', { url: rootPath + '/static/scripts/physics/vehicle.js' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,29 +7,29 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 pc.WasmModule.setConfig('Ammo', {
-    glueUrl: '/static/lib/ammo/ammo.wasm.js',
-    wasmUrl: '/static/lib/ammo/ammo.wasm.wasm',
-    fallbackUrl: '/static/lib/ammo/ammo.js'
+    glueUrl: rootPath + '/static/lib/ammo/ammo.wasm.js',
+    wasmUrl: rootPath + '/static/lib/ammo/ammo.wasm.wasm',
+    fallbackUrl: rootPath + '/static/lib/ammo/ammo.js'
 });
 await new Promise((resolve) => {
     pc.WasmModule.getInstance('Ammo', () => resolve());
 });
 
 const assets = {
-    model: new pc.Asset('model', 'container', { url: '/static/assets/models/bitmoji.glb' }),
-    idleAnim: new pc.Asset('idleAnim', 'container', { url: '/static/assets/animations/bitmoji/idle.glb' }),
+    model: new pc.Asset('model', 'container', { url: rootPath + '/static/assets/models/bitmoji.glb' }),
+    idleAnim: new pc.Asset('idleAnim', 'container', { url: rootPath + '/static/assets/animations/bitmoji/idle.glb' }),
     helipad: new pc.Asset(
         'helipad-env-atlas',
         'texture',
-        { url: '/static/assets/cubemaps/helipad-env-atlas.png' },
+        { url: rootPath + '/static/assets/cubemaps/helipad-env-atlas.png' },
         { type: pc.TEXTURETYPE_RGBP, mipmaps: false }
     )
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);

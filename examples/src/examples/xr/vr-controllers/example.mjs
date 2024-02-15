@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -36,7 +37,7 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    glb: new pc.Asset('glb', 'container', { url: '/static/assets/models/vr-controller.glb' })
+    glb: new pc.Asset('glb', 'container', { url: rootPath + '/static/assets/models/vr-controller.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

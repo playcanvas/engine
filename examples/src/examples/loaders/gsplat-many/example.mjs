@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import files from '@examples/files';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -9,8 +9,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js',
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js',
 
     // disable antialiasing as gaussian splats do not benefit from it and it's expensive
     antialias: false
@@ -46,10 +46,10 @@ app.on('destroy', () => {
 });
 
 const assets = {
-    gallery: new pc.Asset('gallery', 'container', { url: '/static/assets/models/vr-gallery.glb' }),
-    guitar: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/guitar.ply' }),
-    biker: new pc.Asset('gsplat', 'gsplat', { url: '/static/assets/splats/biker.ply' }),
-    orbit: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' })
+    gallery: new pc.Asset('gallery', 'container', { url: rootPath + '/static/assets/models/vr-gallery.glb' }),
+    guitar: new pc.Asset('gsplat', 'gsplat', { url: rootPath + '/static/assets/splats/guitar.ply' }),
+    biker: new pc.Asset('gsplat', 'gsplat', { url: rootPath + '/static/assets/splats/biker.ply' }),
+    orbit: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);

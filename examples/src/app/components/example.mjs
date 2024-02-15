@@ -10,7 +10,7 @@ import { ErrorBoundary } from './ErrorBoundary.mjs';
 
 import { kebabCaseToPascalCase } from '../strings.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
-import { iframePath } from '../assetPath.mjs';
+import { iframePath } from '../paths.mjs';
 import { jsx, fragment } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { getOrientation } from '../utils.mjs';

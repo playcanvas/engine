@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -8,8 +8,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -23,7 +23,7 @@ const app = new pc.AppBase(canvas);
 app.init(createOptions);
 
 const assets = {
-    tv: new pc.Asset('tv', 'container', { url: '/static/assets/models/tv.glb' })
+    tv: new pc.Asset('tv', 'container', { url: rootPath + '/static/assets/models/tv.glb' })
 };
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
@@ -94,7 +94,7 @@ assetListLoader.load(() => {
         'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
     );
 
-    video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+    video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
     document.body.append(video);
 
     video.addEventListener('canplaythrough', function () {

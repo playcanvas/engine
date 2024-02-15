@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { rootPath } from '@examples/utils';
 
 /**
  * @param {string} deviceType - The device type.
@@ -6,7 +7,7 @@ import * as pc from 'playcanvas';
  */
 const createApp = async function (deviceType) {
     const assets = {
-        font: new pc.Asset('font', 'font', { url: '/static/assets/fonts/courier.json' })
+        font: new pc.Asset('font', 'font', { url: rootPath + '/static/assets/fonts/courier.json' })
     };
 
     const canvas = document.createElement('canvas');
@@ -17,7 +18,7 @@ const createApp = async function (deviceType) {
     let device;
     if (deviceType === 'webgpu') {
         device = new pc.WebgpuGraphicsDevice(canvas, {});
-        await device.initWebGpu('/static/lib/glslang/glslang.js', '/static/lib/twgsl/twgsl.js');
+        await device.initWebGpu(rootPath + '/static/lib/glslang/glslang.js', rootPath + '/static/lib/twgsl/twgsl.js');
     } else if (deviceType === 'webgl1' || deviceType === 'webgl2') {
         device = new pc.WebglGraphicsDevice(canvas, {
             preferWebGl2: deviceType === 'webgl2'

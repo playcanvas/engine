@@ -1,6 +1,14 @@
 import config from '@examples/config';
 
-const params = getQueryParams(window.top?.location.href ?? '');
+const href = window.top?.location.href ?? '';
+const params = getQueryParams(href);
+const url = new URL(href);
+const root = url.pathname.replace(/[^/]+\.html$/g, '');
+
+/**
+ * @type {string}
+ */
+export const rootPath = root;
 
 /**
  * @param {string} url - The URL specified.

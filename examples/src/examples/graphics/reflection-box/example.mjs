@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { getDeviceType } from '@examples/utils';
+import { getDeviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
@@ -7,15 +7,15 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 }
 
 const assets = {
-    script1: new pc.Asset('script', 'script', { url: '/static/scripts/camera/orbit-camera.js' }),
-    script2: new pc.Asset('script', 'script', { url: '/static/scripts/utils/cubemap-renderer.js' }),
-    normal: new pc.Asset('normal', 'texture', { url: '/static/assets/textures/normal-map.png' })
+    script1: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/camera/orbit-camera.js' }),
+    script2: new pc.Asset('script', 'script', { url: rootPath + '/static/scripts/utils/cubemap-renderer.js' }),
+    normal: new pc.Asset('normal', 'texture', { url: rootPath + '/static/assets/textures/normal-map.png' })
 };
 
 const gfxOptions = {
     deviceTypes: [getDeviceType()],
-    glslangUrl: '/static/lib/glslang/glslang.js',
-    twgslUrl: '/static/lib/twgsl/twgsl.js'
+    glslangUrl: rootPath + '/static/lib/glslang/glslang.js',
+    twgslUrl: rootPath + '/static/lib/twgsl/twgsl.js'
 };
 
 const device = await pc.createGraphicsDevice(canvas, gfxOptions);
@@ -149,7 +149,7 @@ assetListLoader.load(() => {
             'style',
             'display: block; width: 1px; height: 1px; position: absolute; opacity: 0; z-index: -1000; top: 0px; pointer-events: none'
         );
-        video.src = '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
+        video.src = rootPath + '/static/assets/video/SampleVideo_1280x720_1mb.mp4';
         document.body.append(video);
         video.addEventListener('canplaythrough', function () {
             videoTexture.setSource(video);
