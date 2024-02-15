@@ -95,7 +95,10 @@ class DeviceSelector extends TypedComponent {
      * @param {string} activeDevice - The active device reported from the example iframe.
      */
     setDisabledOptions(preferredDevice = 'webgpu', activeDevice) {
-        if ((preferredDevice === DEVICETYPE_WEBGL2 || preferredDevice === DEVICETYPE_WEBGPU) && activeDevice === DEVICETYPE_WEBGL1) {
+        if (
+            (preferredDevice === DEVICETYPE_WEBGL2 || preferredDevice === DEVICETYPE_WEBGPU) &&
+            activeDevice === DEVICETYPE_WEBGL1
+        ) {
             const fallbackOrder = [DEVICETYPE_WEBGPU, DEVICETYPE_WEBGL2, DEVICETYPE_WEBGL1];
             const disabledOptions = {
                 [DEVICETYPE_WEBGPU]: 'WebGPU (not supported)',

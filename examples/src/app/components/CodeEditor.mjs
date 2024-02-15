@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
-import MonacoEditor, { loader } from "@monaco-editor/react";
+import MonacoEditor, { loader } from '@monaco-editor/react';
 
 import { pcTypes } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
@@ -12,8 +12,8 @@ loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
 
 function getShowMinimap() {
     let showMinimap = true;
-    if (localStorage.getItem("showMinimap")) {
-        showMinimap = localStorage.getItem("showMinimap") === 'true';
+    if (localStorage.getItem('showMinimap')) {
+        showMinimap = localStorage.getItem('showMinimap') === 'true';
     }
     return showMinimap;
 }
@@ -22,13 +22,30 @@ function getShowMinimap() {
  * @type {Record<string, string>}
  */
 const FILE_TYPE_LANGUAGES = {
-    'json': 'json',
-    'shader': '',
-    'vert': '',
-    'frag': '',
-    'javascript': 'javascript',
-    'js': 'javascript',
-    'mjs': 'javascript'
+    json: 'json',
+    shader: '',
+    vert: '',
+    frag: '',
+    javascript: 'javascript',
+    js: 'javascript',
+    mjs: 'javascript'
+};
+
+const THEME = {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [
+        {
+            foreground: '#ffffff'
+        },
+        {
+            token: '#f1c40f',
+            foreground: '#f1c40f'
+        }
+    ],
+    colors: {
+        'editor.background': '#1d292c'
+    }
 };
 
 /**
@@ -77,10 +94,7 @@ class CodeEditor extends TypedComponent {
         this.mergeState({ files, selectedFile: 'example.mjs' });
     }
 
-    /**
-     * @param {LoadingEvent} event - The event.
-     */
-    _handleExampleLoading(event) {
+    _handleExampleLoading() {
         this.mergeState({ files: { 'example.mjs': '// reloading' } });
     }
 
@@ -104,32 +118,34 @@ class CodeEditor extends TypedComponent {
     componentDidMount() {
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('exampleLoading', this._handleExampleLoading);
-        window.addEventListener("requestedFiles", this._handleRequestedFiles);
+        window.addEventListener('requestedFiles', this._handleRequestedFiles);
         iframe.fire('requestFiles');
     }
 
     componentWillUnmount() {
-        window.removeEventListener("exampleLoad", this._handleExampleLoad);
-        window.removeEventListener("exampleLoading", this._handleExampleLoading);
-        window.removeEventListener("requestedFiles", this._handleRequestedFiles);
+        window.removeEventListener('exampleLoad', this._handleExampleLoad);
+        window.removeEventListener('exampleLoading', this._handleExampleLoading);
+        window.removeEventListener('requestedFiles', this._handleRequestedFiles);
     }
 
     /**
      * @param {import('@monaco-editor/react').Monaco} monaco - The monaco editor.
      */
     beforeMount(monaco) {
-        fetch(pcTypes).then((r) => {
-            return r.text();
-        }).then((playcanvasDefs) => {
-            monaco.languages.typescript.typescriptDefaults.addExtraLib(
-                playcanvasDefs,
-                '@playcanvas/playcanvas.d.ts'
-            );
-            monaco.languages.typescript.javascriptDefaults.addExtraLib(
-                playcanvasDefs,
-                '@playcanvas/playcanvas.d.ts'
-            );
-        });
+        fetch(pcTypes)
+            .then((r) => {
+                return r.text();
+            })
+            .then((playcanvasDefs) => {
+                monaco.languages.typescript.typescriptDefaults.addExtraLib(
+                    playcanvasDefs,
+                    '@playcanvas/playcanvas.d.ts'
+                );
+                monaco.languages.typescript.javascriptDefaults.addExtraLib(
+                    playcanvasDefs,
+                    '@playcanvas/playcanvas.d.ts'
+                );
+            });
     }
 
     /**
@@ -139,6 +155,13 @@ class CodeEditor extends TypedComponent {
         // @ts-ignore
         window.editor = editor;
         monacoEditor = editor;
+
+        // set theme
+        // @ts-ignore
+        const monaco = window.monaco;
+        monaco.editor.defineTheme('playcanvas', THEME);
+        monaco.editor.setTheme('playcanvas');
+
         // Hot reload code via Shift + Enter
         editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
             iframe.fire('hotReload');
@@ -175,7 +198,7 @@ class CodeEditor extends TypedComponent {
             contextMenuOrder: 1.5,
             run: () => {
                 const showMinimap = !getShowMinimap();
-                localStorage.setItem("showMinimap", `${showMinimap}`);
+                localStorage.setItem('showMinimap', `${showMinimap}`);
                 this.mergeState({ showMinimap });
             }
         });
@@ -259,13 +282,10 @@ class CodeEditor extends TypedComponent {
                 resizable: 'left',
                 resizeMax: 2000
             },
-            jsx(
-                "div",
-                {
-                    className: 'panel-toggle',
-                    id: 'codePane-panel-toggle'
-                }
-            ),
+            jsx('div', {
+                className: 'panel-toggle',
+                id: 'codePane-panel-toggle'
+            }),
             jsx(
                 Container,
                 {
@@ -276,25 +296,23 @@ class CodeEditor extends TypedComponent {
                     {
                         class: 'code-editor-menu-container'
                     },
-                    jsx(
-                        Button,
-                        {
-                            id: 'play-button',
-                            icon: 'E304',
-                            text: '',
-                            onClick: () => iframe.fire('hotReload')
+                    jsx(Button, {
+                        id: 'play-button',
+                        icon: 'E304',
+                        text: '',
+                        onClick: () => iframe.fire('hotReload')
+                    }),
+                    jsx(Button, {
+                        icon: 'E259',
+                        text: '',
+                        onClick: () => {
+                            const examplePath =
+                                location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
+                            window.open(
+                                `https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.mjs`
+                            );
                         }
-                    ),
-                    jsx(
-                        Button, {
-                            icon: 'E259',
-                            text: '',
-                            onClick: () => {
-                                const examplePath = location.hash === '#/' ? 'misc/hello-world' : location.hash.replace('#/', '');
-                                window.open(`https://github.com/playcanvas/engine/blob/main/examples/src/examples/${examplePath}.mjs`);
-                            }
-                        }
-                    )
+                    })
                 ),
                 jsx(
                     Container,

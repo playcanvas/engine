@@ -102,18 +102,20 @@ class Menu extends TypedComponent {
 
     render() {
         return jsx(
-            Container, {
+            Container,
+            {
                 id: 'menu'
             },
-            jsx(Container,
+            jsx(
+                Container,
                 {
                     id: 'menu-buttons'
                 },
-                jsx("img", {
+                jsx('img', {
                     id: 'playcanvas-icon',
                     src: logo,
                     onClick: () => {
-                        window.open("https://github.com/playcanvas/engine");
+                        window.open('https://github.com/playcanvas/engine');
                     }
                 }),
                 jsx(Button, {

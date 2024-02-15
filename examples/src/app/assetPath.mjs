@@ -9,11 +9,12 @@ const href = typeof location !== 'undefined' ? location.href : '';
  * @returns {string} - The path.
  */
 function getAssetPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/assets/';
     }
-    return href.substring(0, i) + "/examples/assets/";
+    return href.substring(0, i) + '/examples/assets/';
 }
 export const assetPath = getAssetPath();
 
@@ -23,11 +24,12 @@ export const assetPath = getAssetPath();
  * @returns {string} - The path.
  */
 function getPlayCanvasTypes() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/playcanvas.d.ts';
     }
-    return href.substring(0, i) + "/build/playcanvas.d.ts";
+    return href.substring(0, i) + '/build/playcanvas.d.ts';
 }
 export const pcTypes = getPlayCanvasTypes();
 
@@ -38,11 +40,12 @@ export const pcTypes = getPlayCanvasTypes();
  * @returns {string} - The path.
  */
 function getScriptsPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/scripts/';
     }
-    return href.substring(0, i) + "/scripts/";
+    return href.substring(0, i) + '/scripts/';
 }
 export const scriptsPath = getScriptsPath();
 
@@ -53,11 +56,12 @@ export const scriptsPath = getScriptsPath();
  * @returns {string} - The path.
  */
 function getIframePath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/iframe/';
     }
-    return href.substring(0, i) + "/examples/dist/iframe/";
+    return href.substring(0, i) + '/examples/dist/iframe/';
 }
 export const iframePath = getIframePath();
 
@@ -68,11 +72,12 @@ export const iframePath = getIframePath();
  * @returns {string} - The path.
  */
 function getAmmoPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/lib/ammo/';
     }
-    return href.substring(0, i) + "/examples/src/lib/ammo/";
+    return href.substring(0, i) + '/examples/src/lib/ammo/';
 }
 export const ammoPath = getAmmoPath();
 
@@ -83,11 +88,12 @@ export const ammoPath = getAmmoPath();
  * @returns {string} - The path.
  */
 function getBasisPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/lib/basis/';
     }
-    return href.substring(0, i) + "/examples/src/lib/basis/";
+    return href.substring(0, i) + '/examples/src/lib/basis/';
 }
 export const basisPath = getBasisPath();
 
@@ -98,11 +104,12 @@ export const basisPath = getBasisPath();
  * @returns {string} - The path.
  */
 function getDracoPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/lib/draco/';
     }
-    return href.substring(0, i) + "/examples/src/lib/draco/";
+    return href.substring(0, i) + '/examples/src/lib/draco/';
 }
 export const dracoPath = getDracoPath();
 
@@ -113,11 +120,12 @@ export const dracoPath = getDracoPath();
  * @returns {string} - The path.
  */
 function getGlslangPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/lib/glslang/';
     }
-    return href.substring(0, i) + "/examples/src/lib/glslang/";
+    return href.substring(0, i) + '/examples/src/lib/glslang/';
 }
 export const glslangPath = getGlslangPath();
 
@@ -128,11 +136,12 @@ export const glslangPath = getGlslangPath();
  * @returns {string} - The path.
  */
 function getTwgslPath() {
-    const i = href.indexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.indexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/static/lib/twgsl/';
     }
-    return href.substring(0, i) + "/examples/src/lib/twgsl/";
+    return href.substring(0, i) + '/examples/src/lib/twgsl/';
 }
 export const twgslPath = getTwgslPath();
 
@@ -143,11 +152,12 @@ export const twgslPath = getTwgslPath();
  * @returns {string} - The path.
  */
 function getThumbnailPath() {
-    const i = href.lastIndexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.lastIndexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return '/thumbnails/';
     }
-    return href.substring(0, i) + "/examples/dist/thumbnails/";
+    return href.substring(0, i) + '/examples/dist/thumbnails/';
 }
 export const thumbnailPath = getThumbnailPath();
 
@@ -160,10 +170,11 @@ export const thumbnailPath = getThumbnailPath();
  * @returns {string} URL of logo.
  */
 function getLogo() {
-    const i = href.lastIndexOf("/examples/");
-    if (i === -1) { // npm run serve
+    const i = href.lastIndexOf('/examples/');
+    if (i === -1) {
+        // npm run serve
         return './playcanvas-logo.png';
     }
-    return href.substring(0, i) + "/examples/src/static/playcanvas-logo.png";
+    return href.substring(0, i) + '/examples/src/static/playcanvas-logo.png';
 }
 export const logo = getLogo();

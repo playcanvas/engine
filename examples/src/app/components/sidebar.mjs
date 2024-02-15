@@ -69,7 +69,7 @@ class SideBar extends TypedComponent {
 
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
-        const sideBar = document.getElementById("sideBar");
+        const sideBar = document.getElementById('sideBar');
         if (!sideBar) {
             return;
         }
@@ -83,13 +83,13 @@ class SideBar extends TypedComponent {
         this.setupControlPanelToggleButton();
 
         // setup events
-        window.addEventListener("resize", this._onLayoutChange);
-        window.addEventListener("orientationchange", this._onLayoutChange);
+        window.addEventListener('resize', this._onLayoutChange);
+        window.addEventListener('orientationchange', this._onLayoutChange);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this._onLayoutChange);
-        window.removeEventListener("orientationchange", this._onLayoutChange);
+        window.removeEventListener('resize', this._onLayoutChange);
+        window.removeEventListener('orientationchange', this._onLayoutChange);
     }
 
     setupControlPanelToggleButton() {
@@ -128,7 +128,6 @@ class SideBar extends TypedComponent {
         }
     }
 
-
     /**
      * @param {Partial<State>} state - The partial state to update.
      */
@@ -155,8 +154,8 @@ class SideBar extends TypedComponent {
         const { defaultCategories } = this.state;
         // Turn a filter like 'mes dec' (for mesh decals) into 'mes.*dec', because the examples
         // show "MESH DECALS" but internally it's just "MeshDecals".
-        filter = filter.replace(/\s/g, ".*");
-        const reg = (filter && filter.length > 0) ? new RegExp(filter, 'i') : null;
+        filter = filter.replace(/\s/g, '.*');
+        const reg = filter && filter.length > 0 ? new RegExp(filter, 'i') : null;
         if (!reg) {
             this.mergeState({ filteredCategories: defaultCategories });
             return;
@@ -199,69 +198,71 @@ class SideBar extends TypedComponent {
             return jsx(Label, { text: 'No results' });
         }
         const { hash } = this.state;
-        return Object.keys(categories).sort((a, b) => (a > b ? 1 : -1)).map((category) => {
-            return jsx(
-                Panel,
-                {
-                    key: category,
-                    class: "categoryPanel",
-                    headerText: category.split('-').join(' ').toUpperCase(),
-                    collapsible: true,
-                    collapsed: false
-                },
-                jsx("ul",
+        return Object.keys(categories)
+            .sort((a, b) => (a > b ? 1 : -1))
+            .map((category) => {
+                return jsx(
+                    Panel,
                     {
-                        className: "category-nav"
+                        key: category,
+                        class: 'categoryPanel',
+                        headerText: category.split('-').join(' ').toUpperCase(),
+                        collapsible: true,
+                        collapsed: false
                     },
-                    Object.keys(categories[category].examples).sort((a, b) => (a > b ? 1 : -1)).map((example) => {
-                        const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
-                        const className = `nav-item ${isSelected ? 'selected' : null}`;
-                        return jsx(Link,
-                                   {
-                                       key: example,
-                                       to: `/${category}/${example}`,
-                                       onClick: this.onClickExample.bind(this)
-                                   },
-                                   jsx("div", { className: className, id: `link-${category}-${example}` },
-                                       jsx(
-                                           "img",
-                                           {
-                                               className: 'small-thumbnail',
-                                               loading: "lazy",
-                                               src: thumbnailPath + `${category}_${example}_small.webp`
-                                           }
-                                       ),
-                                       jsx("img", {
-                                           className: 'large-thumbnail',
-                                           loading: "lazy",
-                                           src: thumbnailPath + `${category}_${example}_large.webp`
-                                       }),
-                                       jsx(
-                                           "div",
-                                           {
-                                               className: 'nav-item-text'
-                                           },
-                                           example.split('-').join(' ').toUpperCase()
-                                       )
-                                   )
-                        );
-                    })
-                )
-            );
-        });
+                    jsx(
+                        'ul',
+                        {
+                            className: 'category-nav'
+                        },
+                        Object.keys(categories[category].examples)
+                            .sort((a, b) => (a > b ? 1 : -1))
+                            .map((example) => {
+                                const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
+                                const className = `nav-item ${isSelected ? 'selected' : null}`;
+                                return jsx(
+                                    Link,
+                                    {
+                                        key: example,
+                                        to: `/${category}/${example}`,
+                                        onClick: this.onClickExample.bind(this)
+                                    },
+                                    jsx(
+                                        'div',
+                                        { className: className, id: `link-${category}-${example}` },
+                                        jsx('img', {
+                                            className: 'small-thumbnail',
+                                            loading: 'lazy',
+                                            src: thumbnailPath + `${category}_${example}_small.webp`
+                                        }),
+                                        jsx('img', {
+                                            className: 'large-thumbnail',
+                                            loading: 'lazy',
+                                            src: thumbnailPath + `${category}_${example}_large.webp`
+                                        }),
+                                        jsx(
+                                            'div',
+                                            {
+                                                className: 'nav-item-text'
+                                            },
+                                            example.split('-').join(' ').toUpperCase()
+                                        )
+                                    )
+                                );
+                            })
+                    )
+                );
+            });
     }
 
     render() {
         const { observer, collapsed, orientation } = this.state;
         const panelOptions = {
-            headerText: "EXAMPLES",
+            headerText: 'EXAMPLES',
             collapsible: true,
             collapsed: false,
             id: 'sideBar',
-            class: [
-                'small-thumbnails',
-                collapsed ? 'collapsed' : null
-            ]
+            class: ['small-thumbnails', collapsed ? 'collapsed' : null]
         };
         if (orientation === 'portrait') {
             panelOptions.class = ['small-thumbnails'];
@@ -269,26 +270,26 @@ class SideBar extends TypedComponent {
         }
         return jsx(
             // @ts-ignore
-            Panel, panelOptions,
+            Panel,
+            panelOptions,
             jsx(TextInput, {
                 class: 'filter-input',
                 keyChange: true,
-                placeholder: "Filter...",
+                placeholder: 'Filter...',
                 onChange: this.onChangeFilter.bind(this)
             }),
-            jsx(LabelGroup, { text: 'Large thumbnails:' },
+            jsx(
+                LabelGroup,
+                { text: 'Large thumbnails:' },
                 jsx(BooleanInput, {
                     type: 'toggle',
                     binding: new BindingTwoWay(),
                     link: { observer, path: 'largeThumbnails' }
                 })
             ),
-            jsx(Container, { id: 'sideBar-contents' },
-                this.renderContents()
-            )
+            jsx(Container, { id: 'sideBar-contents' }, this.renderContents())
         );
     }
 }
 
 export { SideBar };
-

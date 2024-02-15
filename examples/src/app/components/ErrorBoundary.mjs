@@ -1,6 +1,6 @@
-import { Component } from "react";
+import { Component } from 'react';
 
-import { fragment, jsx } from "../jsx.mjs";
+import { fragment, jsx } from '../jsx.mjs';
 
 // eslint-disable-next-line jsdoc/require-property
 /**
@@ -44,7 +44,7 @@ class ErrorBoundary extends TypedComponent {
     }
 
     resetState() {
-        console.log("reset error");
+        console.log('reset error');
         this.setState({ hasError: false });
     }
 
@@ -53,10 +53,14 @@ class ErrorBoundary extends TypedComponent {
             // You can render any custom fallback UI
             // return <h1>Something went wrong.</h1>;
             return fragment(
-                jsx("pre", null, "Something went wrong."),
-                jsx("button", {
-                    onClick: this.resetState.bind(this)
-                }, "retry")
+                jsx('pre', null, 'Something went wrong.'),
+                jsx(
+                    'button',
+                    {
+                        onClick: this.resetState.bind(this)
+                    },
+                    'retry'
+                )
             );
         }
         return this.props.children;

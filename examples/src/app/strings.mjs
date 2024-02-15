@@ -23,7 +23,7 @@ function toKebabCase(str) {
         .replace(/([a-z])([A-Z])/g, '$1-$2')
         .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
         .toLowerCase()
-        .replace(/(\d)d/g, "-$1d");
+        .replace(/(\d)d/g, '-$1d');
 }
 
 /**
@@ -34,11 +34,7 @@ function toKebabCase(str) {
  * kebabCaseToPascalCase("user-interface"); // Outputs 'UserInterface'
  */
 function kebabCaseToPascalCase(str) {
-    return str
-        .split('-')
-        .map(capitalizeFirstLetter)
-        .join('')
-        .replace(/(\d)d/g, '$1D');
+    return str.split('-').map(capitalizeFirstLetter).join('').replace(/(\d)d/g, '$1D');
 }
 
 /**
@@ -50,7 +46,7 @@ function kebabCaseToPascalCase(str) {
 function countLeadingSpaces(str) {
     let count = 0;
     for (let i = 0; i < str.length; i++) {
-        if (str[i] === " ") {
+        if (str[i] === ' ') {
             count++;
         } else {
             break;

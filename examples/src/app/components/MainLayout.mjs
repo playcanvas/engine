@@ -39,21 +39,18 @@ class MainLayout extends TypedComponent {
         this._onLayoutChange = this._onLayoutChange.bind(this);
     }
 
-    /**
-     * @param {Event} event - The event.
-     */
-    _onLayoutChange(event) {
+    _onLayoutChange() {
         this.setState({ ...this.state, orientation: getOrientation() });
     }
 
     componentDidMount() {
-        window.addEventListener("resize", this._onLayoutChange);
-        window.addEventListener("orientationchange", this._onLayoutChange);
+        window.addEventListener('resize', this._onLayoutChange);
+        window.addEventListener('orientationchange', this._onLayoutChange);
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this._onLayoutChange);
-        window.removeEventListener("orientationchange", this._onLayoutChange);
+        window.removeEventListener('resize', this._onLayoutChange);
+        window.removeEventListener('orientationchange', this._onLayoutChange);
     }
 
     /**
@@ -66,19 +63,31 @@ class MainLayout extends TypedComponent {
     render() {
         const { orientation } = this.state;
         return jsx(
-            "div", { id: 'appInner' },
-            jsx(HashRouter, null,
-                jsx(Switch, null,
-                    jsx(Route, { exact: true, path: '/' },
-                        jsx(Redirect, { to: "/misc/hello-world" })),
-                    jsx(Route, { path: '/:category/:example' },
+            'div',
+            { id: 'appInner' },
+            jsx(
+                HashRouter,
+                null,
+                jsx(
+                    Switch,
+                    null,
+                    jsx(Route, { exact: true, path: '/' }, jsx(Redirect, { to: '/misc/hello-world' })),
+                    jsx(
+                        Route,
+                        { path: '/:category/:example' },
                         jsx(SideBar, null),
-                        jsx(Container, { id: 'main-view-wrapper' },
+                        jsx(
+                            Container,
+                            { id: 'main-view-wrapper' },
                             jsx(Menu, {
                                 setShowMiniStats: this.updateShowMiniStats.bind(this)
                             }),
-                            jsx(Container, { id: 'main-view' },
-                                jsx(ErrorBoundary, null,
+                            jsx(
+                                Container,
+                                { id: 'main-view' },
+                                jsx(
+                                    ErrorBoundary,
+                                    null,
                                     orientation === 'landscape' && jsx(CodeEditor),
                                     jsx(Example, null)
                                 )

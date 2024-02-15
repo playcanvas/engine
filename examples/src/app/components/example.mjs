@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import MonacoEditor from "@monaco-editor/react";
+import MonacoEditor from '@monaco-editor/react';
 import { withRouter } from 'react-router-dom';
 import * as PCUI from '@playcanvas/pcui';
 import * as ReactPCUI from '@playcanvas/pcui/react';
@@ -112,10 +112,8 @@ class Example extends TypedComponent {
 
     /**
      * Called for resizing and changing orientation of device.
-     *
-     * @param {Event} event - The event.
      */
-    _onLayoutChange(event) {
+    _onLayoutChange() {
         this.mergeState({ orientation: getOrientation() });
     }
 
@@ -186,7 +184,7 @@ class Example extends TypedComponent {
 
     componentDidMount() {
         // PCUI should just have a "onHeaderClick" but can't find anything
-        const controlPanel = document.getElementById("controlPanel");
+        const controlPanel = document.getElementById('controlPanel');
         if (!controlPanel) {
             return;
         }
@@ -199,9 +197,9 @@ class Example extends TypedComponent {
         controlPanelHeader.onclick = () => this.toggleCollapse();
 
         // Other events
-        window.addEventListener("resize", this._onLayoutChange);
-        window.addEventListener("requestedFiles", this._handleRequestedFiles);
-        window.addEventListener("orientationchange", this._onLayoutChange);
+        window.addEventListener('resize', this._onLayoutChange);
+        window.addEventListener('requestedFiles', this._handleRequestedFiles);
+        window.addEventListener('orientationchange', this._onLayoutChange);
         window.addEventListener('exampleLoading', this._handleExampleLoading);
         window.addEventListener('exampleLoad', this._handleExampleLoad);
         window.addEventListener('updateFiles', this._handleUpdateFiles);
@@ -209,9 +207,9 @@ class Example extends TypedComponent {
     }
 
     componentWillUnmount() {
-        window.removeEventListener("resize", this._onLayoutChange);
-        window.removeEventListener("requestedFiles", this._handleRequestedFiles);
-        window.removeEventListener("orientationchange", this._onLayoutChange);
+        window.removeEventListener('resize', this._onLayoutChange);
+        window.removeEventListener('requestedFiles', this._handleRequestedFiles);
+        window.removeEventListener('orientationchange', this._onLayoutChange);
         window.removeEventListener('exampleLoading', this._handleExampleLoading);
         window.removeEventListener('exampleLoad', this._handleExampleLoad);
         window.removeEventListener('updateFiles', this._handleUpdateFiles);
@@ -293,11 +291,11 @@ class Example extends TypedComponent {
      * @type {boolean}
      */
     get collapsed() {
-        const controlPanel = document.getElementById("controlPanel");
+        const controlPanel = document.getElementById('controlPanel');
         if (!controlPanel) {
             return false;
         }
-        const collapsed = controlPanel.classList.contains("pcui-collapsed");
+        const collapsed = controlPanel.classList.contains('pcui-collapsed');
         return collapsed;
     }
 
@@ -308,7 +306,8 @@ class Example extends TypedComponent {
     renderPortrait() {
         const { collapsed, controls, show, files, description } = this.state;
         return fragment(
-            jsx(Panel,
+            jsx(
+                Panel,
                 {
                     id: 'controlPanel',
                     class: ['mobile'],
@@ -342,31 +341,32 @@ class Example extends TypedComponent {
                             id: 'paramButton',
                             onClick: () => this.mergeState({ show: 'parameters' })
                         }),
-                        description ? jsx(Button, {
-                            text: 'DESCRIPTION',
-                            class: show === 'description' ? 'selected' : null,
-                            id: 'descButton',
-                            onClick: () => this.mergeState({ show: 'description' })
-                        }) : null
+                        description ?
+                            jsx(Button, {
+                                text: 'DESCRIPTION',
+                                class: show === 'description' ? 'selected' : null,
+                                id: 'descButton',
+                                onClick: () => this.mergeState({ show: 'description' })
+                            }) :
+                            null
                     ),
-                    show === 'parameters' && jsx(
-                        Container,
-                        {
-                            id: 'controlPanel-controls'
-                        },
-                        this.renderControls()
-                    ),
-                    show === 'code' && jsx(
-                        MonacoEditor,
-                        {
+                    show === 'parameters' &&
+                        jsx(
+                            Container,
+                            {
+                                id: 'controlPanel-controls'
+                            },
+                            this.renderControls()
+                        ),
+                    show === 'code' &&
+                        jsx(MonacoEditor, {
                             options: {
                                 readOnly: true,
                                 theme: 'vs-dark'
                             },
-                            defaultLanguage: "javascript",
+                            defaultLanguage: 'javascript',
                             value: files['example.mjs']
-                        }
-                    )
+                        })
                 )
             ),
             this.renderDescription()
@@ -376,7 +376,8 @@ class Example extends TypedComponent {
     renderLandscape() {
         const { collapsed } = this.state;
         return fragment(
-            jsx(Panel,
+            jsx(
+                Panel,
                 {
                     id: 'controlPanel',
                     class: ['landscape'],
@@ -398,11 +399,11 @@ class Example extends TypedComponent {
         return jsx(
             Container,
             {
-                id: "canvas-container"
+                id: 'canvas-container'
             },
             !exampleLoaded && jsx(Spinner, { size: 50 }),
-            jsx("iframe", {
-                id: "exampleIframe",
+            jsx('iframe', {
+                id: 'exampleIframe',
                 key: iframePath,
                 src: iframePath
             }),
