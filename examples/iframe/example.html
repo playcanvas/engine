@@ -136,7 +136,6 @@
                 files['controls.mjs'] = await fetchFile('@CONTROLS');
 
                 Object.assign(files, config.FILES ?? {});
-                window.files = files;
 
                 await load(files);
             }
