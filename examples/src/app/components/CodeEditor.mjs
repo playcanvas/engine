@@ -6,6 +6,7 @@ import { pcTypes } from '../assetPath.mjs';
 import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
+import { playcanvasTheme, glslConfig, glslLang } from '../monaco.config.mjs';
 import '../events.js';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
@@ -24,28 +25,11 @@ function getShowMinimap() {
 const FILE_TYPE_LANGUAGES = {
     json: 'json',
     shader: '',
-    vert: '',
-    frag: '',
+    vert: 'glsl',
+    frag: 'glsl',
     javascript: 'javascript',
     js: 'javascript',
     mjs: 'javascript'
-};
-
-const THEME = {
-    base: 'vs-dark',
-    inherit: true,
-    rules: [
-        {
-            foreground: '#ffffff'
-        },
-        {
-            token: '#f1c40f',
-            foreground: '#f1c40f'
-        }
-    ],
-    colors: {
-        'editor.background': '#1d292c'
-    }
 };
 
 /**
@@ -137,6 +121,7 @@ class CodeEditor extends TypedComponent {
                 return r.text();
             })
             .then((playcanvasDefs) => {
+                // set types
                 monaco.languages.typescript.typescriptDefaults.addExtraLib(
                     playcanvasDefs,
                     '@playcanvas/playcanvas.d.ts'
@@ -145,6 +130,11 @@ class CodeEditor extends TypedComponent {
                     playcanvasDefs,
                     '@playcanvas/playcanvas.d.ts'
                 );
+
+                // set glsl language
+                monaco.languages.register({ id: 'glsl' });
+                monaco.languages.setLanguageConfiguration('glsl', glslConfig);
+                monaco.languages.setMonarchTokensProvider('glsl', glslLang);
             });
     }
 
@@ -155,11 +145,11 @@ class CodeEditor extends TypedComponent {
         // @ts-ignore
         window.editor = editor;
         monacoEditor = editor;
-
-        // set theme
         // @ts-ignore
         const monaco = window.monaco;
-        monaco.editor.defineTheme('playcanvas', THEME);
+
+        // set theme
+        monaco.editor.defineTheme('playcanvas', playcanvasTheme);
         monaco.editor.setTheme('playcanvas');
 
         // Hot reload code via Shift + Enter

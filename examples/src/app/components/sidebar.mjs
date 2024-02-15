@@ -162,12 +162,12 @@ class SideBar extends TypedComponent {
         }
         /** @type {Record<string, Record<string, object>>} */
         const updatedCategories = {};
-        Object.keys(defaultCategories).forEach((category) => {
+        Object.keys(defaultCategories).forEach(category => {
             if (category.search(reg) !== -1) {
                 updatedCategories[category] = defaultCategories[category];
                 return null;
             }
-            Object.keys(defaultCategories[category].examples).forEach((example) => {
+            Object.keys(defaultCategories[category].examples).forEach(example => {
                 // @ts-ignore
                 const title = defaultCategories[category].examples[example];
                 if (title.search(reg) !== -1) {
@@ -200,7 +200,7 @@ class SideBar extends TypedComponent {
         const { hash } = this.state;
         return Object.keys(categories)
             .sort((a, b) => (a > b ? 1 : -1))
-            .map((category) => {
+            .map(category => {
                 return jsx(
                     Panel,
                     {
@@ -217,7 +217,7 @@ class SideBar extends TypedComponent {
                         },
                         Object.keys(categories[category].examples)
                             .sort((a, b) => (a > b ? 1 : -1))
-                            .map((example) => {
+                            .map(example => {
                                 const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
                                 const className = `nav-item ${isSelected ? 'selected' : null}`;
                                 return jsx(

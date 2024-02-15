@@ -341,14 +341,14 @@ class Example extends TypedComponent {
                             id: 'paramButton',
                             onClick: () => this.mergeState({ show: 'parameters' })
                         }),
-                        description ?
-                            jsx(Button, {
-                                text: 'DESCRIPTION',
-                                class: show === 'description' ? 'selected' : null,
-                                id: 'descButton',
-                                onClick: () => this.mergeState({ show: 'description' })
-                            }) :
-                            null
+                        description
+                            ? jsx(Button, {
+                                  text: 'DESCRIPTION',
+                                  class: show === 'description' ? 'selected' : null,
+                                  id: 'descButton',
+                                  onClick: () => this.mergeState({ show: 'description' })
+                              })
+                            : null
                     ),
                     show === 'parameters' &&
                         jsx(
