@@ -85,7 +85,7 @@
     "eslint": "^8.46.0",
     "fflate": "^0.8.0",
     "fs-extra": "^10.1.0",
-    "monaco-editor": "^0.46.0",
+    "monaco-editor": "^0.33.0",
     "playcanvas": "file:..",
     "playcanvas-extras": "file:../extras",
     "prettier": "^2.8.8",
