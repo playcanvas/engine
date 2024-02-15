@@ -61,8 +61,14 @@
                 }
                 scriptUrl = URL.createObjectURL(blob);
 
-                const module = await import(scriptUrl);
-                app = module.app;
+                try {
+                    const module = await import(scriptUrl);
+                    app = module.app;
+                } catch (e) {
+                    console.log(e);
+                    allowRestart = true;
+                    return;
+                }
                 window.ready = true;
 
                 const start = (app) => {
