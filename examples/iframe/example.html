@@ -34,7 +34,7 @@
             let app;
             let started = false;
             let allowRestart = true;
-            let data;
+            let observer;
             let scriptUrl;
 
             function start(app) {
@@ -50,12 +50,12 @@
                     // Sets code editor component files
                     // Sets example component files (for controls + description)
                     // Sets mini stats enabled state based on UI
-                    fire('exampleLoad', { files, description: config.DESCRIPTION || '' });
+                    fire('exampleLoad', { observer, files, description: config.DESCRIPTION || '' });
                 }
                 started = true;
 
                 // Updates controls UI
-                fire('updateFiles', { files });
+                fire('updateFiles', { observer, files });
 
                 if (app) {
                     // Updates device UI
@@ -67,7 +67,7 @@
 
             async function load(files) {
                 allowRestart = false;
-                window.top.data = window.data = data = new observer.Observer({});
+                window.top.data = window.data = observer = new observer.Observer({});
 
                 if (!started) {
                     // just notify to clean UI, but not during hot-reload

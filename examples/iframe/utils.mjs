@@ -48,9 +48,9 @@ export async function loadES5(url) {
 }
 
 /**
- * @type {string} - The device type.
+ * @returns {string} - The device type.
  */
-export const deviceType = (function () {
+function getDeviceType() {
     if (params.deviceType) {
         console.warn("Overwriting default deviceType from URL");
         return params.deviceType;
@@ -77,7 +77,8 @@ export const deviceType = (function () {
         default:
             return 'webgl2';
     }
-})();
+}
+export const deviceType = getDeviceType();
 
 /**
  * @param {string} eventName - The name of the fired event.

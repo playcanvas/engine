@@ -28,7 +28,7 @@ import '../events.js';
 
 /**
  * @typedef {object} ControlOptions
- * @property {import('@playcanvas/observer').Observer} observer - The observer.
+ * @property {import('@playcanvas/observer').Observer} observer - The PCUI observer.
  * @property {import('@playcanvas/pcui')} PCUI - The PCUI vanilla module.
  * @property {import('@playcanvas/pcui/react')} ReactPCUI - The PCUI React module.
  * @property {import('react')} React - The PCUI React module.
@@ -47,6 +47,7 @@ import '../events.js';
  * @property {boolean} collapsed - Collapsed or not.
  * @property {boolean} exampleLoaded - Example is loaded or not.
  * @property {Function | null} controls - Controls function from example.
+ * @property {import('@playcanvas/observer').Observer | null} observer - The PCUI observer
  * @property {boolean} showDeviceSelector - Show device selector.
  * @property {'code' | 'parameters'} show - Used in case of mobile view.
  * @property {Record<string, string>} files - Files of example (controls, shaders, example itself)
@@ -67,6 +68,7 @@ class Example extends TypedComponent {
         showDeviceSelector: true,
         show: 'code',
         files: { 'example.mjs': '// loading' },
+        observer: null,
         description: ''
     };
 
@@ -133,13 +135,14 @@ class Example extends TypedComponent {
      * @param {LoadEvent} event - The event.
      */
     async _handleExampleLoad(event) {
-        const { files, description } = event.detail;
+        const { files, observer, description } = event.detail;
         const controlsSrc = files['controls.mjs'];
         if (controlsSrc) {
             const controls = await this._buildControls(controlsSrc);
             this.mergeState({
                 exampleLoaded: true,
                 controls,
+                observer,
                 files,
                 description
             });
@@ -148,6 +151,7 @@ class Example extends TypedComponent {
             this.mergeState({
                 exampleLoaded: true,
                 controls: null,
+                observer: null,
                 files,
                 description
             });
@@ -158,18 +162,20 @@ class Example extends TypedComponent {
      * @param {FilesEvent} event - The event.
      */
     async _handleUpdateFiles(event) {
-        const { files } = event.detail;
-        const controlsSrc = files['controls.mjs'] ?? 'null';
+        const { files, observer } = event.detail;
+        const controlsSrc = files['controls.mjs'] ?? '';
         if (!files['controls.mjs']) {
             this.mergeState({
                 exampleLoaded: true,
-                controls: null
+                controls: null,
+                observer: null
             });
         }
         const controls = await this._buildControls(controlsSrc);
         this.mergeState({
             exampleLoaded: true,
-            controls
+            controls,
+            observer
         });
     }
 
@@ -240,8 +246,8 @@ class Example extends TypedComponent {
     }
 
     renderControls() {
-        const { exampleLoaded, controls } = this.state;
-        const ready = exampleLoaded && controls && iframe.ready;
+        const { exampleLoaded, controls, observer } = this.state;
+        const ready = exampleLoaded && controls && observer && iframe.ready;
         if (!ready) {
             return;
         }
@@ -250,7 +256,7 @@ class Example extends TypedComponent {
             null,
             jsx(controls, {
                 // @ts-ignore
-                observer: window.data,
+                observer,
                 PCUI,
                 ReactPCUI,
                 React,

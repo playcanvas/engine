@@ -7,6 +7,7 @@
 /**
  * @typedef {CustomEvent} LoadEvent
  * @property {object} detail - The detail object.
+ * @property {Record<string, string>} detail.observer - The PCUI observer.
  * @property {Record<string, string>} detail.files - The example files.
  * @property {string} detail.description - The example description.
  */
@@ -14,6 +15,7 @@
 /**
  * @typedef {CustomEvent} FilesEvent
  * @property {object} detail - The detail object.
+ * @property {Record<string, string>} detail.observer - The PCUI observer.
  * @property {Record<string, string>} detail.files - The example files.
  */
 
