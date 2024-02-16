@@ -26,6 +26,6 @@ jobs:
         run: npm run build:publish
       
       - name: Publish to npm
-        run: npm publish --DRY-RUN
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
