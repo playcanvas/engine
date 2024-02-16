@@ -20,154 +20,16 @@
                     "@examples/utils": "./utils.mjs",
                     "@examples/observer": "./observer.mjs",
                     "@examples/files": "./files.mjs",
-                    "@examples/ministats": "./ministats.mjs"
+                    "@examples/ministats": "./ministats.mjs",
+                    "@examples/loader": "./loader.mjs"
                 }
             }
         </script>
         <script type="module">
-            import config from '@examples/config';
-            import { fetchFile, fire } from '@examples/utils';
-            import { data, refresh } from '@examples/observer';
-            import files from '@examples/files';
-            import MiniStats from '@examples/ministats';
-
-            window.ready = false; // Used in indicate if UI can render Controls
-
-            class ExampleLoader {
-                app;
-
-                started = false;
-
-                allowRestart = true;
-
-                scriptUrl;
-
-                scriptDestroy;
-
-                constructor() {
-
-                }
-
-                async main({ engineUrl, extrasUrl, exampleUrl, controlsUrl }) {
-                    await import(engineUrl);
-                    await import(extrasUrl);
-
-                    window.top.pc = pc;
-                    window.top.pcx = window.pcx;
-
-                    files['example.mjs'] = await fetchFile(exampleUrl);
-                    files['controls.mjs'] = await fetchFile(controlsUrl);
-
-                    Object.assign(files, config.FILES ?? {});
-
-                    await this.load();
-                }
-
-                start() {
-                    if (this.app) {
-                        if (!this.app?.graphicsDevice?.canvas) {
-                            console.warn('No canvas found.');
-                            return;
-                        }
-                        MiniStats.enable(this.app, true);
-                    }
-
-                    if (!this.started) {
-                        // Sets code editor component files
-                        // Sets example component files (for controls + description)
-                        // Sets mini stats enabled state based on UI
-                        fire('exampleLoad', { observer: data, files, description: config.DESCRIPTION || '' });
-                    }
-                    this.started = true;
-
-                    // Updates controls UI
-                    fire('updateFiles', { observer: data, files });
-
-                    if (this.app) {
-                        // Updates device UI
-                        fire('updateActiveDevice', { deviceType: this.app?.graphicsDevice?.deviceType });
-                    }
-
-                    this.allowRestart = true;
-                }
-
-                async load() {
-                    this.allowRestart = false;
-
-                    // refresh observer instance
-                    refresh();
-
-                    if (!this.started) {
-                        // just notify to clean UI, but not during hot-reload
-                        fire('exampleLoading', { showDeviceSelector: !config.NO_DEVICE_SELECTOR });
-                    }
-
-                    if (this.scriptUrl) {
-                        URL.revokeObjectURL(this.scriptUrl);
-                    }
-                    const blob = new Blob([files['example.mjs']], { type: 'text/javascript' });
-                    this.scriptUrl = URL.createObjectURL(blob);
-
-                    try {
-                        const module = await import(this.scriptUrl);
-                        this.app = module.app;
-
-                        // additional destroy handler in case no app provided
-                        this.scriptDestroy = module.destroy;
-                    } catch (e) {
-                        console.log(e);
-                        this.allowRestart = true;
-                        return;
-                    }
-
-                    // set ready state
-                    window.ready = true;
-
-                    if (this.app) {
-                        if (this.app.frame) {
-                            this.start();
-                        } else {
-                            this.app.once('start', () => this.start());
-                        }
-                    } else {
-                        this.start();
-                    }
-                }
-
-                setMiniStats(enabled) {
-                    MiniStats.enable(this.app, enabled);
-                }
-
-                hotReload() {
-                    if (!this.allowRestart) {
-                        console.warn('Dropping restart while still restarting');
-                        return;
-                    }
-                    this.destroy();
-                    this.load();
-                }
-
-                destroy() {
-                    MiniStats.destroy();
-                    if (this.app && this.app.graphicsDevice) {
-                        this.app.destroy();
-                    }
-                    if (this.scriptDestroy) {
-                        this.scriptDestroy();
-                        this.scriptDestroy = null;
-                    }
-                    window.ready = false;
-                }
-
-                exit() {
-                    if (this.scriptUrl) {
-                        URL.revokeObjectURL(this.scriptUrl);
-                    }
-                    this.destroy();
-                }
-            }
-
+            import { ExampleLoader } from '@examples/loader';
             const loader = new ExampleLoader();
+
+            Object.defineProperty(window, 'ready', { get: () => loader.ready });
 
             window.addEventListener('requestFiles', () => fire('requestedFiles', { files }));
             window.addEventListener('stats', (event) => loader.setMiniStats(!!event.detail?.state));
@@ -176,7 +38,7 @@
             window.addEventListener('beforeunload', () => loader.exit(), false);
 
             document.addEventListener('DOMContentLoaded', () => {
-                loader.main({
+                loader.start({
                     engineUrl: '@ENGINE',
                     extrasUrl: './playcanvas-extras.js',
                     exampleUrl: '@EXAMPLE',
