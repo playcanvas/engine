@@ -2,8 +2,8 @@ name: Publish to npm
 
 on:
   push:
-    branches:
-      - publish-on-push
+    tags:
+      - '*'
 
 jobs:
   publish-npm:
