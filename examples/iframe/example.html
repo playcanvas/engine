@@ -31,7 +31,7 @@
 
             Object.defineProperty(window, 'ready', { get: () => loader.ready });
 
-            window.addEventListener('requestFiles', () => fire('requestedFiles', { files }));
+            window.addEventListener('requestFiles', () => loader.sendRequestedFiles());
             window.addEventListener('stats', (event) => loader.setMiniStats(!!event.detail?.state));
             window.addEventListener('hotReload', () => loader.hotReload());
             window.addEventListener('destroy', () => loader.destroy());

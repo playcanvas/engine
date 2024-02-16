@@ -129,6 +129,10 @@ class ExampleLoader {
         }
     }
 
+    sendRequestedFiles() {
+        fire('requestedFiles', { files });
+    }
+
     /**
      * @param {*} enabled - The enabled state of ministats
      */
