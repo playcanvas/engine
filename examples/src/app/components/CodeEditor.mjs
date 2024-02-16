@@ -71,7 +71,7 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {LoadEvent} event - The event.
+     * @param {StateEvent} event - The event.
      */
     _handleExampleLoad(event) {
         const { files } = event.detail;
@@ -83,7 +83,7 @@ class CodeEditor extends TypedComponent {
     }
 
     /**
-     * @param {FilesEvent} event - The event.
+     * @param {StateEvent} event - The event.
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;

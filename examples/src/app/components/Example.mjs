@@ -105,7 +105,7 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {FilesEvent} event - Event.
+     * @param {StateEvent} event - Event.
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;
@@ -132,7 +132,7 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {LoadEvent} event - The event.
+     * @param {StateEvent} event - The event.
      */
     async _handleExampleLoad(event) {
         const { files, observer, description } = event.detail;
@@ -159,7 +159,7 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {FilesEvent} event - The event.
+     * @param {StateEvent} event - The event.
      */
     async _handleUpdateFiles(event) {
         const { files, observer } = event.detail;
@@ -347,14 +347,14 @@ class Example extends TypedComponent {
                             id: 'paramButton',
                             onClick: () => this.mergeState({ show: 'parameters' })
                         }),
-                        description
-                            ? jsx(Button, {
-                                  text: 'DESCRIPTION',
-                                  class: show === 'description' ? 'selected' : null,
-                                  id: 'descButton',
-                                  onClick: () => this.mergeState({ show: 'description' })
-                              })
-                            : null
+                        description ?
+                            jsx(Button, {
+                                text: 'DESCRIPTION',
+                                class: show === 'description' ? 'selected' : null,
+                                id: 'descButton',
+                                onClick: () => this.mergeState({ show: 'description' })
+                            }) :
+                            null
                     ),
                     show === 'parameters' &&
                         jsx(

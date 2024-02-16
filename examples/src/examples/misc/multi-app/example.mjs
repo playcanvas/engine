@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { data } from '@examples/observer';
 import { rootPath } from '@examples/utils';
 
 /**
@@ -119,6 +120,9 @@ const createApp = async function (deviceType) {
     return app;
 };
 
+/**
+ * @type {Record<string, pc.AppBase[]>}
+ */
 const apps = {
     webgpu: [],
     webgl2: [],
@@ -145,7 +149,12 @@ for (const deviceType in apps) {
         const app = apps[deviceType].pop();
         if (app && app.graphicsDevice) {
             const canvas = app.graphicsDevice.canvas;
-            app.destroy();
+            try {
+                app.destroy();
+            } catch (e) {
+                // FIX: Throws error when hot reloading
+                console.error(e);
+            }
             canvas.remove();
             data.set(deviceType, apps[deviceType].length);
         }
@@ -153,17 +162,20 @@ for (const deviceType in apps) {
 }
 
 // Make sure to remove all apps when the example is destroyed or hot reloaded
-const removeAll = () => {
+const destroy = () => {
     for (const deviceType in apps) {
+        let i = 0;
         while (apps[deviceType].length) {
             data.emit(`remove:${deviceType}`);
+            if (i++ > 1e3) {
+                break;
+            }
         }
     }
 };
 
-window.addEventListener('destroy', removeAll);
-window.addEventListener('hotReload', removeAll);
-
 // Start with a webgl2 and webgpu app
 data.emit('add:webgl2');
 data.emit('add:webgpu');
+
+export { destroy };
