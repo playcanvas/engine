@@ -104,7 +104,7 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {StateEvent} event - Event.
+     * @param {StateEvent} event - The event.
      */
     _handleRequestedFiles(event) {
         const { files } = event.detail;
@@ -119,7 +119,7 @@ class Example extends TypedComponent {
     }
 
     /**
-     * @param {LoadingEvent} event - The event.
+     * @param {LoadingEvent} event - The event
      */
     _handleExampleLoading(event) {
         const { showDeviceSelector } = event.detail;
