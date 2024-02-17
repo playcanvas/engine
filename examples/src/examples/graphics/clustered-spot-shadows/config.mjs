@@ -1,5 +1,5 @@
 /**
- * @type {ExampleConfig}
+ * @type {import('../../../../types.mjs').ExampleConfig}
  */
 export default {
     ENGINE: "DEBUG",

@@ -20,6 +20,7 @@ function stringify(obj) {
  * @type {{
  *      examplePath: string,
  *      controlsPath: string,
+ *      configPath: string,
  *      categoryKebab: string,
  *      categoryPascal: string,
  *      exampleNameKebab: string,
@@ -58,6 +59,7 @@ function main() {
             const folderPath = resolve(`${categoryPath}/${exampleFile}`);
             const examplePath = resolve(folderPath, 'example.mjs');
             const controlsPath = resolve(folderPath, 'controls.mjs');
+            const configPath = resolve(folderPath, 'config.mjs');
 
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
@@ -66,6 +68,7 @@ function main() {
             exampleMetaData.push({
                 examplePath,
                 controlsPath,
+                configPath,
                 categoryKebab,
                 categoryPascal,
                 exampleNameKebab,

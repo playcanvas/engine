@@ -104,7 +104,7 @@ function main() {
     }
 
     exampleMetaData.forEach((data) => {
-        const { categoryPascal, exampleNamePascal, examplePath, controlsPath } = data;
+        const { categoryPascal, exampleNamePascal, examplePath, controlsPath, configPath } = data;
         const name = `${categoryPascal}_${exampleNamePascal}`;
 
         // html files
@@ -119,7 +119,12 @@ function main() {
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
 
         // config files
-        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, `export default ${stringify(config[name] ?? {})};\n`);
+        if (fs.existsSync(configPath)) {
+            script = fs.readFileSync(configPath, 'utf-8');
+        } else {
+            script = `export default {};\n`;
+        }
+        fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
     });
 }
 main();
