@@ -11,6 +11,17 @@ import { exampleMetaData } from '../cache/metadata.mjs';
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
+
+
+const TEMPLATE_CONFIG = `export default {};\n`;
+const TEMPLATE_CONTROLS = `/**
+ * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
+ * @returns {JSX.Element} The returned JSX Element.
+ */
+export function controls({ fragment }) {
+    return fragment();
+}\n`;
+
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
@@ -99,6 +110,8 @@ async function main() {
         const examplePath = resolve(path, 'example.mjs');
         const controlsPath = resolve(path, 'controls.mjs');
         const configPath = resolve(path, 'config.mjs');
+
+        const controlsExist = fs.existsSync(controlsPath);
         const configExists = fs.existsSync(configPath);
 
         // html files
@@ -106,14 +119,16 @@ async function main() {
         const out = generateExampleFile(categoryPascal, exampleNamePascal, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
-        // js files
+        // example file
         let script = fs.readFileSync(examplePath, 'utf-8');
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.example.mjs`, patchScript(script));
-        script = fs.readFileSync(controlsPath, 'utf-8');
+
+        // controls file
+        script = controlsExist ? fs.readFileSync(controlsPath, 'utf-8') : TEMPLATE_CONTROLS;
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
 
         // config files
-        script = configExists ? fs.readFileSync(configPath, 'utf-8') : `export default {};\n`;
+        script = configExists ? fs.readFileSync(configPath, 'utf-8') : TEMPLATE_CONFIG;
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
     }));
 
