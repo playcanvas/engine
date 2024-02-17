@@ -115,7 +115,7 @@ async function main() {
         const configExists = fs.existsSync(configPath);
 
         // html files
-        const config = configExists ? await import(`file://${configPath}`) : {};
+        const config = configExists ? (await import(`file://${configPath}`)).default : {};
         const out = generateExampleFile(categoryKebab, exampleNameKebab, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
