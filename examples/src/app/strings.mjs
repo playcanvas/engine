@@ -23,18 +23,8 @@ function toKebabCase(str) {
         .replace(/([a-z])([A-Z])/g, '$1-$2')
         .replace(/([A-Z])([A-Z])([a-z])/g, '$1-$2$3')
         .toLowerCase()
-        .replace(/(\d)d/g, '-$1d');
-}
-
-/**
- * @param {string} str - The string.
- * @returns {string} - The pascal case
- *
- * @example
- * kebabCaseToPascalCase("user-interface"); // Outputs 'UserInterface'
- */
-function kebabCaseToPascalCase(str) {
-    return str.split('-').map(capitalizeFirstLetter).join('').replace(/(\d)d/g, '$1D');
+        .replace(/(\d)d/g, '-$1d')
+        .replace(/--/g, '-');
 }
 
 /**
@@ -74,4 +64,4 @@ function removeRedundantSpaces(code) {
     return prettyCode;
 }
 
-export { capitalizeFirstLetter, toKebabCase, kebabCaseToPascalCase, removeRedundantSpaces };
+export { capitalizeFirstLetter, toKebabCase, removeRedundantSpaces };

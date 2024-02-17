@@ -2,7 +2,7 @@ import fs from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
-import { toKebabCase, kebabCaseToPascalCase } from '../src/app/strings.mjs';
+import { toKebabCase } from '../src/app/strings.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
@@ -20,9 +20,7 @@ function stringify(obj) {
  * @type {{
  *      path: string,
  *      categoryKebab: string,
- *      categoryPascal: string,
- *      exampleNameKebab: string,
- *      exampleNamePascal: string
+ *      exampleNameKebab: string
  * }[]}
  */
 const exampleMetaData = [];
@@ -51,20 +49,16 @@ function main() {
         const examplesFiles = getDirFiles(categoryPath);
 
         const categoryKebab = toKebabCase(category);
-        const categoryPascal = kebabCaseToPascalCase(categoryKebab);
 
         examplesFiles.forEach((exampleFile) => {
             const path = resolve(`${categoryPath}/${exampleFile}`);
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
-            const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
 
             exampleMetaData.push({
                 path,
                 categoryKebab,
-                categoryPascal,
-                exampleNameKebab,
-                exampleNamePascal
+                exampleNameKebab
             });
         });
     });

@@ -37,12 +37,12 @@ function getDefaultExampleFiles() {
     /** @type {Record<string, { examples: Record<string, string> }>} */
     const categories = {};
     for (let i = 0; i < exampleMetaData.length; i++) {
-        const { categoryKebab, exampleNameKebab, exampleNamePascal } = exampleMetaData[i];
+        const { categoryKebab, exampleNameKebab } = exampleMetaData[i];
         if (!categories[categoryKebab]) {
             categories[categoryKebab] = { examples: {} };
         }
 
-        categories[categoryKebab].examples[exampleNameKebab] = exampleNamePascal;
+        categories[categoryKebab].examples[exampleNameKebab] = exampleNameKebab;
     }
     return categories;
 }

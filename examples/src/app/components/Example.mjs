@@ -8,7 +8,6 @@ import { Panel, Container, Button, Spinner } from '@playcanvas/pcui/react';
 import { DeviceSelector } from './DeviceSelector.mjs';
 import { ErrorBoundary } from './ErrorBoundary.mjs';
 
-import { kebabCaseToPascalCase } from '../strings.mjs';
 import { MIN_DESKTOP_WIDTH } from '../constants.mjs';
 import { iframePath } from '../paths.mjs';
 import { jsx, fragment } from '../jsx.mjs';
@@ -228,9 +227,7 @@ class Example extends TypedComponent {
     get iframePath() {
         const categoryKebab = this.props.match.params.category;
         const exampleNameKebab = this.props.match.params.example;
-        const categoryPascal = kebabCaseToPascalCase(categoryKebab);
-        const exampleNamePascal = kebabCaseToPascalCase(exampleNameKebab);
-        return `${iframePath}/${categoryPascal}_${exampleNamePascal}.html`;
+        return `${iframePath}/${categoryKebab}_${exampleNameKebab}.html`;
     }
 
     renderDeviceSelector() {

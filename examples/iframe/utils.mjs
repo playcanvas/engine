@@ -8,7 +8,7 @@ const root = url.pathname.replace(/\/[^/]+\.html$/g, '');
 /**
  * @type {string}
  */
-export const rootPath = root;
+export const rootPath = root.replace(/\/iframe/g, '');
 
 /**
  * @param {string} url - The URL specified.

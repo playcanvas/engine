@@ -42,16 +42,16 @@ function engineFor(type) {
 }
 
 /**
- * @param {string} categoryPascal - The category pascal name.
- * @param {string} exampleNamePascal - The example pascal name.
+ * @param {string} categoryKebab - The category kebab name.
+ * @param {string} exampleNameKebab - The example kebab name.
  * @param {import('../types.mjs').ExampleConfig} config - The example config.
  * @returns {string} File to write as standalone example.
  */
-function generateExampleFile(categoryPascal, exampleNamePascal, config) {
+function generateExampleFile(categoryKebab, exampleNameKebab, config) {
     let html = EXAMPLE_HTML;
 
     // title
-    html = html.replace(/'@TITLE'/g, `${categoryPascal}: ${exampleNamePascal}`);
+    html = html.replace(/'@TITLE'/g, `${categoryKebab}: ${exampleNameKebab}`);
 
     // AR Link
     const arLinkStr = config.INCLUDE_AR_LINK ? `<div style="width:100%; position:absolute; top:10px">
@@ -67,7 +67,7 @@ function generateExampleFile(categoryPascal, exampleNamePascal, config) {
     html = html.replace(/'@CANVAS'/g, config.NO_CANVAS ? '' : '<canvas id="application-canvas"></canvas>');
 
     // js files
-    const name = `${categoryPascal}_${exampleNamePascal}`;
+    const name = `${categoryKebab}_${exampleNameKebab}`;
     html = html.replace(/'@EXAMPLE'/g, JSON.stringify(`./${name}.example.mjs`));
     html = html.replace(/'@CONTROLS'/g, JSON.stringify(`./${name}.controls.mjs`));
     html = html.replace(/'@CONFIG'/g, JSON.stringify(`./${name}.config.mjs`));
@@ -104,9 +104,9 @@ async function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    await Promise.allSettled(exampleMetaData.map(async (data) => {
-        const { categoryPascal, exampleNamePascal, path } = data;
-        const name = `${categoryPascal}_${exampleNamePascal}`;
+    await Promise.all(exampleMetaData.map(async (data) => {
+        const { categoryKebab, exampleNameKebab, path } = data;
+        const name = `${categoryKebab}_${exampleNameKebab}`;
         const examplePath = resolve(path, 'example.mjs');
         const controlsPath = resolve(path, 'controls.mjs');
         const configPath = resolve(path, 'config.mjs');
@@ -115,8 +115,8 @@ async function main() {
         const configExists = fs.existsSync(configPath);
 
         // html files
-        const config = configExists ? await import(configPath) : {};
-        const out = generateExampleFile(categoryPascal, exampleNamePascal, config);
+        const config = configExists ? await import(`file://${configPath}`) : {};
+        const out = generateExampleFile(categoryKebab, exampleNameKebab, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
         // example file
