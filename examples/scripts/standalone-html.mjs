@@ -2,25 +2,15 @@
  * This script is used to generate the standalone HTML file for the iframe to view the example.
  */
 import fs from 'fs';
-import { dirname } from 'path';
+import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 import { exampleMetaData } from '../cache/metadata.mjs';
-import * as config from '../examples.config.mjs';
 
 // @ts-ignore
 const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
-
-/**
- * @param {object} obj - The object.
- * @returns {string} - The stringifiied object
- */
-function stringify(obj) {
-    return JSON.stringify(obj, null, 4).replace(/"(\w+)":/g, '$1:');
-}
-
 /**
  * Choose engine based on `Example#ENGINE`, e.g. ClusteredLightingExample picks:
  * static ENGINE = 'PERFORMANCE';
@@ -43,7 +33,7 @@ function engineFor(type) {
 /**
  * @param {string} categoryPascal - The category pascal name.
  * @param {string} exampleNamePascal - The example pascal name.
- * @param {import('../examples.config.mjs').ExampleConfig} config - The example config.
+ * @param {import('../types.mjs').ExampleConfig} config - The example config.
  * @returns {string} File to write as standalone example.
  */
 function generateExampleFile(categoryPascal, exampleNamePascal, config) {
@@ -95,7 +85,7 @@ function patchScript(script) {
     return script;
 }
 
-function main() {
+async function main() {
     if (!fs.existsSync(`${MAIN_DIR}/dist/`)) {
         fs.mkdirSync(`${MAIN_DIR}/dist/`);
     }
@@ -103,13 +93,17 @@ function main() {
         fs.mkdirSync(`${MAIN_DIR}/dist/iframe/`);
     }
 
-    exampleMetaData.forEach((data) => {
-        const { categoryPascal, exampleNamePascal, examplePath, controlsPath, configPath } = data;
+    await Promise.allSettled(exampleMetaData.map(async (data) => {
+        const { categoryPascal, exampleNamePascal, path } = data;
         const name = `${categoryPascal}_${exampleNamePascal}`;
+        const examplePath = resolve(path, 'example.mjs');
+        const controlsPath = resolve(path, 'controls.mjs');
+        const configPath = resolve(path, 'config.mjs');
+        const configExists = fs.existsSync(configPath);
 
         // html files
-        // @ts-ignore
-        const out = generateExampleFile(categoryPascal, exampleNamePascal, config[name] ?? {});
+        const config = configExists ? await import(configPath) : {};
+        const out = generateExampleFile(categoryPascal, exampleNamePascal, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
         // js files
@@ -119,12 +113,10 @@ function main() {
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.controls.mjs`, patchScript(script));
 
         // config files
-        if (fs.existsSync(configPath)) {
-            script = fs.readFileSync(configPath, 'utf-8');
-        } else {
-            script = `export default {};\n`;
-        }
+        script = configExists ? fs.readFileSync(configPath, 'utf-8') : `export default {};\n`;
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.config.mjs`, script);
-    });
+    }));
+
+    return 0;
 }
-main();
+main().then(process.exit);
