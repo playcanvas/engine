@@ -1,0 +1,8 @@
+Model Information:
+* title:	Asphalt 9 - Lamborghini Terzo Millennio (v2)
+* source:	https://sketchfab.com/3d-models/asphalt-9-lamborghini-terzo-millennio-v2-2f9b3f848d3448d6a746f9229f4e6410#download
+* author:	SDC PERFORMANCE
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.

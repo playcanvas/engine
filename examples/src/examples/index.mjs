@@ -1,5 +1,6 @@
 export * as Animation from './animation/index.mjs';
 export * as Camera from './camera/index.mjs';
+export * as Demos from './demos/index.mjs';
 export * as Graphics from './graphics/index.mjs';
 export * as Input from './input/index.mjs';
 export * as Loaders from './loaders/index.mjs';
