@@ -1,7 +1,9 @@
 import config from '@examples/config';
+
 const files = {
     'example.mjs': '',
-    'controls.mjs': ''
+    'controls.mjs': '',
+    ...config.FILES
 };
-Object.assign(files, config.FILES ?? {});
+
 export default files;
