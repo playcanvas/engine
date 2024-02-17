@@ -255,7 +255,6 @@ class Example extends TypedComponent {
             ErrorBoundary,
             null,
             jsx(controls, {
-                // @ts-ignore
                 observer,
                 PCUI,
                 ReactPCUI,
