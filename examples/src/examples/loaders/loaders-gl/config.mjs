@@ -3,7 +3,37 @@
  */
 export default {
     FILES: {
-        "shader.vert": "\n            // Attributes per vertex: position\n            attribute vec4 aPosition;\n            attribute vec4 aColor;\n            \n            uniform mat4   matrix_viewProjection;\n            uniform mat4   matrix_model;\n            \n            // Color to fragment program\n            varying vec4 outColor;\n            \n            void main(void)\n            {\n                mat4 modelViewProj = matrix_viewProjection * matrix_model;\n                gl_Position = modelViewProj * aPosition;\n            \n                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0\n                #ifndef WEBGPU\n                    gl_PointSize = 1.5;\n                #endif\n            \n                outColor = aColor;\n            }",
-        "shader.frag": "\n            precision lowp float;\n            varying vec4 outColor;\n            \n            void main(void)\n            {\n                // just output color supplied by vertex shader\n                gl_FragColor = outColor;\n            }"
+        "shader.vert": /* glsl */`
+            // Attributes per vertex: position
+            attribute vec4 aPosition;
+            attribute vec4 aColor;
+            
+            uniform mat4   matrix_viewProjection;
+            uniform mat4   matrix_model;
+            
+            // Color to fragment program
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                mat4 modelViewProj = matrix_viewProjection * matrix_model;
+                gl_Position = modelViewProj * aPosition;
+            
+                // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+                #ifndef WEBGPU
+                    gl_PointSize = 1.5;
+                #endif
+            
+                outColor = aColor;
+            }`,
+        "shader.frag": /* glsl */`
+            precision lowp float;
+            varying vec4 outColor;
+            
+            void main(void)
+            {
+                // just output color supplied by vertex shader
+                gl_FragColor = outColor;
+            }`
     }
 };

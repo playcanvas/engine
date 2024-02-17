@@ -4,7 +4,74 @@
 export default {
     WEBGPU_ENABLED: true,
     FILES: {
-        "shader.vert": "\n            attribute vec3 vertex_position;\n            attribute vec2 vertex_texCoord0;\n\n            uniform mat4 matrix_model;\n            uniform mat4 matrix_viewProjection;\n\n            varying vec2 texCoord;\n\n            void main(void)\n            {\n                // project the position\n                vec4 pos = matrix_model * vec4(vertex_position, 1.0);\n                gl_Position = matrix_viewProjection * pos;\n\n                texCoord = vertex_texCoord0;\n            }\n        ",
-        "shader.frag": "\n            // use the special uSceneColorMap texture, which is a built-in texture containing\n            // a copy of the color buffer at the point of capture, inside the Depth layer.\n            uniform sampler2D uSceneColorMap;\n\n            // normal map providing offsets\n            uniform sampler2D uOffsetMap;\n\n            // roughness map\n            uniform sampler2D uRoughnessMap;\n\n            // tint colors\n            uniform vec3 tints[4];\n\n            // engine built-in constant storing render target size in .xy and inverse size in .zw\n            uniform vec4 uScreenSize;\n\n            varying vec2 texCoord;\n\n            void main(void)\n            {\n                float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;\n\n                // sample offset texture - used to add distortion to the sampled background\n                vec2 offset = texture2D(uOffsetMap, texCoord).rg;\n                offset = 2.0 * offset - 1.0;\n\n                // offset strength\n                offset *= (0.2 + roughness) * 0.015;\n\n                // get normalized uv coordinates for canvas\n                vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;\n\n                // roughness dictates which mipmap level gets used, in 0..4 range\n                float mipmap = roughness * 5.0;\n\n                // get background pixel color with distorted offset\n                vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;\n\n                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing\n                // (note - this could be worked around by using a series of if statements in this case)\n                #ifdef GL2\n                    float tintIndex = clamp(mipmap, 0.0, 3.0);\n                    grabColor *= tints[int(tintIndex)];\n                #endif\n\n                // brighten the refracted texture a little bit\n                // brighten even more the rough parts of the glass\n                gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;\n            }\n        "
+        "shader.vert": /* glsl */`
+            attribute vec3 vertex_position;
+            attribute vec2 vertex_texCoord0;
+
+            uniform mat4 matrix_model;
+            uniform mat4 matrix_viewProjection;
+
+            varying vec2 texCoord;
+
+            void main(void)
+            {
+                // project the position
+                vec4 pos = matrix_model * vec4(vertex_position, 1.0);
+                gl_Position = matrix_viewProjection * pos;
+
+                texCoord = vertex_texCoord0;
+            }
+        `,
+        "shader.frag": /* glsl */`
+            // use the special uSceneColorMap texture, which is a built-in texture containing
+            // a copy of the color buffer at the point of capture, inside the Depth layer.
+            uniform sampler2D uSceneColorMap;
+
+            // normal map providing offsets
+            uniform sampler2D uOffsetMap;
+
+            // roughness map
+            uniform sampler2D uRoughnessMap;
+
+            // tint colors
+            uniform vec3 tints[4];
+
+            // engine built-in constant storing render target size in .xy and inverse size in .zw
+            uniform vec4 uScreenSize;
+
+            varying vec2 texCoord;
+
+            void main(void)
+            {
+                float roughness = 1.0 - texture2D(uRoughnessMap, texCoord).r;
+
+                // sample offset texture - used to add distortion to the sampled background
+                vec2 offset = texture2D(uOffsetMap, texCoord).rg;
+                offset = 2.0 * offset - 1.0;
+
+                // offset strength
+                offset *= (0.2 + roughness) * 0.015;
+
+                // get normalized uv coordinates for canvas
+                vec2 grabUv = gl_FragCoord.xy * uScreenSize.zw;
+
+                // roughness dictates which mipmap level gets used, in 0..4 range
+                float mipmap = roughness * 5.0;
+
+                // get background pixel color with distorted offset
+                vec3 grabColor = texture2DLodEXT(uSceneColorMap, grabUv + offset, mipmap).rgb;
+
+                // tint the material based on mipmap, on WebGL2 only, as WebGL1 does not support non-constant array indexing
+                // (note - this could be worked around by using a series of if statements in this case)
+                #ifdef GL2
+                    float tintIndex = clamp(mipmap, 0.0, 3.0);
+                    grabColor *= tints[int(tintIndex)];
+                #endif
+
+                // brighten the refracted texture a little bit
+                // brighten even more the rough parts of the glass
+                gl_FragColor = vec4(grabColor * 1.1, 1.0) + roughness * 0.09;
+            }
+        `
     }
 };

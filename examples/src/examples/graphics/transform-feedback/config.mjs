@@ -4,8 +4,87 @@
 export default {
     WEBGPU_ENABLED: false,
     FILES: {
-        "shaderFeedback.vert": "\n// vertex shader used to move particles during transform-feedback simulation step\n\n// input and output is vec4, containing position in .xyz and lifetime in .w\nattribute vec4 vertex_position;\nvarying vec4 out_vertex_position;\n\n// parameters controlling simulation\nuniform float deltaTime;\nuniform float areaSize;\n\n// texture storing random direction vectors\nuniform sampler2D directionSampler;\n\n// function returning random number based on vec2 seed parameter\nfloat rand(vec2 co) {\n    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);\n}\n\nvoid main(void) {\n\n    // texture contains direction of particle movement - read it based on particle's position\n    vec2 texCoord = vertex_position.xz / areaSize + 0.5;\n    vec3 dir = texture2D(directionSampler, texCoord).xyz;\n    dir = dir * 2.0 - 1.0;\n\n    // move particle along direction with some speed\n    float speed = 20.0 * deltaTime;\n    vec3 pos = vertex_position.xyz + dir * speed;\n\n    // age the particle\n    float liveTime = vertex_position.w;\n    liveTime -= deltaTime;\n\n    // if particle is too old, regenerate it\n    if (liveTime <= 0.0) {\n\n        // random life time\n        liveTime = rand(pos.xy) * 2.0;\n\n        // random position\n        pos.x = rand(pos.xz) * areaSize - 0.5 * areaSize;\n        pos.y = rand(pos.xy) * 4.0;\n        pos.z = rand(pos.yz) * areaSize - 0.5 * areaSize;\n    }\n\n    // write out updated particle\n    out_vertex_position = vec4(pos, liveTime);\n}",
-        "shaderCloud.vert": "\n// vertex shader used to render point sprite particles\n\n// Attributes per vertex: position\nattribute vec4 aPosition;\n\nuniform mat4   matrix_viewProjection;\n\n// Color to fragment program\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // Transform the geometry (ignore life time which is stored in .w of position)\n    vec4 worldPosition = vec4(aPosition.xyz, 1);\n    gl_Position = matrix_viewProjection * worldPosition;\n\n    // point sprite size\n    gl_PointSize = 2.0;\n\n    // color depends on position of particle\n    outColor = vec4(worldPosition.y * 0.25, 0.1, worldPosition.z * 0.2, 1);\n}",
-        "shaderCloud.frag": "\n// fragment shader used to render point sprite particles\nprecision mediump float;\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // color supplied by vertex shader\n    gl_FragColor = outColor;\n}"
+        "shaderFeedback.vert": /* glsl */`
+// vertex shader used to move particles during transform-feedback simulation step
+
+// input and output is vec4, containing position in .xyz and lifetime in .w
+attribute vec4 vertex_position;
+varying vec4 out_vertex_position;
+
+// parameters controlling simulation
+uniform float deltaTime;
+uniform float areaSize;
+
+// texture storing random direction vectors
+uniform sampler2D directionSampler;
+
+// function returning random number based on vec2 seed parameter
+float rand(vec2 co) {
+    return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+}
+
+void main(void) {
+
+    // texture contains direction of particle movement - read it based on particle's position
+    vec2 texCoord = vertex_position.xz / areaSize + 0.5;
+    vec3 dir = texture2D(directionSampler, texCoord).xyz;
+    dir = dir * 2.0 - 1.0;
+
+    // move particle along direction with some speed
+    float speed = 20.0 * deltaTime;
+    vec3 pos = vertex_position.xyz + dir * speed;
+
+    // age the particle
+    float liveTime = vertex_position.w;
+    liveTime -= deltaTime;
+
+    // if particle is too old, regenerate it
+    if (liveTime <= 0.0) {
+
+        // random life time
+        liveTime = rand(pos.xy) * 2.0;
+
+        // random position
+        pos.x = rand(pos.xz) * areaSize - 0.5 * areaSize;
+        pos.y = rand(pos.xy) * 4.0;
+        pos.z = rand(pos.yz) * areaSize - 0.5 * areaSize;
+    }
+
+    // write out updated particle
+    out_vertex_position = vec4(pos, liveTime);
+}`,
+        "shaderCloud.vert": /* glsl */`
+// vertex shader used to render point sprite particles
+
+// Attributes per vertex: position
+attribute vec4 aPosition;
+
+uniform mat4   matrix_viewProjection;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    // Transform the geometry (ignore life time which is stored in .w of position)
+    vec4 worldPosition = vec4(aPosition.xyz, 1);
+    gl_Position = matrix_viewProjection * worldPosition;
+
+    // point sprite size
+    gl_PointSize = 2.0;
+
+    // color depends on position of particle
+    outColor = vec4(worldPosition.y * 0.25, 0.1, worldPosition.z * 0.2, 1);
+}`,
+        "shaderCloud.frag": /* glsl */`
+// fragment shader used to render point sprite particles
+precision mediump float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // color supplied by vertex shader
+    gl_FragColor = outColor;
+}`
     }
 };

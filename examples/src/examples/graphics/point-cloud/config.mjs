@@ -3,7 +3,51 @@
  */
 export default {
     FILES: {
-        "shader.vert": "\n// Attributes per vertex: position\nattribute vec4 aPosition;\n\nuniform mat4   matrix_viewProjection;\nuniform mat4   matrix_model;\n\n// time\nuniform float uTime;\n\n// Color to fragment program\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // Transform the geometry\n    mat4 modelViewProj = matrix_viewProjection * matrix_model;\n    gl_Position = modelViewProj * aPosition;\n\n    // vertex in world space\n    vec4 vertexWorld = matrix_model * aPosition;\n\n    // use sine way to generate intensity value based on time and also y-coordinate of model\n    float intensity = abs(sin(0.6 * vertexWorld.y + uTime * 1.0));\n\n    // intensity smoothly drops to zero for smaller values than 0.9\n    intensity = smoothstep(0.9, 1.0, intensity);\n\n    // point size depends on intensity\n    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0\n    #ifndef WEBGPU\n        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);\n    #endif\n\n    // color mixes red and yellow based on intensity\n    outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);\n}",
-        "shader.frag": "\nprecision lowp float;\nvarying vec4 outColor;\n\nvoid main(void)\n{\n    // just output color supplied by vertex shader\n    gl_FragColor = outColor;\n}"
+        "shader.vert": /* glsl */`
+// Attributes per vertex: position
+attribute vec4 aPosition;
+
+uniform mat4   matrix_viewProjection;
+uniform mat4   matrix_model;
+
+// time
+uniform float uTime;
+
+// Color to fragment program
+varying vec4 outColor;
+
+void main(void)
+{
+    // Transform the geometry
+    mat4 modelViewProj = matrix_viewProjection * matrix_model;
+    gl_Position = modelViewProj * aPosition;
+
+    // vertex in world space
+    vec4 vertexWorld = matrix_model * aPosition;
+
+    // use sine way to generate intensity value based on time and also y-coordinate of model
+    float intensity = abs(sin(0.6 * vertexWorld.y + uTime * 1.0));
+
+    // intensity smoothly drops to zero for smaller values than 0.9
+    intensity = smoothstep(0.9, 1.0, intensity);
+
+    // point size depends on intensity
+    // WebGPU doesn't support setting gl_PointSize to anything besides a constant 1.0
+    #ifndef WEBGPU
+        gl_PointSize = clamp(12.0 * intensity, 1.0, 64.0);
+    #endif
+
+    // color mixes red and yellow based on intensity
+    outColor = mix(vec4(1.0, 1.0, 0.0, 1.0), vec4(0.9, 0.0, 0.0, 1.0), intensity);
+}`,
+        "shader.frag": /* glsl */`
+precision lowp float;
+varying vec4 outColor;
+
+void main(void)
+{
+    // just output color supplied by vertex shader
+    gl_FragColor = outColor;
+}`
     }
 };
