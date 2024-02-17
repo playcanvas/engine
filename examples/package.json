@@ -10,7 +10,7 @@
     "build:metadata": "node ./scripts/metadata.mjs",
     "build:sharing": "node ./scripts/sharing-html.mjs",
     "build:standalone": "node ./scripts/standalone-html.mjs",
-    "build:thumbnails": "npm run build && node ./scripts/thumbnails.mjs",
+    "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging --config ../serve.json",
     "lint": "eslint . --ext .js,.ts,.tsx",
