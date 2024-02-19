@@ -168,7 +168,7 @@ class ScriptHandler {
                         }
                     }
 
-                    registerScript(scriptClass, scriptClass.name);
+                    registerScript(scriptClass, scriptClass.name.toLowerCase());
                 }
             }
 
