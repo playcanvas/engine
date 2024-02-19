@@ -162,7 +162,7 @@ class ScriptHandler extends ResourceHandler {
                         }
                     }
 
-                    registerScript(scriptClass, scriptClass.name);
+                    registerScript(scriptClass, scriptClass.name.toLowerCase());
                 }
             }
 
