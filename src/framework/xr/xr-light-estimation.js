@@ -280,11 +280,9 @@ class XrLightEstimation extends EventHandler {
     }
 
     /**
-     * Spherical harmonics coefficients of what is estimated to be the most prominent directional
-     * light. Or null if data is not available.
+     * Spherical harmonic coefficients of estimated ambient light. Or null if data is not available.
      *
      * @type {Float32Array|null}
-     * @ignore
      */
     get sphericalHarmonics() {
         return this._available ? this._sphericalHarmonics : null;

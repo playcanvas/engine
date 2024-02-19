@@ -30,6 +30,7 @@ let _createdLoadingScreen = false;
  * PlayCanvas loading screen.
  *
  * @namespace
+ * @category Script
  */
 const script = {
     // set during script load to be used for initializing script

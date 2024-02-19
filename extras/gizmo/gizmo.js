@@ -18,6 +18,7 @@ const xdir = new Vec3();
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
+const PERS_CANVAS_RATIO = 1300;
 const ORTHO_SCALE_RATIO = 0.32;
 
 /**
@@ -209,7 +210,7 @@ class Gizmo extends EventHandler {
     /**
      * The graph nodes attached to the gizmo.
      *
-     * @type {import('playcanvas').GraphNode}
+     * @type {import('playcanvas').GraphNode[]}
      */
     nodes = [];
 
@@ -362,7 +363,11 @@ class Gizmo extends EventHandler {
 
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            this._scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
+            let canvasMult = 1;
+            if (this._device.width > 0 && this._device.height > 0) {
+                canvasMult = PERS_CANVAS_RATIO / Math.min(this._device.width, this._device.height);
+            }
+            this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }

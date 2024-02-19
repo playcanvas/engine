@@ -8,8 +8,6 @@ import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderAction } from "../composition/render-action.js";
 
-import { WorldClustersDebug } from "../lighting/world-clusters-debug.js";
-
 /**
  * A render pass used render a set of layers using a camera.
  *
@@ -35,6 +33,14 @@ class RenderPassForward extends RenderPass {
      * @type {import('../composition/render-action.js').RenderAction[]}
      */
     renderActions = [];
+
+    /**
+     * If true, do not clear the depth buffer before rendering, as it was already primed by a depth
+     * pre-pass.
+     *
+     * @type {boolean}
+     */
+    noDepthClear = false;
 
     constructor(device, layerComposition, scene, renderer) {
         super(device);
@@ -170,7 +176,7 @@ class RenderPassForward extends RenderPass {
             const fullSizeClearRect = camera.fullSizeClearRect;
 
             this.setClearColor(fullSizeClearRect && renderAction.clearColor ? camera.clearColor : undefined);
-            this.setClearDepth(fullSizeClearRect && renderAction.clearDepth ? camera.clearDepth : undefined);
+            this.setClearDepth(fullSizeClearRect && renderAction.clearDepth && !this.noDepthClear ? camera.clearDepth : undefined);
             this.setClearStencil(fullSizeClearRect && renderAction.clearStencil ? camera.clearStencil : undefined);
         }
     }
@@ -224,8 +230,7 @@ class RenderPassForward extends RenderPass {
      */
     renderRenderAction(renderAction, firstRenderAction) {
 
-        const { scene, renderer, layerComposition } = this;
-        const clusteredLightingEnabled = scene.clusteredLightingEnabled;
+        const { renderer, layerComposition } = this;
         const device = renderer.device;
 
         // layer
@@ -256,70 +261,23 @@ class RenderPassForward extends RenderPass {
 
         if (camera) {
 
-            renderer.setupViewport(camera.camera, renderAction.renderTarget);
-
-            // if this is not a first render action to the render target, or if the render target was not
-            // fully cleared on pass start, we need to execute clears here
-            if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
-                renderer.clear(camera.camera, renderAction.clearColor, renderAction.clearDepth, renderAction.clearStencil);
-            }
-
-            // #if _PROFILER
-            const sortTime = now();
-            // #endif
-
-            layer.sortVisible(camera.camera, transparent);
-
-            // #if _PROFILER
-            renderer._sortTime += now() - sortTime;
-            // #endif
-
-            const culledInstances = layer.getCulledInstances(camera.camera);
-            const visible = transparent ? culledInstances.transparent : culledInstances.opaque;
-
-            // add debug mesh instances to visible list
-            scene.immediate.onPreRenderLayer(layer, visible, transparent);
-
-            // set up layer uniforms
-            if (layer.requiresLightCube) {
-                renderer.lightCube.update(scene.ambientLight, layer._lights);
-                renderer.constantLightCube.setValue(renderer.lightCube.colors);
-            }
-
-            // upload clustered lights uniforms
-            if (clusteredLightingEnabled && renderAction.lightClusters) {
-                renderAction.lightClusters.activate();
-
-                // debug rendering of clusters
-                if (!renderer.clustersDebugRendered && scene.lighting.debugLayer === layer.id) {
-                    renderer.clustersDebugRendered = true;
-                    WorldClustersDebug.render(renderAction.lightClusters, this.scene);
-                }
-            }
-
-            // Set the not very clever global variable which is only useful when there's just one camera
-            scene._activeCamera = camera.camera;
-
-            const viewCount = renderer.setCameraUniforms(camera.camera, renderAction.renderTarget);
-            if (device.supportsUniformBuffers) {
-                renderer.setupViewUniformBuffers(renderAction.viewBindGroups, renderer.viewUniformFormat, renderer.viewBindGroupFormat, viewCount);
-            }
-
-            // enable flip faces if either the camera has _flipFaces enabled or the render target has flipY enabled
-            const flipFaces = !!(camera.camera._flipFaces ^ renderAction?.renderTarget?.flipY);
+            const options = {
+                lightClusters: renderAction.lightClusters
+            };
 
             // shader pass - use setting from camera if available, otherwise use layer setting
             const shaderPass = camera.camera.shaderPassInfo?.index ?? layer.shaderPass;
 
-            const draws = renderer._forwardDrawCalls;
-            renderer.renderForward(camera.camera,
-                                   visible,
-                                   layer.splitLights,
-                                   shaderPass,
-                                   layer.onDrawCall,
-                                   layer,
-                                   flipFaces);
-            layer._forwardDrawCalls += renderer._forwardDrawCalls - draws;
+            // if this is not a first render action to the render target, or if the render target was not
+            // fully cleared on pass start, we need to execute clears here
+            if (!firstRenderAction || !camera.camera.fullSizeClearRect) {
+                options.clearColor = renderAction.clearColor;
+                options.clearDepth = renderAction.clearDepth;
+                options.clearStencil = renderAction.clearStencil;
+            }
+
+            renderer.renderForwardLayer(camera.camera, renderAction.renderTarget, layer, transparent,
+                                        shaderPass, renderAction.viewBindGroups, options);
 
             // Revert temp frame stuff
             // TODO: this should not be here, as each rendering / clearing should explicitly set up what

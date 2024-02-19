@@ -2,7 +2,7 @@ import * as pc from 'playcanvas';
 import * as TWEEN from '@tweenjs/tween.js'
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath, twgslPath }) {
@@ -31,13 +31,9 @@ async function example({ canvas, deviceType, assetPath, scriptsPath, glslangPath
         pc.ElementComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.FontHandler,
-        // @ts-ignore
         pc.JsonHandler,
-        // @ts-ignore
         pc.ScriptHandler
     ];
 

@@ -23,6 +23,7 @@ import { ShaderGenerator } from './programs/shader-generator.js';
  * attachments. Passing an array will set the output type for each color attachment.
  * @see ShaderUtils.createDefinition
  * @returns {Shader} The newly created shader.
+ * @category Graphics
  */
 function createShader(device, vsName, fsName, useTransformFeedback = false, shaderDefinitionOptions = {}) {
 

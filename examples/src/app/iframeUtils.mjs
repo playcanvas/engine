@@ -50,6 +50,7 @@ function iframeDestroy() {
 }
 function iframeReady() {
     try {
+        // @ts-ignore
         return getIframeWindow()?.eval('ready === true');
     } catch (e) {}
     return false;

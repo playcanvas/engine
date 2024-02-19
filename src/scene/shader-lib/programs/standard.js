@@ -502,7 +502,7 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                     code.append(litShader.chunks.alphaTestPS);
                     func.append("alphaTest(dAlpha);");
                 }
-                if (opacityShadowDither) {
+                if (opacityShadowDither !== DITHER_NONE) {
                     if (opacityShadowDither === DITHER_BAYER8)
                         decl.append(litShader.chunks.bayerPS);
                     decl.append(`#define DITHER_${opacityShadowDither.toUpperCase()}\n`);

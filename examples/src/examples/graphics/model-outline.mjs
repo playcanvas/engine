@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath }) {
@@ -27,7 +27,6 @@ async function example({ canvas, deviceType, scriptsPath, glslangPath, twgslPath
         pc.ScriptComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.ScriptHandler
     ];
 

@@ -2,6 +2,7 @@
  * Math API.
  *
  * @namespace
+ * @category Math
  */
 const math = {
     /**
@@ -116,7 +117,7 @@ const math = {
         // Why ((r << 24)>>>0)?
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
         // >>> used unsigned so >>>0 converts back to an unsigned.
-        // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
+        // See https://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
         return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
     },
 
@@ -213,7 +214,7 @@ const math = {
      * it easy to create a sequence of transitions using smoothstep to interpolate each segment
      * rather than using a more sophisticated or expensive interpolation technique.
      *
-     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * See https://en.wikipedia.org/wiki/Smoothstep for more details.
      *
      * @param {number} min - The lower bound of the interpolation range.
      * @param {number} max - The upper bound of the interpolation range.
@@ -233,7 +234,7 @@ const math = {
      * An improved version of the {@link math.smoothstep} function which has zero 1st and 2nd order
      * derivatives at t=0 and t=1.
      *
-     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * See https://en.wikipedia.org/wiki/Smoothstep#Variations for more details.
      *
      * @param {number} min - The lower bound of the interpolation range.
      * @param {number} max - The upper bound of the interpolation range.

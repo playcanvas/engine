@@ -165,10 +165,11 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * This method provides a way to persist anchor and get a string with UUID.
-     * UUID can be used later to restore anchor.
+     * This method provides a way to persist anchor between WebXR sessions by
+     * providing a unique UUID of an anchor, that can be used later for restoring
+     * an anchor from underlying system.
      * Bear in mind that underlying systems might have a limit on number of anchors
-     * allowed to be persisted.
+     * allowed to be persisted per origin.
      *
      * @param {XrAnchorPersistCallback} [callback] - Callback to fire when anchor
      * persistent UUID has been generated or error if failed.
@@ -212,7 +213,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * This method provides a way to remove persistent UUID of an anchor for underlying systems.
+     * Remove persistent UUID of an anchor from an underlying system.
      *
      * @param {XrAnchorForgetCallback} [callback] - Callback to fire when anchor has been
      * forgotten or error if failed.
@@ -231,7 +232,7 @@ class XrAnchor extends EventHandler {
     }
 
     /**
-     * UUID string of a persistent anchor or null if not presisted.
+     * UUID string of a persistent anchor or null if not persisted.
      *
      * @type {null|string}
      */
