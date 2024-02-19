@@ -4,8 +4,7 @@ import { ResourceHandler } from './handler.js';
 
 class ShaderHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'shader';
+        super(app, 'shader');
     }
 
     load(url, callback) {

@@ -33,8 +33,7 @@ class SpriteHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'sprite';
+        super(app, 'sprite');
 
         this._assets = app.assets;
         this._device = app.graphicsDevice;

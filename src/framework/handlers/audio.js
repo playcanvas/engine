@@ -57,8 +57,7 @@ class AudioHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'audio';
+        super(app, 'audio');
 
         this.manager = app.soundManager;
         Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");

@@ -13,8 +13,7 @@ import { ResourceHandler } from './handler.js';
  */
 class AnimClipHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'animclip';
+        super(app, 'animclip');
     }
 
     load(url, callback) {

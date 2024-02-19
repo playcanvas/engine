@@ -22,8 +22,7 @@ class ScriptHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'script';
+        super(app, 'script');
 
         this._scripts = { };
         this._cache = { };
@@ -162,7 +161,7 @@ class ScriptHandler extends ResourceHandler {
                         }
                     }
 
-                    registerScript(scriptClass, scriptClass.name);
+                    registerScript(scriptClass, scriptClass.name.toLowerCase());
                 }
             }
 
