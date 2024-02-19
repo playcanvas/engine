@@ -169,7 +169,8 @@ class TextureHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('texture');
+        super(app);
+        this.handlerType = 'texture';
 
         const assets = app.assets;
         const device = app.graphicsDevice;

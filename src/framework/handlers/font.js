@@ -44,7 +44,8 @@ class FontHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('font');
+        super(app);
+        this.handlerType = 'font';
 
         this._loader = app.loader;
         this.maxRetries = 0;

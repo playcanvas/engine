@@ -15,16 +15,23 @@ class ResourceHandler {
      *
      * @type {string}
      */
-    handlerType;
+    handlerType = '';
+
+    /**
+     * The running app instance.
+     *
+     * @type {import('../app-base').AppBase}
+     */
+    _app;
 
     /** @private */
     _maxRetries = 0;
 
     /**
-     * @param {string} type - The type of resource the handler will load.
+     * @param {import('../app-base').AppBase} app - The running {@link AppBase}.
      */
-    constructor(type) {
-        this.handlerType = type;
+    constructor(app) {
+        this._app = app;
     }
 
     /**
