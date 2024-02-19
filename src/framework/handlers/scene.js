@@ -16,9 +16,8 @@ class SceneHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('scene');
-
-        this._app = app;
+        super(app);
+        this.handlerType = 'scene';
     }
 
     load(url, callback) {

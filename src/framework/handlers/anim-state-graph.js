@@ -9,8 +9,9 @@ import { ResourceHandler } from './handler.js';
  * @ignore
  */
 class AnimStateGraphHandler extends ResourceHandler {
-    constructor() {
-        super('animstategraph');
+    constructor(app) {
+        super(app);
+        this.handlerType = 'animstategraph';
     }
 
     load(url, callback) {
