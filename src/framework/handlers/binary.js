@@ -4,8 +4,7 @@ import { ResourceHandler } from './handler.js';
 
 class BinaryHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'binary';
+        super(app, 'binary');
     }
 
     load(url, callback) {

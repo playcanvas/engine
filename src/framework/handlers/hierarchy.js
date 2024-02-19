@@ -8,8 +8,7 @@ class HierarchyHandler extends ResourceHandler {
      * @param {import('../app-base').AppBase} app - The running {@link AppBase}.
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'hierarchy';
+        super(app, 'hierarchy');
     }
 
     load(url, callback) {

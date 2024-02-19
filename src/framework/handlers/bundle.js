@@ -19,8 +19,7 @@ class BundleHandler extends ResourceHandler {
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'bundle';
+        super(app, 'bundle');
 
         this._assets = app.assets;
         this._worker = null;

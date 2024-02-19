@@ -32,8 +32,7 @@ class ModelHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'model';
+        super(app, 'model');
 
         this._parsers = [];
         this.device = app.graphicsDevice;

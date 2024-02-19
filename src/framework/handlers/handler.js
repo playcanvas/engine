@@ -29,9 +29,11 @@ class ResourceHandler {
 
     /**
      * @param {import('../app-base').AppBase} app - The running {@link AppBase}.
+     * @param {string} handlerType - The type of the resource the handler handles.
      */
-    constructor(app) {
+    constructor(app, handlerType) {
         this._app = app;
+        this.handlerType = handlerType;
     }
 
     /**

@@ -4,8 +4,7 @@ import { ResourceHandler } from './handler.js';
 
 class JsonHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'json';
+        super(app, 'json');
     }
 
     load(url, callback) {

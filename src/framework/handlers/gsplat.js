@@ -10,8 +10,7 @@ class GSplatHandler extends ResourceHandler {
      * @hideconstructor
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'gsplat';
+        super(app, 'gsplat');
         this.parser = new PlyParser(app.graphicsDevice, app.assets, 3);
     }
 
