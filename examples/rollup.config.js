@@ -47,7 +47,7 @@ const staticFiles = [
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
 
     // playcanvas observer
-    { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
+    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
 
     // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
