@@ -18,6 +18,8 @@ import { LightCamera } from './light-camera.js';
 import { RenderPassForward } from './render-pass-forward.js';
 import { RenderPassPostprocessing } from './render-pass-postprocessing.js';
 
+const _noLights = [[], [], []];
+
 const _drawCallList = {
     drawCalls: [],
     shaderInstances: [],
@@ -740,14 +742,14 @@ class ForwardRenderer extends Renderer {
 
         } else {
             visible = options.meshInstances;
-            splitLights = options.splitLights;
+            splitLights = options.splitLights ?? _noLights;
         }
 
         Debug.assert(visible, 'Either layer or options.meshInstances must be provided');
 
         // upload clustered lights uniforms
-        const { lightClusters } = options;
-        if (clusteredLightingEnabled && lightClusters) {
+        if (clusteredLightingEnabled) {
+            const lightClusters = options.lightClusters ?? this.worldClustersAllocator.empty;
             lightClusters.activate();
 
             // debug rendering of clusters

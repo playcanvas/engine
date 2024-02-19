@@ -192,8 +192,7 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * True if Plane Detection is available. This property can be set to true only during a running
-     * session.
+     * True if Plane Detection is available. This information is available only when the session has started.
      *
      * @type {boolean}
      */
@@ -202,8 +201,7 @@ class XrPlaneDetection extends EventHandler {
     }
 
     /**
-     * Array of {@link XrPlane} instances that contain individual plane information, or null if
-     * plane detection is not available.
+     * Array of {@link XrPlane} instances that contain individual plane information.
      *
      * @type {XrPlane[]}
      */

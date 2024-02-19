@@ -15,8 +15,8 @@ let ids = 0;
 /**
  * Represents XR input source, which is any input mechanism which allows the user to perform
  * targeted actions in the same virtual space as the viewer. Example XR input sources include, but
- * are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods
- * that operate on the viewer's pose.
+ * are not limited to: handheld controllers, optically tracked hands, touch screen taps, and
+ * gaze-based input methods that operate on the viewer's pose.
  *
  * @augments EventHandler
  * @category XR
@@ -140,12 +140,12 @@ class XrInputSource extends EventHandler {
     /**
      * Fired when hit test source receives new results. It provides transform information that
      * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
-     * object that produced the hit result, the {@link Vec3} position and the {@link Quat}
-     * rotation.
+     * object that produced the hit result, the {@link Vec3} position, the {@link Quat}
+     * rotation and the {@link XRHitTestResult} object that is created by the WebXR API.
      *
      * @event
      * @example
-     * inputSource.on('hittest:result', (hitTestSource, position, rotation) => {
+     * inputSource.on('hittest:result', (hitTestSource, position, rotation, hitTestResult) => {
      *     target.setPosition(position);
      *     target.setRotation(rotation);
      * });
@@ -380,7 +380,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * If input source can be held, then it will have node with its world transformation, that can
-     * be used to position and rotate virtual joysticks based on it.
+     * be used to position and rotate visual object based on it.
      *
      * @type {boolean}
      */
@@ -456,7 +456,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * List of active {@link XrHitTestSource} instances created by this input source.
+     * List of active {@link XrHitTestSource} instances associated with this input source.
      *
      * @type {import('./xr-hit-test-source.js').XrHitTestSource[]}
      */
@@ -667,7 +667,7 @@ class XrInputSource extends EventHandler {
      *     inputSource.hitTestStart({
      *         callback: function (err, hitTestSource) {
      *             if (err) return;
-     *             hitTestSource.on('result', function (position, rotation) {
+     *             hitTestSource.on('result', function (position, rotation, inputSource, hitTestResult) {
      *                 // position and rotation of hit test result
      *                 // that will be created from touch on mobile devices
      *             });
@@ -698,11 +698,9 @@ class XrInputSource extends EventHandler {
 
         this.fire('hittest:add', hitTestSource);
 
-        hitTestSource.on('result', (position, rotation, inputSource) => {
-            if (inputSource !== this)
-                return;
-
-            this.fire('hittest:result', hitTestSource, position, rotation);
+        hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
+            if (inputSource !== this) return;
+            this.fire('hittest:result', hitTestSource, position, rotation, hitTestResult);
         });
         hitTestSource.once('remove', () => {
             this.onHitTestSourceRemove(hitTestSource);

@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { Button, Container, Panel } from '@playcanvas/pcui/react';
-import { pcTypes } from '../assetPath.mjs';
+import { pcTypes } from './assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import MonacoEditor, { loader } from "@monaco-editor/react";
 import { iframeHotReload, iframeRequestFiles, iframeResize } from './iframeUtils.mjs';

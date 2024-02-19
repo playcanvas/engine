@@ -1,4 +1,4 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
@@ -91,7 +91,7 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name = '';
+    _name;
 
     /**
      * The graphics device.
@@ -193,9 +193,18 @@ class RenderPass {
      * graphics device.
      */
     constructor(graphicsDevice) {
-        DebugHelper.setName(this, this.constructor.name);
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
+    }
+
+    set name(value) {
+        this._name = value;
+    }
+
+    get name() {
+        if (!this._name)
+            this._name = this.constructor.name;
+        return this._name;
     }
 
     set options(value) {

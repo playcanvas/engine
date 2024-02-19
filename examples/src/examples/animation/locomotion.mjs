@@ -31,7 +31,7 @@ function controls({ observer, ReactPCUI, React, jsx, fragment }) {
 }
 
 /**
- * @param {import('../../options.mjs').ExampleOptions} options - The example options.
+ * @param {import('../../app/example.mjs').ExampleOptions} options - The example options.
  * @returns {Promise<pc.AppBase>} The example application.
  */
 async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, twgslPath, data }) {
@@ -74,15 +74,10 @@ async function example({ canvas, deviceType, assetPath, ammoPath, glslangPath, t
         pc.RigidBodyComponentSystem
     ];
     createOptions.resourceHandlers = [
-        // @ts-ignore
         pc.TextureHandler,
-        // @ts-ignore
         pc.ContainerHandler,
-        // @ts-ignore
         pc.ScriptHandler,
-        // @ts-ignore
         pc.AnimClipHandler,
-        // @ts-ignore
         pc.AnimStateGraphHandler
     ];
 

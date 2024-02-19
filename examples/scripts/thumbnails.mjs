@@ -1,3 +1,6 @@
+/**
+ * This file spawns a pool of puppeteer instances to take screenshots of each example for thumbnail.
+ */
 /* eslint-disable no-await-in-loop */
 import fs from 'fs';
 import puppeteer from 'puppeteer';
@@ -30,8 +33,8 @@ for (const category_ in categories) {
         });
     }
 }
-if (!fs.existsSync(`${MAIN_DIR}/dist/thumbnails`)) {
-    fs.mkdirSync(`${MAIN_DIR}/dist/thumbnails`);
+if (!fs.existsSync(`${MAIN_DIR}/thumbnails`)) {
+    fs.mkdirSync(`${MAIN_DIR}/thumbnails`);
 }
 
 class PuppeteerPool {
@@ -155,20 +158,20 @@ async function takeThumbnails(pool, exampleSlug, categorySlug, example, category
     await page.waitForFunction("window?.pc?.app?._time > 1000", { timeout: TIMEOUT });
 
     // screenshot page
-    await page.screenshot({ path: `${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png` });
+    await page.screenshot({ path: `${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`, type: 'webp' });
 
     // copy and crop image for large thumbnail
-    await sharp(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png`)
+    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
         .resize(320, 240)
-        .toFile(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}_large.png`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.webp`);
 
     // copy and crop image for small thumbnail
-    await sharp(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png`)
+    await sharp(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`)
         .resize(64, 48)
-        .toFile(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}_small.png`);
+        .toFile(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_small.webp`);
 
     // remove screenshot
-    fs.rmSync(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}.png`);
+    fs.rmSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}.webp`);
 
     // close page
     await pool.closePage(poolItem, page);
@@ -194,7 +197,7 @@ async function takeScreenshots() {
         const category = kebabCaseToPascalCase(exampleListItem.category);
 
         // check if thumbnail exists
-        if (fs.existsSync(`${MAIN_DIR}/dist/thumbnails/${categorySlug}_${exampleSlug}_large.png`)) {
+        if (fs.existsSync(`${MAIN_DIR}/thumbnails/${categorySlug}_${exampleSlug}_large.png`)) {
             console.log(`skipped: ${category}/${example}`);
             continue;
         }

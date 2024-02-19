@@ -13,6 +13,7 @@ class CollisionComponentData {
         this.height = 2;
         this.asset = null;
         this.renderAsset = null;
+        this.checkVertexDuplicates = true;
 
         // Non-serialized properties
         this.shape = null;

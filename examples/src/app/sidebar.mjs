@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Observer } from '@playcanvas/observer';
 import examples from './helpers/example-data.mjs';
 import { MIN_DESKTOP_WIDTH } from './constants.mjs';
-import { thumbnailPath } from '../assetPath.mjs';
+import { thumbnailPath } from './assetPath.mjs';
 import { jsx } from './jsx.mjs';
 import { getOrientation } from './utils.mjs';
 import { iframeDestroy } from './iframeUtils.mjs';
@@ -202,13 +202,13 @@ export class SideBar extends TypedComponent {
                                            {
                                                className: 'small-thumbnail',
                                                loading: "lazy",
-                                               src: thumbnailPath + `${category}_${example}_small.png`
+                                               src: thumbnailPath + `${category}_${example}_small.webp`
                                            }
                                        ),
                                        jsx("img", {
                                            className: 'large-thumbnail',
                                            loading: "lazy",
-                                           src: thumbnailPath + `${category}_${example}_large.png`
+                                           src: thumbnailPath + `${category}_${example}_large.webp`
                                        }),
                                        jsx(
                                            "div",

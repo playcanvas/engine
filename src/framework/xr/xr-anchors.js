@@ -225,11 +225,14 @@ class XrAnchors extends EventHandler {
     }
 
     /**
-     * Create anchor with position, rotation and a callback.
+     * Create an anchor using position and rotation, or from hit test result.
      *
-     * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor.
-     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreateCallback} [rotation] - Rotation for an anchor.
-     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be created.
+     * @param {import('../../core/math/vec3.js').Vec3|XRHitTestResult} position - Position for an anchor or
+     * a hit test result.
+     * @param {import('../../core/math/quat.js').Quat|XrAnchorCreateCallback} [rotation] - Rotation for an
+     * anchor or a callback if creating from a hit test result.
+     * @param {XrAnchorCreateCallback} [callback] - Callback to fire when anchor was created or failed to be
+     * created.
      * @example
      * // create an anchor using a position and rotation
      * app.xr.anchors.create(position, rotation, function (err, anchor) {
