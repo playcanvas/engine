@@ -3,8 +3,9 @@ import { http, Http } from '../../platform/net/http.js';
 import { ResourceHandler } from './handler.js';
 
 class BinaryHandler extends ResourceHandler {
-    constructor() {
-        super('binary');
+    constructor(app) {
+        super(app);
+        this.handlerType = 'binary';
     }
 
     load(url, callback) {

@@ -3,8 +3,9 @@ import { http, Http } from '../../platform/net/http.js';
 import { ResourceHandler } from './handler.js';
 
 class JsonHandler extends ResourceHandler {
-    constructor() {
-        super('json');
+    constructor(app) {
+        super(app);
+        this.handlerType = 'json';
     }
 
     load(url, callback) {

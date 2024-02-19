@@ -22,9 +22,9 @@ class ScriptHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('script');
+        super(app);
+        this.handlerType = 'script';
 
-        this._app = app;
         this._scripts = { };
         this._cache = { };
     }

@@ -6,9 +6,8 @@ import { ResourceHandler } from './handler.js';
 
 class TemplateHandler extends ResourceHandler {
     constructor(app) {
-        super('template');
-
-        this._app = app;
+        super(app);
+        this.handlerType = 'template';
     }
 
     load(url, callback) {

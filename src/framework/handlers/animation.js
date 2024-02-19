@@ -23,7 +23,8 @@ class AnimationHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('animation');
+        super(app);
+        this.handlerType = 'animation';
 
         this.device = app.graphicsDevice;
         this.assets = app.assets;
