@@ -35,7 +35,8 @@ const _schema = [
     'renderAsset',
     'shape',
     'model',
-    'render'
+    'render',
+    'zoneCheck'
 ];
 
 // Collision system implementations
@@ -205,7 +206,8 @@ class CollisionSystemImpl {
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
-            render: src.data.render
+            render: src.data.render,
+            zoneCheck: src.data.zoneCheck
         };
 
         return this.system.addComponent(clone, data);
@@ -628,7 +630,8 @@ class CollisionComponentSystem extends ComponentSystem {
             'renderAsset',
             'enabled',
             'linearOffset',
-            'angularOffset'
+            'angularOffset',
+            'zoneCheck'
         ];
 
         // duplicate the input data because we are modifying it
@@ -680,6 +683,8 @@ class CollisionComponentSystem extends ComponentSystem {
                 data.angularOffset = new Quat(data.angularOffset);
             }
         }
+
+        component.data.zoneCheck = !!data.zoneCheck;
 
         const impl = this._createImplementation(data.type);
         impl.beforeInitialize(component, data);
