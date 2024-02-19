@@ -4,8 +4,7 @@ import { ResourceHandler } from './handler.js';
 
 class HtmlHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'html';
+        super(app, 'html');
     }
 
     load(url, callback) {

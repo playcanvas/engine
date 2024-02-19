@@ -2,8 +2,7 @@ import { ResourceHandler } from './handler.js';
 
 class FolderHandler extends ResourceHandler {
     constructor(app) {
-        super(app);
-        this.handlerType = 'folder';
+        super(app, 'folder');
     }
 
     load(url, callback) {

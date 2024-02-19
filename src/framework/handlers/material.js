@@ -45,8 +45,7 @@ class MaterialHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'material';
+        super(app, 'material');
 
         this._assets = app.assets;
         this._device = app.graphicsDevice;

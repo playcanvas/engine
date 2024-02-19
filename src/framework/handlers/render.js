@@ -54,8 +54,7 @@ class RenderHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super(app);
-        this.handlerType = 'render';
+        super(app, 'render');
 
         this._registry = app.assets;
     }
