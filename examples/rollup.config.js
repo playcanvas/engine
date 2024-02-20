@@ -13,7 +13,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTarget } from '../utils/rollup-script-target.mjs';
+import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -49,8 +49,10 @@ const staticFiles = [
     // playcanvas observer
     { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
 
-    // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
+    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+    // N.B. fflate will not be needed once extras module is rolled up
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
 ];
 
 const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
@@ -226,7 +228,7 @@ const targets = [
             timestamp()
         ]
     },
-    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
+    scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
 ];
 
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.

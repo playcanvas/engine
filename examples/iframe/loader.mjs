@@ -74,7 +74,7 @@ class ExampleLoader {
      */
     async start({ engineUrl, extrasUrl, exampleUrl, controlsUrl }) {
         window.pc = await import(engineUrl);
-        await import(extrasUrl);
+        window.pcx = await import(extrasUrl);
 
         // @ts-ignore
         window.top.pc = window.pc;

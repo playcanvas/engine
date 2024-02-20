@@ -15,6 +15,8 @@
         <script type="importmap">
             {
                 "imports": {
+                    "playcanvas": '@ENGINE',
+                    "fflate": "../../modules/fflate/esm/browser.js",
                     "@examples/config": '@CONFIG',
                     "@examples/utils": "./utils.mjs",
                     "@examples/observer": "./observer.mjs",
@@ -37,7 +39,7 @@
             document.addEventListener('DOMContentLoaded', () => {
                 loader.start({
                     engineUrl: '@ENGINE',
-                    extrasUrl: './playcanvas-extras.js',
+                    extrasUrl: './playcanvas-extras.mjs/index.js',
                     exampleUrl: '@EXAMPLE',
                     controlsUrl: '@CONTROLS'
                 });
