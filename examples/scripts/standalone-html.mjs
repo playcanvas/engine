@@ -87,6 +87,7 @@ function engineFor(type) {
  * @property {boolean} NO_CANVAS - No canvas element.
  * @property {boolean} NO_MINISTATS - No ministats.
  * @property {boolean} WEBGPU_ENABLED - If webGPU is enabled.
+ * @property {boolean} WEBGPU_REQUIRED - If webGPU is required.
  */
 /**
  * @param {string} category - The category.
@@ -135,6 +136,9 @@ function generateExampleFile(category, example, exampleClass) {
 
     // webGPU enabled
     html = html.replace(/'@WEBGPU_ENABLED'/g, `${!!exampleClass.WEBGPU_ENABLED}`);
+
+    // webGPU required
+    html = html.replace(/'@WEBGPU_REQUIRED'/g, `${!!exampleClass.WEBGPU_REQUIRED}`);
 
     // engine
     html = html.replace(/'@ENGINE'/g, JSON.stringify(engineFor(exampleClass.ENGINE)));
