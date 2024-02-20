@@ -486,9 +486,9 @@ class XrManager extends EventHandler {
             if (webgl && options && options.cameraColor && this.views.supportedColor) {
                 opts.optionalFeatures.push('camera-access');
             }
-        } else if (type === XRTYPE_VR) {
-            opts.optionalFeatures.push('hand-tracking');
         }
+
+        opts.optionalFeatures.push('hand-tracking');
 
         if (options && options.optionalFeatures)
             opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
