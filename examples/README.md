@@ -146,11 +146,6 @@ The example script allows you to import examples only modules that interact with
 - `@examples/observer` - The observer object `data`.
 - `@examples/files` - The reatime file contents of all files used in the example (includes `FILES` property from `config.mjs`).
 
-These example only modules are accessible but are used internal and not recommended for using in your example script:
-
-- `@examples/ministats` - The interface for enabling and disabling MiniStats (Used only in the template `./iframe/example.html`).
-- `@examples/loader` - The interface for loading an example (Used only in the template `./iframe/example.html`).
-
 ## Deployment
 
 1) **Build the latest engine** by running the following in the `/engine` directory:

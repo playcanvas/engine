@@ -2,8 +2,8 @@ import config from '@examples/config';
 import { fetchFile, fire } from '@examples/utils';
 import { data, refresh } from '@examples/observer';
 import files from '@examples/files';
-import MiniStats from '@examples/ministats';
 
+import MiniStats from './ministats.mjs';
 class ExampleLoader {
     /**
      * @type {import('playcanvas').AppBase}

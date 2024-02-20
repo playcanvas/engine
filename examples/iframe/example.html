@@ -19,14 +19,12 @@
                     "@examples/config": '@CONFIG',
                     "@examples/utils": "./utils.mjs",
                     "@examples/observer": "./observer.mjs",
-                    "@examples/files": "./files.mjs",
-                    "@examples/ministats": "./ministats.mjs",
-                    "@examples/loader": "./loader.mjs"
+                    "@examples/files": "./files.mjs"
                 }
             }
         </script>
         <script type="module">
-            import { ExampleLoader } from '@examples/loader';
+            import { ExampleLoader } from './loader.mjs';
             const loader = new ExampleLoader();
 
             Object.defineProperty(window, 'ready', { get: () => loader.ready });
