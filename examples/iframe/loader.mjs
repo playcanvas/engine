@@ -73,7 +73,7 @@ class ExampleLoader {
      * @param {{ engineUrl: string, extrasUrl: string, exampleUrl: string, controlsUrl: string }} options - Options to start the loader
      */
     async start({ engineUrl, extrasUrl, exampleUrl, controlsUrl }) {
-        await import(engineUrl);
+        window.pc = await import(engineUrl);
         await import(extrasUrl);
 
         // @ts-ignore

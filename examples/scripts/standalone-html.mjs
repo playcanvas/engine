@@ -32,13 +32,13 @@ export function controls({ fragment }) {
 function engineFor(type) {
     switch (type) {
         case 'DEVELOPMENT':
-            return './playcanvas.dev.js';
+            return './ENGINE_PATH/index.js';
         case 'PERFORMANCE':
-            return './playcanvas.prf.js';
+            return './playcanvas.prf.mjs/index.js';
         case 'DEBUG':
-            return './playcanvas.dbg.js';
+            return './playcanvas.dbg.mjs/index.js';
     }
-    return './playcanvas.js';
+    return './playcanvas.mjs/index.js';
 }
 
 /**

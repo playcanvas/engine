@@ -237,28 +237,21 @@ if (ENGINE_PATH === '') {
         targets.push(buildTarget(...args));
     };
     if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.js
-        pushTarget('release', 'es5', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.dbg.js
-        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.prf.js
-        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.mjs
+        pushTarget('release', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.js
-        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.js
-        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else {
         console.warn("NODE_ENV is neither production, development nor profiler.");
     }
-} else {
-    // Outputs: dist/iframe/playcanvas.dev.js
-    const lines = [
-        'window.pc = await import(\'./ENGINE_PATH/index.js\');',
-        ''
-    ];
-    fs.writeFileSync('dist/iframe/playcanvas.dev.js', lines.join('\n'), 'utf-8');
 }
 
 export default targets;
