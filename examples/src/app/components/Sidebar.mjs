@@ -65,6 +65,7 @@ class SideBar extends TypedComponent {
     constructor(props) {
         super(props);
         this._onLayoutChange = this._onLayoutChange.bind(this);
+        this._onClickExample = this._onClickExample.bind(this);
     }
 
     componentDidMount() {
@@ -188,8 +189,17 @@ class SideBar extends TypedComponent {
         this.mergeState({ filteredCategories: updatedCategories });
     }
 
-    onClickExample() {
-        iframe.fire('destroy');
+
+    /**
+     * @param {import("react").MouseEvent<HTMLAnchorElement, MouseEvent>} e - The event.
+     * @param {string} path - The path of example.
+     */
+    _onClickExample(e, path) {
+        if (path === iframe.path) {
+            iframe.fire('hotReload');
+        } else {
+            iframe.fire('destroy');
+        }
     }
 
     renderContents() {
@@ -200,7 +210,7 @@ class SideBar extends TypedComponent {
         const { hash } = this.state;
         return Object.keys(categories)
             .sort((a, b) => (a > b ? 1 : -1))
-            .map(category => {
+            .map((category) => {
                 return jsx(
                     Panel,
                     {
@@ -217,15 +227,16 @@ class SideBar extends TypedComponent {
                         },
                         Object.keys(categories[category].examples)
                             .sort((a, b) => (a > b ? 1 : -1))
-                            .map(example => {
-                                const isSelected = new RegExp(`/${category}/${example}$`).test(hash);
+                            .map((example) => {
+                                const path = `/${category}/${example}`;
+                                const isSelected = new RegExp(`${path}$`).test(hash);
                                 const className = `nav-item ${isSelected ? 'selected' : null}`;
                                 return jsx(
                                     Link,
                                     {
                                         key: example,
-                                        to: `/${category}/${example}`,
-                                        onClick: this.onClickExample.bind(this)
+                                        to: path,
+                                        onClick: e => this._onClickExample(e, path)
                                     },
                                     jsx(
                                         'div',
@@ -269,8 +280,8 @@ class SideBar extends TypedComponent {
             panelOptions.collapsed = collapsed;
         }
         return jsx(
-            // @ts-ignore
             Panel,
+            // @ts-ignore
             panelOptions,
             jsx(TextInput, {
                 class: 'filter-input',

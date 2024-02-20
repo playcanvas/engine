@@ -33,6 +33,15 @@ class IFrame {
         return false;
     }
 
+    get path() {
+        const groups = /([\w\d-]+)_([\w\d-]+).html$/g.exec(this.window?.location.href ?? '');
+        if (!groups) {
+            return '';
+        }
+
+        return `/${groups[1]}/${groups[2]}`;
+    }
+
     reload() {
         this.window?.location.reload();
     }
