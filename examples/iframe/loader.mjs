@@ -4,6 +4,7 @@ import { data, refresh } from '@examples/observer';
 import files from '@examples/files';
 
 import MiniStats from './ministats.mjs';
+
 class ExampleLoader {
     /**
      * @type {import('playcanvas').AppBase}
