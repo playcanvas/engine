@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import * as pcx from 'playcanvas-extras';
 import { deviceType, rootPath } from '@examples/utils';
 
 const canvas = document.getElementById('application-canvas');

@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import * as pcx from 'playcanvas-extras';
 import { data } from '@examples/observer';
 import { deviceType, rootPath } from '@examples/utils';
 
