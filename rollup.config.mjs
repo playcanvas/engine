@@ -60,10 +60,15 @@ export default (args) => {
         ['release', 'debug', 'profiler', 'min'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
                 if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-                    targets.push(buildTarget(t, m));
+                    targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
                 }
             });
+
+            // Add an unbundled es6 build
+            if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+
         });
+
 
         if (envTarget === null) {
             // no targets specified, build them all
