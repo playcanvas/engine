@@ -59,7 +59,7 @@ const stripFunctions = [
  * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
  * @returns {RollupOptions} One rollup target.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build', shouldBundle = false) {
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build', shouldBundle = true) {
     const banner = {
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
