@@ -266,6 +266,12 @@ class XrManager extends EventHandler {
     _depthFar = 1000;
 
     /**
+     * @type {number[]|null}
+     * @private
+     */
+    _supportedFrameRates = null;
+
+    /**
      * @type {number}
      * @private
      */
@@ -717,6 +723,12 @@ class XrManager extends EventHandler {
 
         this._createBaseLayer();
 
+        if (this.session.supportedFrameRates) {
+            this._supportedFrameRates = Array.from(this.session.supportedFrameRates);
+        } else {
+            this._supportedFrameRates = null;
+        }
+
         this._session.addEventListener('frameratechange', () => {
             this.fire('frameratechange', this._session?.frameRate);
         });
@@ -974,10 +986,10 @@ class XrManager extends EventHandler {
     /**
      * List of supported frame rates, or null if this data is not available.
      *
-     * @type {Float32Array|null}
+     * @type {number[]|null}
      */
     get supportedFrameRates() {
-        return this._session?.supportedFrameRates ?? null;
+        return this._supportedFrameRates;
     }
 
     /**
