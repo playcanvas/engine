@@ -18,7 +18,7 @@
   ],
   "license": "MIT",
   "main": "build/playcanvas.js",
-  "module": "build/playcanvas.mjs/index.js",
+  "module": "build/playcanvas.mjs",
   "types": "build/playcanvas.d.ts",
   "sideEffects": false,
   "type": "module",
