@@ -65,7 +65,7 @@ export default (args) => {
             });
 
             // Add an unbundled es6 build
-            targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+            if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
 
         });
 
