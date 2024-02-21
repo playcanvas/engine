@@ -105,7 +105,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
 
     const outputExtension = {
         es5: '.js',
-        es6: shouldBundle ? '.esm.js' : '.mjs'
+        es6: shouldBundle ? '.mjs' : ''
     };
 
     /** @type {Record<string, ModuleFormat>} */
