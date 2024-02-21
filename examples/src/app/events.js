@@ -1,37 +1,22 @@
 /**
- * @typedef {object} Loading
- * @property {object} detail - The detail object.
- * @property {boolean} detail.showDeviceSelector - Show device selector.
+ * @typedef {object} LoadingEventDetail
+ * @property {boolean} showDeviceSelector - Show device selector
  *
- * @typedef {Event & Loading} LoadingEvent
+ * @typedef {CustomEvent<LoadingEventDetail>} LoadingEvent.
  */
 
 /**
- * @typedef {object} Load
+ * @typedef {object} StateEventDetail
+ * @property {import('@playcanvas/observer').Observer} observer - The PCUI observer.
  * @property {Record<string, string>} files - The example files.
- * @property {string} description - The example description..
+ * @property {string} description - The example description.
  *
- * @typedef {Event & Load} LoadEvent
+ * @typedef {CustomEvent<StateEventDetail>} StateEvent
  */
 
 /**
- * @typedef {object} UpdateFiles
- * @property {object} detail - The detail object.
- * @property {Record<string, string>} detail.files - The example files
+ * @typedef {object} DeviceEventDetail
+ * @property {string} deviceType - The device type.
  *
- * @typedef {Event & UpdateFiles} UpdateFilesEvent
- */
-
-/**
- * @typedef {object} HandleFiles
- * @property {Record<string, string>} detail - The example files object.
- *
- * @typedef {Event & HandleFiles} HandleFilesEvent
- */
-
-/**
- * @typedef {object} UpdateActiveDevice
- * @property {string} detail - The detail object.
- *
- * @typedef {Event & UpdateActiveDevice} UpdateActiveDeviceEvent
+ * @typedef {CustomEvent<DeviceEventDetail>} DeviceEvent
  */
