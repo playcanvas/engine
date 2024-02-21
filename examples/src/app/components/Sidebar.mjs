@@ -163,12 +163,12 @@ class SideBar extends TypedComponent {
         }
         /** @type {Record<string, Record<string, object>>} */
         const updatedCategories = {};
-        Object.keys(defaultCategories).forEach(category => {
+        Object.keys(defaultCategories).forEach((category) => {
             if (category.search(reg) !== -1) {
                 updatedCategories[category] = defaultCategories[category];
                 return null;
             }
-            Object.keys(defaultCategories[category].examples).forEach(example => {
+            Object.keys(defaultCategories[category].examples).forEach((example) => {
                 // @ts-ignore
                 const title = defaultCategories[category].examples[example];
                 if (title.search(reg) !== -1) {
