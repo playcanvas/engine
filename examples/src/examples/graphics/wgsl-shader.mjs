@@ -50,33 +50,33 @@ async function example({ canvas, deviceType, files, glslangPath, twgslPath }) {
         window.removeEventListener('resize', resize);
     });
 
-    // create box entity
-    const box = new pc.Entity('cube');
-    box.addComponent('render', {
-        type: 'box'
-    });
-    app.root.addChild(box);
-
     const shaderDefinition = {
         vshader: files['shader.wgsl'],
         fshader: files['shader.wgsl'],
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+
+        // For now WGSL shaders need to provide their own bind group formats as they aren't processed.
+        // This has to match the ub_mesh struct in the shader.
+        meshUniformBufferFormat: new pc.UniformBufferFormat(app.graphicsDevice, [
+            new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4),
+            new pc.UniformFormat('amount', pc.UNIFORMTYPE_FLOAT)
+        ]),
+        meshBindGroupFormat: new pc.BindGroupFormat(app.graphicsDevice, [
+            new pc.BindBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT)
+        ])
     };
     const shader = new pc.Shader(app.graphicsDevice, shaderDefinition);
 
-    // For now WGSL shaders need to provide their own formats as they aren't processed.
-    // This should match your ub_mesh struct in the shader.
-    shader.meshUniformBufferFormat = new pc.UniformBufferFormat(app.graphicsDevice, [
-        new pc.UniformFormat('matrix_model', pc.UNIFORMTYPE_MAT4),
-        new pc.UniformFormat('amount', pc.UNIFORMTYPE_FLOAT)
-    ]);
-    shader.meshBindGroupFormat = new pc.BindGroupFormat(app.graphicsDevice, [
-        new pc.BindBufferFormat(pc.UNIFORM_BUFFER_DEFAULT_SLOT_NAME, pc.SHADERSTAGE_VERTEX | pc.SHADERSTAGE_FRAGMENT)
-    ]);
-
     const material = new pc.Material();
     material.shader = shader;
-    box.render.material = material;
+
+    // create box entity
+    const box = new pc.Entity('cube');
+    box.addComponent('render', {
+        type: 'box',
+        material: material
+    });
+    app.root.addChild(box);
 
     // create camera entity
     const camera = new pc.Entity('camera');

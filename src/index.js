@@ -69,7 +69,6 @@ export * from './platform/audio/constants.js';
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
 export { BindGroupFormat, BindBufferFormat, BindTextureFormat, BindStorageTextureFormat } from './platform/graphics/bind-group-format.js';
-export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
@@ -85,6 +84,7 @@ export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by s
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
+export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-buffer-format.js';
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
 export { VertexIterator } from './platform/graphics/vertex-iterator.js';

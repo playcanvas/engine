@@ -61,6 +61,8 @@ class WebgpuShader {
             this._vertexCode = definition.vshader ?? null;
             this._fragmentCode = definition.fshader ?? null;
             this._computeCode = definition.cshader ?? null;
+            this.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+            this.meshBindGroupFormat = definition.meshBindGroupFormat;
             this.vertexEntryPoint = 'vertexMain';
             this.fragmentEntryPoint = 'fragmentMain';
             shader.ready = true;

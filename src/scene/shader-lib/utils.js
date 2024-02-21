@@ -155,8 +155,8 @@ function processShader(shader, processingOptions) {
     // For now WGSL shaders need to provide their own formats as they aren't processed.
     // Make sure to copy these from the original shader.
     if (shader.definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
-        variant.meshUniformBufferFormat = shader.meshUniformBufferFormat;
-        variant.meshBindGroupFormat = shader.meshBindGroupFormat;
+        variant.meshUniformBufferFormat = shaderDefinition.meshUniformBufferFormat;
+        variant.meshBindGroupFormat = shaderDefinition.meshBindGroupFormat;
     }
 
     // unregister it again
