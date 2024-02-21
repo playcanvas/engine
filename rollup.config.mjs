@@ -63,10 +63,12 @@ export default (args) => {
                     targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
                 }
             });
+
+            // Add an unbundled es6 build
+            targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+
         });
 
-        // Manually add a single unbundled es6 build
-        targets.push(buildTarget('release', 'es6', 'src/index.js', 'build', false));
 
         if (envTarget === null) {
             // no targets specified, build them all
