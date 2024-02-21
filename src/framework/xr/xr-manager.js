@@ -960,6 +960,30 @@ class XrManager extends EventHandler {
     }
 
     /**
+     * Set fixed foveation to the value between 0 and 1. Where 0 - no foveation, and 1 - highest
+     * foveation. It only can be set during an active XR session.
+     * Fixed foveation will reduce the resolution of the back buffer at the edges of the sceen,
+     * which can improve rendering performance.
+     *
+     * @type {number}
+     */
+    set fixedFoveation(value) {
+        if ((this._baseLayer?.fixedFoveation ?? null) !== null) {
+            this._baseLayer.fixedFoveation = value;
+        }
+    }
+
+    /**
+     * Current fixed foveation level, which is between 0 and 1. 0 - no forveation, and 1 - highest
+     * foveation. If fixed foveation is not supported, this value returns null.
+     *
+     * @type {number|null}
+     */
+    get fixedFoveation() {
+        return this._baseLayer?.fixedFoveation ?? null;
+    }
+
+    /**
      * Active camera for which XR session is running or null.
      *
      * @type {import('../entity.js').Entity|null}
