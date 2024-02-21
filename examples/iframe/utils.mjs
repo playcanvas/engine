@@ -47,21 +47,31 @@ export async function loadES5(url) {
     return (Function('module', 'exports', txt).call(module, module, module.exports), module).exports;
 }
 
+function isLinuxChrome() {
+    // Lack of Chrome's WebGPU support on Linux
+    return navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome");
+}
+
 /**
  * @returns {string} - The device type.
  */
 function getDeviceType() {
+    if (config.WEBGPU_REQUIRED) {
+        if (isLinuxChrome()) {
+            return 'webgl2';
+        }
+        return 'webgpu';
+    }
+
     if (params.deviceType) {
         console.warn("Overwriting default deviceType from URL");
         return params.deviceType;
     }
 
-    const webGPUEnabled = !!config.WEBGPU_ENABLED;
     const savedDevice = localStorage.getItem('preferredGraphicsDevice');
-    if (webGPUEnabled) {
+    if (config.WEBGPU_ENABLED) {
         let preferredDevice = 'webgpu';
-        // Lack of Chrome's WebGPU support on Linux
-        if (navigator.platform.includes('Linux') && navigator.appVersion.includes("Chrome")) {
+        if (isLinuxChrome()) {
             preferredDevice = 'webgl2';
         }
         return savedDevice || preferredDevice;
