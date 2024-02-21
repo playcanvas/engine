@@ -60,9 +60,13 @@ export default (args) => {
         ['release', 'debug', 'profiler', 'min'].forEach((t) => {
             ['es5', 'es6'].forEach((m) => {
                 if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-                    targets.push(buildTarget(t, m));
+                    const shouldBundle = m === 'es5';
+                    targets.push(buildTarget(t, m, 'src/index.js', 'build', shouldBundle));
                 }
             });
+
+            // Manually add an bundled es6 build
+            targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', true));
         });
 
         if (envTarget === null) {
