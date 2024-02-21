@@ -56,9 +56,10 @@ const stripFunctions = [
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @param {string} input - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [buildDir] - Only used for examples to change the output location.
+ * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
  * @returns {RollupOptions} One rollup target.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build') {
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build', shouldBundle = true) {
     const banner = {
         debug: ' (DEBUG)',
         release: ' (RELEASE)',
@@ -104,7 +105,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
 
     const outputExtension = {
         es5: '.js',
-        es6: '.mjs'
+        es6: shouldBundle ? '.mjs' : ''
     };
 
     /** @type {Record<string, ModuleFormat>} */
@@ -125,11 +126,11 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         indent: '\t',
         sourcemap: sourceMap[buildType] || sourceMap.release,
         name: 'pc',
-        preserveModules: moduleFormat === 'es6'
+        preserveModules: !shouldBundle
     };
 
     const loc = `${buildDir}/${outputFile[buildType]}${outputExtension[moduleFormat]}`;
-    outputOptions[moduleFormat === 'es6' ? 'dir' : 'file'] = loc;
+    outputOptions[shouldBundle ? 'file' : 'dir'] = loc;
 
     const sdkVersion = {
         _CURRENT_SDK_VERSION: version,
