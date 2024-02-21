@@ -278,6 +278,12 @@ class XrManager extends EventHandler {
     _height = 0;
 
     /**
+     * @type {number}
+     * @private
+     */
+    _framebufferScaleFactor = 1.0;
+
+    /**
      * Create a new XrManager instance.
      *
      * @param {import('../app-base.js').AppBase} app - The main application.
@@ -361,6 +367,9 @@ class XrManager extends EventHandler {
      * starting point.
      *
      * @param {object} [options] - Object with additional options for XR session initialization.
+     * @param {number} [options.framebufferScaleFactor] - Framebuffer scale factor should
+     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution of
+     * an XR session in half, and a value of 2.0 will double the resolution.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.anchors] - Set to true to attempt to enable
@@ -417,6 +426,9 @@ class XrManager extends EventHandler {
         this._camera.camera.xr = this;
         this._type = type;
         this._spaceType = spaceType;
+
+        if (options?.framebufferScaleFactor)
+            this._framebufferScaleFactor = options.framebufferScaleFactor;
 
         this._setClipPlanes(camera.nearClip, camera.farClip);
 
@@ -741,7 +753,7 @@ class XrManager extends EventHandler {
 
     _createBaseLayer() {
         const device = this.app.graphicsDevice;
-        const framebufferScaleFactor = device.maxPixelRatio / window.devicePixelRatio;
+        const framebufferScaleFactor = (device.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
 
         this._baseLayer = new XRWebGLLayer(this._session, device.gl, {
             alpha: true,
@@ -936,6 +948,16 @@ class XrManager extends EventHandler {
      */
     get session() {
         return this._session;
+    }
+
+    /**
+     * Framebuffer scale factor. This value is read-only and can only be set when starting a new
+     * XR session.
+     *
+     * @type {number}
+     */
+    get framebufferScaleFactor() {
+        return this._framebufferScaleFactor;
     }
 
     /**
