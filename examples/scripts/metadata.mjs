@@ -40,33 +40,44 @@ function getDirFiles(path) {
     return fs.readdirSync(path);
 }
 
-function main() {
+async function main() {
     const rootPath = `${MAIN_DIR}/src/examples`;
     const categories = getDirFiles(rootPath);
 
-    categories.forEach((category) => {
+    await Promise.all(categories.map(async (category) => {
         const categoryPath = resolve(`${rootPath}/${category}`);
         const examplesFiles = getDirFiles(categoryPath);
 
         const categoryKebab = toKebabCase(category);
 
-        examplesFiles.forEach((exampleFile) => {
+        await Promise.all(examplesFiles.map(async (exampleFile) => {
             const path = resolve(`${categoryPath}/${exampleFile}`);
             const exampleName = exampleFile.split('.').shift() ?? '';
             const exampleNameKebab = toKebabCase(exampleName);
+
+            const configPath = resolve(path, 'config.mjs');
+            if (fs.existsSync(configPath)) {
+                const config = (await import(`file://${configPath}`)).default;
+                if (config.HIDDEN && process.env.NODE_ENV !== 'development') {
+                    console.info(`skipping hidden ${categoryKebab}/${exampleNameKebab}`);
+                    return;
+                }
+            }
 
             exampleMetaData.push({
                 path,
                 categoryKebab,
                 exampleNameKebab
             });
-        });
-    });
+        }));
+    }));
 
     if (!fs.existsSync(`${MAIN_DIR}/cache`)) {
         fs.mkdirSync(`${MAIN_DIR}/cache`);
     }
 
     fs.writeFileSync(`${MAIN_DIR}/cache/metadata.mjs`, `export const exampleMetaData = ${stringify(exampleMetaData)};\n`);
+
+    return 0;
 }
-main();
+main().then(process.exit);

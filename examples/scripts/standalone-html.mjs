@@ -12,7 +12,6 @@ const __filename = fileURLToPath(import.meta.url);
 const MAIN_DIR = `${dirname(__filename)}/../`;
 const EXAMPLE_HTML = fs.readFileSync(`${MAIN_DIR}/iframe/example.html`, 'utf-8');
 
-
 const TEMPLATE_CONFIG = `export default {};\n`;
 const TEMPLATE_CONTROLS = `/**
  * @param {import('../../../app/components/Example.mjs').ControlOptions} options - The options.
@@ -114,8 +113,9 @@ async function main() {
         const controlsExist = fs.existsSync(controlsPath);
         const configExists = fs.existsSync(configPath);
 
-        // html files
         const config = configExists ? (await import(`file://${configPath}`)).default : {};
+
+        // html file
         const out = generateExampleFile(categoryKebab, exampleNameKebab, config);
         fs.writeFileSync(`${MAIN_DIR}/dist/iframe/${name}.html`, out);
 
