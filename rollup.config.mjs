@@ -14,7 +14,7 @@ console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs'),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras'),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
