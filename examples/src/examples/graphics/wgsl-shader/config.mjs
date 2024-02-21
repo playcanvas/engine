@@ -5,7 +5,7 @@ export default {
     WEBGPU_REQUIRED: true,
     HIDDEN: true,
     FILES: {
-        'shader.wgsl': /* glsl */`
+        'shader.wgsl': /* wgsl */`
             struct ub_mesh {
                 matrix_model : mat4x4f,
                 amount : f32,

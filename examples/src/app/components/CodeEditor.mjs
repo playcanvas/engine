@@ -6,7 +6,11 @@ import { pcTypes } from '../paths.mjs';
 import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
-import { playcanvasTheme, glslConfig, glslLang } from '../monaco.config.mjs';
+import { playcanvasTheme } from '../monaco/theme.mjs';
+import * as glsl from '../monaco/languages/glsl.mjs';
+import * as wgsl from '../monaco/languages/wgsl.mjs';
+import * as languages from '../monaco/languages/index.mjs';
+
 import '../events.js';
 
 loader.config({ paths: { vs: './modules/monaco-editor/min/vs' } });
@@ -27,6 +31,7 @@ const FILE_TYPE_LANGUAGES = {
     shader: '',
     vert: 'glsl',
     frag: 'glsl',
+    wgsl: 'wgsl',
     javascript: 'javascript',
     js: 'javascript',
     mjs: 'javascript'
@@ -131,10 +136,14 @@ class CodeEditor extends TypedComponent {
                     '@playcanvas/playcanvas.d.ts'
                 );
 
-                // set glsl language
-                monaco.languages.register({ id: 'glsl' });
-                monaco.languages.setLanguageConfiguration('glsl', glslConfig);
-                monaco.languages.setMonarchTokensProvider('glsl', glslLang);
+                // set languages
+                for (const id in languages) {
+                    monaco.languages.register({ id });
+                    // @ts-ignore
+                    monaco.languages.setLanguageConfiguration(id, languages[id].conf);
+                    // @ts-ignore
+                    monaco.languages.setMonarchTokensProvider(id, languages[id].language);
+                }
             });
     }
 
