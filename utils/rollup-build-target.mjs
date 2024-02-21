@@ -169,8 +169,6 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         es6: moduleOptions(buildType)
     };
 
-    console.log(babelOptions[moduleFormat])
-
     return {
         input,
         output: outputOptions,
