@@ -623,6 +623,25 @@ class XrManager extends EventHandler {
     }
 
     /**
+     * @param {number} frameRate - Target frame rate. It should be any value from the list
+     * of supportedFrameRates.
+     * @param {Function} [callback] - Callback that will be called when frameRate has been
+     * updated or failed to update with error provided.
+     */
+    updateTargetFrameRate(frameRate, callback) {
+        if (!this._session?.updateTargetFrameRate)
+            return callback?.(new Error('unable to update frameRate'));
+
+        this._session.updateTargetFrameRate(frameRate)
+            .then(() => {
+                callback?.();
+            })
+            .catch((err) => {
+                callback?.(err);
+            });
+    }
+
+    /**
      * @param {string} type - Session type.
      * @private
      */
@@ -697,6 +716,10 @@ class XrManager extends EventHandler {
         Debug.assert(window, 'window is needed to scale the XR framebuffer. Are you running XR headless?');
 
         this._createBaseLayer();
+
+        this._session.addEventListener('frameratechange', () => {
+            this.fire('frameratechange', this._session?.frameRate);
+        });
 
         // request reference space
         session.requestReferenceSpace(spaceType).then((referenceSpace) => {
@@ -936,6 +959,25 @@ class XrManager extends EventHandler {
      */
     get session() {
         return this._session;
+    }
+
+    /**
+     * XR session frameRate or null if this information is not available. This value can change
+     * during an active XR session.
+     *
+     * @type {number|null}
+     */
+    get frameRate() {
+        return this._session?.frameRate ?? null;
+    }
+
+    /**
+     * List of supported frame rates, or null if this data is not available.
+     *
+     * @type {Float32Array|null}
+     */
+    get supportedFrameRates() {
+        return this._session?.supportedFrameRates ?? null;
     }
 
     /**
