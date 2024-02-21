@@ -598,7 +598,7 @@ class Material {
      * Registers mesh instance as referencing the material.
      *
      * @param {import('../mesh-instance.js').MeshInstance} meshInstance - The mesh instance to
-     * de-register.
+     * register.
      * @ignore
      */
     addMeshInstanceRef(meshInstance) {
