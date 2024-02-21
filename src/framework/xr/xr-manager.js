@@ -642,7 +642,7 @@ class XrManager extends EventHandler {
     /**
      * Update target frame rate of an XR session to one of supported value provided by
      * supportedFrameRates list.
-     * 
+     *
      * @param {number} frameRate - Target frame rate. It should be any value from the list
      * of supportedFrameRates.
      * @param {Function} [callback] - Callback that will be called when frameRate has been
