@@ -427,8 +427,7 @@ class XrManager extends EventHandler {
         this._type = type;
         this._spaceType = spaceType;
 
-        if (options?.framebufferScaleFactor)
-            this._framebufferScaleFactor = options.framebufferScaleFactor;
+        this._framebufferScaleFactor = options?.framebufferScaleFactor ?? 1.0;
 
         this._setClipPlanes(camera.nearClip, camera.farClip);
 
