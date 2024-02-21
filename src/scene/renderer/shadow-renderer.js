@@ -300,9 +300,6 @@ class ShadowRenderer {
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
 
-        // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
-        // and endShaderBatch should be called at its end
-
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {

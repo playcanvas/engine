@@ -530,9 +530,6 @@ class ForwardRenderer extends Renderer {
             prevLightMask = lightMask;
         }
 
-        // process the batch of shaders created here
-        device.endShaderBatch?.();
-
         return _drawCallList;
     }
 
