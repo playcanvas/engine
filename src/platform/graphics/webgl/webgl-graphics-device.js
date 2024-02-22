@@ -372,6 +372,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
+        /** @type {WebGL2RenderingContext} */
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
@@ -400,6 +401,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.isWebGL2 = typeof WebGL2RenderingContext !== 'undefined' && gl instanceof WebGL2RenderingContext;
         this.isWebGL1 = !this.isWebGL2;
         this._deviceType = this.isWebGL2 ? DEVICETYPE_WEBGL2 : DEVICETYPE_WEBGL1;
+
+        // supported sampler types
+        this._samplerTypes = new Set([
+            ...[
+                gl.SAMPLER_2D,
+                gl.SAMPLER_CUBE
+            ],
+            ...(this.isWebGL2 ? [
+                gl.UNSIGNED_INT_SAMPLER_2D,
+                gl.INT_SAMPLER_2D,
+                gl.SAMPLER_2D_SHADOW,
+                gl.SAMPLER_CUBE_SHADOW,
+                gl.SAMPLER_3D,
+                gl.INT_SAMPLER_3D,
+                gl.UNSIGNED_INT_SAMPLER_3D,
+                gl.SAMPLER_2D_ARRAY,
+                gl.INT_SAMPLER_2D_ARRAY,
+                gl.UNSIGNED_INT_SAMPLER_2D_ARRAY
+            ] : [])
+        ]);
 
         // pixel format of the framebuffer
         this.updateBackbufferFormat(null);
