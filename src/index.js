@@ -8,6 +8,7 @@
  * @module Engine
  */
 
+// #if _IS_UMD
 // POLYFILLS
 import './polyfill/array-fill.js';
 import './polyfill/array-find.js';
@@ -20,6 +21,7 @@ import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
 import './polyfill/typedarray-fill.js';
+// #endif
 
 // CORE
 export * from './core/constants.js';
