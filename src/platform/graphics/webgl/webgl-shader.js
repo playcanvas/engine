@@ -5,6 +5,7 @@ import { now } from '../../../core/time.js';
 import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 let _totalCompileTime = 0;
 
@@ -398,7 +399,7 @@ class WebglShader {
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
             const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code} while rendering ${DebugGraphics.toString()}`;
             // #if _DEBUG
             error.shader = shader;
             console.error(message, error);
