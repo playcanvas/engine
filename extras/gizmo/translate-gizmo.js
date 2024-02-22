@@ -4,7 +4,7 @@ import {
 } from 'playcanvas';
 
 import { AxisArrow, AxisPlane } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -25,45 +25,45 @@ class TranslateGizmo extends TransformGizmo {
             flipAxis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullNone,
-            hoverColor: this._materials.hover.x.cullNone
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x
         }),
         xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullNone,
-            hoverColor: this._materials.hover.y.cullNone
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y
         }),
         xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullNone,
-            hoverColor: this._materials.hover.z.cullNone
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z
         }),
         x: new AxisArrow(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x
         }),
         y: new AxisArrow(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y
         }),
         z: new AxisArrow(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z
         })
     };
 
@@ -248,7 +248,7 @@ class TranslateGizmo extends TransformGizmo {
     _setNodePositions(pointDelta) {
         for (let i = 0; i < this.nodes.length; i++) {
             const node = this.nodes[i];
-            if (this._coordSpace === LOCAL_COORD_SPACE) {
+            if (this._coordSpace === GIZMO_LOCAL) {
                 tmpV1.copy(pointDelta);
                 node.parent.getWorldTransform().getScale(tmpV2);
                 tmpV2.x = 1 / tmpV2.x;

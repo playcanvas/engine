@@ -107,7 +107,6 @@ class NullGraphicsDevice extends GraphicsDevice {
     }
 
     setShader(shader) {
-        return true;
     }
 
     setBlendState(blendState) {

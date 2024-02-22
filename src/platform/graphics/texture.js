@@ -16,7 +16,7 @@ import {
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
-    isIntegerPixelFormat, FILTER_NEAREST
+    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ
 } from './constants.js';
 
 let id = 0;
@@ -46,6 +46,9 @@ class Texture {
 
     /** @protected */
     _lockedLevel = -1;
+
+    /** @protected */
+    _lockedMode = TEXTURELOCK_NONE;
 
     /**
      * A render version used to track the last time the texture properties requiring bind group
@@ -375,6 +378,20 @@ class Texture {
      */
     get requiredMipLevels() {
         return this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+    }
+
+    /**
+     * Returns the current lock mode. One of:
+     *
+     * - {@link TEXTURELOCK_NONE}
+     * - {@link TEXTURELOCK_READ}
+     * - {@link TEXTURELOCK_WRITE}
+     *
+     * @ignore
+     * @type {number}
+     */
+    get lockedMode() {
+        return this._lockedMode;
     }
 
     /**
@@ -773,6 +790,19 @@ class Texture {
         options.face ??= 0;
         options.mode ??= TEXTURELOCK_WRITE;
 
+        Debug.assert(
+            this._lockedMode === TEXTURELOCK_NONE,
+            'The texture is already locked. Call `texture.unlock()` before attempting to lock again.',
+            this
+        );
+
+        Debug.assert(
+            options.mode === TEXTURELOCK_READ || options.mode === TEXTURELOCK_WRITE,
+            'Cannot lock a texture with TEXTURELOCK_NONE. To unlock a texture, call `texture.unlock()`.',
+            this
+        );
+
+        this._lockedMode = options.mode;
         this._lockedLevel = options.level;
 
         const levels = this.cubemap ? this._levels[options.face] : this._levels;
@@ -900,13 +930,16 @@ class Texture {
      * Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        if (this._lockedLevel === -1) {
-            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
+        if (this._lockedMode === TEXTURELOCK_NONE) {
+            Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
         }
 
-        // Upload the new pixel data
-        this.upload();
+        // Upload the new pixel data if locked in write mode (default)
+        if (this._lockedMode === TEXTURELOCK_WRITE) {
+            this.upload();
+        }
         this._lockedLevel = -1;
+        this._lockedMode = TEXTURELOCK_NONE;
     }
 
     /**

@@ -175,7 +175,6 @@ class XrManager extends EventHandler {
      * Provides access to DOM overlay capabilities.
      *
      * @type {XrDomOverlay}
-     * @ignore
      */
     domOverlay;
 
@@ -191,7 +190,6 @@ class XrManager extends EventHandler {
      * Provides access to image tracking capabilities.
      *
      * @type {XrImageTracking}
-     * @ignore
      */
     imageTracking;
 
@@ -199,7 +197,6 @@ class XrManager extends EventHandler {
      * Provides access to plane detection capabilities.
      *
      * @type {XrPlaneDetection}
-     * @ignore
      */
     planeDetection;
 
@@ -207,7 +204,6 @@ class XrManager extends EventHandler {
      * Provides access to mesh detection capabilities.
      *
      * @type {XrMeshDetection}
-     * @ignore
      */
     meshDetection;
 
@@ -222,7 +218,6 @@ class XrManager extends EventHandler {
      * Provides access to light estimation capabilities.
      *
      * @type {XrLightEstimation}
-     * @ignore
      */
     lightEstimation;
 
@@ -230,7 +225,6 @@ class XrManager extends EventHandler {
      * Provides access to views and their capabilities.
      *
      * @type {XrViews}
-     * @ignore
      */
     views;
 
@@ -272,6 +266,12 @@ class XrManager extends EventHandler {
     _depthFar = 1000;
 
     /**
+     * @type {number[]|null}
+     * @private
+     */
+    _supportedFrameRates = null;
+
+    /**
      * @type {number}
      * @private
      */
@@ -282,6 +282,12 @@ class XrManager extends EventHandler {
      * @private
      */
     _height = 0;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _framebufferScaleFactor = 1.0;
 
     /**
      * Create a new XrManager instance.
@@ -367,6 +373,9 @@ class XrManager extends EventHandler {
      * starting point.
      *
      * @param {object} [options] - Object with additional options for XR session initialization.
+     * @param {number} [options.framebufferScaleFactor] - Framebuffer scale factor should
+     * be higher than 0.0, by default 1.0 (no scaling). A value of 0.5 will reduce the resolution of
+     * an XR session in half, and a value of 2.0 will double the resolution.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
      * @param {boolean} [options.anchors] - Set to true to attempt to enable
@@ -423,6 +432,8 @@ class XrManager extends EventHandler {
         this._camera.camera.xr = this;
         this._type = type;
         this._spaceType = spaceType;
+
+        this._framebufferScaleFactor = options?.framebufferScaleFactor ?? 1.0;
 
         this._setClipPlanes(camera.nearClip, camera.farClip);
 
@@ -492,9 +503,9 @@ class XrManager extends EventHandler {
             if (webgl && options && options.cameraColor && this.views.supportedColor) {
                 opts.optionalFeatures.push('camera-access');
             }
-        } else if (type === XRTYPE_VR) {
-            opts.optionalFeatures.push('hand-tracking');
         }
+
+        opts.optionalFeatures.push('hand-tracking');
 
         if (options && options.optionalFeatures)
             opts.optionalFeatures = opts.optionalFeatures.concat(options.optionalFeatures);
@@ -629,6 +640,30 @@ class XrManager extends EventHandler {
     }
 
     /**
+     * Update target frame rate of an XR session to one of supported value provided by
+     * supportedFrameRates list.
+     *
+     * @param {number} frameRate - Target frame rate. It should be any value from the list
+     * of supportedFrameRates.
+     * @param {Function} [callback] - Callback that will be called when frameRate has been
+     * updated or failed to update with error provided.
+     */
+    updateTargetFrameRate(frameRate, callback) {
+        if (!this._session?.updateTargetFrameRate) {
+            callback?.(new Error('unable to update frameRate'));
+            return;
+        }
+
+        this._session.updateTargetFrameRate(frameRate)
+            .then(() => {
+                callback?.();
+            })
+            .catch((err) => {
+                callback?.(err);
+            });
+    }
+
+    /**
      * @param {string} type - Session type.
      * @private
      */
@@ -704,6 +739,16 @@ class XrManager extends EventHandler {
 
         this._createBaseLayer();
 
+        if (this.session.supportedFrameRates) {
+            this._supportedFrameRates = Array.from(this.session.supportedFrameRates);
+        } else {
+            this._supportedFrameRates = null;
+        }
+
+        this._session.addEventListener('frameratechange', () => {
+            this.fire('frameratechange', this._session?.frameRate);
+        });
+
         // request reference space
         session.requestReferenceSpace(spaceType).then((referenceSpace) => {
             this._referenceSpace = referenceSpace;
@@ -747,7 +792,7 @@ class XrManager extends EventHandler {
 
     _createBaseLayer() {
         const device = this.app.graphicsDevice;
-        const framebufferScaleFactor = device.maxPixelRatio / window.devicePixelRatio;
+        const framebufferScaleFactor = (device.maxPixelRatio / window.devicePixelRatio) * this._framebufferScaleFactor;
 
         this._baseLayer = new XRWebGLLayer(this._session, device.gl, {
             alpha: true,
@@ -942,6 +987,63 @@ class XrManager extends EventHandler {
      */
     get session() {
         return this._session;
+    }
+
+    /**
+     * XR session frameRate or null if this information is not available. This value can change
+     * during an active XR session.
+     *
+     * @type {number|null}
+     */
+    get frameRate() {
+        return this._session?.frameRate ?? null;
+    }
+
+    /**
+     * List of supported frame rates, or null if this data is not available.
+     *
+     * @type {number[]|null}
+     */
+    get supportedFrameRates() {
+        return this._supportedFrameRates;
+    }
+
+    /**
+     * Framebuffer scale factor. This value is read-only and can only be set when starting a new
+     * XR session.
+     *
+     * @type {number}
+     */
+    get framebufferScaleFactor() {
+        return this._framebufferScaleFactor;
+    }
+
+    /**
+     * Set fixed foveation to the value between 0 and 1. Where 0 - no foveation, and 1 - highest
+     * foveation. It only can be set during an active XR session.
+     * Fixed foveation will reduce the resolution of the back buffer at the edges of the sceen,
+     * which can improve rendering performance.
+     *
+     * @type {number}
+     */
+    set fixedFoveation(value) {
+        if ((this._baseLayer?.fixedFoveation ?? null) !== null) {
+            if (this.app.graphicsDevice.samples > 1) {
+                Debug.warn('Fixed Foveation is ignored. Disable anti-aliasing for it to be effective.');
+            }
+
+            this._baseLayer.fixedFoveation = value;
+        }
+    }
+
+    /**
+     * Current fixed foveation level, which is between 0 and 1. 0 - no forveation, and 1 - highest
+     * foveation. If fixed foveation is not supported, this value returns null.
+     *
+     * @type {number|null}
+     */
+    get fixedFoveation() {
+        return this._baseLayer?.fixedFoveation ?? null;
     }
 
     /**

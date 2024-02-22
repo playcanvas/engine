@@ -488,6 +488,7 @@ class GraphicsDevice extends EventHandler {
         this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
+        this.shaderValid = undefined;
         this.renderTarget = null;
     }
 

@@ -1,4 +1,5 @@
 import {
+    PROJECTION_PERSPECTIVE,
     math,
     Color,
     Quat,
@@ -7,7 +8,7 @@ import {
 } from 'playcanvas';
 
 import { AxisDisk } from './axis-shapes.js';
-import { LOCAL_COORD_SPACE } from './gizmo.js';
+import { GIZMO_LOCAL } from './gizmo.js';
 import { TransformGizmo } from "./transform-gizmo.js";
 
 // temporary variables
@@ -29,32 +30,32 @@ class RotateGizmo extends TransformGizmo {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
-            defaultColor: this._materials.axis.z.cullBack,
-            hoverColor: this._materials.hover.z.cullBack,
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z,
             sectorAngle: 180
         }),
         x: new AxisDisk(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultColor: this._materials.axis.x.cullBack,
-            hoverColor: this._materials.hover.x.cullBack,
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x,
             sectorAngle: 180
         }),
         y: new AxisDisk(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultColor: this._materials.axis.y.cullBack,
-            hoverColor: this._materials.hover.y.cullBack,
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y,
             sectorAngle: 180
         }),
         face: new AxisDisk(this._device, {
             axis: 'face',
             layers: [this._layer.id],
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultColor: this._materials.axis.face,
-            hoverColor: this._materials.hover.face,
+            defaultColor: this._meshColors.axis.face,
+            hoverColor: this._meshColors.hover.face,
             ringRadius: 0.55
         })
     };
@@ -179,9 +180,8 @@ class RotateGizmo extends TransformGizmo {
         });
 
         app.on('update', () => {
-            const cameraPos = this._camera.entity.getPosition();
-            this._faceAxisLookAt(cameraPos);
-            this._xyzAxisLookAt(cameraPos);
+            this._faceAxisLookAtCamera();
+            this._xyzAxisLookAtCamera();
 
             if (this._dragging) {
                 const gizmoPos = this.root.getPosition();
@@ -279,14 +279,25 @@ class RotateGizmo extends TransformGizmo {
         return tmpV1;
     }
 
-    _faceAxisLookAt(position) {
-        this._shapes.face.entity.lookAt(position);
-        this._shapes.face.entity.rotateLocal(90, 0, 0);
+    _faceAxisLookAtCamera() {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            this._shapes.face.entity.lookAt(this._camera.entity.getPosition());
+            this._shapes.face.entity.rotateLocal(90, 0, 0);
+        } else {
+            tmpQ1.copy(this._camera.entity.getRotation());
+            tmpQ1.getEulerAngles(tmpV1);
+            this._shapes.face.entity.setEulerAngles(tmpV1);
+            this._shapes.face.entity.rotateLocal(-90, 0, 0);
+        }
     }
 
-    _xyzAxisLookAt(position) {
-        tmpV1.copy(position).sub(this.root.getPosition());
-        tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
+    _xyzAxisLookAtCamera() {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
+            tmpV1.copy(this._camera.entity.getPosition()).sub(this.root.getPosition());
+            tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
+        } else {
+            tmpV1.copy(this._camera.entity.forward).mulScalar(-1);
+        }
         let angle = Math.atan2(tmpV1.z, tmpV1.y) * math.RAD_TO_DEG;
         this._shapes.x.entity.setLocalEulerAngles(0, angle - 90, -90);
         angle = Math.atan2(tmpV1.x, tmpV1.z) * math.RAD_TO_DEG;
@@ -333,7 +344,7 @@ class RotateGizmo extends TransformGizmo {
 
             tmpQ1.setFromAxisAngle(tmpV1, angleDelta);
 
-            if (!isFacing && this._coordSpace === LOCAL_COORD_SPACE) {
+            if (!isFacing && this._coordSpace === GIZMO_LOCAL) {
                 tmpQ2.copy(this._nodeLocalRotations.get(node)).mul(tmpQ1);
                 node.setLocalRotation(tmpQ2);
             } else {
@@ -347,7 +358,7 @@ class RotateGizmo extends TransformGizmo {
             }
         }
 
-        if (this._coordSpace === LOCAL_COORD_SPACE) {
+        if (this._coordSpace === GIZMO_LOCAL) {
             this._updateRotation();
         }
     }

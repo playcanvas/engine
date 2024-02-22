@@ -69,12 +69,11 @@ const matD = new Mat4();
  * ```
  *
  * Relevant 'Engine-only' examples:
- * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic)
- * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline)
- * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow)
- * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup)
- * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap)
- * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter)
+ * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
+ * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
+ * - [Emojis](https://playcanvas.github.io/#/user-interface/text-emojis)
+ * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
+ * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
  * @property {import('../../../core/math/color.js').Color} color The color of the image for
  * {@link ELEMENTTYPE_IMAGE} types or the color of the text for {@link ELEMENTTYPE_TEXT} types.

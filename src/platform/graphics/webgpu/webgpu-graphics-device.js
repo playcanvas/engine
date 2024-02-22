@@ -223,6 +223,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
+
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
@@ -480,14 +481,14 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     setShader(shader) {
 
-        this.shader = shader;
+        if (shader !== this.shader) {
+            this.shader = shader;
 
-        // #if _PROFILER
-        // TODO: we should probably track other stats instead, like pipeline switches
-        this._shaderSwitchesPerFrame++;
-        // #endif
-
-        return true;
+            // #if _PROFILER
+            // TODO: we should probably track other stats instead, like pipeline switches
+            this._shaderSwitchesPerFrame++;
+            // #endif
+        }
     }
 
     setBlendState(blendState) {

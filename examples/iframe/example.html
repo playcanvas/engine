@@ -1,0 +1,50 @@
+<!-- N.B. All single quote strings starting with '@' and are in all caps denote placeholders for replacement code  -->
+<html>
+    <head>
+        <link rel="stylesheet" href="./example.css" />
+        <title>'@TITLE'</title>
+    </head>
+    <body>
+        <div id="app">
+            <div id="appInner">
+                '@AR_LINK'
+                '@CANVAS'
+            </div>
+        </div>
+        <script src="./polyfill.js"></script>
+        <script type="importmap">
+            {
+                "imports": {
+                    "playcanvas": '@ENGINE',
+                    "fflate": "../../modules/fflate/esm/browser.js",
+                    "@examples/config": '@CONFIG',
+                    "@examples/utils": "./utils.mjs",
+                    "@examples/observer": "./observer.mjs",
+                    "@examples/files": "./files.mjs"
+                }
+            }
+        </script>
+        <script type="module">
+            import { ExampleLoader } from './loader.mjs';
+            const loader = new ExampleLoader();
+
+            Object.defineProperty(window, 'ready', { get: () => loader.ready });
+
+            window.addEventListener('requestFiles', () => loader.sendRequestedFiles());
+            window.addEventListener('stats', (event) => loader.setMiniStats(!!event.detail?.state));
+            window.addEventListener('hotReload', () => loader.hotReload());
+            window.addEventListener('destroy', () => loader.destroy());
+            window.addEventListener('beforeunload', () => loader.exit(), false);
+
+            document.addEventListener('DOMContentLoaded', () => {
+                loader.start({
+                    engineUrl: '@ENGINE',
+                    extrasUrl: './playcanvas-extras.mjs/index.js',
+                    exampleUrl: '@EXAMPLE',
+                    controlsUrl: '@CONTROLS'
+                });
+            });
+        </script>
+    </body>
+</html>
+

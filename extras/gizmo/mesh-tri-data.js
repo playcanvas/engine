@@ -17,6 +17,15 @@ const tmpV3 = new Vec3();
  */
 class MeshTriData {
     /**
+     * The priority of the triangle data (Used for intersection ordering).
+     * priority = 0 - no priority
+     * priority > 0 - higher value represents a higher priority
+     *
+     * @type {number}
+     */
+    _priority = 0;
+
+    /**
      * The transform of the mesh.
      *
      * @type {Mat4}
@@ -30,12 +39,17 @@ class MeshTriData {
      */
     tris;
 
-    constructor(mesh) {
+    constructor(mesh, priority = 0) {
         this.setTris(mesh);
+        this._priority = priority;
     }
 
     get ptm() {
         return this._ptm;
+    }
+
+    get priority() {
+        return this._priority;
     }
 
     _trisFromMesh(mesh, destroy = true) {

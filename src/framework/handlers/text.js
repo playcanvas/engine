@@ -1,15 +1,10 @@
 import { http } from '../../platform/net/http.js';
 
-class TextHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "text";
+import { ResourceHandler } from './handler.js';
 
+class TextHandler extends ResourceHandler {
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'text');
     }
 
     load(url, callback) {
@@ -30,13 +25,6 @@ class TextHandler {
                 callback(`Error loading text resource: ${url.original} [${err}]`);
             }
         });
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

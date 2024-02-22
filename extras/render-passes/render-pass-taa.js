@@ -1,8 +1,5 @@
 import {
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE,
-    BLENDEQUATION_ADD, BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT,
-    Color,
-    BlendState,
     RenderPassShaderQuad,
     Texture,
     RenderTarget
@@ -10,9 +7,23 @@ import {
 
 class RenderPassTAA extends RenderPassShaderQuad {
     /**
-     * @type {Texture}
+     * The index of the accumulation texture to render to.
+     *
+     * @type {number}
      */
-    accumulationTexture;
+    accumulationIndex = 0;
+
+    accumulationTexture = null;
+
+    /**
+     * @type {Texture[]}
+     */
+    accumulationTextures = [];
+
+    /**
+     * @type {RenderTarget[]}
+     */
+    accumulationRenderTargets = [];
 
     constructor(device, sourceTexture) {
         super(device);
@@ -21,18 +32,19 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.shader = this.createQuadShader('TaaResolveShader', `
 
             uniform sampler2D sourceTexture;
+            uniform sampler2D accumulationTexture;
             varying vec2 uv0;
 
             void main()
             {
                 vec4 src = texture2D(sourceTexture, uv0);
-                gl_FragColor = src;
+                vec4 acc = texture2D(accumulationTexture, uv0);
+                gl_FragColor = mix(acc, src, 0.05);
             }`
         );
 
         this.sourceTextureId = device.scope.resolve('sourceTexture');
-
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_CONSTANT, BLENDMODE_ONE_MINUS_CONSTANT);
+        this.accumulationTextureId = device.scope.resolve('accumulationTexture');
 
         this.setup();
     }
@@ -47,46 +59,48 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
     setup() {
 
-        const { device } = this;
+        // double buffered accumulation render target
+        for (let i = 0; i < 2; ++i) {
+            this.accumulationTextures[i] = new Texture(this.device, {
+                name: `TAA-Accumulation-${i}`,
+                width: 4,
+                height: 4,
+                format: this.sourceTexture.format,
+                mipmaps: false,
+                minFilter: FILTER_LINEAR,
+                magFilter: FILTER_LINEAR,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE
+            });
 
-        // create the accumulation render target
-        const texture = new Texture(device, {
-            name: 'TAA Accumulation Texture',
-            width: 4,
-            height: 4,
-            format: this.sourceTexture.format,
-            mipmaps: false,
-            minFilter: FILTER_LINEAR,
-            magFilter: FILTER_LINEAR,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE
-        });
-        this.accumulationTexture = texture;
+            this.accumulationRenderTargets[i] = new RenderTarget({
+                colorBuffer: this.accumulationTextures[i],
+                depth: false
+            });
+        }
 
-        const rt = new RenderTarget({
-            colorBuffer: texture,
-            depth: false
-        });
-
-        this.init(rt, {
+        this.accumulationTexture = this.accumulationTextures[0];
+        this.init(this.accumulationRenderTargets[0], {
             resizeSource: this.sourceTexture
         });
-
-        // clear it to black initially
-        this.setClearColor(Color.BLACK);
     }
 
     execute() {
         this.sourceTextureId.setValue(this.sourceTexture);
-
-        // TODO: add this to the parent class
-        const blend = 0.05;
-        this.device.setBlendColor(blend, blend, blend, blend);
+        this.accumulationTextureId.setValue(this.accumulationTextures[1 - this.accumulationIndex]);
 
         super.execute();
+    }
 
-        // disable clearing
-        this.setClearColor();
+    // called when the parent render pass gets added to the frame graph
+    update() {
+
+        // swap source and destination accumulation texture
+        this.accumulationIndex = 1 - this.accumulationIndex;
+        this.accumulationTexture = this.accumulationTextures[this.accumulationIndex];
+        this.renderTarget = this.accumulationRenderTargets[this.accumulationIndex];
+
+        return this.accumulationTexture;
     }
 }
 

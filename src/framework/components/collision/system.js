@@ -35,7 +35,8 @@ const _schema = [
     'renderAsset',
     'shape',
     'model',
-    'render'
+    'render',
+    'checkVertexDuplicates'
 ];
 
 // Collision system implementations
@@ -205,7 +206,8 @@ class CollisionSystemImpl {
             asset: src.data.asset,
             renderAsset: src.data.renderAsset,
             model: src.data.model,
-            render: src.data.render
+            render: src.data.render,
+            checkVertexDuplicates: src.data.checkVertexDuplicates
         };
 
         return this.system.addComponent(clone, data);
@@ -330,17 +332,17 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
-    createAmmoMesh(mesh, node, shape) {
+    createAmmoMesh(mesh, node, shape, checkDupes = true) {
+        const system = this.system;
         let triMesh;
 
-        if (this.system._triMeshCache[mesh.id]) {
-            triMesh = this.system._triMeshCache[mesh.id];
+        if (system._triMeshCache[mesh.id]) {
+            triMesh = system._triMeshCache[mesh.id];
         } else {
             const vb = mesh.vertexBuffer;
 
             const format = vb.getFormat();
-            let stride;
-            let positions;
+            let stride, positions;
             for (let i = 0; i < format.elements.length; i++) {
                 const element = format.elements[i];
                 if (element.name === SEMANTIC_POSITION) {
@@ -355,37 +357,61 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             const numTriangles = mesh.primitive[0].count / 3;
 
             const v1 = new Ammo.btVector3();
-            const v2 = new Ammo.btVector3();
-            const v3 = new Ammo.btVector3();
             let i1, i2, i3;
 
             const base = mesh.primitive[0].base;
             triMesh = new Ammo.btTriangleMesh();
-            this.system._triMeshCache[mesh.id] = triMesh;
+            system._triMeshCache[mesh.id] = triMesh;
 
-            for (let i = 0; i < numTriangles; i++) {
-                i1 = indices[base + i * 3] * stride;
-                i2 = indices[base + i * 3 + 1] * stride;
-                i3 = indices[base + i * 3 + 2] * stride;
-                v1.setValue(positions[i1], positions[i1 + 1], positions[i1 + 2]);
-                v2.setValue(positions[i2], positions[i2 + 1], positions[i2 + 2]);
-                v3.setValue(positions[i3], positions[i3 + 1], positions[i3 + 2]);
-                triMesh.addTriangle(v1, v2, v3, true);
+            const vertexCache = new Map();
+            const indexedArray = triMesh.getIndexedMeshArray();
+            indexedArray.at(0).m_numTriangles = numTriangles;
+
+            const addVertex = (index) => {
+                const x = positions[index * stride];
+                const y = positions[index * stride + 1];
+                const z = positions[index * stride + 2];
+
+                let idx;
+                if (checkDupes) {
+                    const str = `${x}:${y}:${z}`;
+
+                    idx = vertexCache.get(str);
+                    if (idx !== undefined) {
+                        return idx;
+                    }
+
+                    v1.setValue(x, y, z);
+                    idx = triMesh.findOrAddVertex(v1, false);
+                    vertexCache.set(str, idx);
+                } else {
+                    v1.setValue(x, y, z);
+                    idx = triMesh.findOrAddVertex(v1, false);
+                }
+
+                return idx;
+            };
+
+            for (var i = 0; i < numTriangles; i++) {
+                i1 = addVertex(indices[base + i * 3]);
+                i2 = addVertex(indices[base + i * 3 + 1]);
+                i3 = addVertex(indices[base + i * 3 + 2]);
+
+                triMesh.addIndex(i1);
+                triMesh.addIndex(i2);
+                triMesh.addIndex(i3);
             }
 
             Ammo.destroy(v1);
-            Ammo.destroy(v2);
-            Ammo.destroy(v3);
         }
 
-        const useQuantizedAabbCompression = true;
-        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, useQuantizedAabbCompression);
+        const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, true /* useQuantizedAabbCompression */);
 
-        const scaling = this.system._getNodeScaling(node);
+        const scaling = system._getNodeScaling(node);
         triMeshShape.setLocalScaling(scaling);
         Ammo.destroy(scaling);
 
-        const transform = this.system._getNodeTransform(node);
+        const transform = system._getNodeTransform(node);
         shape.addChildShape(transform, triMeshShape);
         Ammo.destroy(transform);
     }
@@ -400,12 +426,12 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             if (data.model) {
                 const meshInstances = data.model.meshInstances;
                 for (let i = 0; i < meshInstances.length; i++) {
-                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape);
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, data.checkVertexDuplicates);
                 }
             } else if (data.render) {
                 const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    this.createAmmoMesh(meshes[i], tempGraphNode, shape);
+                    this.createAmmoMesh(meshes[i], tempGraphNode, shape, data.checkVertexDuplicates);
                 }
             }
 
@@ -628,7 +654,8 @@ class CollisionComponentSystem extends ComponentSystem {
             'renderAsset',
             'enabled',
             'linearOffset',
-            'angularOffset'
+            'angularOffset',
+            'checkVertexDuplicates'
         ];
 
         // duplicate the input data because we are modifying it

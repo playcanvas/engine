@@ -10,6 +10,7 @@ import {
 // temporary variables
 const tmpV1 = new Vec3();
 const tmpM1 = new Mat4();
+const tmpM2 = new Mat4();
 
 const xstart = new Vec3();
 const xdir = new Vec3();
@@ -17,21 +18,24 @@ const xdir = new Vec3();
 // constants
 const MIN_GIZMO_SCALE = 1e-4;
 const PERS_SCALE_RATIO = 0.3;
+const PERS_CANVAS_RATIO = 1300;
 const ORTHO_SCALE_RATIO = 0.32;
 
 /**
  * Local coordinate space.
  *
  * @type {string}
+ * @category Gizmo
  */
-export const LOCAL_COORD_SPACE = 'local';
+export const GIZMO_LOCAL = 'local';
 
 /**
  * World coordinate space.
  *
  * @type {string}
+ * @category Gizmo
  */
-export const WORLD_COORD_SPACE = 'world';
+export const GIZMO_WORLD = 'world';
 
 /**
  * The base class for all gizmos.
@@ -164,12 +168,12 @@ class Gizmo extends EventHandler {
     _scale = 1;
 
     /**
-     * Internal version of coordinate space. Defaults to {@link WORLD_COORD_SPACE}.
+     * Internal version of coordinate space. Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      * @protected
      */
-    _coordSpace = WORLD_COORD_SPACE;
+    _coordSpace = GIZMO_WORLD;
 
     /**
      * Internal reference to the app containing the gizmo.
@@ -206,7 +210,7 @@ class Gizmo extends EventHandler {
     /**
      * The graph nodes attached to the gizmo.
      *
-     * @type {import('playcanvas').GraphNode}
+     * @type {import('playcanvas').GraphNode[]}
      */
     nodes = [];
 
@@ -290,12 +294,17 @@ class Gizmo extends EventHandler {
     }
 
     /**
-     * The gizmo coordinate space. Defaults to {@link WORLD_COORD_SPACE}.
+     * The gizmo coordinate space. Can be:
+     *
+     * - {@link GIZMO_LOCAL}
+     * - {@link GIZMO_WORLD}
+     *
+     * Defaults to {@link GIZMO_WORLD}.
      *
      * @type {string}
      */
     set coordSpace(value) {
-        this._coordSpace = value ?? WORLD_COORD_SPACE;
+        this._coordSpace = value ?? GIZMO_WORLD;
         this._updateRotation();
     }
 
@@ -344,7 +353,7 @@ class Gizmo extends EventHandler {
 
     _updateRotation() {
         tmpV1.set(0, 0, 0);
-        if (this._coordSpace === LOCAL_COORD_SPACE && this.nodes.length !== 0) {
+        if (this._coordSpace === GIZMO_LOCAL && this.nodes.length !== 0) {
             tmpV1.copy(this.nodes[this.nodes.length - 1].getEulerAngles());
         }
         this.root.setEulerAngles(tmpV1);
@@ -354,7 +363,11 @@ class Gizmo extends EventHandler {
 
     _updateScale() {
         if (this._camera.projection === PROJECTION_PERSPECTIVE) {
-            this._scale = this._getProjFrustumWidth() * PERS_SCALE_RATIO;
+            let canvasMult = 1;
+            if (this._device.width > 0 && this._device.height > 0) {
+                canvasMult = PERS_CANVAS_RATIO / Math.min(this._device.width, this._device.height);
+            }
+            this._scale = this._getProjFrustumWidth() * canvasMult * PERS_SCALE_RATIO;
         } else {
             this._scale = this._camera.orthoHeight * ORTHO_SCALE_RATIO;
         }
@@ -374,18 +387,19 @@ class Gizmo extends EventHandler {
             const { meshTriDataList, parent, meshInstances } = this.intersectData[i];
             const wtm = parent.getWorldTransform().clone();
             for (let j = 0; j < meshTriDataList.length; j++) {
-                const { tris, ptm } = meshTriDataList[j];
+                const { tris, ptm, priority } = meshTriDataList[j];
                 tmpM1.copy(wtm).mul(ptm);
-                tmpM1.invert();
-                tmpM1.transformPoint(start, xstart);
-                tmpM1.transformVector(dir, xdir);
+                tmpM2.copy(tmpM1).invert();
+                tmpM2.transformPoint(start, xstart);
+                tmpM2.transformVector(dir, xdir);
                 xdir.normalize();
 
                 for (let k = 0; k < tris.length; k++) {
                     if (tris[k].intersectRay(xstart, xdir, tmpV1)) {
                         selection.push({
-                            dist: tmpV1.sub(xstart).length(),
-                            meshInstances: meshInstances
+                            dist: tmpM1.transformPoint(tmpV1).sub(start).length(),
+                            meshInstances: meshInstances,
+                            priority: priority
                         });
                     }
                 }
@@ -393,7 +407,12 @@ class Gizmo extends EventHandler {
         }
 
         if (selection.length) {
-            selection.sort((s0, s1) => s0.dist - s1.dist);
+            selection.sort((s0, s1) => {
+                if (s0.priority !== 0 && s1.priority !== 0) {
+                    return s1.priority - s0.priority;
+                }
+                return s0.dist - s1.dist;
+            });
             return selection[0].meshInstances;
         }
 

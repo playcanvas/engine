@@ -5,6 +5,7 @@ import { now } from '../../../core/time.js';
 import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 let _totalCompileTime = 0;
 
@@ -34,18 +35,8 @@ class CompiledShaderCache {
     }
 }
 
-// class used to hold a list of recently created shaders forming a batch, to allow their more optimized compilation
-class ShaderBatchCache {
-    shaders = [];
-
-    loseContext(device) {
-        this.shaders = [];
-    }
-}
-
 const _vertexShaderCache = new DeviceCache();
 const _fragmentShaderCache = new DeviceCache();
-const _shaderBatchCache = new DeviceCache();
 
 /**
  * A WebGL implementation of the Shader.
@@ -58,12 +49,11 @@ class WebglShader {
     constructor(shader) {
         this.init();
 
-        // kick off vertex and fragment shader compilation, but not linking here, as that would
-        // make it blocking.
+        // kick off vertex and fragment shader compilation
         this.compile(shader.device, shader);
 
-        // add the shader to recently created list
-        WebglShader.getBatchShaders(shader.device).push(shader);
+        // kick off linking, as this is non-blocking too
+        this.link(shader.device, shader);
 
         // add it to a device list of all shaders
         shader.device.shaders.push(shader);
@@ -89,22 +79,6 @@ class WebglShader {
         this.glProgram = null;
         this.glVertexShader = null;
         this.glFragmentShader = null;
-    }
-
-    static getBatchShaders(device) {
-        const batchCache = _shaderBatchCache.get(device, () => {
-            return new ShaderBatchCache();
-        });
-        return batchCache.shaders;
-    }
-
-    static endShaderBatch(device) {
-
-        // Trigger link step for all recently created shaders. This allows linking to be done in parallel, before
-        // the blocking wait on the linking result is triggered in finalize function
-        const shaders = WebglShader.getBatchShaders(device);
-        shaders.forEach(shader => shader.impl.link(device, shader));
-        shaders.length = 0;
     }
 
     /**
@@ -284,10 +258,6 @@ class WebglShader {
             return true;
         }
 
-        // if the program wasn't linked yet (shader was not created in batch)
-        if (!this.glProgram)
-            this.link(device, shader);
-
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
@@ -305,6 +275,8 @@ class WebglShader {
             linkStartTime = now();
         });
 
+        // check the link status of a shader - this is a blocking operation waiting for the shader
+        // to finish compiling and linking
         const linkStatus = gl.getProgramParameter(glProgram, gl.LINK_STATUS);
         if (!linkStatus) {
 
@@ -423,7 +395,7 @@ class WebglShader {
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
             const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code} while rendering ${DebugGraphics.toString()}`;
             // #if _DEBUG
             error.shader = shader;
             console.error(message, error);
