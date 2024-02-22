@@ -1028,6 +1028,10 @@ class XrManager extends EventHandler {
      */
     set fixedFoveation(value) {
         if ((this._baseLayer?.fixedFoveation ?? null) !== null) {
+            if (this.app.graphicsDevice.samples > 1) {
+                Debug.warn('Fixed Foveation is ignored. Disable anti-aliasing for it to be effective.');
+            }
+
             this._baseLayer.fixedFoveation = value;
         }
     }
