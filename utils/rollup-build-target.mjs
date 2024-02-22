@@ -169,11 +169,14 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         es6: moduleOptions(buildType)
     };
 
+    const jsccParam = jsccOptions[buildType] || jsccOptions.release;
+    if (moduleFormat === 'es5') jsccParam.values._IS_UMD = 1;
+
     return {
         input,
         output: outputOptions,
         plugins: [
-            jscc(jsccOptions[buildType] || jsccOptions.release),
+            jscc(jsccParam),
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
