@@ -2101,6 +2101,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
     draw(primitive, numInstances, keepBuffers) {
         const gl = this.gl;
 
+        this.activateShader();
+        if (!this.shaderValid)
+            return;
+
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
         const shader = this.shader;
@@ -2722,30 +2726,34 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Sets the active shader to be used during subsequent draw calls.
      *
-     * @param {Shader} shader - The shader to set to assign to the device.
-     * @returns {boolean} True if the shader was successfully set, false otherwise.
+     * @param {Shader} shader - The shader to assign to the device.
      */
     setShader(shader) {
         if (shader !== this.shader) {
-            if (shader.failed) {
-                return false;
-            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
-                shader.failed = true;
-                return false;
-            }
-
             this.shader = shader;
-
-            // Set the active shader
-            this.gl.useProgram(shader.impl.glProgram);
+            this.shaderValid = undefined;   // need to run activation / validation
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;
             // #endif
-
-            this.attributesInvalidated = true;
         }
-        return true;
+    }
+
+    activateShader() {
+
+        if (this.shaderValid === undefined) {
+            const { shader } = this;
+            if (shader.failed) {
+                this.shaderValid = false;
+            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
+                shader.failed = true;
+                this.shaderValid = false;
+            } else {
+                // Set the active shader
+                this.gl.useProgram(shader.impl.glProgram);
+                this.shaderValid = true;
+            }
+        }
     }
 
     /**
