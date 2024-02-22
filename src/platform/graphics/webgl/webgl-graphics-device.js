@@ -2726,7 +2726,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Sets the active shader to be used during subsequent draw calls.
      *
-     * @param {Shader} shader - The shader to set to assign to the device.
+     * @param {Shader} shader - The shader to assign to the device.
      */
     setShader(shader) {
         if (shader !== this.shader) {
