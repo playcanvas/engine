@@ -258,10 +258,6 @@ class WebglShader {
             return true;
         }
 
-        // if the program wasn't linked yet (shader was not created in batch)
-        if (!this.glProgram)
-            this.link(device, shader);
-
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
