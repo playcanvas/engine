@@ -479,7 +479,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setShader(shader) {
+    setShader(shader, asyncCompile = false) {
 
         if (shader !== this.shader) {
             this.shader = shader;

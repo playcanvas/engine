@@ -555,7 +555,8 @@ class ForwardRenderer extends Renderer {
 
             if (newMaterial) {
 
-                device.setShader(shaderInstance.shader);
+                const asyncCompile = false;
+                device.setShader(shaderInstance.shader, asyncCompile);
 
                 // Uniforms I: material
                 material.setParameters(device);
