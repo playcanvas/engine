@@ -17,6 +17,7 @@ import './polyfill/math-log2.js';
 import './polyfill/math-sign.js';
 import './polyfill/number-isfinite.js';
 import './polyfill/object-assign.js';
+import './polyfill/object-entries.js';
 import './polyfill/object-values.js';
 import './polyfill/pointer-lock.js';
 import './polyfill/string.js';
