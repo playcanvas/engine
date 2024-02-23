@@ -541,7 +541,6 @@ class ForwardRenderer extends Renderer {
         const clusteredLightingEnabled = this.scene.clusteredLightingEnabled;
 
         // Render the scene
-        let skipMaterial = false;
         const preparedCallsCount = preparedCalls.drawCalls.length;
         for (let i = 0; i < preparedCallsCount; i++) {
 
@@ -552,22 +551,11 @@ class ForwardRenderer extends Renderer {
             const lightMaskChanged = preparedCalls.lightMaskChanged[i];
             const shaderInstance = preparedCalls.shaderInstances[i];
             const material = drawCall.material;
-            const objDefs = drawCall._shaderDefs;
             const lightMask = drawCall.mask;
 
             if (newMaterial) {
 
-                const shader = shaderInstance.shader;
-                if (!shader.failed && !device.setShader(shader)) {
-                    Debug.error(`Error compiling shader [${shader.label}] for material=${material.name} pass=${pass} objDefs=${objDefs}`, material);
-                }
-
-                // skip rendering with the material if shader failed
-                skipMaterial = shader.failed;
-                if (skipMaterial)
-                    break;
-
-                DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
+                device.setShader(shaderInstance.shader);
 
                 // Uniforms I: material
                 material.setParameters(device);
@@ -585,11 +573,10 @@ class ForwardRenderer extends Renderer {
                 device.setBlendState(material.blendState);
                 device.setDepthState(material.depthState);
                 device.setAlphaToCoverage(material.alphaToCoverage);
-
-                DebugGraphics.popGpuMarker(device);
             }
 
             DebugGraphics.pushGpuMarker(device, `Node: ${drawCall.node.name}`);
+            DebugGraphics.pushGpuMarker(device, `Material: ${material.name}`);
 
             this.setupCullMode(camera._cullFaces, flipFactor, drawCall);
 
@@ -648,6 +635,7 @@ class ForwardRenderer extends Renderer {
                 material.setParameters(device, drawCall.parameters);
             }
 
+            DebugGraphics.popGpuMarker(device);
             DebugGraphics.popGpuMarker(device);
         }
     }

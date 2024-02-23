@@ -336,9 +336,7 @@ class ShadowRenderer {
             // sort shadow casters by shader
             meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
 
-            if (!shadowShader.failed && !device.setShader(shadowShader)) {
-                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
-            }
+            device.setShader(shadowShader);
 
             // set buffers
             renderer.setVertexBuffers(device, mesh);

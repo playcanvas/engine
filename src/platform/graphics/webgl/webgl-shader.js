@@ -5,16 +5,17 @@ import { now } from '../../../core/time.js';
 import { WebglShaderInput } from './webgl-shader-input.js';
 import { SHADERTAG_MATERIAL, semanticToLocation } from '../constants.js';
 import { DeviceCache } from '../device-cache.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 let _totalCompileTime = 0;
 
-const _vertexShaderBuiltins = [
+const _vertexShaderBuiltins = new Set([
     'gl_VertexID',
     'gl_InstanceID',
     'gl_DrawID',
     'gl_BaseVertex',
     'gl_BaseInstance'
-];
+]);
 
 // class used to hold compiled WebGL vertex or fragment shaders in the device cache
 class CompiledShaderCache {
@@ -257,10 +258,6 @@ class WebglShader {
             return true;
         }
 
-        // if the program wasn't linked yet (shader was not created in batch)
-        if (!this.glProgram)
-            this.link(device, shader);
-
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
@@ -307,14 +304,13 @@ class WebglShader {
         }
 
         // Query the program for each vertex buffer input (GLSL 'attribute')
-        let i = 0;
         const numAttributes = gl.getProgramParameter(glProgram, gl.ACTIVE_ATTRIBUTES);
-        while (i < numAttributes) {
-            const info = gl.getActiveAttrib(glProgram, i++);
+        for (let i = 0; i < numAttributes; i++) {
+            const info = gl.getActiveAttrib(glProgram, i);
             const location = gl.getAttribLocation(glProgram, info.name);
 
             // a built-in attributes for which we do not need to provide any data
-            if (_vertexShaderBuiltins.indexOf(info.name) !== -1)
+            if (_vertexShaderBuiltins.has(info.name))
                 continue;
 
             // Check attributes are correctly linked up
@@ -328,32 +324,15 @@ class WebglShader {
         }
 
         // Query the program for each shader state (GLSL 'uniform')
-        i = 0;
+        const samplerTypes = device._samplerTypes;
         const numUniforms = gl.getProgramParameter(glProgram, gl.ACTIVE_UNIFORMS);
-        while (i < numUniforms) {
-            const info = gl.getActiveUniform(glProgram, i++);
+        for (let i = 0; i < numUniforms; i++) {
+            const info = gl.getActiveUniform(glProgram, i);
             const location = gl.getUniformLocation(glProgram, info.name);
 
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
-            if (
-                info.type === gl.SAMPLER_2D ||
-                info.type === gl.SAMPLER_CUBE ||
-                (
-                    device.isWebGL2 && (
-                        info.type === gl.UNSIGNED_INT_SAMPLER_2D ||
-                        info.type === gl.INT_SAMPLER_2D ||
-                        info.type === gl.SAMPLER_2D_SHADOW ||
-                        info.type === gl.SAMPLER_CUBE_SHADOW ||
-                        info.type === gl.SAMPLER_3D ||
-                        info.type === gl.INT_SAMPLER_3D ||
-                        info.type === gl.UNSIGNED_INT_SAMPLER_3D ||
-                        info.type === gl.SAMPLER_2D_ARRAY ||
-                        info.type === gl.INT_SAMPLER_2D_ARRAY ||
-                        info.type === gl.UNSIGNED_INT_SAMPLER_2D_ARRAY
-                    )
-                )
-            ) {
+            if (samplerTypes.has(info.type)) {
                 this.samplers.push(shaderInput);
             } else {
                 this.uniforms.push(shaderInput);
@@ -398,7 +377,7 @@ class WebglShader {
         if (!gl.getShaderParameter(glShader, gl.COMPILE_STATUS)) {
             const infoLog = gl.getShaderInfoLog(glShader);
             const [code, error] = this._processError(source, infoLog);
-            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code}`;
+            const message = `Failed to compile ${shaderType} shader:\n\n${infoLog}\n${code} while rendering ${DebugGraphics.toString()}`;
             // #if _DEBUG
             error.shader = shader;
             console.error(message, error);
