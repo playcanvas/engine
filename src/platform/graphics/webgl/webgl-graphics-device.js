@@ -2122,7 +2122,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
     draw(primitive, numInstances, keepBuffers) {
         const gl = this.gl;
 
-        this.activateShader();
+        this.activateShader(this);
         if (!this.shaderValid)
             return;
 
@@ -2749,9 +2749,19 @@ class WebglGraphicsDevice extends GraphicsDevice {
      *
      * @param {Shader} shader - The shader to assign to the device.
      */
-    setShader(shader) {
+
+    /**
+     * Sets the active shader to be used during subsequent draw calls.
+     *
+     * @param {Shader} shader - The shader to assign to the device.
+     * @param {boolean} asyncCompile - If true, rendering will be skipped until the shader is
+     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults to
+     * false.
+     */
+    setShader(shader, asyncCompile = false) {
         if (shader !== this.shader) {
             this.shader = shader;
+            this.shaderAsyncCompile = asyncCompile;
             this.shaderValid = undefined;   // need to run activation / validation
 
             // #if _PROFILER
@@ -2760,20 +2770,45 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    activateShader() {
+    activateShader(device) {
 
+        const { shader } = this;
+        const { impl } = shader;
         if (this.shaderValid === undefined) {
-            const { shader } = this;
+
             if (shader.failed) {
                 this.shaderValid = false;
-            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
-                shader.failed = true;
-                this.shaderValid = false;
-            } else {
-                // Set the active shader
-                this.gl.useProgram(shader.impl.glProgram);
-                this.shaderValid = true;
+            } else if (!shader.ready) {
+
+                // if the shader is async compiled and can be skipped if not ready
+                if (this.shaderAsyncCompile) {
+
+                    // if the shader is linked, finalize it
+                    if (impl.isLinked(device)) {
+                        if (!impl.finalize(this, shader)) {
+                            shader.failed = true;
+                            this.shaderValid = false;
+                        }
+                    } else {
+                        // skip the async shader rendering
+                        this.shaderValid = false;
+                    }
+
+                } else {
+
+                    // this cannot be skipped, wait for the shader to be ready
+                    if (!impl.finalize(this, shader)) {
+                        shader.failed = true;
+                        this.shaderValid = false;
+                    }
+                }
             }
+        }
+
+        if (this.shaderValid === undefined) {
+            // Set the active shader
+            this.gl.useProgram(impl.glProgram);
+            this.shaderValid = true;
         }
     }
 

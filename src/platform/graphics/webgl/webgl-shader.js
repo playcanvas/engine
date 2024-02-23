@@ -390,6 +390,23 @@ class WebglShader {
     }
 
     /**
+     * Check the linking status of a shader.
+     *
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The graphics device.
+     * @returns {boolean} True if the shader is already linked, false otherwise. Note that unless the
+     * device supports the KHR_parallel_shader_compile extension, this will always return true.
+     */
+    isLinked(device) {
+
+        const { extParallelShaderCompile } = device;
+        if (extParallelShaderCompile) {
+            return device.gl.getProgramParameter(this.glProgram, extParallelShaderCompile.COMPLETION_STATUS_KHR);
+        }
+
+        return true;
+    }
+
+    /**
      * Truncate the WebGL shader compilation log to just include the error line plus the 5 lines
      * before and after it.
      *
