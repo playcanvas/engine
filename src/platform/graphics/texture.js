@@ -157,7 +157,7 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]} [options.levels] - Array of Uint8Array.
+     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} [options.levels] - Array of Uint8Array or other supported browser interface.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new pc.Texture(graphicsDevice, {
@@ -181,18 +181,21 @@ class Texture {
     constructor(graphicsDevice, options = {}) {
         this.device = graphicsDevice;
         Debug.assert(this.device, "Texture constructor requires a graphicsDevice to be valid");
+        Debug.assert(!options.width || Number.isInteger(options.width), "Texture width must be an integer number, got", options);
+        Debug.assert(!options.height || Number.isInteger(options.height), "Texture height must be an integer number, got", options);
+        Debug.assert(!options.depth || Number.isInteger(options.depth), "Texture depth must be an integer number, got", options);
 
-        this.name = options.name ?? null;
+        this.name = options.name ?? '';
 
-        this._width = options.width ?? 4;
-        this._height = options.height ?? 4;
+        this._width = Math.floor(options.width ?? 4);
+        this._height = Math.floor(options.height ?? 4);
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
 
         if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
-            this._depth = options.depth ?? 1;
+            this._depth = Math.floor(options.depth ?? 1);
         } else {
             this._volume = false;
             this._depth = 1;
@@ -263,9 +266,9 @@ class Texture {
 
         Debug.trace(TRACEID_TEXTURE_ALLOC, `DeAlloc: Id ${this.id} ${this.name}`);
 
-        if (this.device) {
+        const device = this.device;
+        if (device) {
             // stop tracking the texture
-            const device = this.device;
             const idx = device.textures.indexOf(this);
             if (idx !== -1) {
                 device.textures.splice(idx, 1);
@@ -283,6 +286,31 @@ class Texture {
             this._levels = null;
             this.device = null;
         }
+    }
+
+    /**
+     * Resizes the texture. Only supported for render target textures, as it does not resize the
+     * existing content of the texture, but only the allocated buffer for rendering into.
+     *
+     * @param {number} width - The new width of the texture.
+     * @param {number} height - The new height of the texture.
+     * @param {number} [depth] - The new depth of the texture. Defaults to 1.
+     * @ignore
+     */
+    resize(width, height, depth = 1) {
+
+        // destroy texture impl
+        const device = this.device;
+        this.adjustVramSizeTracking(device._vram, -this._gpuSize);
+        this.impl.destroy(device);
+
+        this._width = width;
+        this._height = height;
+        this._depth = depth;
+
+        // re-create the implementation
+        this.impl = device.createTextureImpl(this);
+        this.dirtyAll();
     }
 
     /**
@@ -876,118 +904,6 @@ class Texture {
             promises.push(promise);
         }
         await Promise.all(promises);
-    }
-
-    /**
-     * Generate an in-memory DDS representation of this texture. Only works on RGBA8 textures.
-     * Currently, only used by the Editor to write prefiltered cubemaps to DDS format.
-     *
-     * @returns {ArrayBuffer} Buffer containing the DDS data.
-     * @ignore
-     */
-    getDds() {
-        Debug.assert(this.format === PIXELFORMAT_RGBA8, "This format is not implemented yet");
-
-        let fsize = 128;
-        let idx = 0;
-        while (this._levels[idx]) {
-            if (!this.cubemap) {
-                const mipSize = this._levels[idx].length;
-                if (!mipSize) {
-                    Debug.error(`No byte array for mip ${idx}`);
-                    return undefined;
-                }
-                fsize += mipSize;
-            } else {
-                for (let face = 0; face < 6; face++) {
-                    if (!this._levels[idx][face]) {
-                        Debug.error(`No level data for mip ${idx}, face ${face}`);
-                        return undefined;
-                    }
-                    const mipSize = this._levels[idx][face].length;
-                    if (!mipSize) {
-                        Debug.error(`No byte array for mip ${idx}, face ${face}`);
-                        return undefined;
-                    }
-                    fsize += mipSize;
-                }
-            }
-            fsize += this._levels[idx].length;
-            idx++;
-        }
-
-        const buff = new ArrayBuffer(fsize);
-        const header = new Uint32Array(buff, 0, 128 / 4);
-
-        const DDS_MAGIC = 542327876; // "DDS"
-        const DDS_HEADER_SIZE = 124;
-        const DDS_FLAGS_REQUIRED = 0x01 | 0x02 | 0x04 | 0x1000 | 0x80000; // caps | height | width | pixelformat | linearsize
-        const DDS_FLAGS_MIPMAP = 0x20000;
-        const DDS_PIXELFORMAT_SIZE = 32;
-        const DDS_PIXELFLAGS_RGBA8 = 0x01 | 0x40; // alpha | rgb
-        const DDS_CAPS_REQUIRED = 0x1000;
-        const DDS_CAPS_MIPMAP = 0x400000;
-        const DDS_CAPS_COMPLEX = 0x8;
-        const DDS_CAPS2_CUBEMAP = 0x200 | 0x400 | 0x800 | 0x1000 | 0x2000 | 0x4000 | 0x8000; // cubemap | all faces
-
-        let flags = DDS_FLAGS_REQUIRED;
-        if (this._levels.length > 1) flags |= DDS_FLAGS_MIPMAP;
-
-        let caps = DDS_CAPS_REQUIRED;
-        if (this._levels.length > 1) caps |= DDS_CAPS_MIPMAP;
-        if (this._levels.length > 1 || this.cubemap) caps |= DDS_CAPS_COMPLEX;
-
-        const caps2 = this.cubemap ? DDS_CAPS2_CUBEMAP : 0;
-
-        header[0] = DDS_MAGIC;
-        header[1] = DDS_HEADER_SIZE;
-        header[2] = flags;
-        header[3] = this.height;
-        header[4] = this.width;
-        header[5] = this.width * this.height * 4;
-        header[6] = 0; // depth
-        header[7] = this._levels.length;
-        for (let i = 0; i < 11; i++) {
-            header[8 + i] = 0;
-        }
-        header[19] = DDS_PIXELFORMAT_SIZE;
-        header[20] = DDS_PIXELFLAGS_RGBA8;
-        header[21] = 0; // fourcc
-        header[22] = 32; // bpp
-        header[23] = 0x00FF0000; // R mask
-        header[24] = 0x0000FF00; // G mask
-        header[25] = 0x000000FF; // B mask
-        header[26] = 0xFF000000; // A mask
-        header[27] = caps;
-        header[28] = caps2;
-        header[29] = 0;
-        header[30] = 0;
-        header[31] = 0;
-
-        let offset = 128;
-        if (!this.cubemap) {
-            for (let i = 0; i < this._levels.length; i++) {
-                const level = this._levels[i];
-                const mip = new Uint8Array(buff, offset, level.length);
-                for (let j = 0; j < level.length; j++) {
-                    mip[j] = level[j];
-                }
-                offset += level.length;
-            }
-        } else {
-            for (let face = 0; face < 6; face++) {
-                for (let i = 0; i < this._levels.length; i++) {
-                    const level = this._levels[i][face];
-                    const mip = new Uint8Array(buff, offset, level.length);
-                    for (let j = 0; j < level.length; j++) {
-                        mip[j] = level[j];
-                    }
-                    offset += level.length;
-                }
-            }
-        }
-
-        return buff;
     }
 }
 

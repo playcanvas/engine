@@ -17,6 +17,7 @@ import { XrImageTracking } from './xr-image-tracking.js';
 import { XrInput } from './xr-input.js';
 import { XrLightEstimation } from './xr-light-estimation.js';
 import { XrPlaneDetection } from './xr-plane-detection.js';
+import { XrAnchors } from './xr-anchors.js';
 
 /**
  * Callback used by {@link XrManager#endXr} and {@link XrManager#startXr}.
@@ -76,7 +77,7 @@ class XrManager extends EventHandler {
 
     /**
      * @type {XRReferenceSpace|null}
-     * @private
+     * @ignore
      */
     _referenceSpace = null;
 
@@ -225,6 +226,7 @@ class XrManager extends EventHandler {
         this.planeDetection = new XrPlaneDetection(this);
         this.input = new XrInput(this);
         this.lightEstimation = new XrLightEstimation(this);
+        this.anchors = new XrAnchors(this);
 
         // TODO
         // 1. HMD class with its params
@@ -351,6 +353,8 @@ class XrManager extends EventHandler {
      * @param {object} [options] - Object with additional options for XR session initialization.
      * @param {string[]} [options.optionalFeatures] - Optional features for XRSession start. It is
      * used for getting access to additional WebXR spec extensions.
+     * @param {boolean} [options.anchors] - Set to true to attempt to enable
+     * {@link XrAnchors}.
      * @param {boolean} [options.imageTracking] - Set to true to attempt to enable
      * {@link XrImageTracking}.
      * @param {boolean} [options.planeDetection] - Set to true to attempt to enable
@@ -375,6 +379,8 @@ class XrManager extends EventHandler {
      * @example
      * button.on('click', function () {
      *     app.xr.start(camera, pc.XRTYPE_AR, pc.XRSPACE_LOCALFLOOR, {
+     *         anchors: true,
+     *         imageTracking: true,
      *         depthSensing: { }
      *     });
      * });
@@ -430,6 +436,10 @@ class XrManager extends EventHandler {
             if (this.domOverlay.supported && this.domOverlay.root) {
                 opts.optionalFeatures.push('dom-overlay');
                 opts.domOverlay = { root: this.domOverlay.root };
+            }
+
+            if (options && options.anchors && this.anchors.supported) {
+                opts.optionalFeatures.push('anchors');
             }
 
             if (options && options.depthSensing && this.depthSensing.supported) {
@@ -637,7 +647,10 @@ class XrManager extends EventHandler {
             alpha: true,
             depth: true,
             stencil: true,
-            framebufferScaleFactor: framebufferScaleFactor
+            framebufferScaleFactor: framebufferScaleFactor,
+
+            // request a single-sampled buffer. We allocate multi-sampled buffer internally and resolve to this buffer.
+            antialias: false
         });
 
         session.updateRenderState({
@@ -812,6 +825,9 @@ class XrManager extends EventHandler {
 
             if (this.imageTracking.supported)
                 this.imageTracking.update(frame);
+
+            if (this.anchors.supported)
+                this.anchors.update(frame);
 
             if (this.planeDetection.supported)
                 this.planeDetection.update(frame);

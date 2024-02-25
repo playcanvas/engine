@@ -167,8 +167,6 @@ class Material {
 
     _scene = null;
 
-    _dirtyBlend = false;
-
     dirty = true;
 
     /**
@@ -257,16 +255,6 @@ class Material {
         }
     }
 
-    // called when material changes transparency, for layer composition to add it to appropriate
-    // queue (opaque or transparent)
-    _markBlendDirty() {
-        if (this._scene) {
-            this._scene.layers._dirtyBlend = true;
-        } else {
-            this._dirtyBlend = true;
-        }
-    }
-
     /**
      * Controls how fragment shader outputs are blended when being written to the currently active
      * render target. This overwrites blending type set using {@link Material#blendType}, and
@@ -275,9 +263,6 @@ class Material {
      * @type { BlendState }
      */
     set blendState(value) {
-        if (this._blendState.blend !== value.blend) {
-            this._markBlendDirty();
-        }
         this._blendState.copy(value);
         this._updateTransparency();
     }
@@ -324,7 +309,6 @@ class Material {
         if (this._blendState.blend !== blend) {
             this._blendState.blend = blend;
             this._updateTransparency();
-            this._markBlendDirty();
         }
         this._updateMeshInstanceKeys();
     }

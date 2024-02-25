@@ -27,10 +27,10 @@ import {
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
 
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from './common.js';
 import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
+import { ShaderGenerator } from './shader-generator.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -77,6 +77,12 @@ class LitShader {
         this.attributes = {
             vertex_position: SEMANTIC_POSITION
         };
+
+        if (options.userAttributes) {
+            for (const [semantic, name] of Object.entries(options.userAttributes)) {
+                this.attributes[name] = semantic;
+            }
+        }
 
         if (options.chunks) {
             const userChunks = options.chunks;
@@ -374,7 +380,7 @@ class LitShader {
         if (options.skin) {
             this.attributes.vertex_boneWeights = SEMANTIC_BLENDWEIGHT;
             this.attributes.vertex_boneIndices = SEMANTIC_BLENDINDICES;
-            code += skinCode(device, chunks);
+            code += ShaderGenerator.skinCode(device, chunks);
             code += "#define SKIN\n";
         } else if (options.useInstancing) {
             code += "#define INSTANCING\n";
@@ -428,10 +434,10 @@ class LitShader {
         code += this.varyingDefines;
         code += this.frontendDecl;
         code += this.frontendCode;
-        code += begin();
+        code += ShaderGenerator.begin();
         code += this.frontendFunc;
         code += "    gl_FragColor = uColor;\n";
-        code += end();
+        code += ShaderGenerator.end();
         return code;
     }
 
@@ -446,10 +452,10 @@ class LitShader {
         code += chunks.packDepthPS;
         code += this.frontendDecl;
         code += this.frontendCode;
-        code += begin();
+        code += ShaderGenerator.begin();
         code += this.frontendFunc;
         code += "    gl_FragColor = packFloat(vDepth);\n";
-        code += end();
+        code += ShaderGenerator.end();
 
         return code;
     }
@@ -472,7 +478,7 @@ class LitShader {
 
         let code = this._fsGetBeginCode();
 
-        if (device.extStandardDerivatives && !device.webgl2 && !device.isWebGPU) {
+        if (device.extStandardDerivatives && device.isWebGL1) {
             code += 'uniform vec2 polygonOffset;\n';
         }
 
@@ -514,12 +520,12 @@ class LitShader {
             code += shaderChunks.linearizeDepthPS;
         }
 
-        code += begin();
+        code += ShaderGenerator.begin();
 
         code += this.frontendFunc;
 
         const isVsm = shadowType === SHADOW_VSM8 || shadowType === SHADOW_VSM16 || shadowType === SHADOW_VSM32;
-        const applySlopeScaleBias = !device.webgl2 && device.extStandardDerivatives && !device.isWebGPU;
+        const applySlopeScaleBias = device.isWebGL1 && device.extStandardDerivatives;
 
         // Use perspective depth for:
         // Directional: Always since light has no position
@@ -563,7 +569,7 @@ class LitShader {
             code += chunks.storeEVSMPS;
         }
 
-        code += end();
+        code += ShaderGenerator.end();
 
         return code;
     }
@@ -748,9 +754,9 @@ class LitShader {
         // FIXME: only add these when needed
         func.append(chunks.sphericalPS);
         func.append(chunks.decodePS);
-        func.append(gammaCode(options.gamma, chunks));
-        func.append(tonemapCode(options.toneMap, chunks));
-        func.append(fogCode(options.fog, chunks));
+        func.append(ShaderGenerator.gammaCode(options.gamma, chunks));
+        func.append(ShaderGenerator.tonemapCode(options.toneMap, chunks));
+        func.append(ShaderGenerator.fogCode(options.fog, chunks));
 
         // frontend
         func.append(this.frontendCode);
@@ -855,7 +861,7 @@ class LitShader {
             if (shadowTypeUsed[SHADOW_PCF1] || shadowTypeUsed[SHADOW_PCF3]) {
                 func.append(chunks.shadowStandardPS);
             }
-            if (shadowTypeUsed[SHADOW_PCF5] && (device.webgl2 || device.isWebGPU)) {
+            if (shadowTypeUsed[SHADOW_PCF5] && !device.isWebGL1) {
                 func.append(chunks.shadowStandardGL2PS);
             }
             if (useVsm) {
@@ -875,7 +881,7 @@ class LitShader {
                 func.append(chunks.shadowPCSSPS);
             }
 
-            if (!(device.webgl2 || device.extStandardDerivatives || device.isWebGPU)) {
+            if (!(device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives)) {
                 func.append(chunks.biasConstPS);
             }
         }
@@ -1267,8 +1273,7 @@ class LitShader {
                         if (lightType === LIGHTTYPE_DIRECTIONAL) {
                             func.append("#define SHADOW_SAMPLE_ORTHO");
                         }
-                        if ((pcfShadows || pcssShadows) &&
-                            device.webgl2 || device.extStandardDerivatives || device.isWebGPU) {
+                        if ((pcfShadows || pcssShadows) && device.isWebGL2 || device.isWebGPU || device.extStandardDerivatives) {
                             func.append("#define SHADOW_SAMPLE_SOURCE_ZBUFFER");
                         }
                         if (lightType === LIGHTTYPE_OMNI) {
@@ -1515,7 +1520,7 @@ class LitShader {
 
         code.append("    evaluateBackend();");
 
-        code.append(end());
+        code.append(ShaderGenerator.end());
 
         const mergedCode = decl.code + func.code + code.code;
 

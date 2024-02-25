@@ -131,7 +131,8 @@
                 }).observe(canvasContainerElement);
             }
 
-            if (app.graphicsDevice.deviceType !== 'webgpu' && !Example.MINISTATS) {
+            const deviceType = app.graphicsDevice.deviceType;
+            if (deviceType !== 'null' && !Example.MINISTATS) {
                 // set up miniStats
                 var miniStats = new pcx.MiniStats(app);
                 if (urlParams.get('miniStats') === 'false') {

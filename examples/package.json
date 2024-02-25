@@ -14,9 +14,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "watch": "npm run build:example:data && npm run build:directory && cross-env concurrently --kill-others \"npm run rollup:watch\"",
-    "watch:debug": "ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
-    "watch:profiler": "ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
-    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve --no-request-logging\""
+    "watch:debug": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
+    "watch:profiler": "cross-env ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
+    "develop": "cross-env concurrently --kill-others \"npm run watch\" \"npm run serve\""
   },
   "eslintConfig": {
     "root": true,
@@ -33,6 +33,7 @@
       "@typescript-eslint/ban-ts-comment": 0,
       "@typescript-eslint/no-explicit-any": 0,
       "@typescript-eslint/explicit-module-boundary-types": 0,
+      "radix": 0,
       "lines-between-class-members": [
         "error",
         "always",
@@ -40,6 +41,13 @@
           "exceptAfterSingleLine": true
         }
       ]
+    },
+    "settings": {
+      "import/resolver": {
+        "node": {
+          "extensions": [".js", ".jsx", ".ts", ".tsx"]
+        }
+      }
     }
   },
   "eslintIgnore": [
@@ -58,7 +66,7 @@
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@rollup/plugin-replace": "^4.0.0",
     "@rollup/plugin-terser": "^0.4.3",
-    "@types/react": "^18.2.17",
+    "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^6.2.0",

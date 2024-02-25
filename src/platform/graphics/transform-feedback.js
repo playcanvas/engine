@@ -10,7 +10,7 @@ import { ShaderUtils } from './shader-utils.js';
  * This object allows you to configure and use the transform feedback feature (WebGL2 only). How to
  * use:
  *
- * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.webgl2`` value.
+ * 1. First, check that you're on WebGL2, by looking at the `app.graphicsDevice.isWebGL2`` value.
  * 2. Define the outputs in your vertex shader. The syntax is `out vec3 out_vertex_position`,
  * note that there must be out_ in the name. You can then simply assign values to these outputs in
  * VS. The order and size of shader outputs must match the output buffer layout.
@@ -60,14 +60,14 @@ import { ShaderUtils } from './shader-utils.js';
  *     app.root.addChild(entity);
  *
  *     // if webgl2 is not supported, transform-feedback is not available
- *     if (!device.webgl2) return;
+ *     if (!device.isWebGL2) return;
  *     const inputBuffer = mesh.vertexBuffer;
  *     this.tf = new pc.TransformFeedback(inputBuffer);
  *     this.shader = pc.TransformFeedback.createShader(device, this.shaderCode.resource, "tfMoveUp");
  * };
  *
  * TransformExample.prototype.update = function(dt) {
- *     if (!this.app.graphicsDevice.webgl2) return;
+ *     if (!this.app.graphicsDevice.isWebGL2) return;
  *     this.tf.process(this.shader);
  * };
  * ```

@@ -1144,7 +1144,8 @@ class ElementComponent extends Component {
                 element._worldCornersDirty = true;
             }
 
-            return Entity.prototype._sync.call(this);
+            Entity.prototype._sync.call(this);
+            return;
         }
 
 

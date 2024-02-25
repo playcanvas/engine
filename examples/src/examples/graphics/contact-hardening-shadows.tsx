@@ -199,7 +199,7 @@ class ContactHardeningShadowsExample {
                     occluder.anim.assignAnimation('Idle', assets.asset.resource.animations[0].resource);
                     occluder.anim.baseLayer.weight = 1.0;
                     occluder.anim.speed = 0.1;
-                    //const animLayer = occluder.anim.addLayer('Idle', 1.0, )
+                    // const animLayer = occluder.anim.addLayer('Idle', 1.0, )
 
                     app.scene.envAtlas = assets.helipad.resource;
 

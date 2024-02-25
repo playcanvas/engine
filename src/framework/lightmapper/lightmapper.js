@@ -32,7 +32,7 @@ import {
     PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE,
     SHADER_FORWARDHDR,
     SHADERDEF_DIRLM, SHADERDEF_LM, SHADERDEF_LMAMBIENT,
-    MASK_BAKE, MASK_AFFECT_LIGHTMAPPED,
+    MASK_BAKE, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC,
     SHADOWUPDATE_REALTIME, SHADOWUPDATE_THISFRAME
 } from '../../scene/constants.js';
 import { Camera } from '../../scene/camera.js';
@@ -120,6 +120,9 @@ class Lightmapper {
         this.scene = null;
         this.renderer = null;
         this.assets = null;
+
+        this.camera?.destroy();
+        this.camera = null;
     }
 
     initBake(device) {
@@ -647,7 +650,7 @@ class Lightmapper {
         }
 
         // scene lights
-        const sceneLights = layerComposition._lights;
+        const sceneLights = this.renderer.lights;
         for (let i = 0; i < sceneLights.length; i++) {
             const light = sceneLights[i];
 
@@ -657,7 +660,7 @@ class Lightmapper {
 
             // bake light
             if (light.enabled && (light.mask & MASK_BAKE) !== 0) {
-                light.mask = 0xFFFFFFFF;
+                light.mask = MASK_BAKE | MASK_AFFECT_LIGHTMAPPED | MASK_AFFECT_DYNAMIC;
                 light.shadowUpdateMode = light.type === LIGHTTYPE_DIRECTIONAL ? SHADOWUPDATE_REALTIME : SHADOWUPDATE_THISFRAME;
                 bakeLights.push(bakeLight);
             }
@@ -836,12 +839,13 @@ class Lightmapper {
         light.visibleThisFrame = true;
     }
 
-    renderShadowMap(shadowMapRendered, casters, bakeLight) {
+    renderShadowMap(comp, shadowMapRendered, casters, bakeLight) {
 
         const light = bakeLight.light;
         const isClustered = this.scene.clusteredLightingEnabled;
+        const castShadow = light.castShadows && (!isClustered || this.scene.lighting.shadowsEnabled);
 
-        if (!shadowMapRendered && light.castShadows) {
+        if (!shadowMapRendered && castShadow) {
 
             // allocate shadow map from the cache to avoid per light allocation
             if (!light.shadowMap && !isClustered) {
@@ -849,9 +853,9 @@ class Lightmapper {
             }
 
             if (light.type === LIGHTTYPE_DIRECTIONAL) {
-                this.renderer._shadowRendererDirectional.cull(light, casters, this.camera);
+                this.renderer._shadowRendererDirectional.cull(light, comp, this.camera, casters);
             } else {
-                this.renderer._shadowRendererLocal.cull(light, casters);
+                this.renderer._shadowRendererLocal.cull(light, comp, casters);
             }
 
             const insideRenderPass = false;
@@ -910,6 +914,7 @@ class Lightmapper {
     bakeInternal(passCount, bakeNodes, allNodes) {
 
         const scene = this.scene;
+        const comp = scene.layers;
         const device = this.device;
         const clusteredLightingEnabled = scene.clusteredLightingEnabled;
 
@@ -917,7 +922,7 @@ class Lightmapper {
         this.setupScene();
 
         // update layer composition
-        scene.layers._update(device, clusteredLightingEnabled);
+        comp._update();
 
         // compute bounding boxes for nodes
         this.computeNodesBounds(bakeNodes);
@@ -926,8 +931,9 @@ class Lightmapper {
         this.allocateTextures(bakeNodes, passCount);
 
         // Collect bakeable lights, and also keep allLights along with their properties we change to restore them later
+        this.renderer.collectLights(comp);
         const allLights = [], bakeLights = [];
-        this.prepareLightsToBake(scene.layers, allLights, bakeLights);
+        this.prepareLightsToBake(comp, allLights, bakeLights);
 
         // update transforms
         this.updateTransforms(allNodes);
@@ -975,6 +981,7 @@ class Lightmapper {
         for (i = 0; i < bakeLights.length; i++) {
             const bakeLight = bakeLights[i];
             const isAmbientLight = bakeLight instanceof BakeLightAmbient;
+            const isDirectional = bakeLight.light.type === LIGHTTYPE_DIRECTIONAL;
 
             // light can be baked using many virtual lights to create soft effect
             let numVirtualLights = bakeLight.numVirtualLights;
@@ -1010,16 +1017,16 @@ class Lightmapper {
                     }
 
                     this.setupLightArray(lightArray, bakeLight.light);
+                    const clusterLights = isDirectional ? [] : [bakeLight.light];
 
                     if (clusteredLightingEnabled) {
-                        this.renderer.lightTextureAtlas.update(lightArray[LIGHTTYPE_SPOT], lightArray[LIGHTTYPE_OMNI], this.lightingParams);
+                        this.renderer.lightTextureAtlas.update(clusterLights, this.lightingParams);
                     }
 
                     // render light shadow map needs to be rendered
-                    shadowMapRendered = this.renderShadowMap(shadowMapRendered, casters, bakeLight);
+                    shadowMapRendered = this.renderShadowMap(comp, shadowMapRendered, casters, bakeLight);
 
                     if (clusteredLightingEnabled) {
-                        const clusterLights = lightArray[LIGHTTYPE_SPOT].concat(lightArray[LIGHTTYPE_OMNI]);
                         this.worldClusters.update(clusterLights, this.scene.gammaCorrection, this.lightingParams);
                     }
 
@@ -1086,7 +1093,7 @@ class Lightmapper {
                         this.renderer._forwardTime = 0;
                         this.renderer._shadowMapTime = 0;
 
-                        this.renderer.renderForward(this.camera, rcv, rcv.length, lightArray, SHADER_FORWARDHDR);
+                        this.renderer.renderForward(this.camera, rcv, lightArray, SHADER_FORWARDHDR);
 
                         device.updateEnd();
 

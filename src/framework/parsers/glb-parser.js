@@ -498,12 +498,20 @@ const createVertexBufferInternal = (device, sourceDesc, flipV) => {
     const vertexDesc = [];
     for (const semantic in sourceDesc) {
         if (sourceDesc.hasOwnProperty(semantic)) {
-            vertexDesc.push({
+            const element = {
                 semantic: semantic,
                 components: sourceDesc[semantic].components,
                 type: sourceDesc[semantic].type,
                 normalize: !!sourceDesc[semantic].normalize
-            });
+            };
+
+            if (!VertexFormat.isElementValid(device, element)) {
+                // WebGP does not support some formats and we need to remap it to one larger, for example int16x3 -> int16x4
+                // TODO: this might need the actual data changes if this element is the last one in the vertex, as it might
+                // try to read outside of the vertex buffer.
+                element.components++;
+            }
+            vertexDesc.push(element);
         }
     }
 
@@ -1048,14 +1056,14 @@ const extensionUnlit = (data, material, textures) => {
 
 const extensionSpecular = (data, material, textures) => {
     material.useMetalnessSpecularColor = true;
+
     if (data.hasOwnProperty('specularColorTexture')) {
         material.specularEncoding = 'srgb';
         material.specularMap = textures[data.specularColorTexture.index];
         material.specularMapChannel = 'rgb';
-
         extractTextureTransform(data.specularColorTexture, material, ['specular']);
-
     }
+
     if (data.hasOwnProperty('specularColorFactor')) {
         const color = data.specularColorFactor;
         material.specular.set(Math.pow(color[0], 1 / 2.2), Math.pow(color[1], 1 / 2.2), Math.pow(color[2], 1 / 2.2));
@@ -1068,6 +1076,7 @@ const extensionSpecular = (data, material, textures) => {
     } else {
         material.specularityFactor = 1;
     }
+
     if (data.hasOwnProperty('specularTexture')) {
         material.specularityFactorMapChannel = 'a';
         material.specularityFactorMap = textures[data.specularTexture.index];
@@ -1282,9 +1291,10 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
                 }
                 break;
             case 'BLEND':
+                // Blended materials will be rendered back to front, but continue to write depth
+                // along with alpha test. This helps to composite the scene.
                 material.blendType = BLEND_NORMAL;
-                // note: by default don't write depth on semitransparent materials
-                material.depthWrite = false;
+                material.alphaTest = 1.0 / 255.0;
                 break;
             default:
             case 'OPAQUE':

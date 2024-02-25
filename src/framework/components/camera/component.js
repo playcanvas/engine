@@ -707,6 +707,8 @@ class CameraComponent extends Component {
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneColorMap was called, but the camera does not have a Depth layer, ignoring.');
         }
+
+        this.camera._enableRenderPassColorGrab(this.system.app.graphicsDevice, this.renderSceneColorMap);
     }
 
     /**
@@ -722,6 +724,8 @@ class CameraComponent extends Component {
         if (!ok) {
             Debug.warnOnce('CameraComponent.requestSceneDepthMap was called, but the camera does not have a Depth layer, ignoring.');
         }
+
+        this.camera._enableRenderPassDepthGrab(this.system.app.graphicsDevice, this.system.app.renderer, this.renderSceneDepthMap);
     }
 
     dirtyLayerCompositionCameras() {
@@ -880,12 +884,14 @@ class CameraComponent extends Component {
     onRemove() {
         this.onDisable();
         this.off();
+
+        this.camera.destroy();
     }
 
     /**
      * Calculates aspect ratio value for a given render target.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget} [rt] - Optional
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} [rt] - Optional
      * render target. If unspecified, the backbuffer is used.
      * @returns {number} The aspect ratio of the render target (or backbuffer).
      */
@@ -899,7 +905,7 @@ class CameraComponent extends Component {
     /**
      * Prepare the camera for frame rendering.
      *
-     * @param {import('../../../platform/graphics/render-target.js').RenderTarget} rt - Render
+     * @param {import('../../../platform/graphics/render-target.js').RenderTarget|null} rt - Render
      * target to which rendering will be performed. Will affect camera's aspect ratio, if
      * aspectRatioMode is {@link ASPECT_AUTO}.
      * @ignore
@@ -946,6 +952,7 @@ class CameraComponent extends Component {
      * @param {import('../../xr/xr-manager.js').XrErrorCallback} [options.callback] - Optional
      * callback function called once the session is started. The callback has one argument Error -
      * it is null if the XR session started successfully.
+     * @param {boolean} [options.anchors] - Optional boolean to attempt to enable {@link XrAnchors}.
      * @param {object} [options.depthSensing] - Optional object with depth sensing parameters to
      * attempt to enable {@link XrDepthSensing}.
      * @param {string} [options.depthSensing.usagePreference] - Optional usage preference for depth

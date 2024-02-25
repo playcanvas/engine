@@ -2,8 +2,6 @@ import { Curve } from '../../../core/math/curve.js';
 import { CurveSet } from '../../../core/math/curve-set.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 
-import { LIGHTTYPE_DIRECTIONAL } from '../../../scene/constants.js';
-
 import { Asset } from '../../asset/asset.js';
 
 import { Component } from '../component.js';
@@ -205,6 +203,12 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         const components = this.store;
         let numSteps;
         const stats = this.app.stats.particles;
+        const composition = this.app.scene.layers;
+
+        // disable light cube on all layers first
+        for (let i = 0; i < composition.layerList.length; i++) {
+            composition.layerList[i].requiresLightCube = false;
+        }
 
         for (const id in components) {
             if (components.hasOwnProperty(id)) {
@@ -216,36 +220,14 @@ class ParticleSystemComponentSystem extends ComponentSystem {
                     const emitter = entity.particlesystem.emitter;
                     if (!emitter?.meshInstance.visible) continue;
 
-                    // Bake ambient and directional lighting into one ambient cube
-                    // TODO: only do if lighting changed
-                    // TODO: don't do for every emitter
+                    // if emitter is using lighting, enable light cube on all layers it is assigned to
                     if (emitter.lighting) {
                         const layers = data.layers;
-                        let lightCube;
                         for (let i = 0; i < layers.length; i++) {
-                            const layer = this.app.scene.layers.getLayerById(layers[i]);
-                            if (!layer) continue;
-
-                            if (!layer._lightCube) {
-                                layer._lightCube = new Float32Array(6 * 3);
-                            }
-                            lightCube = layer._lightCube;
-                            for (let j = 0; j < 6; j++) {
-                                lightCube[j * 3] = this.app.scene.ambientLight.r;
-                                lightCube[j * 3 + 1] = this.app.scene.ambientLight.g;
-                                lightCube[j * 3 + 2] = this.app.scene.ambientLight.b;
-                            }
-                            const dirs = layer._splitLights[LIGHTTYPE_DIRECTIONAL];
-                            for (let j = 0; j < dirs.length; j++) {
-                                for (let c = 0; c < 6; c++) {
-                                    const weight = Math.max(emitter.lightCubeDir[c].dot(dirs[j]._direction), 0) * dirs[j]._intensity;
-                                    lightCube[c * 3] += dirs[j]._color.r * weight;
-                                    lightCube[c * 3 + 1] += dirs[j]._color.g * weight;
-                                    lightCube[c * 3 + 2] += dirs[j]._color.b * weight;
-                                }
-                            }
+                            const layer = composition.getLayerById(layers[i]);
+                            if (layer)
+                                layer.requiresLightCube = true;
                         }
-                        emitter.constantLightCube.setValue(lightCube); // ?
                     }
 
                     if (!data.paused) {

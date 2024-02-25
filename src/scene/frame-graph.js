@@ -1,3 +1,5 @@
+import { Debug } from '../core/debug.js';
+
 /**
  * A frame graph represents a single rendering frame as a sequence of render passes.
  *
@@ -21,6 +23,7 @@ class FrameGraph {
      * pass to add.
      */
     addRenderPass(renderPass) {
+        Debug.assert(renderPass);
         this.renderPasses.push(renderPass);
     }
 
@@ -36,7 +39,7 @@ class FrameGraph {
             const renderPass = renderPasses[i];
             const renderTarget = renderPass.renderTarget;
 
-            // if using a target, or null which represents the default framebuffer
+            // if using a target, or null which represents the default back-buffer
             if (renderTarget !== undefined) {
 
                 // previous pass using the same render target
@@ -104,21 +107,6 @@ class FrameGraph {
                 lastCubeRenderPass = null;
             }
         }
-
-        // handle what's left in the map - last passes rendering to each render target
-        renderTargetMap.forEach((renderPass, renderTarget) => {
-
-            // default framebuffer
-            if (renderTarget === null) {
-
-                // store the multisampled buffer
-                renderPass.colorOps.store = true;
-
-                // no resolve, no mipmaps
-                renderPass.colorOps.resolve = false;
-                renderPass.colorOps.mipmaps = false;
-            }
-        });
 
         renderTargetMap.clear();
     }

@@ -130,12 +130,12 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_RGB8:
                 this._glFormat = gl.RGB;
-                this._glInternalFormat = device.webgl2 ? gl.RGB8 : gl.RGB;
+                this._glInternalFormat = device.isWebGL2 ? gl.RGB8 : gl.RGB;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case PIXELFORMAT_RGBA8:
                 this._glFormat = gl.RGBA;
-                this._glInternalFormat = device.webgl2 ? gl.RGBA8 : gl.RGBA;
+                this._glInternalFormat = device.isWebGL2 ? gl.RGBA8 : gl.RGBA;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
             case PIXELFORMAT_DXT1:
@@ -193,7 +193,7 @@ class WebglTexture {
             case PIXELFORMAT_RGB16F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGB;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGB16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
@@ -204,7 +204,7 @@ class WebglTexture {
             case PIXELFORMAT_RGBA16F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGBA;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGBA16F;
                     this._glPixelType = gl.HALF_FLOAT;
                 } else {
@@ -215,7 +215,7 @@ class WebglTexture {
             case PIXELFORMAT_RGB32F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGB;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGB32F;
                 } else {
                     this._glInternalFormat = gl.RGB;
@@ -225,7 +225,7 @@ class WebglTexture {
             case PIXELFORMAT_RGBA32F:
                 // definition varies between WebGL1 and 2
                 this._glFormat = gl.RGBA;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.RGBA32F;
                 } else {
                     this._glInternalFormat = gl.RGBA;
@@ -238,7 +238,7 @@ class WebglTexture {
                 this._glPixelType = gl.FLOAT;
                 break;
             case PIXELFORMAT_DEPTH:
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     // native WebGL2
                     this._glFormat = gl.DEPTH_COMPONENT;
                     this._glInternalFormat = gl.DEPTH_COMPONENT32F; // should allow 16/24 bits?
@@ -252,7 +252,7 @@ class WebglTexture {
                 break;
             case PIXELFORMAT_DEPTHSTENCIL:
                 this._glFormat = gl.DEPTH_STENCIL;
-                if (device.webgl2) {
+                if (device.isWebGL2) {
                     this._glInternalFormat = gl.DEPTH24_STENCIL8;
                     this._glPixelType = gl.UNSIGNED_INT_24_8;
                 } else {
@@ -484,7 +484,7 @@ class WebglTexture {
             }
         }
 
-        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.webgl2) && texture._levels.length === 1) {
+        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.isWebGL2) && texture._levels.length === 1) {
             gl.generateMipmap(this._glTarget);
             texture._mipmapsUploaded = true;
         }

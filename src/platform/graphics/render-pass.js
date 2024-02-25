@@ -1,4 +1,4 @@
-import { Debug } from '../../core/debug.js';
+import { Debug, DebugHelper } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
@@ -93,7 +93,13 @@ class RenderPass {
     /** @type {string} */
     name;
 
-    /** @type {import('../graphics/render-target.js').RenderTarget} */
+    /**
+     * The render target for this render pass:
+     *  - `undefined`: render pass does not render to any render target
+     *  - `null`: render pass renders to the backbuffer
+     *  - Otherwise, renders to the provided RT.
+     * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
+     */
     renderTarget;
 
     /**
@@ -143,23 +149,29 @@ class RenderPass {
     /**
      * Custom function that is called to render the pass.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    execute;
+    _execute;
+
+    /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
 
     /**
      * Custom function that is called before the pass has started.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    before;
+    _before;
 
     /**
      * Custom function that is called after the pass has fnished.
      *
-     * @type {Function}
+     * @type {Function|undefined}
      */
-    after;
+    _after;
 
     /**
      * Creates an instance of the RenderPass.
@@ -169,22 +181,26 @@ class RenderPass {
      * @param {Function} [execute] - Custom function that is called to render the pass.
      */
     constructor(graphicsDevice, execute) {
+        DebugHelper.setName(this, this.constructor.name);
+        Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
 
-        /** @type {Function} */
-        this.execute = execute;
+        this._execute = execute;
+    }
+
+    destroy() {
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget} renderTarget - The render
+     * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
      * target to render into (output). This function should be called only for render passes which
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
      */
-    init(renderTarget) {
+    init(renderTarget = null) {
 
         // null represents the default framebuffer
-        this.renderTarget = renderTarget || null;
+        this.renderTarget = renderTarget;
 
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
@@ -208,6 +224,18 @@ class RenderPass {
                 colorOps.mipmaps = true;
             }
         }
+    }
+
+    before() {
+        this._before?.();
+    }
+
+    execute() {
+        this._execute?.();
+    }
+
+    after() {
+        this._after?.();
     }
 
     /**
@@ -260,19 +288,21 @@ class RenderPass {
             this.log(device, device.renderPassIndex);
         });
 
-        this.before?.();
+        this.before();
 
-        if (realPass) {
-            device.startPass(this);
+        if (this.executeEnabled) {
+            if (realPass) {
+                device.startPass(this);
+            }
+
+            this.execute();
+
+            if (realPass) {
+                device.endPass(this);
+            }
         }
 
-        this.execute?.();
-
-        if (realPass) {
-            device.endPass(this);
-        }
-
-        this.after?.();
+        this.after();
 
         device.renderPassIndex++;
 
@@ -284,11 +314,9 @@ class RenderPass {
     log(device, index) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            let rt = this.renderTarget;
-            if (rt === null && device.isWebGPU) {
-                rt = device.frameBuffer;
-            }
-            const numColor = rt?._colorBuffers?.length ?? (rt?.impl.assignedColorTexture ? 1 : 0);
+            const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
+            const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
+            const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
             const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
@@ -299,6 +327,7 @@ class RenderPass {
 
             Debug.trace(TRACEID_RENDER_PASS,
                         `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}` +
                         rtInfo.padEnd(30));
 
             for (let i = 0; i < numColor; i++) {

@@ -114,7 +114,7 @@ class GroundFogExample {
         const gfxOptions = {
             deviceTypes: [deviceType],
             glslangUrl: '/static/lib/glslang/glslang.js',
-            twgslUrl: '/static/lib/twgsl/twgsl.js',
+            twgslUrl: '/static/lib/twgsl/twgsl.js'
         };
 
         pc.createGraphicsDevice(canvas, gfxOptions).then((device: pc.GraphicsDevice) => {
@@ -236,7 +236,6 @@ class GroundFogExample {
                 const material = new pc.Material();
                 material.shader = shader;
                 material.setParameter('uTexture', assets.texture.resource);
-                material.depthWrite = false;
                 material.depthWrite = false;
                 material.blendType = pc.BLEND_NORMAL;
                 material.update();

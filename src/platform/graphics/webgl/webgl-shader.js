@@ -149,13 +149,18 @@ class WebglShader {
         if (this.glProgram)
             return;
 
+        // if the device is lost, silently ignore
+        const gl = device.gl;
+        if (gl.isContextLost()) {
+            return;
+        }
+
         let startTime = 0;
         Debug.call(() => {
             this.compileDuration = 0;
             startTime = now();
         });
 
-        const gl = device.gl;
         const glProgram = gl.createProgram();
         this.glProgram = glProgram;
 
@@ -164,7 +169,7 @@ class WebglShader {
 
         const definition = shader.definition;
         const attrs = definition.attributes;
-        if (device.webgl2 && definition.useTransformFeedback) {
+        if (device.isWebGL2 && definition.useTransformFeedback) {
             // Collect all "out_" attributes and use them for output
             const outNames = [];
             for (const attr in attrs) {
@@ -235,6 +240,11 @@ class WebglShader {
 
             glShader = gl.createShader(isVertexShader ? gl.VERTEX_SHADER : gl.FRAGMENT_SHADER);
 
+            // if the device is lost, silently ignore
+            if (!glShader && gl.isContextLost()) {
+                return glShader;
+            }
+
             gl.shaderSource(glShader, src);
             gl.compileShader(glShader);
 
@@ -268,11 +278,16 @@ class WebglShader {
      */
     finalize(device, shader) {
 
+        // if the device is lost, silently ignore
+        const gl = device.gl;
+        if (gl.isContextLost()) {
+            return true;
+        }
+
         // if the program wasn't linked yet (shader was not created in batch)
         if (!this.glProgram)
             this.link(device, shader);
 
-        const gl = device.gl;
         const glProgram = this.glProgram;
         const definition = shader.definition;
 
@@ -331,11 +346,10 @@ class WebglShader {
             if (definition.attributes[info.name] === undefined) {
                 console.error(`Vertex shader attribute "${info.name}" is not mapped to a semantic in shader definition, shader [${shader.label}]`, shader);
                 shader.failed = true;
+            } else {
+                const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
+                this.attributes.push(shaderInput);
             }
-
-            const shaderInput = new WebglShaderInput(device, definition.attributes[info.name], device.pcUniformType[info.type], location);
-
-            this.attributes.push(shaderInput);
         }
 
         // Query the program for each shader state (GLSL 'uniform')
@@ -348,7 +362,7 @@ class WebglShader {
             const shaderInput = new WebglShaderInput(device, info.name, device.pcUniformType[info.type], location);
 
             if (info.type === gl.SAMPLER_2D || info.type === gl.SAMPLER_CUBE ||
-                (device.webgl2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
+                (device.isWebGL2 && (info.type === gl.SAMPLER_2D_SHADOW || info.type === gl.SAMPLER_CUBE_SHADOW || info.type === gl.SAMPLER_3D))
             ) {
                 this.samplers.push(shaderInput);
             } else {

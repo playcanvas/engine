@@ -10,6 +10,7 @@ import {
 } from './constants.js';
 
 const stringIds = new StringIds();
+const webgpuValidElementSizes = [2, 4, 8, 12, 16];
 
 /**
  * A vertex format is a descriptor that defines the layout of vertex data inside a
@@ -150,7 +151,7 @@ class VertexFormat {
             elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
 
             // WebGPU has limited element size support (for example uint16x3 is not supported)
-            Debug.assert(!graphicsDevice.isWebGPU || [2, 4, 8, 12, 16].includes(elementSize),
+            Debug.assert(VertexFormat.isElementValid(graphicsDevice, elementDesc),
                          `WebGPU does not support the format of vertex element ${elementDesc.semantic} : ${vertexTypesNames[elementDesc.type]} x ${elementDesc.components}`);
 
             // align up the offset to elementSize (when vertexCount is specified only - case of non-interleaved format)
@@ -234,6 +235,13 @@ class VertexFormat {
         }
 
         return VertexFormat._defaultInstancingFormat;
+    }
+
+    static isElementValid(graphicsDevice, elementDesc) {
+        const elementSize = elementDesc.components * typedArrayTypesByteSize[elementDesc.type];
+        if (graphicsDevice.isWebGPU && !webgpuValidElementSizes.includes(elementSize))
+            return false;
+        return true;
     }
 
     /**

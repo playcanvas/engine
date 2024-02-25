@@ -21,6 +21,7 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 
+let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
@@ -43,19 +44,82 @@ class InstancingData {
     }
 }
 
-class Command {
-    constructor(layer, blendType, command) {
-        this._key = [];
-        this._key[SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
-        this.command = command;
+/**
+ * Internal helper class for storing the shader and related mesh bind group in the shader cache.
+ *
+ * @ignore
+ */
+class ShaderInstance {
+    /**
+     * A shader.
+     *
+     * @type {import('../platform/graphics/shader.js').Shader|undefined}
+     */
+    shader;
+
+    /**
+     * A bind group storing mesh uniforms for the shader.
+     *
+     * @type {BindGroup|null}
+     */
+    bindGroup = null;
+
+    /**
+     * Returns the mesh bind group for the shader.
+     *
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
+     * graphics device.
+     * @returns {BindGroup} - The mesh bind group.
+     */
+    getBindGroup(device) {
+
+        // create bind group
+        if (!this.bindGroup) {
+            const shader = this.shader;
+            Debug.assert(shader);
+
+            // mesh uniform buffer
+            const ubFormat = shader.meshUniformBufferFormat;
+            Debug.assert(ubFormat);
+            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
+
+            // mesh bind group
+            const bindGroupFormat = shader.meshBindGroupFormat;
+            Debug.assert(bindGroupFormat);
+            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
+            DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
+        }
+
+        return this.bindGroup;
     }
 
-    set key(val) {
-        this._key[SORTKEY_FORWARD] = val;
+    destroy() {
+        const group = this.bindGroup;
+        if (group) {
+            group.defaultUniformBuffer?.destroy();
+            group.destroy();
+            this.bindGroup = null;
+        }
     }
+}
 
-    get key() {
-        return this._key[SORTKEY_FORWARD];
+/**
+ * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
+ * pass.
+ *
+ * @ignore
+ */
+class ShaderCacheEntry {
+    /**
+     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
+     *
+     * @type {Map<number, ShaderInstance>}
+     */
+    shaderInstances = new Map();
+
+    destroy() {
+        this.shaderInstances.forEach(instance => instance.destroy());
+        this.shaderInstances.clear();
     }
 }
 
@@ -194,8 +258,20 @@ class MeshInstance {
      * value stores all shaders and bind groups for the shader pass for various light combinations.
      *
      * @type {Array<ShaderCacheEntry|null>}
+     * @private
      */
     _shaderCache = [];
+
+    /** @ignore */
+    id = id++;
+
+    /**
+     * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    pick = true;
 
     /**
      * Create a new MeshInstance instance.
@@ -264,14 +340,6 @@ class MeshInstance {
          */
         this.cull = true;
 
-        /**
-         * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.pick = true;
-
         this._updateAabb = true;
         this._updateAabbFunc = null;
         this._calculateSortDistance = null;
@@ -302,6 +370,7 @@ class MeshInstance {
         // World space AABB
         this.aabb = new BoundingBox();
         this._aabbVer = -1;
+        this._aabbMeshVer = -1;
 
         /**
          * Use this value to affect rendering order of mesh instances. Only used when mesh
@@ -438,7 +507,7 @@ class MeshInstance {
 
                 toWorldSpace = true;
 
-            } else if (this.node._aabbVer !== this._aabbVer) {
+            } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
 
                 // local space bounding box - either from mesh or empty
                 if (this.mesh?.aabb) {
@@ -457,6 +526,7 @@ class MeshInstance {
 
                 toWorldSpace = true;
                 this._aabbVer = this.node._aabbVer;
+                this._aabbMeshVer = this.mesh._aabbVer;
             }
         }
 
@@ -563,17 +633,6 @@ class MeshInstance {
             this.transparent = material.transparent;
 
             this.updateKey();
-
-            // if blend type of the material changes
-            const prevBlend = prevMat && prevMat.transparent;
-            if (material.transparent !== prevBlend) {
-                const scene = this._material._scene || prevMat?._scene;
-                if (scene) {
-                    scene.layers._dirtyBlend = true;
-                } else {
-                    material._dirtyBlend = true;
-                }
-            }
         }
     }
 
@@ -787,10 +846,22 @@ class MeshInstance {
     }
 
     updateKey() {
+
+        // render alphatest/atoc after opaque
         const material = this.material;
-        this._key[SORTKEY_FORWARD] = getKey(this.layer,
-                                            (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
-                                            false, material.id);
+        const blendType = (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType;
+
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : unused
+        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
+        this._key[SORTKEY_FORWARD] =
+            ((this.layer & 0x0f) << 27) |
+            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
+            ((material.id & 0x1ffffff) << 0);
     }
 
     /**
@@ -968,18 +1039,4 @@ class MeshInstance {
     }
 }
 
-function getKey(layer, blendType, isCommand, materialId) {
-    // Key definition:
-    // Bit
-    // 31      : sign bit (leave)
-    // 27 - 30 : layer
-    // 26      : translucency type (opaque/transparent)
-    // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-    return ((layer & 0x0f) << 27) |
-           ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-           ((isCommand ? 1 : 0) << 25) |
-           ((materialId & 0x1ffffff) << 0);
-}
-
-export { Command, MeshInstance };
+export { MeshInstance };

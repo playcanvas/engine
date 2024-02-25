@@ -64,6 +64,12 @@ class StandardMaterialOptionsBuilder {
 
     _updateSharedOptions(options, scene, stdMat, objDefs, pass) {
         options.forceUv1 = stdMat.forceUv1;
+
+        // USER ATTRIBUTES
+        if (stdMat.userAttributes) {
+            options.litOptions.userAttributes = Object.fromEntries(stdMat.userAttributes.entries());
+        }
+
         options.litOptions.chunks = stdMat.chunks || {};
         options.litOptions.pass = pass;
         options.litOptions.alphaTest = stdMat.alphaTest > 0;

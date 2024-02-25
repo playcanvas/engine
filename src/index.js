@@ -78,6 +78,9 @@ export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-de
 // PLATFORM / GRAPHICS / webgpu
 export { WebgpuGraphicsDevice } from './platform/graphics/webgpu/webgpu-graphics-device.js';
 
+// PLATFORM / GRAPHICS / null
+export { NullGraphicsDevice } from './platform/graphics/null/null-graphics-device.js';
+
 // PLATFORM / INPUT
 export * from './platform/input/constants.js';
 export { Controller } from './platform/input/controller.js';
@@ -119,7 +122,7 @@ export { LightingParams } from './scene/lighting/lighting-params.js';
 export { LitShaderOptions } from './scene/shader-lib/programs/lit-shader-options.js';
 export { Material } from './scene/materials/material.js';
 export { Mesh } from './scene/mesh.js';
-export { MeshInstance, Command } from './scene/mesh-instance.js';
+export { MeshInstance } from './scene/mesh-instance.js';
 export { Model } from './scene/model.js';
 export { Morph } from './scene/morph.js';
 export { MorphInstance } from './scene/morph-instance.js';
@@ -328,6 +331,8 @@ export { XrHitTestSource } from './framework/xr/xr-hit-test-source.js';
 export { XrImageTracking } from './framework/xr/xr-image-tracking.js';
 export { XrTrackedImage } from './framework/xr/xr-tracked-image.js';
 export { XrDomOverlay } from './framework/xr/xr-dom-overlay.js';
+export { XrAnchors } from './framework/xr/xr-anchors.js';
+export { XrAnchor } from './framework/xr/xr-anchor.js';
 export { XrPlaneDetection } from './framework/xr/xr-plane-detection.js';
 export { XrPlane } from './framework/xr/xr-plane.js';
 
