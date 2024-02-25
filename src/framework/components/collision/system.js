@@ -445,7 +445,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
                     this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
                 }
             }
-            
+
             return shape;
         }
 
