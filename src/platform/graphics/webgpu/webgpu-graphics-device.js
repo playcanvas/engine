@@ -13,6 +13,7 @@ import { WebgpuBindGroup } from './webgpu-bind-group.js';
 import { WebgpuBindGroupFormat } from './webgpu-bind-group-format.js';
 import { WebgpuIndexBuffer } from './webgpu-index-buffer.js';
 import { WebgpuRenderPipeline } from './webgpu-render-pipeline.js';
+import { WebgpuComputePipeline } from './webgpu-compute-pipeline.js';
 import { WebgpuRenderTarget } from './webgpu-render-target.js';
 import { WebgpuShader } from './webgpu-shader.js';
 import { WebgpuTexture } from './webgpu-texture.js';
@@ -24,12 +25,18 @@ import { WebgpuDebug } from './webgpu-debug.js';
 import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
+import { WebgpuCompute } from './webgpu-compute.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Object responsible for caching and creation of render pipelines.
      */
     renderPipeline = new WebgpuRenderPipeline(this);
+
+    /**
+     * Object responsible for caching and creation of compute pipelines.
+     */
+    computePipeline = new WebgpuComputePipeline(this);
 
     /**
      * Object responsible for clearing the rendering surface by rendering a quad.
@@ -63,10 +70,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
      * Current command buffer encoder.
      *
-     * @type {GPUCommandEncoder}
+     * @type {GPUCommandEncoder|null}
      * @private
      */
-    commandEncoder;
+    commandEncoder = null;
 
     /**
      * Command buffers scheduled for execution on the GPU.
@@ -92,8 +99,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -131,6 +136,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
+        this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
+        this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
@@ -140,9 +147,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.supportsDepthShadow = true;
         this.supportsGpuParticles = false;
         this.supportsMrt = true;
+        this.supportsCompute = true;
         this.extUintElement = true;
         this.extTextureFloat = true;
         this.textureFloatRenderable = true;
+        this.textureHalfFloatFilterable = true;
         this.extTextureHalfFloat = true;
         this.textureHalfFloatRenderable = true;
         this.textureHalfFloatUpdatable = true;
@@ -166,9 +175,17 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // temporary message to confirm Webgpu is being used
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
+        // build a full URL from a relative path
+        const buildUrl = (relativePath) => {
+            const url = new URL(window.location.href);
+            url.pathname = relativePath;
+            url.search = '';
+            return url.toString();
+        };
+
         const results = await Promise.all([
-            import(`${twgslUrl}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
-            import(`${glslangUrl}`).then(module => module.default())
+            import(`${buildUrl(twgslUrl)}`).then(module => twgsl(twgslUrl.replace('.js', '.wasm'))),
+            import(`${buildUrl(glslangUrl)}`).then(module => module.default())
         ]);
 
         this.twgsl = results[0];
@@ -190,7 +207,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         //      "depth32float-stencil8",
         //      "indirect-first-instance",
         //      "shader-f16",
-        //      "rg11b10ufloat-renderable",
         //      "bgra8unorm-storage",
 
         // request optional features
@@ -207,6 +223,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
+
+        this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
         /** @type {GPUDeviceDescriptor} */
@@ -271,6 +289,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     postInit() {
         super.postInit();
+
+        this.initializeRenderState();
+        this.setupPassEncoderDefaults();
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
@@ -372,6 +393,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         return new WebgpuBindGroup();
     }
 
+    createComputeImpl(compute) {
+        return new WebgpuCompute(compute);
+    }
+
     /**
      * @param {number} index - Index of the bind group slot
      * @param {import('../bind-group.js').BindGroup} bindGroup - Bind group to attach
@@ -454,16 +479,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setShader(shader) {
+    setShader(shader, asyncCompile = false) {
 
-        this.shader = shader;
+        if (shader !== this.shader) {
+            this.shader = shader;
 
-        // #if _PROFILER
-        // TODO: we should probably track other stats instead, like pipeline switches
-        this._shaderSwitchesPerFrame++;
-        // #endif
-
-        return true;
+            // #if _PROFILER
+            // TODO: we should probably track other stats instead, like pipeline switches
+            this._shaderSwitchesPerFrame++;
+            // #endif
+        }
     }
 
     setBlendState(blendState) {
@@ -492,8 +517,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendColor(r, g, b, a) {
-        // TODO: this should use passEncoder.setBlendConstant(color)
-        // similar implementation to this.stencilRef
+        const c = this.blendColor;
+        if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
+            c.set(r, g, b, a);
+            this.passEncoder.setBlendConstant(c);
+        }
     }
 
     setCullMode(cullMode) {
@@ -511,7 +539,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Set up default values for the render pass encoder.
      */
     setupPassEncoderDefaults() {
+        this.pipeline = null;
         this.stencilRef = 0;
+        this.blendColor.set(0, 0, 0, 0);
     }
 
     _uploadDirtyTextures() {
@@ -529,7 +559,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to start.
      * @ignore
      */
-    startPass(renderPass) {
+    startRenderPass(renderPass) {
 
         // upload textures that need it, to avoid them being uploaded / their mips generated during the pass
         // TODO: this needs a better solution
@@ -556,9 +586,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
-
-        // clear cached encoder state
-        this.pipeline = null;
 
         const renderPassDesc = wrt.renderPassDescriptor;
 
@@ -598,7 +625,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {import('../render-pass.js').RenderPass} renderPass - The render pass to end.
      * @ignore
      */
-    endPass(renderPass) {
+    endRenderPass(renderPass) {
 
         // end the render pass
         this.passEncoder.end();
@@ -625,6 +652,51 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         WebgpuDebug.end(this, { renderPass });
         WebgpuDebug.end(this, { renderPass });
+    }
+
+    startComputePass() {
+
+        WebgpuDebug.internal(this);
+        WebgpuDebug.validate(this);
+
+        // create a new encoder for each pass
+        this.commandEncoder = this.wgpu.createCommandEncoder();
+        // DebugHelper.setLabel(this.commandEncoder, `${renderPass.name}-Encoder`);
+        DebugHelper.setLabel(this.commandEncoder, 'ComputePass-Encoder');
+
+        // clear cached encoder state
+        this.pipeline = null;
+
+        // TODO: add performance queries to compute passes
+
+        // start the pass
+        this.passEncoder = this.commandEncoder.beginComputePass();
+        DebugHelper.setLabel(this.passEncoder, 'ComputePass');
+
+        Debug.assert(!this.insideRenderPass, 'ComputePass cannot be started while inside another pass.');
+        this.insideRenderPass = true;
+    }
+
+    endComputePass() {
+
+        // end the compute pass
+        this.passEncoder.end();
+        this.passEncoder = null;
+        this.insideRenderPass = false;
+
+        // each render pass can use different number of bind groups
+        this.bindGroupFormats.length = 0;
+
+        // schedule command buffer submission
+        const cb = this.commandEncoder.finish();
+        // DebugHelper.setLabel(cb, `${renderPass.name}-CommandBuffer`);
+        DebugHelper.setLabel(cb, 'ComputePass-CommandBuffer');
+
+        this.addCommandBuffer(cb);
+        this.commandEncoder = null;
+
+        WebgpuDebug.end(this);
+        WebgpuDebug.end(this);
     }
 
     addCommandBuffer(commandBuffer, front = false) {
@@ -663,12 +735,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (options.flags) {
             this.clearRenderer.clear(this, this.renderTarget, options, this.defaultClearOptions);
         }
-    }
-
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
     }
 
     setViewport(x, y, w, h) {

@@ -7,11 +7,12 @@
 class RenderAction {
     constructor() {
 
-        // index into a layer stored in LayerComposition.layerList
-        this.layerIndex = 0;
-
         // the layer
+        /** @type {import('../layer.js').Layer|null} */
         this.layer = null;
+
+        // true if this uses transparent sublayer, opaque otherwise
+        this.transparent = false;
 
         // camera of type CameraComponent
         this.camera = null;
@@ -40,13 +41,12 @@ class RenderAction {
         // true if this is the last render action using this camera
         this.lastCameraUse = false;
 
-        // directional lights that needs to update their shadows for this render action. The array is
-        // filled in during light culling each frame.
-        this.directionalLights = [];
-
         // an array of view bind groups (the number of these corresponds to the number of views when XR is used)
         /** @type {import('../../platform/graphics/bind-group.js').BindGroup[]} */
         this.viewBindGroups = [];
+
+        // true if the camera should render using render passes it specifies
+        this.useCameraPasses = false;
     }
 
     // releases GPU resources
@@ -58,18 +58,10 @@ class RenderAction {
         this.viewBindGroups.length = 0;
     }
 
-    get hasDirectionalShadowLights() {
-        return this.directionalLights.length > 0;
-    }
-
-    /**
-     * @param {import('./layer-composition.js').LayerComposition} layerComposition - The layer
-     * composition.
-     * @returns {boolean} - True if the layer / sublayer referenced by the render action is enabled
-     */
-    isLayerEnabled(layerComposition) {
-        const layer = layerComposition.layerList[this.layerIndex];
-        return layer.enabled && layerComposition.subLayerEnabled[this.layerIndex];
+    setupClears(camera, layer) {
+        this.clearColor = camera?.clearColorBuffer || layer.clearColorBuffer;
+        this.clearDepth = camera?.clearDepthBuffer || layer.clearDepthBuffer;
+        this.clearStencil = camera?.clearStencilBuffer || layer.clearStencilBuffer;
     }
 }
 

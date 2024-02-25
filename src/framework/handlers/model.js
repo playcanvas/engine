@@ -7,7 +7,7 @@ import { getDefaultMaterial } from '../../scene/materials/default-material.js';
 import { GlbModelParser } from '../parsers/glb-model.js';
 import { JsonModelParser } from '../parsers/json-model.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Callback used by {@link ModelHandler#addParser} to decide on which parser to use.
@@ -22,29 +22,22 @@ import { JsonModelParser } from '../parsers/json-model.js';
 /**
  * Resource handler used for loading {@link Model} resources.
  *
- * @implements {ResourceHandler}
  * @category Graphics
  */
-class ModelHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "model";
-
+class ModelHandler extends ResourceHandler {
     /**
      * Create a new ModelHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
+        super(app, 'model');
+
         this._parsers = [];
         this.device = app.graphicsDevice;
         this.assets = app.assets;
         this.defaultMaterial = getDefaultMaterial(this.device);
-        this.maxRetries = 0;
 
         this.addParser(new JsonModelParser(this), function (url, data) {
             return (path.getExtension(url) === '.json');

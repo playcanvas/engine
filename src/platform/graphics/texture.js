@@ -15,7 +15,8 @@ import {
     TEXHINT_SHADOWMAP, TEXHINT_ASSET, TEXHINT_LIGHTMAP,
     TEXTURELOCK_WRITE,
     TEXTUREPROJECTION_NONE, TEXTUREPROJECTION_CUBE,
-    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR
+    TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_RGBE, TEXTURETYPE_RGBP, TEXTURETYPE_SWIZZLEGGGR,
+    isIntegerPixelFormat, FILTER_NEAREST, TEXTURELOCK_NONE, TEXTURELOCK_READ
 } from './constants.js';
 
 let id = 0;
@@ -34,10 +35,7 @@ class Texture {
      */
     name;
 
-    /** @protected */
-    _isRenderTarget = false;
-
-    /** @protected */
+    /** @ignore */
     _gpuSize = 0;
 
     /** @protected */
@@ -49,6 +47,9 @@ class Texture {
     /** @protected */
     _lockedLevel = -1;
 
+    /** @protected */
+    _lockedMode = TEXTURELOCK_NONE;
+
     /**
      * A render version used to track the last time the texture properties requiring bind group
      * to be updated were changed.
@@ -57,6 +58,9 @@ class Texture {
      * @ignore
      */
     renderVersionDirty = 0;
+
+    /** @protected */
+    _storage = false;
 
     /**
      * Create a new Texture instance.
@@ -68,7 +72,6 @@ class Texture {
      * @param {number} [options.width] - The width of the texture in pixels. Defaults to 4.
      * @param {number} [options.height] - The height of the texture in pixels. Defaults to 4.
      * @param {number} [options.depth] - The number of depth slices in a 3D texture (not supported by WebGl1).
-     * Defaults to 1 (single 2D image).
      * @param {number} [options.format] - The pixel format of the texture. Can be:
      *
      * - {@link PIXELFORMAT_A8}
@@ -123,6 +126,9 @@ class Texture {
      * texture. Default is true.
      * @param {boolean} [options.cubemap] - Specifies whether the texture is to be a cubemap.
      * Defaults to false.
+     * @param {number} [options.arrayLength] - Specifies whether the texture is to be a 2D texture array.
+     * When passed in as undefined or < 1, this is not an array texture. If >= 1, this is an array texture.
+     * (not supported by WebGL1). Defaults to undefined.
      * @param {boolean} [options.volume] - Specifies whether the texture is to be a 3D volume
      * (not supported by WebGL1). Defaults to false.
      * @param {string} [options.type] - Specifies the texture type.  Can be:
@@ -157,7 +163,11 @@ class Texture {
      * - {@link FUNC_NOTEQUAL}
      *
      * Defaults to {@link FUNC_LESS}.
-     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]} [options.levels] - Array of Uint8Array or other supported browser interface.
+     * @param {Uint8Array[]|HTMLCanvasElement[]|HTMLImageElement[]|HTMLVideoElement[]|Uint8Array[][]} [options.levels]
+     * - Array of Uint8Array or other supported browser interface; or a two-dimensional array
+     * of Uint8Array if options.arrayLength is defined and greater than zero.
+     * @param {boolean} [options.storage] - Defines if texture can be used as a storage texture by
+     * a compute shader. Defaults to false.
      * @example
      * // Create a 8x8x24-bit texture
      * const texture = new pc.Texture(graphicsDevice, {
@@ -192,15 +202,24 @@ class Texture {
 
         this._format = options.format ?? PIXELFORMAT_RGBA8;
         this._compressed = isCompressedPixelFormat(this._format);
+        this._integerFormat = isIntegerPixelFormat(this._format);
+        if (this._integerFormat) {
+            options.mipmaps = false;
+            options.minFilter = FILTER_NEAREST;
+            options.magFilter = FILTER_NEAREST;
+        }
 
         if (graphicsDevice.supportsVolumeTextures) {
             this._volume = options.volume ?? false;
             this._depth = Math.floor(options.depth ?? 1);
+            this._arrayLength = Math.floor(options.arrayLength ?? 0);
         } else {
             this._volume = false;
             this._depth = 1;
+            this._arrayLength = 0;
         }
 
+        this._storage = options.storage ?? false;
         this._cubemap = options.cubemap ?? false;
         this.fixCubemapSeams = options.fixCubemapSeams ?? false;
         this._flipY = options.flipY ?? false;
@@ -256,6 +275,7 @@ class Texture {
         Debug.trace(TRACEID_TEXTURE_ALLOC, `Alloc: Id ${this.id} ${this.name}: ${this.width}x${this.height} ` +
             `${this.cubemap ? '[Cubemap]' : ''}` +
             `${this.volume ? '[Volume]' : ''}` +
+            `${this.array ? '[Array]' : ''}` +
             `${this.mipmaps ? '[Mipmaps]' : ''}`, this);
     }
 
@@ -304,9 +324,9 @@ class Texture {
         this.adjustVramSizeTracking(device._vram, -this._gpuSize);
         this.impl.destroy(device);
 
-        this._width = width;
-        this._height = height;
-        this._depth = depth;
+        this._width = Math.floor(width);
+        this._height = Math.floor(height);
+        this._depth = Math.floor(depth);
 
         // re-create the implementation
         this.impl = device.createTextureImpl(this);
@@ -357,7 +377,21 @@ class Texture {
      * @type {number}
      */
     get requiredMipLevels() {
-        return this.mipmaps ? Math.floor(Math.log2(Math.max(this.width, this.height))) + 1 : 1;
+        return this.mipmaps ? TextureUtils.calcMipLevelsCount(this.width, this.height) : 1;
+    }
+
+    /**
+     * Returns the current lock mode. One of:
+     *
+     * - {@link TEXTURELOCK_NONE}
+     * - {@link TEXTURELOCK_READ}
+     * - {@link TEXTURELOCK_WRITE}
+     *
+     * @ignore
+     * @type {number}
+     */
+    get lockedMode() {
+        return this._lockedMode;
     }
 
     /**
@@ -374,8 +408,12 @@ class Texture {
      */
     set minFilter(v) {
         if (this._minFilter !== v) {
-            this._minFilter = v;
-            this.propertyChanged(1);
+            if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#minFilter: minFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+            } else {
+                this._minFilter = v;
+                this.propertyChanged(1);
+            }
         }
     }
 
@@ -393,8 +431,12 @@ class Texture {
      */
     set magFilter(v) {
         if (this._magFilter !== v) {
-            this._magFilter = v;
-            this.propertyChanged(2);
+            if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#magFilter: magFilter property cannot be changed on an integer texture, will remain FILTER_NEAREST", this);
+            } else {
+                this._magFilter = v;
+                this.propertyChanged(2);
+            }
         }
     }
 
@@ -532,10 +574,13 @@ class Texture {
      */
     set mipmaps(v) {
         if (this._mipmaps !== v) {
-            this._mipmaps = v;
 
             if (this.device.isWebGPU) {
                 Debug.warn("Texture#mipmaps: mipmap property is currently not allowed to be changed on WebGPU, create the texture appropriately.", this);
+            } else if (isIntegerPixelFormat(this._format)) {
+                Debug.warn("Texture#mipmaps: mipmap property cannot be changed on an integer texture, will remain false", this);
+            } else {
+                this._mipmaps = v;
             }
 
             if (v) this._needsMipmapsUpload = true;
@@ -544,6 +589,15 @@ class Texture {
 
     get mipmaps() {
         return this._mipmaps;
+    }
+
+    /**
+     * Defines if texture can be used as a storage texture by a compute shader.
+     *
+     * @type {boolean}
+     */
+    get storage() {
+        return this._storage;
     }
 
     /**
@@ -622,6 +676,24 @@ class Texture {
     }
 
     /**
+     * Returns true if this texture is a 2D texture array and false otherwise.
+     *
+     * @type {boolean}
+     */
+    get array() {
+        return this._arrayLength > 0;
+    }
+
+    /**
+     * Returns the number of textures inside this texture if this is a 2D array texture or 0 otherwise.
+     *
+     * @type {number}
+     */
+    get arrayLength() {
+        return this._arrayLength;
+    }
+
+    /**
      * Returns true if this texture is a 3D volume and false otherwise.
      *
      * @type {boolean}
@@ -681,7 +753,8 @@ class Texture {
                 return (this.format === PIXELFORMAT_RGB16F ||
                         this.format === PIXELFORMAT_RGB32F ||
                         this.format === PIXELFORMAT_RGBA16F ||
-                        this.format === PIXELFORMAT_RGBA32F) ? 'linear' : 'srgb';
+                        this.format === PIXELFORMAT_RGBA32F ||
+                        isIntegerPixelFormat(this.format)) ? 'linear' : 'srgb';
         }
     }
 
@@ -713,16 +786,23 @@ class Texture {
      */
     lock(options = {}) {
         // Initialize options to some sensible defaults
-        if (options.level === undefined) {
-            options.level = 0;
-        }
-        if (options.face === undefined) {
-            options.face = 0;
-        }
-        if (options.mode === undefined) {
-            options.mode = TEXTURELOCK_WRITE;
-        }
+        options.level ??= 0;
+        options.face ??= 0;
+        options.mode ??= TEXTURELOCK_WRITE;
 
+        Debug.assert(
+            this._lockedMode === TEXTURELOCK_NONE,
+            'The texture is already locked. Call `texture.unlock()` before attempting to lock again.',
+            this
+        );
+
+        Debug.assert(
+            options.mode === TEXTURELOCK_READ || options.mode === TEXTURELOCK_WRITE,
+            'Cannot lock a texture with TEXTURELOCK_NONE. To unlock a texture, call `texture.unlock()`.',
+            this
+        );
+
+        this._lockedMode = options.mode;
         this._lockedLevel = options.level;
 
         const levels = this.cubemap ? this._levels[options.face] : this._levels;
@@ -850,13 +930,16 @@ class Texture {
      * Unlocks the currently locked mip level and uploads it to VRAM.
      */
     unlock() {
-        if (this._lockedLevel === -1) {
-            Debug.log("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
+        if (this._lockedMode === TEXTURELOCK_NONE) {
+            Debug.warn("pc.Texture#unlock: Attempting to unlock a texture that is not locked.", this);
         }
 
-        // Upload the new pixel data
-        this.upload();
+        // Upload the new pixel data if locked in write mode (default)
+        if (this._lockedMode === TEXTURELOCK_WRITE) {
+            this.upload();
+        }
         this._lockedLevel = -1;
+        this._lockedMode = TEXTURELOCK_NONE;
     }
 
     /**

@@ -103,7 +103,7 @@ class WebgpuQuerySet {
             }
 
             stagingBuffer.unmap();
-            this.stagingBuffers.push(stagingBuffer);
+            this.stagingBuffers?.push(stagingBuffer);
 
             return {
                 renderVersion,

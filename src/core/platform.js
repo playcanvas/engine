@@ -53,6 +53,15 @@ const passiveEvents = detectPassiveEvents();
  */
 const platform = {
     /**
+     * String identifying the current platform. Can be one of: android, ios, windows, osx, linux,
+     * cros or null.
+     *
+     * @type {'android' | 'ios' | 'windows' | 'osx' | 'linux' | 'cros' | null}
+     * @ignore
+     */
+    name: platformName,
+
+    /**
      * String identifying the current runtime environment. Either 'browser' or 'node'.
      *
      * @type {'browser' | 'node'}

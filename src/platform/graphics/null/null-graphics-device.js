@@ -74,6 +74,15 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.frameEnd();
     }
 
+    updateBegin() {
+    }
+
+    updateEnd() {
+    }
+
+    readPixels(x, y, w, h, pixels) {
+    }
+
     createVertexBufferImpl(vertexBuffer, format) {
         return new NullVertexBuffer(vertexBuffer, format);
     }
@@ -97,8 +106,7 @@ class NullGraphicsDevice extends GraphicsDevice {
     draw(primitive, numInstances = 1, keepBuffers) {
     }
 
-    setShader(shader) {
-        return true;
+    setShader(shader, asyncCompile = false) {
     }
 
     setBlendState(blendState) {
@@ -123,19 +131,7 @@ class NullGraphicsDevice extends GraphicsDevice {
         super.initializeContextCaches();
     }
 
-    startPass(renderPass) {
-    }
-
-    endPass(renderPass) {
-    }
-
     clear(options) {
-    }
-
-    setDepthBias(on) {
-    }
-
-    setDepthBiasValues(constBias, slopeBias) {
     }
 
     setViewport(x, y, w, h) {

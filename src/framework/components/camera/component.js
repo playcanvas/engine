@@ -180,6 +180,21 @@ class CameraComponent extends Component {
     }
 
     /**
+     * Sets the render passes the camera will use for rendering, instead of its default rendering.
+     * Set this to an empty array to return to the default behavior.
+     *
+     * @type {import('../../../platform/graphics/render-pass.js').RenderPass[]}
+     * @ignore
+     */
+    set renderPasses(passes) {
+        this._camera.renderPasses = passes;
+    }
+
+    get renderPasses() {
+        return this._camera.renderPasses;
+    }
+
+    /**
      * Set camera aperture in f-stops, the default value is 16.0. Higher value means less exposure.
      *
      * @type {number}
@@ -477,6 +492,22 @@ class CameraComponent extends Component {
     }
 
     /**
+     * A jitter intensity applied in the projection matrix. Used for jittered sampling by TAA.
+     * A value of 1 represents a jitter in the range of [-1 to 1] of a pixel. Smaller values result
+     * in a crisper yet more aliased outcome, whereas increased values produce smoother but blurred
+     * result. Defaults to 0, representing no jitter.
+     *
+     * @type {number}
+     */
+    set jitter(value) {
+        this._camera.jitter = value;
+    }
+
+    get jitter() {
+        return this._camera.jitter;
+    }
+
+    /**
      * The distance from the camera before which no rendering will take place. Defaults to 0.1.
      *
      * @type {number}
@@ -731,7 +762,7 @@ class CameraComponent extends Component {
     dirtyLayerCompositionCameras() {
         // layer composition needs to update order
         const layerComp = this.system.app.scene.layers;
-        layerComp._dirtyCameras = true;
+        layerComp._dirty = true;
     }
 
     /**

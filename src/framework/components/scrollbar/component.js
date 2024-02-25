@@ -29,6 +29,18 @@ import { EntityReference } from '../../utils/entity-reference.js';
  */
 class ScrollbarComponent extends Component {
     /**
+     * Fired whenever the scroll value changes. The handler is passed a number representing the
+     * current scroll value.
+     *
+     * @event
+     * @example
+     * entity.scrollbar.on('set:value', (value) => {
+     *     console.log(`Scroll value is now ${value}`);
+     * });
+     */
+    static EVENT_SETVALUE = 'set:value';
+
+    /**
      * Create a new ScrollbarComponent.
      *
      * @param {import('./system.js').ScrollbarComponentSystem} system - The ComponentSystem that
@@ -49,13 +61,6 @@ class ScrollbarComponent extends Component {
 
         this._toggleLifecycleListeners('on');
     }
-
-    /**
-     * Fired whenever the scroll value changes.
-     *
-     * @event ScrollbarComponent#set:value
-     * @param {number} value - The current scroll value.
-     */
 
     /**
      * @param {string} onOrOff - 'on' or 'off'.

@@ -1257,6 +1257,7 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
             material.bumpiness = normalTexture.scale;
         }
     }
+
     if (gltfMaterial.hasOwnProperty('occlusionTexture')) {
         const occlusionTexture = gltfMaterial.occlusionTexture;
         material.aoMap = textures[occlusionTexture.index];
@@ -1265,6 +1266,7 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
         extractTextureTransform(occlusionTexture, material, ['ao']);
         // TODO: support 'strength'
     }
+
     if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
         color = gltfMaterial.emissiveFactor;
         // Convert from linear space to sRGB space
@@ -1274,12 +1276,14 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
         material.emissive.set(0, 0, 0);
         material.emissiveTint = false;
     }
+
     if (gltfMaterial.hasOwnProperty('emissiveTexture')) {
         const emissiveTexture = gltfMaterial.emissiveTexture;
         material.emissiveMap = textures[emissiveTexture.index];
 
         extractTextureTransform(emissiveTexture, material, ['emissive']);
     }
+
     if (gltfMaterial.hasOwnProperty('alphaMode')) {
         switch (gltfMaterial.alphaMode) {
             case 'MASK':
@@ -1291,10 +1295,10 @@ const createMaterial = (gltfMaterial, textures, flipV) => {
                 }
                 break;
             case 'BLEND':
-                // Blended materials will be rendered back to front, but continue to write depth
-                // along with alpha test. This helps to composite the scene.
                 material.blendType = BLEND_NORMAL;
-                material.alphaTest = 1.0 / 255.0;
+
+                // note: by default don't write depth on semitransparent materials
+                material.depthWrite = false;
                 break;
             default:
             case 'OPAQUE':

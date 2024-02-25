@@ -24,7 +24,6 @@ import { LightCamera } from './light-camera.js';
 import { UniformBufferFormat, UniformFormat } from '../../platform/graphics/uniform-buffer-format.js';
 import { BindBufferFormat, BindGroupFormat } from '../../platform/graphics/bind-group-format.js';
 import { BlendState } from '../../platform/graphics/blend-state.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
 
 function gauss(x, sigma) {
     return Math.exp(-(x * x) / (2.0 * sigma * sigma));
@@ -206,17 +205,8 @@ class ShadowRenderer {
 
     setupRenderState(device, light) {
 
-        const isClustered = this.renderer.scene.clusteredLightingEnabled;
-
-        // depth bias
-        if (device.isWebGL2 || device.isWebGPU) {
-            if (light._type === LIGHTTYPE_OMNI && !isClustered) {
-                device.setDepthBias(false);
-            } else {
-                device.setDepthBias(true);
-                device.setDepthBiasValues(light.shadowBias * -1000.0, light.shadowBias * -1000.0);
-            }
-        } else if (device.extStandardDerivatives) {
+        // webgl1 depth bias (not rendering to a shadow map, so cannot use hardware depth bias)
+        if (device.isWebGL1 && device.extStandardDerivatives) {
             if (light._type === LIGHTTYPE_OMNI) {
                 this.polygonOffset[0] = 0;
                 this.polygonOffset[1] = 0;
@@ -229,25 +219,15 @@ class ShadowRenderer {
         }
 
         // Set standard shadowmap states
+        const isClustered = this.renderer.scene.clusteredLightingEnabled;
         const gpuOrGl2 = device.isWebGL2 || device.isWebGPU;
         const useShadowSampler = isClustered ?
             light._isPcf && gpuOrGl2 :     // both spot and omni light are using shadow sampler on webgl2 when clustered
             light._isPcf && gpuOrGl2 && light._type !== LIGHTTYPE_OMNI;    // for non-clustered, point light is using depth encoded in color buffer (should change to shadow sampler)
 
         device.setBlendState(useShadowSampler ? this.blendStateNoWrite : this.blendStateWrite);
-        device.setDepthState(DepthState.DEFAULT);
+        device.setDepthState(light.shadowDepthState);
         device.setStencilState(null, null);
-    }
-
-    restoreRenderState(device) {
-
-        if (device.isWebGL2 || device.isWebGPU) {
-            device.setDepthBias(false);
-        } else if (device.extStandardDerivatives) {
-            this.polygonOffset[0] = 0;
-            this.polygonOffset[1] = 0;
-            this.polygonOffsetId.setValue(this.polygonOffset);
-        }
     }
 
     dispatchUniforms(light, shadowCam, lightRenderData, face) {
@@ -278,6 +258,10 @@ class ShadowRenderer {
         }
     }
 
+    /**
+     * @param {import('../light.js').Light} light - The light.
+     * @returns {number} Index of shadow pass info.
+     */
     getShadowPass(light) {
 
         // get shader pass from cache for this light type and shadow type
@@ -316,9 +300,6 @@ class ShadowRenderer {
         const passFlags = 1 << SHADER_SHADOW;
         const shadowPass = this.getShadowPass(light);
 
-        // TODO: Similarly to forward renderer, a shader creation part of this loop should be split into a separate loop,
-        // and endShaderBatch should be called at its end
-
         // Render
         const count = visibleCasters.length;
         for (let i = 0; i < count; i++) {
@@ -355,9 +336,7 @@ class ShadowRenderer {
             // sort shadow casters by shader
             meshInstance._key[SORTKEY_DEPTH] = shadowShader.id;
 
-            if (!shadowShader.failed && !device.setShader(shadowShader)) {
-                Debug.error(`Error compiling shadow shader for material=${material.name} pass=${shadowPass}`, material);
-            }
+            device.setShader(shadowShader);
 
             // set buffers
             renderer.setVertexBuffers(device, mesh);
@@ -478,8 +457,6 @@ class ShadowRenderer {
 
         // render mesh instances
         this.submitCasters(lightRenderData.visibleCasters, light);
-
-        this.restoreRenderState(device);
 
         DebugGraphics.popGpuMarker(device);
 

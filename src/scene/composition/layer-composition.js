@@ -40,6 +40,22 @@ class LayerComposition extends EventHandler {
     layerNameMap = new Map();
 
     /**
+     * A mapping of {@link Layer} to its opaque index in {@link LayerComposition#layerList}.
+     *
+     * @type {Map<import('../layer.js').Layer, number>}
+     * @ignore
+     */
+    layerOpaqueIndexMap = new Map();
+
+    /**
+     * A mapping of {@link Layer} to its transparent index in {@link LayerComposition#layerList}.
+     *
+     * @type {Map<import('../layer.js').Layer, number>}
+     * @ignore
+     */
+    layerTransparentIndexMap = new Map();
+
+    /**
      * A read-only array of boolean values, matching {@link LayerComposition#layerList}. True means only
      * semi-transparent objects are rendered, and false means opaque.
      *
@@ -82,6 +98,13 @@ class LayerComposition extends EventHandler {
     _renderActions = [];
 
     /**
+     * True if the composition needs to be updated before rendering.
+     *
+     * @ignore
+     */
+    _dirty = false;
+
+    /**
      * Create a new layer composition.
      *
      * @param {string} [name] - Optional non-unique name of the layer composition. Defaults to
@@ -94,38 +117,39 @@ class LayerComposition extends EventHandler {
 
         this._opaqueOrder = {};
         this._transparentOrder = {};
-
-        this._dirtyCameras = false;
     }
 
     destroy() {
-        // render actions
+        this.destroyRenderActions();
+    }
+
+    destroyRenderActions() {
         this._renderActions.forEach(ra => ra.destroy());
-        this._renderActions = null;
+        this._renderActions.length = 0;
     }
 
     _update() {
         const len = this.layerList.length;
 
         // if composition dirty flag is not set, test if layers are marked dirty
-        if (!this._dirtyCameras) {
+        if (!this._dirty) {
             for (let i = 0; i < len; i++) {
-                if (this.layerList[i]._dirtyCameras) {
-                    this._dirtyCameras = true;
+                if (this.layerList[i]._dirtyComposition) {
+                    this._dirty = true;
                     break;
                 }
             }
         }
 
-        if (this._dirtyCameras) {
+        if (this._dirty) {
 
-            this._dirtyCameras = false;
+            this._dirty = false;
 
             // walk the layers and build an array of unique cameras from all layers
             this.cameras.length = 0;
             for (let i = 0; i < len; i++) {
                 const layer = this.layerList[i];
-                layer._dirtyCameras = false;
+                layer._dirtyComposition = false;
 
                 // for all cameras in the layer
                 for (let j = 0; j < layer.cameras.length; j++) {
@@ -153,9 +177,19 @@ class LayerComposition extends EventHandler {
 
             // render in order of cameras sorted by priority
             let renderActionCount = 0;
+            this.destroyRenderActions();
+
             for (let i = 0; i < this.cameras.length; i++) {
                 const camera = this.cameras[i];
                 cameraLayers.length = 0;
+
+                // if the camera uses custom render passes, only add a dummy render action to mark
+                // the place where to add them during building of the frame graph
+                if (camera.camera.renderPasses.length > 0) {
+                    this.addDummyRenderAction(renderActionCount, camera);
+                    renderActionCount++;
+                    continue;
+                }
 
                 // first render action for this camera
                 let cameraFirstRenderAction = true;
@@ -172,8 +206,8 @@ class LayerComposition extends EventHandler {
                 for (let j = 0; j < len; j++) {
 
                     const layer = this.layerList[j];
-                    const isLayerEnabled = this.subLayerEnabled[j];
-                    if (layer && isLayerEnabled) {
+                    const isLayerEnabled = layer.enabled && this.subLayerEnabled[j];
+                    if (isLayerEnabled) {
 
                         // if layer needs to be rendered
                         if (layer.cameras.length > 0) {
@@ -196,7 +230,8 @@ class LayerComposition extends EventHandler {
                                 }
 
                                 // add render action to describe rendering step
-                                lastRenderAction = this.addRenderAction(this._renderActions, renderActionCount, layer, j, camera,
+                                const isTransparent = this.subLayerList[j];
+                                lastRenderAction = this.addRenderAction(renderActionCount, layer, isTransparent, camera,
                                                                         cameraFirstRenderAction, postProcessMarked);
                                 renderActionCount++;
                                 cameraFirstRenderAction = false;
@@ -224,25 +259,25 @@ class LayerComposition extends EventHandler {
                 }
             }
 
-            // destroy unused render actions
-            for (let i = renderActionCount; i < this._renderActions.length; i++) {
-                this._renderActions[i].destroy();
-            }
-            this._renderActions.length = renderActionCount;
-
             this._logRenderActions();
         }
     }
 
-    // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
-    addRenderAction(renderActions, renderActionIndex, layer, layerIndex, camera, cameraFirstRenderAction, postProcessMarked) {
+    getNextRenderAction(renderActionIndex) {
+        Debug.assert(this._renderActions.length === renderActionIndex);
+        const renderAction = new RenderAction();
+        this._renderActions.push(renderAction);
+        return renderAction;
+    }
 
-        // try and reuse object, otherwise allocate new
-        /** @type {RenderAction} */
-        let renderAction = renderActions[renderActionIndex];
-        if (!renderAction) {
-            renderAction = renderActions[renderActionIndex] = new RenderAction();
-        }
+    addDummyRenderAction(renderActionIndex, camera) {
+        const renderAction = this.getNextRenderAction(renderActionIndex);
+        renderAction.camera = camera;
+        renderAction.useCameraPasses = true;
+    }
+
+    // function adds new render action to a list, while trying to limit allocation and reuse already allocated objects
+    addRenderAction(renderActionIndex, layer, isTransparent, camera, cameraFirstRenderAction, postProcessMarked) {
 
         // render target from the camera takes precedence over the render target from the layer
         let rt = layer.renderTarget;
@@ -254,6 +289,7 @@ class LayerComposition extends EventHandler {
 
         // was camera and render target combo used already
         let used = false;
+        const renderActions = this._renderActions;
         for (let i = renderActionIndex - 1; i >= 0; i--) {
             if (renderActions[i].camera === camera && renderActions[i].renderTarget === rt) {
                 used = true;
@@ -261,35 +297,29 @@ class LayerComposition extends EventHandler {
             }
         }
 
-        // clear flags - use camera clear flags in the first render action for each camera,
-        // or when render target (from layer) was not yet cleared by this camera
-        const needsClear = cameraFirstRenderAction || !used;
-        let clearColor = needsClear ? camera.clearColorBuffer : false;
-        let clearDepth = needsClear ? camera.clearDepthBuffer : false;
-        let clearStencil = needsClear ? camera.clearStencilBuffer : false;
-
-        // clear buffers if requested by the layer
-        clearColor ||= layer.clearColorBuffer;
-        clearDepth ||= layer.clearDepthBuffer;
-        clearStencil ||= layer.clearStencilBuffer;
-
         // for cameras with post processing enabled, on layers after post processing has been applied already (so UI and similar),
         // don't render them to render target anymore
         if (postProcessMarked && camera.postEffectsEnabled) {
             rt = null;
         }
 
-        // store the properties - write all as we reuse previously allocated class instances
+        // store the properties
+        const renderAction = this.getNextRenderAction(renderActionIndex);
         renderAction.triggerPostprocess = false;
-        renderAction.layerIndex = layerIndex;
         renderAction.layer = layer;
+        renderAction.transparent = isTransparent;
         renderAction.camera = camera;
         renderAction.renderTarget = rt;
-        renderAction.clearColor = clearColor;
-        renderAction.clearDepth = clearDepth;
-        renderAction.clearStencil = clearStencil;
         renderAction.firstCameraUse = cameraFirstRenderAction;
         renderAction.lastCameraUse = false;
+
+        // clear flags - use camera clear flags in the first render action for each camera,
+        // or when render target (from layer) was not yet cleared by this camera
+        const needsCameraClear = cameraFirstRenderAction || !used;
+        const needsLayerClear = layer.clearColorBuffer || layer.clearDepthBuffer || layer.clearStencilBuffer;
+        if (needsCameraClear || needsLayerClear) {
+            renderAction.setupClears(needsCameraClear ? camera : undefined, layer);
+        }
 
         return renderAction;
     }
@@ -301,7 +331,7 @@ class LayerComposition extends EventHandler {
         for (let a = startIndex; a >= 0; a--) {
 
             const ra = this._renderActions[a];
-            const layer = this.layerList[ra.layerIndex];
+            const layer = ra.layer;
 
             // if we hit render action with a render target (other than depth layer), that marks the end of camera stack
             // TODO: refactor this as part of depth layer refactoring
@@ -312,6 +342,11 @@ class LayerComposition extends EventHandler {
             // skip over depth layer
             if (layer.id === LAYERID_DEPTH) {
                 continue;
+            }
+
+            // end of stacking if camera with custom render passes
+            if (ra.useCameraPasses) {
+                break;
             }
 
             // camera stack ends when viewport or scissor of the camera changes
@@ -335,24 +370,27 @@ class LayerComposition extends EventHandler {
             Debug.trace(TRACEID_RENDER_ACTION, 'Render Actions for composition: ' + this.name);
             for (let i = 0; i < this._renderActions.length; i++) {
                 const ra = this._renderActions[i];
-                const layerIndex = ra.layerIndex;
-                const layer = this.layerList[layerIndex];
-                const enabled = layer.enabled && this.subLayerEnabled[layerIndex];
-                const transparent = this.subLayerList[layerIndex];
                 const camera = ra.camera;
-                const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
+                if (ra.useCameraPasses) {
+                    Debug.trace(TRACEID_RENDER_ACTION, i +
+                        ('CustomPasses Cam: ' + (camera ? camera.entity.name : '-')));
+                } else {
+                    const layer = ra.layer;
+                    const enabled = layer.enabled && this.isEnabled(layer, ra.transparent);
+                    const clear = (ra.clearColor ? 'Color ' : '..... ') + (ra.clearDepth ? 'Depth ' : '..... ') + (ra.clearStencil ? 'Stencil' : '.......');
 
-                Debug.trace(TRACEID_RENDER_ACTION, i +
-                    (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
-                    (' Lay: ' + layer.name).padEnd(22, ' ') +
-                    (transparent ? ' TRANSP' : ' OPAQUE') +
-                    (enabled ? ' ENABLED ' : ' DISABLED') +
-                    (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
-                    ' Clear: ' + clear +
-                    (ra.firstCameraUse ? ' CAM-FIRST' : '') +
-                    (ra.lastCameraUse ? ' CAM-LAST' : '') +
-                    (ra.triggerPostprocess ? ' POSTPROCESS' : '')
-                );
+                    Debug.trace(TRACEID_RENDER_ACTION, i +
+                        (' Cam: ' + (camera ? camera.entity.name : '-')).padEnd(22, ' ') +
+                        (' Lay: ' + layer.name).padEnd(22, ' ') +
+                        (ra.transparent ? ' TRANSP' : ' OPAQUE') +
+                        (enabled ? ' ENABLED ' : ' DISABLED') +
+                        (' RT: ' + (ra.renderTarget ? ra.renderTarget.name : '-')).padEnd(30, ' ') +
+                        ' Clear: ' + clear +
+                        (ra.firstCameraUse ? ' CAM-FIRST' : '') +
+                        (ra.lastCameraUse ? ' CAM-LAST' : '') +
+                        (ra.triggerPostprocess ? ' POSTPROCESS' : '')
+                    );
+                }
             }
         }
         // #endif
@@ -365,11 +403,10 @@ class LayerComposition extends EventHandler {
     }
 
     _isSublayerAdded(layer, transparent) {
-        for (let i = 0; i < this.layerList.length; i++) {
-            if (this.layerList[i] === layer && this.subLayerList[i] === transparent) {
-                Debug.error(`Sublayer ${layer.name}, transparent: ${transparent} is already added.`);
-                return true;
-            }
+        const map = transparent ? this.layerTransparentIndexMap : this.layerOpaqueIndexMap;
+        if (map.get(layer) !== undefined) {
+            Debug.error(`Sublayer ${layer.name}, transparent: ${transparent} is already added.`);
+            return true;
         }
         return false;
     }
@@ -392,7 +429,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -415,7 +452,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true, true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -436,7 +473,7 @@ class LayerComposition extends EventHandler {
             this.subLayerList.splice(id, 1);
             this.subLayerEnabled.splice(id, 1);
             id = this.layerList.indexOf(layer);
-            this._dirtyCameras = true;
+            this._dirty = true;
             this.fire('remove', layer);
         }
 
@@ -463,7 +500,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -486,7 +523,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -507,7 +544,7 @@ class LayerComposition extends EventHandler {
                 this._updateOpaqueOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirtyCameras = true;
+                this._dirty = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
@@ -530,7 +567,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.push(true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -552,7 +589,7 @@ class LayerComposition extends EventHandler {
         this.subLayerEnabled.splice(index, 0, true);
 
         this._updateLayerMaps();
-        this._dirtyCameras = true;
+        this._dirty = true;
         this.fire('add', layer);
     }
 
@@ -572,7 +609,7 @@ class LayerComposition extends EventHandler {
                 this._updateTransparentOrder(i, len - 1);
 
                 this.subLayerEnabled.splice(i, 1);
-                this._dirtyCameras = true;
+                this._dirty = true;
                 if (this.layerList.indexOf(layer) < 0) {
                     this.fire('remove', layer); // no sublayers left
                 }
@@ -582,39 +619,32 @@ class LayerComposition extends EventHandler {
         this._updateLayerMaps();
     }
 
-    _getSublayerIndex(layer, transparent) {
-        // find sublayer index in the composition array
-        let id = this.layerList.indexOf(layer);
-        if (id < 0) return -1;
-
-        if (this.subLayerList[id] !== transparent) {
-            id = this.layerList.indexOf(layer, id + 1);
-            if (id < 0) return -1;
-            if (this.subLayerList[id] !== transparent) {
-                return -1;
-            }
-        }
-        return id;
-    }
-
     /**
      * Gets index of the opaque part of the supplied layer in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
-     * @returns {number} The index of the opaque part of the specified layer.
+     * @returns {number} The index of the opaque part of the specified layer, or -1 if it is not
+     * part of the composition.
      */
     getOpaqueIndex(layer) {
-        return this._getSublayerIndex(layer, false);
+        return this.layerOpaqueIndexMap.get(layer) ?? -1;
     }
 
     /**
      * Gets index of the semi-transparent part of the supplied layer in the {@link LayerComposition#layerList}.
      *
      * @param {import('../layer.js').Layer} layer - A {@link Layer} to find index of.
-     * @returns {number} The index of the semi-transparent part of the specified layer.
+     * @returns {number} The index of the semi-transparent part of the specified layer, or -1 if it
+     * is not part of the composition.
      */
     getTransparentIndex(layer) {
-        return this._getSublayerIndex(layer, true);
+        return this.layerTransparentIndexMap.get(layer) ?? -1;
+    }
+
+    isEnabled(layer, transparent) {
+        const index = transparent ? this.getTransparentIndex(layer) : this.getOpaqueIndex(layer);
+        Debug.assert(index >= 0, `${transparent ? 'Transparent' : 'Opaque'} layer ${layer.name} is not part of the composition.`);
+        return this.subLayerEnabled[index];
     }
 
     /**
@@ -625,10 +655,16 @@ class LayerComposition extends EventHandler {
     _updateLayerMaps() {
         this.layerIdMap.clear();
         this.layerNameMap.clear();
+        this.layerOpaqueIndexMap.clear();
+        this.layerTransparentIndexMap.clear();
+
         for (let i = 0; i < this.layerList.length; i++) {
             const layer = this.layerList[i];
             this.layerIdMap.set(layer.id, layer);
             this.layerNameMap.set(layer.name, layer);
+
+            const subLayerIndexMap = this.subLayerList[i] ? this.layerTransparentIndexMap : this.layerOpaqueIndexMap;
+            subLayerIndexMap.set(layer, i);
         }
     }
 

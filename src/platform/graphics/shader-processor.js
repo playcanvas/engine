@@ -5,7 +5,7 @@ import {
     UNIFORM_BUFFER_DEFAULT_SLOT_NAME,
     SAMPLETYPE_FLOAT, SAMPLETYPE_DEPTH, SAMPLETYPE_UNFILTERABLE_FLOAT,
     TEXTUREDIMENSION_2D, TEXTUREDIMENSION_2D_ARRAY, TEXTUREDIMENSION_CUBE, TEXTUREDIMENSION_3D,
-    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32
+    TYPE_FLOAT32, TYPE_INT8, TYPE_INT16, TYPE_INT32, TYPE_FLOAT16, SAMPLETYPE_INT, SAMPLETYPE_UINT
 } from './constants.js';
 import { UniformFormat, UniformBufferFormat } from './uniform-buffer-format.js';
 import { BindGroupFormat, BindBufferFormat, BindTextureFormat } from './bind-group-format.js';
@@ -25,7 +25,7 @@ const MARKER = '@@@';
 const ARRAY_IDENTIFIER = /([\w-]+)\[(.*?)\]/;
 
 const precisionQualifiers = new Set(['highp', 'mediump', 'lowp']);
-const shadowSamplers = new Set(['sampler2DShadow', 'samplerCubeShadow']);
+const shadowSamplers = new Set(['sampler2DShadow', 'samplerCubeShadow', 'sampler2DArrayShadow']);
 const textureDimensions = {
     sampler2D: TEXTUREDIMENSION_2D,
     sampler3D: TEXTUREDIMENSION_3D,
@@ -33,7 +33,15 @@ const textureDimensions = {
     samplerCubeShadow: TEXTUREDIMENSION_CUBE,
     sampler2DShadow: TEXTUREDIMENSION_2D,
     sampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
-    sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY
+    sampler2DArrayShadow: TEXTUREDIMENSION_2D_ARRAY,
+    isampler2D: TEXTUREDIMENSION_2D,
+    usampler2D: TEXTUREDIMENSION_2D,
+    isampler3D: TEXTUREDIMENSION_3D,
+    usampler3D: TEXTUREDIMENSION_3D,
+    isamplerCube: TEXTUREDIMENSION_CUBE,
+    usamplerCube: TEXTUREDIMENSION_CUBE,
+    isampler2DArray: TEXTUREDIMENSION_2D_ARRAY,
+    usampler2DArray: TEXTUREDIMENSION_2D_ARRAY
 };
 
 class UniformLine {
@@ -79,6 +87,8 @@ class UniformLine {
         }
 
         this.isSampler = this.type.indexOf('sampler') !== -1;
+        this.isSignedInt = this.type.indexOf('isampler') !== -1;
+        this.isUnsignedInt = this.type.indexOf('usampler') !== -1;
     }
 }
 
@@ -276,10 +286,16 @@ class ShaderProcessor {
                 // WebGpu does not currently support filtered float format textures, and so we map them to unfilterable type
                 // as we sample them without filtering anyways
                 let sampleType = SAMPLETYPE_FLOAT;
-                if (uniform.precision === 'highp')
-                    sampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
-                if (shadowSamplers.has(uniform.type))
-                    sampleType = SAMPLETYPE_DEPTH;
+                if (uniform.isSignedInt) {
+                    sampleType = SAMPLETYPE_INT;
+                } else if (uniform.isUnsignedInt) {
+                    sampleType = SAMPLETYPE_UINT;
+                } else {
+                    if (uniform.precision === 'highp')
+                        sampleType = SAMPLETYPE_UNFILTERABLE_FLOAT;
+                    if (shadowSamplers.has(uniform.type))
+                        sampleType = SAMPLETYPE_DEPTH;
+                }
 
                 // dimension
                 const dimension = textureDimensions[uniform.type];
@@ -387,7 +403,7 @@ class ShaderProcessor {
                 const element = processingOptions.getVertexElement(semantic);
                 if (element) {
                     const dataType = element.dataType;
-                    if (dataType !== TYPE_FLOAT32 && !element.normalize) {
+                    if (dataType !== TYPE_FLOAT32 && dataType !== TYPE_FLOAT16 && !element.normalize && !element.asInt) {
 
                         const attribNumElements = ShaderProcessor.getTypeCount(type);
                         const newName = `_private_${name}`;

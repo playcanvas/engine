@@ -4,13 +4,14 @@ import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
 import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
+import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
     BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -29,6 +30,17 @@ import { StencilParameters } from './stencil-parameters.js';
  * @category Graphics
  */
 class GraphicsDevice extends EventHandler {
+    /**
+     * Fired when the canvas is resized. The handler is passed the new width and height as number
+     * parameters.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('resizecanvas', (width, height) => {
+     *     console.log(`The canvas was resized to ${width}x${height}`);
+     * });
+     */
+
     /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
@@ -62,6 +74,8 @@ class GraphicsDevice extends EventHandler {
 
     /**
      * True if the back buffer should use anti-aliasing.
+     *
+     * @type {boolean}
      */
     backBufferAntialias = false;
 
@@ -188,6 +202,14 @@ class GraphicsDevice extends EventHandler {
     supportsVolumeTextures = false;
 
     /**
+     * True if the device supports compute shaders.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsCompute = false;
+
+    /**
      * Currently active render target.
      *
      * @type {import('./render-target.js').RenderTarget|null}
@@ -277,7 +299,15 @@ class GraphicsDevice extends EventHandler {
       * @type {boolean}
       * @readonly
       */
-    textureFloatFilterable = true;
+    textureFloatFilterable = false;
+
+    /**
+     * True if filtering can be applied when sampling 16-bit float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -417,14 +447,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Fired when the canvas is resized.
-     *
-     * @event GraphicsDevice#resizecanvas
-     * @param {number} width - The new width of the canvas in pixels.
-     * @param {number} height - The new height of the canvas in pixels.
-     */
-
-    /**
      * Destroy the graphics device.
      */
     destroy() {
@@ -466,6 +488,8 @@ class GraphicsDevice extends EventHandler {
         this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
+        this.shaderValid = undefined;
+        this.shaderAsyncCompile = false;
         this.renderTarget = null;
     }
 
@@ -478,6 +502,8 @@ class GraphicsDevice extends EventHandler {
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+
+        this.blendColor = new Color(0, 0, 0, 0);
     }
 
     /**
@@ -499,6 +525,20 @@ class GraphicsDevice extends EventHandler {
      * @param {BlendState} blendState - New blend state.
      */
     setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the constant blend color and alpha values used with {@link BLENDMODE_CONSTANT} and
+     * {@link BLENDMODE_ONE_MINUS_CONSTANT} factors specified in {@link BlendState}. Defaults to
+     * [0, 0, 0, 0].
+     *
+     * @param {number} r - The value for red.
+     * @param {number} g - The value for green.
+     * @param {number} b - The value for blue.
+     * @param {number} a - The value for alpha.
+     */
+    setBlendColor(r, g, b, a) {
         Debug.assert(false);
     }
 
@@ -753,6 +793,18 @@ class GraphicsDevice extends EventHandler {
         this.boneLimit = maxBones;
     }
 
+    startRenderPass(renderPass) {
+    }
+
+    endRenderPass(renderPass) {
+    }
+
+    startComputePass() {
+    }
+
+    endComputePass() {
+    }
+
     /**
      * Function which executes at the start of the frame. This should not be called manually, as
      * it is handled by the AppBase instance.
@@ -788,6 +840,47 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+    }
+
+    /**
+     * Get a renderable HDR pixel format supported by the graphics device.
+     *
+     * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
+     *
+     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RGBA16F}
+     * - {@link PIXELFORMAT_RGBA32F}
+     *
+     * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
+     * true.
+     * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
+     * supported.
+     */
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+        for (let i = 0; i < formats.length; i++) {
+            const format = formats[i];
+            switch (format) {
+
+                case PIXELFORMAT_111110F: {
+                    if (this.textureRG11B10Renderable)
+                        return format;
+                    break;
+                }
+
+                case PIXELFORMAT_RGBA16F:
+                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+
+                case PIXELFORMAT_RGBA32F:
+                    if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+            }
+        }
+        return undefined;
     }
 }
 

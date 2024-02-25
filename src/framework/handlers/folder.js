@@ -1,17 +1,12 @@
-class FolderHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "folder";
+import { ResourceHandler } from './handler.js';
+
+class FolderHandler extends ResourceHandler {
+    constructor(app) {
+        super(app, 'folder');
+    }
 
     load(url, callback) {
         callback(null, null);
-    }
-
-    open(url, data) {
-        return data;
     }
 }
 

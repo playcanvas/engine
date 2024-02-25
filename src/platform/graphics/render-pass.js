@@ -1,4 +1,4 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
@@ -91,7 +91,28 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name;
+    _name;
+
+    /**
+     * The graphics device.
+     *
+     * @type {import('../graphics/graphics-device.js').GraphicsDevice}
+     */
+    device;
+
+    /**
+     * True if the render pass is enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
 
     /**
      * The render target for this render pass:
@@ -101,6 +122,11 @@ class RenderPass {
      * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
      */
     renderTarget;
+
+    /**
+     * The options specified when the render target was initialized.
+     */
+    _options;
 
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
@@ -147,48 +173,52 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
-     * Custom function that is called to render the pass.
+     * Render passes which need to be executed before this pass.
      *
-     * @type {Function|undefined}
+     * @type {RenderPass[]}
      */
-    _execute;
+    beforePasses = [];
 
     /**
-     * True if the render pass is enabled and execute function will be called. Note that before and
-     * after functions are called regardless of this flag.
-     */
-    executeEnabled = true;
-
-    /**
-     * Custom function that is called before the pass has started.
+     * Render passes which need to be executed after this pass.
      *
-     * @type {Function|undefined}
+     * @type {RenderPass[]}
      */
-    _before;
-
-    /**
-     * Custom function that is called after the pass has fnished.
-     *
-     * @type {Function|undefined}
-     */
-    _after;
+    afterPasses = [];
 
     /**
      * Creates an instance of the RenderPass.
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
-     * @param {Function} [execute] - Custom function that is called to render the pass.
      */
-    constructor(graphicsDevice, execute) {
-        DebugHelper.setName(this, this.constructor.name);
+    constructor(graphicsDevice) {
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
-
-        this._execute = execute;
     }
 
-    destroy() {
+    set name(value) {
+        this._name = value;
+    }
+
+    get name() {
+        if (!this._name)
+            this._name = this.constructor.name;
+        return this._name;
+    }
+
+    set options(value) {
+        this._options = value;
+
+        // sanitize options
+        if (value) {
+            this._options.scaleX = this._options.scaleX ?? 1;
+            this._options.scaleY = this._options.scaleY ?? 1;
+        }
+    }
+
+    get options() {
+        return this._options;
     }
 
     /**
@@ -197,7 +227,9 @@ class RenderPass {
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
      */
-    init(renderTarget = null) {
+    init(renderTarget = null, options = null) {
+
+        this.options = options;
 
         // null represents the default framebuffer
         this.renderTarget = renderTarget;
@@ -209,6 +241,8 @@ class RenderPass {
         this.depthStencilOps = new DepthStencilAttachmentOps();
 
         const numColorOps = renderTarget ? renderTarget._colorBuffers?.length : 1;
+
+        this.colorArrayOps.length = 0;
         for (let i = 0; i < numColorOps; i++) {
             const colorOps = new ColorAttachmentOps();
             this.colorArrayOps[i] = colorOps;
@@ -224,24 +258,61 @@ class RenderPass {
                 colorOps.mipmaps = true;
             }
         }
+
+        this.postInit();
+    }
+
+    destroy() {
+    }
+
+    postInit() {
+    }
+
+    frameUpdate() {
+        // resize the render target if needed
+        if (this._options && this.renderTarget) {
+            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
+            const width = Math.floor(resizeSource.width * this._options.scaleX);
+            const height = Math.floor(resizeSource.height * this._options.scaleY);
+            this.renderTarget.resize(width, height);
+        }
     }
 
     before() {
-        this._before?.();
     }
 
     execute() {
-        this._execute?.();
     }
 
     after() {
-        this._after?.();
+    }
+
+    onEnable() {
+    }
+
+    onDisable() {
+    }
+
+    set enabled(value) {
+        if (this._enabled !== value) {
+            this._enabled = value;
+            if (value) {
+                this.onEnable();
+            } else {
+                this.onDisable();
+            }
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     /**
      * Mark render pass as clearing the full color buffer.
      *
-     * @param {Color} color - The color to clear to.
+     * @param {Color|undefined} color - The color to clear to, or undefined to preserve the existing
+     * content.
      */
     setClearColor(color) {
 
@@ -250,29 +321,34 @@ class RenderPass {
         const count = this.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
             const colorOps = this.colorArrayOps[i];
-            colorOps.clearValue.copy(color);
-            colorOps.clear = true;
+            if (color)
+                colorOps.clearValue.copy(color);
+            colorOps.clear = !!color;
         }
     }
 
     /**
      * Mark render pass as clearing the full depth buffer.
      *
-     * @param {number} depthValue - The depth value to clear to.
+     * @param {number|undefined} depthValue - The depth value to clear to, or undefined to preserve
+     * the existing content.
      */
     setClearDepth(depthValue) {
-        this.depthStencilOps.clearDepthValue = depthValue;
-        this.depthStencilOps.clearDepth = true;
+        if (depthValue)
+            this.depthStencilOps.clearDepthValue = depthValue;
+        this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
     /**
      * Mark render pass as clearing the full stencil buffer.
      *
-     * @param {number} stencilValue - The stencil value to clear to.
+     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to preserve the
+     * existing content.
      */
     setClearStencil(stencilValue) {
-        this.depthStencilOps.clearStencilValue = stencilValue;
-        this.depthStencilOps.clearStencil = true;
+        if (stencilValue)
+            this.depthStencilOps.clearStencilValue = stencilValue;
+        this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
     /**
@@ -280,34 +356,37 @@ class RenderPass {
      */
     render() {
 
-        const device = this.device;
-        const realPass = this.renderTarget !== undefined;
-        DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
+        if (this.enabled) {
 
-        Debug.call(() => {
-            this.log(device, device.renderPassIndex);
-        });
+            const device = this.device;
+            const realPass = this.renderTarget !== undefined;
+            DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
-        this.before();
+            Debug.call(() => {
+                this.log(device, device.renderPassIndex);
+            });
 
-        if (this.executeEnabled) {
-            if (realPass) {
-                device.startPass(this);
+            this.before();
+
+            if (this.executeEnabled) {
+
+                if (realPass) {
+                    device.startRenderPass(this);
+                }
+
+                this.execute();
+
+                if (realPass) {
+                    device.endRenderPass(this);
+                }
             }
 
-            this.execute();
+            this.after();
 
-            if (realPass) {
-                device.endPass(this);
-            }
+            device.renderPassIndex++;
+
+            DebugGraphics.popGpuMarker(device);
         }
-
-        this.after();
-
-        device.renderPassIndex++;
-
-        DebugGraphics.popGpuMarker(device);
-
     }
 
     // #if _DEBUG
@@ -319,10 +398,11 @@ class RenderPass {
             const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
-            const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+            const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
                 `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
+                ` ${rt.width} x ${rt.height}` +
                 `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
 
             Debug.trace(TRACEID_RENDER_PASS,

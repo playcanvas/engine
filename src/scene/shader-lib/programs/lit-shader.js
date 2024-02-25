@@ -813,8 +813,7 @@ class LitShader {
             func.append(options.fixSeams ? chunks.fixCubemapSeamsStretchPS : chunks.fixCubemapSeamsNonePS);
             func.append(chunks.reflectionCubePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         } else if (options.reflectionSource === 'sphereMap') {
-            const scode = device.fragmentUniformsCount > 16 ? chunks.reflectionSpherePS : chunks.reflectionSphereLowPS;
-            func.append(scode.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
+            func.append(chunks.reflectionSpherePS.replace(/\$DECODE/g, ChunkUtils.decodeFunc(options.reflectionEncoding)));
         }
 
         if (this.reflections) {
@@ -979,7 +978,7 @@ class LitShader {
             if (options.clusteredLightingAreaLightsEnabled)
                 decl.append("#define CLUSTER_AREALIGHTS");
 
-            decl.append(LightsBuffer.shaderDefines);
+            decl.append(LightsBuffer.getShaderDefines(device));
 
             if (options.clusteredLightingShadowsEnabled && !options.noShadow) {
                 func.append(chunks.clusteredLightShadowsPS);

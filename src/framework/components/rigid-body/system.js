@@ -292,6 +292,18 @@ function createShape(name, axis, ...args) {
  */
 class RigidBodyComponentSystem extends ComponentSystem {
     /**
+     * Fired when a contact occurs between two rigid bodies. The handler is passed a
+     * {@link SingleContactResult} object containing details of the contact between the two bodies.
+     *
+     * @event
+     * @example
+     * app.systems.rigidbody.on('contact', (result) => {
+     *     console.log(`Contact between ${result.a.name} and ${result.b.name}`);
+     * });
+     */
+    static EVENT_CONTACT = 'contact';
+
+    /**
      * @type {number}
      * @ignore
      */
@@ -366,15 +378,7 @@ class RigidBodyComponentSystem extends ComponentSystem {
         this.frameCollisions = {};
 
         this.on('beforeremove', this.onBeforeRemove, this);
-        this.on('remove', this.onRemove, this);
     }
-
-    /**
-     * Fired when a contact occurs between two rigid bodies.
-     *
-     * @event RigidBodyComponentSystem#contact
-     * @param {SingleContactResult} result - Details of the contact between the two bodies.
-     */
 
     /**
      * Called once Ammo has been loaded. Responsible for creating the physics world.
@@ -472,14 +476,9 @@ class RigidBodyComponentSystem extends ComponentSystem {
         if (component.enabled) {
             component.enabled = false;
         }
-    }
 
-    onRemove(entity, component) {
-        const body = component.body;
-        if (body) {
-            this.removeBody(body);
-            this.destroyBody(body);
-
+        if (component.body) {
+            this.destroyBody(component.body);
             component.body = null;
         }
     }

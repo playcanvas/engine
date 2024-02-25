@@ -1,7 +1,7 @@
-import { CoreExporter } from "./core-exporter.js";
+import { CoreExporter } from './core-exporter.js';
 import {
     ADDRESS_CLAMP_TO_EDGE, ADDRESS_MIRRORED_REPEAT, ADDRESS_REPEAT,
-    BLEND_NORMAL,
+    BLEND_NONE, BLEND_NORMAL,
     CULLFACE_NONE,
     FILTER_NEAREST, FILTER_LINEAR, FILTER_NEAREST_MIPMAP_NEAREST, FILTER_LINEAR_MIPMAP_NEAREST,
     FILTER_NEAREST_MIPMAP_LINEAR, FILTER_LINEAR_MIPMAP_LINEAR,
@@ -17,7 +17,9 @@ import {
     BoundingBox,
     Color,
     Quat,
+    Vec2,
     Vec3,
+    IndexBuffer,
     VertexBuffer,
     StandardMaterial,
     BasicMaterial
@@ -96,13 +98,37 @@ const getWrap = function (wrap) {
     }
 };
 
+function isCanvasTransparent(canvas) {
+    const context = canvas.getContext('2d');
+    const pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
+
+    for (let i = 3; i < pixelData.length; i += 4) {
+        if (pixelData[i] < 255) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // supported texture semantics on a material
 const textureSemantics = [
     'diffuseMap',
-    'colorMap'
+    'colorMap',
+    'normalMap',
+    'metalnessMap',
+    'emissiveMap'
 ];
 
+/**
+ * Implementation of the GLTF 2.0 format exporter.
+ *
+ * @category Exporter
+ */
 class GltfExporter extends CoreExporter {
+    /**
+     * @ignore
+     */
     collectResources(root) {
         const resources = {
             buffers: [],
@@ -115,7 +141,9 @@ class GltfExporter extends CoreExporter {
             entityMeshInstances: [],
 
             // maps a buffer (vertex or index) to an array of bufferview indices
-            bufferViewMap: new Map()
+            bufferViewMap: new Map(),
+
+            compressableTexture: new Set()
         };
 
         const { materials, buffers, entityMeshInstances, textures } = resources;
@@ -137,6 +165,12 @@ class GltfExporter extends CoreExporter {
                     textureSemantics.forEach((semantic) => {
                         const texture = material[semantic];
                         if (texture && textures.indexOf(texture) < 0) {
+                            // NOTE: don't store normal maps as jpeg,
+                            // because of the way they are sampled, they don't compress well
+                            if (semantic !== 'normalMap') {
+                                resources.compressableTexture.add(texture);
+                            }
+
                             textures.push(texture);
                         }
                     });
@@ -182,78 +216,86 @@ class GltfExporter extends CoreExporter {
         return resources;
     }
 
-    writeBuffers(resources, json) {
-        if (resources.buffers.length > 0) {
-            json.buffers = [];
+    writeBufferViews(resources, json) {
+        json.bufferViews = [];
 
-            let byteLength = 0;
-
-            resources.buffers.forEach((buffer) => {
-                const arrayBuffer = buffer.lock();
-                byteLength += arrayBuffer.byteLength;
-            });
-
-            const buffer = {
-                byteLength: byteLength
-            };
-
-            json.buffers.push(buffer);
+        for (const buffer of resources.buffers) {
+            GltfExporter.writeBufferView(resources, json, buffer);
         }
     }
 
-    writeBufferViews(resources, json) {
+    static writeBufferView(resources, json, buffer) {
+        // NOTE: right now we only use one buffer per gltf file
+        json.buffers = json.buffers ?? [];
 
-        json.bufferViews = [];
-        let offset = 0;
+        json.buffers[0] = json.buffers[0] ?? { byteLength: 0 };
+        const bufferInfo = json.buffers[0];
 
-        resources.buffers.forEach((buffer) => {
+        // To be sure that the buffer is aligned to 4 bytes
+        // so that it can be read as a Uint32Array or Float32Array
+        bufferInfo.byteLength = math.roundUp(bufferInfo.byteLength, 4);
+        const offset = bufferInfo.byteLength;
 
-            const addBufferView = (target, byteLength, byteOffset, byteStride) => {
+        // FIXME: don't create the function every time
+        const addBufferView = (target, byteLength, byteOffset, byteStride) => {
 
-                const bufferView =  {
-                    target: target,
-                    buffer: 0,
-                    byteLength: byteLength,
-                    byteOffset: byteOffset,
-                    byteStride: byteStride
-                };
-
-                return json.bufferViews.push(bufferView) - 1;
+            const bufferView = {
+                target: target,
+                buffer: 0,
+                byteLength: byteLength,
+                byteOffset: byteOffset,
+                byteStride: byteStride
             };
 
-            const arrayBuffer = buffer.lock();
+            return json.bufferViews.push(bufferView) - 1;
+        };
 
-            if (buffer instanceof VertexBuffer) {
+        let arrayBuffer;
+        if (buffer instanceof VertexBuffer) {
+            arrayBuffer = buffer.lock();
 
-                const format = buffer.getFormat();
-                if (format.interleaved) {
+            const format = buffer.getFormat();
+            if (format.interleaved) {
 
-                    const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
-                    resources.bufferViewMap.set(buffer, [bufferViewIndex]);
-
-                } else {
-
-                    // generate buffer view per element
-                    const bufferViewIndices = [];
-                    format.elements.forEach((element) => {
-
-                        const bufferViewIndex = addBufferView(ARRAY_BUFFER, element.size * format.vertexCount, offset + element.offset, element.size);
-                        bufferViewIndices.push(bufferViewIndex);
-
-                    });
-
-                    resources.bufferViewMap.set(buffer, bufferViewIndices);
-                }
-
-            } else {    // index buffer
-
-                const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+                const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset, format.size);
                 resources.bufferViewMap.set(buffer, [bufferViewIndex]);
 
+            } else {
+
+                // generate buffer view per element
+                const bufferViewIndices = [];
+                for (const element of format.elements) {
+
+                    const bufferViewIndex = addBufferView(
+                        ARRAY_BUFFER,
+                        element.size * format.vertexCount,
+                        offset + element.offset,
+                        element.size
+                    );
+                    bufferViewIndices.push(bufferViewIndex);
+
+                }
+
+                resources.bufferViewMap.set(buffer, bufferViewIndices);
             }
 
-            offset += arrayBuffer.byteLength;
-        });
+        } else if (buffer instanceof IndexBuffer) {    // index buffer
+            arrayBuffer = buffer.lock();
+
+            const bufferViewIndex = addBufferView(ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
+        } else {
+            // buffer is an array buffer
+            arrayBuffer = buffer;
+
+            const bufferViewIndex = addBufferView(ELEMENT_ARRAY_BUFFER, arrayBuffer.byteLength, offset);
+            resources.bufferViewMap.set(buffer, [bufferViewIndex]);
+
+        }
+
+        // increment buffer by the size of the array buffer to allocate buffer with enough space
+        bufferInfo.byteLength += arrayBuffer.byteLength;
     }
 
     writeCameras(resources, json) {
@@ -266,7 +308,7 @@ class GltfExporter extends CoreExporter {
                 const camera = {};
 
                 if (projection === PROJECTION_ORTHOGRAPHIC) {
-                    camera.type = "orthographic";
+                    camera.type = 'orthographic';
                     camera.orthographic = {
                         xmag: 1,
                         ymag: 1,
@@ -276,7 +318,7 @@ class GltfExporter extends CoreExporter {
                 } else {
                     const fov = cam.fov;
 
-                    camera.type = "perspective";
+                    camera.type = 'perspective';
                     camera.perspective = {
                         yfov: fov * Math.PI / 180,
                         znear: nearClip,
@@ -289,34 +331,77 @@ class GltfExporter extends CoreExporter {
         }
     }
 
-    attachTexture(resources, material, destination, name, textureSemantic) {
+    attachTexture(resources, material, destination, name, textureSemantic, json) {
         const texture = material[textureSemantic];
+
         if (texture) {
             const textureIndex = resources.textures.indexOf(texture);
-            if (textureIndex < 0) console.logWarn(`Texture ${texture.name} wasn't collected.`);
+            if (textureIndex < 0) console.warn(`Texture ${texture.name} wasn't collected.`);
             destination[name] = {
-                "index": textureIndex
+                index: textureIndex
             };
+
+            const scale = material[`${textureSemantic}Tiling`];
+            const offset = material[`${textureSemantic}Offset`];
+            const rotation = material[`${textureSemantic}Rotation`];
+
+            if ((scale && !scale.equals(Vec2.ONE)) || (offset && !offset.equals(Vec2.ZERO)) || rotation !== 0) {
+                destination[name].extensions = {
+                    KHR_texture_transform: {}
+                };
+
+                json.extensionsUsed = json.extensionsUsed ?? [];
+                if (json.extensionsUsed.indexOf('KHR_texture_transform') < 0) {
+                    json.extensionsUsed.push('KHR_texture_transform');
+                }
+
+                json.extensionsRequired = json.extensionsRequired ?? [];
+                if (json.extensionsRequired.indexOf('KHR_texture_transform') < 0) {
+                    json.extensionsRequired.push('KHR_texture_transform');
+                }
+
+                if (scale && !scale.equals(Vec2.ONE)) {
+                    destination[name].extensions.KHR_texture_transform.scale = [scale.x, scale.y];
+                }
+
+                if (offset && !offset.equals(Vec2.ZERO)) {
+                    destination[name].extensions.KHR_texture_transform.offset = [offset.x, offset.y - 1 + scale.y];
+                }
+
+                if (rotation !== 0) {
+                    destination[name].extensions.KHR_texture_transform.rotation = rotation * math.DEG_TO_RAD;
+                }
+            }
         }
     }
 
-    writeStandardMaterial(resources, mat, output) {
+    writeStandardMaterial(resources, mat, output, json) {
 
-        const { diffuse, emissive, opacity } = mat;
+        const { diffuse, emissive, opacity, metalness, gloss, glossInvert } = mat;
         const pbr = output.pbrMetallicRoughness;
 
         if (!diffuse.equals(Color.WHITE) || opacity !== 1) {
             pbr.baseColorFactor = [diffuse.r, diffuse.g, diffuse.b, opacity];
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap');
+        if (metalness !== 1) {
+            pbr.metallicFactor = metalness;
+        }
+
+        const roughness = glossInvert ? gloss : 1 - gloss;
+        if (roughness !== 1) {
+            pbr.roughnessFactor = roughness;
+        }
+
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'diffuseMap', json);
+        this.attachTexture(resources, mat, pbr, 'metallicRoughnessTexture', 'metalnessMap', json);
 
         if (!emissive.equals(Color.BLACK)) {
             output.emissiveFactor = [emissive.r, emissive.g, emissive.b];
         }
     }
 
-    writeBasicMaterial(resources, mat, output) {
+    writeBasicMaterial(resources, mat, output, json) {
 
         const { color } = mat;
         const pbr = output.pbrMetallicRoughness;
@@ -325,14 +410,14 @@ class GltfExporter extends CoreExporter {
             pbr.baseColorFactor = [color.r, color.g, color.b, color];
         }
 
-        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap');
+        this.attachTexture(resources, mat, pbr, 'baseColorTexture', 'colorMap', json);
     }
 
     writeMaterials(resources, json) {
 
         if (resources.materials.length > 0) {
             json.materials = resources.materials.map((mat) => {
-                const { name, blendType, cull } = mat;
+                const { name, blendType, cull, alphaTest } = mat;
                 const material = {
                     pbrMetallicRoughness: {}
                 };
@@ -342,20 +427,29 @@ class GltfExporter extends CoreExporter {
                 }
 
                 if (mat instanceof StandardMaterial) {
-                    this.writeStandardMaterial(resources, mat, material);
+                    this.writeStandardMaterial(resources, mat, material, json);
                 }
 
                 if (mat instanceof BasicMaterial) {
-                    this.writeBasicMaterial(resources, mat, material);
+                    this.writeBasicMaterial(resources, mat, material, json);
                 }
 
                 if (blendType === BLEND_NORMAL) {
-                    material.alphaMode = "BLEND";
+                    material.alphaMode = 'BLEND';
+                } else if (blendType === BLEND_NONE) {
+                    if (alphaTest !== 0) {
+                        material.alphaMode = 'MASK';
+                        material.alphaCutoff = alphaTest;
+                    }
                 }
 
                 if (cull === CULLFACE_NONE) {
                     material.doubleSided = true;
                 }
+
+                this.attachTexture(resources, mat, material, 'normalTexture', 'normalMap', json);
+                this.attachTexture(resources, mat, material, 'occlusionTexture', 'aoMap', json);
+                this.attachTexture(resources, mat, material, 'emissiveTexture', 'emissiveMap', json);
 
                 return material;
             });
@@ -424,69 +518,90 @@ class GltfExporter extends CoreExporter {
                 // all mesh instances of a single node are stores as a single gltf mesh with multiple primitives
                 const meshInstances = entityMeshInstances.meshInstances;
                 meshInstances.forEach((meshInstance) => {
+                    const primitive = GltfExporter.createPrimitive(resources, json, meshInstance.mesh);
 
-                    const primitive = {
-                        attributes: {},
-                        material: resources.materials.indexOf(meshInstance.material)
-                    };
+                    primitive.material = resources.materials.indexOf(meshInstance.material);
+
                     mesh.primitives.push(primitive);
-
-                    // vertex buffer
-                    const { vertexBuffer } = meshInstance.mesh;
-                    const { format } = vertexBuffer;
-                    const { interleaved, elements } = format;
-                    const numVertices = vertexBuffer.getNumVertices();
-                    elements.forEach((element, elementIndex) => {
-
-                        const viewIndex = resources.bufferViewMap.get(vertexBuffer)[interleaved ? 0 : elementIndex];
-
-                        const accessor = {
-                            bufferView: viewIndex,
-                            byteOffset: interleaved ? element.offset : 0,
-                            componentType: getComponentType(element.dataType),
-                            type: getAccessorType(element.numComponents),
-                            count: numVertices
-                        };
-
-                        const idx = json.accessors.push(accessor) - 1;
-                        primitive.attributes[getSemantic(element.name)] = idx;
-
-                        // Position accessor also requires min and max properties
-                        if (element.name === SEMANTIC_POSITION) {
-
-                            // compute min and max from positions, as the BoundingBox stores center and extents,
-                            // and we get precision warnings from gltf validator
-                            const positions = [];
-                            meshInstance.mesh.getPositions(positions);
-                            const min = new Vec3(), max = new Vec3();
-                            BoundingBox.computeMinMax(positions, min, max);
-
-                            accessor.min = [min.x, min.y, min.z];
-                            accessor.max = [max.x, max.y, max.z];
-                        }
-                    });
-
-                    // index buffer
-                    const indexBuffer = meshInstance.mesh.indexBuffer[0];
-                    if (indexBuffer) {
-
-                        const viewIndex = resources.bufferViewMap.get(indexBuffer)[0];
-
-                        const accessor = {
-                            bufferView: viewIndex,
-                            componentType: getIndexComponentType(indexBuffer.getFormat()),
-                            count: indexBuffer.getNumIndices(),
-                            type: "SCALAR"
-                        };
-
-                        const idx = json.accessors.push(accessor) - 1;
-                        primitive.indices = idx;
-                    }
                 });
 
                 json.meshes.push(mesh);
             });
         }
+    }
+
+    static createPrimitive(resources, json, mesh) {
+        const primitive = {
+            attributes: {}
+        };
+
+        // vertex buffer
+        const { vertexBuffer } = mesh;
+        const { format } = vertexBuffer;
+        const { interleaved, elements } = format;
+        const numVertices = vertexBuffer.getNumVertices();
+        elements.forEach((element, elementIndex) => {
+
+            let bufferView = resources.bufferViewMap.get(vertexBuffer);
+            if (!bufferView) {
+                GltfExporter.writeBufferView(resources, json, vertexBuffer);
+                resources.buffers.push(vertexBuffer);
+
+                bufferView = resources.bufferViewMap.get(vertexBuffer);
+            }
+            const viewIndex = bufferView[interleaved ? 0 : elementIndex];
+
+            const accessor = {
+                bufferView: viewIndex,
+                byteOffset: interleaved ? element.offset : 0,
+                componentType: getComponentType(element.dataType),
+                type: getAccessorType(element.numComponents),
+                count: numVertices
+            };
+
+            const idx = json.accessors.push(accessor) - 1;
+            primitive.attributes[getSemantic(element.name)] = idx;
+
+            // Position accessor also requires min and max properties
+            if (element.name === SEMANTIC_POSITION) {
+
+                // compute min and max from positions, as the BoundingBox stores center and extents,
+                // and we get precision warnings from gltf validator
+                const positions = [];
+                mesh.getPositions(positions);
+                const min = new Vec3();
+                const max = new Vec3();
+                BoundingBox.computeMinMax(positions, min, max);
+
+                accessor.min = [min.x, min.y, min.z];
+                accessor.max = [max.x, max.y, max.z];
+            }
+        });
+
+        // index buffer
+        const indexBuffer = mesh.indexBuffer[0];
+        if (indexBuffer) {
+            let bufferView = resources.bufferViewMap.get(indexBuffer);
+            if (!bufferView) {
+                GltfExporter.writeBufferView(resources, json, indexBuffer);
+                resources.buffers.push(indexBuffer);
+
+                bufferView = resources.bufferViewMap.get(indexBuffer);
+            }
+            const viewIndex = bufferView[0];
+
+            const accessor = {
+                bufferView: viewIndex,
+                componentType: getIndexComponentType(indexBuffer.getFormat()),
+                count: indexBuffer.getNumIndices(),
+                type: 'SCALAR'
+            };
+
+            const idx = json.accessors.push(accessor) - 1;
+            primitive.indices = idx;
+        }
+
+        return primitive;
     }
 
     convertTextures(srcTextures, options) {
@@ -507,55 +622,105 @@ class GltfExporter extends CoreExporter {
         return promises;
     }
 
-    writeTextures(textures, textureCanvases, json, options) {
+    writeTextures(resources, textureCanvases, json, options) {
+        const textures = resources.textures;
+
+        const promises = [];
 
         for (let i = 0; i < textureCanvases.length; i++) {
-
-            // for now store all textures as png
-            // TODO: consider jpg if the alpha channel is not used
-            const isRGBA = true;
-            const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
             // convert texture data to uri
             const texture = textures[i];
             const canvas = textureCanvases[i];
 
-            // if texture format is supported
-            if (canvas) {
-                const uri = canvas.toDataURL(mimeType);
+            const isRGBA = isCanvasTransparent(canvas) || !resources.compressableTexture.has(texture);
+            const mimeType = isRGBA ? 'image/png' : 'image/jpeg';
 
-                json.images[i] = {
-                    'uri': uri
-                };
+            promises.push(
+                this.getBlob(canvas, mimeType)
+                    .then((blob) => {
+                        const reader = new FileReader();
+                        reader.readAsArrayBuffer(blob);
 
-                json.samplers[i] = {
-                    'minFilter': getFilter(texture.minFilter),
-                    'magFilter': getFilter(texture.magFilter),
-                    'wrapS': getWrap(texture.addressU),
-                    'wrapT': getWrap(texture.addressV)
-                };
+                        return new Promise((resolve) => {
+                            reader.onloadend = () => {
+                                resolve(reader);
+                            };
+                        });
+                    })
+                    .then((reader) => {
+                        const buffer = this.getPaddedArrayBuffer(reader.result);
 
-                json.textures[i] = {
-                    'sampler': i,
-                    'source': i
-                };
-            } else {
-                // ignore it
-                console.log(`Export of texture ${texture.name} is not currently supported.`);
-                textures[i] = null;
-            }
+                        GltfExporter.writeBufferView(resources, json, buffer);
+                        resources.buffers.push(buffer);
+
+                        const bufferView = resources.bufferViewMap.get(buffer);
+
+                        json.images[i] = {
+                            mimeType: mimeType,
+                            bufferView: bufferView[0]
+                        };
+
+                        json.samplers[i] = {
+                            minFilter: getFilter(texture.minFilter),
+                            magFilter: getFilter(texture.magFilter),
+                            wrapS: getWrap(texture.addressU),
+                            wrapT: getWrap(texture.addressV)
+                        };
+
+                        json.textures[i] = {
+                            sampler: i,
+                            source: i
+                        };
+                    })
+            );
         }
+
+        return Promise.all(promises);
+    }
+
+    getBlob(canvas, mimeType) {
+        if (canvas.toBlob !== undefined) {
+            return new Promise((resolve) => {
+                canvas.toBlob(resolve, mimeType);
+            });
+        }
+
+        let quality = 1.0;
+        if (mimeType === 'image/jpeg') {
+            quality = 0.92;
+        }
+
+        return canvas.convertToBlob({
+            type: mimeType,
+            quality: quality
+        });
+    }
+
+    getPaddedArrayBuffer(arrayBuffer, paddingByte = 0) {
+        const paddedLength = math.roundUp(arrayBuffer.byteLength, 4);
+        if (paddedLength !== arrayBuffer.byteLength) {
+            const array = new Uint8Array(paddedLength);
+            array.set(new Uint8Array(arrayBuffer));
+            if (paddingByte !== 0) {
+                for (let i = arrayBuffer.byteLength; i < paddedLength; i++) {
+                    array[i] = paddingByte;
+                }
+            }
+            return array.buffer;
+        }
+        return arrayBuffer;
     }
 
     buildJson(resources, options) {
 
         const promises = this.convertTextures(resources.textures, options);
-        return Promise.all(promises).then((textureCanvases) => {
+        return Promise.all(promises).then(async (textureCanvases) => {
 
             const json = {
                 asset: {
-                    version: "2.0",
-                    generator: "PlayCanvas GltfExporter"
+                    version: '2.0',
+                    generator: 'PlayCanvas GltfExporter'
                 },
                 scenes: [
                     {
@@ -573,13 +738,12 @@ class GltfExporter extends CoreExporter {
                 scene: 0
             };
 
-            this.writeBuffers(resources, json);
             this.writeBufferViews(resources, json);
             this.writeCameras(resources, json);
-            this.writeNodes(resources, json);
-            this.writeMaterials(resources, json);
             this.writeMeshes(resources, json);
-            this.writeTextures(resources.textures, textureCanvases, json, options);
+            this.writeMaterials(resources, json);
+            this.writeNodes(resources, json, options);
+            await this.writeTextures(resources, textureCanvases, json, options);
 
             // delete unused properties
             if (!json.images.length) delete json.images;
@@ -593,9 +757,10 @@ class GltfExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to GLB format.
      *
-     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
+     * the size.
      * @returns {Promise<ArrayBuffer>} - The GLB file content.
      */
     build(entity, options = {}) {
@@ -612,11 +777,10 @@ class GltfExporter extends CoreExporter {
             const jsonPaddingLength = (4 - (jsonDataLength & 3)) & 3;
 
             const binaryHeaderLength = 8;
-            let binaryDataLength = 0;
-            resources.buffers.forEach((buffer) => {
-                binaryDataLength += buffer.lock().byteLength;
-            });
-            binaryDataLength = math.roundUp(binaryDataLength, 4);
+            const binaryDataLength = json.buffers.reduce(
+                (total, buffer) => math.roundUp(total + buffer.byteLength, 4),
+                0
+            );
 
             let totalLength = headerLength + jsonHeaderLength + jsonDataLength + jsonPaddingLength;
             if (binaryDataLength > 0) {
@@ -658,17 +822,24 @@ class GltfExporter extends CoreExporter {
                 offset += binaryHeaderLength;
 
                 resources.buffers.forEach((buffer) => {
-                    const srcBuffer = buffer.lock();
                     let src;
-                    if (srcBuffer instanceof ArrayBuffer) {
-                        src = new Uint8Array(srcBuffer);
-                    } else {
-                        src = new Uint8Array(srcBuffer.buffer, srcBuffer.byteOffset, srcBuffer.byteLength);
-                    }
-                    const dst = new Uint8Array(glbBuffer, offset, srcBuffer.byteLength);
-                    dst.set(src);
 
-                    offset += srcBuffer.byteLength;
+                    const bufferViewId = resources.bufferViewMap.get(buffer)[0];
+
+                    const bufferOffset = json.bufferViews[bufferViewId].byteOffset;
+
+                    if (buffer instanceof ArrayBuffer) {
+                        src = new Uint8Array(buffer);
+                    } else {
+                        const srcBuffer = buffer.lock();
+                        if (srcBuffer instanceof ArrayBuffer) {
+                            src = new Uint8Array(srcBuffer);
+                        } else {
+                            src = new Uint8Array(srcBuffer.buffer, srcBuffer.byteOffset, srcBuffer.byteLength);
+                        }
+                    }
+                    const dst = new Uint8Array(glbBuffer, offset + bufferOffset, src.byteLength);
+                    dst.set(src);
                 });
             }
 

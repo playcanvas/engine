@@ -1,15 +1,10 @@
 import { http, Http } from '../../platform/net/http.js';
 
-class BinaryHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "binary";
+import { ResourceHandler } from './handler.js';
 
+class BinaryHandler extends ResourceHandler {
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'binary');
     }
 
     load(url, callback) {
@@ -31,13 +26,6 @@ class BinaryHandler {
                 callback(`Error loading binary resource: ${url.original} [${err}]`);
             }
         });
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

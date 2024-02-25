@@ -42,6 +42,17 @@ class Camera {
      */
     renderPassDepthGrab = null;
 
+    /**
+     * Render passes used to render this camera. If empty, the camera will render using the default
+     * render passes.
+     *
+     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     */
+    renderPasses = [];
+
+    /** @type {number} */
+    jitter = 0;
+
     constructor() {
         this._aspectRatio = 16 / 9;
         this._aspectRatioMode = ASPECT_AUTO;
@@ -102,6 +113,8 @@ class Camera {
 
         this.renderPassDepthGrab?.destroy();
         this.renderPassDepthGrab = null;
+
+        this.renderPasses.length = 0;
     }
 
     /**
@@ -447,6 +460,7 @@ class Camera {
         this.sensitivity = other.sensitivity;
 
         this.shaderPassInfo = other.shaderPassInfo;
+        this.jitter = other.jitter;
 
         this._projMatDirty = true;
 
@@ -456,7 +470,7 @@ class Camera {
     _enableRenderPassColorGrab(device, enable) {
         if (enable) {
             if (!this.renderPassColorGrab) {
-                this.renderPassColorGrab = new RenderPassColorGrab(device, this);
+                this.renderPassColorGrab = new RenderPassColorGrab(device);
             }
         } else {
             this.renderPassColorGrab?.destroy();

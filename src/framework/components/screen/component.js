@@ -124,8 +124,8 @@ class ScreenComponent extends Component {
         // Using log of scale values
         // This produces a nicer outcome where if you have a xscale = 2 and yscale = 0.5
         // the combined scale is 1 for an even blend
-        const lx = Math.log2(resolution.x / referenceResolution.x);
-        const ly = Math.log2(resolution.y / referenceResolution.y);
+        const lx = Math.log2((resolution.x || 1) / referenceResolution.x);
+        const ly = Math.log2((resolution.y || 1) / referenceResolution.y);
         return Math.pow(2, (lx * (1 - this._scaleBlend) + ly * this._scaleBlend));
     }
 
