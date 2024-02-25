@@ -4,15 +4,16 @@
         "outDir": "types",
         "allowJs": true,
         "checkJs": true,
-        "module": "es6",
-        "target": "es6",
+        "module": "ES2022",
+        "target": "ES2022",
         "moduleResolution": "node",
         "noImplicitReturns": true,
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "strictNullChecks": true,
         "strictPropertyInitialization": true,
-        "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ]
+        "typeRoots": [ "./node_modules/@webgpu/types", "./node_modules/@types" ],
+        "removeComments": true,
     },
     "typedocOptions": {
         "compilerOptions": {

@@ -124,85 +124,6 @@ class ShaderCacheEntry {
 }
 
 /**
- * Internal helper class for storing the shader and related mesh bind group in the shader cache.
- *
- * @ignore
- */
-class ShaderInstance {
-    /**
-     * A shader.
-     *
-     * @type {import('../platform/graphics/shader.js').Shader|undefined}
-     */
-    shader;
-
-    /**
-     * A bind group storing mesh uniforms for the shader.
-     *
-     * @type {BindGroup|null}
-     */
-    bindGroup = null;
-
-    /**
-     * Returns the mesh bind group for the shader.
-     *
-     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} device - The
-     * graphics device.
-     * @returns {BindGroup} - The mesh bind group.
-     */
-    getBindGroup(device) {
-
-        // create bind group
-        if (!this.bindGroup) {
-            const shader = this.shader;
-            Debug.assert(shader);
-
-            // mesh uniform buffer
-            const ubFormat = shader.meshUniformBufferFormat;
-            Debug.assert(ubFormat);
-            const uniformBuffer = new UniformBuffer(device, ubFormat, false);
-
-            // mesh bind group
-            const bindGroupFormat = shader.meshBindGroupFormat;
-            Debug.assert(bindGroupFormat);
-            this.bindGroup = new BindGroup(device, bindGroupFormat, uniformBuffer);
-            DebugHelper.setName(this.bindGroup, `MeshBindGroup_${this.bindGroup.id}`);
-        }
-
-        return this.bindGroup;
-    }
-
-    destroy() {
-        const group = this.bindGroup;
-        if (group) {
-            group.defaultUniformBuffer?.destroy();
-            group.destroy();
-            this.bindGroup = null;
-        }
-    }
-}
-
-/**
- * An entry in the shader cache, representing shaders for this mesh instance and a specific shader
- * pass.
- *
- * @ignore
- */
-class ShaderCacheEntry {
-    /**
-     * The shader instances. Looked up by lightHash, which represents an ordered set of lights.
-     *
-     * @type {Map<number, ShaderInstance>}
-     */
-    shaderInstances = new Map();
-
-    destroy() {
-        this.shaderInstances.forEach(instance => instance.destroy());
-        this.shaderInstances.clear();
-    }
-}
-
-/**
  * Callback used by {@link Layer} to calculate the "sort distance" for a {@link MeshInstance},
  * which determines its place in the render order.
  *
@@ -330,7 +251,6 @@ class MeshInstance {
         this._renderStyle = RENDERSTYLE_SOLID;
         this._receiveShadow = true;
         this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
@@ -358,6 +278,12 @@ class MeshInstance {
          * @private
          */
         this._morphInstance = null;
+
+        /**
+         * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+         * @ignore
+         */
+        this.gsplatInstance = null;
 
         this.instancingData = null;
 
@@ -510,6 +436,7 @@ class MeshInstance {
             } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
 
                 // local space bounding box - either from mesh or empty
+                // @magnopus patched
                 if (this.mesh?.aabb) {
                     localAabb.center.copy(this.mesh.aabb.center);
                     localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
@@ -867,10 +794,15 @@ class MeshInstance {
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      *
-     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
-     * (usually world matrices). Pass null to turn off hardware instancing.
+     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer -
+     * Vertex buffer to hold per-instance vertex data (usually world matrices). Pass null to turn
+     * off hardware instancing.
+     * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
+     * instance will be culled by the  camera frustum. This often involves setting
+     * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
+     * the whole instance is always rendered.
      */
-    setInstancing(vertexBuffer) {
+    setInstancing(vertexBuffer, cull = false) {
         if (vertexBuffer) {
             this.instancingData = new InstancingData(vertexBuffer.numVertices);
             this.instancingData.vertexBuffer = vertexBuffer;
@@ -878,8 +810,8 @@ class MeshInstance {
             // mark vertex buffer as instancing data
             vertexBuffer.format.instancing = true;
 
-            // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
-            this.cull = false;
+            // set up culling
+            this.cull = cull;
         } else {
             this.instancingData = null;
             this.cull = true;
