@@ -148,14 +148,6 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 - https://code.playcanvas.com/playcanvas-1.38.4.js
 - https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### 生成 Source Maps
-
-您可以在任何构建指令之后添加 `-- -m` 来生成 Source map 更好更方便地对引擎进行调试和排错：
-
-    npm run build -- -m
-
-此条指令将会将结果输出到 `build/playcanvas.js.map`
-
 ## PlayCanvas 平台
 
 PlayCanvas 引擎是一款可以基于浏览器的用于制作游戏以及 3D 可视化的开源引擎。除此之外，我们还开发了[PlayCanvas 开发平台](https://playcanvas.com/)， 为我们的用户提供了可视化编辑器，资源管理，代码编辑，代码托管以及发布等服务。

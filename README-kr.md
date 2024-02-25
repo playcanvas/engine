@@ -149,14 +149,6 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 * https://code.playcanvas.com/playcanvas-1.38.4.js
 * https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### Generate Source Maps
-
-엔진의 디버깅이 쉽도록 소스 맵을 구축하려면 임의의 엔진 구축 명령에 `---m`을 추가합니다. 예시는 다음과 같습니다.
-
-    npm run build -- -m
-
-그러면  `build/playcanvas.js.map` 이 출력이 됩니다.
-
 ## PlayCanvas 에디터
 
 PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔진입니다.엔진 외에 [PlayCanvas 에디터](https://playcanvas.com/)가 있습니다.

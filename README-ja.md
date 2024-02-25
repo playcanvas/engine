@@ -140,15 +140,6 @@ Node.jsがインストールされていることを確認します。
 * https://code.playcanvas.com/playcanvas-1.38.4.js
 * https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### Generate Source Maps
-
-エンジンのデバッグがしやすいようにソースマップを構築するには、任意のエンジン構築コマンドに`-- -m`を追加します。例えば、以下のようになります。
-
-
-    npm run build -- -m
-
-これにより`build/playcanvas.js.map`が出力されます。
-
 ## PlayCanvasエディター
 
 PlayCanvas エンジンは、HTML5 アプリやゲームを作成するためのオープンソースのエンジンです。エンジンに加えて、[PlayCanvasエディター](https://playcanvas.com/)があります。
