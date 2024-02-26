@@ -3,7 +3,7 @@
  * in a `new Function('import("modulePath")')` statement, in order to avoid parsing errors in older browsers
  * without support for dynamic imports.
  *
- * Note that whilst this will prevent parsing errors, it will
+ * Note that whilst this will prevent parsing errors, it can trigger CSP errors.
  */
 
 export function dynamicImportTransform() {
