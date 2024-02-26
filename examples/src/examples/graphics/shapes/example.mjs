@@ -47,7 +47,7 @@ let x = -1,
 
 shapes.forEach(function (shape) {
     // Create an entity with a render component
-    const entity = new pc.Entity();
+    const entity = new pc.Entity(shape);
     entity.addComponent('render', {
         type: shape
     });
