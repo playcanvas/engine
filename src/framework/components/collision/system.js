@@ -364,6 +364,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             system._triMeshCache[mesh.id] = triMesh;
 
             const vertexCache = new Map();
+            Debug.assert(typeof triMesh.getIndexedMeshArray === 'function', 'Ammo.js version is too old, please update to a newer Ammo.');
             const indexedArray = triMesh.getIndexedMeshArray();
             indexedArray.at(0).m_numTriangles = numTriangles;
 
