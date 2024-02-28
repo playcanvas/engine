@@ -17,7 +17,7 @@ export function dynamicImportTransform() {
              * @returns {object} - The transformed code and map.
              */
             return {
-                code: code.replace(/import\(/g, 'new Function("modulePath", "return import(modulePath)")('),
+                code: code.replace(/([^\w])import\(/g, '$1new Function("modulePath", "return import(modulePath)")('),
                 map: null
             };
         }
