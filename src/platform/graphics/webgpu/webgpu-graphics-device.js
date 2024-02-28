@@ -606,6 +606,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
+        // push marker to the passEncoder
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
+
         this.setupPassEncoderDefaults();
 
         // the pass always clears full target
@@ -626,6 +629,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     endRenderPass(renderPass) {
+
+        // pop the marker from the passEncoder
+        DebugGraphics.popGpuMarker(this);
 
         // end the render pass
         this.passEncoder.end();
