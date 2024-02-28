@@ -360,7 +360,6 @@ class RenderPass {
 
             const device = this.device;
             const realPass = this.renderTarget !== undefined;
-            DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
             Debug.call(() => {
                 this.log(device, device.renderPassIndex);
@@ -384,8 +383,6 @@ class RenderPass {
             this.after();
 
             device.renderPassIndex++;
-
-            DebugGraphics.popGpuMarker(device);
         }
     }
 
