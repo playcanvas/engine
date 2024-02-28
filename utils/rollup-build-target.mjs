@@ -120,7 +120,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
     };
     /** @type {OutputOptions} */
     const outputOptions = {
-        banner: moduleFormat === 'es5' && getBanner(banner[buildType]),
+        banner: (moduleFormat === 'es5' || shouldBundle) ? getBanner(banner[buildType]) : undefined,
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
