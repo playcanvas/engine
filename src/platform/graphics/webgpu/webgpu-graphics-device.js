@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
@@ -176,9 +177,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
         // build a full URL from a relative path
-        const buildUrl = (relativePath) => {
+        const buildUrl = (srcPath) => {
+            if (!path.isRelativePath(srcPath)) {
+                return srcPath;
+            }
+
             const url = new URL(window.location.href);
-            url.pathname = relativePath;
+            url.pathname = srcPath;
             url.search = '';
             return url.toString();
         };
