@@ -33,11 +33,11 @@ function engineFor(type) {
         case 'DEVELOPMENT':
             return './ENGINE_PATH/index.js';
         case 'PERFORMANCE':
-            return './playcanvas.prf.mjs/index.js';
+            return './playcanvas.prf.mjs';
         case 'DEBUG':
-            return './playcanvas.dbg.mjs/index.js';
+            return './playcanvas.dbg.mjs';
     }
-    return './playcanvas.mjs/index.js';
+    return './playcanvas.mjs';
 }
 
 /**
