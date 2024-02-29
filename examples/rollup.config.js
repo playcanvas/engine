@@ -24,8 +24,8 @@ import { isModuleWithExternalDependencies } from './utils.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const NODE_ENV = process.env.NODE_ENV;
-const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH;
+const NODE_ENV = process.env.NODE_ENV ?? '';
+const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH ?? '';
 
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
