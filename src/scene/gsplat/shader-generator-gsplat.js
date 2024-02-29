@@ -175,7 +175,7 @@ const splatCoreVS = `
         #else
             vec3 splat_cova;
             vec3 splat_covb;
-            computeCov3d(mat3(matrix_model) * quatToMat3(rotation), scale, splat_cova, splat_covb);
+            computeCov3d(quatToMat3(rotation), scale, splat_cova, splat_covb);
 
             mat3 Vrk = mat3(
                 splat_cova.x, splat_cova.y, splat_cova.z, 
@@ -191,7 +191,8 @@ const splatCoreVS = `
                 0., 0., 0.
             );
 
-            mat3 W = transpose(mat3(matrix_view));
+            mat3 W = transpose(mat3(matrix_view) * mat3(matrix_model));
+
             mat3 T = W * J;
             mat3 cov = transpose(T) * Vrk * T;
 

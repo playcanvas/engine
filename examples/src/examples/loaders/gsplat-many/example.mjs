@@ -134,6 +134,10 @@ assetListLoader.load(() => {
 
         const material = guitar.gsplat.material;
         material.setParameter('uTime', currentTime);
+
+
+        biker2.rotate(0, 80 * dt, 0);
+
     });
 });
 
