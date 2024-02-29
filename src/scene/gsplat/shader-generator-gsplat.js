@@ -118,26 +118,22 @@ const splatCoreVS = `
     void computeCov3d(in mat3 rot, in vec3 scale, out vec3 covA, out vec3 covB)
     {
         // M = S * R
-        float M0 = scale.x * rot[0][0];
-        float M1 = scale.x * rot[0][1];
-        float M2 = scale.x * rot[0][2];
-        float M3 = scale.y * rot[1][0];
-        float M4 = scale.y * rot[1][1];
-        float M5 = scale.y * rot[1][2];
-        float M6 = scale.z * rot[2][0];
-        float M7 = scale.z * rot[2][1];
-        float M8 = scale.z * rot[2][2];
+        mat3 M = transpose(mat3(
+            scale[0] * rot[0],
+            scale[1] * rot[1],
+            scale[2] * rot[2]
+        ));
 
         covA = vec3(
-            M0 * M0 + M3 * M3 + M6 * M6,
-            M0 * M1 + M3 * M4 + M6 * M7,
-            M0 * M2 + M3 * M5 + M6 * M8
+            dot(M[0], M[0]),
+            dot(M[0], M[1]),
+            dot(M[0], M[2])
         );
 
         covB = vec3(
-            M1 * M1 + M4 * M4 + M7 * M7,
-            M1 * M2 + M4 * M5 + M7 * M8,
-            M2 * M2 + M5 * M5 + M8 * M8
+            dot(M[1], M[1]),
+            dot(M[1], M[2]),
+            dot(M[2], M[2])
         );
     }
 
