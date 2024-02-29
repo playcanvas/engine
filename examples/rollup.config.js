@@ -12,17 +12,25 @@ import replace from '@rollup/plugin-replace';
 import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
+// engine rollup utils
 import { buildTarget } from '../utils/rollup-build-target.mjs';
 import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
+
+// util functions
+import { isModuleWithExternalDependencies } from './utils.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const NODE_ENV = process.env.NODE_ENV;
+const ENGINE_PATH = !process.env.ENGINE_PATH && NODE_ENV === 'development' ? '../src/index.js' : process.env.ENGINE_PATH;
+
 const PCUI_PATH = process.env.PCUI_PATH || 'node_modules/@playcanvas/pcui';
 const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
+
 
 const STATIC_FILES = [
     // static main page src
@@ -52,58 +60,36 @@ const STATIC_FILES = [
     // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
     { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
 
-    // N.B. fflate will not be needed once extras module is rolled up
-    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
+    // TODO: fflate will not be needed once extras module is rolled up
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' },
+
+    // engine path
+    ...getEnginePathFiles()
 ];
 
-const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
-const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
-const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
-/**
- * If one of this RegExp's match, it's likely an ESM with external dependencies.
- * @example
- * isModuleWithExternalDependencies(`
- *    // Testing variants:
- *    export * from './index.mjs';
- *    export { Ray } from './core/shape/ray.js';
- *    import './polyfill/OESVertexArrayObject.js';
- *`);
- * @param {string} content - The file content to test.
- * @returns {boolean} Whether content is a module.
- */
-function isModuleWithExternalDependencies(content) {
-    const a = regexpExportStarFrom.test(content);
-    const b = regexpExportFrom.test(content);
-    const c = regexpImport.test(content);
-    // console.log('isModuleWithExternalDependencies', { a, b, c });
-    return a || b || c;
-}
+function getEnginePathFiles() {
+    if (!ENGINE_PATH) {
+        return [];
+    }
 
-const { NODE_ENV = '' } = process.env;
-let { ENGINE_PATH = '' } = process.env;
-
-// If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
-// requires no additional build shells.
-if (!ENGINE_PATH && NODE_ENV === 'development') {
-    ENGINE_PATH = '../src/index.js';
-}
-if (ENGINE_PATH) {
     const src = path.resolve(ENGINE_PATH);
     const content = fs.readFileSync(src, 'utf8');
-    const copyDir = isModuleWithExternalDependencies(content);
-    if (copyDir) {
-        // unpacked module builds
+    const isUnpacked = isModuleWithExternalDependencies(content);
+    if (isUnpacked) {
         const srcDir = path.dirname(src);
         const dest = 'dist/iframe/ENGINE_PATH';
-        STATIC_FILES.push({ src: srcDir, dest });
-    } else {
-        // packed module builds
-        ENGINE_PATH.split("/").pop();
-        const dest = 'dist/iframe/ENGINE_PATH/index.js';
-        STATIC_FILES.push({ src, dest });
+        return [{ src: srcDir, dest }];
     }
+
+    // packed module builds
+    ENGINE_PATH.split("/").pop();
+    const dest = 'dist/iframe/ENGINE_PATH/index.js';
+    return [{ src, dest }];
 }
 
+/**
+ * @returns {RollupPlugin} - The plugin.
+ */
 function timestamp() {
     return {
         name: 'timestamp',
@@ -114,7 +100,7 @@ function timestamp() {
 }
 
 /**
- * @param {import('rollup').Plugin} plugin - The Rollup plugin.
+ * @param {RollupPlugin} plugin - The Rollup plugin.
  * @param {string} src - File or path to watch.
  */
 function watch(plugin, src) {
@@ -139,7 +125,7 @@ function watch(plugin, src) {
  * This plugin copies static files from source to destination.
  *
  * @param {STATIC_FILES} targets - Array of source and destination objects.
- * @returns {RollupPlugin} The plugin.
+ * @returns {RollupPlugin} - The plugin.
  */
 function copyStaticFiles(targets) {
     return {
@@ -168,7 +154,7 @@ function copyStaticFiles(targets) {
 /**
  * This plugin builds the standalone html files.
  *
- * @returns {RollupPlugin} The plugin.
+ * @returns {RollupPlugin} - The plugin.
  */
 function buildAndWatchStandaloneExamples() {
     return {
@@ -207,7 +193,6 @@ function getEngineTargets() {
     }
     return targets;
 }
-
 
 export default [
     {
