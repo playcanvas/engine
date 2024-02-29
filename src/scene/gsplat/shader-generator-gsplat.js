@@ -127,7 +127,6 @@ const splatCoreVS = `
             dot(M0, M1),
             dot(M0, M2)
         );
-        
         covB = vec3(
             dot(M1, M1),
             dot(M1, M2),
