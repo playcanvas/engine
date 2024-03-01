@@ -4,6 +4,7 @@ import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
 import { scriptTarget } from './utils/rollup-script-target.mjs';
 import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
+import { buildTargetRTI } from './utils/rollup-build-target-rti.mjs';
 
 // 3rd party Rollup plugins
 import dts from 'rollup-plugin-dts';
@@ -71,6 +72,7 @@ export default (args) => {
 
         });
 
+        targets.push(buildTargetRTI('es5'), buildTargetRTI('es6'));
 
         if (envTarget === null) {
             // no targets specified, build them all
