@@ -82,7 +82,6 @@ function getEnginePathFiles() {
     }
 
     // packed module builds
-    ENGINE_PATH.split("/").pop();
     const dest = 'dist/iframe/ENGINE_PATH/index.js';
     return [{ src, dest }];
 }
