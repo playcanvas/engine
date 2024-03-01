@@ -30,36 +30,32 @@ class RotateGizmo extends TransformGizmo {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 90),
-            defaultMaterial: this._materials.axis.z.cullBack,
-            hoverMaterial: this._materials.hover.z.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack,
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z,
             sectorAngle: 180
         }),
         x: new AxisDisk(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultMaterial: this._materials.axis.x.cullBack,
-            hoverMaterial: this._materials.hover.x.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack,
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x,
             sectorAngle: 180
         }),
         y: new AxisDisk(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultMaterial: this._materials.axis.y.cullBack,
-            hoverMaterial: this._materials.hover.y.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack,
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y,
             sectorAngle: 180
         }),
         face: new AxisDisk(this._device, {
             axis: 'face',
             layers: [this._layer.id],
             rotation: this._getLookAtEulerAngles(this._camera.entity.getPosition()),
-            defaultMaterial: this._materials.axis.face,
-            hoverMaterial: this._materials.hover.face,
-            disabledMaterial: this._materials.disabled.cullBack,
+            defaultColor: this._meshColors.axis.face,
+            hoverColor: this._meshColors.hover.face,
             ringRadius: 0.55
         })
     };
@@ -296,7 +292,7 @@ class RotateGizmo extends TransformGizmo {
     }
 
     _xyzAxisLookAtCamera() {
-        if (this._camera.projecion === PROJECTION_PERSPECTIVE) {
+        if (this._camera.projection === PROJECTION_PERSPECTIVE) {
             tmpV1.copy(this._camera.entity.getPosition()).sub(this.root.getPosition());
             tmpQ1.copy(this.root.getRotation()).invert().transformVector(tmpV1, tmpV1);
         } else {

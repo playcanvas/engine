@@ -372,6 +372,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
+        /** @type {WebGL2RenderingContext} */
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
@@ -426,6 +427,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
+
+        // supported sampler types
+        this._samplerTypes = new Set([
+            ...[
+                gl.SAMPLER_2D,
+                gl.SAMPLER_CUBE
+            ],
+            ...(this.isWebGL2 ? [
+                gl.UNSIGNED_INT_SAMPLER_2D,
+                gl.INT_SAMPLER_2D,
+                gl.SAMPLER_2D_SHADOW,
+                gl.SAMPLER_CUBE_SHADOW,
+                gl.SAMPLER_3D,
+                gl.INT_SAMPLER_3D,
+                gl.UNSIGNED_INT_SAMPLER_3D,
+                gl.SAMPLER_2D_ARRAY,
+                gl.INT_SAMPLER_2D_ARRAY,
+                gl.UNSIGNED_INT_SAMPLER_2D_ARRAY
+            ] : [])
+        ]);
 
         this.glAddress = [
             gl.REPEAT,
@@ -1353,15 +1374,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Called after a batch of shaders was created, to guide in their optimal preparation for rendering.
-     *
-     * @ignore
-     */
-    endShaderBatch() {
-        WebglShader.endShaderBatch(this);
-    }
-
-    /**
      * Set the active rectangle for rendering on the specified device.
      *
      * @param {number} x - The pixel space x-coordinate of the bottom left corner of the viewport.
@@ -1541,6 +1553,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
@@ -1673,6 +1686,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         DebugGraphics.popGpuMarker(this);
+        DebugGraphics.popGpuMarker(this);   // pop the pass-start marker
     }
 
     set defaultFramebuffer(value) {
@@ -2109,6 +2123,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     draw(primitive, numInstances, keepBuffers) {
         const gl = this.gl;
+
+        this.activateShader(this);
+        if (!this.shaderValid)
+            return;
 
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
@@ -2731,30 +2749,69 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Sets the active shader to be used during subsequent draw calls.
      *
-     * @param {Shader} shader - The shader to set to assign to the device.
-     * @returns {boolean} True if the shader was successfully set, false otherwise.
+     * @param {Shader} shader - The shader to assign to the device.
      */
-    setShader(shader) {
+
+    /**
+     * Sets the active shader to be used during subsequent draw calls.
+     *
+     * @param {Shader} shader - The shader to assign to the device.
+     * @param {boolean} asyncCompile - If true, rendering will be skipped until the shader is
+     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults to
+     * false.
+     */
+    setShader(shader, asyncCompile = false) {
         if (shader !== this.shader) {
-            if (shader.failed) {
-                return false;
-            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
-                shader.failed = true;
-                return false;
-            }
-
             this.shader = shader;
-
-            // Set the active shader
-            this.gl.useProgram(shader.impl.glProgram);
+            this.shaderAsyncCompile = asyncCompile;
+            this.shaderValid = undefined;   // need to run activation / validation
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;
             // #endif
-
-            this.attributesInvalidated = true;
         }
-        return true;
+    }
+
+    activateShader(device) {
+
+        const { shader } = this;
+        const { impl } = shader;
+        if (this.shaderValid === undefined) {
+
+            if (shader.failed) {
+                this.shaderValid = false;
+            } else if (!shader.ready) {
+
+                // if the shader is async compiled and can be skipped if not ready
+                if (this.shaderAsyncCompile) {
+
+                    // if the shader is linked, finalize it
+                    if (impl.isLinked(device)) {
+                        if (!impl.finalize(this, shader)) {
+                            shader.failed = true;
+                            this.shaderValid = false;
+                        }
+                    } else {
+                        // skip the async shader rendering
+                        this.shaderValid = false;
+                    }
+
+                } else {
+
+                    // this cannot be skipped, wait for the shader to be ready
+                    if (!impl.finalize(this, shader)) {
+                        shader.failed = true;
+                        this.shaderValid = false;
+                    }
+                }
+            }
+        }
+
+        if (this.shaderValid === undefined) {
+            // Set the active shader
+            this.gl.useProgram(impl.glProgram);
+            this.shaderValid = true;
+        }
     }
 
     /**

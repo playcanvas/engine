@@ -173,7 +173,8 @@ class ProgramLibrary {
                 attributes: generatedShaderDef.attributes,
                 vshader: generatedShaderDef.vshader,
                 fshader: generatedShaderDef.fshader,
-                processingOptions: processingOptions
+                processingOptions: processingOptions,
+                shaderLanguage: generatedShaderDef.shaderLanguage
             };
 
             // add new shader to the processed cache

@@ -42,7 +42,6 @@ import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
-const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -751,18 +750,15 @@ class Renderer {
     }
 
     setSkinning(device, meshInstance) {
-        if (meshInstance.skinInstance) {
+        const skinInstance = meshInstance.skinInstance;
+        if (skinInstance) {
             this._skinDrawCalls++;
             if (device.supportsBoneTextures) {
-                const boneTexture = meshInstance.skinInstance.boneTexture;
+                const boneTexture = skinInstance.boneTexture;
                 this.boneTextureId.setValue(boneTexture);
-                boneTextureSize[0] = boneTexture.width;
-                boneTextureSize[1] = boneTexture.height;
-                boneTextureSize[2] = 1.0 / boneTexture.width;
-                boneTextureSize[3] = 1.0 / boneTexture.height;
-                this.boneTextureSizeId.setValue(boneTextureSize);
+                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
             } else {
-                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                this.poseMatrixId.setValue(skinInstance.matrixPalette);
             }
         }
     }

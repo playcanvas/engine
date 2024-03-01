@@ -2,7 +2,7 @@ import { path } from '../../core/path.js';
 
 import { GlbContainerParser } from '../parsers/glb-container-parser.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * @interface
@@ -160,24 +160,18 @@ class ContainerResource {
  * });
  * ```
  *
- * @implements {ResourceHandler}
  * @category Graphics
  */
-class ContainerHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "container";
-
+class ContainerHandler extends ResourceHandler {
     /**
      * Create a new ContainerResource instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
+        super(app, 'container');
+
         this.glbContainerParser = new GlbContainerParser(app.graphicsDevice, app.assets, 0);
         this.parsers = { };
     }
@@ -245,14 +239,6 @@ class ContainerHandler {
      */
     open(url, data, asset) {
         return this._getParser(url).open(url, data, asset);
-    }
-
-    /**
-     * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
-     * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
-     */
-    patch(asset, assets) {
-
     }
 }
 

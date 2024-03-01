@@ -1,16 +1,19 @@
 import {
     math,
-    CULLFACE_NONE,
-    CULLFACE_BACK,
     PROJECTION_PERSPECTIVE,
     PROJECTION_ORTHOGRAPHIC,
-    BLEND_NORMAL,
     Color,
-    StandardMaterial,
     Vec3,
     Quat
 } from 'playcanvas';
 
+import {
+    COLOR_RED,
+    COLOR_GREEN,
+    COLOR_BLUE,
+    COLOR_YELLOW,
+    COLOR_GRAY
+} from './default-colors.js';
 import { Gizmo } from "./gizmo.js";
 
 // temporary variables
@@ -27,16 +30,15 @@ const FACING_EPSILON = 0.2;
 const SPANLINE_SIZE = 1e3;
 const ROTATE_SCALE = 900;
 
-const RED_COLOR = new Color(1, 0.3, 0.3);
-const SEMI_RED_COLOR = new Color(1, 0.3, 0.3, 0.6);
-const GREEN_COLOR = new Color(0.3, 1, 0.3);
-const SEMI_GREEN_COLOR = new Color(0.3, 1, 0.3, 0.6);
-const BLUE_COLOR = new Color(0.3, 0.3, 1);
-const SEMI_BLUE_COLOR = new Color(0.3, 0.3, 1, 0.6);
-const YELLOW_COLOR = new Color(1, 1, 0.5);
-const WHITE_COLOR = new Color(1, 1, 1);
-const SEMI_WHITE_COLOR = new Color(1, 1, 1, 0.6);
-const GRAY_COLOR = new Color(0.5, 0.5, 0.5, 0.5);
+/**
+ * @param {Color} color - The color.
+ * @returns {Color} - The semi transparent color.
+ */
+const colorSemi = (color) => {
+    const clone = color.clone();
+    clone.a = 0.6;
+    return clone;
+};
 
 /**
  * Shape axis for the line X.
@@ -138,48 +140,27 @@ class TransformGizmo extends Gizmo {
     static EVENT_TRANSFORMEND = 'transform:end';
 
     /**
-     * Internal material objects for mesh instances.
+     * Internal color for meshs.
      *
      * @type {Object}
      * @protected
      */
-    _materials = {
+    _meshColors = {
         axis: {
-            x: {
-                cullBack: this._createMaterial(SEMI_RED_COLOR),
-                cullNone: this._createMaterial(SEMI_RED_COLOR, CULLFACE_NONE)
-            },
-            y: {
-                cullBack: this._createMaterial(SEMI_GREEN_COLOR),
-                cullNone: this._createMaterial(SEMI_GREEN_COLOR, CULLFACE_NONE)
-            },
-            z: {
-                cullBack: this._createMaterial(SEMI_BLUE_COLOR),
-                cullNone: this._createMaterial(SEMI_BLUE_COLOR, CULLFACE_NONE)
-            },
-            face: this._createMaterial(SEMI_WHITE_COLOR),
-            xyz: this._createMaterial(SEMI_WHITE_COLOR)
+            x: colorSemi(COLOR_RED),
+            y: colorSemi(COLOR_GREEN),
+            z: colorSemi(COLOR_BLUE),
+            xyz: colorSemi(Color.WHITE),
+            face: colorSemi(Color.WHITE)
         },
         hover: {
-            x: {
-                cullBack: this._createMaterial(RED_COLOR),
-                cullNone: this._createMaterial(RED_COLOR, CULLFACE_NONE)
-            },
-            y: {
-                cullBack: this._createMaterial(GREEN_COLOR),
-                cullNone: this._createMaterial(GREEN_COLOR, CULLFACE_NONE)
-            },
-            z: {
-                cullBack: this._createMaterial(BLUE_COLOR),
-                cullNone: this._createMaterial(BLUE_COLOR, CULLFACE_NONE)
-            },
-            face: this._createMaterial(YELLOW_COLOR),
-            xyz: this._createMaterial(WHITE_COLOR)
+            x: COLOR_RED.clone(),
+            y: COLOR_GREEN.clone(),
+            z: COLOR_BLUE.clone(),
+            xyz: Color.WHITE.clone(),
+            face: COLOR_YELLOW.clone()
         },
-        disabled: {
-            cullBack: this._createMaterial(GRAY_COLOR),
-            cullNone: this._createMaterial(GRAY_COLOR, CULLFACE_NONE)
-        }
+        disabled: COLOR_GRAY.clone()
     };
 
     /**
@@ -189,10 +170,10 @@ class TransformGizmo extends Gizmo {
      * @protected
      */
     _guideColors = {
-        x: RED_COLOR,
-        y: GREEN_COLOR,
-        z: BLUE_COLOR,
-        face: YELLOW_COLOR
+        x: COLOR_RED.clone(),
+        y: COLOR_GREEN.clone(),
+        z: COLOR_BLUE.clone(),
+        face: COLOR_YELLOW.clone()
     };
 
     /**
@@ -421,7 +402,7 @@ class TransformGizmo extends Gizmo {
     }
 
     get xAxisColor() {
-        return this._materials.axis.x.cullBack.emissive;
+        return this._meshColors.axis.x;
     }
 
     /**
@@ -434,7 +415,7 @@ class TransformGizmo extends Gizmo {
     }
 
     get yAxisColor() {
-        return this._materials.axis.y.cullBack.emissive;
+        return this._meshColors.axis.y;
     }
 
     /**
@@ -447,21 +428,17 @@ class TransformGizmo extends Gizmo {
     }
 
     get zAxisColor() {
-        return this._materials.axis.z.cullBack.emissive;
+        return this._meshColors.axis.z;
     }
 
     _updateAxisColor(axis, value) {
         this._guideColors[axis].copy(value);
+        this._meshColors.axis[axis].copy(colorSemi(value));
+        this._meshColors.hover[axis].copy(value);
 
-        this._materials.axis[axis].cullBack.emissive.copy(value);
-        this._materials.axis[axis].cullNone.emissive.copy(value);
-        this._materials.hover[axis].cullBack.emissive.copy(value);
-        this._materials.hover[axis].cullNone.emissive.copy(value);
-
-        this._materials.axis[axis].cullBack.update();
-        this._materials.axis[axis].cullNone.update();
-        this._materials.hover[axis].cullBack.update();
-        this._materials.hover[axis].cullNone.update();
+        for (const name in this._shapes) {
+            this._shapes[name].hover(!!this._hoverAxis);
+        }
     }
 
     _getAxis(meshInstance) {
@@ -669,18 +646,6 @@ class TransformGizmo extends Gizmo {
         rot.transformVector(tmpV1, tmpV1);
         rot.transformVector(tmpV2, tmpV2);
         this._app.drawLine(tmpV1.add(pos), tmpV2.add(pos), this._guideColors[axis], true);
-    }
-
-    _createMaterial(color, cull = CULLFACE_BACK) {
-        const material = new StandardMaterial();
-        material.emissive = color;
-        material.emissiveVertexColor = true;
-        material.cull = cull;
-        material.blendType = BLEND_NORMAL;
-        if (color.a !== 1) {
-            material.opacity = color.a;
-        }
-        return material;
     }
 
     _createTransform() {

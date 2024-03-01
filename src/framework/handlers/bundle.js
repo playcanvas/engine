@@ -5,32 +5,24 @@ import { http, Http } from '../../platform/net/http.js';
 import { Bundle } from '../bundle/bundle.js';
 import { Untar, UntarWorker } from './untar.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Loads Bundle Assets.
  *
- * @implements {ResourceHandler}
  * @ignore
  */
-class BundleHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "bundle";
-
+class BundleHandler extends ResourceHandler {
     /**
      * Create a new BundleHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
      */
     constructor(app) {
+        super(app, 'bundle');
+
         this._assets = app.assets;
         this._worker = null;
-        this.maxRetries = 0;
     }
 
     load(url, callback) {
@@ -90,9 +82,6 @@ class BundleHandler {
 
     open(url, data) {
         return new Bundle(data);
-    }
-
-    patch(asset, assets) {
     }
 }
 

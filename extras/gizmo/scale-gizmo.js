@@ -17,60 +17,53 @@ class ScaleGizmo extends TransformGizmo {
         xyz: new AxisBoxCenter(this._device, {
             axis: 'xyz',
             layers: [this._layer.id],
-            defaultMaterial: this._materials.axis.xyz,
-            hoverMaterial: this._materials.hover.xyz,
-            disabledMaterial: this._materials.disabled.cullBack
+            defaultColor: this._meshColors.axis.xyz,
+            hoverColor: this._meshColors.hover.xyz
         }),
         yz: new AxisPlane(this._device, {
             axis: 'x',
             flipAxis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultMaterial: this._materials.axis.x.cullNone,
-            hoverMaterial: this._materials.hover.x.cullNone,
-            disabledMaterial: this._materials.disabled.cullNone
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x
         }),
         xz: new AxisPlane(this._device, {
             axis: 'y',
             flipAxis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultMaterial: this._materials.axis.y.cullNone,
-            hoverMaterial: this._materials.hover.y.cullNone,
-            disabledMaterial: this._materials.disabled.cullNone
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y
         }),
         xy: new AxisPlane(this._device, {
             axis: 'z',
             flipAxis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultMaterial: this._materials.axis.z.cullNone,
-            hoverMaterial: this._materials.hover.z.cullNone,
-            disabledMaterial: this._materials.disabled.cullNone
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z
         }),
         x: new AxisBoxLine(this._device, {
             axis: 'x',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, -90),
-            defaultMaterial: this._materials.axis.x.cullBack,
-            hoverMaterial: this._materials.hover.x.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack
+            defaultColor: this._meshColors.axis.x,
+            hoverColor: this._meshColors.hover.x
         }),
         y: new AxisBoxLine(this._device, {
             axis: 'y',
             layers: [this._layer.id],
             rotation: new Vec3(0, 0, 0),
-            defaultMaterial: this._materials.axis.y.cullBack,
-            hoverMaterial: this._materials.hover.y.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack
+            defaultColor: this._meshColors.axis.y,
+            hoverColor: this._meshColors.hover.y
         }),
         z: new AxisBoxLine(this._device, {
             axis: 'z',
             layers: [this._layer.id],
             rotation: new Vec3(90, 0, 0),
-            defaultMaterial: this._materials.axis.z.cullBack,
-            hoverMaterial: this._materials.hover.z.cullBack,
-            disabledMaterial: this._materials.disabled.cullBack
+            defaultColor: this._meshColors.axis.z,
+            hoverColor: this._meshColors.hover.z
         })
     };
 

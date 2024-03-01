@@ -7,7 +7,7 @@ import { hasAudioContext } from '../../platform/audio/capabilities.js';
 
 import { Sound } from '../../platform/sound/sound.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 // checks if user is running IE
 const ie = (function () {
@@ -47,28 +47,20 @@ const supportedExtensions = [
 /**
  * Resource handler used for loading {@link Sound} resources.
  *
- * @implements {ResourceHandler}
  * @category Sound
  */
-class AudioHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "audio";
-
+class AudioHandler extends ResourceHandler {
     /**
      * Create a new AudioHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
+        super(app, 'audio');
+
         this.manager = app.soundManager;
         Debug.assert(this.manager, "AudioSourceComponentSystem cannot be created without sound manager");
-
-        this.maxRetries = 0;
     }
 
     _isSupported(url) {
@@ -108,13 +100,6 @@ class AudioHandler {
         } else {
             error(null);
         }
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 
     /**
