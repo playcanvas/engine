@@ -32,28 +32,6 @@ const splatCoreVS = `
     #endif
     #endif
 
-    mat3 quatToMat3(vec3 R)
-    {
-        float x = R.x;
-        float y = R.y;
-        float z = R.z;
-        float w = sqrt(1.0 - dot(R, R));
-
-        return mat3(
-            1.0 - 2.0 * (z * z + w * w),
-                2.0 * (y * z + x * w),
-                2.0 * (y * w - x * z),
-
-                2.0 * (y * z - x * w),
-            1.0 - 2.0 * (y * y + w * w),
-                2.0 * (z * w + x * y),
-
-                2.0 * (y * w + x * z),
-                2.0 * (z * w - x * y),
-            1.0 - 2.0 * (y * y + z * z)
-        );
-    }
-
     uniform vec4 tex_params;
     uniform sampler2D splatColor;
     uniform highp sampler2D splatCenter;
