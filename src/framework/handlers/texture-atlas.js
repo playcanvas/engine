@@ -43,7 +43,7 @@ class TextureAtlasHandler extends ResourceHandler {
      * @ignore
      */
     constructor(app) {
-        super('textureatlas');
+        super(app, 'textureatlas');
 
         this._loader = app.loader;
     }

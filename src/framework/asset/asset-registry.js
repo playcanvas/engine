@@ -31,6 +31,7 @@ import { Asset } from './asset.js';
  * are provided with an AssetRegistry instance as `app.assets`.
  *
  * @augments EventHandler
+ * @category Asset
  */
 class AssetRegistry extends EventHandler {
     /**

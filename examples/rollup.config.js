@@ -13,7 +13,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTarget } from '../utils/rollup-script-target.mjs';
+import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -29,9 +29,7 @@ const staticFiles = [
     { src: './src/static', dest: 'dist/' },
 
     // static iframe src
-    { src: './iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './iframe/example.css', dest: 'dist/iframe/example.css' },
-    { src: './iframe/pathes.js', dest: 'dist/iframe/pathes.js' },
+    { src: './iframe', dest: 'dist/iframe' },
 
     // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
@@ -49,10 +47,12 @@ const staticFiles = [
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
 
     // playcanvas observer
-    { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
+    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
 
-    // Note: destination folder is 'modules' as 'node_modules' are automatically excluded by git pages
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' }
+    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+    // N.B. fflate will not be needed once extras module is rolled up
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
 ];
 
 const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
@@ -175,6 +175,7 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
+                watch(this, 'iframe/example.html');
                 watch(this, 'scripts/standalone-html.mjs');
                 watch(this, 'src/examples');
             }
@@ -227,7 +228,7 @@ const targets = [
             timestamp()
         ]
     },
-    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
+    scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
 ];
 
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.
@@ -238,18 +239,18 @@ if (ENGINE_PATH === '') {
         targets.push(buildTarget(...args));
     };
     if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.js
-        pushTarget('release', 'es5', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.dbg.js
-        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
-        // Outputs: dist/iframe/playcanvas.prf.js
-        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.mjs
+        pushTarget('release', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.js
-        pushTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.js
-        pushTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else {
         console.warn("NODE_ENV is neither production, development nor profiler.");
     }

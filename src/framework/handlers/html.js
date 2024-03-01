@@ -3,8 +3,8 @@ import { http } from '../../platform/net/http.js';
 import { ResourceHandler } from './handler.js';
 
 class HtmlHandler extends ResourceHandler {
-    constructor() {
-        super('html');
+    constructor(app) {
+        super(app, 'html');
     }
 
     load(url, callback) {

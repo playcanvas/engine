@@ -3,8 +3,8 @@ import { http } from '../../platform/net/http.js';
 import { ResourceHandler } from './handler.js';
 
 class CssHandler extends ResourceHandler {
-    constructor() {
-        super('css');
+    constructor(app) {
+        super(app, 'css');
     }
 
     load(url, callback) {

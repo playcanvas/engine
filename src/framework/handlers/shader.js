@@ -3,8 +3,8 @@ import { http } from '../../platform/net/http.js';
 import { ResourceHandler } from './handler.js';
 
 class ShaderHandler extends ResourceHandler {
-    constructor() {
-        super('shader');
+    constructor(app) {
+        super(app, 'shader');
     }
 
     load(url, callback) {
