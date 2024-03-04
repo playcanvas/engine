@@ -134,9 +134,11 @@ const splatCoreVS = `
 
         float focal = viewport.x * matrix_projection[0][0];
 
+        float J1 = focal / splat_cam.z;
+        vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
         mat3 J = mat3(
-            focal / splat_cam.z, 0., -(focal * splat_cam.x) / (splat_cam.z * splat_cam.z), 
-            0., focal / splat_cam.z, -(focal * splat_cam.y) / (splat_cam.z * splat_cam.z), 
+            J1, 0., J2.x, 
+            0., J1, J2.y, 
             0., 0., 0.
         );
 
@@ -166,9 +168,8 @@ const splatCoreVS = `
 
         texCoord = vertex_position.xy * 2.0;
 
-        return splat_proj +
-            vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
-                0.0, 0.0) * splat_proj.w;
+        splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
+        return splat_proj;
 
         id = float(vertex_id);
     }
