@@ -23,24 +23,24 @@ class Bundle extends EventHandler {
     /**
      * Fired when a file has been added to a Bundle.
      *
-     * @event Bundle#add
-     * @param {string} url - A url of a file
-     * @param {DataView} data - A DataView of a file
+     * @event
      * @example
      * bundle.on("add", function (url, data) {
      *     console.log("file added: " + url);
      * });
      */
+    static EVENT_ADD = 'add';
 
     /**
      * Fired when all files of a Bundle has been loaded.
      *
-     * @event Bundle#load
+     * @event
      * @example
      * bundle.on("load", function () {
      *     console.log("All Bundle files has been loaded");
      * });
      */
+    static EVENT_LOAD = 'load';
 
     /**
      * Add file to a Bundle.
