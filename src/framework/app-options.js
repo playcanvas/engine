@@ -1,3 +1,7 @@
+/**
+ * AppOptions is an object that holds configuration settings utilized in the creation of AppBase. It
+ * allows functionality to be included or excluded from the AppBase instance.
+ */
 class AppOptions {
     /**
      * Input handler for {@link ElementComponent}s.
@@ -72,21 +76,21 @@ class AppOptions {
     /**
      * The lightmapper.
      *
-     * @type {import('./lightmapper/lightmapper.js').Lightmapper}
+     * @type {typeof import('./lightmapper/lightmapper.js').Lightmapper}
      */
     lightmapper;
 
     /**
      * The BatchManager.
      *
-     * @type {import('../scene/batching/batch-manager.js').BatchManager}
+     * @type {typeof import('../scene/batching/batch-manager.js').BatchManager}
      */
     batchManager;
 
     /**
      * The XrManager.
      *
-     * @type {import('./xr/xr-manager.js').XrManager}
+     * @type {typeof import('./xr/xr-manager.js').XrManager}
      */
     xr;
 
@@ -100,7 +104,7 @@ class AppOptions {
     /**
      * The resource handlers the app requires.
      *
-     * @type {import('./handlers/handler.js').ResourceHandler[]}
+     * @type {typeof import('./handlers/handler.js').ResourceHandler[]}
      */
     resourceHandlers = [];
 }

@@ -60,6 +60,67 @@ const _quat = new Quat();
  */
 class CollisionComponent extends Component {
     /**
+     * Fired when a contact occurs between two rigid bodies. The handler is passed a
+     * {@link ContactResult} object which contains details of the contact between the two rigid
+     * bodies.
+     *
+     * @event
+     * @example
+     * entity.collision.on('contact', (result) => {
+     *    console.log(`Contact between ${entity.name} and ${result.other.name}`);
+     * });
+     */
+    static EVENT_CONTACT = 'contact';
+
+    /**
+     * Fired when two rigid bodies start touching. The handler is passed the {@link ContactResult}
+     * object which contains details of the contact between the two rigid bodies.
+     *
+     * @event
+     * @example
+     * entity.collision.on('collisionstart', (result) => {
+     *    console.log(`${entity.name} started touching ${result.other.name}`);
+     * });
+     */
+    static EVENT_COLLISIONSTART = 'collisionstart';
+
+    /**
+     * Fired two rigid-bodies stop touching. The handler is passed an {@link Entity} that
+     * represents the other rigid body involved in the collision.
+     *
+     * @event
+     * @example
+     * entity.collision.on('collisionend', (other) => {
+     *     console.log(`${entity.name} stopped touching ${other.name}`);
+     * });
+     */
+    static EVENT_COLLISIONEND = 'collisionend';
+
+    /**
+     * Fired when a rigid body enters a trigger volume. The handler is passed an {@link Entity}
+     * representing the rigid body that entered this collision volume.
+     *
+     * @event
+     * @example
+     * entity.collision.on('triggerenter', (other) => {
+     *     console.log(`${other.name} entered trigger volume ${entity.name}`);
+     * });
+     */
+    static EVENT_TRIGGERENTER = 'triggerenter';
+
+    /**
+     * Fired when a rigid body exits a trigger volume. The handler is passed an {@link Entity}
+     * representing the rigid body that exited this collision volume.
+     *
+     * @event
+     * @example
+     * entity.collision.on('triggerleave', (other) => {
+     *     console.log(`${other.name} exited trigger volume ${entity.name}`);
+     * });
+     */
+    static EVENT_TRIGGERLEAVE = 'triggerleave';
+
+    /**
      * Create a new CollisionComponent.
      *
      * @param {import('./system.js').CollisionComponentSystem} system - The ComponentSystem that
@@ -88,41 +149,6 @@ class CollisionComponent extends Component {
         this.on('set_model', this.onSetModel, this);
         this.on('set_render', this.onSetRender, this);
     }
-
-    /**
-     * The 'contact' event is fired when a contact occurs between two rigid bodies.
-     *
-     * @event CollisionComponent#contact
-     * @param {ContactResult} result - Details of the contact between the two rigid bodies.
-     */
-
-    /**
-     * Fired when two rigid bodies start touching.
-     *
-     * @event CollisionComponent#collisionstart
-     * @param {ContactResult} result - Details of the contact between the two Entities.
-     */
-
-    /**
-     * Fired two rigid-bodies stop touching.
-     *
-     * @event CollisionComponent#collisionend
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} that stopped touching this collision volume.
-     */
-
-    /**
-     * Fired when a rigid body enters a trigger volume.
-     *
-     * @event CollisionComponent#triggerenter
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} that entered this collision volume.
-     */
-
-    /**
-     * Fired when a rigid body exits a trigger volume.
-     *
-     * @event CollisionComponent#triggerleave
-     * @param {import('../../entity.js').Entity} other - The {@link Entity} that exited this collision volume.
-     */
 
     /**
      * @param {string} name - Property name.

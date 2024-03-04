@@ -1,6 +1,8 @@
 import { Debug, DebugHelper } from '../../core/debug.js';
 import { now } from '../../core/time.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Vec3 } from '../../core/math/vec3.js';
+import { Vec4 } from '../../core/math/vec4.js';
 import { Mat3 } from '../../core/math/mat3.js';
 import { Mat4 } from '../../core/math/mat4.js';
 import { BoundingSphere } from '../../core/shape/bounding-sphere.js';
@@ -36,9 +38,10 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
+import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
+import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;
-const boneTextureSize = [0, 0, 0, 0];
 const viewProjMat = new Mat4();
 const viewInvMat = new Mat4();
 const viewMat = new Mat4();
@@ -47,6 +50,7 @@ const tempSphere = new BoundingSphere();
 const _flipYMat = new Mat4().setScale(1, -1, 1);
 const _tempLightSet = new Set();
 const _tempLayerSet = new Set();
+const _tempVec4 = new Vec4();
 
 // Converts a projection matrix in OpenGL style (depth range of -1..1) to a DirectX style (depth range of 0..1).
 const _fixProjRangeMat = new Mat4().set([
@@ -56,10 +60,32 @@ const _fixProjRangeMat = new Mat4().set([
     0, 0, 0.5, 1
 ]);
 
+// helton sequence of 2d offsets for jittering
+const _haltonSequence = [
+    new Vec2(0.5, 0.333333),
+    new Vec2(0.25, 0.666667),
+    new Vec2(0.75, 0.111111),
+    new Vec2(0.125, 0.444444),
+    new Vec2(0.625, 0.777778),
+    new Vec2(0.375, 0.222222),
+    new Vec2(0.875, 0.555556),
+    new Vec2(0.0625, 0.888889),
+    new Vec2(0.5625, 0.037037),
+    new Vec2(0.3125, 0.370370),
+    new Vec2(0.8125, 0.703704),
+    new Vec2(0.1875, 0.148148),
+    new Vec2(0.6875, 0.481481),
+    new Vec2(0.4375, 0.814815),
+    new Vec2(0.9375, 0.259259),
+    new Vec2(0.03125, 0.592593)
+];
+
 const _tempProjMat0 = new Mat4();
 const _tempProjMat1 = new Mat4();
 const _tempProjMat2 = new Mat4();
 const _tempProjMat3 = new Mat4();
+const _tempProjMat4 = new Mat4();
+const _tempProjMat5 = new Mat4();
 const _tempSet = new Set();
 
 const _tempMeshInstances = [];
@@ -119,6 +145,8 @@ class Renderer {
      * @type {Map<import('../light.js').Light, import('../camera.js').Camera>}
      */
     dirLightShadows = new Map();
+
+    blueNoise = new BlueNoise(123);
 
     /**
      * Create a new instance.
@@ -191,6 +219,10 @@ class Renderer {
         this.farClipId = scope.resolve('camera_far');
         this.cameraParams = new Float32Array(4);
         this.cameraParamsId = scope.resolve('camera_params');
+        this.viewIndexId = scope.resolve('view_index');
+
+        this.blueNoiseJitterId = scope.resolve('blueNoiseJitter');
+        this.blueNoiseTextureId = scope.resolve('blueNoiseTex32');
 
         this.alphaTestId = scope.resolve('alpha_ref');
         this.opacityMapId = scope.resolve('texture_opacityMap');
@@ -340,6 +372,36 @@ class Renderer {
                 projMat = _tempProjMat2.mul2(_fixProjRangeMat, projMat);
                 projMatSkybox = _tempProjMat3.mul2(_fixProjRangeMat, projMatSkybox);
             }
+
+            // camera jitter
+            const { jitter } = camera;
+            let noise = Vec4.ZERO;
+            if (jitter > 0) {
+
+                // render target size
+                const targetWidth = target ? target.width : this.device.width;
+                const targetHeight = target ? target.height : this.device.height;
+
+                // offsets
+                const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
+                const offsetX = jitter * (offset.x * 2 - 1) / targetWidth;
+                const offsetY = jitter * (offset.y * 2 - 1) / targetHeight;
+
+                // apply offset to projection matrix
+                projMat = _tempProjMat4.copy(projMat);
+                projMat.data[8] = offsetX;
+                projMat.data[9] = offsetY;
+
+                // apply offset to skybox projection matrix
+                projMatSkybox = _tempProjMat5.copy(projMatSkybox);
+                projMatSkybox.data[8] = offsetX;
+                projMatSkybox.data[9] = offsetY;
+
+                // blue noise vec4 - only set when jitter is enabled
+                noise = this.blueNoise.vec4(_tempVec4);
+            }
+
+            this.blueNoiseJitterId.setValue([noise.x, noise.y, noise.z, noise.w]);
 
             this.projId.setValue(projMat.data);
             this.projSkyboxId.setValue(projMatSkybox.data);
@@ -611,6 +673,19 @@ class Renderer {
     }
 
     /**
+     * Update gsplats ahead of rendering.
+     *
+     * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
+     * containing gsplatInstances.
+     * @ignore
+     */
+    updateGSplats(drawCalls) {
+        for (const drawCall of drawCalls) {
+            drawCall.gsplatInstance?.update();
+        }
+    }
+
+    /**
      * Update draw calls ahead of rendering.
      *
      * @param {import('../mesh-instance.js').MeshInstance[]|Set<import('../mesh-instance.js').MeshInstance>} drawCalls - MeshInstances
@@ -622,6 +697,7 @@ class Renderer {
         // that are visible in this frame
         this.updateGpuSkinMatrices(drawCalls);
         this.updateMorphing(drawCalls);
+        this.updateGSplats(drawCalls);
     }
 
     setVertexBuffers(device, mesh) {
@@ -671,18 +747,15 @@ class Renderer {
     }
 
     setSkinning(device, meshInstance) {
-        if (meshInstance.skinInstance) {
+        const skinInstance = meshInstance.skinInstance;
+        if (skinInstance) {
             this._skinDrawCalls++;
             if (device.supportsBoneTextures) {
-                const boneTexture = meshInstance.skinInstance.boneTexture;
+                const boneTexture = skinInstance.boneTexture;
                 this.boneTextureId.setValue(boneTexture);
-                boneTextureSize[0] = boneTexture.width;
-                boneTextureSize[1] = boneTexture.height;
-                boneTextureSize[2] = 1.0 / boneTexture.width;
-                boneTextureSize[3] = 1.0 / boneTexture.height;
-                this.boneTextureSizeId.setValue(boneTextureSize);
+                this.boneTextureSizeId.setValue(skinInstance.boneTextureSize);
             } else {
-                this.poseMatrixId.setValue(meshInstance.skinInstance.matrixPalette);
+                this.poseMatrixId.setValue(skinInstance.matrixPalette);
             }
         }
     }
@@ -867,8 +940,14 @@ class Renderer {
                     const bucket = drawCall.transparent ? transparent : opaque;
                     bucket.push(drawCall);
 
-                    if (drawCall.skinInstance || drawCall.morphInstance)
+                    if (drawCall.skinInstance || drawCall.morphInstance || drawCall.gsplatInstance) {
                         this.processingMeshInstances.add(drawCall);
+
+                        // register visible cameras
+                        if (drawCall.gsplatInstance) {
+                            drawCall.gsplatInstance.cameras.push(camera);
+                        }
+                    }
                 }
             }
         }
@@ -1160,6 +1239,11 @@ class Renderer {
         _tempSet.clear();
     }
 
+    updateFrameUniforms() {
+        // blue noise texture
+        this.blueNoiseTextureId.setValue(getBlueNoiseTexture(this.device));
+    }
+
     /**
      * @param {import('../composition/layer-composition.js').LayerComposition} comp - The layer
      * composition to update.
@@ -1209,6 +1293,8 @@ class Renderer {
             scene.updateShaders = false;
             scene._shaderVersion++;
         }
+
+        this.updateFrameUniforms();
 
         // Update all skin matrices to properly cull skinned objects (but don't update rendering data yet)
         this.updateCpuSkinMatrices(_tempMeshInstancesSkinned);

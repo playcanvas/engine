@@ -23,8 +23,18 @@ class ShaderPassInfo {
     name;
 
     /** @type {string} */
-    shaderDefine;
+    shaderDefines;
 
+    /**
+     * @param {string} name - The name, for example 'depth'. Must contain only letters, numbers,
+     * and underscores, and start with a letter.
+     * @param {number} index - Index from ShaderPass#nextIndex.
+     * @param {object} [options] - Options for additional configuration of the shader pass.
+     * @param {boolean} [options.isForward] - Whether the pass is forward.
+     * @param {boolean} [options.isShadow] - Whether the pass is shadow.
+     * @param {boolean} [options.lightType] - Type of light, for example `pc.LIGHTTYPE_DIRECTIONAL`.
+     * @param {boolean} [options.shadowType] - Type of shadow, for example `pc.SHADOW_PCF3`.
+     */
     constructor(name, index, options = {}) {
 
         Debug.assert(/^[a-zA-Z][_a-zA-Z0-9]*$/.test(name), `ShaderPass name can only contain letters, numbers and underscores and start with a letter: ${name}`);
@@ -35,10 +45,10 @@ class ShaderPassInfo {
         // assign options as properties to this object
         Object.assign(this, options);
 
-        this.initShaderDefines();
+        this.shaderDefines = this.buildShaderDefines();
     }
 
-    initShaderDefines() {
+    buildShaderDefines() {
 
         let keyword;
         if (this.isShadow) {
@@ -57,7 +67,7 @@ class ShaderPassInfo {
         // define based on the name
         const define2 = `#define ${this.name.toUpperCase()}_PASS\n`;
 
-        this.shaderDefines = define1 + define2;
+        return define1 + define2;
     }
 }
 
@@ -118,7 +128,7 @@ class ShaderPass {
      * Allocates a shader pass with the specified name and options.
      *
      * @param {string} name - A name of the shader pass.
-     * @param {object} options - Options for the shader pass, which are added as properties to the
+     * @param {object} [options] - Options for the shader pass, which are added as properties to the
      * shader pass info.
      * @returns {ShaderPassInfo} The allocated shader pass info.
      */

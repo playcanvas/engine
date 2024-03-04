@@ -13,7 +13,7 @@ import resolve from "@rollup/plugin-node-resolve";
 import terser from '@rollup/plugin-terser';
 
 import { buildTarget } from '../utils/rollup-build-target.mjs';
-import { scriptTarget } from '../utils/rollup-script-target.mjs';
+import { scriptTargetEs6 } from '../utils/rollup-script-target-es6.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').Plugin} RollupPlugin */
@@ -25,22 +25,36 @@ const PCUI_REACT_PATH = path.resolve(PCUI_PATH, 'react');
 const PCUI_STYLES_PATH = path.resolve(PCUI_PATH, 'styles');
 
 const staticFiles = [
+    // static main page src
     { src: './src/static', dest: 'dist/' },
-    { src: './src/iframe/arkit.png', dest: 'dist/iframe/arkit.png' },
-    { src: './src/example.css', dest: 'dist/iframe/example.css' },
-    { src: './src/pathes.js', dest: 'dist/iframe/pathes.js' },
-    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // static iframe src
+    { src: './iframe', dest: 'dist/iframe' },
+
+    // assets used in examples
     { src: './assets', dest: 'dist/static/assets/' },
+
+    // thumbnails used in examples
+    { src: './thumbnails', dest: 'dist/thumbnails/' },
+
+    // external libraries used in examples
+    { src: './src/lib', dest: 'dist/static/lib/' },
+
+    // engine scripts
     { src: '../scripts', dest: 'dist/static/scripts/' },
+
+    // playcanvas engine types
     { src: '../build/playcanvas.d.ts', dest: 'dist/playcanvas.d.ts' },
-    { src: './node_modules/@playcanvas/observer/dist/index.js', dest: 'dist/iframe/playcanvas-observer.js' },
-    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/node_modules/monaco-editor/min/vs' }
+
+    // playcanvas observer
+    { src: './node_modules/@playcanvas/observer/dist/index.mjs', dest: 'dist/iframe/playcanvas-observer.mjs' },
+
+    // modules (N.B. destination folder is 'modules' as 'node_modules' are automatically excluded by git pages)
+    { src: './node_modules/monaco-editor/min/vs', dest: 'dist/modules/monaco-editor/min/vs' },
+    // N.B. fflate will not be needed once extras module is rolled up
+    { src: '../node_modules/fflate/esm/', dest: 'dist/modules/fflate/esm' }
 ];
 
-// ^ = beginning of line
-// \s* = whitespace
-// $ = end of line
-// .* = any character
 const regexpExportStarFrom =  /^\s*export\s*\*\s*from\s*.+\s*;\s*$/gm;
 const regexpExportFrom     =  /^\s*export\s*{.*}\s*from\s*.+\s*;\s*$/gm;
 const regexpImport         =  /^\s*import\s*.+\s*;\s*$/gm;
@@ -64,7 +78,8 @@ function isModuleWithExternalDependencies(content) {
     return a || b || c;
 }
 
-let { NODE_ENV = '', ENGINE_PATH = '' } = process.env;
+const { NODE_ENV = '' } = process.env;
+let { ENGINE_PATH = '' } = process.env;
 
 // If we don't set ENGINE_PATH and NODE_ENV is 'development', we use ../src/index.js, which
 // requires no additional build shells.
@@ -160,7 +175,8 @@ function buildAndWatchStandaloneExamples() {
         name: 'build-and-watch-standalone-examples',
         buildStart() {
             if (NODE_ENV === 'development') {
-                watch(this, 'scripts/generate-standalone-files.mjs');
+                watch(this, 'iframe/example.html');
+                watch(this, 'scripts/standalone-html.mjs');
                 watch(this, 'src/examples');
             }
         },
@@ -212,28 +228,31 @@ const targets = [
             timestamp()
         ]
     },
-    scriptTarget('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.js')
+    scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
 ];
 
 // We skip building PlayCanvas ourselves when ENGINE_PATH is given.
 // In that case we have a watcher which copies all necessary files.
 if (ENGINE_PATH === '') {
-    /** @type {RollupOptions|undefined} */
-    let target;
+    /** @type {buildTarget} */
+    const pushTarget = (...args) => {
+        targets.push(buildTarget(...args));
+    };
     if (NODE_ENV === 'production') {
-        // Outputs: dist/iframe/playcanvas.js
-        target = buildTarget('release', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.mjs
+        pushTarget('release', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'development') {
-        // Outputs: dist/iframe/playcanvas.dbg.js
-        target = buildTarget('debug', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.dbg.mjs
+        pushTarget('debug', 'es6', '../src/index.js', 'dist/iframe');
     } else if (NODE_ENV === 'profiler') {
-        // Outputs: dist/iframe/playcanvas.prf.js
-        target = buildTarget('profiler', 'es5', '../src/index.js', 'dist/iframe');
+        // Outputs: dist/iframe/playcanvas.prf.mjs
+        pushTarget('profiler', 'es6', '../src/index.js', 'dist/iframe');
     } else {
         console.warn("NODE_ENV is neither production, development nor profiler.");
-    }
-    if (target) {
-        targets.push(target);
     }
 }
 

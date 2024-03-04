@@ -152,6 +152,8 @@ function rawToValue(app, args, value, old) {
  * Container of Script Attribute definitions. Implements an interface to add/remove attributes and
  * store their definition for a {@link ScriptType}. Note: An instance of ScriptAttributes is
  * created automatically by each {@link ScriptType}.
+ *
+ * @category Script
  */
 class ScriptAttributes {
     /**

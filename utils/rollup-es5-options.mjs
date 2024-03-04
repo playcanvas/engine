@@ -18,7 +18,11 @@ const es5Options = buildType => ({
                 loose: true,
                 modules: false,
                 targets: {
-                    ie: '11'
+                    browsers: [
+                        'fully supports webgl',
+                        '> 0.1%',
+                        'not dead'
+                    ]
                 }
             }
         ]

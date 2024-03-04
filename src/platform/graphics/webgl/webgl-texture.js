@@ -7,7 +7,10 @@ import {
     PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_111110F, PIXELFORMAT_SRGB, PIXELFORMAT_SRGBA, PIXELFORMAT_ETC1,
     PIXELFORMAT_ETC2_RGB, PIXELFORMAT_ETC2_RGBA, PIXELFORMAT_PVRTC_2BPP_RGB_1, PIXELFORMAT_PVRTC_2BPP_RGBA_1,
     PIXELFORMAT_PVRTC_4BPP_RGB_1, PIXELFORMAT_PVRTC_4BPP_RGBA_1, PIXELFORMAT_ASTC_4x4, PIXELFORMAT_ATC_RGB,
-    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8
+    PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
+    PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
+    PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
+    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U
 } from '../constants.js';
 
 /**
@@ -279,6 +282,99 @@ class WebglTexture {
                 this._glInternalFormat = gl.SRGB8_ALPHA8;
                 this._glPixelType = gl.UNSIGNED_BYTE;
                 break;
+            // Integer texture formats (R) (WebGL2 only)
+            case PIXELFORMAT_R8I: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R8I;
+                this._glPixelType = gl.BYTE;
+                break;
+            case PIXELFORMAT_R8U: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R8UI;
+                this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_R16I: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R16I;
+                this._glPixelType = gl.SHORT;
+                break;
+            case PIXELFORMAT_R16U: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R16UI;
+                this._glPixelType = gl.UNSIGNED_SHORT;
+                break;
+            case PIXELFORMAT_R32I: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R32I;
+                this._glPixelType = gl.INT;
+                break;
+            case PIXELFORMAT_R32U: // WebGL2 only
+                this._glFormat = gl.RED_INTEGER;
+                this._glInternalFormat = gl.R32UI;
+                this._glPixelType = gl.UNSIGNED_INT;
+                break;
+            // Integer texture formats (RG) (WebGL2 only)
+            case PIXELFORMAT_RG8I: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG8I;
+                this._glPixelType = gl.BYTE;
+                break;
+            case PIXELFORMAT_RG8U: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG8UI;
+                this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_RG16I: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG16I;
+                this._glPixelType = gl.SHORT;
+                break;
+            case PIXELFORMAT_RG16U: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG16UI;
+                this._glPixelType = gl.UNSIGNED_SHORT;
+                break;
+            case PIXELFORMAT_RG32I: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG32I;
+                this._glPixelType = gl.INT;
+                break;
+            case PIXELFORMAT_RG32U: // WebGL2 only
+                this._glFormat = gl.RG_INTEGER;
+                this._glInternalFormat = gl.RG32UI;
+                this._glPixelType = gl.UNSIGNED_INT;
+                break;
+            // Integer texture formats (RGBA) (WebGL2 only)
+            case PIXELFORMAT_RGBA8I: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA8I;
+                this._glPixelType = gl.BYTE;
+                break;
+            case PIXELFORMAT_RGBA8U: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA8UI;
+                this._glPixelType = gl.UNSIGNED_BYTE;
+                break;
+            case PIXELFORMAT_RGBA16I: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA16I;
+                this._glPixelType = gl.SHORT;
+                break;
+            case PIXELFORMAT_RGBA16U: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA16UI;
+                this._glPixelType = gl.UNSIGNED_SHORT;
+                break;
+            case PIXELFORMAT_RGBA32I: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA32I;
+                this._glPixelType = gl.INT;
+                break;
+            case PIXELFORMAT_RGBA32U: // WebGL2 only
+                this._glFormat = gl.RGBA_INTEGER;
+                this._glInternalFormat = gl.RGBA32UI;
+                this._glPixelType = gl.UNSIGNED_INT;
+                break;
             case PIXELFORMAT_BGRA8:
                 Debug.error("BGRA8 texture format is not supported by WebGL.");
                 break;
@@ -287,6 +383,10 @@ class WebglTexture {
         this._glCreated = false;
     }
 
+    /**
+     * @param {import('./webgl-graphics-device.js').WebglGraphicsDevice} device - The device.
+     * @param {import('../texture.js').Texture} texture - The texture to update.
+     */
     upload(device, texture) {
 
         Debug.assert(texture.device, "Attempting to use a texture that has been destroyed.", texture);
@@ -324,7 +424,7 @@ class WebglTexture {
             mipObject = texture._levels[mipLevel];
             resMult = 1 / Math.pow(2, mipLevel);
 
-            if (mipLevel === 1 && !texture._compressed && texture._levels.length < requiredMipLevels) {
+            if (mipLevel === 1 && !texture._compressed && !texture._integerFormat && texture._levels.length < requiredMipLevels) {
                 // We have more than one mip levels we want to assign, but we need all mips to make
                 // the texture complete. Therefore first generate all mip chain from 0, then assign custom mips.
                 // (this implies the call to _completePartialMipLevels above was unsuccessful)
@@ -518,7 +618,10 @@ class WebglTexture {
                     // Upload the image, canvas or video
                     device.setUnpackFlipY(texture._flipY);
                     device.setUnpackPremultiplyAlpha(texture._premultiplyAlpha);
-                    if (this._glCreated && texture._width === w && texture._height === h) {
+
+                    // TEMP: disable fast path for video updates until
+                    // https://bugs.chromium.org/p/chromium/issues/detail?id=1511207 is resolved
+                    if (this._glCreated && texture._width === w && texture._height === h && !device._isImageVideoInterface(mipObject)) {
                         gl.texSubImage2D(
                             gl.TEXTURE_2D,
                             mipLevel,
@@ -615,7 +718,7 @@ class WebglTexture {
             }
         }
 
-        if (!texture._compressed && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.isWebGL2) && texture._levels.length === 1) {
+        if (!texture._compressed && !texture._integerFormat && texture._mipmaps && texture._needsMipmapsUpload && (texture.pot || device.isWebGL2) && texture._levels.length === 1) {
             gl.generateMipmap(this._glTarget);
             texture._mipmapsUploaded = true;
         }

@@ -258,6 +258,18 @@ const _schema = ['enabled'];
  */
 class RigidBodyComponentSystem extends ComponentSystem {
     /**
+     * Fired when a contact occurs between two rigid bodies. The handler is passed a
+     * {@link SingleContactResult} object containing details of the contact between the two bodies.
+     *
+     * @event
+     * @example
+     * app.systems.rigidbody.on('contact', (result) => {
+     *     console.log(`Contact between ${result.a.name} and ${result.b.name}`);
+     * });
+     */
+    static EVENT_CONTACT = 'contact';
+
+    /**
      * @type {number}
      * @ignore
      */
@@ -333,13 +345,6 @@ class RigidBodyComponentSystem extends ComponentSystem {
 
         this.on('beforeremove', this.onBeforeRemove, this);
     }
-
-    /**
-     * Fired when a contact occurs between two rigid bodies.
-     *
-     * @event RigidBodyComponentSystem#contact
-     * @param {SingleContactResult} result - Details of the contact between the two bodies.
-     */
 
     /**
      * Called once Ammo has been loaded. Responsible for creating the physics world.

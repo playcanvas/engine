@@ -1,5 +1,6 @@
 import { TRACEID_SHADER_ALLOC } from '../../core/constants.js';
 import { Debug } from '../../core/debug.js';
+import { platform } from '../../core/platform.js';
 import { Preprocessor } from '../../core/preprocessor.js';
 import { DebugGraphics } from './debug-graphics.js';
 
@@ -54,6 +55,9 @@ class Shader {
      * WebGPU platform.
      * @param {boolean} [definition.useTransformFeedback] - Specifies that this shader outputs
      * post-VS data to a buffer.
+     * @param {string | string[]} [definition.fragmentOutputTypes] - Fragment shader output types,
+     * which default to vec4. Passing a string will set the output type for all color attachments.
+     * Passing an array will set the output type for each color attachment.
      * @param {string} [definition.shaderLanguage] - Specifies the shader language of vertex and
      * fragment shaders. Defaults to {@link SHADERLANGUAGE_GLSL}.
      * @example
@@ -103,7 +107,12 @@ class Shader {
 
             // pre-process shader sources
             definition.vshader = Preprocessor.run(definition.vshader);
-            definition.fshader = Preprocessor.run(definition.fshader, graphicsDevice.isWebGL2);
+
+            // Strip unused color attachments from fragment shader.
+            // Note: this is only needed for iOS 15 on WebGL2 where there seems to be a bug where color attachments that are not
+            // written to generate metal linking errors. This is fixed on iOS 16, and iOS 14 does not support WebGL2.
+            const stripUnusedColorAttachments = graphicsDevice.isWebGL2 && (platform.name === 'osx' || platform.name === 'ios');
+            definition.fshader = Preprocessor.run(definition.fshader, stripUnusedColorAttachments);
         }
 
         this.impl = graphicsDevice.createShaderImpl(this);

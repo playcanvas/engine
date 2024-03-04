@@ -13,16 +13,14 @@ class ShaderGenerator {
         return '}\n';
     }
 
-    static skinCode(device, chunks) {
-        if (!chunks) chunks = shaderChunks;
+    static skinCode(device, chunks = shaderChunks) {
         if (device.supportsBoneTextures) {
             return chunks.skinTexVS;
         }
         return "#define BONE_LIMIT " + device.getBoneLimit() + "\n" + chunks.skinConstVS;
     }
 
-    static fogCode(value, chunks) {
-        if (!chunks) chunks = shaderChunks;
+    static fogCode(value, chunks = shaderChunks) {
         if (value === 'linear') {
             return chunks.fogLinearPS ? chunks.fogLinearPS : shaderChunks.fogLinearPS;
         } else if (value === 'exp') {
@@ -33,8 +31,7 @@ class ShaderGenerator {
         return chunks.fogNonePS ? chunks.fogNonePS : shaderChunks.fogNonePS;
     }
 
-    static gammaCode(value, chunks) {
-        if (!chunks) chunks = shaderChunks;
+    static gammaCode(value, chunks = shaderChunks) {
         if (value === GAMMA_SRGB || value === GAMMA_SRGBFAST) {
             return chunks.gamma2_2PS ? chunks.gamma2_2PS : shaderChunks.gamma2_2PS;
         } else if (value === GAMMA_SRGBHDR) {
@@ -43,8 +40,7 @@ class ShaderGenerator {
         return chunks.gamma1_0PS ? chunks.gamma1_0PS : shaderChunks.gamma1_0PS;
     }
 
-    static tonemapCode(value, chunks) {
-        if (!chunks) chunks = shaderChunks;
+    static tonemapCode(value, chunks = shaderChunks) {
         if (value === TONEMAP_FILMIC) {
             return chunks.tonemappingFilmicPS ? chunks.tonemappingFilmicPS : shaderChunks.tonemappingFilmicPS;
         } else if (value === TONEMAP_LINEAR) {

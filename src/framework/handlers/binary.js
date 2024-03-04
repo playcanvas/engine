@@ -1,15 +1,9 @@
 import { http, Http } from '../../platform/net/http.js';
+import { ResourceHandler } from './handler.js';
 
-class BinaryHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "binary";
-
+class BinaryHandler extends ResourceHandler {
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'binary');
     }
 
     load(url, callback) {
@@ -34,18 +28,13 @@ class BinaryHandler {
     }
 
     /**
-     * @ignore
+     * Parses raw DataView and returns ArrayBuffer.
+     * 
      * @param {DataView} data - The raw data as a DataView
+     * @returns {ArrayBuffer} The parsed resource data.
     */
     openBinary(data) {
         return data.buffer;
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

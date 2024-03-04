@@ -5,20 +5,20 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "npm run prebuild && cross-env NODE_ENV=production rollup -c",
-    "prebuild": "npm run build:example:data && npm run build:standalone && npm run build:directory",
-    "build:directory": "node ./scripts/example-directory.mjs",
-    "build:example:data": "node ./scripts/example-data.mjs",
-    "build:thumbnails": "npm run build && node ./scripts/thumbnails.mjs",
-    "build:standalone": "node ./scripts/generate-standalone-files.mjs",
+    "prebuild": "npm run -s build:metadata && npm run -s build:standalone && npm run -s build:sharing",
+    "build": "cross-env NODE_ENV=production rollup -c",
+    "build:metadata": "node ./scripts/metadata.mjs",
+    "build:sharing": "node ./scripts/sharing-html.mjs",
+    "build:standalone": "node ./scripts/standalone-html.mjs",
+    "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "rollup:watch": "cross-env NODE_ENV=development rollup -c -w",
     "serve": "serve dist -l 5000 --no-request-logging --config ../serve.json",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .js,.ts,.tsx",
     "watch": "npm run prebuild && cross-env concurrently --kill-others \"npm run rollup:watch\"",
     "watch:debug": "cross-env ENGINE_PATH=../build/playcanvas.dbg.js npm run watch",
     "watch:profiler": "cross-env ENGINE_PATH=../build/playcanvas.prf.js npm run watch",
-    "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\""
+    "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
+    "clean": "node ./scripts/clean.mjs"
   },
   "eslintConfig": {
     "root": true,

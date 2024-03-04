@@ -1,3 +1,4 @@
+import { EventHandler } from '../../core/event-handler.js';
 import { Texture } from '../../platform/graphics/texture.js';
 import { Vec4 } from "../../core/math/vec4.js";
 import { Mat3 } from "../../core/math/mat3.js";
@@ -6,11 +7,26 @@ import { Mat4 } from "../../core/math/mat4.js";
 import { ADDRESS_CLAMP_TO_EDGE, FILTER_LINEAR, PIXELFORMAT_RGB8 } from '../../platform/graphics/constants.js';
 
 /**
- * Represents XR View which represents a screen (mobile phone context) or an eye (HMD context).
+ * Represents an XR View which represents a screen (monoscopic scenario such as a mobile phone) or an eye
+ * (stereoscopic scenario such as an HMD context). It provides access to the view's color and depth information
+ * based on the capabilities of underlying AR system.
  *
  * @category XR
  */
-class XrView {
+class XrView extends EventHandler {
+    /**
+     * Fired when the depth sensing texture been resized. The {@link XrView#depthUvMatrix} needs
+     * to be updated for relevant shaders. The handler is passed the new width and height of the
+     * depth texture in pixels.
+     *
+     * @event
+     * @example
+     * view.on('depth:resize', () => {
+     *     material.setParameter('matrix_depth_uv', view.depthUvMatrix);
+     * });
+     */
+    static EVENT_DEPTHRESIZE = 'depth:resize';
+
     /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
@@ -90,23 +106,52 @@ class XrView {
     _textureColor = null;
 
     /**
+     * @type {Texture|null}
+     * @private
+     */
+    _textureDepth = null;
+
+    /**
+     * @type {XRDepthInformation|null}
+     * @private
+     */
+    _depthInfo = null;
+
+    /**
+     * @type {Uint8Array}
+     * @private
+     */
+    _emptyDepthBuffer = new Uint8Array(32);
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    _depthMatrix = new Mat4();
+
+    /**
      * Create a new XrView instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
      * @param {XRView} xrView - [XRView](https://developer.mozilla.org/en-US/docs/Web/API/XRView)
      * object that is created by WebXR API.
+     * @param {number} viewsCount - Number of views available for the session.
      * @hideconstructor
      */
-    constructor(manager, xrView) {
+    constructor(manager, xrView, viewsCount) {
+        super();
+
         this._manager = manager;
         this._xrView = xrView;
+
+        const device = this._manager.app.graphicsDevice;
 
         if (this._manager.views.supportedColor) {
             this._xrCamera = this._xrView.camera;
 
             // color texture
             if (this._manager.views.availableColor && this._xrCamera) {
-                this._textureColor = new Texture(this._manager.app.graphicsDevice, {
+                this._textureColor = new Texture(device, {
                     format: PIXELFORMAT_RGB8,
                     mipmaps: false,
                     addressU: ADDRESS_CLAMP_TO_EDGE,
@@ -117,20 +162,110 @@ class XrView {
                     height: this._xrCamera.height,
                     name: `XrView-${this._xrView.eye}-Color`
                 });
-
-                this._manager.app.graphicsDevice?.on('devicelost', this._onDeviceLost, this);
             }
         }
+
+        if (this._manager.views.supportedDepth && this._manager.views.availableDepth) {
+            this._textureDepth = new Texture(device, {
+                format: this._manager.views.depthPixelFormat,
+                arrayLength: (viewsCount === 1) ? 0 : viewsCount,
+                mipmaps: false,
+                addressU: ADDRESS_CLAMP_TO_EDGE,
+                addressV: ADDRESS_CLAMP_TO_EDGE,
+                minFilter: FILTER_LINEAR,
+                magFilter: FILTER_LINEAR,
+                width: 4,
+                height: 4,
+                name: `XrView-${this._xrView.eye}-Depth`
+            });
+
+            for (let i = 0; i < this._textureDepth._levels.length; i++) {
+                this._textureDepth._levels[i] = this._emptyDepthBuffer;
+            }
+        }
+
+        if (this._textureColor || this._textureDepth)
+            device.on('devicelost', this._onDeviceLost, this);
     }
 
     /**
      * Texture associated with this view's camera color. Equals to null if camera color is
-     * not available or not supported.
+     * not available or is not supported.
      *
      * @type {Texture|null}
      */
     get textureColor() {
         return this._textureColor;
+    }
+
+    /* eslint-disable jsdoc/check-examples */
+    /**
+     * Texture that contains packed depth information which is reconstructed using the underlying
+     * AR system. This texture can be used (not limited to) for reconstructing real world
+     * geometry, virtual object placement, occlusion of virtual object by the real world geometry,
+     * and more.
+     * The format of this texture is {@link PIXELFORMAT_LA8} or {@link PIXELFORMAT_R32F}
+     * based on {@link XrViews#depthFormat}. It is UV transformed based on the underlying AR
+     * system which can be normalized using {@link XrView#depthUvMatrix}. Equals to null if camera
+     * depth is not supported.
+     *
+     * @type {Texture|null}
+     * @example
+     * // GPU path, attaching texture to material
+     * material.setParameter('texture_depthSensingMap', view.textureDepth);
+     * material.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
+     * material.setParameter('depth_to_meters', view.depthValueToMeters);
+     * @example
+     * // GLSL shader to unpack depth texture
+     * varying vec2 vUv0;
+     *
+     * uniform sampler2D texture_depthSensingMap;
+     * uniform mat4 matrix_depth_uv;
+     * uniform float depth_to_meters;
+     *
+     * void main(void) {
+     *     // transform UVs using depth matrix
+     *     vec2 texCoord = (matrix_depth_uv * vec4(vUv0.xy, 0.0, 1.0)).xy;
+     *
+     *     // get luminance alpha components from depth texture
+     *     vec2 packedDepth = texture2D(texture_depthSensingMap, texCoord).ra;
+     *
+     *     // unpack into single value in millimeters
+     *     float depth = dot(packedDepth, vec2(255.0, 256.0 * 255.0)) * depth_to_meters; // m
+     *
+     *     // normalize: 0m to 8m distance
+     *     depth = min(depth / 8.0, 1.0); // 0..1 = 0m..8m
+     *
+     *     // paint scene from black to white based on distance
+     *     gl_FragColor = vec4(depth, depth, depth, 1.0);
+     * }
+     */
+    get textureDepth() {
+        return this._textureDepth;
+    }
+    /* eslint-enable jsdoc/check-examples */
+
+    /**
+     * 4x4 matrix that should be used to transform depth texture UVs to normalized UVs in a shader.
+     * It is updated when the depth texture is resized. Refer to {@link XrView#depthResize}.
+     *
+     * @type {Mat4}
+     * @example
+     * material.setParameter('matrix_depth_uv', view.depthUvMatrix.data);
+     */
+    get depthUvMatrix() {
+        return this._depthMatrix;
+    }
+
+    /**
+     * Multiply this coefficient number by raw depth value to get depth in meters.
+     *
+     * @type {number}
+     * @example
+     * material.setParameter('depth_to_meters', view.depthValueToMeters);
+     */
+    get depthValueToMeters() {
+        return this._depthInfo?.rawValueToMeters || 0;
     }
 
     /**
@@ -206,7 +341,7 @@ class XrView {
     }
 
     /**
-     * @param {*} frame - XRFrame from requestAnimationFrame callback.
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
      * @param {XRView} xrView - XRView from WebXR API.
      * @ignore
      */
@@ -230,6 +365,7 @@ class XrView {
         this._viewInvMat.set(this._xrView.transform.matrix);
 
         this._updateTextureColor();
+        this._updateDepth(frame);
     }
 
     /**
@@ -291,6 +427,74 @@ class XrView {
     }
 
     /**
+     * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
+     * @private
+     */
+    _updateDepth(frame) {
+        if (!this._manager.views.availableDepth || !this._textureDepth)
+            return;
+
+        const gpu = this._manager.views.depthGpuOptimized;
+
+        const infoSource = gpu ? this._manager.webglBinding : frame;
+        if (!infoSource) {
+            this._depthInfo = null;
+            return;
+        }
+
+        const depthInfo = infoSource.getDepthInformation(this._xrView);
+        if (!depthInfo) {
+            this._depthInfo = null;
+            return;
+        }
+
+        let matrixDirty = !this._depthInfo !== !depthInfo;
+        this._depthInfo = depthInfo;
+
+        const width = this._depthInfo?.width || 4;
+        const height = this._depthInfo?.height || 4;
+
+        let resized = false;
+
+        // resizing
+        if (this._textureDepth.width !== width || this._textureDepth.height !== height) {
+            this._textureDepth._width = width;
+            this._textureDepth._height = height;
+            matrixDirty = true;
+            resized = true;
+        }
+
+        // update depth matrix
+        if (matrixDirty) {
+            if (this._depthInfo) {
+                this._depthMatrix.data.set(this._depthInfo.normDepthBufferFromNormView.matrix);
+            } else {
+                this._depthMatrix.setIdentity();
+            }
+        }
+
+        // update texture
+        if (this._depthInfo) {
+            if (gpu) {
+                // gpu
+                if (this._depthInfo.texture) {
+                    this._textureDepth.impl._glTexture = this._depthInfo.texture;
+                }
+            } else {
+                // cpu
+                this._textureDepth._levels[0] = new Uint8Array(this._depthInfo.data);
+                this._textureDepth.upload();
+            }
+        } else {
+            // clear
+            this._textureDepth._levels[0] = this._emptyDepthBuffer;
+            this._textureDepth.upload();
+        }
+
+        if (resized) this.fire('depth:resize', width, height);
+    }
+
+    /**
      * @param {Mat4|null} transform - World Transform of a parents GraphNode.
      * @ignore
      */
@@ -314,15 +518,44 @@ class XrView {
     _onDeviceLost() {
         this._frameBufferSource = null;
         this._frameBuffer = null;
+        this._depthInfo = null;
     }
 
     /**
-     * @ignore
+     * Get depth value from depth information in meters. UV is in range of 0..1, with origin in
+     * top-left corner of a texture.
+     *
+     * @param {number} u - U coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (left to right).
+     * @param {number} v - V coordinate of pixel in depth texture, which is in range from 0.0 to
+     * 1.0 (top to bottom).
+     * @returns {number|null} Depth in meters or null if depth information is currently not
+     * available.
+     * @example
+     * const depth = view.getDepth(u, v);
+     * if (depth !== null) {
+     *     // depth in meters
+     * }
      */
+    getDepth(u, v) {
+        if (this._manager.views.depthGpuOptimized)
+            return null;
+
+        return this._depthInfo?.getDepthInMeters(u, v) ?? null;
+    }
+
+    /** @ignore */
     destroy() {
+        this._depthInfo = null;
+
         if (this._textureColor) {
             this._textureColor.destroy();
             this._textureColor = null;
+        }
+
+        if (this._textureDepth) {
+            this._textureDepth.destroy();
+            this._textureDepth = null;
         }
 
         if (this._frameBufferSource) {

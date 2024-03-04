@@ -4,16 +4,19 @@ import { ChunkUtils } from '../chunk-utils.js';
 
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { SKYTYPE_INFINITE } from '../../constants.js';
 
 class ShaderGeneratorSkybox extends ShaderGenerator {
     generateKey(options) {
-        return options.type === 'cubemap' ?
-            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.fixSeams}-${options.mip}` :
-            `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}`;
+        const sharedKey = `skybox-${options.type}-${options.encoding}-${options.useIntensity}-${options.gamma}-${options.toneMapping}-${options.skymesh}`;
+        return sharedKey + (options.type === 'cubemap' ? `-${options.fixSeams}-${options.mip}` : '');
     }
 
     createShaderDefinition(device, options) {
-        let fshader = '';
+        const defines = options.skymesh === SKYTYPE_INFINITE ? '' : '#define SKYMESH\n';
+        const vshader = defines + shaderChunks.skyboxVS;
+        let fshader = defines;
+
         if (options.type === 'cubemap') {
             const mip2size = [128, 64, /* 32 */ 16, 8, 4, 2];
             fshader += options.mip ? shaderChunks.fixCubemapSeamsStretchPS : shaderChunks.fixCubemapSeamsNonePS;
@@ -39,7 +42,7 @@ class ShaderGeneratorSkybox extends ShaderGenerator {
             attributes: {
                 aPosition: SEMANTIC_POSITION
             },
-            vertexCode: shaderChunks.skyboxVS,
+            vertexCode: vshader,
             fragmentCode: fshader
         });
     }

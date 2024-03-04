@@ -63,8 +63,8 @@ const _lightPropsDefault = [];
  * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
- * @property {boolean} affectSpecularity If enabled and the light type is pc.LIGHTTYPE_DIRECTIONAL, material specularity
- * will not be affected by this light. Defaults to true.
+ * @property {boolean} affectSpecularity If enabled, material specularity will be affected by this light.
+ * Ignored for lights other than {@link LIGHTTYPE_DIRECTIONAL}. Defaults to true.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.

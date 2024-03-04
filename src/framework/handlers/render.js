@@ -1,6 +1,6 @@
 import { Render } from '../../scene/render.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 // The scope of this function is the render asset
 function onContainerAssetLoaded(containerAsset) {
@@ -44,28 +44,19 @@ function onContainerAssetRemoved(containerAsset) {
 /**
  * Resource handler used for loading {@link Render} resources.
  *
- * @implements {ResourceHandler}
  * @category Graphics
  */
-class RenderHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "render";
-
+class RenderHandler extends ResourceHandler {
     /**
      * Create a new RenderHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
-        this._registry = app.assets;
-    }
+        super(app, 'render');
 
-    load(url, callback, asset) {
+        this._registry = app.assets;
     }
 
     open(url, data) {

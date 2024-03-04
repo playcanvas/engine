@@ -2,6 +2,8 @@
  * Log tracing functionality, allowing for tracing of the internal functionality of the engine.
  * Note that the trace logging only takes place in the debug build of the engine and is stripped
  * out in other builds.
+ *
+ * @category Debug
  */
 class Tracing {
     /**

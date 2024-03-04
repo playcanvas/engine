@@ -30,6 +30,40 @@ const OPPOSITE_AXIS = {
  */
 class ElementDragHelper extends EventHandler {
     /**
+     * Fired when a new drag operation starts.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:start', () => {
+     *     console.log('Drag started');
+     * });
+     */
+    static EVENT_DRAGSTART = 'drag:start';
+
+    /**
+     * Fired when the current new drag operation ends.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:end', () => {
+     *     console.log('Drag ended');
+     * });
+     */
+    static EVENT_DRAGEND = 'drag:end';
+
+    /**
+     * Fired whenever the position of the dragged element changes. The handler is passed the
+     * current {@link Vec3} position of the dragged element.
+     *
+     * @event
+     * @example
+     * elementDragHelper.on('drag:move', (position) => {
+     *     console.log(`Dragged element position is ${position}`);
+     * });
+     */
+    static EVENT_DRAGMOVE = 'drag:move';
+
+    /**
      * Create a new ElementDragHelper instance.
      *
      * @param {ElementComponent} element - The Element that should become draggable.
@@ -59,25 +93,6 @@ class ElementDragHelper extends EventHandler {
 
         this._toggleLifecycleListeners('on');
     }
-
-    /**
-     * Fired when a new drag operation starts.
-     *
-     * @event ElementDragHelper#drag:start
-     */
-
-    /**
-     * Fired when the current new drag operation ends.
-     *
-     * @event ElementDragHelper#drag:end
-     */
-
-    /**
-     * Fired whenever the position of the dragged element changes.
-     *
-     * @event ElementDragHelper#drag:move
-     * @param {Vec3} value - The current position.
-     */
 
     /**
      * @param {'on'|'off'} onOrOff - Either 'on' or 'off'.

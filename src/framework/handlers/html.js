@@ -1,13 +1,7 @@
 import { http } from '../../platform/net/http.js';
+import { ResourceHandler } from './handler.js';
 
-class HtmlHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "html";
-
+class HtmlHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.
      *
@@ -17,7 +11,7 @@ class HtmlHandler {
     decoder = new TextDecoder('utf-8');
 
     constructor(app) {
-        this.maxRetries = 0;
+        super(app, 'html');
     }
 
     load(url, callback) {
@@ -41,18 +35,13 @@ class HtmlHandler {
     }
 
     /**
-     * @ignore
+     * Parses raw DataView and returns string.
+     * 
      * @param {DataView} data - The raw data as a DataView
+     * @returns {string} The parsed resource data.
     */
     openBinary(data) {
         return this.decoder.decode(data);
-    }
-
-    open(url, data) {
-        return data;
-    }
-
-    patch(asset, assets) {
     }
 }
 

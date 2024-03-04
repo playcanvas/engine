@@ -3,13 +3,13 @@
 <img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL 游戏引擎
-[开发者站点](https://developer.playcanvas.com) | [例子](https://playcanvas.github.io) | [论坛](https://forum.playcanvas.com) | [博客](https://blog.playcanvas.com)
+
+[API 参考](https://api.playcanvas.com/modules/Engine.html) | [用户手册](https://developer.playcanvas.com) | [例子](https://playcanvas.github.io) | [论坛](https://forum.playcanvas.com) | [博客](https://blog.playcanvas.com)
 
 PlayCanvas 是一款使用 HTML5 和 WebGL 技术运行游戏以及其他 3D 内容的开源游戏引擎，PlayCanvas 以其独特的性能实现了在任何手机移动端和桌面浏览器端均可以流畅运行。
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
-[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
@@ -148,14 +148,6 @@ PlayCanvas 是一款优秀的全功能游戏引擎。
 - https://code.playcanvas.com/playcanvas-1.38.4.js
 - https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### 生成 Source Maps
-
-您可以在任何构建指令之后添加 `-- -m` 来生成 Source map 更好更方便地对引擎进行调试和排错：
-
-    npm run build -- -m
-
-此条指令将会将结果输出到 `build/playcanvas.js.map`
-
 ## PlayCanvas 平台
 
 PlayCanvas 引擎是一款可以基于浏览器的用于制作游戏以及 3D 可视化的开源引擎。除此之外，我们还开发了[PlayCanvas 开发平台](https://playcanvas.com/)， 为我们的用户提供了可视化编辑器，资源管理，代码编辑，代码托管以及发布等服务。
@@ -170,8 +162,6 @@ The PlayCanvas Engine is released under the [MIT](https://opensource.org/license
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
-[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
-[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: https://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine

@@ -23,6 +23,52 @@ import { XrMesh } from "./xr-mesh.js";
  */
 class XrMeshDetection extends EventHandler {
     /**
+     * Fired when mesh detection becomes available.
+     *
+     * @event
+     * @example
+     * app.xr.meshDetection.on('available', () => {
+     *     console.log('Mesh detection is available');
+     * });
+     */
+    static EVENT_AVAILABLE = 'available';
+
+    /**
+     * Fired when mesh detection becomes unavailable.
+     *
+     * @event
+     * @example
+     * app.xr.meshDetection.on('unavailable', () => {
+     *     console.log('Mesh detection is unavailable');
+     * });
+     */
+    static EVENT_UNAVAILABLE = 'unavailable';
+
+    /**
+     * Fired when new {@link XrMesh} is added to the list. The handler is passed the {@link XrMesh}
+     * instance that has been added.
+     *
+     * @event
+     * @example
+     * app.xr.meshDetection.on('add', (mesh) => {
+     *     // a new XrMesh has been added
+     * });
+     */
+    static EVENT_ADD = 'add';
+
+    /**
+     * Fired when a {@link XrMesh} is removed from the list. The handler is passed the
+     * {@link XrMesh} instance that has been removed.
+     *
+     * @event
+     * @example
+     * app.xr.meshDetection.on('remove', (mesh) => {
+     *     // XrMesh has been removed
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
      * @type {import('./xr-manager.js').XrManager}
      * @private
      */
@@ -68,40 +114,6 @@ class XrMeshDetection extends EventHandler {
             this._manager.on('end', this._onSessionEnd, this);
         }
     }
-
-    /**
-     * Fired when mesh detection becomes available.
-     *
-     * @event XrMeshDetection#available
-     */
-
-    /**
-     * Fired when mesh detection becomes unavailable.
-     *
-     * @event XrMeshDetection#unavailable
-     */
-
-    /**
-     * Fired when new {@link XrMesh} is added to the list.
-     *
-     * @event XrMeshDetection#add
-     * @param {XrMesh} mesh - Mesh that has been added.
-     * @example
-     * app.xr.meshDetection.on('add', (mesh) => {
-     *     // a new XrMesh has been added
-     * });
-     */
-
-    /**
-     * Fired when a {@link XrMesh} is removed from the list.
-     *
-     * @event XrMeshDetection#remove
-     * @param {XrMesh} mesh - Mesh that has been removed.
-     * @example
-     * app.xr.meshDetection.on('remove', (mesh) => {
-     *     // XrMesh has been removed
-     * });
-     */
 
     /**
      * @param {XRFrame} frame - XRFrame from requestAnimationFrame callback.
@@ -185,7 +197,7 @@ class XrMeshDetection extends EventHandler {
     /**
      * Array of {@link XrMesh} instances that contain transform, vertices and label information.
      *
-     * @type {XrMesh[]|null}
+     * @type {XrMesh[]}
      */
     get meshes() {
         return this._list;

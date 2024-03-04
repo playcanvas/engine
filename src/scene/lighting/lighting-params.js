@@ -4,7 +4,7 @@ import { SHADOW_PCF3 } from '../constants.js';
 
 /**
  * Lighting parameters, allow configuration of the global lighting parameters. For details see
- * [Clustered Lighting](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/).
+ * [Clustered Lighting](https://developer.playcanvas.com/user-manual/graphics/lighting/clustered-lighting/).
  *
  * @category Graphics
  */
@@ -45,7 +45,7 @@ class LightingParams {
     /**
      * Atlas textures split description, which applies to both the shadow and cookie texture atlas.
      * Defaults to null, which enables to automatic split mode. For details see [Configuring Atlas
-     * Split](https://developer.playcanvas.com/en/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas).
+     * Split](https://developer.playcanvas.com/user-manual/graphics/lighting/clustered-lighting/#configuring-atlas).
      *
      * @type {number[]|null}
      */

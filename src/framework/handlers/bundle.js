@@ -1,30 +1,22 @@
 import { Bundle } from '../bundle/bundle.js';
 import { Debug } from '../../core/debug.js';
 import { Untar } from './untar.js';
-
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Loads Bundle Assets.
  *
- * @implements {ResourceHandler}
  * @ignore
  */
-class BundleHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "bundle";
-
+class BundleHandler extends ResourceHandler {
     /**
      * Create a new BundleHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
      */
     constructor(app) {
+        super(app, 'bundle');
+
         this._assets = app.assets;
         this.maxRetries = 0;
     }
@@ -64,11 +56,16 @@ class BundleHandler {
         });
     }
 
+    /**
+     * Open the bundle.
+     *
+     * @param {string} url - The URL of the resource to open.
+     * @param {Bundle} bundle - Bundle to open.
+     * @returns {Bundle} The bundle.
+     */
     open(url, bundle) {
         return bundle;
     }
-
-    patch(asset, assets) { }
 }
 
 export { BundleHandler };

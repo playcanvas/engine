@@ -31,6 +31,8 @@ export default /* glsl */`
 #endif
 
 #define texture2DBias texture2D
+#define itexture2D texture2D
+#define utexture2D texture2D
 
 // pass / accept shadow map or texture as a function parameter, on webgl this is simply passed as is
 // but this is needed for WebGPU

@@ -69,12 +69,11 @@ const matD = new Mat4();
  * ```
  *
  * Relevant 'Engine-only' examples:
- * - [Basic text rendering](http://playcanvas.github.io/#user-interface/text-basic)
- * - [Rendering text outlines](http://playcanvas.github.io/#user-interface/text-outline)
- * - [Adding drop shadows to text](http://playcanvas.github.io/#user-interface/text-drop-shadow)
- * - [Coloring text with markup](http://playcanvas.github.io/#user-interface/text-markup)
- * - [Wrapping text](http://playcanvas.github.io/#user-interface/text-wrap)
- * - [Typewriter text](http://playcanvas.github.io/#user-interface/text-typewriter)
+ * - [Basic text rendering](https://playcanvas.github.io/#/user-interface/text)
+ * - [Auto font sizing](https://playcanvas.github.io/#/user-interface/text-auto-font-size)
+ * - [Emojis](https://playcanvas.github.io/#/user-interface/text-emojis)
+ * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
+ * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
  * @property {import('../../../core/math/color.js').Color} color The color of the image for
  * {@link ELEMENTTYPE_IMAGE} types or the color of the text for {@link ELEMENTTYPE_TEXT} types.
@@ -174,6 +173,139 @@ const matD = new Mat4();
  */
 class ElementComponent extends Component {
     /**
+     * Fired when the mouse is pressed while the cursor is on the component. Only fired when
+     * useInput is true. The handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mousedown', (event) => {
+     *     console.log(`Mouse down event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEDOWN = 'mousedown';
+
+    /**
+     * Fired when the mouse is released while the cursor is on the component. Only fired when
+     * useInput is true. The handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mouseup', (event) => {
+     *     console.log(`Mouse up event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEUP = 'mouseup';
+
+    /**
+     * Fired when the mouse cursor enters the component. Only fired when useInput is true. The
+     * handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mouseenter', (event) => {
+     *     console.log(`Mouse enter event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEENTER = 'mouseenter';
+
+    /**
+     * Fired when the mouse cursor leaves the component. Only fired when useInput is true. The
+     * handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mouseleave', (event) => {
+     *     console.log(`Mouse leave event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSELEAVE = 'mouseleave';
+
+    /**
+     * Fired when the mouse cursor is moved on the component. Only fired when useInput is true. The
+     * handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mousemove', (event) => {
+     *     console.log(`Mouse move event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEMOVE = 'mousemove';
+
+    /**
+     * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
+     * The handler is passed an {@link ElementMouseEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('mousewheel', (event) => {
+     *     console.log(`Mouse wheel event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_MOUSEWHEEL = 'mousewheel';
+
+    /**
+     * Fired when the mouse is pressed and released on the component or when a touch starts and
+     * ends on the component. Only fired when useInput is true. The handler is passed an
+     * {@link ElementMouseEvent} or {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('click', (event) => {
+     *     console.log(`Click event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_CLICK = 'click';
+
+    /**
+     * Fired when a touch starts on the component. Only fired when useInput is true. The handler is
+     * passed an {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('touchstart', (event) => {
+     *     console.log(`Touch start event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHSTART = 'touchstart';
+
+    /**
+     * Fired when a touch ends on the component. Only fired when useInput is true. The handler is
+     * passed an {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('touchend', (event) => {
+     *     console.log(`Touch end event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHEND = 'touchend';
+
+    /**
+     * Fired when a touch moves after it started touching the component. Only fired when useInput
+     * is true. The handler is passed an {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('touchmove', (event) => {
+     *     console.log(`Touch move event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHMOVE = 'touchmove';
+
+    /**
+     * Fired when a touch is canceled on the component. Only fired when useInput is true. The
+     * handler is passed an {@link ElementTouchEvent}.
+     *
+     * @event
+     * @example
+     * entity.element.on('touchcancel', (event) => {
+     *     console.log(`Touch cancel event on entity ${entity.name}`);
+     * });
+     */
+    static EVENT_TOUCHCANCEL = 'touchcancel';
+
+    /**
      * Create a new ElementComponent instance.
      *
      * @param {import('./system.js').ElementComponentSystem} system - The ComponentSystem that
@@ -267,87 +399,6 @@ class ElementComponent extends Component {
         this._maskOffset = 0.5;
         this._maskedBy = null; // the entity that is masking this element
     }
-
-    /**
-     * Fired when the mouse is pressed while the cursor is on the component. Only fired when
-     * useInput is true.
-     *
-     * @event ElementComponent#mousedown
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse is released while the cursor is on the component. Only fired when
-     * useInput is true.
-     *
-     * @event ElementComponent#mouseup
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse cursor enters the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#mouseenter
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse cursor leaves the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#mouseleave
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse cursor is moved on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#mousemove
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse wheel is scrolled on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#mousewheel
-     * @param {import('../../input/element-input.js').ElementMouseEvent} event - The event.
-     */
-
-    /**
-     * Fired when the mouse is pressed and released on the component or when a touch starts and
-     * ends on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#click
-     * @param {import('../../input/element-input.js').ElementMouseEvent|import('../../input/element-input.js').ElementTouchEvent} event - The event.
-     */
-
-    /**
-     * Fired when a touch starts on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#touchstart
-     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
-     */
-
-    /**
-     * Fired when a touch ends on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#touchend
-     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
-     */
-
-    /**
-     * Fired when a touch moves after it started touching the component. Only fired when useInput
-     * is true.
-     *
-     * @event ElementComponent#touchmove
-     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
-     */
-
-    /**
-     * Fired when a touch is canceled on the component. Only fired when useInput is true.
-     *
-     * @event ElementComponent#touchcancel
-     * @param {import('../../input/element-input.js').ElementTouchEvent} event - The event.
-     */
 
     /**
      * @type {number}

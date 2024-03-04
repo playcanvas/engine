@@ -63,6 +63,8 @@ class LitMaterialOptionsBuilder {
 
         litOptions.alphaToCoverage = material.alphaToCoverage;
         litOptions.opacityFadesSpecular = material.opacityFadesSpecular;
+        litOptions.opacityDither = material.opacityDither;
+        litOptions.opacityShadowDither = material.opacityShadowDither;
 
         litOptions.cubeMapProjection = CUBEPROJ_NONE;
 

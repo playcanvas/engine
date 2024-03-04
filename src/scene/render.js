@@ -10,6 +10,19 @@ import { EventHandler } from '../core/event-handler.js';
  */
 class Render extends EventHandler {
     /**
+     * Fired when the meshes are set on the render. The handler is passed the an array of
+     * {@link Mesh} objects.
+     *
+     * @event
+     * @example
+     * render.on('set:meshes', (meshes) => {
+     *     console.log(`Render has ${meshes.length} meshes`);
+     * });
+     * @ignore
+     */
+    static EVENT_SETMESHES = 'set:meshes';
+
+    /**
      * Create a new Render instance. These are usually created by the GLB loader and not created
      * by hand.
      */
@@ -25,14 +38,6 @@ class Render extends EventHandler {
          */
         this._meshes = null;
     }
-
-    /**
-     * Fired when the meshes are set.
-     *
-     * @event Render#set:meshes
-     * @param {import('./mesh.js').Mesh[]} meshes - The meshes.
-     * @ignore
-     */
 
     /**
      * The meshes that the render contains.

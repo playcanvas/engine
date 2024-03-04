@@ -133,7 +133,7 @@ const string = {
      * const s = pc.string.format("Hello {0}", "world");
      * console.log(s); // Prints "Hello world"
      */
-    format: function (s, ...args) {
+    format(s, ...args) {
         for (let i = 0; i < args.length; i++) {
             s = s.replace(`{${i}}`, args[i]);
         }
@@ -148,7 +148,7 @@ const string = {
      * @param {number} [i] - The index in the string.
      * @returns {number} The code point value for the character in the string.
      */
-    getCodePoint: function (string, i) {
+    getCodePoint(string, i) {
         const codePointData = getCodePointData(string, i);
         return codePointData && codePointData.code;
     },
@@ -159,7 +159,7 @@ const string = {
      * @param {string} string - The string to get code points from.
      * @returns {number[]} The code points in the string.
      */
-    getCodePoints: function (string) {
+    getCodePoints(string) {
         if (typeof string !== 'string') {
             throw new TypeError('Not a string');
         }
@@ -182,7 +182,7 @@ const string = {
      * @param {string} string - The string to break into symbols.
      * @returns {string[]} The symbols in the string.
      */
-    getSymbols: function (string) {
+    getSymbols(string) {
         if (typeof string !== 'string') {
             throw new TypeError('Not a string');
         }
@@ -221,7 +221,7 @@ const string = {
      * @param {...number} args - The code points to convert to a string.
      * @returns {string} The converted string.
      */
-    fromCodePoint: function (/* ...args */) {
+    fromCodePoint(/* ...args */) {
         const chars = [];
         let current;
         let codePoint;

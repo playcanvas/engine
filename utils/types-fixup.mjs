@@ -460,6 +460,8 @@ const standardMaterialProps = [
     ['occludeSpecularIntensity', 'number'],
     ['onUpdateShader', 'UpdateShaderCallback'],
     ['opacity', 'number'],
+    ['opacityDither', 'string'],
+    ['opacityShadowDither', 'string'],
     ['opacityFadesSpecular', 'boolean'],
     ['opacityMap', 'Texture|null'],
     ['opacityMapChannel', 'string'],
@@ -553,10 +555,4 @@ dts = dts.replace('get enabled(): boolean;', `get enabled(): boolean;
      */
     swap?(old: ScriptType): void;
 `);
-fs.writeFileSync(path, dts);
-
-path = './types/framework/handlers/handler.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('export class ResourceHandler', 'export interface ResourceHandler');
-dts = dts.replace('patch(', 'patch?(');
 fs.writeFileSync(path, dts);

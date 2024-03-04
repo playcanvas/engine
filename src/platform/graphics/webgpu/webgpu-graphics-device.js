@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
@@ -99,8 +100,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.backBufferAntialias = options.antialias ?? false;
         this.isWebGPU = true;
         this._deviceType = DEVICETYPE_WEBGPU;
-
-        this.setupPassEncoderDefaults();
     }
 
     /**
@@ -138,6 +137,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.maxColorAttachments = limits.maxColorAttachments;
         this.maxPixelRatio = 1;
         this.maxAnisotropy = 16;
+        this.fragmentUniformsCount = limits.maxUniformBufferBindingSize / 16;
+        this.vertexUniformsCount = limits.maxUniformBufferBindingSize / 16;
         this.supportsInstancing = true;
         this.supportsUniformBuffers = true;
         this.supportsVolumeTextures = true;
@@ -176,9 +177,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
         // build a full URL from a relative path
-        const buildUrl = (relativePath) => {
+        const buildUrl = (srcPath) => {
+            if (!path.isRelativePath(srcPath)) {
+                return srcPath;
+            }
+
             const url = new URL(window.location.href);
-            url.pathname = relativePath;
+            url.pathname = srcPath;
             url.search = '';
             return url.toString();
         };
@@ -223,6 +228,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.extCompressedTextureETC = requireFeature('texture-compression-etc2');
         this.extCompressedTextureASTC = requireFeature('texture-compression-astc');
         this.supportsTimestampQuery = requireFeature('timestamp-query');
+
         this.textureRG11B10Renderable = requireFeature('rg11b10ufloat-renderable');
         Debug.log(`WEBGPU features: ${requiredFeatures.join(', ')}`);
 
@@ -288,6 +294,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
     postInit() {
         super.postInit();
+
+        this.initializeRenderState();
+        this.setupPassEncoderDefaults();
 
         this.gpuProfiler = new WebgpuGpuProfiler(this);
 
@@ -459,9 +468,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, 0, 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
             } else {
-                passEncoder.draw(primitive.count, numInstances, 0, 0);
+                passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
 
             WebgpuDebug.end(this, {
@@ -475,16 +484,16 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         }
     }
 
-    setShader(shader) {
+    setShader(shader, asyncCompile = false) {
 
-        this.shader = shader;
+        if (shader !== this.shader) {
+            this.shader = shader;
 
-        // #if _PROFILER
-        // TODO: we should probably track other stats instead, like pipeline switches
-        this._shaderSwitchesPerFrame++;
-        // #endif
-
-        return true;
+            // #if _PROFILER
+            // TODO: we should probably track other stats instead, like pipeline switches
+            this._shaderSwitchesPerFrame++;
+            // #endif
+        }
     }
 
     setBlendState(blendState) {
@@ -513,8 +522,11 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     setBlendColor(r, g, b, a) {
-        // TODO: this should use passEncoder.setBlendConstant(color)
-        // similar implementation to this.stencilRef
+        const c = this.blendColor;
+        if (r !== c.r || g !== c.g || b !== c.b || a !== c.a) {
+            c.set(r, g, b, a);
+            this.passEncoder.setBlendConstant(c);
+        }
     }
 
     setCullMode(cullMode) {
@@ -532,7 +544,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * Set up default values for the render pass encoder.
      */
     setupPassEncoderDefaults() {
+        this.pipeline = null;
         this.stencilRef = 0;
+        this.blendColor.set(0, 0, 0, 0);
     }
 
     _uploadDirtyTextures() {
@@ -578,9 +592,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // set up clear / store / load settings
         wrt.setupForRenderPass(renderPass);
 
-        // clear cached encoder state
-        this.pipeline = null;
-
         const renderPassDesc = wrt.renderPassDescriptor;
 
         // timestamp
@@ -599,6 +610,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // start the pass
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
+
+        // push marker to the passEncoder
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
 
         this.setupPassEncoderDefaults();
 
@@ -620,6 +634,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     endRenderPass(renderPass) {
+
+        // pop the marker from the passEncoder
+        DebugGraphics.popGpuMarker(this);
 
         // end the render pass
         this.passEncoder.end();

@@ -4,6 +4,8 @@ import {
     PIXELFORMAT_RGBA8,
     ADDRESS_CLAMP_TO_EDGE,
     FILTER_LINEAR,
+    FILTER_NEAREST,
+    PIXELFORMAT_DEPTH,
     RenderPass,
     RenderPassColorGrab,
     RenderPassForward,
@@ -12,9 +14,13 @@ import {
 } from "playcanvas";
 import { RenderPassBloom } from "./render-pass-bloom.js";
 import { RenderPassCompose } from "./render-pass-compose.js";
+import { RenderPassTAA } from "./render-pass-taa.js";
+import { RenderPassPrepass } from "./render-pass-prepass.js";
 
 class RenderPassCameraFrame extends RenderPass {
     app;
+
+    prepPass;
 
     scenePass;
 
@@ -22,9 +28,17 @@ class RenderPassCameraFrame extends RenderPass {
 
     bloomPass;
 
+    taaPass;
+
     _bloomEnabled = true;
 
     _renderTargetScale = 1;
+
+    /**
+     * @type {RenderTarget}
+     * @private
+     */
+    _rt = null;
 
     constructor(app, options = {}) {
         super(app.graphicsDevice);
@@ -32,6 +46,19 @@ class RenderPassCameraFrame extends RenderPass {
         this.options = this.sanitizeOptions(options);
 
         this.setupRenderPasses(this.options);
+    }
+
+    destroy() {
+
+        if (this._rt) {
+            this._rt.destroyTextureBuffers();
+            this._rt.destroy();
+            this._rt = null;
+        }
+
+        // destroy all passes we created
+        this.beforePasses.forEach(pass => pass.destroy());
+        this.beforePasses = null;
     }
 
     sanitizeOptions(options) {
@@ -47,7 +74,10 @@ class RenderPassCameraFrame extends RenderPass {
 
             // immediate layer is the last layer rendered before the post-processing
             lastSceneLayerId: LAYERID_IMMEDIATE,
-            lastSceneLayerIsTransparent: true
+            lastSceneLayerIsTransparent: true,
+
+            // TAA
+            taaEnabled: false
         };
 
         return Object.assign({}, defaults, options);
@@ -107,11 +137,36 @@ class RenderPassCameraFrame extends RenderPass {
             addressV: ADDRESS_CLAMP_TO_EDGE
         });
 
+        const sceneDepth = new Texture(device, {
+            name: 'SceneDepth',
+            width: 4,
+            height: 4,
+            format: PIXELFORMAT_DEPTH,  // TODO: handle stencil support
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE
+        });
+
         const rt = new RenderTarget({
             colorBuffer: sceneTexture,
-            depth: true,
+            depthBuffer: sceneDepth,
             samples: options.samples
         });
+        this._rt = rt;
+
+        const sceneOptions = {
+            resizeSource: targetRenderTarget,
+            scaleX: this.renderTargetScale,
+            scaleY: this.renderTargetScale
+        };
+
+        // ------ SCENE PREPASS ------
+
+        if (options.prepassEnabled) {
+            this.prepPass = new RenderPassPrepass(device, scene, renderer, cameraComponent, sceneDepth, sceneOptions);
+        }
 
         // ------ SCENE RENDERING WITH OPTIONAL GRAB PASS ------
 
@@ -119,11 +174,12 @@ class RenderPassCameraFrame extends RenderPass {
         // matches the back-buffer size with the optional scale. Note that the scale parameters
         // allow us to render the 3d scene at lower resolution, improving performance.
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
-        this.scenePass.init(rt, {
-            resizeSource: targetRenderTarget,
-            scaleX: this.renderTargetScale,
-            scaleY: this.renderTargetScale
-        });
+        this.scenePass.init(rt, sceneOptions);
+
+        // if prepass is enabled, do not clear the depth buffer when rendering the scene
+        if (options.prepassEnabled) {
+            this.scenePass.noDepthClear = true;
+        }
 
         // layers this pass renders depend on the grab pass being used
         const lastLayerId = options.sceneColorMap ? options.lastGrabLayerId : options.lastSceneLayerId;
@@ -146,18 +202,31 @@ class RenderPassCameraFrame extends RenderPass {
             scenePassTransparent = new RenderPassForward(device, composition, scene, renderer);
             scenePassTransparent.init(rt);
             lastAddedIndex = scenePassTransparent.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget, options.lastSceneLayerId, options.lastSceneLayerIsTransparent);
+
+            // if prepass is enabled, we need to store the depth, as by default it gets discarded
+            if (options.prepassEnabled) {
+                scenePassTransparent.depthStencilOps.storeDepth = true;
+            }
+        }
+
+        // ------ TAA ------
+
+        let sceneTextureWithTaa = sceneTexture;
+        if (options.taaEnabled) {
+            this.taaPass = new RenderPassTAA(device, sceneTexture);
+            sceneTextureWithTaa = this.taaPass.accumulationTexture;
         }
 
         // ------ BLOOM GENERATION ------
 
         // create a bloom pass, which generates bloom texture based on the just rendered scene texture
-        this.bloomPass = new RenderPassBloom(app.graphicsDevice, sceneTexture, format);
+        this.bloomPass = new RenderPassBloom(app.graphicsDevice, sceneTextureWithTaa, format);
 
         // ------ COMPOSITION ------
 
         // create a compose pass, which combines the scene texture with the bloom texture
         this.composePass = new RenderPassCompose(app.graphicsDevice);
-        this.composePass.sceneTexture = sceneTexture;
+        // this.composePass.sceneTexture = sceneTextureWithTaa;
         this.composePass.bloomTexture = this.bloomPass.bloomTexture;
 
         // compose pass renders directly to target renderTarget
@@ -173,8 +242,22 @@ class RenderPassCameraFrame extends RenderPass {
         afterPass.addLayers(composition, cameraComponent, lastAddedIndex, clearRenderTarget);
 
         // use these prepared render passes in the order they should be executed
-        const allPasses = [this.scenePass, colorGrabPass, scenePassTransparent, this.bloomPass, this.composePass, afterPass];
+        const allPasses = [this.prepPass, this.scenePass, colorGrabPass, scenePassTransparent, this.taaPass, this.bloomPass, this.composePass, afterPass];
         this.beforePasses = allPasses.filter(element => element !== undefined);
+    }
+
+    frameUpdate() {
+
+        super.frameUpdate();
+
+        // scene texture is either output of taa pass or the scene render target
+        const sceneTexture = this.taaPass?.update() ?? this._rt.colorBuffer;
+
+        // TAA accumulation buffer is double buffered, assign the current one to the follow up passes.
+        this.composePass.sceneTexture = sceneTexture;
+        if (this.bloomEnabled) {
+            this.bloomPass.sourceTexture = sceneTexture;
+        }
     }
 }
 

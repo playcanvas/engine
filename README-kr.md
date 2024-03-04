@@ -3,7 +3,8 @@
 <img width="200" src="https://s3-eu-west-1.amazonaws.com/static.playcanvas.com/platform/images/logo/playcanvas-logo-medium.png"/>
 
 # PlayCanvas WebGL Game Engine
-[Docs](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
+
+[API Reference](https://api.playcanvas.com/modules/Engine.html) | [User Manual](https://developer.playcanvas.com) | [Examples](https://playcanvas.github.io) | [Forum](https://forum.playcanvas.com) | [Blog](https://blog.playcanvas.com)
 
 PlayCanvas는 오픈소스 게임 엔진입니다.
 
@@ -11,7 +12,6 @@ HTML5와 WebGL을 사용하여 게임과 인터랙티브한 3D 콘텐츠를 모�
 
 [![NPM version][npm-badge]][npm-url]
 [![Minzipped size][minzip-badge]][minzip-url]
-[![Language grade: JavaScript][code-quality-badge]][code-quality-url]
 [![Average time to resolve an issue][resolution-badge]][isitmaintained-url]
 [![Percentage of issues still open][open-issues-badge]][isitmaintained-url]
 [![Twitter][twitter-badge]][twitter-url]
@@ -149,14 +149,6 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 * https://code.playcanvas.com/playcanvas-1.38.4.js
 * https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### Generate Source Maps
-
-엔진의 디버깅이 쉽도록 소스 맵을 구축하려면 임의의 엔진 구축 명령에 `---m`을 추가합니다. 예시는 다음과 같습니다.
-
-    npm run build -- -m
-
-그러면  `build/playcanvas.js.map` 이 출력이 됩니다.
-
 ## PlayCanvas 에디터
 
 PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔진입니다.엔진 외에 [PlayCanvas 에디터](https://playcanvas.com/)가 있습니다.
@@ -170,8 +162,6 @@ PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔�
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
 [minzip-url]: https://bundlephobia.com/result?p=playcanvas
-[code-quality-badge]: https://img.shields.io/lgtm/grade/javascript/g/playcanvas/engine.svg?logo=lgtm&logoWidth=18
-[code-quality-url]: https://lgtm.com/projects/g/playcanvas/engine/context:javascript
 [resolution-badge]: https://isitmaintained.com/badge/resolution/playcanvas/engine.svg
 [open-issues-badge]: https://isitmaintained.com/badge/open/playcanvas/engine.svg
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine

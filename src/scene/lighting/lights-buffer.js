@@ -3,6 +3,7 @@ import { PIXELFORMAT_RGBA8, PIXELFORMAT_RGBA32F, ADDRESS_CLAMP_TO_EDGE, TEXTURET
 import { FloatPacking } from '../../core/math/float-packing.js';
 import { LIGHTSHAPE_PUNCTUAL, LIGHTTYPE_SPOT, MASK_AFFECT_LIGHTMAPPED, MASK_AFFECT_DYNAMIC } from '../constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { DeviceCache } from '../../platform/graphics/device-cache.js';
 import { LightCamera } from '../renderer/light-camera.js';
 
 const epsilon = 0.000001;
@@ -88,71 +89,47 @@ const TextureIndexFloat = {
     COUNT: 8
 };
 
+// format for high precision light texture - float
+const FORMAT_FLOAT = 0;
+
+// format for high precision light texture - 8bit
+const FORMAT_8BIT = 1;
+
+// device cache storing shader defines for the device
+const shaderDefinesDeviceCache = new DeviceCache();
+
 // A class used by clustered lighting, responsible for encoding light properties into textures for the use on the GPU
 class LightsBuffer {
-    // format for high precision light texture - float
-    static FORMAT_FLOAT = 0;
-
-    // format for high precision light texture - 8bit
-    static FORMAT_8BIT = 1;
-
-    // active light texture format, initialized at app start
-    static lightTextureFormat = LightsBuffer.FORMAT_8BIT;
-
-    // on webgl2 and WebGPU we use texelFetch instruction to read data textures
-    static useTexelFetch = false;
-
-    // defines used for unpacking of light textures to allow CPU packing to match the GPU unpacking
-    static shaderDefines = '';
-
-    // creates list of defines specifying texture coordinates for decoding lights
-    static initShaderDefines() {
-        const clusterTextureFormat = LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT ? 'FLOAT' : '8BIT';
-        LightsBuffer.shaderDefines = `
-            \n#define CLUSTER_TEXTURE_${clusterTextureFormat}
-            ${LightsBuffer.buildShaderDefines(TextureIndex8, 'CLUSTER_TEXTURE_8_')}
-            ${LightsBuffer.buildShaderDefines(TextureIndexFloat, 'CLUSTER_TEXTURE_F_')}
-        `;
-    }
-
-    // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
-    static buildShaderDefines(object, prefix) {
-        let str = '';
-        const floatOffset = LightsBuffer.useTexelFetch ? '' : '.5';
-        Object.keys(object).forEach((key) => {
-            str += `\n#define ${prefix}${key} ${object[key]}${floatOffset}`;
-        });
-        return str;
-    }
-
-    // executes when the app starts
-    static init(device) {
-
+    static getLightTextureFormat(device) {
         // precision for texture storage
         // don't use float texture on devices with small number of texture units (as it uses both float and 8bit textures at the same time)
-        LightsBuffer.lightTextureFormat = (device.extTextureFloat && device.maxTextures > 8) ? LightsBuffer.FORMAT_FLOAT : LightsBuffer.FORMAT_8BIT;
-
-        LightsBuffer.useTexelFetch = device.supportsTextureFetch;
-
-        LightsBuffer.initShaderDefines();
+        return (device.extTextureFloat && device.maxTextures > 8) ? FORMAT_FLOAT : FORMAT_8BIT;
     }
 
-    static createTexture(device, width, height, format, name) {
-        const tex = new Texture(device, {
-            name: name,
-            width: width,
-            height: height,
-            mipmaps: false,
-            format: format,
-            addressU: ADDRESS_CLAMP_TO_EDGE,
-            addressV: ADDRESS_CLAMP_TO_EDGE,
-            type: TEXTURETYPE_DEFAULT,
-            magFilter: FILTER_NEAREST,
-            minFilter: FILTER_NEAREST,
-            anisotropy: 1
-        });
+    static getShaderDefines(device) {
 
-        return tex;
+        // return defines for this device from the cache, or create them if not cached yet
+        return shaderDefinesDeviceCache.get(device, () => {
+
+            // converts object with properties to a list of these as an example: "#define CLUSTER_TEXTURE_8_BLAH 1.5"
+            const buildShaderDefines = (device, object, prefix, floatOffset) => {
+                return Object.keys(object)
+                    .map(key => `#define ${prefix}${key} ${object[key]}${floatOffset}`)
+                    .join('\n');
+            };
+
+            const lightTextureFormat = LightsBuffer.getLightTextureFormat(device);
+            const clusterTextureFormat = lightTextureFormat === FORMAT_FLOAT ? 'FLOAT' : '8BIT';
+
+            // on webgl2 and WebGPU we use texelFetch instruction to read data textures, and don't need the offset
+            const floatOffset = device.supportsTextureFetch ? '' : '.5';
+
+            return `
+                \n#define CLUSTER_TEXTURE_${clusterTextureFormat}
+                ${buildShaderDefines(device, TextureIndex8, 'CLUSTER_TEXTURE_8_', floatOffset)}
+                ${buildShaderDefines(device, TextureIndexFloat, 'CLUSTER_TEXTURE_F_', floatOffset)}
+            `;
+        });
     }
 
     constructor(device) {
@@ -171,8 +148,10 @@ class LightsBuffer {
         let pixelsPerLight8 = TextureIndex8.COUNT_ALWAYS;
         let pixelsPerLightFloat = 0;
 
+        this.lightTextureFormat = LightsBuffer.getLightTextureFormat(device);
+
         // float texture format
-        if (LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT) {
+        if (this.lightTextureFormat === FORMAT_FLOAT) {
             pixelsPerLightFloat = TextureIndexFloat.COUNT;
         } else { // 8bit texture
             pixelsPerLight8 = TextureIndex8.COUNT;
@@ -180,13 +159,13 @@ class LightsBuffer {
 
         // 8bit texture - to store data that can fit into 8bits to lower the bandwidth requirements
         this.lights8 = new Uint8ClampedArray(4 * pixelsPerLight8 * this.maxLights);
-        this.lightsTexture8 = LightsBuffer.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
+        this.lightsTexture8 = this.createTexture(this.device, pixelsPerLight8, this.maxLights, PIXELFORMAT_RGBA8, 'LightsTexture8');
         this._lightsTexture8Id = this.device.scope.resolve('lightsTexture8');
 
         // float texture
         if (pixelsPerLightFloat) {
             this.lightsFloat = new Float32Array(4 * pixelsPerLightFloat * this.maxLights);
-            this.lightsTextureFloat = LightsBuffer.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
+            this.lightsTextureFloat = this.createTexture(this.device, pixelsPerLightFloat, this.maxLights, PIXELFORMAT_RGBA32F, 'LightsTextureFloat');
             this._lightsTextureFloatId = this.device.scope.resolve('lightsTextureFloat');
         } else {
             this.lightsFloat = null;
@@ -223,6 +202,24 @@ class LightsBuffer {
         }
     }
 
+    createTexture(device, width, height, format, name) {
+        const tex = new Texture(device, {
+            name: name,
+            width: width,
+            height: height,
+            mipmaps: false,
+            format: format,
+            addressU: ADDRESS_CLAMP_TO_EDGE,
+            addressV: ADDRESS_CLAMP_TO_EDGE,
+            type: TEXTURETYPE_DEFAULT,
+            magFilter: FILTER_NEAREST,
+            minFilter: FILTER_NEAREST,
+            anisotropy: 1
+        });
+
+        return tex;
+    }
+
     setCompressionRanges(maxAttenuation, maxColorValue) {
         this.invMaxColorValue = 1 / maxColorValue;
         this.invMaxAttenuation = 1 / maxAttenuation;
@@ -249,7 +246,7 @@ class LightsBuffer {
         // textures
         this._lightsTexture8Id.setValue(this.lightsTexture8);
 
-        if (LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT) {
+        if (this.lightTextureFormat === FORMAT_FLOAT) {
             this._lightsTextureFloatId.setValue(this.lightsTextureFloat);
         }
 
@@ -427,7 +424,7 @@ class LightsBuffer {
         }
 
         // high precision data stored using float texture
-        if (LightsBuffer.lightTextureFormat === LightsBuffer.FORMAT_FLOAT) {
+        if (this.lightTextureFormat === FORMAT_FLOAT) {
 
             const dataFloat = this.lightsFloat;
             const dataFloatStart = lightIndex * this.lightsTextureFloat.width * 4;

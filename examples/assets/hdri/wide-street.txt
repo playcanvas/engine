@@ -1,0 +1,5 @@
+The wide-street HDRI has been obtained from this address:
+https://polyhaven.com/a/wide_street_02
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/

@@ -1,4 +1,3 @@
-import { setupVertexArrayObject } from '../../../polyfill/OESVertexArrayObject.js';
 import { math } from '../../../core/math/math.js';
 import { Debug } from '../../../core/debug.js';
 import { platform } from '../../../core/platform.js';
@@ -18,6 +17,11 @@ import {
     UNIFORMTYPE_BVEC3, UNIFORMTYPE_BVEC4, UNIFORMTYPE_MAT2, UNIFORMTYPE_MAT3, UNIFORMTYPE_MAT4,
     UNIFORMTYPE_TEXTURE2D, UNIFORMTYPE_TEXTURECUBE, UNIFORMTYPE_FLOATARRAY, UNIFORMTYPE_TEXTURE2D_SHADOW,
     UNIFORMTYPE_TEXTURECUBE_SHADOW, UNIFORMTYPE_TEXTURE3D, UNIFORMTYPE_VEC2ARRAY, UNIFORMTYPE_VEC3ARRAY, UNIFORMTYPE_VEC4ARRAY,
+    UNIFORMTYPE_UINT, UNIFORMTYPE_UVEC2, UNIFORMTYPE_UVEC3, UNIFORMTYPE_UVEC4, UNIFORMTYPE_ITEXTURE2D, UNIFORMTYPE_UTEXTURE2D,
+    UNIFORMTYPE_ITEXTURECUBE, UNIFORMTYPE_UTEXTURECUBE, UNIFORMTYPE_ITEXTURE3D, UNIFORMTYPE_UTEXTURE3D, UNIFORMTYPE_ITEXTURE2D_ARRAY,
+    UNIFORMTYPE_UTEXTURE2D_ARRAY, UNIFORMTYPE_INTARRAY, UNIFORMTYPE_UINTARRAY, UNIFORMTYPE_BOOLARRAY, UNIFORMTYPE_IVEC2ARRAY,
+    UNIFORMTYPE_BVEC2ARRAY, UNIFORMTYPE_UVEC2ARRAY, UNIFORMTYPE_IVEC3ARRAY, UNIFORMTYPE_BVEC3ARRAY, UNIFORMTYPE_UVEC3ARRAY,
+    UNIFORMTYPE_IVEC4ARRAY, UNIFORMTYPE_BVEC4ARRAY, UNIFORMTYPE_UVEC4ARRAY, UNIFORMTYPE_MAT4ARRAY,
     semanticToLocation,
     UNIFORMTYPE_TEXTURE2D_ARRAY,
     PRIMITIVE_TRISTRIP,
@@ -368,6 +372,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
             }
         }
 
+        /** @type {WebGL2RenderingContext} */
         let gl = null;
 
         // we always allocate the default framebuffer without antialiasing, so remove that option
@@ -410,11 +415,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         // enable temporary workaround for glBlitFramebuffer failing on Mac Chrome (#2504)
         this._tempMacChromeBlitFramebufferWorkaround = isMac && isChrome && !options.alpha;
 
-        // init polyfill for VAOs under webgl1
-        if (!this.isWebGL2) {
-            setupVertexArrayObject(gl);
-        }
-
         canvas.addEventListener("webglcontextlost", this._contextLostHandler, false);
         canvas.addEventListener("webglcontextrestored", this._contextRestoredHandler, false);
 
@@ -427,6 +427,26 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         // only enable ImageBitmap on chrome
         this.supportsImageBitmap = !isSafari && typeof ImageBitmap !== 'undefined';
+
+        // supported sampler types
+        this._samplerTypes = new Set([
+            ...[
+                gl.SAMPLER_2D,
+                gl.SAMPLER_CUBE
+            ],
+            ...(this.isWebGL2 ? [
+                gl.UNSIGNED_INT_SAMPLER_2D,
+                gl.INT_SAMPLER_2D,
+                gl.SAMPLER_2D_SHADOW,
+                gl.SAMPLER_CUBE_SHADOW,
+                gl.SAMPLER_3D,
+                gl.INT_SAMPLER_3D,
+                gl.UNSIGNED_INT_SAMPLER_3D,
+                gl.SAMPLER_2D_ARRAY,
+                gl.INT_SAMPLER_2D_ARRAY,
+                gl.UNSIGNED_INT_SAMPLER_2D_ARRAY
+            ] : [])
+        ]);
 
         this.glAddress = [
             gl.REPEAT,
@@ -562,11 +582,28 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.pcUniformType[gl.FLOAT_MAT4]   = UNIFORMTYPE_MAT4;
         this.pcUniformType[gl.SAMPLER_2D]   = UNIFORMTYPE_TEXTURE2D;
         this.pcUniformType[gl.SAMPLER_CUBE] = UNIFORMTYPE_TEXTURECUBE;
+        this.pcUniformType[gl.UNSIGNED_INT]         = UNIFORMTYPE_UINT;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC2]    = UNIFORMTYPE_UVEC2;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC3]    = UNIFORMTYPE_UVEC3;
+        this.pcUniformType[gl.UNSIGNED_INT_VEC4]    = UNIFORMTYPE_UVEC4;
+
         if (this.isWebGL2) {
             this.pcUniformType[gl.SAMPLER_2D_SHADOW]   = UNIFORMTYPE_TEXTURE2D_SHADOW;
             this.pcUniformType[gl.SAMPLER_CUBE_SHADOW] = UNIFORMTYPE_TEXTURECUBE_SHADOW;
             this.pcUniformType[gl.SAMPLER_2D_ARRAY]    = UNIFORMTYPE_TEXTURE2D_ARRAY;
             this.pcUniformType[gl.SAMPLER_3D]          = UNIFORMTYPE_TEXTURE3D;
+
+            this.pcUniformType[gl.INT_SAMPLER_2D]           = UNIFORMTYPE_ITEXTURE2D;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURE2D;
+
+            this.pcUniformType[gl.INT_SAMPLER_CUBE]         = UNIFORMTYPE_ITEXTURECUBE;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D]  = UNIFORMTYPE_UTEXTURECUBE;
+
+            this.pcUniformType[gl.INT_SAMPLER_3D]           = UNIFORMTYPE_ITEXTURE3D;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_3D]  = UNIFORMTYPE_UTEXTURE3D;
+
+            this.pcUniformType[gl.INT_SAMPLER_2D_ARRAY]     = UNIFORMTYPE_ITEXTURE2D_ARRAY;
+            this.pcUniformType[gl.UNSIGNED_INT_SAMPLER_2D_ARRAY] = UNIFORMTYPE_UTEXTURE2D_ARRAY;
         }
 
         this.targetToSlot = {};
@@ -686,6 +723,85 @@ class WebglGraphicsDevice extends GraphicsDevice {
         };
         this.commitFunction[UNIFORMTYPE_VEC4ARRAY]  = function (uniform, value) {
             gl.uniform4fv(uniform.locationId, value);
+        };
+
+        this.commitFunction[UNIFORMTYPE_UINT] = function (uniform, value) {
+            if (uniform.value !== value) {
+                gl.uniform1ui(uniform.locationId, value);
+                uniform.value = value;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC2]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY) {
+                gl.uniform2uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC3]  = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ) {
+                gl.uniform3uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+            }
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC4] = function (uniform, value) {
+            uniformValue = uniform.value;
+            scopeX = value[0];
+            scopeY = value[1];
+            scopeZ = value[2];
+            scopeW = value[3];
+            if (uniformValue[0] !== scopeX || uniformValue[1] !== scopeY || uniformValue[2] !== scopeZ || uniformValue[3] !== scopeW) {
+                gl.uniform4uiv(uniform.locationId, value);
+                uniformValue[0] = scopeX;
+                uniformValue[1] = scopeY;
+                uniformValue[2] = scopeZ;
+                uniformValue[3] = scopeW;
+            }
+        };
+
+        this.commitFunction[UNIFORMTYPE_INTARRAY] = function (uniform, value) {
+            gl.uniform1iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UINTARRAY] = function (uniform, value) {
+            gl.uniform1uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BOOLARRAY] = this.commitFunction[UNIFORMTYPE_INTARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC2ARRAY]  = function (uniform, value) {
+            gl.uniform2iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC2ARRAY]  = function (uniform, value) {
+            gl.uniform2uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC2ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC2ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC3ARRAY]  = function (uniform, value) {
+            gl.uniform3iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC3ARRAY]  = function (uniform, value) {
+            gl.uniform3uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC3ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC3ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_IVEC4ARRAY]  = function (uniform, value) {
+            gl.uniform4iv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_UVEC4ARRAY]  = function (uniform, value) {
+            gl.uniform4uiv(uniform.locationId, value);
+        };
+        this.commitFunction[UNIFORMTYPE_BVEC4ARRAY] = this.commitFunction[UNIFORMTYPE_IVEC4ARRAY];
+
+        this.commitFunction[UNIFORMTYPE_MAT4ARRAY]  = function (uniform, value) {
+            gl.uniformMatrix4fv(uniform.locationId, false, value);
         };
 
         this.supportsBoneTextures = this.extTextureFloat && this.maxVertexTextures > 0;
@@ -1110,7 +1226,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendEquation(gl.FUNC_ADD);
         gl.colorMask(true, true, true, true);
 
-        this.blendColor = new Color(0, 0, 0, 0);
         gl.blendColor(0, 0, 0, 0);
 
         gl.enable(gl.CULL_FACE);
@@ -1256,15 +1371,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         this.gpuProfiler?.restoreContext();
-    }
-
-    /**
-     * Called after a batch of shaders was created, to guide in their optimal preparation for rendering.
-     *
-     * @ignore
-     */
-    endShaderBatch() {
-        WebglShader.endShaderBatch(this);
     }
 
     /**
@@ -1447,6 +1553,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
@@ -1579,6 +1686,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         DebugGraphics.popGpuMarker(this);
+        DebugGraphics.popGpuMarker(this);   // pop the pass-start marker
     }
 
     set defaultFramebuffer(value) {
@@ -2015,6 +2123,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     draw(primitive, numInstances, keepBuffers) {
         const gl = this.gl;
+
+        this.activateShader(this);
+        if (!this.shaderValid)
+            return;
 
         let sampler, samplerValue, texture, numTextures; // Samplers
         let uniform, scopeId, uniformVersion, programVersion; // Uniforms
@@ -2637,30 +2749,69 @@ class WebglGraphicsDevice extends GraphicsDevice {
     /**
      * Sets the active shader to be used during subsequent draw calls.
      *
-     * @param {Shader} shader - The shader to set to assign to the device.
-     * @returns {boolean} True if the shader was successfully set, false otherwise.
+     * @param {Shader} shader - The shader to assign to the device.
      */
-    setShader(shader) {
+
+    /**
+     * Sets the active shader to be used during subsequent draw calls.
+     *
+     * @param {Shader} shader - The shader to assign to the device.
+     * @param {boolean} asyncCompile - If true, rendering will be skipped until the shader is
+     * compiled, otherwise the rendering will wait for the shader compilation to finish. Defaults to
+     * false.
+     */
+    setShader(shader, asyncCompile = false) {
         if (shader !== this.shader) {
-            if (shader.failed) {
-                return false;
-            } else if (!shader.ready && !shader.impl.finalize(this, shader)) {
-                shader.failed = true;
-                return false;
-            }
-
             this.shader = shader;
-
-            // Set the active shader
-            this.gl.useProgram(shader.impl.glProgram);
+            this.shaderAsyncCompile = asyncCompile;
+            this.shaderValid = undefined;   // need to run activation / validation
 
             // #if _PROFILER
             this._shaderSwitchesPerFrame++;
             // #endif
-
-            this.attributesInvalidated = true;
         }
-        return true;
+    }
+
+    activateShader(device) {
+
+        const { shader } = this;
+        const { impl } = shader;
+        if (this.shaderValid === undefined) {
+
+            if (shader.failed) {
+                this.shaderValid = false;
+            } else if (!shader.ready) {
+
+                // if the shader is async compiled and can be skipped if not ready
+                if (this.shaderAsyncCompile) {
+
+                    // if the shader is linked, finalize it
+                    if (impl.isLinked(device)) {
+                        if (!impl.finalize(this, shader)) {
+                            shader.failed = true;
+                            this.shaderValid = false;
+                        }
+                    } else {
+                        // skip the async shader rendering
+                        this.shaderValid = false;
+                    }
+
+                } else {
+
+                    // this cannot be skipped, wait for the shader to be ready
+                    if (!impl.finalize(this, shader)) {
+                        shader.failed = true;
+                        this.shaderValid = false;
+                    }
+                }
+            }
+        }
+
+        if (this.shaderValid === undefined) {
+            // Set the active shader
+            this.gl.useProgram(impl.glProgram);
+            this.shaderValid = true;
+        }
     }
 
     /**

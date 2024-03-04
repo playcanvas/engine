@@ -6,8 +6,8 @@ import {
     RenderPass,
     FILTER_LINEAR, ADDRESS_CLAMP_TO_EDGE
 } from "playcanvas";
-import { RenderPassDownSample } from "./render-pass-downsample.js";
-import { RenderPassUpSample } from "./render-pass-upsample.js";
+import { RenderPassDownsample } from "./render-pass-downsample.js";
+import { RenderPassUpsample } from "./render-pass-upsample.js";
 
 // based on https://learnopengl.com/Guest-Articles/2022/Phys.-Based-Bloom
 
@@ -24,7 +24,7 @@ class RenderPassBloom extends RenderPass {
 
     constructor(device, sourceTexture, format) {
         super(device);
-        this.sourceTexture = sourceTexture;
+        this._sourceTexture = sourceTexture;
         this.textureFormat = format;
 
         this.bloomRenderTarget = this.createRenderTarget(0);
@@ -87,10 +87,10 @@ class RenderPassBloom extends RenderPass {
         const device = this.device;
 
         // progressive downscale
-        let passSourceTexture = this.sourceTexture;
+        let passSourceTexture = this._sourceTexture;
         for (let i = 0; i < numPasses; i++) {
 
-            const pass = new RenderPassDownSample(device, passSourceTexture);
+            const pass = new RenderPassDownsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt, {
                 resizeSource: passSourceTexture,
@@ -106,7 +106,7 @@ class RenderPassBloom extends RenderPass {
         passSourceTexture = this.renderTargets[numPasses - 1].colorBuffer;
         for (let i = numPasses - 2; i >= 0; i--) {
 
-            const pass = new RenderPassUpSample(device, passSourceTexture);
+            const pass = new RenderPassUpsample(device, passSourceTexture);
             const rt = this.renderTargets[i];
             pass.init(rt);
             pass.blendState = BlendState.ADDBLEND;  // blend when up-scaling
@@ -124,11 +124,29 @@ class RenderPassBloom extends RenderPass {
         this.destroyRenderTargets(1);
     }
 
+    set sourceTexture(value) {
+        this._sourceTexture = value;
+
+        if (this.beforePasses.length > 0) {
+            const firstPass = this.beforePasses[0];
+
+            // change resize source
+            firstPass.options.resizeSource = value;
+
+            // change downsample source
+            firstPass.sourceTexture = value;
+        }
+    }
+
+    get sourceTexture() {
+        return this._sourceTexture;
+    }
+
     frameUpdate() {
         super.frameUpdate();
 
         // create an appropriate amount of render passes
-        let numPasses = this.calcMipLevels(this.sourceTexture.width, this.sourceTexture.height, 2 ** this.lastMipLevel);
+        let numPasses = this.calcMipLevels(this._sourceTexture.width, this._sourceTexture.height, 2 ** this.lastMipLevel);
         numPasses = Math.max(1, numPasses);
 
         if (this.renderTargets.length !== numPasses) {

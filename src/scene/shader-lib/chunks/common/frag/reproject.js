@@ -84,7 +84,7 @@ vec3 getDirectionEquirect() {
     return fromSpherical((vec2(vUv0.x, 1.0 - vUv0.y) * 2.0 - 1.0) * vec2(PI, PI * 0.5));
 }
 
-// octahedral code, based on http://jcgt.org/published/0003/02/01
+// octahedral code, based on https://jcgt.org/published/0003/02/01/
 // "Survey of Efficient Representations for Independent Unit Vectors" by Cigolle, Donow, Evangelakos, Mara, McGuire, Meyer
 
 float signNotZero(float k){

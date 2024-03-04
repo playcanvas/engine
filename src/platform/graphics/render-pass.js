@@ -1,8 +1,7 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 class ColorAttachmentOps {
     /**
@@ -91,7 +90,7 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name = '';
+    _name;
 
     /**
      * The graphics device.
@@ -126,7 +125,7 @@ class RenderPass {
     /**
      * The options specified when the render target was initialized.
      */
-    options;
+    _options;
 
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
@@ -193,9 +192,32 @@ class RenderPass {
      * graphics device.
      */
     constructor(graphicsDevice) {
-        DebugHelper.setName(this, this.constructor.name);
         Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
+    }
+
+    set name(value) {
+        this._name = value;
+    }
+
+    get name() {
+        if (!this._name)
+            this._name = this.constructor.name;
+        return this._name;
+    }
+
+    set options(value) {
+        this._options = value;
+
+        // sanitize options
+        if (value) {
+            this._options.scaleX = this._options.scaleX ?? 1;
+            this._options.scaleY = this._options.scaleY ?? 1;
+        }
+    }
+
+    get options() {
+        return this._options;
     }
 
     /**
@@ -206,12 +228,7 @@ class RenderPass {
      */
     init(renderTarget = null, options = null) {
 
-        // sanitize options
         this.options = options;
-        if (options) {
-            this.options.scaleX = this.options.scaleX ?? 1;
-            this.options.scaleY = this.options.scaleY ?? 1;
-        }
 
         // null represents the default framebuffer
         this.renderTarget = renderTarget;
@@ -252,10 +269,10 @@ class RenderPass {
 
     frameUpdate() {
         // resize the render target if needed
-        if (this.options && this.renderTarget) {
-            const resizeSource = this.options.resizeSource ?? this.device.backBuffer;
-            const width = Math.floor(resizeSource.width * this.options.scaleX);
-            const height = Math.floor(resizeSource.height * this.options.scaleY);
+        if (this._options && this.renderTarget) {
+            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
+            const width = Math.floor(resizeSource.width * this._options.scaleX);
+            const height = Math.floor(resizeSource.height * this._options.scaleY);
             this.renderTarget.resize(width, height);
         }
     }
@@ -342,7 +359,6 @@ class RenderPass {
 
             const device = this.device;
             const realPass = this.renderTarget !== undefined;
-            DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
 
             Debug.call(() => {
                 this.log(device, device.renderPassIndex);
@@ -366,8 +382,6 @@ class RenderPass {
             this.after();
 
             device.renderPassIndex++;
-
-            DebugGraphics.popGpuMarker(device);
         }
     }
 

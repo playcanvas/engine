@@ -1,4 +1,4 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from "../../platform/graphics/constants.js";
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_DEPTH, PIXELFORMAT_DEPTHSTENCIL, PIXELFORMAT_R32F } from "../../platform/graphics/constants.js";
 import { DebugGraphics } from "../../platform/graphics/debug-graphics.js";
 import { RenderPass } from "../../platform/graphics/render-pass.js";
 import { RenderTarget } from "../../platform/graphics/render-target.js";
@@ -91,11 +91,12 @@ class RenderPassDepthGrab extends RenderPass {
 
         const camera = this.camera;
         const device = this.device;
+        const destinationRt = camera?.renderTarget ?? device.backBuffer;
 
         let useDepthBuffer = true;
-        let format = PIXELFORMAT_DEPTHSTENCIL;
+        let format = destinationRt.stencil ? PIXELFORMAT_DEPTHSTENCIL : PIXELFORMAT_DEPTH;
         if (device.isWebGPU) {
-            const numSamples = camera.renderTarget?.samples ?? device.samples;
+            const numSamples = destinationRt.samples;
 
             // when depth buffer is multi-sampled, instead of copying it out, we use custom shader to resolve it
             // to a R32F texture, used as a color attachment of the render target

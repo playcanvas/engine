@@ -15,13 +15,143 @@ let ids = 0;
 /**
  * Represents XR input source, which is any input mechanism which allows the user to perform
  * targeted actions in the same virtual space as the viewer. Example XR input sources include, but
- * are not limited to, handheld controllers, optically tracked hands, and gaze-based input methods
- * that operate on the viewer's pose.
+ * are not limited to: handheld controllers, optically tracked hands, touch screen taps, and
+ * gaze-based input methods that operate on the viewer's pose.
  *
  * @augments EventHandler
  * @category XR
  */
 class XrInputSource extends EventHandler {
+    /**
+     * Fired when {@link XrInputSource} is removed.
+     *
+     * @event
+     * @example
+     * inputSource.once('remove', () => {
+     *     // input source is not available anymore
+     * });
+     */
+    static EVENT_REMOVE = 'remove';
+
+    /**
+     * Fired when input source has triggered primary action. This could be pressing a trigger
+     * button, or touching a screen. The handler is passed an {@link XRInputSourceEvent} object
+     * from the WebXR API.
+     *
+     * @event
+     * @example
+     * const ray = new pc.Ray();
+     * inputSource.on('select', (evt) => {
+     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
+     *     if (obj.intersectsRay(ray)) {
+     *         // selected an object with input source
+     *     }
+     * });
+     */
+    static EVENT_SELECT = 'select';
+
+    /**
+     * Fired when input source has started to trigger primary action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('selectstart', (evt) => {
+     *     console.log('Select started');
+     * });
+     */
+    static EVENT_SELECTSTART = 'selectstart';
+
+    /**
+     * Fired when input source has ended triggering primary action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('selectend', (evt) => {
+     *     console.log('Select ended');
+     * });
+     */
+    static EVENT_SELECTEND = 'selectend';
+
+    /**
+     * Fired when input source has triggered squeeze action. This is associated with "grabbing"
+     * action on the controllers. The handler is passed an {@link XRInputSourceEvent} object from
+     * the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeeze', (evt) => {
+     *     console.log('Squeeze');
+     * });
+     */
+    static EVENT_SQUEEZE = 'squeeze';
+
+    /**
+     * Fired when input source has started to trigger squeeze action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeezestart', (evt) => {
+     *     if (obj.containsPoint(inputSource.getPosition())) {
+     *         // grabbed an object
+     *     }
+     * });
+     */
+    static EVENT_SQUEEZESTART = 'squeezestart';
+
+    /**
+     * Fired when input source has ended triggering squeeze action. The handler is passed an
+     * {@link XRInputSourceEvent} object from the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('squeezeend', (evt) => {
+     *     console.log('Squeeze ended');
+     * });
+     */
+    static EVENT_SQUEEZEEND = 'squeezeend';
+
+    /**
+     * Fired when new {@link XrHitTestSource} is added to the input source. The handler is passed
+     * the {@link XrHitTestSource} object that has been added.
+     *
+     * @event
+     * @example
+     * inputSource.on('hittest:add', (hitTestSource) => {
+     *     // new hit test source is added
+     * });
+     */
+    static EVENT_HITTESTADD = 'hittest:add';
+
+    /**
+     * Fired when {@link XrHitTestSource} is removed to the the input source. The handler is passed
+     * the {@link XrHitTestSource} object that has been removed.
+     *
+     * @event
+     * @example
+     * inputSource.on('remove', (hitTestSource) => {
+     *     // hit test source is removed
+     * });
+     */
+    static EVENT_HITTESTREMOVE = 'hittest:remove';
+
+    /**
+     * Fired when hit test source receives new results. It provides transform information that
+     * tries to match real world picked geometry. The handler is passed the {@link XrHitTestSource}
+     * object that produced the hit result, the {@link Vec3} position, the {@link Quat}
+     * rotation and the {@link XRHitTestResult} object that is created by the WebXR API.
+     *
+     * @event
+     * @example
+     * inputSource.on('hittest:result', (hitTestSource, position, rotation, hitTestResult) => {
+     *     target.setPosition(position);
+     *     target.setRotation(rotation);
+     * });
+     */
+    static EVENT_HITTESTRESULT = 'hittest:result';
+
     /**
      * @type {number}
      * @private
@@ -167,12 +297,6 @@ class XrInputSource extends EventHandler {
     _hitTestSources = [];
 
     /**
-     * @type {Set<import('./xr-hit-test-source.js').XrHitTestSource>}
-     * @ignore
-     */
-    hitTestSourcesSet = new Set();
-
-    /**
      * Create a new XrInputSource instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
@@ -191,114 +315,6 @@ class XrInputSource extends EventHandler {
         if (xrInputSource.hand)
             this._hand = new XrHand(this);
     }
-
-    /**
-     * Fired when {@link XrInputSource} is removed.
-     *
-     * @event XrInputSource#remove
-     * @example
-     * inputSource.once('remove', function () {
-     *     // input source is not available anymore
-     * });
-     */
-
-    /**
-     * Fired when input source has triggered primary action. This could be pressing a trigger
-     * button, or touching a screen.
-     *
-     * @event XrInputSource#select
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * const ray = new pc.Ray();
-     * inputSource.on('select', function (evt) {
-     *     ray.set(inputSource.getOrigin(), inputSource.getDirection());
-     *     if (obj.intersectsRay(ray)) {
-     *         // selected an object with input source
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when input source has started to trigger primary action.
-     *
-     * @event XrInputSource#selectstart
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has ended triggering primary action.
-     *
-     * @event XrInputSource#selectend
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has triggered squeeze action. This is associated with "grabbing"
-     * action on the controllers.
-     *
-     * @event XrInputSource#squeeze
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when input source has started to trigger squeeze action.
-     *
-     * @event XrInputSource#squeezestart
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     * @example
-     * inputSource.on('squeezestart', function (evt) {
-     *     if (obj.containsPoint(inputSource.getPosition())) {
-     *         // grabbed an object
-     *     }
-     * });
-     */
-
-    /**
-     * Fired when input source has ended triggering squeeze action.
-     *
-     * @event XrInputSource#squeezeend
-     * @param {object} evt - XRInputSourceEvent event data from WebXR API.
-     */
-
-    /**
-     * Fired when new {@link XrHitTestSource} is added to the input source.
-     *
-     * @event XrInputSource#hittest:add
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that has been added.
-     * @example
-     * inputSource.on('hittest:add', function (hitTestSource) {
-     *     // new hit test source is added
-     * });
-     */
-
-    /**
-     * Fired when {@link XrHitTestSource} is removed to the the input source.
-     *
-     * @event XrInputSource#hittest:remove
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that has been removed.
-     * @example
-     * inputSource.on('remove', function (hitTestSource) {
-     *     // hit test source is removed
-     * });
-     */
-
-    /**
-     * Fired when hit test source receives new results. It provides transform information that
-     * tries to match real world picked geometry.
-     *
-     * @event XrInputSource#hittest:result
-     * @param {import('./xr-hit-test-source.js').XrHitTestSource} hitTestSource - Hit test source
-     * that produced the hit result.
-     * @param {Vec3} position - Position of hit test.
-     * @param {Quat} rotation - Rotation of hit test.
-     * @example
-     * inputSource.on('hittest:result', function (hitTestSource, position, rotation) {
-     *     target.setPosition(position);
-     *     target.setRotation(rotation);
-     * });
-     */
 
     /**
      * Unique number associated with instance of input source. Same physical devices when
@@ -364,7 +380,7 @@ class XrInputSource extends EventHandler {
 
     /**
      * If input source can be held, then it will have node with its world transformation, that can
-     * be used to position and rotate virtual joysticks based on it.
+     * be used to position and rotate visual object based on it.
      *
      * @type {boolean}
      */
@@ -440,7 +456,7 @@ class XrInputSource extends EventHandler {
     }
 
     /**
-     * List of active {@link XrHitTestSource} instances created by this input source.
+     * List of active {@link XrHitTestSource} instances associated with this input source.
      *
      * @type {import('./xr-hit-test-source.js').XrHitTestSource[]}
      */
@@ -651,7 +667,7 @@ class XrInputSource extends EventHandler {
      *     inputSource.hitTestStart({
      *         callback: function (err, hitTestSource) {
      *             if (err) return;
-     *             hitTestSource.on('result', function (position, rotation) {
+     *             hitTestSource.on('result', function (position, rotation, inputSource, hitTestResult) {
      *                 // position and rotation of hit test result
      *                 // that will be created from touch on mobile devices
      *             });
@@ -660,6 +676,7 @@ class XrInputSource extends EventHandler {
      * });
      */
     hitTestStart(options = {}) {
+        options.inputSource = this;
         options.profile = this._xrInputSource.profiles[0];
 
         const callback = options.callback;
@@ -677,21 +694,18 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceAdd(hitTestSource) {
-        this.hitTestSourcesSet.add(hitTestSource);
         this._hitTestSources.push(hitTestSource);
 
         this.fire('hittest:add', hitTestSource);
 
-        hitTestSource.on('result', function (position, rotation, inputSource) {
-            if (inputSource !== this)
-                return;
-
-            this.fire('hittest:result', hitTestSource, position, rotation);
-        }, this);
-        hitTestSource.once('remove', function () {
+        hitTestSource.on('result', (position, rotation, inputSource, hitTestResult) => {
+            if (inputSource !== this) return;
+            this.fire('hittest:result', hitTestSource, position, rotation, hitTestResult);
+        });
+        hitTestSource.once('remove', () => {
             this.onHitTestSourceRemove(hitTestSource);
             this.fire('hittest:remove', hitTestSource);
-        }, this);
+        });
     }
 
     /**
@@ -700,7 +714,6 @@ class XrInputSource extends EventHandler {
      * @private
      */
     onHitTestSourceRemove(hitTestSource) {
-        this.hitTestSourcesSet.delete(hitTestSource);
         const ind = this._hitTestSources.indexOf(hitTestSource);
         if (ind !== -1) this._hitTestSources.splice(ind, 1);
     }

@@ -54,11 +54,10 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { ShaderUtils } from '../platform/graphics/shader-utils.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -121,6 +120,9 @@ import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
+export const LINEBATCH_WORLD = 0;
+export const LINEBATCH_OVERLAY = 1;
+export const LINEBATCH_GIZMO = 2;
 
 export const log = {
     write: function (text) {
@@ -565,8 +567,8 @@ Object.defineProperties(RenderTarget.prototype, {
 
 Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
     get: function () {
-        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
-        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
+        Debug.assert('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return null;
     }
 });
 
@@ -811,12 +813,6 @@ Object.defineProperty(Layer.prototype, 'renderTarget', {
         return this._renderTarget;
     }
 });
-
-// This can be removed when 1.56 is out and the Editor no longer calls this
-Scene.prototype._updateSkybox = function (device) {
-    Debug.deprecated(`pc.Scene#_updateSkybox is deprecated. Use pc.Scene#_updateSky instead.`);
-    this._updateSky(device);
-};
 
 Scene.prototype.addModel = function (model) {
     Debug.deprecated('pc.Scene#addModel is deprecated.');

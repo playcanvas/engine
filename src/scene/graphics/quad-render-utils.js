@@ -19,6 +19,7 @@ const _tempRect = new Vec4();
  * pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle of the
  * quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @category Graphics
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
@@ -78,6 +79,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
  * texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle to use for
  * the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @category Graphics
  */
 function drawTexture(device, texture, target, shader, rect, scissorRect) {
     Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');

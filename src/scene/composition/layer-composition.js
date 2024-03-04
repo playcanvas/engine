@@ -187,6 +187,7 @@ class LayerComposition extends EventHandler {
                 // the place where to add them during building of the frame graph
                 if (camera.camera.renderPasses.length > 0) {
                     this.addDummyRenderAction(renderActionCount, camera);
+                    renderActionCount++;
                     continue;
                 }
 

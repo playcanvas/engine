@@ -11,7 +11,8 @@ import {
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR,
-    SPECULAR_PHONG
+    SPECULAR_PHONG,
+    DITHER_NONE
 } from '../constants.js';
 import { _matTex2D } from '../shader-lib/programs/standard.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -150,7 +151,7 @@ class StandardMaterialOptionsBuilder {
             options[vname] = false;
             options[vcname] = '';
 
-            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage) {
+            if (isOpacity && stdMat.blendType === BLEND_NONE && stdMat.alphaTest === 0.0 && !stdMat.alphaToCoverage && stdMat.opacityDither === DITHER_NONE) {
                 return;
             }
 
@@ -188,7 +189,8 @@ class StandardMaterialOptionsBuilder {
     }
 
     _updateMinOptions(options, stdMat) {
-        options.opacityTint = stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE;
+        options.opacityTint = stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE);
+        options.litOptions.opacityShadowDither = stdMat.opacityShadowDither;
         options.litOptions.lights = [];
     }
 
@@ -214,7 +216,7 @@ class StandardMaterialOptionsBuilder {
 
         const isPackedNormalMap = stdMat.normalMap ? (stdMat.normalMap.format === PIXELFORMAT_DXT5 || stdMat.normalMap.type === TEXTURETYPE_SWIZZLEGGGR) : false;
 
-        options.opacityTint = (stdMat.opacity !== 1 && stdMat.blendType !== BLEND_NONE) ? 1 : 0;
+        options.opacityTint = (stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.alphaTest > 0 || stdMat.opacityDither !== DITHER_NONE)) ? 1 : 0;
         options.ambientTint = stdMat.ambientTint;
         options.diffuseTint = diffuseTint ? 2 : 0;
         options.specularTint = specularTint ? 2 : 0;
@@ -272,6 +274,7 @@ class StandardMaterialOptionsBuilder {
 
         options.litOptions.alphaToCoverage = stdMat.alphaToCoverage;
         options.litOptions.opacityFadesSpecular = stdMat.opacityFadesSpecular;
+        options.litOptions.opacityDither = stdMat.opacityDither;
 
         options.litOptions.cubeMapProjection = stdMat.cubeMapProjection;
 
