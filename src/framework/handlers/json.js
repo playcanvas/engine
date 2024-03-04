@@ -5,10 +5,10 @@ class JsonHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.
      *
-     * @type {TextDecoder}
+     * @type {TextDecoder|null}
      * @private
      */
-    decoder = new TextDecoder('utf-8');
+    decoder = null;
 
     constructor(app) {
         super(app, 'json');
@@ -48,6 +48,7 @@ class JsonHandler extends ResourceHandler {
      * @returns {object} The parsed resource data.
      */
     openBinary(data) {
+        this.decoder ??= new TextDecoder('utf-8');
         return JSON.parse(this.decoder.decode(data));
     }
 }

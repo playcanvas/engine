@@ -5,10 +5,10 @@ class CssHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.
      *
-     * @type {TextDecoder}
+     * @type {TextDecoder|null}
      * @private
      */
-    decoder = new TextDecoder('utf-8');
+    decoder = null;
 
     constructor(app) {
         super(app, 'css');
@@ -41,6 +41,7 @@ class CssHandler extends ResourceHandler {
      * @returns {string} The parsed resource data.
      */
     openBinary(data) {
+        this.decoder ??= new TextDecoder('utf-8');
         return this.decoder.decode(data);
     }
 }

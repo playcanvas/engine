@@ -6,10 +6,10 @@ class TemplateHandler extends ResourceHandler {
     /**
      * TextDecoder for decoding binary data.
      *
-     * @type {TextDecoder}
+     * @type {TextDecoder|null}
      * @private
      */
-    decoder = new TextDecoder('utf-8');
+    decoder = null;
 
     constructor(app) {
         super(app, 'template');
@@ -49,6 +49,7 @@ class TemplateHandler extends ResourceHandler {
      * @returns {Template} The parsed resource data.
      */
     openBinary(data) {
+        this.decoder ??= new TextDecoder('utf-8');
         return new Template(this._app, JSON.parse(this.decoder.decode(data)));
     }
 }

@@ -51,10 +51,10 @@ class Untar extends EventHandler {
     data = new Uint8Array(0);
 
     /**
-     * @type {TextDecoder}
+     * @type {TextDecoder|null}
      * @private
      */
-    decoder = new TextDecoder('windows-1252');
+    decoder = null;
 
     /**
      * @type {string}
@@ -146,6 +146,7 @@ class Untar extends EventHandler {
         if (!this.headerRead && this.bytesReceived > (this.bytesRead + this.headerSize)) {
             this.headerRead = true;
             const view = new DataView(this.data.buffer, this.bytesRead, this.headerSize);
+            this.decoder ??= new TextDecoder('windows-1252');
             const headers = this.decoder.decode(view);
 
             this.fileName = headers.substring(0, 100).replace(/\0/g, '');
