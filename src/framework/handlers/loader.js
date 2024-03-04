@@ -199,10 +199,10 @@ class ResourceLoader {
                         bundles?.sort((a, b) => {
                             return a.file.size - b.file.size;
                         });
-                        bundle = bundles[0];
+                        bundle = bundles?.[0];
                     }
 
-                    this._app.assets?.load(bundle);
+                    if (bundle) this._app.assets?.load(bundle);
                 }
 
                 this._app.bundles.loadUrl(normalizedUrl, function (err, fileUrlFromBundle) {

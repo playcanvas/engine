@@ -29,10 +29,10 @@ class BinaryHandler extends ResourceHandler {
 
     /**
      * Parses raw DataView and returns ArrayBuffer.
-     * 
+     *
      * @param {DataView} data - The raw data as a DataView
      * @returns {ArrayBuffer} The parsed resource data.
-    */
+     */
     openBinary(data) {
         return data.buffer;
     }

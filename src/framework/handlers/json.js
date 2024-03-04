@@ -43,10 +43,10 @@ class JsonHandler extends ResourceHandler {
 
     /**
      * Parses raw DataView and returns string.
-     * 
+     *
      * @param {DataView} data - The raw data as a DataView
      * @returns {object} The parsed resource data.
-    */
+     */
     openBinary(data) {
         return JSON.parse(this.decoder.decode(data));
     }

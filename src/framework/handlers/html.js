@@ -36,10 +36,10 @@ class HtmlHandler extends ResourceHandler {
 
     /**
      * Parses raw DataView and returns string.
-     * 
+     *
      * @param {DataView} data - The raw data as a DataView
      * @returns {string} The parsed resource data.
-    */
+     */
     openBinary(data) {
         return this.decoder.decode(data);
     }

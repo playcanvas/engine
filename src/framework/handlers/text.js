@@ -24,7 +24,7 @@ class TextHandler extends ResourceHandler {
 
         http.get(url.load, {
             retry: this.maxRetries > 0,
-            maxRetries: this.maxRetries
+        maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);
@@ -36,10 +36,10 @@ class TextHandler extends ResourceHandler {
 
     /**
      * Parses raw DataView and returns string.
-     * 
+     *
      * @param {DataView} data - The raw data as a DataView
      * @returns {string} The parsed resource data.
-    */
+     */
     openBinary(data) {
         return this.decoder.decode(data);
     }

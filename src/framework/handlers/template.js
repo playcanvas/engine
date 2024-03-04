@@ -44,10 +44,10 @@ class TemplateHandler extends ResourceHandler {
 
     /**
      * Parses raw DataView and returns string.
-     * 
+     *
      * @param {DataView} data - The raw data as a DataView
      * @returns {Template} The parsed resource data.
-    */
+     */
     openBinary(data) {
         return new Template(this._app, JSON.parse(this.decoder.decode(data)));
     }
