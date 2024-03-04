@@ -46,6 +46,10 @@ class TemplateHandler {
         });
     }
 
+    /**
+     * @ignore
+     * @param {DataView} data - The raw data as a DataView
+    */
     openBinary(data) {
         return new Template(this._app, JSON.parse(this.decoder.decode(data)));
     }

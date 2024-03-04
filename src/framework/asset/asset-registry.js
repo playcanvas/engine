@@ -363,6 +363,8 @@ class AssetRegistry extends EventHandler {
      * @param {object} [options] - Options for asset loading.
      * @param {boolean} [options.bundlesIgnore] - If set to true, then asset will not try to load
      * from a bundle. Defaults to false.
+     * @param {boolean} [options.force] - If set to true, then the check of asset being loaded or
+     * is already loaded is bypassed, which forces loading of asset regardless.
      * @param {BundlesFilterCallback} [options.bundlesFilter] - A callback that will be called
      * when loading an asset that is contained in any of the bundles. It provides an array of
      * bundles and will ensure asset is loaded from bundle returned from a callback. By default

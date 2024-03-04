@@ -47,6 +47,10 @@ class JsonHandler {
         });
     }
 
+    /**
+     * @ignore
+     * @param {DataView} data - The raw data as a DataView
+    */
     openBinary(data) {
         return JSON.parse(this.decoder.decode(data));
     }

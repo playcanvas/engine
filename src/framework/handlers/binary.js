@@ -33,6 +33,10 @@ class BinaryHandler {
         });
     }
 
+    /**
+     * @ignore
+     * @param {DataView} data - The raw data as a DataView
+    */
     openBinary(data) {
         return data.buffer;
     }
