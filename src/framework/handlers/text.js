@@ -24,7 +24,7 @@ class TextHandler extends ResourceHandler {
 
         http.get(url.load, {
             retry: this.maxRetries > 0,
-        maxRetries: this.maxRetries
+            maxRetries: this.maxRetries
         }, function (err, response) {
             if (!err) {
                 callback(null, response);
