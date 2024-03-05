@@ -486,11 +486,8 @@ class ForwardRenderer extends Renderer {
             if (!drawCall.mesh) continue;
 
             // apply visibility override
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
-                continue;
-
-            // apply visibility override
-            if (cullingMask && drawCall.mask && !(cullingMask & drawCall.mask))
+            // magnopus patched
+            if (camera.cullingMask && drawCall.mask && !(camera.cullingMask & drawCall.mask))
                 continue;
 
             // #if _PROFILER
