@@ -91,6 +91,36 @@ class Mat3 {
     }
 
     /**
+     * Extracts the x-axis from the specified matrix.
+     *
+     * @param {Vec3} [x] - The vector to receive the x axis of the matrix.
+     * @returns {Vec3} The x-axis of the specified matrix.
+     */
+    getX(x = new Vec3()) {
+        return x.set(this.data[0], this.data[1], this.data[2]);
+    }
+
+    /**
+     * Extracts the y-axis from the specified matrix.
+     *
+     * @param {Vec3} [y] - The vector to receive the y axis of the matrix.
+     * @returns {Vec3} The y-axis of the specified matrix.
+     */
+    getY(y = new Vec3()) {
+        return y.set(this.data[3], this.data[4], this.data[5]);
+    }
+
+    /**
+     * Extracts the z-axis from the specified matrix.
+     *
+     * @param {Vec3} [z] - The vector to receive the z axis of the matrix.
+     * @returns {Vec3} The z-axis of the specified matrix.
+     */
+    getZ(z = new Vec3()) {
+        return z.set(this.data[6], this.data[7], this.data[8]);
+    }
+
+    /**
      * Reports whether two matrices are equal.
      *
      * @param {Mat3} rhs - The other matrix.

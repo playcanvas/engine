@@ -1,5 +1,6 @@
 import { TRACEID_RENDER_QUEUE } from '../../../core/constants.js';
 import { Debug, DebugHelper } from '../../../core/debug.js';
+import { path } from '../../../core/path.js';
 
 import {
     PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
@@ -176,9 +177,13 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         Debug.log("WebgpuGraphicsDevice initialization ..");
 
         // build a full URL from a relative path
-        const buildUrl = (relativePath) => {
+        const buildUrl = (srcPath) => {
+            if (!path.isRelativePath(srcPath)) {
+                return srcPath;
+            }
+
             const url = new URL(window.location.href);
-            url.pathname = relativePath;
+            url.pathname = srcPath;
             url.search = '';
             return url.toString();
         };
@@ -463,9 +468,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             if (ib) {
                 this.indexBuffer = null;
                 passEncoder.setIndexBuffer(ib.impl.buffer, ib.impl.format);
-                passEncoder.drawIndexed(primitive.count, numInstances, 0, 0, 0);
+                passEncoder.drawIndexed(primitive.count, numInstances, primitive.base, 0, 0);
             } else {
-                passEncoder.draw(primitive.count, numInstances, 0, 0);
+                passEncoder.draw(primitive.count, numInstances, primitive.base, 0);
             }
 
             WebgpuDebug.end(this, {
@@ -606,6 +611,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         this.passEncoder = this.commandEncoder.beginRenderPass(renderPassDesc);
         DebugHelper.setLabel(this.passEncoder, renderPass.name);
 
+        // push marker to the passEncoder
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
+
         this.setupPassEncoderDefaults();
 
         // the pass always clears full target
@@ -626,6 +634,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     endRenderPass(renderPass) {
+
+        // pop the marker from the passEncoder
+        DebugGraphics.popGpuMarker(this);
 
         // end the render pass
         this.passEncoder.end();

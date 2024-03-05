@@ -147,14 +147,6 @@ Specific engine versions:
 * https://code.playcanvas.com/playcanvas-1.38.4.js
 * https://code.playcanvas.com/playcanvas-1.38.4.min.js
 
-### Generate Source Maps
-
-To build the source map to allow for easier engine debugging, you can add `-- -m` to any engine build command. For example:
-
-    npm run build -- -m
-
-This will output to `build/playcanvas.js.map`
-
 ## PlayCanvas Editor
 
 The PlayCanvas Engine is an open source engine which you can use to create HTML5 apps/games. In addition to the engine, we also make the [PlayCanvas Editor](https://playcanvas.com/):

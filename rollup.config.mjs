@@ -14,7 +14,8 @@ console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 
 const target_extras = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras'),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras', false),
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs', true),
     scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
 ];
 
@@ -65,7 +66,9 @@ export default (args) => {
             });
 
             // Add an unbundled es6 build
-            if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+            if (t !== 'min' && envTarget === null || envTarget === t || envTarget === `${t}_es6`) {
+                if (t !== 'min') targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+            }
 
         });
 

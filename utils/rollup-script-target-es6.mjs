@@ -7,6 +7,7 @@ import { moduleOptions } from './rollup-module-options.mjs';
 import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
+/** @typedef {import('rollup').OutputOptions} OutputOptions */
 
 /**
  * Build an ES6 target that rollup is supposed to build.
@@ -14,19 +15,23 @@ import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
  * @param {string} name - The name, like `pcx` or `VoxParser`.
  * @param {string} input - The input file, like `extras/index.js`.
  * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
+ * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
  * @returns {RollupOptions} One rollup target.
  */
-function scriptTargetEs6(name, input, output) {
+function scriptTargetEs6(name, input, output, shouldBundle = false) {
+    /** @type {OutputOptions} */
+    const outputOptions = {
+        name: name,
+        banner: getBanner(''),
+        format: 'es',
+        indent: '\t',
+        preserveModules: !shouldBundle
+    };
+    outputOptions[shouldBundle ? 'file' : 'dir'] = output;
+
     return {
         input: input,
-        output: {
-            name: name,
-            banner: getBanner(''),
-            dir: output,
-            format: 'es',
-            indent: '\t',
-            preserveModules: true
-        },
+        output: outputOptions,
         plugins: [
             resolve(),
             babel(moduleOptions('release')),

@@ -1554,6 +1554,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     startRenderPass(renderPass) {
 
+        DebugGraphics.pushGpuMarker(this, `Pass:${renderPass.name}`);
         DebugGraphics.pushGpuMarker(this, `START-PASS`);
 
         // set up render target
@@ -1686,6 +1687,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.insideRenderPass = false;
 
         DebugGraphics.popGpuMarker(this);
+        DebugGraphics.popGpuMarker(this);   // pop the pass-start marker
     }
 
     set defaultFramebuffer(value) {

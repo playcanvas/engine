@@ -161,9 +161,13 @@ assetListLoader.load(() => {
             // apply the value to the material
             material[propertyName] = value;
 
-            // turn on / off blending depending on the dithering of the color
             if (propertyName === 'opacityDither') {
+
+                // turn on / off blending depending on the dithering of the color
                 material.blendType = value === pc.DITHER_NONE ? pc.BLEND_NORMAL : pc.BLEND_NONE;
+
+                // turn on / off depth write depending on the dithering of the color
+                material.depthWrite = value !== pc.DITHER_NONE;
             }
             material.update();
         });
