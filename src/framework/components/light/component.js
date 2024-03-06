@@ -546,7 +546,7 @@ class LightComponent extends Component {
      * Projection texture. Must be 2D for spot and cubemap for omni light
      * (ignored if incorrect type is used).
      *
-     * @type {Texture}
+     * @type {import('../../../platform/graphics/texture.js').Texture}
      */
     set cookie(arg) {
         this._setValue('cookie', arg, function (newValue, oldValue) {
