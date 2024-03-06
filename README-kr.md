@@ -56,66 +56,51 @@ PlayCanvas는 완전한 기능의 게임 엔진입니다.
 
 여기에 아주 간단한 Hello World의 예가 있습니다. - 회전하는 큐브
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>PlayCanvas Hello Cube</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no' />
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
-    <script src='https://code.playcanvas.com/playcanvas-stable.min.js'></script>
-</head>
-<body>
-    <canvas id='application'></canvas>
-    <script>
-        // create a PlayCanvas application
-        const canvas = document.getElementById('application');
-        const app = new pc.Application(canvas);
+```js
+import * as pc from 'playcanvas';
 
-        // fill the available space at full resolution
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
 
-        // ensure canvas is resized when window changes size
-        window.addEventListener('resize', () => app.resizeCanvas());
+const app = new pc.Application(canvas);
 
-        // create box entity
-        const box = new pc.Entity('cube');
-        box.addComponent('model', {
-            type: 'box'
-        });
-        app.root.addChild(box);
+// fill the available space at full resolution
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
 
-        // create camera entity
-        const camera = new pc.Entity('camera');
-        camera.addComponent('camera', {
-            clearColor: new pc.Color(0.1, 0.1, 0.1)
-        });
-        app.root.addChild(camera);
-        camera.setPosition(0, 0, 3);
+// ensure canvas is resized when window changes size
+window.addEventListener('resize', () => app.resizeCanvas());
 
-        // create directional light entity
-        const light = new pc.Entity('light');
-        light.addComponent('light');
-        app.root.addChild(light);
-        light.setEulerAngles(45, 0, 0);
+// create box entity
+const box = new pc.Entity('cube');
+box.addComponent('model', {
+  type: 'box'
+});
+app.root.addChild(box);
 
-        // rotate the box according to the delta time since the last frame
-        app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+// create camera entity
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+  clearColor: new pc.Color(0.1, 0.2, 0.3)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
 
-        app.start();
-    </script>
-</body>
-</html>
+// create directional light entity
+const light = new pc.Entity('light');
+light.addComponent('light');
+app.root.addChild(light);
+light.setEulerAngles(45, 0, 0);
+
+// rotate the box according to the delta time since the last frame
+app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+
+app.start();
 ```
 
 이 코드를 직접 시도하려면 [CodePen](https://codepen.io/playcanvas/pen/NPbxMj)를 클릭하세요.
+
+PlayCanvas 엔진을 기반으로 하는 로컬 개발 환경 설정에 대한 전체 가이드는 [여기](https://developer.playcanvas.com/user-manual/engine/standalone/)에서 찾을 수 있습니다.
 
 ## 빌드 순서
 
@@ -157,7 +142,6 @@ PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔�
 
 에디터 관련 버그나 문제는 [Editor's repo](https://github.com/playcanvas/editor)를 참조하십시오.
 
-
 [npm-badge]: https://img.shields.io/npm/v/playcanvas
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
@@ -167,4 +151,4 @@ PlayCanvas 엔진은 HTML5 앱 및 게임을 만들기 위한 오픈 소스 엔�
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
-[docs]: https://developer.playcanvas.com/en/api/
+[docs]: https://api.playcanvas.com/modules/Engine.html

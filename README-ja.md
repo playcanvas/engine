@@ -23,9 +23,7 @@ HTML5とWebGLを使用してゲームやインタラクティブな3Dコンテ�
 
 ## ショーケース
 
-PlayCanvasエンジンを使って[多くのゲームやアプリ](https://github.com/playcanvas/awesome-playcanvas#awesome-playcanvas-
-) 公開されています。ここではその一部をご紹介します。
-
+PlayCanvasエンジンを使って[多くのゲームやアプリ](https://github.com/playcanvas/awesome-playcanvas) 公開されています。ここではその一部をご紹介します。
 
 [![Seemore](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14705/319531/O4J4VU-image-25.jpg)](https://playcanv.as/p/MflWvdTW/) [![After The Flood](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/440410/98554E-image-25.jpg)](https://playcanv.as/p/44MRmJRU/) [![Casino](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/14928/349824/U88HJQ-image-25.jpg)](https://playcanv.as/p/LpmXGUe6/)  
 [![Swooop](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/4763/TKYXB8-image-25.jpg)](https://playcanv.as/p/JtL2iqIH/) [![Master Archer](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/12/415995/10A5A9-image-25.jpg)](https://playcanv.as/p/JERg21J8/) [![Flappy Bird](https://s3-eu-west-1.amazonaws.com/images.playcanvas.com/projects/8/375389/23PRTL-image-25.jpg)](https://playcanv.as/p/2OlkUaxF/)  
@@ -56,58 +54,51 @@ PlayCanvasはフル機能のゲームエンジンです。
 
 シンプルなHello Worldの例です。
 
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>PlayCanvas Hello Cube</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no' />
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
-    <script src='https://code.playcanvas.com/playcanvas-stable.min.js'></script>
-</head>
-<body>
-    <canvas id='application'></canvas>
-    <script>
-        // create a PlayCanvas application
-        const canvas = document.getElementById('application');
-        const app = new pc.Application(canvas);
-        // fill the available space at full resolution
-        app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
-        app.setCanvasResolution(pc.RESOLUTION_AUTO);
-        // ensure canvas is resized when window changes size
-        window.addEventListener('resize', () => app.resizeCanvas());
-        // create box entity
-        const box = new pc.Entity('cube');
-        box.addComponent('model', {
-            type: 'box'
-        });
-        app.root.addChild(box);
-        // create camera entity
-        const camera = new pc.Entity('camera');
-        camera.addComponent('camera', {
-            clearColor: new pc.Color(0.1, 0.1, 0.1)
-        });
-        app.root.addChild(camera);
-        camera.setPosition(0, 0, 3);
-        // create directional light entity
-        const light = new pc.Entity('light');
-        light.addComponent('light');
-        app.root.addChild(light);
-        light.setEulerAngles(45, 0, 0);
-        // rotate the box according to the delta time since the last frame
-        app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
-        app.start();
-    </script>
-</body>
-</html>
+```js
+import * as pc from 'playcanvas';
+
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+
+const app = new pc.Application(canvas);
+
+// fill the available space at full resolution
+app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
+app.setCanvasResolution(pc.RESOLUTION_AUTO);
+
+// ensure canvas is resized when window changes size
+window.addEventListener('resize', () => app.resizeCanvas());
+
+// create box entity
+const box = new pc.Entity('cube');
+box.addComponent('model', {
+  type: 'box'
+});
+app.root.addChild(box);
+
+// create camera entity
+const camera = new pc.Entity('camera');
+camera.addComponent('camera', {
+  clearColor: new pc.Color(0.1, 0.2, 0.3)
+});
+app.root.addChild(camera);
+camera.setPosition(0, 0, 3);
+
+// create directional light entity
+const light = new pc.Entity('light');
+light.addComponent('light');
+app.root.addChild(light);
+light.setEulerAngles(45, 0, 0);
+
+// rotate the box according to the delta time since the last frame
+app.on('update', dt => box.rotate(10 * dt, 20 * dt, 30 * dt));
+
+app.start();
 ```
+
 このコードを自分で試すには[CodePen](https://codepen.io/playcanvas/pen/NPbxMj)をクリックします。
+
+PlayCanvas Engine をベースにしたローカル開発環境の設定に関する完全ガイドは[こちら](https://developer.playcanvas.com/user-manual/engine/standalone/)で見つけることができます。
 
 ## ビルドの手順
 
@@ -148,7 +139,6 @@ PlayCanvas エンジンは、HTML5 アプリやゲームを作成するための
 
 エディター関連のバグや問題については、[Editor's repo](https://github.com/playcanvas/editor)を参照してください。
 
-
 [npm-badge]: https://img.shields.io/npm/v/playcanvas
 [npm-url]: https://www.npmjs.com/package/playcanvas
 [minzip-badge]: https://img.shields.io/bundlephobia/minzip/playcanvas
@@ -158,4 +148,4 @@ PlayCanvas エンジンは、HTML5 アプリやゲームを作成するための
 [isitmaintained-url]: https://isitmaintained.com/project/playcanvas/engine
 [twitter-badge]: https://img.shields.io/twitter/follow/playcanvas.svg?style=social&label=Follow
 [twitter-url]: https://twitter.com/intent/follow?screen_name=playcanvas
-[docs]: https://developer.playcanvas.com/en/api/
+[docs]: https://api.playcanvas.com/modules/Engine.html
