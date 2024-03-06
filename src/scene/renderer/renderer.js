@@ -612,7 +612,7 @@ class Renderer {
         for (let i = 0; i < drawCallsCount; i++) {
             const drawCall = drawCalls[i];
             const si = drawCall.skinInstance;
-            if (si && drawCall.visibleThisFrame) {
+            if (si) {
                 si.updateMatrices(drawCall.node, _skinUpdateIndex);
                 si._dirty = true;
             }
