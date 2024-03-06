@@ -110,28 +110,10 @@ npm install
 
 现在您就可以运行不同的搭建选项了：
 
-| Command               | Description                               | Outputs                          |
-| --------------------- | ----------------------------------------- | -------------------------------- |
-| `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
-| `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run typedocs`    | Build engine [API reference docs][docs]   | `docs`                           |
-
-您也可以使用 PlayCanvas 的预搭建版本
-
-最新的开发版本：
-
-- https://code.playcanvas.com/playcanvas-latest.js
-- https://code.playcanvas.com/playcanvas-latest.min.js
-
-最新的稳定版本：
-
-- https://code.playcanvas.com/playcanvas-stable.js
-- https://code.playcanvas.com/playcanvas-stable.min.js
-
-特定引擎版本：
-
-- https://code.playcanvas.com/playcanvas-1.38.4.js
-- https://code.playcanvas.com/playcanvas-1.38.4.min.js
+| 命令                    | 描述                                             | 输出到     |
+| ----------------------- | ------------------------------------------------ | ---------- |
+| `npm run build`         | 构建所有引擎构建目标和类型声明                   | `build`    |
+| `npm run typedocs`      | 构建引擎[API参考文档][docs]                      | `typedocs` |
 
 ## PlayCanvas 平台
 

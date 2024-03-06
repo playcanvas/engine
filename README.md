@@ -38,7 +38,7 @@ PlayCanvas is used by leading companies in video games, advertising and visualiz
 
 ## Features
 
-PlayCanvas is a fully featured game engine.
+PlayCanvas is a fully-featured game engine.
 
 * 🧊 **Graphics** - Advanced 2D + 3D graphics engine built on WebGL 1 & 2.
 * 🏃 **Animation** - Powerful state-based animations for characters and arbitrary scene properties
@@ -108,30 +108,10 @@ npm install
 
 Now you can run various build options:
 
-| Command                 | Description                               | Outputs                          |
-| ----------------------- | ----------------------------------------- | -------------------------------- |
-| `npm run build`         | Build release, min, debug and profiler engines | `build\playcanvas[.min/.dbg/.prf].[mjs/js]` |
-| `npm run build:es5`     | Build release, min, debug and profiler engines for es5 only | `build\playcanvas[.min/.dbg/.prf].js` |
-| `npm run build:release` | Build release engine for es5 and es6      | `build\playcanvas.[mjs/js]`      |
-| `npm run build:types`   | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run typedocs`      | Build engine [API reference docs][docs]   | `docs`                           |
-
-Pre-built versions of the engine are also available.
-
-Latest development release (head revision of dev branch):
-
-* https://code.playcanvas.com/playcanvas-latest.js
-* https://code.playcanvas.com/playcanvas-latest.min.js
-
-Latest stable release:
-
-* https://code.playcanvas.com/playcanvas-stable.js
-* https://code.playcanvas.com/playcanvas-stable.min.js
-
-Specific engine versions:
-
-* https://code.playcanvas.com/playcanvas-1.38.4.js
-* https://code.playcanvas.com/playcanvas-1.38.4.min.js
+| Command                 | Description                                    | Outputs To |
+| ----------------------- | ---------------------------------------------- | ---------- |
+| `npm run build`         | Build all engine flavors and type declarations | `build`    |
+| `npm run typedocs`      | Build engine [API reference docs][docs]        | `typedocs` |
 
 ## PlayCanvas Editor
 

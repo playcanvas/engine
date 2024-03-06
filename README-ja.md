@@ -111,26 +111,10 @@ npm install
 
 これで、様々なオプションでビルドを実行できるようになりました。
 
-| コマンド                | 説明                               | 出力ファイル                          |
-| ---------------------- | ---------------------------------- | ------------------------------------ |
-| `npm run build`        | リリース用、デバッグ用、プロファイラー用エンジンをビルドする | `build\playcanvas[.dbg/.prf].js` |
-| `npm run build:types`  | TypeScript型定義ファイルをビルドする | `build\playcanvas.d.ts`              |
-| `npm run typedocs`     | [APIリファレンス][docs] をビルドする | `docs`                               |
-
-また、ビルド済みのエンジンも利用できます。
-
-最新版のビルド(devブランチのHEADリビジョン)
-
-* https://code.playcanvas.com/playcanvas-latest.js
-* https://code.playcanvas.com/playcanvas-latest.min.js
-
-最新安定版のビルド
-* https://code.playcanvas.com/playcanvas-stable.js
-* https://code.playcanvas.com/playcanvas-stable.min.js
-
-特定のバージョンのビルド
-* https://code.playcanvas.com/playcanvas-1.38.4.js
-* https://code.playcanvas.com/playcanvas-1.38.4.min.js
+| コマンド                | 説明                                               | 出力先     |
+| ----------------------- | -------------------------------------------------- | ---------- |
+| `npm run build`         | すべてのエンジンビルドターゲットと型宣言をビルドする | `build`    |
+| `npm run typedocs`      | エンジンの[APIリファレンスドキュメント][docs]をビルドする | `typedocs` |
 
 ## PlayCanvasエディター
 

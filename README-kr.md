@@ -112,29 +112,10 @@ npm install
 
 이제 다양한 빌드 옵션을 실행할 수 있습니다.
 
-| Command               | Description                               | Outputs                          |
-| --------------------- | ----------------------------------------- | -------------------------------- |
-| `npm run build`       | 릴리스용, 디버깅용, 프로파일러용 엔진을 빌드한다 | `build\playcanvas[.min/.dbg/.prf].[mjs/js]` |
-| `npm run build:es5`   | es5 전용 릴리스용, 디버깅용, 프로파일러용 엔진을 빌드한다 | `build\playcanvas[.min/.dbg/.prf].js` |
-| `npm run build:release` | es5 및 es6 전용 릴리스용 엔진을 빌드한다  | `build\playcanvas.[mjs/js]`      |
-| `npm run build:types` | TypeScript형 정의 파일을 빌드한다          | `build\playcanvas.d.ts`          |
-| `npm run typedocs`    | [API 레퍼런스] [docs]를 빌드한다           | `docs`                           |
-
-
-이전 버전의 엔진도 이용할수 있습니다.
-
-최신버전 빌드(master 브랜치의 HEAD 리비전)
-
-* https://code.playcanvas.com/playcanvas-latest.js
-* https://code.playcanvas.com/playcanvas-latest.min.js
-
-안정적인 최신 빌드
-* https://code.playcanvas.com/playcanvas-stable.js
-* https://code.playcanvas.com/playcanvas-stable.min.js
-
-특정 버전의 빌드
-* https://code.playcanvas.com/playcanvas-1.38.4.js
-* https://code.playcanvas.com/playcanvas-1.38.4.min.js
+| 명령어                  | 설명                                                | 출력 위치  |
+| ----------------------- | --------------------------------------------------- | ---------- |
+| `npm run build`         | 모든 엔진 빌드 대상과 타입 선언을 빌드합니다        | `build`    |
+| `npm run typedocs`      | 엔진 [API 참조 문서][docs]를 빌드합니다             | `typedocs` |
 
 ## PlayCanvas 에디터
 
