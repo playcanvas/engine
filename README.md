@@ -102,17 +102,19 @@ A full guide to setting up a local development environment based on the PlayCanv
 
 Ensure you have [Node.js](https://nodejs.org) installed. Then, install all of the required Node.js dependencies:
 
-    npm install
+```sh
+npm install
+```
 
 Now you can run various build options:
 
-| Command               | Description                               | Outputs                          |
-|-----------------------|-------------------------------------------|----------------------------------|
-| `npm run build`       | Build release, min, debug and profiler engines | `build\playcanvas[.min/.dbg/.prf].[mjs/js]` |
-| `npm run build:es5`   | Build release, min, debug and profiler engines for es5 only | `build\playcanvas[.min/.dbg/.prf].js` |
-| `npm run build:release` | Build release engine for es5 and es6 | `build\playcanvas.[mjs/js]` |
-| `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
+| Command                 | Description                               | Outputs                          |
+| ----------------------- | ----------------------------------------- | -------------------------------- |
+| `npm run build`         | Build release, min, debug and profiler engines | `build\playcanvas[.min/.dbg/.prf].[mjs/js]` |
+| `npm run build:es5`     | Build release, min, debug and profiler engines for es5 only | `build\playcanvas[.min/.dbg/.prf].js` |
+| `npm run build:release` | Build release engine for es5 and es6      | `build\playcanvas.[mjs/js]`      |
+| `npm run build:types`   | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
+| `npm run typedocs`      | Build engine [API reference docs][docs]   | `docs`                           |
 
 Pre-built versions of the engine are also available.
 

@@ -104,15 +104,17 @@ app.start();
 
 确保已安装 [Node.js](https://nodejs.org) ，并安装 Node.js 相关依赖组件。
 
-    npm install
+```sh
+npm install
+```
 
 现在您就可以运行不同的搭建选项了：
 
 | Command               | Description                               | Outputs                          |
-|-----------------------|-------------------------------------------|----------------------------------|
+| --------------------- | ----------------------------------------- | -------------------------------- |
 | `npm run build`       | Build release, debug and profiler engines | `build\playcanvas[.dbg/.prf].js` |
 | `npm run build:types` | Build engine Typescript bindings          | `build\playcanvas.d.ts`          |
-| `npm run docs`        | Build engine [API reference docs][docs]   | `docs`                           |
+| `npm run typedocs`    | Build engine [API reference docs][docs]   | `docs`                           |
 
 您也可以使用 PlayCanvas 的预搭建版本
 
