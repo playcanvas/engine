@@ -630,6 +630,9 @@ class LightComponent extends Component {
         return this.data.affectLightmapped;
     }
 
+    /**
+     * If enabled the light will be rendered into lightmaps.
+     */
     set bake(arg) {
         this._setValue('bake', arg, function (newValue, oldValue) {
             if (newValue) {
