@@ -32,88 +32,7 @@ import { properties } from './data.js';
  * // Update a property on a light component
  * entity.light.range = 20;
  * ```
- * @property {number} numCascades Number of shadow cascades. Can be 1, 2, 3 or 4. Defaults to 1,
- * representing no cascades.
- * @property {number} cascadeDistribution The distribution of subdivision of the camera frustum for
- * individual shadow cascades. Only used if {@link LightComponent#numCascades} is larger than 1.
- * Can be a value in range of 0 and 1. Value of 0 represents a linear distribution, value of 1
- * represents a logarithmic distribution. Defaults to 0.5. Larger value increases the resolution of
- * the shadows in the near distance.
- * @property {number} normalOffsetBias Normal offset depth bias. Valid range is 0 to 1. Defaults to
- * 0.
- * @property {number} range The range of the light. Affects omni and spot lights only. Defaults to
- * 10.
- * @property {number} innerConeAngle The angle at which the spotlight cone starts to fade off. The
- * angle is specified in degrees. Affects spot lights only. Defaults to 40.
- * @property {number} outerConeAngle The angle at which the spotlight cone has faded to nothing.
- * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
- * @property {number} penumbraSize Size of penumbra for contact hardening shadows. For area lights
- * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
- * it's the area size of the light. Defaults to 1.0.
- * @property {number} falloffMode Controls the rate at which a light attenuates from its position.
- * Can be:
  *
- * - {@link LIGHTFALLOFF_LINEAR}: Linear.
- * - {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
- *
- * Affects omni and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
- * @property {number} mask Defines a mask to determine which {@link MeshInstance}s are lit by this
- * light. Defaults to 1.
- * @property {boolean} affectDynamic If enabled the light will affect non-lightmapped objects.
- * @property {boolean} affectLightmapped If enabled the light will affect lightmapped objects.
- * @property {number} bakeNumSamples If bake is true, this specifies the number of samples used to
- * bake this light into the lightmap. Defaults to 1. Maximum value is 255.
- * @property {number} bakeArea If bake is true and the light type is {@link LIGHTTYPE_DIRECTIONAL},
- * this specifies the penumbra angle in degrees, allowing a soft shadow boundary. Defaults to 0.
- * @property {boolean} bakeDir If enabled and bake=true, the light's direction will contribute to
- * directional lightmaps. Be aware, that directional lightmap is an approximation and can only hold
- * single direction per pixel. Intersecting multiple lights with bakeDir=true may lead to incorrect
- * look of specular/bump-mapping in the area of intersection. The error is not always visible
- * though, and highly scene-dependent.
- * @property {number} shadowUpdateMode Tells the renderer how often shadows must be updated for
- * this light. Can be:
- *
- * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
- * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to
- * {@link SHADOWUPDATE_NONE}.
- * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
- * @property {number} shadowType Type of shadows being rendered by this light. Options:
- *
- * - {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3
- * sampling.
- * - {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast
- * shadows for this mode to work correctly.
- * - {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires
- * OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
- * - {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires
- * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
- * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
- * sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
- * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
- * @property {number} vsmBlurMode Blurring mode for variance shadow maps. Can be:
- *
- * - {@link BLUR_BOX}: Box filter.
- * - {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
- * @property {number} vsmBlurSize Number of samples used for blurring a variance shadow map. Only
- * uneven numbers work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
- * @property {number} cookieAsset Asset that has texture that will be assigned to cookie internally
- * once asset resource is available.
- * @property {Texture} cookie Projection texture. Must be 2D for spot and cubemap for omni light
- * (ignored if incorrect type is used).
- * @property {number} cookieIntensity Projection texture intensity (default is 1).
- * @property {boolean} cookieFalloff Toggle normal spotlight falloff when projection texture is
- * used. When set to false, spotlight will work like a pure texture projector (only fading with
- * distance). Default is false.
- * @property {string} cookieChannel Color channels of the projection texture to use. Can be "r",
- * "g", "b", "a", "rgb".
- * @property {number} cookieAngle Angle for spotlight cookie rotation.
- * @property {import('../../../core/math/vec2.js').Vec2} cookieScale Spotlight cookie scale.
- * @property {import('../../../core/math/vec2.js').Vec2} cookieOffset Spotlight cookie position
- * offset.
- * @property {boolean} isStatic Mark light as non-movable (optimization).
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this light should
- * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
- * instead.
  * @augments Component
  * @category Graphics
  */
@@ -157,6 +76,8 @@ class LightComponent extends Component {
     }
 
     /**
+     * The light.
+     *
      * @type {import('../../../scene/light.js').Light}
      */
     set light(arg) {
@@ -175,7 +96,7 @@ class LightComponent extends Component {
      * - "omni": An omni-directional light that illuminates in all directions from the light source.
      * - "spot": An omni-directional light but is bounded by a cone.
      * Defaults to "directional".
-     * 
+     *
      * @type {string}
      */
     set type(arg) {
@@ -192,7 +113,7 @@ class LightComponent extends Component {
     /**
      * The Color of the light. The alpha component of the color is ignored.
      * Defaults to white (1, 1, 1).
-     * 
+     *
      * @type {import('../../../core/math/color.js').Color};
      */
     set color(arg) {
@@ -212,7 +133,7 @@ class LightComponent extends Component {
 
     /**
      * The brightness of the light. Defaults to 1.
-     * 
+     *
      * @type {number}
      */
     set intensity(arg) {
@@ -227,7 +148,7 @@ class LightComponent extends Component {
 
     /**
      * The physically based luminance. Only used if scene.physicalUnits is true. Defaults to 0.
-     * 
+     *
      * @type {number}
      */
     set luminance(arg) {
@@ -247,9 +168,9 @@ class LightComponent extends Component {
      * - {@link LIGHTSHAPE_RECT}: Rectangle shape.
      * - {@link LIGHTSHAPE_DISK}: Disk shape.
      * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
-     * 
+     *
      * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
-     * 
+     *
      * @type {number}
      */
     set shape(arg) {
@@ -265,7 +186,7 @@ class LightComponent extends Component {
     /**
      * If enabled, material specularity will be affected by this light.
      * Ignored for lights other than {@link LIGHTTYPE_DIRECTIONAL}. Defaults to true.
-     * 
+     *
      * @type {boolean}
      */
     set affectSpecularity(arg) {
@@ -280,7 +201,7 @@ class LightComponent extends Component {
 
     /**
      * If enabled the light will cast shadows. Defaults to false.
-     * 
+     *
      * @type {boolean}
      */
     set castShadows(arg) {
@@ -294,9 +215,9 @@ class LightComponent extends Component {
     }
 
     /**
-     * The distance from the viewpoint beyond which shadows are no 
+     * The distance from the viewpoint beyond which shadows are no
      * longer rendered. Affects directional lights only. Defaults to 40.
-     * 
+     *
      * @type {number}
      */
     set shadowDistance(arg) {
@@ -312,7 +233,7 @@ class LightComponent extends Component {
     /**
      * The intensity of the shadow darkening, 1 being shadows are entirely black.
      * Defaults to 1.
-     * 
+     *
      * @type {number}
      */
     set shadowIntensity(arg) {
@@ -328,7 +249,7 @@ class LightComponent extends Component {
     /**
      * The size of the texture used for the shadow map. Valid sizes
      * are 64, 128, 256, 512, 1024, 2048. Defaults to 1024.
-     * 
+     *
      * @type {number}
      */
     set shadowResolution(arg) {
@@ -344,7 +265,7 @@ class LightComponent extends Component {
     /**
      * he depth bias for tuning the appearance of the shadow mapping
      * generated by this light. Valid range is 0 to 1. Defaults to 0.05.
-     * 
+     *
      * @type {number}
      */
     set shadowBias(arg) {
@@ -357,6 +278,12 @@ class LightComponent extends Component {
         return this.data.shadowBias;
     }
 
+    /**
+     * Number of shadow cascades. Can be 1, 2, 3 or 4. Defaults to 1,
+     * representing no cascades.
+     *
+     * @type {number}
+     */
     set numCascades(arg) {
         this._setValue('numCascades', arg, function (newValue, oldValue) {
             this.light.numCascades = math.clamp(Math.floor(newValue), 1, 4);
@@ -367,6 +294,12 @@ class LightComponent extends Component {
         return this.data.numCascades;
     }
 
+    /**
+     * If bake is true, this specifies the number of samples used to
+     * bake this light into the lightmap. Defaults to 1. Maximum value is 255.
+     *
+     * @type {number}
+     */
     set bakeNumSamples(arg) {
         this._setValue('bakeNumSamples', arg, function (newValue, oldValue) {
             this.light.bakeNumSamples = math.clamp(Math.floor(newValue), 1, 255);
@@ -377,6 +310,12 @@ class LightComponent extends Component {
         return this.data.bakeNumSamples;
     }
 
+    /**
+     * If bake is true and the light type is {@link LIGHTTYPE_DIRECTIONAL},
+     * this specifies the penumbra angle in degrees, allowing a soft shadow boundary. Defaults to 0.
+     *
+     * @type {number}
+     */
     set bakeArea(arg) {
         this._setValue('bakeArea', arg, function (newValue, oldValue) {
             this.light.bakeArea = math.clamp(newValue, 0, 180);
@@ -387,6 +326,15 @@ class LightComponent extends Component {
         return this.data.bakeArea;
     }
 
+    /**
+     * The distribution of subdivision of the camera frustum for
+     * individual shadow cascades. Only used if {@link LightComponent#numCascades} is larger than 1.
+     * Can be a value in range of 0 and 1. Value of 0 represents a linear distribution, value of 1
+     * represents a logarithmic distribution. Defaults to 0.5. Larger value increases the resolution of
+     * the shadows in the near distance.
+     *
+     * @type {number}
+     */
     set cascadeDistribution(arg) {
         this._setValue('cascadeDistribution', arg, function (newValue, oldValue) {
             this.light.cascadeDistribution = math.clamp(newValue, 0, 1);
@@ -397,6 +345,12 @@ class LightComponent extends Component {
         return this.data.cascadeDistribution;
     }
 
+    /**
+     * Normal offset depth bias. Valid range is 0 to 1. Defaults to
+     * 0.
+     *
+     * @type {number}
+     */
     set normalOffsetBias(arg) {
         this._setValue('normalOffsetBias', arg, function (newValue, oldValue) {
             this.light.normalOffsetBias = math.clamp(newValue, 0, 1);
@@ -407,6 +361,12 @@ class LightComponent extends Component {
         return this.data.normalOffsetBias;
     }
 
+    /**
+     * The range of the light. Affects omni and spot lights only. Defaults to
+     * 10.
+     *
+     * @type {number}
+     */
     set range(arg) {
         this._setValue('range', arg, function (newValue, oldValue) {
             this.light.attenuationEnd = newValue;
@@ -417,6 +377,12 @@ class LightComponent extends Component {
         return this.data.range;
     }
 
+    /**
+     * The angle at which the spotlight cone starts to fade off. The
+     * angle is specified in degrees. Affects spot lights only. Defaults to 40.
+     *
+     * @type {number}
+     */
     set innerConeAngle(arg) {
         this._setValue('innerConeAngle', arg, function (newValue, oldValue) {
             this.light.innerConeAngle = newValue;
@@ -427,6 +393,12 @@ class LightComponent extends Component {
         return this.data.innerConeAngle;
     }
 
+    /**
+     * The angle at which the spotlight cone has faded to nothing.
+     * The angle is specified in degrees. Affects spot lights only. Defaults to 45.
+     *
+     * @type {number}
+     */
     set outerConeAngle(arg) {
         this._setValue('outerConeAngle', arg, function (newValue, oldValue) {
             this.light.outerConeAngle = newValue;
@@ -437,6 +409,17 @@ class LightComponent extends Component {
         return this.data.outerConeAngle;
     }
 
+    /**
+     * Controls the rate at which a light attenuates from its position.
+     * Can be:
+     *
+     * - {@link LIGHTFALLOFF_LINEAR}: Linear.
+     * - {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
+     *
+     * Affects omni and spot lights only. Defaults to {@link LIGHTFALLOFF_LINEAR}.
+     *
+     * @type {number}
+     */
     set falloffMode(arg) {
         this._setValue('falloffMode', arg, function (newValue, oldValue) {
             this.light.falloffMode = newValue;
@@ -447,6 +430,23 @@ class LightComponent extends Component {
         return this.data.falloffMode;
     }
 
+    /**
+     * Type of shadows being rendered by this light. Options:
+     *
+     * - {@link SHADOW_PCF3}: Render depth (color-packed on WebGL 1.0), can be used for PCF 3x3
+     * sampling.
+     * - {@link SHADOW_VSM8}: Render packed variance shadow map. All shadow receivers must also cast
+     * shadows for this mode to work correctly.
+     * - {@link SHADOW_VSM16}: Render 16-bit exponential variance shadow map. Requires
+     * OES_texture_half_float extension. Falls back to {@link SHADOW_VSM8}, if not supported.
+     * - {@link SHADOW_VSM32}: Render 32-bit exponential variance shadow map. Requires
+     * OES_texture_float extension. Falls back to {@link SHADOW_VSM16}, if not supported.
+     * - {@link SHADOW_PCF5}: Render depth buffer only, can be used for hardware-accelerated PCF 5x5
+     * sampling. Requires WebGL2. Falls back to {@link SHADOW_PCF3} on WebGL 1.0.
+     * - {@link SHADOW_PCSS}: Render depth as color, and use the software sampled PCSS method for shadows.
+     *
+     * @type {number}
+     */
     set shadowType(arg) {
         this._setValue('shadowType', arg, function (newValue, oldValue) {
             this.light.shadowType = newValue;
@@ -457,6 +457,12 @@ class LightComponent extends Component {
         return this.data.shadowType;
     }
 
+    /**
+     * Number of samples used for blurring a variance shadow map. Only
+     * uneven numbers work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
+     *
+     * @type {number}
+     */
     set vsmBlurSize(arg) {
         this._setValue('vsmBlurSize', arg, function (newValue, oldValue) {
             this.light.vsmBlurSize = newValue;
@@ -467,6 +473,14 @@ class LightComponent extends Component {
         return this.data.vsmBlurSize;
     }
 
+    /**
+     * Blurring mode for variance shadow maps. Can be:
+     *
+     * - {@link BLUR_BOX}: Box filter.
+     * - {@link BLUR_GAUSSIAN}: Gaussian filter. May look smoother than box, but requires more samples.
+     *
+     * @type {number}
+     */
     set vsmBlurMode(arg) {
         this._setValue('vsmBlurMode', arg, function (newValue, oldValue) {
             this.light.vsmBlurMode = newValue;
@@ -477,6 +491,11 @@ class LightComponent extends Component {
         return this.data.vsmBlurMode;
     }
 
+    /**
+     * TODO:
+     *
+     * @type {number}
+     */
     set vsmBias(arg) {
         this._setValue('vsmBias', arg, function (newValue, oldValue) {
             this.light.vsmBias = math.clamp(newValue, 0, 1);
@@ -487,6 +506,12 @@ class LightComponent extends Component {
         return this.data.vsmBias;
     }
 
+    /**
+     * Asset that has texture that will be assigned to cookie internally
+     * once asset resource is available.
+     *
+     * @type {number}
+     */
     set cookieAsset(arg) {
         this._setValue('cookieAsset', arg, function (newValue, oldValue) {
             if (
@@ -517,6 +542,12 @@ class LightComponent extends Component {
         return this.data.cookieAsset;
     }
 
+    /**
+     * Projection texture. Must be 2D for spot and cubemap for omni light
+     * (ignored if incorrect type is used).
+     *
+     * @type {Texture}
+     */
     set cookie(arg) {
         this._setValue('cookie', arg, function (newValue, oldValue) {
             this.light.cookie = newValue;
@@ -527,6 +558,11 @@ class LightComponent extends Component {
         return this.data.cookie;
     }
 
+    /**
+     * Projection texture intensity (default is 1).
+     *
+     * @type {number}
+     */
     set cookieIntensity(arg) {
         this._setValue('cookieIntensity', arg, function (newValue, oldValue) {
             this.light.cookieIntensity = math.clamp(newValue, 0, 1);
@@ -537,6 +573,13 @@ class LightComponent extends Component {
         return this.data.cookieIntensity;
     }
 
+    /**
+     * Toggle normal spotlight falloff when projection texture is
+     * used. When set to false, spotlight will work like a pure texture projector (only fading with
+     * distance). Default is false.
+     *
+     * @type {boolean}
+     */
     set cookieFalloff(arg) {
         this._setValue('cookieFalloff', arg, function (newValue, oldValue) {
             this.light.cookieFalloff = newValue;
@@ -547,6 +590,11 @@ class LightComponent extends Component {
         return this.data.cookieFalloff;
     }
 
+    /**
+     * Color channels of the projection texture to use. Can be "r", "g", "b", "a", "rgb".
+     *
+     * @type {string}
+     */
     set cookieChannel(arg) {
         this._setValue('cookieChannel', arg, function (newValue, oldValue) {
             this.light.cookieChannel = newValue;
@@ -557,6 +605,11 @@ class LightComponent extends Component {
         return this.data.cookieChannel;
     }
 
+    /**
+     * Angle for spotlight cookie rotation.
+     *
+     * @type {number}
+     */
     set cookieAngle(arg) {
         this._setValue('cookieAngle', arg, function (newValue, oldValue) {
             if (newValue !== 0 || this.cookieScale !== null) {
@@ -581,6 +634,11 @@ class LightComponent extends Component {
         return this.data.cookieAngle;
     }
 
+    /**
+     * Spotlight cookie scale.
+     *
+     * @type {import('../../../core/math/vec2.js').Vec2}
+     */
     set cookieScale(arg) {
         this._setValue(
             'cookieScale',
@@ -606,6 +664,11 @@ class LightComponent extends Component {
         return this.data.cookieScale;
     }
 
+    /**
+     * Spotlight cookie position offset.
+     *
+     * @type {import('../../../core/math/vec2.js').Vec2}
+     */
     set cookieOffset(arg) {
         this._setValue(
             'cookieOffset',
@@ -621,6 +684,16 @@ class LightComponent extends Component {
         return this.data.cookieOffset;
     }
 
+    /**
+     * Tells the renderer how often shadows must be updated for
+     * this light. Can be:
+     *
+     * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
+     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
+     * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
+     *
+     * @type {number}
+     */
     set shadowUpdateMode(arg) {
         this._setValue(
             'shadowUpdateMode',
@@ -636,6 +709,12 @@ class LightComponent extends Component {
         return this.data.shadowUpdateMode;
     }
 
+    /**
+     * Defines a mask to determine which {@link MeshInstance}s are lit by this
+     * light. Defaults to 1.
+     *
+     * @type {number}
+     */
     set mask(arg) {
         this._setValue('mask', arg, function (newValue, oldValue) {
             this.light.mask = newValue;
@@ -646,6 +725,11 @@ class LightComponent extends Component {
         return this.data.mask;
     }
 
+    /**
+     * If enabled the light will affect non-lightmapped objects.
+     *
+     * @type {boolean}
+     */
     set affectDynamic(arg) {
         this._setValue('affectDynamic', arg, function (newValue, oldValue) {
             if (newValue) {
@@ -661,6 +745,11 @@ class LightComponent extends Component {
         return this.data.affectDynamic;
     }
 
+    /**
+     * If enabled the light will affect lightmapped objects.
+     *
+     * @type {boolean}
+     */
     set affectLightmapped(arg) {
         this._setValue('affectLightmapped', arg, function (newValue, oldValue) {
             if (newValue) {
@@ -679,7 +768,7 @@ class LightComponent extends Component {
 
     /**
      * If enabled the light will be rendered into lightmaps.
-     * 
+     *
      * @type {boolean}
      */
     set bake(arg) {
@@ -699,6 +788,15 @@ class LightComponent extends Component {
         return this.data.bake;
     }
 
+    /**
+     * If enabled and bake=true, the light's direction will contribute to
+     * directional lightmaps. Be aware, that directional lightmap is an approximation and can only hold
+     * single direction per pixel. Intersecting multiple lights with bakeDir=true may lead to incorrect
+     * look of specular/bump-mapping in the area of intersection. The error is not always visible
+     * though, and highly scene-dependent.
+     *
+     * @type {boolean}
+     */
     set bakeDir(arg) {
         this._setValue('bakeDir', arg, function (newValue, oldValue) {
             this.light.bakeDir = newValue;
@@ -709,6 +807,11 @@ class LightComponent extends Component {
         return this.data.bakeDir;
     }
 
+    /**
+     * Mark light as non-movable (optimization).
+     *
+     * @type {boolean}
+     */
     set isStatic(arg) {
         this._setValue('isStatic', arg, function (newValue, oldValue) {
             this.light.isStatic = newValue;
@@ -719,6 +822,13 @@ class LightComponent extends Component {
         return this.data.isStatic;
     }
 
+    /**
+     * An array of layer IDs ({@link Layer#id}) to which this light should
+     * belong. Don't push/pop/splice or modify this array, if you want to change it - set a new one
+     * instead.
+     *
+     * @type {number[]}
+     */
     set layers(arg) {
         this._setValue('layers', arg, function (newValue, oldValue) {
             for (let i = 0; i < oldValue.length; i++) {
@@ -755,6 +865,13 @@ class LightComponent extends Component {
         return this.light.shadowUpdateOverrides;
     }
 
+    /**
+     * Size of penumbra for contact hardening shadows. For area lights
+     * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
+     * it's the area size of the light. Defaults to 1.0.
+     *
+     * @type {number}
+     */
     set penumbraSize(value) {
         this.light.penumbraSize = value;
     }
