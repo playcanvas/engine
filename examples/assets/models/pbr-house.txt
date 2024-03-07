@@ -1,0 +1,5 @@
+The house model has been obtained from this address:
+https://sketchfab.com/3d-models/house-03-pbr-c56521b89188460a99235dec8bcd0ed3
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/

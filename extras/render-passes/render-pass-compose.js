@@ -69,15 +69,25 @@ const fragmentShader = `
     #endif
 
     void main() {
-        vec4 scene = texture2D(sceneTexture, uv0);
+
+        vec2 uv = uv0;
+
+        // TAA pass renders upside-down on WebGPU, flip it here
+        #ifdef TAA
+        #ifdef WEBGPU
+            uv.y = 1.0 - uv.y;
+        #endif
+        #endif
+
+        vec4 scene = texture2D(sceneTexture, uv);
         vec3 result = scene.rgb;
 
         #ifdef FRINGING
-            result = fringing(uv0, result);
+            result = fringing(uv, result);
         #endif
 
         #ifdef BLOOM
-            vec3 bloom = texture2D(bloomTexture, uv0).rgb;
+            vec3 bloom = texture2D(bloomTexture, uv).rgb;
             result += bloom * bloomIntensity;
         #endif
 
@@ -88,7 +98,7 @@ const fragmentShader = `
         result = toneMap(result);
 
         #ifdef VIGNETTE
-            result *= vignette(uv0);
+            result *= vignette(uv);
         #endif
 
         result = gammaCorrectOutput(result);
@@ -130,6 +140,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     fringingIntensity = 10;
 
+    _taaEnabled = false;
+
     _key = '';
 
     constructor(graphicsDevice) {
@@ -152,6 +164,17 @@ class RenderPassCompose extends RenderPassShaderQuad {
 
     get bloomTexture() {
         return this._bloomTexture;
+    }
+
+    set taaEnabled(value) {
+        if (this._taaEnabled !== value) {
+            this._taaEnabled = value;
+            this._shaderDirty = true;
+        }
+    }
+
+    get taaEnabled() {
+        return this._taaEnabled;
     }
 
     set gradingEnabled(value) {
@@ -225,7 +248,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                 `-${this.bloomTexture ? 'bloom' : 'nobloom'}` +
                 `-${this.gradingEnabled ? 'grading' : 'nograding'}` +
                 `-${this.vignetteEnabled ? 'vignette' : 'novignette'}` +
-                `-${this.fringingEnabled ? 'fringing' : 'nofringing'}`;
+                `-${this.fringingEnabled ? 'fringing' : 'nofringing'}` +
+                `-${this.taaEnabled ? 'taa' : 'notaa'}`;
 
             if (this._key !== key) {
                 this._key = key;
@@ -234,7 +258,8 @@ class RenderPassCompose extends RenderPassShaderQuad {
                     (this.bloomTexture ? `#define BLOOM\n` : '') +
                     (this.gradingEnabled ? `#define GRADING\n` : '') +
                     (this.vignetteEnabled ? `#define VIGNETTE\n` : '') +
-                    (this.fringingEnabled ? `#define FRINGING\n` : '');
+                    (this.fringingEnabled ? `#define FRINGING\n` : '') +
+                    (this.taaEnabled ? `#define TAA\n` : '');
 
                 const fsChunks =
                 shaderChunks.decodePS +
