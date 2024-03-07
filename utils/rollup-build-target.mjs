@@ -11,7 +11,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { shaderChunks } from './rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './rollup-import-validation.mjs';
 import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
-import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './rollup-dynamic-import-transform.mjs';
+import { dynamicImportTransform } from './rollup-dynamic-import-transform.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -125,7 +125,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
-        sourcemap: (sourceMap[buildType]) || sourceMap.release,
+        sourcemap: shouldBundle && sourceMap[buildType] || sourceMap.release,
         name: 'pc',
         preserveModules: !shouldBundle
     };
@@ -178,12 +178,11 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         output: outputOptions,
         plugins: [
             jscc(jsccParam),
-            moduleFormat === 'es5' ? dynamicImportLegacyBrowserSupport() : undefined,
+            moduleFormat === 'es5' ? dynamicImportTransform() : undefined,
             shaderChunks({ enabled: buildType !== 'debug' }),
             engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
-            moduleFormat === 'es6' && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
             spacesToTabs(buildType !== 'debug')
         ]
     };
