@@ -738,6 +738,8 @@ export const SHADER_PICK = 3;
 // shadow pass used by the shadow rendering code
 export const SHADER_SHADOW = 4;
 
+export const SHADER_PREPASS_VELOCITY = 5;
+
 /**
  * Shader that performs forward rendering.
  *

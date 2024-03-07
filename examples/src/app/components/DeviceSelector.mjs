@@ -5,7 +5,7 @@ import {
     DEVICETYPE_WEBGL2,
     DEVICETYPE_WEBGPU,
     DEVICETYPE_NULL
-} from 'playcanvas/src/platform/graphics/constants.js';
+} from 'playcanvas';
 import { Component } from 'react';
 import { SelectInput } from '@playcanvas/pcui/react';
 

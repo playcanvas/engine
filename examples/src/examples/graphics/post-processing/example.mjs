@@ -44,6 +44,7 @@ const createOptions = new pc.AppOptions();
 createOptions.graphicsDevice = device;
 createOptions.mouse = new pc.Mouse(document.body);
 createOptions.touch = new pc.TouchDevice(document.body);
+createOptions.keyboard = new pc.Keyboard(window);
 
 createOptions.componentSystems = [
     pc.RenderComponentSystem,
@@ -81,7 +82,8 @@ assetListLoader.load(() => {
     // disable skydome rendering itself, we don't need it as we use camera clear color
     app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-    // render in HDR mode
+    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
+    // as that is applied in the final compose pass
     app.scene.toneMapping = pc.TONEMAP_LINEAR;
     app.scene.gammaCorrection = pc.GAMMA_NONE;
 
@@ -143,7 +145,9 @@ assetListLoader.load(() => {
 
     // add orbit camera script with a mouse and a touch support
     cameraEntity.addComponent('script');
-    cameraEntity.script.create('orbitCamera', {
+
+    // add orbit camera script with a mouse and a touch support
+    cameraEntity.script.create("orbitCamera", {
         attributes: {
             inertiaFactor: 0.2,
             focusEntity: mosquitoEntity,
@@ -154,7 +158,6 @@ assetListLoader.load(() => {
     cameraEntity.script.create('orbitCameraInputMouse');
     cameraEntity.script.create('orbitCameraInputTouch');
 
-    // position the camera in the world
     cameraEntity.setLocalPosition(0, 40, -220);
     cameraEntity.lookAt(0, 0, 100);
     app.root.addChild(cameraEntity);
@@ -218,9 +221,9 @@ assetListLoader.load(() => {
         samples: 0, // number of samples for multi-sampling
         sceneColorMap: true, // true if the scene color should be captured
 
-        // disabled by default as this is WIP
+        // disabled TAA as it currently does not handle dynamic objects
         prepassEnabled: false,
-        taaEnabled: false // true if temporal anti-aliasing should be used
+        taaEnabled: false
     };
 
     const setupRenderPass = () => {
@@ -245,6 +248,7 @@ assetListLoader.load(() => {
         const taaEnabled = data.get('data.taa.enabled');
         if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
             currentOptions.taaEnabled = taaEnabled;
+            currentOptions.prepassEnabled = taaEnabled;
 
             // create new pass
             setupRenderPass();
