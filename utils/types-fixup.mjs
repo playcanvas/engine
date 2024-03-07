@@ -30,13 +30,6 @@ import { ScriptType } from './script-type.js';
     fs.writeFileSync(path, dts);
 });
 
-// Fix up description parameter for VertexFormat constructor because tsc
-// doesn't recognize it as an array
-let path = './types/platform/graphics/vertex-format.d.ts';
-let dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
-fs.writeFileSync(path, dts);
-
 // A regex that matches a string starting with 'constructor' and ending with ');'
 const regexConstructor = /constructor(.*?)\);/g;
 
