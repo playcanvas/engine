@@ -51,8 +51,8 @@ const componentProps = [
     ['enabled', 'boolean']
 ];
 
-path = './types/framework/components/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
+let path = './types/framework/components/component.d.ts';
+let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
 fs.writeFileSync(path, dts);
 
