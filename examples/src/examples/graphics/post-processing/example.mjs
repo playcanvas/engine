@@ -154,8 +154,8 @@ assetListLoader.load(() => {
             frameOnStart: false
         }
     });
-    cameraEntity.script.create("orbitCameraInputMouse");
-    cameraEntity.script.create("orbitCameraInputTouch");
+    cameraEntity.script.create('orbitCameraInputMouse');
+    cameraEntity.script.create('orbitCameraInputTouch');
 
     cameraEntity.setLocalPosition(0, 40, -220);
     cameraEntity.lookAt(0, 0, 100);
