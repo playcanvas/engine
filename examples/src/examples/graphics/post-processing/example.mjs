@@ -82,7 +82,8 @@ assetListLoader.load(() => {
     // disable skydome rendering itself, we don't need it as we use camera clear color
     app.scene.layers.getLayerByName('Skybox').enabled = false;
 
-    // render in HDR mode
+    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
+    // as that is applied in the final compose pass
     app.scene.toneMapping = pc.TONEMAP_LINEAR;
     app.scene.gammaCorrection = pc.GAMMA_NONE;
 

@@ -69,7 +69,8 @@ assetListLoader.load(() => {
     app.scene.skyboxMip = 0;
     app.scene.exposure = 1.0;
 
-    // render in HDR mode
+    // the render passes render in HDR format, and so disable output tone mapping and gamma correction,
+    // as that is applied in the final compose pass
     app.scene.toneMapping = pc.TONEMAP_LINEAR;
     app.scene.gammaCorrection = pc.GAMMA_NONE;
 
