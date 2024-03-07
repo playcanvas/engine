@@ -126,7 +126,7 @@ class RenderPassCameraFrame extends RenderPass {
         // create a render target to render the scene into
         const format = device.getRenderableHdrFormat() || PIXELFORMAT_RGBA8;
         const sceneTexture = new Texture(device, {
-            name: 'SceneTexture',
+            name: 'SceneColor',
             width: 4,
             height: 4,
             format: format,
@@ -176,9 +176,10 @@ class RenderPassCameraFrame extends RenderPass {
         this.scenePass = new RenderPassForward(device, composition, scene, renderer);
         this.scenePass.init(rt, sceneOptions);
 
-        // if prepass is enabled, do not clear the depth buffer when rendering the scene
+        // if prepass is enabled, do not clear the depth buffer when rendering the scene, and preserve it
         if (options.prepassEnabled) {
             this.scenePass.noDepthClear = true;
+            this.scenePass.depthStencilOps.storeDepth = true;
         }
 
         // layers this pass renders depend on the grab pass being used
@@ -226,8 +227,8 @@ class RenderPassCameraFrame extends RenderPass {
 
         // create a compose pass, which combines the scene texture with the bloom texture
         this.composePass = new RenderPassCompose(app.graphicsDevice);
-        // this.composePass.sceneTexture = sceneTextureWithTaa;
         this.composePass.bloomTexture = this.bloomPass.bloomTexture;
+        this.composePass.taaEnabled = options.taaEnabled;
 
         // compose pass renders directly to target renderTarget
         this.composePass.init(targetRenderTarget);

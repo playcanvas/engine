@@ -376,6 +376,8 @@ class Renderer {
             // camera jitter
             const { jitter } = camera;
             let noise = Vec4.ZERO;
+            let jitterX = 0;
+            let jitterY = 0;
             if (jitter > 0) {
 
                 // render target size
@@ -384,18 +386,18 @@ class Renderer {
 
                 // offsets
                 const offset = _haltonSequence[this.device.renderVersion % _haltonSequence.length];
-                const offsetX = jitter * (offset.x * 2 - 1) / targetWidth;
-                const offsetY = jitter * (offset.y * 2 - 1) / targetHeight;
+                jitterX = jitter * (offset.x * 2 - 1) / targetWidth;
+                jitterY = jitter * (offset.y * 2 - 1) / targetHeight;
 
                 // apply offset to projection matrix
                 projMat = _tempProjMat4.copy(projMat);
-                projMat.data[8] = offsetX;
-                projMat.data[9] = offsetY;
+                projMat.data[8] = jitterX;
+                projMat.data[9] = jitterY;
 
                 // apply offset to skybox projection matrix
                 projMatSkybox = _tempProjMat5.copy(projMatSkybox);
-                projMatSkybox.data[8] = offsetX;
-                projMatSkybox.data[9] = offsetY;
+                projMatSkybox.data[8] = jitterX;
+                projMatSkybox.data[9] = jitterY;
 
                 // blue noise vec4 - only set when jitter is enabled
                 noise = this.blueNoise.vec4(_tempVec4);
@@ -429,7 +431,7 @@ class Renderer {
             this.viewProjId.setValue(viewProjMat.data);
 
             // store matrices needed by TAA
-            camera._storeShaderMatrices(viewProjMat, this.device.renderVersion);
+            camera._storeShaderMatrices(viewProjMat, jitterX, jitterY, this.device.renderVersion);
 
             this.flipYId.setValue(flipY ? -1 : 1);
 
