@@ -356,39 +356,37 @@ class ScriptType extends EventHandler {
     }
 
     /**
-     * @function
-     * @name ScriptType#[initialize]
-     * @description Called when script is about to run for the first time.
+     * Called when script is about to run for the first time.
      */
+    initialize() {}
 
     /**
-     * @function
-     * @name ScriptType#[postInitialize]
-     * @description Called after all initialize methods are executed in the same tick or enabling chain of actions.
+     * Called after all initialize methods are executed in the same tick or enabling chain of actions.
      */
+    postInitialize() {}
 
     /**
-     * @function
-     * @name ScriptType#[update]
-     * @description Called for enabled (running state) scripts on each tick.
+     * Called for enabled (running state) scripts on each tick.
+     *
      * @param {number} dt - The delta time in seconds since the last frame.
      */
+    update(dt) {}
 
     /**
-     * @function
-     * @name ScriptType#[postUpdate]
-     * @description Called for enabled (running state) scripts on each tick, after update.
+     * Called for enabled (running state) scripts on each tick, after update.
+     *
      * @param {number} dt - The delta time in seconds since the last frame.
      */
+    postUpdate(dt) {}
 
     /**
-     * @function
-     * @name ScriptType#[swap]
-     * @description Called when a ScriptType that already exists in the registry
+     * Called when a ScriptType that already exists in the registry
      * gets redefined. If the new ScriptType has a `swap` method in its prototype,
      * then it will be executed to perform hot-reload at runtime.
+     *
      * @param {ScriptType} old - Old instance of the scriptType to copy data to the new instance.
      */
+    swap(old) {}
 }
 
 export { ScriptType };
