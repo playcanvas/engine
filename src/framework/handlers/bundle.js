@@ -48,15 +48,17 @@ class BundleHandler extends ResourceHandler {
 
             untar.on('error', (err) => {
                 Debug.error(err);
+                this._retries = 0;
                 callback(err);
             });
         }).catch((err) => {
             this._retries++;
-            Debug.error(err);
             if (this._retries < this.maxRetries) {
                 Debug.error(`Bundle failed to load retrying (attempt ${this._retries}`);
                 this.load(url, callback);
             } else {
+                Debug.error(err);
+                this._retries = 0;
                 callback(err);
             }
 
