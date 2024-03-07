@@ -81,7 +81,7 @@ class LightComponent extends Component {
      * @type {import('../../../scene/light.js').Light}
      */
     set light(arg) {
-        this._setValue('type', arg);
+        this._setValue('light', arg);
     }
 
     get light() {
