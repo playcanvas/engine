@@ -20,19 +20,21 @@ class BundleHandler extends ResourceHandler {
         this._assets = app.assets;
     }
 
-    async _fetchRetries(url, options, retries = 0) {
-        while (true) {
-            try {
-                return await fetch(url, options);
-            } catch (e) {
-                retries++;
-                if (retries < this.maxRetries) {
-                    Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
-                } else {
-                    throw e;
-                }
-            }
-        }
+    _fetchRetries(url, options, retries = 0) {
+        return new Promise((resolve, reject) => {
+            const tryFetch = () => {
+                fetch(url, options).then(resolve).catch((err) => {
+                    retries++;
+                    if (retries < this.maxRetries) {
+                        Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
+                        tryFetch();
+                    } else {
+                        reject(err);
+                    }
+                });
+            };
+            tryFetch();
+        });
     }
 
     load(url, callback) {
