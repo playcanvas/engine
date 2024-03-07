@@ -192,7 +192,7 @@ describe('pc.BundleRegistry', function () {
         expect(this.bundles.hasUrl('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns false if bundle not loaded', function () {
+    it('urlIsLoadedOrLoading() returns false if bundle not loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -203,10 +203,10 @@ describe('pc.BundleRegistry', function () {
         });
         this.assets.add(bundleAsset);
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(false);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns false if bundle loaded without a resource', function () {
+    it('urlIsLoadedOrLoading() returns false if bundle loaded without a resource', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -218,10 +218,10 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
         bundleAsset.loaded = true;
 
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(false);
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(false);
     });
 
-    it('canLoadUrl() returns true if bundle loaded', function () {
+    it('urlIsLoadedOrLoading() returns true if bundle loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -232,50 +232,13 @@ describe('pc.BundleRegistry', function () {
         });
         this.assets.add(bundleAsset);
 
-        bundleAsset.loaded = true;
-        bundleAsset.resource = sinon.fake();
-
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(true);
-    });
-
-    it('canLoadUrl() returns true if bundle being loaded', function () {
-        var asset = new pc.Asset('asset', 'text', {
-            url: 'text.txt'
-        });
-        this.assets.add(asset);
-
-        var bundleAsset = new pc.Asset('bundle', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset);
-        bundleAsset.loading = true;
-
-        expect(this.bundles.canLoadUrl('text.txt')).to.equal(true);
-    });
-
-    it('loadUrl() calls callback if bundle loaded', function (done) {
-        var asset = new pc.Asset('asset', 'text', {
-            url: 'text.txt'
-        });
-        this.assets.add(asset);
-
-        var bundleAsset = new pc.Asset('bundle', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset);
         bundleAsset.loaded = true;
         bundleAsset.resource = sinon.fake();
-        bundleAsset.resource.hasBlobUrl = sinon.fake.returns(true);
-        bundleAsset.resource.getBlobUrl = sinon.fake.returns('blob url');
 
-        this.bundles.loadUrl('text.txt', function (err, blobUrl) {
-            expect(err).to.equal(null);
-            expect(blobUrl).to.equal('blob url');
-            done();
-        });
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(true);
     });
 
-    it('loadUrl() calls callback if bundle is loaded later', function (done) {
+    it('urlIsLoadedOrLoading() returns true if bundle being loaded', function () {
         var asset = new pc.Asset('asset', 'text', {
             url: 'text.txt'
         });
@@ -287,115 +250,7 @@ describe('pc.BundleRegistry', function () {
         this.assets.add(bundleAsset);
         bundleAsset.loading = true;
 
-        this.bundles.loadUrl('text.txt', function (err, blobUrl) {
-            expect(err).to.equal(null);
-            expect(blobUrl).to.equal('blob url');
-            done();
-        });
-
-        setTimeout(function () {
-            bundleAsset.loading = false;
-            bundleAsset.loaded = true;
-            bundleAsset.resource = sinon.fake();
-            bundleAsset.resource.hasBlobUrl = sinon.fake.returns(true);
-            bundleAsset.resource.getBlobUrl = sinon.fake.returns('blob url');
-            this.assets.fire('load:' + bundleAsset.id, bundleAsset);
-        }.bind(this));
-    });
-
-    it('loadUrl() calls callback if other bundle that contains the asset is loaded later', function (done) {
-        var asset = new pc.Asset('asset', 'text', {
-            url: 'text.txt'
-        });
-        this.assets.add(asset);
-
-        var bundleAsset = new pc.Asset('bundle', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset);
-        bundleAsset.loading = true;
-
-        var bundleAsset2 = new pc.Asset('bundle2', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset2);
-        bundleAsset2.loading = true;
-
-        this.bundles.loadUrl('text.txt', function (err, blobUrl) {
-            expect(err).to.equal(null);
-            expect(blobUrl).to.equal('blob url');
-            done();
-        });
-
-        setTimeout(function () {
-            this.assets.remove(bundleAsset);
-            bundleAsset2.loading = false;
-            bundleAsset2.loaded = true;
-            bundleAsset2.resource = sinon.fake();
-            bundleAsset2.resource.hasBlobUrl = sinon.fake.returns(true);
-            bundleAsset2.resource.getBlobUrl = sinon.fake.returns('blob url');
-            this.assets.fire('load:' + bundleAsset2.id, bundleAsset2);
-        }.bind(this));
-    });
-
-    it('loadUrl() calls callback with error if bundle that contains the asset is removed', function (done) {
-        var asset = new pc.Asset('asset', 'text', {
-            url: 'text.txt'
-        });
-        this.assets.add(asset);
-
-        var bundleAsset = new pc.Asset('bundle', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset);
-        bundleAsset.loading = true;
-
-        this.bundles.loadUrl('text.txt', function (err, blobUrl) {
-            expect(err).to.be.a('string');
-            done();
-        });
-
-        setTimeout(function () {
-            this.assets.remove(bundleAsset);
-        }.bind(this));
-    });
-
-    it('loadUrl() calls callback if bundle fails to load but another bundle that contains the asset is loaded later', function (done) {
-        var asset = new pc.Asset('asset', 'text', {
-            url: 'text.txt'
-        });
-        this.assets.add(asset);
-
-        var bundleAsset = new pc.Asset('bundle', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset);
-        bundleAsset.loading = true;
-
-        var bundleAsset2 = new pc.Asset('bundle2', 'bundle', null, {
-            assets: [asset.id]
-        });
-        this.assets.add(bundleAsset2);
-        bundleAsset2.loading = true;
-
-        this.bundles.loadUrl('text.txt', function (err, blobUrl) {
-            expect(err).to.equal(null);
-            expect(blobUrl).to.equal('blob url');
-            done();
-        });
-
-        setTimeout(function () {
-            bundleAsset.loading = false;
-            bundleAsset.loaded = true;
-            this.assets.fire('error:' + bundleAsset.id, 'error');
-
-            bundleAsset2.loading = false;
-            bundleAsset2.loaded = true;
-            bundleAsset2.resource = sinon.fake();
-            bundleAsset2.resource.hasBlobUrl = sinon.fake.returns(true);
-            bundleAsset2.resource.getBlobUrl = sinon.fake.returns('blob url');
-            this.assets.fire('load:' + bundleAsset2.id, bundleAsset2);
-        }.bind(this));
+        expect(this.bundles.urlIsLoadedOrLoading('text.txt')).to.equal(true);
     });
 
     it('loadUrl() calls callback with error if bundle fails to load', function (done) {
