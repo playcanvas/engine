@@ -185,7 +185,7 @@ assetListLoader.load(() => {
     // set initial values
     data.set('data', {
         scene: {
-            scale: 0.7,
+            scale: 1,
             bloom: true,
             tonemapping: pc.TONEMAP_ACES
         },
