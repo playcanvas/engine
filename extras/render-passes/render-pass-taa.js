@@ -66,7 +66,7 @@ const fs = /* glsl */ `
 
         #ifdef WEBGPU
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            // This hack is needed on webgpu, which makes TAA to work but the resulting image is upside-down.
+            // This hack is needed on webgpu, which makes TAA work but the resulting image is upside-down.
             // We could flip the image in the following pass, but ideally a better solution should be found.
             uv.y = 1.0 - uv.y;
             // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
