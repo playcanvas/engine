@@ -27,6 +27,7 @@ import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { Debug } from '../../../core/debug.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -224,12 +225,9 @@ class LitShader {
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
         }
 
-
         if (this.options.pass === SHADER_PREPASS_VELOCITY) {
-
-
+            Debug.error("SHADER_PREPASS_VELOCITY not implemented");
         }
-
 
         if (this.options.useInstancing) {
             this.attributes.instance_line1 = SEMANTIC_ATTR12;
