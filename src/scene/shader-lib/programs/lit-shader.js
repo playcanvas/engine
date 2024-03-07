@@ -454,21 +454,6 @@ class LitShader {
     }
 
     _fsGetPrePassVelocityCode() {
-        // const chunks = this.chunks;
-
-        // let code = this._fsGetBeginCode();
-        // code += 'varying float vDepth;\n';
-        // code += this.varyings;
-        // code += this.varyingDefines;
-        // code += chunks.packDepthPS;
-        // code += this.frontendDecl;
-        // code += this.frontendCode;
-        // code += ShaderGenerator.begin();
-        // code += this.frontendFunc;
-        // code += "    gl_FragColor = packFloat(vDepth);\n";
-        // code += ShaderGenerator.end();
-
-
         const code = `
             void main(void)
             {
@@ -476,9 +461,7 @@ class LitShader {
             }
             `;
 
-
         return code;
-
     }
 
     _fsGetShadowPassCode() {
