@@ -18,7 +18,7 @@ import {
     SHADOW_PCF1, SHADOW_PCF3, SHADOW_PCF5, SHADOW_VSM8, SHADOW_VSM16, SHADOW_VSM32, SHADOW_PCSS,
     SPECOCC_AO, SPECOCC_GLOSSDEPENDENT,
     SPECULAR_PHONG,
-    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString
+    SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED, shadowTypeToString, SHADER_PREPASS_VELOCITY
 } from '../../constants.js';
 import { LightsBuffer } from '../../lighting/lights-buffer.js';
 import { ShaderPass } from '../../shader-pass.js';
@@ -27,6 +27,7 @@ import { validateUserChunks } from '../chunks/chunk-validation.js';
 import { ShaderUtils } from '../../../platform/graphics/shader-utils.js';
 import { ChunkBuilder } from '../chunk-builder.js';
 import { ShaderGenerator } from './shader-generator.js';
+import { Debug } from '../../../core/debug.js';
 
 const builtinAttributes = {
     vertex_normal: SEMANTIC_NORMAL,
@@ -222,6 +223,10 @@ class LitShader {
             code += 'uniform vec4 camera_params;\n\n';
             code += '#endif\n';
             codeBody += "    vDepth = -(matrix_view * vec4(vPositionW,1.0)).z * camera_params.x;\n";
+        }
+
+        if (this.options.pass === SHADER_PREPASS_VELOCITY) {
+            Debug.error("SHADER_PREPASS_VELOCITY not implemented");
         }
 
         if (this.options.useInstancing) {
@@ -434,7 +439,6 @@ class LitShader {
         const chunks = this.chunks;
 
         let code = this._fsGetBeginCode();
-
         code += 'varying float vDepth;\n';
         code += this.varyings;
         code += this.varyingDefines;
@@ -445,6 +449,17 @@ class LitShader {
         code += this.frontendFunc;
         code += "    gl_FragColor = packFloat(vDepth);\n";
         code += ShaderGenerator.end();
+
+        return code;
+    }
+
+    _fsGetPrePassVelocityCode() {
+        const code = `
+            void main(void)
+            {
+                gl_FragColor = vec4(1, 0, 0, 1);
+            }
+            `;
 
         return code;
     }
@@ -1578,6 +1593,8 @@ class LitShader {
             this.fshader = this._fsGetPickPassCode();
         } else if (options.pass === SHADER_DEPTH) {
             this.fshader = this._fsGetDepthPassCode();
+        } else if (options.pass === SHADER_PREPASS_VELOCITY) {
+            this.fshader = this._fsGetPrePassVelocityCode();
         } else if (this.shadowPass) {
             this.fshader = this._fsGetShadowPassCode();
         } else if (options.customFragmentShader) {
