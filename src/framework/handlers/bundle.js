@@ -18,7 +18,7 @@ class BundleHandler extends ResourceHandler {
         super(app, 'bundle');
 
         this._assets = app.assets;
-        this.maxRetries = 0;
+        this._retries = 0;
     }
 
     load(url, callback) {
@@ -51,8 +51,15 @@ class BundleHandler extends ResourceHandler {
                 callback(err);
             });
         }).catch((err) => {
+            this._retries++;
             Debug.error(err);
-            callback(err);
+            if (this._retries < this.maxRetries) {
+                Debug.error(`Bundle failed to load retrying (attempt ${this._retries}`);
+                this.load(url, callback);
+            } else {
+                callback(err);
+            }
+
         });
     }
 
