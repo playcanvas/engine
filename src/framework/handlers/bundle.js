@@ -18,7 +18,25 @@ class BundleHandler extends ResourceHandler {
         super(app, 'bundle');
 
         this._assets = app.assets;
-        this._retries = 0;
+    }
+
+    _fetchRetries(url, options, retries = 0) {
+        return new Promise((resolve, reject) => {
+            while (true) {
+                try {
+                    resolve(fetch(url, options));
+                    return;
+                } catch (e) {
+                    retries++;
+                    if (retries < this.maxRetries) {
+                        Debug.error(`Bundle failed to load retrying (attempt ${retries}`);
+                    } else {
+                        reject(e);
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     load(url, callback) {
@@ -29,10 +47,10 @@ class BundleHandler extends ResourceHandler {
             };
         }
 
-        fetch(url.load, {
+        this._fetchRetries(url.load, {
             mode: 'cors',
             credentials: 'include'
-        }).then((res) => {
+        }, this.maxRetries).then((res) => {
             const bundle = new Bundle();
             callback(null, bundle);
 
@@ -48,20 +66,11 @@ class BundleHandler extends ResourceHandler {
 
             untar.on('error', (err) => {
                 Debug.error(err);
-                this._retries = 0;
                 callback(err);
             });
         }).catch((err) => {
-            this._retries++;
-            if (this._retries < this.maxRetries) {
-                Debug.error(`Bundle failed to load retrying (attempt ${this._retries}`);
-                this.load(url, callback);
-            } else {
-                Debug.error(err);
-                this._retries = 0;
-                callback(err);
-            }
-
+            Debug.error(err);
+            callback(err);
         });
     }
 
