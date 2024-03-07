@@ -125,7 +125,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         plugins: outputPlugins[buildType || outputPlugins.release],
         format: outputFormat[moduleFormat],
         indent: '\t',
-        sourcemap: shouldBundle && sourceMap[buildType] || sourceMap.release,
+        sourcemap: shouldBundle && (sourceMap[buildType] || sourceMap.release),
         name: 'pc',
         preserveModules: !shouldBundle
     };
