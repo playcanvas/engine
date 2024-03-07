@@ -59,10 +59,7 @@ class RenderPassPrepass extends RenderPass {
 
         const { device } = this;
 
-        //////////////
-        // we only need two channel texture
-
-
+        // TODO: only two channel texture is needed here, but that is not supported by WebGL
         const velocityFormat = device.getRenderableHdrFormat([PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA16F]);
         this.velocityTexture = new Texture(device, {
             name: 'VelocityTexture',
@@ -78,7 +75,7 @@ class RenderPassPrepass extends RenderPass {
 
         const renderTarget = new RenderTarget({
             name: 'PrepassRT',
-//            colorBuffer: this.velocityTexture,
+            // colorBuffer: this.velocityTexture,
             depthBuffer: depthBuffer
         });
 
