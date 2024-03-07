@@ -54,7 +54,7 @@ class LightComponent extends Component {
         this._cookieMatrix = null;
     }
 
-    //TODO: Remove this override in upgrading component
+    // TODO: Remove this override in upgrading component
     /**
      * @type {import('./data.js').LightComponentData}
      */
