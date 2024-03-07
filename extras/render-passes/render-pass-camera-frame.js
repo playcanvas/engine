@@ -215,7 +215,7 @@ class RenderPassCameraFrame extends RenderPass {
         let sceneTextureWithTaa = sceneTexture;
         if (options.taaEnabled) {
             this.taaPass = new RenderPassTAA(device, sceneTexture, cameraComponent);
-            sceneTextureWithTaa = this.taaPass.accumulationTexture;
+            sceneTextureWithTaa = this.taaPass.historyTexture;
         }
 
         // ------ BLOOM GENERATION ------
@@ -254,7 +254,7 @@ class RenderPassCameraFrame extends RenderPass {
         // scene texture is either output of taa pass or the scene render target
         const sceneTexture = this.taaPass?.update() ?? this._rt.colorBuffer;
 
-        // TAA accumulation buffer is double buffered, assign the current one to the follow up passes.
+        // TAA history buffer is double buffered, assign the current one to the follow up passes.
         this.composePass.sceneTexture = sceneTexture;
         if (this.bloomEnabled) {
             this.bloomPass.sourceTexture = sceneTexture;

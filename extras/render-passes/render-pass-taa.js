@@ -9,7 +9,7 @@ import {
 const fs = /* glsl */ `
     uniform highp sampler2D uSceneDepthMap;
     uniform sampler2D sourceTexture;
-    uniform sampler2D accumulationTexture;
+    uniform sampler2D historyTexture;
     uniform mat4 matrix_viewProjectionPrevious;
     uniform mat4 matrix_viewProjectionInverse;
     uniform vec4 jitters;   // xy: current frame, zw: previous frame
@@ -84,12 +84,12 @@ const fs = /* glsl */ `
         #ifdef QUALITY_HIGH
 
             // high quality history, sharper result
-            vec4 historyColor = SampleTextureCatmullRom(TEXTURE_PASS(accumulationTexture), historyUv, textureSize);
+            vec4 historyColor = SampleTextureCatmullRom(TEXTURE_PASS(historyTexture), historyUv, textureSize);
 
         #else
 
             // single sample history, more blurry result
-            vec4 historyColor = texture2D(accumulationTexture, historyUv);
+            vec4 historyColor = texture2D(historyTexture, historyUv);
 
         #endif
 
@@ -106,23 +106,26 @@ const fs = /* glsl */ `
 
 class RenderPassTAA extends RenderPassShaderQuad {
     /**
-     * The index of the accumulation texture to render to.
+     * The index of the history texture to render to.
      *
      * @type {number}
      */
-    accumulationIndex = 0;
+    historyIndex = 0;
 
-    accumulationTexture = null;
+    /**
+     * @type {Texture}
+     */
+    historyTexture = null;
 
     /**
      * @type {Texture[]}
      */
-    accumulationTextures = [];
+    historyTextures = [];
 
     /**
      * @type {RenderTarget[]}
      */
-    accumulationRenderTargets = [];
+    historyRenderTargets = [];
 
     constructor(device, sourceTexture, cameraComponent) {
         super(device);
@@ -139,7 +142,7 @@ class RenderPassTAA extends RenderPassShaderQuad {
         this.sourceTextureId = scope.resolve('sourceTexture');
         this.textureSizeId = scope.resolve('textureSize');
         this.textureSize = new Float32Array(2);
-        this.accumulationTextureId = scope.resolve('accumulationTexture');
+        this.historyTextureId = scope.resolve('historyTexture');
         this.viewProjPrevId = scope.resolve('matrix_viewProjectionPrevious');
         this.viewProjInvId = scope.resolve('matrix_viewProjectionInverse');
         this.jittersId = scope.resolve('jitters');
@@ -157,10 +160,10 @@ class RenderPassTAA extends RenderPassShaderQuad {
 
     setup() {
 
-        // double buffered accumulation render target
+        // double buffered history render target
         for (let i = 0; i < 2; ++i) {
-            this.accumulationTextures[i] = new Texture(this.device, {
-                name: `TAA-Accumulation-${i}`,
+            this.historyTextures[i] = new Texture(this.device, {
+                name: `TAA-History-${i}`,
                 width: 4,
                 height: 4,
                 format: this.sourceTexture.format,
@@ -171,21 +174,21 @@ class RenderPassTAA extends RenderPassShaderQuad {
                 addressV: ADDRESS_CLAMP_TO_EDGE
             });
 
-            this.accumulationRenderTargets[i] = new RenderTarget({
-                colorBuffer: this.accumulationTextures[i],
+            this.historyRenderTargets[i] = new RenderTarget({
+                colorBuffer: this.historyTextures[i],
                 depth: false
             });
         }
 
-        this.accumulationTexture = this.accumulationTextures[0];
-        this.init(this.accumulationRenderTargets[0], {
+        this.historyTexture = this.historyTextures[0];
+        this.init(this.historyRenderTargets[0], {
             resizeSource: this.sourceTexture
         });
     }
 
     before() {
         this.sourceTextureId.setValue(this.sourceTexture);
-        this.accumulationTextureId.setValue(this.accumulationTextures[1 - this.accumulationIndex]);
+        this.historyTextureId.setValue(this.historyTextures[1 - this.historyIndex]);
 
         this.textureSize[0] = this.sourceTexture.width;
         this.textureSize[1] = this.sourceTexture.height;
@@ -200,12 +203,12 @@ class RenderPassTAA extends RenderPassShaderQuad {
     // called when the parent render pass gets added to the frame graph
     update() {
 
-        // swap source and destination accumulation texture
-        this.accumulationIndex = 1 - this.accumulationIndex;
-        this.accumulationTexture = this.accumulationTextures[this.accumulationIndex];
-        this.renderTarget = this.accumulationRenderTargets[this.accumulationIndex];
+        // swap source and destination history texture
+        this.historyIndex = 1 - this.historyIndex;
+        this.historyTexture = this.historyTextures[this.historyIndex];
+        this.renderTarget = this.historyRenderTargets[this.historyIndex];
 
-        return this.accumulationTexture;
+        return this.historyTexture;
     }
 }
 
