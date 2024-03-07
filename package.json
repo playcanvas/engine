@@ -20,6 +20,16 @@
   "main": "build/playcanvas.js",
   "module": "build/playcanvas.mjs",
   "types": "build/playcanvas.d.ts",
+  "exports": {
+    ".": {
+      "import": "./build/playcanvas.mjs",
+      "require": "./build/playcanvas.js"
+    },
+    "./extras": {
+      "import": "./build/playcanvas-extras.mjs",
+      "require": "./build/playcanvas-extras.js"
+    }
+  },
   "sideEffects": false,
   "type": "module",
   "bugs": {
@@ -94,7 +104,8 @@
   ],
   "dependencies": {
     "@types/webxr": "^0.5.7",
-    "@webgpu/types": "^0.1.38"
+    "@webgpu/types": "^0.1.38",
+    "playcanvas": "file:."
   },
   "devDependencies": {
     "@babel/core": "^7.23.2",
@@ -126,8 +137,8 @@
     "rollup-plugin-visualizer": "^5.9.2",
     "serve": "^14.2.1",
     "sinon": "^17.0.0",
-    "typedoc": "^0.25.7",
-    "typedoc-plugin-mdn-links": "^3.1.14",
+    "typedoc": "^0.25.11",
+    "typedoc-plugin-mdn-links": "^3.1.17",
     "typescript": "^5.2.2",
     "xhr2": "^0.2.1"
   },
@@ -135,7 +146,8 @@
     "build": "rollup -c",
     "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
-    "build:dts": "tsc src/index.js --outDir types --allowJs --declaration --emitDeclarationOnly",
+    "build:dts": "tsc --project tsconfig.engine.json",
+    "build:dts:extras": "tsc --project tsconfig.extras.json",
     "build:extras": "rollup -c --environment target:extras",
     "build:es5": "rollup -c --environment target:es5",
     "build:es6": "rollup -c --environment target:es6",
@@ -146,7 +158,7 @@
     "build:treenet": "npm run build:es5 -- --environment treenet",
     "build:treesun": "npm run build:es5 -- --environment treesun",
     "build:types": "npm run build:dts && node utils/types-fixup.mjs && rollup -c --environment target:types && node utils/types-undollar.mjs && npm run build:types:extras",
-    "build:types:extras": "tsc extras/index.js --allowJs --declaration --emitDeclarationOnly --outDir build/playcanvas-extras",
+    "build:types:extras": "npm run build:dts:extras",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run build:types",
     "watch": "npm run build -- -w",
