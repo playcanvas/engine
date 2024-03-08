@@ -75,7 +75,7 @@ const platform = {
      *
      * @type {object}
      */
-    global: globalThis ??
+    global: (typeof globalThis !== 'undefined' && globalThis) ??
         (environment === 'browser' && window) ??
         (environment === 'node' && global) ??
         (environment === 'worker' && self),
