@@ -69,9 +69,8 @@ class VertexFormat {
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {Description[]} description - An array of vertex attribute descriptions.
-     * @typedef {object} Description
-     * @property {string} semantic - The meaning of the vertex element. This is used to
+     * @param {Object[]} description - An array of vertex attribute descriptions.
+     * @param {string} description[].semantic - The meaning of the vertex element. This is used to
      * link the vertex data to a shader input. Can be:
      *
      * - {@link SEMANTIC_POSITION}
@@ -91,9 +90,9 @@ class VertexFormat {
      *
      * If vertex data has a meaning other that one of those listed above, use the user-defined
      * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
-     * @property {number} components - The number of components of the vertex attribute.
+     * @param {number} description[].components - The number of components of the vertex attribute.
      * Can be 1, 2, 3 or 4.
-     * @property {number} type - The data type of the attribute. Can be:
+     * @param {number} description[].type - The data type of the attribute. Can be:
      *
      * - {@link TYPE_INT8}
      * - {@link TYPE_UINT8}
@@ -104,11 +103,11 @@ class VertexFormat {
      * - {@link TYPE_FLOAT16}
      * - {@link TYPE_FLOAT32}
      *
-     * @property {boolean} [normalize] - If true, vertex attribute data will be mapped
+     * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped
      * from a 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data
      * is left unchanged. If this property is unspecified, false is assumed. This property is
      * ignored when asInt is true.
-     * @property {boolean} [asInt] - If true, vertex attribute data will be accessible
+     * @param {boolean} [description[].asInt] - If true, vertex attribute data will be accessible
      * as integer numbers in shader code. Defaults to false, which means that vertex attribute data
      * will be accessible as floating point numbers. Can be only used with INT and UINT data types.
      * @param {number} [vertexCount] - When specified, vertex format will be set up for
