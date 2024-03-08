@@ -63,13 +63,14 @@ const deviceCache = new DeviceCache();
  * @property {number} elements[].size The size of the attribute in bytes.
  * @category Graphics
  */
+
 class VertexFormat {
     /**
      * Create a new VertexFormat instance.
      *
      * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
      * used to manage this vertex format.
-     * @param {Object[]} description - An array of vertex attribute descriptions.
+     * @param {{semantic: string, components: number, type: number, normalize?: boolean, asInt?: boolean }[]} description - An array of vertex attribute descriptions.
      * @param {string} description[].semantic - The meaning of the vertex element. This is used to
      * link the vertex data to a shader input. Can be:
      *
