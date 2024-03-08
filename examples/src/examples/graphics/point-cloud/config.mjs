@@ -2,6 +2,7 @@
  * @type {import('../../../../types.mjs').ExampleConfig}
  */
 export default {
+    WEBGPU_ENABLED: true,
     FILES: {
         "shader.vert": /* glsl */`
 // Attributes per vertex: position
