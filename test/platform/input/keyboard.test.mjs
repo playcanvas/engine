@@ -65,7 +65,7 @@ describe('Keyboard', function () {
             });
 
             const keyDownEvent = new KeyboardEvent('keydown', {
-                keyCode: 38, // Up arrow
+                keyCode: 38 // Up arrow
             });
             window.dispatchEvent(keyDownEvent);
         });
@@ -80,7 +80,7 @@ describe('Keyboard', function () {
             });
 
             const keyUpEvent = new KeyboardEvent('keyup', {
-                keyCode: 38, // Up arrow
+                keyCode: 38 // Up arrow
             });
             window.dispatchEvent(keyUpEvent);
         });
@@ -88,7 +88,7 @@ describe('Keyboard', function () {
     });
 
     describe('#wasPressed', function () {
-        
+
         it('should return false for a key that was not pressed', function () {
             expect(keyboard.wasPressed(KEY_UP)).to.be.false;
         });

@@ -1,6 +1,6 @@
 import { Mouse } from '../../../src/platform/input/mouse.js';
 import {
-    EVENT_MOUSEDOWN, EVENT_MOUSEMOVE, EVENT_MOUSEUP,
+    EVENT_MOUSEDOWN, EVENT_MOUSEUP,
     MOUSEBUTTON_LEFT, MOUSEBUTTON_MIDDLE, MOUSEBUTTON_RIGHT
 } from '../../../src/platform/input/constants.js';
 
@@ -87,7 +87,7 @@ describe('Mouse', function () {
     });
 
     describe('#wasPressed', function () {
-        
+
         it('should return false for all buttons by default', function () {
             for (const button of buttons) {
                 expect(mouse.wasPressed(button)).to.be.false;
