@@ -21,10 +21,6 @@ void getTBN(vec3 tangent, vec3 binormal, vec3 normal) {
     float denom = max( dot(T,T), dot(B,B) );
     float invmax = (denom == 0.0) ? 0.0 : tbnBasis / sqrt( denom );
 
-    #ifdef TWO_SIDED_LIGHTING
-        dTBN = mat3(T * invmax, -B * invmax, (gl_FrontFacing ? normal : -normal) * twoSidedLightingNegScaleFactor);
-    #else
-        dTBN = mat3(T * invmax, -B * invmax, normal);
-    #endif
+    dTBN = mat3(T * invmax, -B * invmax, normal);
 }
 `;
