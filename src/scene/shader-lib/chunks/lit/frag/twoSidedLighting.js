@@ -1,9 +1,6 @@
 export default /* glsl */`
 uniform float twoSidedLightingNegScaleFactor;
 void handleTwoSidedLighting() {
-    float factor = (gl_FrontFacing ? 1.0 : -1.0) * twoSidedLightingNegScaleFactor;
-    // if (factor != 1.0) {
-        dTBN *= factor;
-    // }
+    dTBN[2] *= gl_FrontFacing ? twoSidedLightingNegScaleFactor : -twoSidedLightingNegScaleFactor;
 }
 `;
