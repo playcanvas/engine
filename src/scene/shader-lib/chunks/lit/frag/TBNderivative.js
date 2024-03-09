@@ -20,7 +20,6 @@ void getTBN(vec3 tangent, vec3 binormal, vec3 normal) {
     // construct a scale-invariant frame
     float denom = max( dot(T,T), dot(B,B) );
     float invmax = (denom == 0.0) ? 0.0 : tbnBasis / sqrt( denom );
-
     dTBN = mat3(T * invmax, -B * invmax, normal);
 }
 `;
