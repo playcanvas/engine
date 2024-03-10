@@ -53,7 +53,6 @@
             "Forum": "https://forum.playcanvas.com/",
             "GitHub": "https://github.com/playcanvas/engine"
         },
-        "out": "typedocs",
         "plugin": [
             "./utils/typedoc-plugin.mjs",
             "typedoc-plugin-mdn-links"
