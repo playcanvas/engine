@@ -132,7 +132,7 @@ class TouchEvent {
         this.event = event;
 
         this.touches = Array.from(event.touches).map(touch => new Touch(touch));
-        this.changedTouches = Array.from(event.changedTouches).map(touch => new Touch(touch));    
+        this.changedTouches = Array.from(event.changedTouches).map(touch => new Touch(touch));
     }
 
     /**
