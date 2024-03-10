@@ -122,6 +122,8 @@
     "chai": "^4.3.10",
     "eslint": "^8.52.0",
     "fflate": "^0.8.1",
+    "global-jsdom": "^24.0.0",
+    "jsdom": "^24.0.0",
     "karma": "^6.4.2",
     "karma-chrome-launcher": "^3.2.0",
     "karma-mocha": "2.0.1",
