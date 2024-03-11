@@ -409,8 +409,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Controls the rate at which a light attenuates from its position.
-     * Can be:
+     * Controls the rate at which a light attenuates from its position. Can be:
      *
      * - {@link LIGHTFALLOFF_LINEAR}: Linear.
      * - {@link LIGHTFALLOFF_INVERSESQUARED}: Inverse squared.
