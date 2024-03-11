@@ -347,8 +347,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * Normal offset depth bias. Valid range is 0 to 1. Defaults to
-     * 0.
+     * Normal offset depth bias. Valid range is 0 to 1. Defaults to 0.
      *
      * @type {number}
      */
