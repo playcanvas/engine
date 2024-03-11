@@ -34,10 +34,14 @@ const splatCoreVS = `
 
     uniform vec4 tex_params;
     uniform sampler2D splatColor;
-    uniform highp sampler2D splatCenter;
 
-    uniform highp sampler2D splatCovA;
-    uniform highp sampler2D splatCovB;
+    uniform highp sampler2D transformA;
+    uniform highp sampler2D transformB;
+    uniform highp sampler2D transformC;
+
+    vec3 center;
+    vec3 covA;
+    vec3 covB;
 
     #ifdef INT_INDICES
 
@@ -58,16 +62,14 @@ const splatCoreVS = `
             return texelFetch(splatColor, dataUV, 0);
         }
 
-        vec3 getCenter() {
-            return texelFetch(splatCenter, dataUV, 0).xyz;
-        }
+        void getTransform() {
+            vec4 tA = texelFetch(transformA, dataUV, 0);
+            vec4 tB = texelFetch(transformB, dataUV, 0);
+            vec4 tC = texelFetch(transformC, dataUV, 0);
 
-        vec3 getCovA() {
-            return texelFetch(splatCovA, dataUV, 0).xyz;
-        }
-
-        vec3 getCovB() {
-            return texelFetch(splatCovB, dataUV, 0).xyz;
+            center = tA.xyz;
+            covA = tB.xyz;
+            covB = vec3(tA.w, tB.w, tC.x);
         }
 
     #else
@@ -92,23 +94,25 @@ const splatCoreVS = `
             return texture2D(splatColor, dataUV);
         }
 
-        vec3 getCenter() {
-            return texture2D(splatCenter, dataUV).xyz;
-        }
+        void getTransform() {
+            vec4 tA = texture2D(transformA, dataUV);
+            vec4 tB = texture2D(transformB, dataUV);
+            vec4 tC = texture2D(transformC, dataUV);
 
-        vec3 getCovA() {
-            return texture2D(splatCovA, dataUV).xyz;
-        }
-
-        vec3 getCovB() {
-            return texture2D(splatCovB, dataUV).xyz;
+            center = tA.xyz;
+            covA = tB.xyz;
+            covB = vec3(tA.w, tB.w, tC.x);
         }
 
     #endif
 
     vec3 evalCenter() {
         evalDataUV();
-        return getCenter();
+
+        // get data
+        getTransform();
+
+        return center;
     }
 
     vec4 evalSplat(vec4 centerWorld)
@@ -123,20 +127,19 @@ const splatCoreVS = `
 
         color = getColor();
 
-        vec3 splat_cova = getCovA();
-        vec3 splat_covb = getCovB();
-
         mat3 Vrk = mat3(
-            splat_cova.x, splat_cova.y, splat_cova.z, 
-            splat_cova.y, splat_covb.x, splat_covb.y,
-            splat_cova.z, splat_covb.y, splat_covb.z
+            covA.x, covA.y, covA.z, 
+            covA.y, covB.x, covB.y,
+            covA.z, covB.y, covB.z
         );
 
         float focal = viewport.x * matrix_projection[0][0];
 
+        float J1 = focal / splat_cam.z;
+        vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
         mat3 J = mat3(
-            focal / splat_cam.z, 0., -(focal * splat_cam.x) / (splat_cam.z * splat_cam.z), 
-            0., focal / splat_cam.z, -(focal * splat_cam.y) / (splat_cam.z * splat_cam.z), 
+            J1, 0., J2.x, 
+            0., J1, J2.y, 
             0., 0., 0.
         );
 
@@ -166,9 +169,8 @@ const splatCoreVS = `
 
         texCoord = vertex_position.xy * 2.0;
 
-        return splat_proj +
-            vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
-                0.0, 0.0) * splat_proj.w;
+        splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
+        return splat_proj;
 
         id = float(vertex_id);
     }
