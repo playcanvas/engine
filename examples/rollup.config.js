@@ -1,4 +1,3 @@
-import date from 'date-and-time';
 import * as fs from 'node:fs';
 import fse from 'fs-extra';
 import { fileURLToPath } from 'node:url';
@@ -89,13 +88,27 @@ function getEnginePathFiles() {
 }
 
 /**
+ * @param {string} name - The timer name.
  * @returns {RollupPlugin} The plugin.
  */
-function timestamp() {
+function timeStart(name) {
     return {
-        name: 'timestamp',
+        name: 'time-start',
+        buildStart() {
+            console.time(name);
+        }
+    };
+}
+
+/**
+ * @param {string} name - The timer name.
+ * @returns {RollupPlugin} The plugin.
+ */
+function timeEnd(name) {
+    return {
+        name: 'time-end',
         writeBundle() {
-            console.log("\x1b[32m", "Finished at: " + date.format(new Date(), 'HH:mm:ss'));
+            console.timeEnd(name);
         }
     };
 }
@@ -168,9 +181,9 @@ function buildAndWatchStandaloneExamples() {
             }
         },
         generateBundle() {
-            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} npm run build:pre`;
-            console.log(cmd);
-            execSync(cmd, { stdio: 'inherit' });
+            const cmd = `cross-env NODE_ENV=${NODE_ENV} ENGINE_PATH=${ENGINE_PATH} npm run build:standalone`;
+            console.log("\x1b[32m%s\x1b[0m", cmd);
+            execSync(cmd);
         }
     };
 }
@@ -180,6 +193,9 @@ function getEngineTargets() {
         // Outputs: dist/iframe/playcanvas-extras.mjs
         scriptTargetEs6('pcx', '../extras/index.js', 'dist/iframe/playcanvas-extras.mjs')
     ];
+    if (ENGINE_PATH) {
+        return targets;
+    }
     if (NODE_ENV === 'production') {
         // Outputs: dist/iframe/playcanvas.mjs
         targets.push(buildTarget('release', 'es6', '../src/index.js', 'dist/iframe'));
@@ -202,9 +218,10 @@ export default [
             file: `dist/copy.tmp`
         },
         plugins: [
+            timeStart('examples'),
             buildAndWatchStandaloneExamples(),
             copyStaticFiles(STATIC_FILES),
-            timestamp()
+            timeEnd('examples')
         ]
     },
     {
@@ -215,6 +232,7 @@ export default [
             format: 'umd'
         },
         plugins: [
+            timeStart('site'),
             alias({
                 entries: {
                     // define supported module overrides
@@ -231,7 +249,7 @@ export default [
                 preventAssignment: true
             }),
             (NODE_ENV === 'production' && terser()),
-            timestamp()
+            timeEnd('site')
         ]
     },
     ...getEngineTargets()
