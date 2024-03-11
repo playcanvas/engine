@@ -77,9 +77,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * The light.
-     *
      * @type {import('../../../scene/light.js').Light}
+     * @ignore
      */
     set light(arg) {
         this._setValue('light', arg);
@@ -328,8 +327,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * The distribution of subdivision of the camera frustum for
-     * individual shadow cascades. Only used if {@link LightComponent#numCascades} is larger than 1.
+     * The distribution of subdivision of the camera frustum for individual shadow cascades.
+     * Only used if {@link LightComponent#numCascades} is larger than 1.
      * Can be a value in range of 0 and 1. Value of 0 represents a linear distribution, value of 1
      * represents a logarithmic distribution. Defaults to 0.5. Larger value increases the resolution of
      * the shadows in the near distance.
@@ -456,8 +455,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Number of samples used for blurring a variance shadow map. Only
-     * uneven numbers work, even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
+     * Number of samples used for blurring a variance shadow map. Only uneven numbers work,
+     * even are incremented. Minimum value is 1, maximum is 25. Defaults to 11.
      *
      * @type {number}
      */
@@ -572,8 +571,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Toggle normal spotlight falloff when projection texture is
-     * used. When set to false, spotlight will work like a pure texture projector (only fading with
+     * Toggle normal spotlight falloff when projection texture is used. When set to false,
+     * spotlight will work like a pure texture projector (only fading with
      * distance). Default is false.
      *
      * @type {boolean}
@@ -687,7 +686,8 @@ class LightComponent extends Component {
      * this light. Can be:
      *
      * - {@link SHADOWUPDATE_NONE}: Don't render shadows.
-     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches to {@link SHADOWUPDATE_NONE}.
+     * - {@link SHADOWUPDATE_THISFRAME}: Render shadows only once (then automatically switches
+     * to {@link SHADOWUPDATE_NONE}.
      * - {@link SHADOWUPDATE_REALTIME}: Render shadows every frame (default).
      *
      * @type {number}
@@ -864,8 +864,8 @@ class LightComponent extends Component {
     }
 
     /**
-     * Size of penumbra for contact hardening shadows. For area lights
-     * acts as a multiplier with the dimensions of the area light. For punctual and directional lights
+     * Size of penumbra for contact hardening shadows. For area lights acts as a multiplier with
+     * the dimensions of the area light. For punctual and directional lights
      * it's the area size of the light. Defaults to 1.0.
      *
      * @type {number}
