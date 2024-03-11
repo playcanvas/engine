@@ -217,7 +217,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Maximal interval in seconds between particle births.
      *
-     * @type {number}
+     * @type {number | null}
      */
     set rate2(arg) {
         this._setValue('rate2', arg);
@@ -243,7 +243,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Maximal initial Euler angle of a particle.
      *
-     * @type {number}
+     * @type {number | null}
      */
     set startAngle2(arg) {
         this._setValue('startAngle2', arg);
@@ -471,7 +471,7 @@ class ParticleSystemComponent extends Component {
      * (Only for EMITTERSHAPE_BOX)
      * The extents of a local space bounding box within which particles are spawned at random positions.
      *
-     * @type {import('../../../core/math/vec3.js')}
+     * @type {import('../../../core/math/vec3.js').Vec3}
      */
     set emitterExtents(arg) {
         this._setValue('emitterExtents', arg);
@@ -486,7 +486,7 @@ class ParticleSystemComponent extends Component {
      * EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles
      * are not spawned. Aligned to the center of EmitterExtents.
      *
-     * @type {import('../../../core/math/vec3.js')}
+     * @type {import('../../../core/math/vec3.js').Vec3}
      */
     set emitterExtentsInner(arg) {
         this._setValue('emitterExtentsInner', arg);
@@ -556,7 +556,7 @@ class ParticleSystemComponent extends Component {
      * If a particle crosses the boundary of one side of the volume, it teleports to the
      * opposite side.
      *
-     * @type {import('../../../core/math/vec3.js')}
+     * @type {import('../../../core/math/vec3.js').Vec3}
      */
     set wrapBounds(arg) {
         this._setValue('wrapBounds', arg);
@@ -602,7 +602,7 @@ class ParticleSystemComponent extends Component {
      * The {@link Asset} used
      * to set the colorMap.
      *
-     * @type {Asset}
+     * @type {Asset | null}
      */
     set colorMapAsset(arg) {
         this._setValue('colorMapAsset', arg);
@@ -616,7 +616,7 @@ class ParticleSystemComponent extends Component {
      * The {@link Asset} used
      * to set the normalMap.
      *
-     * @type {Asset}
+     * @type {Asset | null}
      */
     set normalMapAsset(arg) {
         this._setValue('normalMapAsset', arg);
@@ -630,7 +630,7 @@ class ParticleSystemComponent extends Component {
      * Triangular mesh to be used as a particle. Only first vertex/index buffer
      * is used. Vertex buffer must contain local position at first 3 floats of each vertex.
      *
-     * @type {Mesh}
+     * @type {Mesh | null}
      */
     set mesh(arg) {
         this._setValue('mesh', arg);
@@ -644,7 +644,7 @@ class ParticleSystemComponent extends Component {
      * The {@link Asset} used
      * to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset | null}
      */
     set meshAsset(arg) {
         this._setValue('meshAsset', arg);
@@ -658,7 +658,7 @@ class ParticleSystemComponent extends Component {
      * The Render {@link Asset} used
      * to set the mesh.
      *
-     * @type {Asset}
+     * @type {Asset | null}
      */
     set renderAsset(arg) {
         this._setValue('renderAsset', arg);
@@ -694,7 +694,7 @@ class ParticleSystemComponent extends Component {
      * space bounding box within which particles are not spawned. Aligned to the center of
      * EmitterExtents.
      *
-     * @type {import('../../../core/math/vec3.js')}
+     * @type {import('../../../core/math/vec3.js').Vec3}
      */
     set particleNormal(arg) {
         this._setValue('particleNormal', arg);
@@ -722,7 +722,7 @@ class ParticleSystemComponent extends Component {
      * If not null,
      * particles pick random values between localVelocityGraph and localVelocityGraph2.
      *
-     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     * @type {import('../../../core/math/curve-set.js').CurveSet | null}
      */
     set localVelocityGraph2(arg) {
         this._setValue('localVelocityGraph2', arg);
@@ -736,7 +736,7 @@ class ParticleSystemComponent extends Component {
      * World-space
      * velocity over lifetime.
      *
-     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     * @type {import('../../../core/math/curve-set.js').CurveSet | null}
      */
     set velocityGraph(arg) {
         this._setValue('velocityGraph', arg);
@@ -750,7 +750,7 @@ class ParticleSystemComponent extends Component {
      * If not null,
      * particles pick random values between velocityGraph and velocityGraph2.
      *
-     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     * @type {import('../../../core/math/curve-set.js').CurveSet | null}
      */
     set velocityGraph2(arg) {
         this._setValue('velocityGraph2', arg);
@@ -764,7 +764,7 @@ class ParticleSystemComponent extends Component {
      * Rotation speed over
      * lifetime.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set rotationSpeedGraph(arg) {
         this._setValue('rotationSpeedGraph', arg);
@@ -778,7 +778,7 @@ class ParticleSystemComponent extends Component {
      * If not null,
      * particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set rotationSpeedGraph2(arg) {
         this._setValue('rotationSpeedGraph2', arg);
@@ -792,7 +792,7 @@ class ParticleSystemComponent extends Component {
      * Radial speed over
      * lifetime, velocity vector points from emitter origin to particle pos.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set radialSpeedGraph(arg) {
         this._setValue('radialSpeedGraph', arg);
@@ -806,7 +806,7 @@ class ParticleSystemComponent extends Component {
      * If not null, particles
      * pick random values between radialSpeedGraph and radialSpeedGraph2.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set radialSpeedGraph2(arg) {
         this._setValue('radialSpeedGraph2', arg);
@@ -819,7 +819,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Scale over lifetime.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set scaleGraph(arg) {
         this._setValue('scaleGraph', arg);
@@ -833,7 +833,7 @@ class ParticleSystemComponent extends Component {
      * If not null, particles pick
      * random values between scaleGraph and scaleGraph2.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set scaleGraph2(arg) {
         this._setValue('scaleGraph2', arg);
@@ -846,7 +846,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Color over lifetime.
      *
-     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     * @type {import('../../../core/math/curve-set.js').CurveSet | null}
      */
     set colorGraph(arg) {
         this._setValue('colorGraph', arg);
@@ -860,7 +860,7 @@ class ParticleSystemComponent extends Component {
      * If not null,
      * particles pick random values between colorGraph and colorGraph2.
      *
-     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     * @type {import('../../../core/math/curve-set.js').CurveSet | null}
      */
     set colorGraph2(arg) {
         this._setValue('colorGraph2', arg);
@@ -873,7 +873,7 @@ class ParticleSystemComponent extends Component {
     /**
      * Alpha over lifetime.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set alphaGraph(arg) {
         this._setValue('alphaGraph', arg);
@@ -887,7 +887,7 @@ class ParticleSystemComponent extends Component {
      * If not null, particles pick
      * random values between alphaGraph and alphaGraph2.
      *
-     * @type {import('../../../core/math/curve.js').Curve}
+     * @type {import('../../../core/math/curve.js').Curve | null}
      */
     set alphaGraph2(arg) {
         this._setValue('alphaGraph2', arg);
@@ -901,7 +901,7 @@ class ParticleSystemComponent extends Component {
      * The color map texture to apply to all particles in the system. If
      * no texture is assigned, a default spot texture is used.
      *
-     * @type {import('../../../platform/graphics/texture.js')}
+     * @type {import('../../../platform/graphics/texture.js').Texture | null}
      */
     set colorMap(arg) {
         this._setValue('colorMap', arg);
@@ -915,7 +915,7 @@ class ParticleSystemComponent extends Component {
      * The normal map texture to apply to all particles in the system. If
      * no texture is assigned, an approximate spherical normal is calculated for each vertex.
      *
-     * @type {import('../../../platform/graphics/texture.js')}
+     * @type {import('../../../platform/graphics/texture.js').Texture | null}
      */
     set normalMap(arg) {
         this._setValue('normalMap', arg);
