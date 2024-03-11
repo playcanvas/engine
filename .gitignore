@@ -3,7 +3,7 @@
 .vscode/
 build
 coverage
-docs
+typedocs
 examples/dist
 examples/node_modules
 node_modules
