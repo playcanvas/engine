@@ -16,6 +16,7 @@ class ParticleSystemComponentData {
         this.emitterRadiusInner = 0;
         this.emitterShape = EMITTERSHAPE_BOX;
         this.initialVelocity = 0;
+        this.wrap = false;
         this.wrapBounds = new Vec3();
         this.localSpace = false;
         this.screenSpace = false;
