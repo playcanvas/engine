@@ -362,8 +362,7 @@ class LightComponent extends Component {
     }
 
     /**
-     * The range of the light. Affects omni and spot lights only. Defaults to
-     * 10.
+     * The range of the light. Affects omni and spot lights only. Defaults to 10.
      *
      * @type {number}
      */
