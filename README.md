@@ -108,10 +108,10 @@ npm install
 
 Now you can run various build options:
 
-| Command                 | Description                                    | Outputs To |
-| ----------------------- | ---------------------------------------------- | ---------- |
-| `npm run build`         | Build all engine flavors and type declarations | `build`    |
-| `npm run typedocs`      | Build engine [API reference docs][docs]        | `typedocs` |
+| Command         | Description                                    | Outputs To |
+| --------------- | ---------------------------------------------- | ---------- |
+| `npm run build` | Build all engine flavors and type declarations | `build`    |
+| `npm run docs`  | Build engine [API reference docs][docs]        | `docs`     |
 
 ## PlayCanvas Editor
 
