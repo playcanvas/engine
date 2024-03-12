@@ -1,35 +1,5 @@
 import fs from 'fs';
 
-// Create a regex that matches any string starting with Class< and ending with >
-const regex = /Class<(.*?)>/g;
-const paths = [
-    './types/framework/components/script/component.d.ts',
-    './types/framework/entity.d.ts',
-    './types/framework/script/script-attributes.d.ts',
-    './types/framework/script/script-registry.d.ts',
-    './types/framework/script/script.d.ts'
-];
-
-paths.forEach((path, index) => {
-    let dts = fs.readFileSync(path, 'utf8');
-    dts = dts.replace(regex, 'typeof ScriptType');
-    // The .d.ts files don't know what a ScriptType is, so import it
-    if (index === 0) {
-        dts += `
-import { ScriptType } from '../../script/script-type.js';
-`;
-    } else if (index === 1) {
-        dts += `
-import { ScriptType } from './script/script-type.js';
-`;
-    } else {
-        dts += `
-import { ScriptType } from './script-type.js';
-`;
-    }
-    fs.writeFileSync(path, dts);
-});
-
 // Fix up description parameter for VertexFormat constructor because tsc
 // doesn't recognize it as an array
 let path = './types/platform/graphics/vertex-format.d.ts';
@@ -162,56 +132,6 @@ import { Material } from '../../../scene/materials/material.js';
 import { Entity } from '../../../framework/entity.js';
 import { CanvasFont } from '../../../framework/font/canvas-font.js';
 import { Font } from '../../../framework/font/font.js';
-`;
-fs.writeFileSync(path, dts);
-
-const lightComponentProps = [
-    ['affectDynamic', 'boolean'],
-    ['affectLightmapped', 'boolean'],
-    ['bake', 'boolean'],
-    ['bakeArea', 'number'],
-    ['bakeDir', 'boolean'],
-    ['bakeNumSamples', 'number'],
-    ['cascadeDistribution', 'number'],
-    ['castShadows', 'boolean'],
-    ['color', 'Color'],
-    ['cookieAngle', 'number'],
-    ['cookieChannel', 'string'],
-    ['cookieFalloff', 'boolean'],
-    ['cookieIntensity', 'number'],
-    ['cookieOffset', 'Vec2'],
-    ['cookieScale', 'Vec2'],
-    ['falloffMode', 'number'],
-    ['innerConeAngle', 'number'],
-    ['intensity', 'number'],
-    ['luminance', 'number'],
-    ['isStatic', 'boolean'],
-    ['layers', 'number[]'],
-    ['mask', 'number'],
-    ['normalOffsetBias', 'number'],
-    ['numCascades', 'number'],
-    ['outerConeAngle', 'number'],
-    ['range', 'number'],
-    ['shadowBias', 'number'],
-    ['shadowDistance', 'number'],
-    ['shadowIntensity', 'number'],
-    ['shadowResolution', 'number'],
-    ['shadowType', 'number'],
-    ['shadowUpdateMode', 'number'],
-    ['shape', 'number'],
-    ['affectSpecularity', 'boolean'],
-    ['type', 'string'],
-    ['vsmBlurMode', 'number'],
-    ['vsmBlurSize', 'number']
-];
-
-path = './types/framework/components/light/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Color } from '../../../core/math/color.js';
-import { Vec2 } from '../../../core/math/vec2.js';
 `;
 fs.writeFileSync(path, dts);
 
