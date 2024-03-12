@@ -370,6 +370,10 @@ class ShaderGeneratorStandard extends ShaderGenerator {
                 code.append(this._addMap("thickness", "thicknessPS", options, litShader.chunks, textureMapping));
                 func.append("getThickness();");
                 args.append("litArgs_thickness = dThickness;");
+
+                if (options.litOptions.dispersion) {
+                    args.append("litArgs_dispersion = material_dispersion;");
+                }
             }
 
             if (options.litOptions.useIridescence) {
