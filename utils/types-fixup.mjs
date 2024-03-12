@@ -135,56 +135,6 @@ import { Font } from '../../../framework/font/font.js';
 `;
 fs.writeFileSync(path, dts);
 
-const lightComponentProps = [
-    ['affectDynamic', 'boolean'],
-    ['affectLightmapped', 'boolean'],
-    ['bake', 'boolean'],
-    ['bakeArea', 'number'],
-    ['bakeDir', 'boolean'],
-    ['bakeNumSamples', 'number'],
-    ['cascadeDistribution', 'number'],
-    ['castShadows', 'boolean'],
-    ['color', 'Color'],
-    ['cookieAngle', 'number'],
-    ['cookieChannel', 'string'],
-    ['cookieFalloff', 'boolean'],
-    ['cookieIntensity', 'number'],
-    ['cookieOffset', 'Vec2'],
-    ['cookieScale', 'Vec2'],
-    ['falloffMode', 'number'],
-    ['innerConeAngle', 'number'],
-    ['intensity', 'number'],
-    ['luminance', 'number'],
-    ['isStatic', 'boolean'],
-    ['layers', 'number[]'],
-    ['mask', 'number'],
-    ['normalOffsetBias', 'number'],
-    ['numCascades', 'number'],
-    ['outerConeAngle', 'number'],
-    ['range', 'number'],
-    ['shadowBias', 'number'],
-    ['shadowDistance', 'number'],
-    ['shadowIntensity', 'number'],
-    ['shadowResolution', 'number'],
-    ['shadowType', 'number'],
-    ['shadowUpdateMode', 'number'],
-    ['shape', 'number'],
-    ['affectSpecularity', 'boolean'],
-    ['type', 'string'],
-    ['vsmBlurMode', 'number'],
-    ['vsmBlurSize', 'number']
-];
-
-path = './types/framework/components/light/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Color } from '../../../core/math/color.js';
-import { Vec2 } from '../../../core/math/vec2.js';
-`;
-fs.writeFileSync(path, dts);
-
 const particleSystemComponentProps = [
     ['alignToMotion', 'boolean'],
     ['alphaGraph', 'Curve'],
