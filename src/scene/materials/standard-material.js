@@ -279,6 +279,8 @@ let _params = new Set();
  * indices of refraction, the one around the object and the one of its own surface. In most
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
+ * @property {number} dispersion The strength of the angular separation of colors (chromatic
+ * aberration) transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
  * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
@@ -787,6 +789,10 @@ class StandardMaterial extends Material {
             this._setParameter('material_refraction', this.refraction);
         }
 
+        if (this.dispersion > 0) {
+            this._setParameter('material_dispersion', this.dispersion);
+        }
+
         if (this.useDynamicRefraction) {
             this._setParameter('material_thickness', this.thickness);
             this._setParameter('material_attenuation', getUniform('attenuation'));
@@ -1171,6 +1177,7 @@ function _defineMaterialProps() {
     _defineFloat('occludeSpecularIntensity', 1);
     _defineFloat('refraction', 0);
     _defineFloat('refractionIndex', 1.0 / 1.5); // approx. (air ior / glass ior)
+    _defineFloat('dispersion', 0);
     _defineFloat('thickness', 0);
     _defineFloat('attenuationDistance', 0);
     _defineFloat('metalness', 1);

@@ -111,6 +111,7 @@
   ],
   "reflectivity": 1,
   "refractionIndex": 0.6666666666666666,
+  "dispersion": 0,
   "cubeMapProjectionBox": {
     "center": [
       0,
