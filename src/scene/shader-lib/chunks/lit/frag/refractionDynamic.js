@@ -53,6 +53,8 @@ void addRefraction(
     vec3 refraction = evalRefractionColor(refractionVector, gloss, refractionIndex);
 
     #ifdef DISPERSION
+        // based on the dispersion material property, calculate modified refraction index values
+        // for R and B channels and evaluate the refraction color for them.
         float halfSpread = (1.0 / refractionIndex - 1.0) * 0.025 * dispersion;
 
         float refractionIndexR = refractionIndex - halfSpread;
