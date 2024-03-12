@@ -45,6 +45,17 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
             ),
             jsx(
                 LabelGroup,
+                { text: 'sharpness' },
+                jsx(SliderInput, {
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.scene.sharpness' },
+                    min: 0,
+                    max: 1,
+                    precision: 2
+                })
+            ),
+            jsx(
+                LabelGroup,
                 { text: 'jitter' },
                 jsx(SliderInput, {
                     binding: new BindingTwoWay(),
