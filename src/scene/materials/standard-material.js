@@ -280,7 +280,7 @@ let _params = new Set();
  * situations outer medium is air, so outerIor will be approximately 1. Then you only need to do
  * (1.0 / surfaceIor).
  * @property {number} dispersion The strength of the angular separation of colors (chromatic
- * aberration)transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
+ * aberration) transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
  * @property {boolean} useDynamicRefraction Enables higher quality refractions using the grab pass
  * instead of pre-computed cube maps for refractions.
  * @property {number} thickness The thickness of the medium, only used when useDynamicRefraction
