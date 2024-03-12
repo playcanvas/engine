@@ -209,7 +209,7 @@ class ScriptType extends EventHandler {
         this.fire('state', this.enabled);
 
         // initialize script if not initialized yet and script is enabled
-        if (!this._initialized && this.enabled) {
+        if (this.enabled && !this._initialized) {
             this._initialized = true;
 
             this.__initializeAttributes(true);
@@ -223,12 +223,13 @@ class ScriptType extends EventHandler {
         // Warning: Do not do this if the script component is currently being enabled
         // because in this case post initialize must be called after all the scripts
         // in the script component have been initialized first
-        if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
+        if (this.enabled && this._initialized && !this._postInitialized && !this.entity.script._beingEnabled) {
             this._postInitialized = true;
 
             if (Object.getPrototypeOf(this).hasOwnProperty(SCRIPT_POST_INITIALIZE))
                 this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
         }
+
     }
 
     get enabled() {
