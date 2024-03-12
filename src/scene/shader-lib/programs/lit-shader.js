@@ -831,6 +831,10 @@ class LitShader {
 
         if (options.useRefraction) {
             if (options.useDynamicRefraction) {
+                if (options.dispersion) {
+                    decl.append("uniform float material_dispersion;");
+                    decl.append('#define DISPERSION\n');
+                }
                 func.append(chunks.refractionDynamicPS);
             } else if (this.reflections) {
                 func.append(chunks.refractionCubePS);
@@ -1451,7 +1455,8 @@ class LitShader {
                         litArgs_specularity, 
                         litArgs_albedo, 
                         litArgs_transmission,
-                        litArgs_ior
+                        litArgs_ior,
+                        litArgs_dispersion
                     #if defined(LIT_IRIDESCENCE)
                         , iridescenceFresnel, 
                         litArgs_iridescence_intensity
