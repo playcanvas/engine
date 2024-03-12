@@ -31,6 +31,7 @@ class SkyMesh {
     constructor(device, scene, node, texture, type) {
 
         const material = new Material();
+        material.name = 'SkyMaterial';
 
         material.getShaderVariant = function (dev, sc, defs, unused, pass, sortedLights, viewUniformFormat, viewBindGroupFormat) {
 
