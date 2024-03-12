@@ -113,6 +113,19 @@ class Component extends EventHandler {
         const record = this.system.store[this.entity.getGuid()];
         return record ? record.data : null;
     }
+
+    /**
+     * TODO: implement once all classes are upgraded.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    set enabled(arg) {
+    }
+
+    get enabled() {
+        return true;
+    }
 }
 
 export { Component };

@@ -24,14 +24,14 @@ const getDeclarations = (properties) => {
     return declarations;
 };
 
-const componentProps = [
-    ['enabled', 'boolean']
-];
+// const componentProps = [
+//     ['enabled', 'boolean']
+// ];
 
-path = './types/framework/components/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
-fs.writeFileSync(path, dts);
+// path = './types/framework/components/component.d.ts';
+// dts = fs.readFileSync(path, 'utf8');
+// dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
+// fs.writeFileSync(path, dts);
 
 const buttonComponentProps = [
     ['active', 'boolean'],
