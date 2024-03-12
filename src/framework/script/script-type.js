@@ -214,7 +214,7 @@ class ScriptType extends EventHandler {
 
             this.__initializeAttributes(true);
 
-            if (this.initialize)
+            if (Object.getPrototypeOf(this).hasOwnProperty(SCRIPT_INITIALIZE))
                 this.entity.script._scriptMethod(this, SCRIPT_INITIALIZE);
         }
 
@@ -226,7 +226,7 @@ class ScriptType extends EventHandler {
         if (this._initialized && !this._postInitialized && this.enabled && !this.entity.script._beingEnabled) {
             this._postInitialized = true;
 
-            if (this.postInitialize)
+            if (Object.getPrototypeOf(this).hasOwnProperty(SCRIPT_POST_INITIALIZE))
                 this.entity.script._scriptMethod(this, SCRIPT_POST_INITIALIZE);
         }
     }

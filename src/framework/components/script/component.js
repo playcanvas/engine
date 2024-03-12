@@ -272,7 +272,7 @@ class ScriptComponent extends Component {
             if (script._initialized && !script._postInitialized && script.enabled) {
                 script._postInitialized = true;
 
-                if (script.postInitialize)
+                if (Object.getPrototypeOf(script).hasOwnProperty(SCRIPT_POST_INITIALIZE))
                     this._scriptMethod(script, SCRIPT_POST_INITIALIZE);
             }
         }
@@ -398,7 +398,7 @@ class ScriptComponent extends Component {
             const script = scripts[i];
             if (!script._initialized && script.enabled) {
                 script._initialized = true;
-                if (script.initialize)
+                if (Object.getPrototypeOf(script).hasOwnProperty(SCRIPT_INITIALIZE))
                     this._scriptMethod(script, SCRIPT_INITIALIZE);
             }
         }
@@ -459,12 +459,12 @@ class ScriptComponent extends Component {
             scriptInstance.__executionOrder = scriptsLength;
 
             // append script to the update list if it has an update method
-            if (scriptInstance.update) {
+            if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_UPDATE)) {
                 this._updateList.append(scriptInstance);
             }
 
             // add script to the postUpdate list if it has a postUpdate method
-            if (scriptInstance.postUpdate) {
+            if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_POST_UPDATE)) {
                 this._postUpdateList.append(scriptInstance);
             }
         } else {
@@ -478,13 +478,13 @@ class ScriptComponent extends Component {
 
             // insert script to the update list if it has an update method
             // in the right order
-            if (scriptInstance.update) {
+            if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_UPDATE)) {
                 this._updateList.insert(scriptInstance);
             }
 
             // insert script to the postUpdate list if it has a postUpdate method
             // in the right order
-            if (scriptInstance.postUpdate) {
+            if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_POST_UPDATE)) {
                 this._postUpdateList.insert(scriptInstance);
             }
         }
@@ -496,11 +496,10 @@ class ScriptComponent extends Component {
 
         this._scripts.splice(idx, 1);
 
-        if (scriptInstance.update) {
+        if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_UPDATE)) {
             this._updateList.remove(scriptInstance);
         }
-
-        if (scriptInstance.postUpdate) {
+        if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_POST_UPDATE)) {
             this._postUpdateList.remove(scriptInstance);
         }
 
@@ -669,13 +668,13 @@ class ScriptComponent extends Component {
                     if (scriptInstance.enabled && !scriptInstance._initialized) {
                         scriptInstance._initialized = true;
 
-                        if (scriptInstance.initialize)
+                        if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_INITIALIZE))
                             this._scriptMethod(scriptInstance, SCRIPT_INITIALIZE);
                     }
 
                     if (scriptInstance.enabled && !scriptInstance._postInitialized) {
                         scriptInstance._postInitialized = true;
-                        if (scriptInstance.postInitialize)
+                        if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_POST_INITIALIZE))
                             this._scriptMethod(scriptInstance, SCRIPT_POST_INITIALIZE);
                     }
                 }
@@ -786,7 +785,7 @@ class ScriptComponent extends Component {
             attributes: scriptInstanceOld.__attributes
         });
 
-        if (!scriptInstance.swap)
+        if (!Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_SWAP))
             return false;
 
         scriptInstance.__initializeAttributes();
@@ -799,17 +798,17 @@ class ScriptComponent extends Component {
         // set execution order and make sure we update
         // our update and postUpdate lists
         scriptInstance.__executionOrder = ind;
-        if (scriptInstanceOld.update) {
+        if (Object.getPrototypeOf(scriptInstanceOld).hasOwnProperty(SCRIPT_UPDATE)) {
             this._updateList.remove(scriptInstanceOld);
         }
-        if (scriptInstanceOld.postUpdate) {
+        if (Object.getPrototypeOf(scriptInstanceOld).hasOwnProperty(SCRIPT_POST_UPDATE)) {
             this._postUpdateList.remove(scriptInstanceOld);
         }
 
-        if (scriptInstance.update) {
+        if (Object.getPrototypeOf(scriptInstance).hasOwnProperty(SCRIPT_UPDATE)) {
             this._updateList.insert(scriptInstance);
         }
-        if (scriptInstance.postUpdate) {
+        if (Object.getPrototypeOf(scriptInstanceOld).hasOwnProperty(SCRIPT_POST_UPDATE)) {
             this._postUpdateList.insert(scriptInstance);
         }
 
