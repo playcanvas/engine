@@ -1360,7 +1360,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // Recompile all shaders (they'll be linked when they're next actually used)
+        // Recompile all shaders
         for (const shader of this.shaders) {
             shader.restoreContext();
         }

@@ -96,6 +96,7 @@ class WebglShader {
      */
     restoreContext(device, shader) {
         this.compile(device, shader);
+        this.link(device, shader);
     }
 
     /**
