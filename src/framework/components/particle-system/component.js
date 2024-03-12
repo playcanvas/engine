@@ -159,10 +159,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Controls whether the particle system plays automatically on
-     * creation. If set to false, it is necessary to call {@link ParticleSystemComponent#play} for
-     * the
-     * particle system to play. Defaults to true.
+     * Controls whether the particle system plays automatically on creation.
+     * If set to false, it is necessary to call {@link ParticleSystemComponent#play} for
+     * the particle system to play. Defaults to true.
      *
      * @type {boolean}
      */
@@ -188,8 +187,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The length of time in seconds between a particle's birth and its
-     * death.
+     * The length of time in seconds between a particle's birth and its death.
      *
      * @type {number}
      */
@@ -267,8 +265,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If enabled, the particle system will be initialized as though it had
-     * already completed a full cycle. This only works with looping particle systems.
+     * If enabled, the particle system will be initialized as though it had already completed a full
+     * cycle. This only works with looping particle systems.
      *
      * @type {boolean}
      */
@@ -281,8 +279,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If enabled, particles will be lit by ambient and directional
-     * lights.
+     * If enabled, particles will be lit by ambient and directional lights.
      *
      * @type {boolean}
      */
@@ -295,9 +292,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Enabling Half Lambert lighting avoids particles looking too flat
-     * in shadowed areas. It is a completely non-physical lighting model but can give more pleasing
-     * visual results.
+     * Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a
+     * completely non-physical lighting model but can give more pleasing visual results.
      *
      * @type {boolean}
      */
@@ -323,9 +319,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If enabled, the particles will write to the depth buffer. If
-     * disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one
-     * another in the order in which they are rendered.
+     * If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is
+     * left unchanged and particles will be guaranteed to overwrite one another in the order in
+     * which they are rendered.
      *
      * @type {boolean}
      */
@@ -351,10 +347,10 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Controls fading of particles near their intersections with
-     * scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered.
-     * Multiple depth-dependent effects can share the same map, but if you only use it for particles,
-     * bear in mind that it can double engine draw calls.
+     * Controls fading of particles near their intersections with scene geometry. This effect, when
+     * it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can
+     * share the same map, but if you only use it for particles, bear in mind that it can double
+     * engine draw calls.
      *
      * @type {number}
      */
@@ -387,8 +383,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Controls how particles are blended when being written to the currently
-     * active render target. Can be:
+     * Controls how particles are blended when being written to the currently active render target.
+     * Can be:
      *
      * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
      * fragment and write the result to the frame buffer.
@@ -420,9 +416,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * A value in world units that controls the amount by which particles
-     * are stretched based on their velocity. Particles are stretched from their center towards their
-     * previous position.
+     * A value in world units that controls the amount by which particles are stretched based on
+     * their velocity. Particles are stretched from their center towards their previous position.
      *
      * @type {number}
      */
@@ -448,8 +443,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Shape of the emitter. Defines the bounds inside which particles
-     * are spawned. Also affects the direction of initial velocity.
+     * Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the
+     * direction of initial velocity.
      *
      * - {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is
      * directed towards local Z axis.
@@ -482,9 +477,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * (Only for
-     * EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles
-     * are not spawned. Aligned to the center of EmitterExtents.
+     * (Only for EMITTERSHAPE_BOX)
+     * The exception of extents of a local space bounding box within
+     * which particles are not spawned. Aligned to the center of EmitterExtents.
      *
      * @type {import('../../../core/math/vec3.js').Vec3}
      */
@@ -497,8 +492,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * (Only for EMITTERSHAPE_SPHERE) The radius within which
-     * particles are spawned at random positions.
+     * (Only for EMITTERSHAPE_SPHERE)
+     * The radius within which particles are spawned at random positions.
      *
      * @type {number}
      */
@@ -511,8 +506,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * (Only for EMITTERSHAPE_SPHERE) The inner radius within
-     * which particles are not spawned.
+     * (Only for EMITTERSHAPE_SPHERE)
+     * The inner radius within which particles are not spawned.
      *
      * @type {number}
      */
@@ -525,8 +520,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Defines magnitude of the initial emitter velocity. Direction
-     * is given by emitter shape.
+     * Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
      *
      * @type {number}
      */
@@ -567,8 +561,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Binds particles to emitter transformation rather then world
-     * space.
+     * Binds particles to emitter transformation rather then world space.
      *
      * @type {boolean}
      */
@@ -581,12 +574,11 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Renders particles in 2D screen space. This needs to be set when
-     * particle system is part of hierarchy with {@link ScreenComponent} as
-     * its ancestor, and allows
-     * particle system to integrate with the rendering of {@link ElementComponent}s. Note that an
-     * entity with ParticleSystem component cannot be parented directly to {@link ScreenComponent}, but
-     * has to be a child of a {@link ElementComponent}, for example {@link LayoutGroupComponent}.
+     * Renders particles in 2D screen space. This needs to be set when particle system is part of
+     * hierarchy with {@link ScreenComponent} as its ancestor, and allows particle system to
+     * integrate with the rendering of {@link ElementComponent}s. Note that an entity with
+     * ParticleSystem component cannot be parented directly to {@link ScreenComponent}, but has to
+     * be a child of a {@link ElementComponent}, for example {@link LayoutGroupComponent}.
      *
      * @type {boolean}
      */
@@ -599,8 +591,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The {@link Asset} used
-     * to set the colorMap.
+     * The {@link Asset} used to set the colorMap.
      *
      * @type {Asset}
      */
@@ -613,8 +604,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The {@link Asset} used
-     * to set the normalMap.
+     * The {@link Asset} used to set the normalMap.
      *
      * @type {Asset}
      */
@@ -627,8 +617,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Triangular mesh to be used as a particle. Only first vertex/index buffer
-     * is used. Vertex buffer must contain local position at first 3 floats of each vertex.
+     * Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer
+     * must contain local position at first 3 floats of each vertex.
      *
      * @type {Mesh}
      */
@@ -641,8 +631,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The {@link Asset} used
-     * to set the mesh.
+     * The {@link Asset} used to set the mesh.
      *
      * @type {Asset}
      */
@@ -655,8 +644,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The Render {@link Asset} used
-     * to set the mesh.
+     * The Render {@link Asset} used to set the mesh.
      *
      * @type {Asset}
      */
@@ -689,10 +677,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * (Only for
-     * PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local
-     * space bounding box within which particles are not spawned. Aligned to the center of
-     * EmitterExtents.
+     * (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER)
+     * The exception of extents of a local space bounding box within which particles are not spawned.
+     * Aligned to the center of EmitterExtents.
      *
      * @type {import('../../../core/math/vec3.js').Vec3}
      */
@@ -705,8 +692,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Velocity
-     * relative to emitter over lifetime.
+     * Velocity relative to emitter over lifetime.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -719,8 +705,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null,
-     * particles pick random values between localVelocityGraph and localVelocityGraph2.
+     * If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -733,8 +718,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * World-space
-     * velocity over lifetime.
+     * World-space velocity over lifetime.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -747,8 +731,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null,
-     * particles pick random values between velocityGraph and velocityGraph2.
+     * If not null, particles pick random values between velocityGraph and velocityGraph2.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -761,8 +744,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Rotation speed over
-     * lifetime.
+     * Rotation speed over lifetime.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -775,8 +757,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null,
-     * particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+     * If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -789,8 +770,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Radial speed over
-     * lifetime, velocity vector points from emitter origin to particle pos.
+     * Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -803,8 +783,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null, particles
-     * pick random values between radialSpeedGraph and radialSpeedGraph2.
+     * If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -830,8 +809,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null, particles pick
-     * random values between scaleGraph and scaleGraph2.
+     * If not null, particles pick random values between scaleGraph and scaleGraph2.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -857,8 +835,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null,
-     * particles pick random values between colorGraph and colorGraph2.
+     * If not null, particles pick random values between colorGraph and colorGraph2.
      *
      * @type {import('../../../core/math/curve-set.js').CurveSet}
      */
@@ -884,8 +861,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * If not null, particles pick
-     * random values between alphaGraph and alphaGraph2.
+     * If not null, particles pick random values between alphaGraph and alphaGraph2.
      *
      * @type {import('../../../core/math/curve.js').Curve}
      */
@@ -898,8 +874,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The color map texture to apply to all particles in the system. If
-     * no texture is assigned, a default spot texture is used.
+     * The color map texture to apply to all particles in the system. If no texture is assigned, a
+     * default spot texture is used.
      *
      * @type {import('../../../platform/graphics/texture.js').Texture}
      */
@@ -912,8 +888,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The normal map texture to apply to all particles in the system. If
-     * no texture is assigned, an approximate spherical normal is calculated for each vertex.
+     * The normal map texture to apply to all particles in the system. If no texture is assigned,
+     * an approximate spherical normal is calculated for each vertex.
      *
      * @type {import('../../../platform/graphics/texture.js').Texture}
      */
@@ -952,8 +928,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * The sprite sheet frame that the animation should begin playing
-     * from. Indexed from the start of the current animation.
+     * The sprite sheet frame that the animation should begin playing from. Indexed from the start
+     * of the current animation.
      *
      * @type {number}
      */
@@ -966,9 +942,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Number of sprite sheet frames in the current sprite sheet
-     * animation. The number of animations multiplied by number of frames should be a value less than
-     * animTilesX multiplied by animTilesY.
+     * Number of sprite sheet frames in the current sprite sheet animation. The number of animations
+     * multiplied by number of frames should be a value less than animTilesX multiplied by animTilesY.
      *
      * @type {number}
      */
@@ -981,9 +956,9 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Number of sprite sheet animations contained within the
-     * current sprite sheet. The number of animations multiplied by number of frames should be a value
-     * less than animTilesX multiplied by animTilesY.
+     * Number of sprite sheet animations contained within the current sprite sheet. The number of
+     * animations multiplied by number of frames should be a value less than animTilesX multiplied
+     * by animTilesY.
      *
      * @type {number}
      */
@@ -996,8 +971,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * When animNumAnimations is greater than 1, the sprite sheet
-     * animation index determines which animation the particle system should play.
+     * When animNumAnimations is greater than 1, the sprite sheet animation index determines which
+     * animation the particle system should play.
      *
      * @type {number}
      */
@@ -1010,8 +985,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Each particle emitted by the system will play a random
-     * animation from the sprite sheet, up to animNumAnimations.
+     * Each particle emitted by the system will play a random animation from the sprite sheet, up to
+     * animNumAnimations.
      *
      * @type {number}
      */
@@ -1024,8 +999,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Sprite sheet animation speed. 1 = particle lifetime, 2 = twice
-     * during lifetime etc...
+     * Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc.
      *
      * @type {number}
      */
@@ -1038,8 +1012,7 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * Controls whether the sprite sheet animation plays once or loops
-     * continuously.
+     * Controls whether the sprite sheet animation plays once or loops continuously.
      *
      * @type {boolean}
      */
@@ -1052,9 +1025,8 @@ class ParticleSystemComponent extends Component {
     }
 
     /**
-     * An array of layer IDs ({@link Layer#id}) to which this particle
-     * system should belong. Don't push/pop/splice or modify this array, if you want to change it - set
-     * a new one instead.
+     * An array of layer IDs ({@link Layer#id}) to which this particle system should belong. Don't
+     * push/pop/splice or modify this array, if you want to change it - set a new one instead.
      *
      * @type {number[]}
      */
