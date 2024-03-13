@@ -73,7 +73,9 @@ assetListLoader.load(() => {
     // Create an Entity with a camera component
     const camera = new pc.Entity();
     camera.addComponent('camera', {
-        clearColor: new pc.Color(0.2, 0.2, 0.2)
+        clearColor: new pc.Color(0.2, 0.2, 0.2),
+        nearClip: 0.01,
+        farClip: 2
     });
 
     // the color grab pass is needed
