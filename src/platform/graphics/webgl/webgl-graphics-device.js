@@ -338,7 +338,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextLostHandler = (event) => {
             event.preventDefault();
-            this.contextLost = true;
             this.loseContext();
             Debug.log('pc.GraphicsDevice: WebGL context lost.');
             this.fire('devicelost');
@@ -346,7 +345,6 @@ class WebglGraphicsDevice extends GraphicsDevice {
 
         this._contextRestoredHandler = () => {
             Debug.log('pc.GraphicsDevice: WebGL context restored.');
-            this.contextLost = false;
             this.restoreContext();
             this.fire('devicerestored');
         };
@@ -1230,6 +1228,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
         gl.blendColor(0, 0, 0, 0);
 
         gl.enable(gl.CULL_FACE);
+
+        this.cullFace = gl.BACK;
         gl.cullFace(gl.BACK);
 
         // default depth state
@@ -1322,6 +1322,8 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     loseContext() {
 
+        this.contextLost = true;
+
         // force the backbuffer to be recreated on restore
         this.backBufferSize.set(-1, -1);
 
@@ -1356,12 +1358,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      * @ignore
      */
     restoreContext() {
+
+        this.contextLost = false;
+
         this.initializeExtensions();
         this.initializeCapabilities();
         this.initializeRenderState();
         this.initializeContextCaches();
 
-        // Recompile all shaders (they'll be linked when they're next actually used)
+        // Recompile all shaders
         for (const shader of this.shaders) {
             shader.restoreContext();
         }

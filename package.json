@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.69.0",
+  "version": "1.69.1",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -93,6 +93,7 @@
     "build/playcanvas.prf.mjs",
     "build/playcanvas.d.ts",
     "build/playcanvas-extras.js",
+    "build/playcanvas-extras.mjs",
     "build/playcanvas-extras/index.js",
     "scripts",
     "LICENSE",
