@@ -93,6 +93,7 @@
     "build/playcanvas.prf.mjs",
     "build/playcanvas.d.ts",
     "build/playcanvas-extras.js",
+    "build/playcanvas-extras.mjs",
     "build/playcanvas-extras/index.js",
     "scripts",
     "LICENSE",
