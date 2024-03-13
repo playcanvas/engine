@@ -290,6 +290,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
         options.litOptions.useMetalness = stdMat.useMetalness;
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
+        options.litOptions.dispersion = stdMat.dispersion > 0;
     }
 
     _updateEnvOptions(options, stdMat, scene) {

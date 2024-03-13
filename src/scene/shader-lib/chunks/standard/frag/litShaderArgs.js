@@ -48,6 +48,9 @@ float litArgs_thickness;
 // Index of refraction
 float litArgs_ior;
 
+// Dispersion, range [0..1] typically, but can be higher
+float litArgs_dispersion;
+
 // Iridescence effect intensity, range [0..1]
 float litArgs_iridescence_intensity;
 
