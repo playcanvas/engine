@@ -160,7 +160,7 @@
     "build:types": "npm run build:dts && node utils/types-fixup.mjs && rollup -c --environment target:types && node utils/types-undollar.mjs && npm run build:types:extras",
     "build:types:extras": "npm run build:dts:extras",
     "build:sourcemaps": "npm run build -- -m",
-    "build:publish": "npm run publint && npm run build && npm run build:types",
+    "build:publish": "npm run build && npm run build:types && npm run publint",
     "watch": "npm run build -- -w",
     "watch:release": "npm run build:release -- -w",
     "watch:debug": "npm run build:debug -- -w",
