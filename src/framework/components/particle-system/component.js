@@ -663,7 +663,6 @@ class ParticleSystemComponent extends Component {
      * - {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by
      * emitter (entity) transformation.
      *
-     *
      * @type {number}
      */
     set orientation(arg) {
