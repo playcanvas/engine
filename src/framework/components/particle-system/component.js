@@ -371,7 +371,6 @@ class ParticleSystemComponent extends Component {
      * - {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
      * - {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
      *
-     *
      * @type {number}
      */
     set sort(arg) {
