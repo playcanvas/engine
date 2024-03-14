@@ -57,6 +57,7 @@ class LightComponent extends Component {
     // TODO: Remove this override in upgrading component
     /**
      * @type {import('./data.js').LightComponentData}
+     * @ignore
      */
     get data() {
         const record = this.system.store[this.entity.getGuid()];
