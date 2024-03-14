@@ -1,42 +1,5 @@
 import fs from 'fs';
 
-// Create a regex that matches any string starting with Class< and ending with >
-const regex = /Class<(.*?)>/g;
-const paths = [
-    './types/framework/components/script/component.d.ts',
-    './types/framework/entity.d.ts',
-    './types/framework/script/script-attributes.d.ts',
-    './types/framework/script/script-registry.d.ts',
-    './types/framework/script/script.d.ts'
-];
-
-paths.forEach((path, index) => {
-    let dts = fs.readFileSync(path, 'utf8');
-    dts = dts.replace(regex, 'typeof ScriptType');
-    // The .d.ts files don't know what a ScriptType is, so import it
-    if (index === 0) {
-        dts += `
-import { ScriptType } from '../../script/script-type.js';
-`;
-    } else if (index === 1) {
-        dts += `
-import { ScriptType } from './script/script-type.js';
-`;
-    } else {
-        dts += `
-import { ScriptType } from './script-type.js';
-`;
-    }
-    fs.writeFileSync(path, dts);
-});
-
-// Fix up description parameter for VertexFormat constructor because tsc
-// doesn't recognize it as an array
-let path = './types/platform/graphics/vertex-format.d.ts';
-let dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
-fs.writeFileSync(path, dts);
-
 // A regex that matches a string starting with 'constructor' and ending with ');'
 const regexConstructor = /constructor(.*?)\);/g;
 
