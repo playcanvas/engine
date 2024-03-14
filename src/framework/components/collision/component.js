@@ -382,7 +382,7 @@ class CollisionComponent extends Component {
      */
     onSetRadius(name, oldValue, newValue) {
         const t = this.data.type;
-        if (this.data.initialized &&(t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
+        if (this.data.initialized && (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
     }
