@@ -382,10 +382,7 @@ class CollisionComponent extends Component {
      */
     onSetRadius(name, oldValue, newValue) {
         const t = this.data.type;
-        if (
-            this.data.initialized &&
-            (t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')
-        ) {
+        if (this.data.initialized &&(t === 'sphere' || t === 'capsule' || t === 'cylinder' || t === 'cone')) {
             this.system.recreatePhysicalShapes(this);
         }
     }
@@ -572,7 +569,9 @@ class CollisionComponent extends Component {
         // and there is no change of compoundParent, then update child transform
         // once updateChildTransform is exposed in ammo.js
 
-        if (typeof Ammo === 'undefined') return;
+        if (typeof Ammo === 'undefined') {
+            return;
+        }
 
         if (this._compoundParent) {
             this.system.recreatePhysicalShapes(this);
@@ -599,7 +598,9 @@ class CollisionComponent extends Component {
             let dirty = entity._dirtyLocal;
             let parent = entity;
             while (parent && !dirty) {
-                if (parent.collision && parent.collision === this._compoundParent) break;
+                if (parent.collision && parent.collision === this._compoundParent) {
+                    break;
+                }
 
                 if (parent._dirtyLocal) dirty = true;
 
@@ -607,10 +608,7 @@ class CollisionComponent extends Component {
             }
 
             if (dirty) {
-                entity.forEach(
-                    this.system.implementations.compound._updateEachDescendantTransform,
-                    entity
-                );
+                entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
 
                 const bodyComponent = this._compoundParent.entity.rigidbody;
                 if (bodyComponent) bodyComponent.activate();
@@ -680,8 +678,9 @@ class CollisionComponent extends Component {
                 this._compoundParent.shape.addChildShape(transform, this.data.shape);
                 Ammo.destroy(transform);
 
-                if (this._compoundParent.entity.rigidbody)
+                if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();
+                }
             }
         } else if (this.entity.trigger) {
             this.entity.trigger.enable();
@@ -695,8 +694,9 @@ class CollisionComponent extends Component {
             if (!this._compoundParent.entity._destroying) {
                 this.system._removeCompoundChild(this._compoundParent, this.data.shape);
 
-                if (this._compoundParent.entity.rigidbody)
+                if (this._compoundParent.entity.rigidbody) {
                     this._compoundParent.entity.rigidbody.activate();
+                }
             }
         } else if (this.entity.trigger) {
             this.entity.trigger.disable();
