@@ -602,7 +602,9 @@ class CollisionComponent extends Component {
                     break;
                 }
 
-                if (parent._dirtyLocal) dirty = true;
+                if (parent._dirtyLocal) {
+                    dirty = true;
+                }
 
                 parent = parent.parent;
             }
@@ -611,7 +613,9 @@ class CollisionComponent extends Component {
                 entity.forEach(this.system.implementations.compound._updateEachDescendantTransform, entity);
 
                 const bodyComponent = this._compoundParent.entity.rigidbody;
-                if (bodyComponent) bodyComponent.activate();
+                if (bodyComponent) {
+                    bodyComponent.activate();
+                }
             }
         }
     }
@@ -649,11 +653,7 @@ class CollisionComponent extends Component {
     }
 
     onEnable() {
-        if (
-            this.data.type === 'mesh' &&
-            (this.data.asset || this.data.renderAsset) &&
-            this.data.initialized
-        ) {
+        if (this.data.type === 'mesh' && (this.data.asset || this.data.renderAsset) && this.data.initialized) {
             const asset = this.system.app.assets.get(this.data.asset || this.data.renderAsset);
             // recreate the collision shape if the model asset is not loaded
             // or the shape does not exist
@@ -671,10 +671,7 @@ class CollisionComponent extends Component {
             if (this._compoundParent.shape.getNumChildShapes() === 0) {
                 this.system.recreatePhysicalShapes(this._compoundParent);
             } else {
-                const transform = this.system._getNodeTransform(
-                    this.entity,
-                    this._compoundParent.entity
-                );
+                const transform = this.system._getNodeTransform(this.entity, this._compoundParent.entity);
                 this._compoundParent.shape.addChildShape(transform, this.data.shape);
                 Ammo.destroy(transform);
 
