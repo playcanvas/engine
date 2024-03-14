@@ -141,6 +141,7 @@ class ParticleSystemComponent extends Component {
     // TODO: Remove this override in upgrading component
     /**
      * @type {import('./data.js').ParticleSystemComponentData}
+     * @ignore
      */
     get data() {
         const record = this.system.store[this.entity.getGuid()];
