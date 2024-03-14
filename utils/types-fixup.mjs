@@ -312,6 +312,7 @@ const standardMaterialProps = [
     ['reflectivity', 'number'],
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
+    ['dispersion', 'number'],
     ['shadingModel', 'number'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],
