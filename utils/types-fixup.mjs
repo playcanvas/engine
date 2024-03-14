@@ -17,15 +17,6 @@ const getDeclarations = (properties) => {
     return declarations;
 };
 
-const componentProps = [
-    ['enabled', 'boolean']
-];
-
-let path = './types/framework/components/component.d.ts';
-let dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
-fs.writeFileSync(path, dts);
-
 const buttonComponentProps = [
     ['active', 'boolean'],
     ['fadeDuration', 'number'],
@@ -43,8 +34,8 @@ const buttonComponentProps = [
     ['transitionMode', 'number']
 ];
 
-path = './types/framework/components/button/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
+let path = './types/framework/components/button/component.d.ts';
+let dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
 // We need to import types that are newly introduced in the property list above
 dts += `
