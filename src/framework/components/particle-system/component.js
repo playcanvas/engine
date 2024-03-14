@@ -450,7 +450,6 @@ class ParticleSystemComponent extends Component {
      * - {@link EMITTERSHAPE_SPHERE}: Sphere shape parameterized by emitterRadius. Initial velocity is
      * directed outwards from the center.
      *
-     *
      * @type {number}
      */
     set emitterShape(arg) {
