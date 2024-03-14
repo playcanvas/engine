@@ -4,6 +4,8 @@ import { Tracing } from "../../core/tracing.js";
 
 /**
  * Base class of a simple GPU profiler.
+ *
+ * @ignore
  */
 class GpuProfiler {
     /**
