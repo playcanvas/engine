@@ -404,7 +404,6 @@ class ParticleSystemComponent extends Component {
      * the source RGB is
      * multiplied by the source alpha.
      *
-     *
      * @type {number}
      */
     set blendType(arg) {
