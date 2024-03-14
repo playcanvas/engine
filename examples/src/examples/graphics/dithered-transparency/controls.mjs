@@ -48,6 +48,15 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                         { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
                     ]
                 })
+            ),
+            jsx(
+                LabelGroup,
+                { text: 'TAA (WIP)' },
+                jsx(BooleanInput, {
+                    type: 'toggle',
+                    binding: new BindingTwoWay(),
+                    link: { observer, path: 'data.taa' }
+                })
             )
         )
     );

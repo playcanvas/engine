@@ -212,7 +212,7 @@ class LitShader {
 
         codeBody += "   vPositionW    = getWorldPosition();\n";
 
-        if (this.options.pass === SHADER_DEPTH) {
+        if (this.options.pass === SHADER_DEPTH || this.options.pass === SHADER_PREPASS_VELOCITY) {
             code += 'varying float vDepth;\n';
             code += '#ifndef VIEWMATRIX\n';
             code += '#define VIEWMATRIX\n';
@@ -454,14 +454,9 @@ class LitShader {
     }
 
     _fsGetPrePassVelocityCode() {
-        const code = `
-            void main(void)
-            {
-                gl_FragColor = vec4(1, 0, 0, 1);
-            }
-            `;
 
-        return code;
+        // till the velocity is implemented, just output the depth
+        return this._fsGetDepthPassCode();
     }
 
     _fsGetShadowPassCode() {
