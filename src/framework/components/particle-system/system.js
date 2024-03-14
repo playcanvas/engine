@@ -4,7 +4,6 @@ import { Vec3 } from '../../../core/math/vec3.js';
 
 import { Asset } from '../../asset/asset.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ParticleSystemComponent } from './component.js';
@@ -262,7 +261,5 @@ class ParticleSystemComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ParticleSystemComponent.prototype, _schema);
 
 export { ParticleSystemComponentSystem };

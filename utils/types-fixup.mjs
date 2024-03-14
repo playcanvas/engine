@@ -30,6 +30,13 @@ import { ScriptType } from './script-type.js';
     fs.writeFileSync(path, dts);
 });
 
+// Fix up description parameter for VertexFormat constructor because tsc
+// doesn't recognize it as an array
+let path = './types/platform/graphics/vertex-format.d.ts';
+let dts = fs.readFileSync(path, 'utf8');
+dts = dts.replace('}, vertexCount?: number);', '}[], vertexCount?: number);');
+fs.writeFileSync(path, dts);
+
 // A regex that matches a string starting with 'constructor' and ending with ');'
 const regexConstructor = /constructor(.*?)\);/g;
 
@@ -51,8 +58,8 @@ const componentProps = [
     ['enabled', 'boolean']
 ];
 
-let path = './types/framework/components/component.d.ts';
-let dts = fs.readFileSync(path, 'utf8');
+path = './types/framework/components/component.d.ts';
+dts = fs.readFileSync(path, 'utf8');
 dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(componentProps));
 fs.writeFileSync(path, dts);
 
@@ -155,130 +162,6 @@ import { Material } from '../../../scene/materials/material.js';
 import { Entity } from '../../../framework/entity.js';
 import { CanvasFont } from '../../../framework/font/canvas-font.js';
 import { Font } from '../../../framework/font/font.js';
-`;
-fs.writeFileSync(path, dts);
-
-const lightComponentProps = [
-    ['affectDynamic', 'boolean'],
-    ['affectLightmapped', 'boolean'],
-    ['bake', 'boolean'],
-    ['bakeArea', 'number'],
-    ['bakeDir', 'boolean'],
-    ['bakeNumSamples', 'number'],
-    ['cascadeDistribution', 'number'],
-    ['castShadows', 'boolean'],
-    ['color', 'Color'],
-    ['cookieAngle', 'number'],
-    ['cookieChannel', 'string'],
-    ['cookieFalloff', 'boolean'],
-    ['cookieIntensity', 'number'],
-    ['cookieOffset', 'Vec2'],
-    ['cookieScale', 'Vec2'],
-    ['falloffMode', 'number'],
-    ['innerConeAngle', 'number'],
-    ['intensity', 'number'],
-    ['luminance', 'number'],
-    ['isStatic', 'boolean'],
-    ['layers', 'number[]'],
-    ['mask', 'number'],
-    ['normalOffsetBias', 'number'],
-    ['numCascades', 'number'],
-    ['outerConeAngle', 'number'],
-    ['range', 'number'],
-    ['shadowBias', 'number'],
-    ['shadowDistance', 'number'],
-    ['shadowIntensity', 'number'],
-    ['shadowResolution', 'number'],
-    ['shadowType', 'number'],
-    ['shadowUpdateMode', 'number'],
-    ['shape', 'number'],
-    ['affectSpecularity', 'boolean'],
-    ['type', 'string'],
-    ['vsmBlurMode', 'number'],
-    ['vsmBlurSize', 'number']
-];
-
-path = './types/framework/components/light/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(lightComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Color } from '../../../core/math/color.js';
-import { Vec2 } from '../../../core/math/vec2.js';
-`;
-fs.writeFileSync(path, dts);
-
-const particleSystemComponentProps = [
-    ['alignToMotion', 'boolean'],
-    ['alphaGraph', 'Curve'],
-    ['alphaGraph2', 'Curve'],
-    ['animIndex', 'number'],
-    ['animLoop', 'boolean'],
-    ['animNumAnimations', 'number'],
-    ['animNumFrames', 'number'],
-    ['animSpeed', 'number'],
-    ['animStartFrame', 'number'],
-    ['animTilesX', 'number'],
-    ['animTilesY', 'number'],
-    ['autoPlay', 'boolean'],
-    ['blend', 'number'],
-    ['colorGraph', 'CurveSet'],
-    ['colorMapAsset', 'Asset'],
-    ['depthSoftening', 'number'],
-    ['depthWrite', 'boolean'],
-    ['emitterExtents', 'Vec3'],
-    ['emitterExtentsInner', 'Vec3'],
-    ['emitterRadius', 'number'],
-    ['emitterRadiusInner', 'number'],
-    ['emitterShape', 'number'],
-    ['halfLambert', 'boolean'],
-    ['initialVelocity', 'number'],
-    ['intensity', 'number'],
-    ['layers', 'number[]'],
-    ['lifetime', 'number'],
-    ['lighting', 'boolean'],
-    ['localSpace', 'boolean'],
-    ['localVelocityGraph', 'CurveSet'],
-    ['localVelocityGraph2', 'CurveSet'],
-    ['loop', 'boolean'],
-    ['noFog', 'boolean'],
-    ['normalMapAsset', 'Asset'],
-    ['numParticles', 'number'],
-    ['orientation', 'number'],
-    ['particleNormal', 'Vec3'],
-    ['preWarm', 'boolean'],
-    ['radialSpeedGraph', 'Curve'],
-    ['radialSpeedGraph2', 'Curve'],
-    ['randomizeAnimIndex', 'number'],
-    ['rate', 'number'],
-    ['rate2', 'number'],
-    ['renderAsset', 'Asset'],
-    ['rotationSpeedGraph', 'Curve'],
-    ['rotationSpeedGraph2', 'Curve'],
-    ['scaleGraph', 'Curve'],
-    ['scaleGraph2', 'Curve'],
-    ['screenSpace', 'boolean'],
-    ['sort', 'number'],
-    ['startAngle', 'number'],
-    ['startAngle2', 'number'],
-    ['stretch', 'number'],
-    ['velocityGraph', 'CurveSet'],
-    ['velocityGraph2', 'CurveSet'],
-    ['wrapBounds', 'Vec3']
-];
-
-path = './types/framework/components/particle-system/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-// TypeScript compiler is defining enabled in ParticleSystemComponent because it doesn't
-// know about the declaration in the Component base class, so remove it.
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(particleSystemComponentProps));
-dts = dts.replace('enabled: any;', '');
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Vec3 } from '../../../core/math/vec3.js';
-import { Curve } from '../../../core/math/curve.js';
-import { CurveSet } from '../../../core/math/curve-set.js';
-import { Asset } from '../../../framework/asset/asset.js';
 `;
 fs.writeFileSync(path, dts);
 
@@ -468,6 +351,7 @@ const standardMaterialProps = [
     ['reflectivity', 'number'],
     ['refraction', 'number'],
     ['refractionIndex', 'number'],
+    ['dispersion', 'number'],
     ['shadingModel', 'number'],
     ['specular', 'Color'],
     ['specularMap', 'Texture|null'],

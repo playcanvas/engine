@@ -163,15 +163,20 @@ assetListLoader.load(() => {
         if (noPasses || taaEnabled !== currentOptions.taaEnabled) {
             currentOptions.taaEnabled = taaEnabled;
 
+            // TAA has been flipped, setup sharpening appropriately
+            data.set('data.scene.sharpness', taaEnabled ? 1 : 0);
+
             // create new pass
             setupRenderPass();
         }
-
 
         // apply all runtime settings
         const renderPassCamera = cameraEntity.camera.renderPasses[0];
         renderPassCamera.renderTargetScale = data.get('data.scene.scale');
         renderPassCamera.bloomEnabled = data.get('data.scene.bloom');
+
+        const composePass = renderPassCamera.composePass;
+        composePass.sharpness = data.get('data.scene.sharpness');
 
         // taa - enable camera jitter if taa is enabled
         cameraEntity.camera.jitter = taaEnabled ? data.get('data.taa.jitter') : 0;
@@ -188,6 +193,7 @@ assetListLoader.load(() => {
         scene: {
             scale: 1,
             bloom: true,
+            sharpness: 0.5,
             tonemapping: pc.TONEMAP_ACES
         },
         taa: {

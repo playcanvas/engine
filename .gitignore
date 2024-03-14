@@ -11,7 +11,7 @@ npm-debug.log
 scripts/parsers/vox-parser.js
 scripts/parsers/vox-parser.js.map
 types
-typedocs
 stats.html
 .npmrc
 examples/.npmrc
+.prettierrc
