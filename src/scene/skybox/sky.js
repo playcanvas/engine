@@ -7,6 +7,7 @@ import { SkyMesh } from "./sky-mesh.js";
  * Implementation of the sky.
  *
  * @category Graphics
+ * @ignore
  */
 class Sky {
     /**

@@ -8,6 +8,7 @@ import { Quat } from "../../core/math/quat.js";
  * change during its lifetime.
  *
  * @category XR
+ * @ignore
  */
 class XrMesh extends EventHandler {
     /**
