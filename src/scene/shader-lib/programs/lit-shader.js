@@ -226,7 +226,7 @@ class LitShader {
         }
 
         if (this.options.pass === SHADER_PREPASS_VELOCITY) {
-            Debug.error("SHADER_PREPASS_VELOCITY not implemented");
+            Debug.warnOnce("SHADER_PREPASS_VELOCITY not implemented");
         }
 
         if (this.options.useInstancing) {
