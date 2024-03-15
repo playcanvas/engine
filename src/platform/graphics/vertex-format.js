@@ -63,7 +63,6 @@ const deviceCache = new DeviceCache();
  * @property {number} elements[].size The size of the attribute in bytes.
  * @category Graphics
  */
-
 class VertexFormat {
     /**
      * @typedef {object} AttributeDescription
