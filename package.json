@@ -105,8 +105,7 @@
   ],
   "dependencies": {
     "@types/webxr": "^0.5.14",
-    "@webgpu/types": "^0.1.40",
-    "playcanvas": "file:."
+    "@webgpu/types": "^0.1.40"
   },
   "devDependencies": {
     "@babel/core": "^7.24.0",
