@@ -1364,24 +1364,22 @@ class ElementComponent extends Component {
     }
 
     /**
-     * The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To override certain text
-     * styling properties on a per-character basis, the text can optionally include markup tags
-     * contained within square brackets. Supported tags are:
-     * 1.  `color ` - override the element's  `color ` property.
-     * Examples:
-     *      -  `[color="#ff0000"]red text[/color] `
-     *      -  `[color="#00ff00"]green text[/color] `
-     *      -  `[color="#0000ff"]blue text[/color] `
-     * 2.  `outline ` - override the element's  `outlineColor ` and  `outlineThickness ` properties.
-     * Example:
-     *      -  `[outline color="#ffffff" thickness="0.5"]text[/outline] `
-     * 3.  `shadow ` - override the element's  `shadowColor ` and  `shadowOffset ` properties.
-     * Examples:
-     *      -  `[shadow color="#ffffff" offset="0.5"]text[/shadow] `
-     *      -  `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]
+     * The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To
+     * override certain text styling properties on a per-character basis, the text can optionally
+     * include markup tags contained within square brackets. Supported tags are:
      *
-     * ` Note that markup tags are only processed if the text element's  `enableMarkup ` property is
-     * set to true.
+     * 1. `color` - override the element's `color` property. Examples:
+     * - `[color="#ff0000"]red text[/color]`
+     * - `[color="#00ff00"]green text[/color]`
+     * - `[color="#0000ff"]blue text[/color]`
+     * 2. `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
+     * - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
+     * 3. `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
+     * - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
+     * - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
+     *
+     * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
+     * true.
      *
      * @type {string}
      */
