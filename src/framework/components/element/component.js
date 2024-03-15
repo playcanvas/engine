@@ -1196,7 +1196,7 @@ class ElementComponent extends Component {
     }
 
     get fontAsset() {
-        if (this._text) {
+        if (this._text && typeof this._text.fontAsset === 'number') {
             return this._text.fontAsset;
         }
 
