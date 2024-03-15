@@ -1312,6 +1312,9 @@ class ImageElement {
     }
 
     // private
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
+     */
     get aabb() {
         if (this._renderable.meshInstance) {
             return this._renderable.meshInstance.aabb;

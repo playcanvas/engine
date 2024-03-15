@@ -1899,6 +1899,9 @@ class TextElement {
     }
 
     // private
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     */
     get aabb() {
         if (this._aabbDirty) {
             let initialized = false;

@@ -390,11 +390,15 @@ class ElementComponent extends Component {
     }
 
     /**
-     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox | null}
      */
     get aabb() {
-        if (this._image) return this._image.aabb;
-        if (this._text) return this._text.aabb;
+        if (this._image) {
+            return this._image.aabb;
+        }
+        if (this._text) {
+            return this._text.aabb;
+        }
 
         return null;
     }
