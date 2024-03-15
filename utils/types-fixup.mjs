@@ -74,21 +74,6 @@ import { Font } from '../../../framework/font/font.js';
 `;
 fs.writeFileSync(path, dts);
 
-const scrollbarComponentProps = [
-    ['handleEntity', 'Entity'],
-    ['handleSize', 'number'],
-    ['orientation', 'number']
-];
-
-path = './types/framework/components/scrollbar/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Entity } from '../../../framework/entity.js';
-`;
-fs.writeFileSync(path, dts);
-
 const scrollViewComponentProps = [
     ['bounceAmount', 'number'],
     ['contentEntity', 'Entity'],

@@ -47,6 +47,4 @@ class ScrollbarComponentSystem extends ComponentSystem {
     }
 }
 
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
-
 export { ScrollbarComponentSystem };
