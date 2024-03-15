@@ -317,6 +317,16 @@ class ElementComponent extends Component {
         this._maskedBy = null; // the entity that is masking this element
     }
 
+    // TODO: Remove this override in upgrading component
+    /**
+     * @type {import('./data.js').ElementComponentData}
+     * @ignore
+     */
+    get data() {
+        const record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+
     /**
      * @type {boolean}
      */
@@ -379,6 +389,9 @@ class ElementComponent extends Component {
         return Math.abs(this._anchor.y - this._anchor.w) > 0.001;
     }
 
+    /**
+     * @type {import('../../../core/shape/bounding-box.js').BoundingBox}
+     */
     get aabb() {
         if (this._image) return this._image.aabb;
         if (this._text) return this._text.aabb;
