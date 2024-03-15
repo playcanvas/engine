@@ -129,6 +129,8 @@ class TextElement {
         this._symbolColors = null;  // per-symbol color indexes. only set for text with markup.
         this._symbolOutlineParams = null;  // per-symbol outline color/thickness indexes. only set for text with markup.
         this._symbolShadowParams = null;  // per-symbol shadow color/offset indexes. only set for text with markup.
+        /** @type {string} */
+        // @ts-ignore
         this._i18nKey = null;
 
         this._fontAsset = new LocalizedAsset(this._system.app);

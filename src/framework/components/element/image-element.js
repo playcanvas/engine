@@ -266,13 +266,27 @@ class ImageElement {
         this._system = element.system;
 
         // public
+        /** @type {number} */
+        // @ts-ignore
         this._textureAsset = null;
+        /** @type {import('../../../platform/graphics/texture.js').Texture} */
+        // @ts-ignore
         this._texture = null;
+        /** @type {number} */
+        // @ts-ignore
         this._materialAsset = null;
+        /** @type {import('../../../scene/materials/material.js').Material} */
+        // @ts-ignore
         this._material = null;
+        /** @type {number} */
+        // @ts-ignore
         this._spriteAsset = null;
+        /** @type {import('../../../scene/sprite.js').Sprite} */
+        // @ts-ignore
         this._sprite = null;
         this._spriteFrame = 0;
+        /** @type {number} */
+        // @ts-ignore
         this._pixelsPerUnit = null;
         this._targetAspectRatio = -1; // will be set when assigning textures
 

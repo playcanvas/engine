@@ -1263,6 +1263,9 @@ class ElementComponent extends Component {
         this._setValue('lines', arg);
     }
 
+    /**
+     * @ignore
+     */
     get lines() {
         if (this._text) {
             return this._text.lines;
