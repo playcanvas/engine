@@ -20,33 +20,28 @@ const splatCoreVS = `
     varying vec4 color;
     varying float id;
 
-    mat3 quatToMat3(vec3 R)
-    {
-        float x = R.x;
-        float y = R.y;
-        float z = R.z;
-        float w = sqrt(1.0 - dot(R, R));
-
+    #ifndef GL2
+    #ifndef WEBGPU
+    mat3 transpose(in mat3 m) {
         return mat3(
-            1.0 - 2.0 * (z * z + w * w),
-                2.0 * (y * z + x * w),
-                2.0 * (y * w - x * z),
-
-                2.0 * (y * z - x * w),
-            1.0 - 2.0 * (y * y + w * w),
-                2.0 * (z * w + x * y),
-
-                2.0 * (y * w + x * z),
-                2.0 * (z * w - x * y),
-            1.0 - 2.0 * (y * y + z * z)
+            m[0].x, m[1].x, m[2].x,
+            m[0].y, m[1].y, m[2].y,
+            m[0].z, m[1].z, m[2].z
         );
     }
+    #endif
+    #endif
 
     uniform vec4 tex_params;
     uniform sampler2D splatColor;
-    uniform highp sampler2D splatScale;
-    uniform highp sampler2D splatRotation;
-    uniform highp sampler2D splatCenter;
+
+    uniform highp sampler2D transformA;
+    uniform highp sampler2D transformB;
+    uniform highp sampler2D transformC;
+
+    vec3 center;
+    vec3 covA;
+    vec3 covB;
 
     #ifdef INT_INDICES
 
@@ -67,16 +62,14 @@ const splatCoreVS = `
             return texelFetch(splatColor, dataUV, 0);
         }
 
-        vec3 getScale() {
-            return texelFetch(splatScale, dataUV, 0).xyz;
-        }
+        void getTransform() {
+            vec4 tA = texelFetch(transformA, dataUV, 0);
+            vec4 tB = texelFetch(transformB, dataUV, 0);
+            vec4 tC = texelFetch(transformC, dataUV, 0);
 
-        vec3 getRotation() {
-            return texelFetch(splatRotation, dataUV, 0).xyz;
-        }
-
-        vec3 getCenter() {
-            return texelFetch(splatCenter, dataUV, 0).xyz;
+            center = tA.xyz;
+            covA = tB.xyz;
+            covB = vec3(tA.w, tB.w, tC.x);
         }
 
     #else
@@ -101,62 +94,26 @@ const splatCoreVS = `
             return texture2D(splatColor, dataUV);
         }
 
-        vec3 getScale() {
-            return texture2D(splatScale, dataUV).xyz;
-        }
+        void getTransform() {
+            vec4 tA = texture2D(transformA, dataUV);
+            vec4 tB = texture2D(transformB, dataUV);
+            vec4 tC = texture2D(transformC, dataUV);
 
-        vec3 getRotation() {
-            return texture2D(splatRotation, dataUV).xyz;
-        }
-
-        vec3 getCenter() {
-            return texture2D(splatCenter, dataUV).xyz;
+            center = tA.xyz;
+            covA = tB.xyz;
+            covB = vec3(tA.w, tB.w, tC.x);
         }
 
     #endif
-
-    void computeCov3d(in mat3 rot, in vec3 scale, out vec3 covA, out vec3 covB)
-    {
-        // M = S * R
-        float M0 = scale.x * rot[0][0];
-        float M1 = scale.x * rot[0][1];
-        float M2 = scale.x * rot[0][2];
-        float M3 = scale.y * rot[1][0];
-        float M4 = scale.y * rot[1][1];
-        float M5 = scale.y * rot[1][2];
-        float M6 = scale.z * rot[2][0];
-        float M7 = scale.z * rot[2][1];
-        float M8 = scale.z * rot[2][2];
-
-        covA = vec3(
-            M0 * M0 + M3 * M3 + M6 * M6,
-            M0 * M1 + M3 * M4 + M6 * M7,
-            M0 * M2 + M3 * M5 + M6 * M8
-        );
-
-        covB = vec3(
-            M1 * M1 + M4 * M4 + M7 * M7,
-            M1 * M2 + M4 * M5 + M7 * M8,
-            M2 * M2 + M5 * M5 + M8 * M8
-        );
-    }
 
     vec3 evalCenter() {
         evalDataUV();
-        return getCenter();
-    }
 
-    #ifndef GL2
-    #ifndef WEBGPU
-    mat3 transpose(in mat3 m) {
-        return mat3(
-            m[0].x, m[1].x, m[2].x,
-            m[0].y, m[1].y, m[2].y,
-            m[0].z, m[1].z, m[2].z
-        );
+        // get data
+        getTransform();
+
+        return center;
     }
-    #endif
-    #endif
 
     vec4 evalSplat(vec4 centerWorld)
     {
@@ -168,62 +125,52 @@ const splatCoreVS = `
             return vec4(0.0, 0.0, 2.0, 1.0);
         }
 
-        vec3 scale = getScale();
-        vec3 rotation = getRotation();
-
         color = getColor();
 
-        #ifdef DEBUG_RENDER
-            vec3 local = quatToMat3(rotation) * (vertex_position * scale * 2.0) + center;
-            return matrix_viewProjection * matrix_model * vec4(local, 1.0);
-        #else
-            vec3 splat_cova;
-            vec3 splat_covb;
-            computeCov3d(mat3(matrix_model) * quatToMat3(rotation), scale, splat_cova, splat_covb);
+        mat3 Vrk = mat3(
+            covA.x, covA.y, covA.z, 
+            covA.y, covB.x, covB.y,
+            covA.z, covB.y, covB.z
+        );
 
-            mat3 Vrk = mat3(
-                splat_cova.x, splat_cova.y, splat_cova.z, 
-                splat_cova.y, splat_covb.x, splat_covb.y,
-                splat_cova.z, splat_covb.y, splat_covb.z
-            );
+        float focal = viewport.x * matrix_projection[0][0];
 
-            float focal = viewport.x * matrix_projection[0][0];
+        float J1 = focal / splat_cam.z;
+        vec2 J2 = -J1 / splat_cam.z * splat_cam.xy;
+        mat3 J = mat3(
+            J1, 0., J2.x, 
+            0., J1, J2.y, 
+            0., 0., 0.
+        );
 
-            mat3 J = mat3(
-                focal / splat_cam.z, 0., -(focal * splat_cam.x) / (splat_cam.z * splat_cam.z), 
-                0., focal / splat_cam.z, -(focal * splat_cam.y) / (splat_cam.z * splat_cam.z), 
-                0., 0., 0.
-            );
+        mat3 W = transpose(mat3(matrix_view) * mat3(matrix_model));
 
-            mat3 W = transpose(mat3(matrix_view));
-            mat3 T = W * J;
-            mat3 cov = transpose(T) * Vrk * T;
+        mat3 T = W * J;
+        mat3 cov = transpose(T) * Vrk * T;
 
-            float diagonal1 = cov[0][0] + 0.3;
-            float offDiagonal = cov[0][1];
-            float diagonal2 = cov[1][1] + 0.3;
+        float diagonal1 = cov[0][0] + 0.3;
+        float offDiagonal = cov[0][1];
+        float diagonal2 = cov[1][1] + 0.3;
 
-            float mid = 0.5 * (diagonal1 + diagonal2);
-            float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
-            float lambda1 = mid + radius;
-            float lambda2 = max(mid - radius, 0.1);
-            vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
-            vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
-            vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+        float mid = 0.5 * (diagonal1 + diagonal2);
+        float radius = length(vec2((diagonal1 - diagonal2) / 2.0, offDiagonal));
+        float lambda1 = mid + radius;
+        float lambda2 = max(mid - radius, 0.1);
+        vec2 diagonalVector = normalize(vec2(offDiagonal, lambda1 - diagonal1));
+        vec2 v1 = min(sqrt(2.0 * lambda1), 1024.0) * diagonalVector;
+        vec2 v2 = min(sqrt(2.0 * lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-            // early out tiny splats
-            // TODO: figure out length units and expose as uniform parameter
-            // TODO: perhaps make this a shader compile-time option
-            if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
-                return vec4(0.0, 0.0, 2.0, 1.0);
-            }
+        // early out tiny splats
+        // TODO: figure out length units and expose as uniform parameter
+        // TODO: perhaps make this a shader compile-time option
+        if (dot(v1, v1) < 4.0 && dot(v2, v2) < 4.0) {
+            return vec4(0.0, 0.0, 2.0, 1.0);
+        }
 
-            texCoord = vertex_position.xy * 2.0;
+        texCoord = vertex_position.xy * 2.0;
 
-            return splat_proj +
-                vec4((vertex_position.x * v1 + vertex_position.y * v2) / viewport * 2.0,
-                    0.0, 0.0) * splat_proj.w;
-        #endif
+        splat_proj.xy += (texCoord.x * v1 + texCoord.y * v2) / viewport * splat_proj.w;
+        return splat_proj;
 
         id = float(vertex_id);
     }

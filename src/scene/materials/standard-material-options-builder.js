@@ -7,7 +7,7 @@ import {
     GAMMA_NONE, GAMMA_SRGBHDR,
     LIGHTTYPE_DIRECTIONAL, LIGHTTYPE_OMNI, LIGHTTYPE_SPOT,
     MASK_AFFECT_DYNAMIC,
-    SHADER_FORWARDHDR,
+    SHADER_FORWARDHDR, SHADER_PREPASS_VELOCITY,
     SHADERDEF_DIRLM, SHADERDEF_INSTANCING, SHADERDEF_LM, SHADERDEF_MORPH_POSITION, SHADERDEF_MORPH_NORMAL, SHADERDEF_NOSHADOW, SHADERDEF_MORPH_TEXTURE_BASED,
     SHADERDEF_SCREENSPACE, SHADERDEF_SKIN, SHADERDEF_TANGENTS, SHADERDEF_UV0, SHADERDEF_UV1, SHADERDEF_VCOLOR, SHADERDEF_LMAMBIENT,
     TONEMAP_LINEAR,
@@ -45,7 +45,7 @@ class StandardMaterialOptionsBuilder {
     // Minimal options for Depth and Shadow passes
     updateMinRef(options, scene, stdMat, objDefs, pass, sortedLights) {
         this._updateSharedOptions(options, scene, stdMat, objDefs, pass);
-        this._updateMinOptions(options, stdMat);
+        this._updateMinOptions(options, stdMat, pass);
         this._updateUVOptions(options, stdMat, objDefs, true);
     }
 
@@ -188,9 +188,13 @@ class StandardMaterialOptionsBuilder {
         }
     }
 
-    _updateMinOptions(options, stdMat) {
+    _updateMinOptions(options, stdMat, pass) {
         options.opacityTint = stdMat.opacity !== 1 && (stdMat.blendType !== BLEND_NONE || stdMat.opacityShadowDither !== DITHER_NONE);
-        options.litOptions.opacityShadowDither = stdMat.opacityShadowDither;
+
+        // pre-pass uses the same dither setting as forward pass, otherwise shadow dither
+        const isPrepass = pass === SHADER_PREPASS_VELOCITY;
+        options.litOptions.opacityShadowDither = isPrepass ? stdMat.opacityDither : stdMat.opacityShadowDither;
+
         options.litOptions.lights = [];
     }
 
@@ -290,6 +294,7 @@ class StandardMaterialOptionsBuilder {
         options.litOptions.useIridescence = stdMat.useIridescence && stdMat.iridescence !== 0.0;
         options.litOptions.useMetalness = stdMat.useMetalness;
         options.litOptions.useDynamicRefraction = stdMat.useDynamicRefraction;
+        options.litOptions.dispersion = stdMat.dispersion > 0;
     }
 
     _updateEnvOptions(options, stdMat, scene) {

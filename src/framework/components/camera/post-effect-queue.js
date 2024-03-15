@@ -5,7 +5,7 @@ import { Texture } from '../../../platform/graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-class PostEffect {
+class PostEffectEntry {
     constructor(effect, inputTarget) {
         this.effect = effect;
         this.inputTarget = inputTarget;
@@ -42,7 +42,7 @@ class PostEffectQueue {
         /**
          * All of the post effects in the queue.
          *
-         * @type {PostEffect[]}
+         * @type {PostEffectEntry[]}
          * @ignore
          */
         this.effects = [];
@@ -136,7 +136,8 @@ class PostEffectQueue {
      * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
      *
-     * @param {PostEffect} effect - The post effect to add to the queue.
+     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post
+     * effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
@@ -144,7 +145,7 @@ class PostEffectQueue {
         const isFirstEffect = effects.length === 0;
 
         const inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
-        const newEntry = new PostEffect(effect, inputTarget);
+        const newEntry = new PostEffectEntry(effect, inputTarget);
         effects.push(newEntry);
 
         this._sourceTarget = newEntry.inputTarget;
@@ -168,7 +169,8 @@ class PostEffectQueue {
      * Removes a post effect from the queue. If the queue becomes empty it will be disabled
      * automatically.
      *
-     * @param {PostEffect} effect - The post effect to remove.
+     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post effect
+     * to remove.
      */
     removeEffect(effect) {
 

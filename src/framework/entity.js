@@ -402,7 +402,7 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for the first script instance of specified type.
      *
-     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {import('./script/script-type.js').ScriptType|undefined} A script instance of specified type, if the entity or any of its descendants
      * has one. Returns undefined otherwise.
      * @example
@@ -417,7 +417,7 @@ class Entity extends GraphNode {
     /**
      * Search the entity and all of its descendants for all script instances of specified type.
      *
-     * @param {string|Class<import('./script/script-type.js').ScriptType>} nameOrType - The name or type of {@link ScriptType}.
+     * @param {string|typeof import('./script/script-type.js').ScriptType} nameOrType - The name or type of {@link ScriptType}.
      * @returns {import('./script/script-type.js').ScriptType[]} All script instances of specified type in the entity or any of its
      * descendants. Returns empty array if none found.
      * @example

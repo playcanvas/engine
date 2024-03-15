@@ -10,7 +10,7 @@ import {
     PIXELFORMAT_ATC_RGBA, PIXELFORMAT_BGRA8, PIXELFORMAT_R8I, PIXELFORMAT_R8U, PIXELFORMAT_R16I, PIXELFORMAT_R16U,
     PIXELFORMAT_R32I, PIXELFORMAT_R32U, PIXELFORMAT_RG16I, PIXELFORMAT_RG16U, PIXELFORMAT_RG32I, PIXELFORMAT_RG32U,
     PIXELFORMAT_RG8I, PIXELFORMAT_RG8U, PIXELFORMAT_RGBA16I, PIXELFORMAT_RGBA16U, PIXELFORMAT_RGBA32I, PIXELFORMAT_RGBA32U,
-    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U
+    PIXELFORMAT_RGBA8I, PIXELFORMAT_RGBA8U, PIXELFORMAT_R16F, PIXELFORMAT_RG16F
 } from '../constants.js';
 
 /**
@@ -195,6 +195,28 @@ class WebglTexture {
             case PIXELFORMAT_ATC_RGBA:
                 this._glFormat = gl.RGBA;
                 this._glInternalFormat = device.extCompressedTextureATC.COMPRESSED_RGBA_ATC_INTERPOLATED_ALPHA_WEBGL;
+                break;
+            case PIXELFORMAT_R16F:
+                if (device.isWebGL2) {
+                    this._glFormat = gl.RED;
+                    this._glInternalFormat = gl.R16F;
+                    this._glPixelType = gl.HALF_FLOAT;
+                } else {
+                    this._glFormat = gl.LUMINANCE;
+                    this._glInternalFormat = gl.LUMINANCE;
+                    this._glPixelType = device.extTextureHalfFloat.HALF_FLOAT_OES;
+                }
+                break;
+            case PIXELFORMAT_RG16F:
+                if (device.isWebGL2) {
+                    this._glFormat = gl.RG;
+                    this._glInternalFormat = gl.RG16F;
+                    this._glPixelType = gl.HALF_FLOAT;
+                } else {
+                    this._glFormat = gl.RG;
+                    this._glInternalFormat = gl.RG;
+                    this._glPixelType = device.extTextureHalfFloat.HALF_FLOAT_OES;
+                }
                 break;
             case PIXELFORMAT_RGB16F:
                 // definition varies between WebGL1 and 2

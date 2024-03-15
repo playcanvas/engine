@@ -9,7 +9,6 @@ import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { CollisionComponent } from './component.js';
@@ -332,7 +331,7 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
     // special handling
     beforeInitialize(component, data) {}
 
-    createAmmoMesh(mesh, node, shape, checkDupes = true) {
+    createAmmoMesh(mesh, node, shape, scale, checkDupes = true) {
         const system = this.system;
         let triMesh;
 
@@ -364,13 +363,18 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
             system._triMeshCache[mesh.id] = triMesh;
 
             const vertexCache = new Map();
+            Debug.assert(typeof triMesh.getIndexedMeshArray === 'function', 'Ammo.js version is too old, please update to a newer Ammo.');
             const indexedArray = triMesh.getIndexedMeshArray();
             indexedArray.at(0).m_numTriangles = numTriangles;
 
+            const sx = scale ? scale.x : 1;
+            const sy = scale ? scale.y : 1;
+            const sz = scale ? scale.z : 1;
+
             const addVertex = (index) => {
-                const x = positions[index * stride];
-                const y = positions[index * stride + 1];
-                const z = positions[index * stride + 2];
+                const x = positions[index * stride] * sx;
+                const y = positions[index * stride + 1] * sy;
+                const z = positions[index * stride + 2] * sz;
 
                 let idx;
                 if (checkDupes) {
@@ -407,9 +411,11 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
 
         const triMeshShape = new Ammo.btBvhTriangleMeshShape(triMesh, true /* useQuantizedAabbCompression */);
 
-        const scaling = system._getNodeScaling(node);
-        triMeshShape.setLocalScaling(scaling);
-        Ammo.destroy(scaling);
+        if (!scale) {
+            const scaling = system._getNodeScaling(node);
+            triMeshShape.setLocalScaling(scaling);
+            Ammo.destroy(scaling);
+        }
 
         const transform = system._getNodeTransform(node);
         shape.addChildShape(transform, triMeshShape);
@@ -422,24 +428,23 @@ class CollisionMeshSystemImpl extends CollisionSystemImpl {
         if (data.model || data.render) {
 
             const shape = new Ammo.btCompoundShape();
+            const entityTransform = entity.getWorldTransform();
+            const scale = entityTransform.getScale();
 
             if (data.model) {
                 const meshInstances = data.model.meshInstances;
                 for (let i = 0; i < meshInstances.length; i++) {
-                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, data.checkVertexDuplicates);
+                    this.createAmmoMesh(meshInstances[i].mesh, meshInstances[i].node, shape, null, data.checkVertexDuplicates);
                 }
+                const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
+                shape.setLocalScaling(vec);
+                Ammo.destroy(vec);
             } else if (data.render) {
                 const meshes = data.render.meshes;
                 for (let i = 0; i < meshes.length; i++) {
-                    this.createAmmoMesh(meshes[i], tempGraphNode, shape, data.checkVertexDuplicates);
+                    this.createAmmoMesh(meshes[i], tempGraphNode, shape, scale, data.checkVertexDuplicates);
                 }
             }
-
-            const entityTransform = entity.getWorldTransform();
-            const scale = entityTransform.getScale();
-            const vec = new Ammo.btVector3(scale.x, scale.y, scale.z);
-            shape.setLocalScaling(vec);
-            Ammo.destroy(vec);
 
             return shape;
         }
@@ -881,7 +886,5 @@ class CollisionComponentSystem extends ComponentSystem {
         super.destroy();
     }
 }
-
-Component._buildAccessors(CollisionComponent.prototype, _schema);
 
 export { CollisionComponentSystem };
