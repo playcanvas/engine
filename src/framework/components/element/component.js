@@ -318,6 +318,20 @@ class ElementComponent extends Component {
     }
 
     /**
+     * @type {boolean}
+     */
+    set enabled(value) {
+        const data = this.data;
+        const oldValue = data.enabled;
+        data.enabled = value;
+        this.fire('set', 'enabled', oldValue, value);
+    }
+
+    get enabled() {
+        return this.data.enabled;
+    }
+
+    /**
      * @type {number}
      * @private
      */
@@ -1018,7 +1032,11 @@ class ElementComponent extends Component {
     }
 
     get fontSize() {
-        return this._getValue('fontSize');
+        if (this._text) {
+            return this._text.fontSize;
+        }
+
+        return null;
     }
 
     /**
@@ -1031,7 +1049,11 @@ class ElementComponent extends Component {
     }
 
     get minFontSize() {
-        return this._getValue('minFontSize');
+        if (this._text) {
+            return this._text.minFontSize;
+        }
+
+        return null;
     }
 
     /**
@@ -1044,7 +1066,11 @@ class ElementComponent extends Component {
     }
 
     get maxFontSize() {
-        return this._getValue('maxFontSize');
+        if (this._text) {
+            return this._text.maxFontSize;
+        }
+
+        return null;
     }
 
     /**
@@ -1058,7 +1084,11 @@ class ElementComponent extends Component {
     }
 
     get maxLines() {
-        return this._getValue('maxLines');
+        if (this._text) {
+            return this._text.maxLines;
+        }
+
+        return null;
     }
 
     /**
@@ -1073,7 +1103,11 @@ class ElementComponent extends Component {
     }
 
     get autoFitWidth() {
-        return this._getValue('autoFitWidth');
+        if (this._text) {
+            return this._text.autoFitWidth;
+        }
+
+        return null;
     }
 
     /**
@@ -1088,7 +1122,11 @@ class ElementComponent extends Component {
     }
 
     get autoFitHeight() {
-        return this._getValue('autoFitHeight');
+        if (this._text) {
+            return this._text.autoFitHeight;
+        }
+
+        return null;
     }
 
     /**
@@ -1102,7 +1140,15 @@ class ElementComponent extends Component {
     }
 
     get color() {
-        return this._getValue('color');
+        if (this._text) {
+            return this._text.color;
+        }
+
+        if (this._image) {
+            return this._image.color;
+        }
+
+        return null;
     }
 
     /**
@@ -1115,7 +1161,11 @@ class ElementComponent extends Component {
     }
 
     get font() {
-        return this._getValue('font');
+        if (this._text) {
+            return this._text.font;
+        }
+
+        return null;
     }
 
     /**
@@ -1129,7 +1179,11 @@ class ElementComponent extends Component {
     }
 
     get fontAsset() {
-        return this._getValue('fontAsset');
+        if (this._text) {
+            return this._text.fontAsset;
+        }
+
+        return null;
     }
 
     /**
@@ -1142,7 +1196,11 @@ class ElementComponent extends Component {
     }
 
     get spacing() {
-        return this._getValue('spacing');
+        if (this._text) {
+            return this._text.spacing;
+        }
+
+        return null;
     }
 
     /**
@@ -1155,7 +1213,11 @@ class ElementComponent extends Component {
     }
 
     get lineHeight() {
-        return this._getValue('lineHeight');
+        if (this._text) {
+            return this._text.lineHeight;
+        }
+
+        return null;
     }
 
     /**
@@ -1169,7 +1231,11 @@ class ElementComponent extends Component {
     }
 
     get wrapLines() {
-        return this._getValue('wrapLines');
+        if (this._text) {
+            return this._text.wrapLines;
+        }
+
+        return null;
     }
 
     /**
@@ -1181,7 +1247,11 @@ class ElementComponent extends Component {
     }
 
     get lines() {
-        return this._getValue('lines');
+        if (this._text) {
+            return this._text.lines;
+        }
+
+        return null;
     }
 
     /**
@@ -1195,7 +1265,11 @@ class ElementComponent extends Component {
     }
 
     get alignment() {
-        return this._getValue('alignment');
+        if (this._text) {
+            return this._text.alignment;
+        }
+
+        return null;
     }
 
     /**
@@ -1209,7 +1283,11 @@ class ElementComponent extends Component {
     }
 
     get autoWidth() {
-        return this._getValue('autoWidth');
+        if (this._text) {
+            return this._text.autoWidth;
+        }
+
+        return null;
     }
 
     /**
@@ -1223,7 +1301,11 @@ class ElementComponent extends Component {
     }
 
     get autoHeight() {
-        return this._getValue('autoHeight');
+        if (this._text) {
+            return this._text.autoHeight;
+        }
+
+        return null;
     }
 
     /**
@@ -1237,7 +1319,11 @@ class ElementComponent extends Component {
     }
 
     get rtlReorder() {
-        return this._getValue('rtlReorder');
+        if (this._text) {
+            return this._text.rtlReorder;
+        }
+
+        return null;
     }
 
     /**
@@ -1250,7 +1336,11 @@ class ElementComponent extends Component {
     }
 
     get unicodeConverter() {
-        return this._getValue('unicodeConverter');
+        if (this._text) {
+            return this._text.unicodeConverter;
+        }
+
+        return null;
     }
 
     /**
@@ -1280,11 +1370,15 @@ class ElementComponent extends Component {
     }
 
     get text() {
-        return this._getValue('text');
+        if (this._text) {
+            return this._text.text;
+        }
+
+        return null;
     }
 
     /**
-     * The localization key to use to get the localized text from {@link Application#i18n}. Only 
+     * The localization key to use to get the localized text from {@link Application#i18n}. Only
      * works for {@link ELEMENTTYPE_TEXT} types.
      *
      * @type {string}
@@ -1294,7 +1388,11 @@ class ElementComponent extends Component {
     }
 
     get key() {
-        return this._getValue('key');
+        if (this._text) {
+            return this._text.key;
+        }
+
+        return null;
     }
 
     /**
@@ -1307,7 +1405,11 @@ class ElementComponent extends Component {
     }
 
     get texture() {
-        return this._getValue('texture');
+        if (this._image) {
+            return this._image.texture;
+        }
+
+        return null;
     }
 
     /**
@@ -1320,7 +1422,11 @@ class ElementComponent extends Component {
     }
 
     get textureAsset() {
-        return this._getValue('textureAsset');
+        if (this._image) {
+            return this._image.textureAsset;
+        }
+
+        return null;
     }
 
     /**
@@ -1333,7 +1439,11 @@ class ElementComponent extends Component {
     }
 
     get material() {
-        return this._getValue('material');
+        if (this._image) {
+            return this._image.material;
+        }
+
+        return null;
     }
 
     /**
@@ -1347,7 +1457,11 @@ class ElementComponent extends Component {
     }
 
     get materialAsset() {
-        return this._getValue('materialAsset');
+        if (this._image) {
+            return this._image.materialAsset;
+        }
+
+        return null;
     }
 
     /**
@@ -1361,7 +1475,11 @@ class ElementComponent extends Component {
     }
 
     get sprite() {
-        return this._getValue('sprite');
+        if (this._image) {
+            return this._image.sprite;
+        }
+
+        return null;
     }
 
     /**
@@ -1375,7 +1493,11 @@ class ElementComponent extends Component {
     }
 
     get spriteAsset() {
-        return this._getValue('spriteAsset');
+        if (this._image) {
+            return this._image.spriteAsset;
+        }
+
+        return null;
     }
 
     /**
@@ -1389,7 +1511,11 @@ class ElementComponent extends Component {
     }
 
     get spriteFrame() {
-        return this._getValue('spriteFrame');
+        if (this._image) {
+            return this._image.spriteFrame;
+        }
+
+        return null;
     }
 
     /**
@@ -1403,7 +1529,11 @@ class ElementComponent extends Component {
     }
 
     get pixelsPerUnit() {
-        return this._getValue('pixelsPerUnit');
+        if (this._image) {
+            return this._image.pixelsPerUnit;
+        }
+
+        return null;
     }
 
     /**
@@ -1417,7 +1547,15 @@ class ElementComponent extends Component {
     }
 
     get opacity() {
-        return this._getValue('opacity');
+        if (this._text) {
+            return this._text.opacity;
+        }
+
+        if (this._image) {
+            return this._image.opacity;
+        }
+
+        return null;
     }
 
     /**
@@ -1431,7 +1569,11 @@ class ElementComponent extends Component {
     }
 
     get rect() {
-        return this._getValue('rect');
+        if (this._image) {
+            return this._image.rect;
+        }
+
+        return null;
     }
 
     /**
@@ -1445,7 +1587,11 @@ class ElementComponent extends Component {
     }
 
     get mask() {
-        return this._getValue('mask');
+        if (this._image) {
+            return this._image.mask;
+        }
+
+        return null;
     }
 
     /**
@@ -1458,7 +1604,10 @@ class ElementComponent extends Component {
     }
 
     get outlineColor() {
-        return this._getValue('outlineColor');
+        if (this._text) {
+            return this._text.outlineColor;
+        }
+        return null;
     }
 
     /**
@@ -1471,7 +1620,11 @@ class ElementComponent extends Component {
     }
 
     get outlineThickness() {
-        return this._getValue('outlineThickness');
+        if (this._text) {
+            return this._text.outlineThickness;
+        }
+
+        return null;
     }
 
     /**
@@ -1484,7 +1637,11 @@ class ElementComponent extends Component {
     }
 
     get shadowColor() {
-        return this._getValue('shadowColor');
+        if (this._text) {
+            return this._text.shadowColor;
+        }
+
+        return null;
     }
 
     /**
@@ -1498,7 +1655,11 @@ class ElementComponent extends Component {
     }
 
     get shadowOffset() {
-        return this._getValue('shadowOffset');
+        if (this._text) {
+            return this._text.shadowOffset;
+        }
+
+        return null;
     }
 
     /**
@@ -1512,7 +1673,11 @@ class ElementComponent extends Component {
     }
 
     get enableMarkup() {
-        return this._getValue('enableMarkup');
+        if (this._text) {
+            return this._text.enableMarkup;
+        }
+
+        return null;
     }
 
     /**
@@ -1525,7 +1690,11 @@ class ElementComponent extends Component {
     }
 
     get rangeStart() {
-        return this._getValue('rangeStart');
+        if (this._text) {
+            return this._text.rangeStart;
+        }
+
+        return null;
     }
 
     /**
@@ -1538,7 +1707,11 @@ class ElementComponent extends Component {
     }
 
     get rangeEnd() {
-        return this._getValue('rangeEnd');
+        if (this._text) {
+            return this._text.rangeEnd;
+        }
+
+        return null;
     }
 
     /** @ignore */
@@ -1556,16 +1729,6 @@ class ElementComponent extends Component {
 
             this._image[name] = value;
         }
-    }
-
-    /** @ignore */
-    _getValue(name) {
-        if (this._text) {
-            return this._text[name];
-        } else if (this._image) {
-            return this._image[name];
-        }
-        return null;
     }
 
     _patch() {
