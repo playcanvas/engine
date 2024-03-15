@@ -14,6 +14,8 @@ const tmpV3 = new Vec3();
 
 /**
  * The class for holding mesh triangle data.
+ *
+ * @ignore
  */
 class MeshTriData {
     /**

@@ -71,6 +71,7 @@ function arrayGet4(offset, outputArray, outputIndex) {
  * Helps with accessing a specific vertex attribute.
  *
  * @category Graphics
+ * @ignore
  */
 class VertexIteratorAccessor {
     /**

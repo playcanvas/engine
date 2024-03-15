@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.69.1",
+  "version": "1.69.2",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -105,8 +105,7 @@
   ],
   "dependencies": {
     "@types/webxr": "^0.5.7",
-    "@webgpu/types": "^0.1.38",
-    "playcanvas": "file:."
+    "@webgpu/types": "^0.1.38"
   },
   "devDependencies": {
     "@babel/core": "^7.23.2",

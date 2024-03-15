@@ -75,20 +75,6 @@ class Progress {
 }
 
 /**
- * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
- * an error occurs).
- *
- * @callback ConfigureAppCallback
- * @param {string|null} err - The error message in the case where the loading or parsing fails.
- */
-
-/**
- * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- *
- * @callback PreloadAppCallback
- */
-
-/**
  * Gets the current application, if any.
  *
  * @type {AppBase|null}
@@ -123,6 +109,32 @@ let app = null;
  * @augments EventHandler
  */
 class AppBase extends EventHandler {
+    /**
+     * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
+     * an error occurs).
+     *
+     * @callback ConfigureAppCallback
+     * @param {string|null} err - The error message in the case where the loading or parsing fails.
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
+     *
+     * @callback PreloadAppCallback
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#start} and itself to request
+     * the rendering of a new animation frame.
+     *
+     * @callback MakeTickCallback
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @returns {void}
+     */
+
     /**
      * A request id returned by requestAnimationFrame, allowing us to cancel it.
      *
@@ -2088,16 +2100,6 @@ class AppBase extends EventHandler {
 
 // static data
 const _frameEndData = {};
-
-/**
- * Callback used by {@link AppBase#start} and itself to request
- * the rendering of a new animation frame.
- *
- * @callback MakeTickCallback
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
- * @ignore
- */
 
 /**
  * Create tick function to be wrapped in closure.
