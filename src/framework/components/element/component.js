@@ -6,7 +6,12 @@ import { Vec2 } from '../../../core/math/vec2.js';
 import { Vec3 } from '../../../core/math/vec3.js';
 import { Vec4 } from '../../../core/math/vec4.js';
 
-import { FUNC_ALWAYS, FUNC_EQUAL, STENCILOP_INCREMENT, STENCILOP_REPLACE } from '../../../platform/graphics/constants.js';
+import {
+    FUNC_ALWAYS,
+    FUNC_EQUAL,
+    STENCILOP_INCREMENT,
+    STENCILOP_REPLACE
+} from '../../../platform/graphics/constants.js';
 
 import { LAYERID_UI } from '../../../scene/constants.js';
 import { BatchGroup } from '../../../scene/batching/batch-group.js';
@@ -16,7 +21,12 @@ import { Entity } from '../../entity.js';
 
 import { Component } from '../component.js';
 
-import { ELEMENTTYPE_GROUP, ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT, FITMODE_STRETCH } from './constants.js';
+import {
+    ELEMENTTYPE_GROUP,
+    ELEMENTTYPE_IMAGE,
+    ELEMENTTYPE_TEXT,
+    FITMODE_STRETCH
+} from './constants.js';
 import { ImageElement } from './image-element.js';
 import { TextElement } from './text-element.js';
 
@@ -75,99 +85,6 @@ const matD = new Mat4();
  * - [Text localization](https://playcanvas.github.io/#/user-interface/text-localization)
  * - [Typewriter text](https://playcanvas.github.io/#/user-interface/text-typewriter)
  *
- * @property {import('../../../core/math/color.js').Color} color The color of the image for
- * {@link ELEMENTTYPE_IMAGE} types or the color of the text for {@link ELEMENTTYPE_TEXT} types.
- * @property {number} opacity The opacity of the image for {@link ELEMENTTYPE_IMAGE} types or the
- * text for {@link ELEMENTTYPE_TEXT} types.
- * @property {import('../../../core/math/color.js').Color} outlineColor The text outline effect
- * color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {number} outlineThickness The width of the text outline effect. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {import('../../../core/math/color.js').Color} shadowColor The text shadow effect color
- * and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {Vec2} shadowOffset The text shadow effect shift amount from original text. Only works
- * for {@link ELEMENTTYPE_TEXT} types.
- * @property {boolean} autoWidth Automatically set the width of the component to be the same as the
- * textWidth. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {boolean} autoHeight Automatically set the height of the component to be the same as
- * the textHeight. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {string} fitMode Set how the content should be fitted and preserve the aspect ratio of
- * the source texture or sprite. Only works for {@link ELEMENTTYPE_IMAGE} types.
- * @property {number} fontAsset The id of the font asset used for rendering the text. Only works
- * for {@link ELEMENTTYPE_TEXT} types.
- * @property {import('../../font/font.js').Font} font The font used for rendering the text. Only
- * works for {@link ELEMENTTYPE_TEXT} types.
- * @property {number} fontSize The size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {boolean} autoFitWidth When true the font size and line height will scale so that the
- * text fits inside the width of the Element. The font size will be scaled between minFontSize and
- * maxFontSize. The value of autoFitWidth will be ignored if autoWidth is true.
- * @property {boolean} autoFitHeight When true the font size and line height will scale so that the
- * text fits inside the height of the Element. The font size will be scaled between minFontSize and
- * maxFontSize. The value of autoFitHeight will be ignored if autoHeight is true.
- * @property {number} minFontSize The minimum size that the font can scale to when autoFitWidth or
- * autoFitHeight are true.
- * @property {number} maxFontSize The maximum size that the font can scale to when autoFitWidth or
- * autoFitHeight are true.
- * @property {number} spacing The spacing between the letters of the text. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {number} lineHeight The height of each line of text. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {boolean} wrapLines Whether to automatically wrap lines based on the element width.
- * Only works for {@link ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
- * @property {number} maxLines The maximum number of lines that the Element can wrap to. Any
- * leftover text will be appended to the last line. Set this to null to allow unlimited lines.
- * @property {Vec2} alignment The horizontal and vertical alignment of the text. Values range from
- * 0 to 1 where [0,0] is the bottom left and [1,1] is the top right.  Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {string} text The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To
- * override certain text styling properties on a per-character basis, the text can optionally
- * include markup tags contained within square brackets. Supported tags are:
- *
- * 1. `color` - override the element's `color` property. Examples:
- * - `[color="#ff0000"]red text[/color]`
- * - `[color="#00ff00"]green text[/color]`
- * - `[color="#0000ff"]blue text[/color]`
- * 2. `outline` - override the element's `outlineColor` and `outlineThickness` properties. Example:
- * - `[outline color="#ffffff" thickness="0.5"]text[/outline]`
- * 3. `shadow` - override the element's `shadowColor` and `shadowOffset` properties. Examples:
- * - `[shadow color="#ffffff" offset="0.5"]text[/shadow]`
- * - `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]`
- *
- * Note that markup tags are only processed if the text element's `enableMarkup` property is set to
- * true.
- * @property {string} key The localization key to use to get the localized text from
- * {@link Application#i18n}. Only works for {@link ELEMENTTYPE_TEXT} types.
- * @property {number} textureAsset The id of the texture asset to render. Only works for
- * {@link ELEMENTTYPE_IMAGE} types.
- * @property {import('../../../platform/graphics/texture.js').Texture} texture The texture to
- * render. Only works for {@link ELEMENTTYPE_IMAGE} types.
- * @property {number} spriteAsset The id of the sprite asset to render. Only works for
- * {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
- * @property {import('../../../scene/sprite.js').Sprite} sprite The sprite to render. Only works
- * for {@link ELEMENTTYPE_IMAGE} types which can render either a texture or a sprite.
- * @property {number} spriteFrame The frame of the sprite to render. Only works for
- * {@link ELEMENTTYPE_IMAGE} types who have a sprite assigned.
- * @property {number} pixelsPerUnit The number of pixels that map to one PlayCanvas unit. Only
- * works for {@link ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
- * @property {number} materialAsset The id of the material asset to use when rendering an image.
- * Only works for {@link ELEMENTTYPE_IMAGE} types.
- * @property {import('../../../scene/materials/material.js').Material} material The material to use
- * when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
- * @property {Vec4} rect Specifies which region of the texture to use in order to render an image.
- * Values range from 0 to 1 and indicate u, v, width, height. Only works for
- * {@link ELEMENTTYPE_IMAGE} types.
- * @property {boolean} rtlReorder Reorder the text for RTL languages using a function registered
- * by `app.systems.element.registerUnicodeConverter`.
- * @property {boolean} unicodeConverter Convert unicode characters using a function registered by
- * `app.systems.element.registerUnicodeConverter`.
- * @property {boolean} enableMarkup Flag for enabling markup processing. Only works for
- * {@link ELEMENTTYPE_TEXT} types. Defaults to false.
- * @property {number} rangeStart Index of the first character to render. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {number} rangeEnd Index of the last character to render. Only works for
- * {@link ELEMENTTYPE_TEXT} types.
- * @property {boolean} mask Switch Image Element into a mask. Masks do not render into the scene,
- * but instead limit child elements to only be rendered where this element is rendered.
  * @augments Component
  * @category User Interface
  */
@@ -485,8 +402,7 @@ class ElementComponent extends Component {
 
         this._anchorDirty = true;
 
-        if (!this.entity._dirtyLocal)
-            this.entity._dirtifyLocal();
+        if (!this.entity._dirtyLocal) this.entity._dirtifyLocal();
 
         this.fire('set:anchor', this._anchor);
     }
@@ -501,8 +417,7 @@ class ElementComponent extends Component {
      * @type {number}
      */
     set batchGroupId(value) {
-        if (this._batchGroupId === value)
-            return;
+        if (this._batchGroupId === value) return;
 
         if (this.entity.enabled && this._batchGroupId >= 0) {
             this.system.app.batcher?.remove(BatchGroup.ELEMENT, this.batchGroupId, this.entity);
@@ -601,7 +516,10 @@ class ElementComponent extends Component {
 
         // scale screen corners to canvas size and reverse y
         for (let i = 0; i < 4; i++) {
-            this._canvasCorners[i].set(screenCorners[i].x * sx, (device.height - screenCorners[i].y) * sy);
+            this._canvasCorners[i].set(
+                screenCorners[i].x * sx,
+                (device.height - screenCorners[i].y) * sy
+            );
         }
 
         this._canvasCornersDirty = false;
@@ -621,9 +539,9 @@ class ElementComponent extends Component {
             priority = this.screen.screen.priority;
         }
 
-        if (value > 0xFFFFFF) {
-            Debug.warn('Element.drawOrder larger than max size of: ' + 0xFFFFFF);
-            value = 0xFFFFFF;
+        if (value > 0xffffff) {
+            Debug.warn('Element.drawOrder larger than max size of: ' + 0xffffff);
+            value = 0xffffff;
         }
 
         // screen priority is stored in the top 8 bits
@@ -806,7 +724,11 @@ class ElementComponent extends Component {
         this._setWidth(wr - wl);
 
         // update position
-        p.x = (this._localAnchor.z - this._localAnchor.x) - value - (this._calculatedWidth * (1 - this._pivot.x));
+        p.x =
+            this._localAnchor.z -
+            this._localAnchor.x -
+            value -
+            this._calculatedWidth * (1 - this._pivot.x);
         this.entity.setLocalPosition(p);
     }
 
@@ -821,10 +743,12 @@ class ElementComponent extends Component {
      * @type {Vec3[]}
      */
     get screenCorners() {
-        if (!this._cornersDirty || !this.screen)
-            return this._screenCorners;
+        if (!this._cornersDirty || !this.screen) return this._screenCorners;
 
-        const parentBottomLeft = this.entity.parent && this.entity.parent.element && this.entity.parent.element.screenCorners[0];
+        const parentBottomLeft =
+            this.entity.parent &&
+            this.entity.parent.element &&
+            this.entity.parent.element.screenCorners[0];
 
         // init corners
         this._screenCorners[0].set(this._absLeft, this._absBottom, 0);
@@ -836,8 +760,7 @@ class ElementComponent extends Component {
         const screenSpace = this.screen.screen.screenSpace;
         for (let i = 0; i < 4; i++) {
             this._screenTransform.transformPoint(this._screenCorners[i], this._screenCorners[i]);
-            if (screenSpace)
-                this._screenCorners[i].mulScalar(this.screen.screen.scale);
+            if (screenSpace) this._screenCorners[i].mulScalar(this.screen.screen.scale);
 
             if (parentBottomLeft) {
                 this._screenCorners[i].add(parentBottomLeft);
@@ -849,7 +772,6 @@ class ElementComponent extends Component {
         this._worldCornersDirty = true;
 
         return this._screenCorners;
-
     }
 
     /**
@@ -883,7 +805,11 @@ class ElementComponent extends Component {
         const wt = this._localAnchor.w - value;
         this._setHeight(wt - wb);
 
-        p.y = (this._localAnchor.w - this._localAnchor.y) - value - this._calculatedHeight * (1 - this._pivot.y);
+        p.y =
+            this._localAnchor.w -
+            this._localAnchor.y -
+            value -
+            this._calculatedHeight * (1 - this._pivot.y);
         this.entity.setLocalPosition(p);
     }
 
@@ -932,8 +858,7 @@ class ElementComponent extends Component {
      * @type {boolean}
      */
     set useInput(value) {
-        if (this._useInput === value)
-            return;
+        if (this._useInput === value) return;
 
         this._useInput = value;
 
@@ -947,7 +872,9 @@ class ElementComponent extends Component {
             }
         } else {
             if (this._useInput === true) {
-                Debug.warn('Elements will not get any input events because this.system.app.elementInput is not created');
+                Debug.warn(
+                    'Elements will not get any input events because this.system.app.elementInput is not created'
+                );
             }
         }
 
@@ -1044,26 +971,601 @@ class ElementComponent extends Component {
             matD.mul(matC).mul(matB).mul(matA);
 
             // bottom left
-            vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
+            vecA.set(
+                localPos.x - this.pivot.x * this.calculatedWidth,
+                localPos.y - this.pivot.y * this.calculatedHeight,
+                localPos.z
+            );
             matD.transformPoint(vecA, this._worldCorners[0]);
 
             // bottom right
-            vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y - this.pivot.y * this.calculatedHeight, localPos.z);
+            vecA.set(
+                localPos.x + (1 - this.pivot.x) * this.calculatedWidth,
+                localPos.y - this.pivot.y * this.calculatedHeight,
+                localPos.z
+            );
             matD.transformPoint(vecA, this._worldCorners[1]);
 
             // top right
-            vecA.set(localPos.x + (1 - this.pivot.x) * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
+            vecA.set(
+                localPos.x + (1 - this.pivot.x) * this.calculatedWidth,
+                localPos.y + (1 - this.pivot.y) * this.calculatedHeight,
+                localPos.z
+            );
             matD.transformPoint(vecA, this._worldCorners[2]);
 
             // top left
-            vecA.set(localPos.x - this.pivot.x * this.calculatedWidth, localPos.y + (1 - this.pivot.y) * this.calculatedHeight, localPos.z);
+            vecA.set(
+                localPos.x - this.pivot.x * this.calculatedWidth,
+                localPos.y + (1 - this.pivot.y) * this.calculatedHeight,
+                localPos.z
+            );
             matD.transformPoint(vecA, this._worldCorners[3]);
         }
 
         this._worldCornersDirty = false;
 
         return this._worldCorners;
+    }
 
+    /**
+     * The size of the font. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set fontSize(arg) {
+        this._setValue('fontSize', arg);
+    }
+
+    get fontSize() {
+        return this._getValue('fontSize');
+    }
+
+    /**
+     * The minimum size that the font can scale to when autoFitWidth or autoFitHeight are true.
+     *
+     * @type {number}
+     */
+    set minFontSize(arg) {
+        this._setValue('minFontSize', arg);
+    }
+
+    get minFontSize() {
+        return this._getValue('minFontSize');
+    }
+
+    /**
+     * The maximum size that the font can scale to when autoFitWidth or autoFitHeight are true.
+     *
+     * @type {number}
+     */
+    set maxFontSize(arg) {
+        this._setValue('maxFontSize', arg);
+    }
+
+    get maxFontSize() {
+        return this._getValue('maxFontSize');
+    }
+
+    /**
+     * The maximum number of lines that the Element can wrap to. Any leftover text will be appended
+     * to the last line. Set this to null to allow unlimited lines.
+     *
+     * @type {number}
+     */
+    set maxLines(arg) {
+        this._setValue('maxLines', arg);
+    }
+
+    get maxLines() {
+        return this._getValue('maxLines');
+    }
+
+    /**
+     * When true the font size and line height will scale so that the text fits inside the width of
+     * the Element. The font size will be scaled between minFontSize and maxFontSize. The value of
+     * autoFitWidth will be ignored if autoWidth is true.
+     *
+     * @type {boolean}
+     */
+    set autoFitWidth(arg) {
+        this._setValue('autoFitWidth', arg);
+    }
+
+    get autoFitWidth() {
+        return this._getValue('autoFitWidth');
+    }
+
+    /**
+     * When true the font size and line height will scale so that the text fits inside the height of
+     * the Element. The font size will be scaled between minFontSize and maxFontSize. The value of
+     * autoFitHeight will be ignored if autoHeight is true.
+     *
+     * @type {boolean}
+     */
+    set autoFitHeight(arg) {
+        this._setValue('autoFitHeight', arg);
+    }
+
+    get autoFitHeight() {
+        return this._getValue('autoFitHeight');
+    }
+
+    /**
+     * The color of the image for {@link ELEMENTTYPE_IMAGE} types or the color of the text for
+     * {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
+    set color(arg) {
+        this._setValue('color', arg);
+    }
+
+    get color() {
+        return this._getValue('color');
+    }
+
+    /**
+     * The font used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont}
+     */
+    set font(arg) {
+        this._setValue('font', arg);
+    }
+
+    get font() {
+        return this._getValue('font');
+    }
+
+    /**
+     * The id of the font asset used for rendering the text. Only works for {@link ELEMENTTYPE_TEXT}
+     * types.
+     *
+     * @type {number}
+     */
+    set fontAsset(arg) {
+        this._setValue('fontAsset', arg);
+    }
+
+    get fontAsset() {
+        return this._getValue('fontAsset');
+    }
+
+    /**
+     * The spacing between the letters of the text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set spacing(arg) {
+        this._setValue('spacing', arg);
+    }
+
+    get spacing() {
+        return this._getValue('spacing');
+    }
+
+    /**
+     * The height of each line of text. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set lineHeight(arg) {
+        this._setValue('lineHeight', arg);
+    }
+
+    get lineHeight() {
+        return this._getValue('lineHeight');
+    }
+
+    /**
+     * Whether to automatically wrap lines based on the element width. Only works for
+     * {@link ELEMENTTYPE_TEXT} types, and when autoWidth is set to false.
+     *
+     * @type {boolean}
+     */
+    set wrapLines(arg) {
+        this._setValue('wrapLines', arg);
+    }
+
+    get wrapLines() {
+        return this._getValue('wrapLines');
+    }
+
+    /**
+     * @type {any}
+     * @ignore
+     */
+    set lines(arg) {
+        this._setValue('lines', arg);
+    }
+
+    get lines() {
+        return this._getValue('lines');
+    }
+
+    /**
+     * The horizontal and vertical alignment of the text. Values range from 0 to 1 where [0,0] is
+     * the bottom left and [1,1] is the top right.  Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {Vec2}
+     */
+    set alignment(arg) {
+        this._setValue('alignment', arg);
+    }
+
+    get alignment() {
+        return this._getValue('alignment');
+    }
+
+    /**
+     * Automatically set the width of the component to be the same as the textWidth. Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {boolean}
+     */
+    set autoWidth(arg) {
+        this._setValue('autoWidth', arg);
+    }
+
+    get autoWidth() {
+        return this._getValue('autoWidth');
+    }
+
+    /**
+     * Automatically set the height of the component to be the same as the textHeight. Only works
+     * for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {boolean}
+     */
+    set autoHeight(arg) {
+        this._setValue('autoHeight', arg);
+    }
+
+    get autoHeight() {
+        return this._getValue('autoHeight');
+    }
+
+    /**
+     * Reorder the text for RTL languages using a function registered by
+     * `app.systems.element.registerUnicodeConverter`.
+     *
+     * @type {boolean}
+     */
+    set rtlReorder(arg) {
+        this._setValue('rtlReorder', arg);
+    }
+
+    get rtlReorder() {
+        return this._getValue('rtlReorder');
+    }
+
+    /**
+     * Convert unicode characters using a function registered by `app.systems.element.registerUnicodeConverter`.
+     *
+     * @type {boolean}
+     */
+    set unicodeConverter(arg) {
+        this._setValue('unicodeConverter', arg);
+    }
+
+    get unicodeConverter() {
+        return this._getValue('unicodeConverter');
+    }
+
+    /**
+     * The text to render. Only works for {@link ELEMENTTYPE_TEXT} types. To override certain text
+     * styling properties on a per-character basis, the text can optionally include markup tags
+     * contained within square brackets. Supported tags are:
+     * 1.  `color ` - override the element's  `color ` property.
+     * Examples:
+     *      -  `[color="#ff0000"]red text[/color] `
+     *      -  `[color="#00ff00"]green text[/color] `
+     *      -  `[color="#0000ff"]blue text[/color] `
+     * 2.  `outline ` - override the element's  `outlineColor ` and  `outlineThickness ` properties.
+     * Example:
+     *      -  `[outline color="#ffffff" thickness="0.5"]text[/outline] `
+     * 3.  `shadow ` - override the element's  `shadowColor ` and  `shadowOffset ` properties.
+     * Examples:
+     *      -  `[shadow color="#ffffff" offset="0.5"]text[/shadow] `
+     *      -  `[shadow color="#000000" offsetX="0.1" offsetY="0.2"]text[/shadow]
+     *
+     * ` Note that markup tags are only processed if the text element's  `enableMarkup ` property is
+     * set to true.
+     *
+     * @type {string}
+     */
+    set text(arg) {
+        this._setValue('text', arg);
+    }
+
+    get text() {
+        return this._getValue('text');
+    }
+
+    /**
+     * The localization key to use to get the localized text from {@link Application#i18n}. Only 
+     * works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {string}
+     */
+    set key(arg) {
+        this._setValue('key', arg);
+    }
+
+    get key() {
+        return this._getValue('key');
+    }
+
+    /**
+     * The texture to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     *
+     * @type {import('../../../platform/graphics/texture.js').Texture}
+     */
+    set texture(arg) {
+        this._setValue('texture', arg);
+    }
+
+    get texture() {
+        return this._getValue('texture');
+    }
+
+    /**
+     * The id of the texture asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     *
+     * @type {number}
+     */
+    set textureAsset(arg) {
+        this._setValue('textureAsset', arg);
+    }
+
+    get textureAsset() {
+        return this._getValue('textureAsset');
+    }
+
+    /**
+     * The material to use when rendering an image. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     *
+     * @type {import('../../../scene/materials/material.js').Material}
+     */
+    set material(arg) {
+        this._setValue('material', arg);
+    }
+
+    get material() {
+        return this._getValue('material');
+    }
+
+    /**
+     * The id of the material asset to use when rendering an image. Only works for
+     * {@link ELEMENTTYPE_IMAGE} types.
+     *
+     * @type {number}
+     */
+    set materialAsset(arg) {
+        this._setValue('materialAsset', arg);
+    }
+
+    get materialAsset() {
+        return this._getValue('materialAsset');
+    }
+
+    /**
+     * The sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types which can render either
+     * a texture or a sprite.
+     *
+     * @type {import('../../../scene/sprite.js').Sprite}
+     */
+    set sprite(arg) {
+        this._setValue('sprite', arg);
+    }
+
+    get sprite() {
+        return this._getValue('sprite');
+    }
+
+    /**
+     * The id of the sprite asset to render. Only works for {@link ELEMENTTYPE_IMAGE} types which
+     * can render either a texture or a sprite.
+     *
+     * @type {number}
+     */
+    set spriteAsset(arg) {
+        this._setValue('spriteAsset', arg);
+    }
+
+    get spriteAsset() {
+        return this._getValue('spriteAsset');
+    }
+
+    /**
+     * The frame of the sprite to render. Only works for {@link ELEMENTTYPE_IMAGE} types who have a
+     * sprite assigned.
+     *
+     * @type {number}
+     */
+    set spriteFrame(arg) {
+        this._setValue('spriteFrame', arg);
+    }
+
+    get spriteFrame() {
+        return this._getValue('spriteFrame');
+    }
+
+    /**
+     * The number of pixels that map to one PlayCanvas unit. Only works for
+     * {@link ELEMENTTYPE_IMAGE} types who have a sliced sprite assigned.
+     *
+     * @type {number}
+     */
+    set pixelsPerUnit(arg) {
+        this._setValue('pixelsPerUnit', arg);
+    }
+
+    get pixelsPerUnit() {
+        return this._getValue('pixelsPerUnit');
+    }
+
+    /**
+     * The opacity of the image for {@link ELEMENTTYPE_IMAGE} types or the text for
+     * {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set opacity(arg) {
+        this._setValue('opacity', arg);
+    }
+
+    get opacity() {
+        return this._getValue('opacity');
+    }
+
+    /**
+     * Specifies which region of the texture to use in order to render an image. Values range from 0
+     * to 1 and indicate u, v, width, height. Only works for {@link ELEMENTTYPE_IMAGE} types.
+     *
+     * @type {Vec4}
+     */
+    set rect(arg) {
+        this._setValue('rect', arg);
+    }
+
+    get rect() {
+        return this._getValue('rect');
+    }
+
+    /**
+     * Switch Image Element into a mask. Masks do not render into the scene, but instead limit child
+     * elements to only be rendered where this element is rendered.
+     *
+     * @type {boolean}
+     */
+    set mask(arg) {
+        this._setValue('mask', arg);
+    }
+
+    get mask() {
+        return this._getValue('mask');
+    }
+
+    /**
+     * The text outline effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
+    set outlineColor(arg) {
+        this._setValue('outlineColor', arg);
+    }
+
+    get outlineColor() {
+        return this._getValue('outlineColor');
+    }
+
+    /**
+     * The width of the text outline effect. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set outlineThickness(arg) {
+        this._setValue('outlineThickness', arg);
+    }
+
+    get outlineThickness() {
+        return this._getValue('outlineThickness');
+    }
+
+    /**
+     * The text shadow effect color and opacity. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {import('../../../core/math/color.js').Color}
+     */
+    set shadowColor(arg) {
+        this._setValue('shadowColor', arg);
+    }
+
+    get shadowColor() {
+        return this._getValue('shadowColor');
+    }
+
+    /**
+     * The text shadow effect shift amount from original text. Only works for
+     * {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set shadowOffset(arg) {
+        this._setValue('shadowOffset', arg);
+    }
+
+    get shadowOffset() {
+        return this._getValue('shadowOffset');
+    }
+
+    /**
+     * Flag for enabling markup processing. Only works for {@link ELEMENTTYPE_TEXT} types. Defaults
+     * to false.
+     *
+     * @type {boolean}
+     */
+    set enableMarkup(arg) {
+        this._setValue('enableMarkup', arg);
+    }
+
+    get enableMarkup() {
+        return this._getValue('enableMarkup');
+    }
+
+    /**
+     * Index of the first character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set rangeStart(arg) {
+        this._setValue('rangeStart', arg);
+    }
+
+    get rangeStart() {
+        return this._getValue('rangeStart');
+    }
+
+    /**
+     * Index of the last character to render. Only works for {@link ELEMENTTYPE_TEXT} types.
+     *
+     * @type {number}
+     */
+    set rangeEnd(arg) {
+        this._setValue('rangeEnd', arg);
+    }
+
+    get rangeEnd() {
+        return this._getValue('rangeEnd');
+    }
+
+    /** @ignore */
+    _setValue(name, value) {
+        if (this._text) {
+            if (this._text[name] !== value) {
+                this._dirtyBatch();
+            }
+
+            this._text[name] = value;
+        } else if (this._image) {
+            if (this._image[name] !== value) {
+                this._dirtyBatch();
+            }
+
+            this._image[name] = value;
+        }
+    }
+
+    /** @ignore */
+    _getValue(name) {
+        if (this._text) {
+            return this._text[name];
+        } else if (this._image) {
+            return this._image[name];
+        }
+        return null;
     }
 
     _patch() {
@@ -1102,8 +1604,7 @@ class ElementComponent extends Component {
         invParentWtm.copy(this.element._screenToWorld).invert();
         invParentWtm.transformPoint(position, this.localPosition);
 
-        if (!this._dirtyLocal)
-            this._dirtifyLocal();
+        if (!this._dirtyLocal) this._dirtifyLocal();
     }
 
     /**
@@ -1126,12 +1627,19 @@ class ElementComponent extends Component {
         const p = this.localPosition;
         const pvt = element._pivot;
         element._margin.x = p.x - element._calculatedWidth * pvt.x;
-        element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
+        element._margin.z =
+            element._localAnchor.z -
+            element._localAnchor.x -
+            element._calculatedWidth -
+            element._margin.x;
         element._margin.y = p.y - element._calculatedHeight * pvt.y;
-        element._margin.w = (element._localAnchor.w - element._localAnchor.y) - element._calculatedHeight - element._margin.y;
+        element._margin.w =
+            element._localAnchor.w -
+            element._localAnchor.y -
+            element._calculatedHeight -
+            element._margin.y;
 
-        if (!this._dirtyLocal)
-            this._dirtifyLocal();
+        if (!this._dirtyLocal) this._dirtifyLocal();
     }
 
     // this method overwrites GraphNode#sync and so operates in scope of the Entity.
@@ -1140,7 +1648,6 @@ class ElementComponent extends Component {
         const screen = element.screen;
 
         if (screen) {
-
             if (element._anchorDirty) {
                 let resx = 0;
                 let resy = 0;
@@ -1160,7 +1667,11 @@ class ElementComponent extends Component {
                     resy = resolution.y / screen.screen.scale;
                 }
 
-                element._anchorTransform.setTranslate((resx * (element.anchor.x - px)), -(resy * (py - element.anchor.y)), 0);
+                element._anchorTransform.setTranslate(
+                    resx * (element.anchor.x - px),
+                    -(resy * (py - element.anchor.y)),
+                    0
+                );
                 element._anchorDirty = false;
                 element._calculateLocalAnchors();
             }
@@ -1181,9 +1692,17 @@ class ElementComponent extends Component {
             const p = this.localPosition;
             const pvt = element._pivot;
             element._margin.x = p.x - element._calculatedWidth * pvt.x;
-            element._margin.z = (element._localAnchor.z - element._localAnchor.x) - element._calculatedWidth - element._margin.x;
+            element._margin.z =
+                element._localAnchor.z -
+                element._localAnchor.x -
+                element._calculatedWidth -
+                element._margin.x;
             element._margin.y = p.y - element._calculatedHeight * pvt.y;
-            element._margin.w = (element._localAnchor.w - element._localAnchor.y) - element._calculatedHeight - element._margin.y;
+            element._margin.w =
+                element._localAnchor.w -
+                element._localAnchor.y -
+                element._calculatedHeight -
+                element._margin.y;
 
             this._dirtyLocal = false;
         }
@@ -1199,14 +1718,16 @@ class ElementComponent extends Component {
             return;
         }
 
-
         if (this._dirtyWorld) {
             if (this._parent === null) {
                 this.worldTransform.copy(this.localTransform);
             } else {
                 // transform element hierarchy
                 if (this._parent.element) {
-                    element._screenToWorld.mul2(this._parent.element._modelTransform, element._anchorTransform);
+                    element._screenToWorld.mul2(
+                        this._parent.element._modelTransform,
+                        element._anchorTransform
+                    );
                 } else {
                     element._screenToWorld.copy(element._anchorTransform);
                 }
@@ -1214,7 +1735,10 @@ class ElementComponent extends Component {
                 element._modelTransform.mul2(element._screenToWorld, this.localTransform);
 
                 if (screen) {
-                    element._screenToWorld.mul2(screen.screen._screenMatrix, element._screenToWorld);
+                    element._screenToWorld.mul2(
+                        screen.screen._screenMatrix,
+                        element._screenToWorld
+                    );
 
                     if (!screen.screen.screenSpace) {
                         element._screenToWorld.mul2(screen.worldTransform, element._screenToWorld);
@@ -1237,13 +1761,20 @@ class ElementComponent extends Component {
                     depthOffset.set(0, 0, this.localPosition.z);
 
                     const pivotOffset = vecB;
-                    pivotOffset.set(element._absLeft + element._pivot.x * element.calculatedWidth, element._absBottom + element._pivot.y * element.calculatedHeight, 0);
+                    pivotOffset.set(
+                        element._absLeft + element._pivot.x * element.calculatedWidth,
+                        element._absBottom + element._pivot.y * element.calculatedHeight,
+                        0
+                    );
 
                     matA.setTranslate(-pivotOffset.x, -pivotOffset.y, -pivotOffset.z);
                     matB.setTRS(depthOffset, this.getLocalRotation(), this.getLocalScale());
                     matC.setTranslate(pivotOffset.x, pivotOffset.y, pivotOffset.z);
 
-                    element._screenTransform.mul2(element._parentWorldTransform, matC).mul(matB).mul(matA);
+                    element._screenTransform
+                        .mul2(element._parentWorldTransform, matC)
+                        .mul(matB)
+                        .mul(matA);
 
                     element._cornersDirty = true;
                     element._canvasCornersDirty = true;
@@ -1371,10 +1902,12 @@ class ElementComponent extends Component {
             Debug.trace(TRACE_ID_ELEMENT, 'masking: ' + this.entity.name + ' with ' + ref);
 
             // if this is image or text, set the stencil parameters
-            renderableElement?._setStencil(new StencilParameters({
-                ref: ref,
-                func: FUNC_EQUAL
-            }));
+            renderableElement?._setStencil(
+                new StencilParameters({
+                    ref: ref,
+                    func: FUNC_EQUAL
+                })
+            );
 
             this._maskedBy = mask;
         } else {
@@ -1407,7 +1940,10 @@ class ElementComponent extends Component {
                 // increment counter to count mask depth
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1));
+                Debug.trace(
+                    TRACE_ID_ELEMENT,
+                    'masking from: ' + this.entity.name + ' with ' + (sp.ref + 1)
+                );
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -1421,7 +1957,6 @@ class ElementComponent extends Component {
 
             // if mask counter was increased, decrement it as we come back up the hierarchy
             if (this.mask) depth--;
-
         } else {
             // clearing mask
             this._setMaskedBy(null);
@@ -1438,7 +1973,10 @@ class ElementComponent extends Component {
                 // increment mask counter to count depth of masks
                 depth++;
 
-                Debug.trace(TRACE_ID_ELEMENT, 'masking from: ' + this.entity.name + ' with ' + sp.ref);
+                Debug.trace(
+                    TRACE_ID_ELEMENT,
+                    'masking from: ' + this.entity.name + ' with ' + sp.ref
+                );
                 Debug.trace(TRACE_ID_ELEMENT, 'depth++ to: ', depth);
 
                 currentMask = this.entity;
@@ -1712,8 +2250,7 @@ class ElementComponent extends Component {
      * @private
      */
     _setCalculatedWidth(value, updateMargins) {
-        if (Math.abs(value - this._calculatedWidth) <= 1e-4)
-            return;
+        if (Math.abs(value - this._calculatedWidth) <= 1e-4) return;
 
         this._calculatedWidth = value;
         this.entity._dirtifyLocal();
@@ -1722,7 +2259,8 @@ class ElementComponent extends Component {
             const p = this.entity.getLocalPosition();
             const pvt = this._pivot;
             this._margin.x = p.x - this._calculatedWidth * pvt.x;
-            this._margin.z = (this._localAnchor.z - this._localAnchor.x) - this._calculatedWidth - this._margin.x;
+            this._margin.z =
+                this._localAnchor.z - this._localAnchor.x - this._calculatedWidth - this._margin.x;
         }
 
         this._flagChildrenAsDirty();
@@ -1738,8 +2276,7 @@ class ElementComponent extends Component {
      * @private
      */
     _setCalculatedHeight(value, updateMargins) {
-        if (Math.abs(value - this._calculatedHeight) <= 1e-4)
-            return;
+        if (Math.abs(value - this._calculatedHeight) <= 1e-4) return;
 
         this._calculatedHeight = value;
         this.entity._dirtifyLocal();
@@ -1748,7 +2285,8 @@ class ElementComponent extends Component {
             const p = this.entity.getLocalPosition();
             const pvt = this._pivot;
             this._margin.y = p.y - this._calculatedHeight * pvt.y;
-            this._margin.w = (this._localAnchor.w - this._localAnchor.y) - this._calculatedHeight - this._margin.y;
+            this._margin.w =
+                this._localAnchor.w - this._localAnchor.y - this._calculatedHeight - this._margin.y;
         }
 
         this._flagChildrenAsDirty();
@@ -1806,10 +2344,22 @@ class ElementComponent extends Component {
         if (this.maskedBy) {
             const corners = this.maskedBy.element.screenCorners;
 
-            clipL = Math.min(Math.min(corners[0].x, corners[1].x), Math.min(corners[2].x, corners[3].x));
-            clipR = Math.max(Math.max(corners[0].x, corners[1].x), Math.max(corners[2].x, corners[3].x));
-            clipB = Math.min(Math.min(corners[0].y, corners[1].y), Math.min(corners[2].y, corners[3].y));
-            clipT = Math.max(Math.max(corners[0].y, corners[1].y), Math.max(corners[2].y, corners[3].y));
+            clipL = Math.min(
+                Math.min(corners[0].x, corners[1].x),
+                Math.min(corners[2].x, corners[3].x)
+            );
+            clipR = Math.max(
+                Math.max(corners[0].x, corners[1].x),
+                Math.max(corners[2].x, corners[3].x)
+            );
+            clipB = Math.min(
+                Math.min(corners[0].y, corners[1].y),
+                Math.min(corners[2].y, corners[3].y)
+            );
+            clipT = Math.max(
+                Math.max(corners[0].y, corners[1].y),
+                Math.max(corners[2].y, corners[3].y)
+            );
         } else {
             const sw = this.system.app.graphicsDevice.width;
             const sh = this.system.app.graphicsDevice.height;
@@ -1824,15 +2374,24 @@ class ElementComponent extends Component {
 
         const hitCorners = this.screenCorners;
 
-        const left = Math.min(Math.min(hitCorners[0].x, hitCorners[1].x), Math.min(hitCorners[2].x, hitCorners[3].x));
-        const right = Math.max(Math.max(hitCorners[0].x, hitCorners[1].x), Math.max(hitCorners[2].x, hitCorners[3].x));
-        const bottom = Math.min(Math.min(hitCorners[0].y, hitCorners[1].y), Math.min(hitCorners[2].y, hitCorners[3].y));
-        const top = Math.max(Math.max(hitCorners[0].y, hitCorners[1].y), Math.max(hitCorners[2].y, hitCorners[3].y));
+        const left = Math.min(
+            Math.min(hitCorners[0].x, hitCorners[1].x),
+            Math.min(hitCorners[2].x, hitCorners[3].x)
+        );
+        const right = Math.max(
+            Math.max(hitCorners[0].x, hitCorners[1].x),
+            Math.max(hitCorners[2].x, hitCorners[3].x)
+        );
+        const bottom = Math.min(
+            Math.min(hitCorners[0].y, hitCorners[1].y),
+            Math.min(hitCorners[2].y, hitCorners[3].y)
+        );
+        const top = Math.max(
+            Math.max(hitCorners[0].y, hitCorners[1].y),
+            Math.max(hitCorners[2].y, hitCorners[3].y)
+        );
 
-        if (right < clipL ||
-            left > clipR ||
-            bottom > clipT ||
-            top < clipB) {
+        if (right < clipL || left > clipR || bottom > clipT || top < clipB) {
             return false;
         }
 
@@ -1861,72 +2420,5 @@ class ElementComponent extends Component {
         }
     }
 }
-
-function _define(name) {
-    Object.defineProperty(ElementComponent.prototype, name, {
-        get: function () {
-            if (this._text) {
-                return this._text[name];
-            } else if (this._image) {
-                return this._image[name];
-            }
-            return null;
-        },
-        set: function (value) {
-            if (this._text) {
-                if (this._text[name] !== value) {
-                    this._dirtyBatch();
-                }
-
-                this._text[name] = value;
-            } else if (this._image) {
-                if (this._image[name] !== value) {
-                    this._dirtyBatch();
-                }
-
-                this._image[name] = value;
-            }
-        }
-    });
-}
-
-_define('fontSize');
-_define('minFontSize');
-_define('maxFontSize');
-_define('maxLines');
-_define('autoFitWidth');
-_define('autoFitHeight');
-_define('color');
-_define('font');
-_define('fontAsset');
-_define('spacing');
-_define('lineHeight');
-_define('wrapLines');
-_define('lines');
-_define('alignment');
-_define('autoWidth');
-_define('autoHeight');
-_define('rtlReorder');
-_define('unicodeConverter');
-_define('text');
-_define('key');
-_define('texture');
-_define('textureAsset');
-_define('material');
-_define('materialAsset');
-_define('sprite');
-_define('spriteAsset');
-_define('spriteFrame');
-_define('pixelsPerUnit');
-_define('opacity');
-_define('rect');
-_define('mask');
-_define('outlineColor');
-_define('outlineThickness');
-_define('shadowColor');
-_define('shadowOffset');
-_define('enableMarkup');
-_define('rangeStart');
-_define('rangeEnd');
 
 export { ElementComponent };
