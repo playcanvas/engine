@@ -17,52 +17,7 @@ const getDeclarations = (properties) => {
     return declarations;
 };
 
-const buttonComponentProps = [
-    ['active', 'boolean'],
-    ['fadeDuration', 'number'],
-    ['hitPadding', 'Vec4'],
-    ['hoverSpriteAsset', 'Asset'],
-    ['hoverSpriteFrame', 'number'],
-    ['hoverTint', 'Color'],
-    ['imageEntity', 'Entity'],
-    ['inactiveSpriteAsset', 'Asset'],
-    ['inactiveSpriteFrame', 'number'],
-    ['inactiveTint', 'Color'],
-    ['pressedSpriteAsset', 'Asset'],
-    ['pressedSpriteFrame', 'number'],
-    ['pressedTint', 'Color'],
-    ['transitionMode', 'number']
-];
-
-let path = './types/framework/components/button/component.d.ts';
-let dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(buttonComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Vec4 } from '../../../core/math/vec4.js';
-import { Entity } from '../../../framework/entity.js';
-import { Asset } from '../../../framework/asset/asset.js';
-`;
-fs.writeFileSync(path, dts);
-
-const collisionComponentProps = [
-    ['axis', 'number'],
-    ['halfExtents', 'Vec3'],
-    ['height', 'number'],
-    ['model', 'Model|null'],
-    ['radius', 'number'],
-    ['type', 'string']
-];
-
-path = './types/framework/components/collision/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(collisionComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Vec3 } from '../../../core/math/vec3.js';
-import { Model } from '../../../scene/model.js';
-`;
-fs.writeFileSync(path, dts);
+let path, dts;
 
 const elementComponentProps = [
     ['alignment', 'Vec2'],

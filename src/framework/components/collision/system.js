@@ -9,7 +9,6 @@ import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { CollisionComponent } from './component.js';
@@ -887,7 +886,5 @@ class CollisionComponentSystem extends ComponentSystem {
         super.destroy();
     }
 }
-
-Component._buildAccessors(CollisionComponent.prototype, _schema);
 
 export { CollisionComponentSystem };
