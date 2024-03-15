@@ -7,11 +7,9 @@ class ParticleSystemComponentData {
         this.numParticles = 1;                  // Amount of particles allocated (max particles = max GL texture width at this moment)
         this.rate = 1;                          // Emission rate
         /** @type {number} */
-        // @ts-ignore
         this.rate2 = null;
         this.startAngle = 0;
         /** @type {number} */
-        // @ts-ignore
         this.startAngle2 = null;
         this.lifetime = 50;                     // Particle lifetime
         this.emitterExtents = new Vec3();       // Spawn point divergence
@@ -25,16 +23,12 @@ class ParticleSystemComponentData {
         this.localSpace = false;
         this.screenSpace = false;
         /** @type {import('../../../platform/graphics/texture.js').Texture} */
-        // @ts-ignore
         this.colorMap = null;
         /** @type {import('../../../framework/asset/asset.js').Asset} */
-        // @ts-ignore
         this.colorMapAsset = null;
         /** @type {import('../../../platform/graphics/texture.js').Texture} */
-        // @ts-ignore
         this.normalMap = null;
         /** @type {import('../../../framework/asset/asset.js').Asset} */
-        // @ts-ignore
         this.normalMapAsset = null;
         this.loop = true;
         this.preWarm = false;
@@ -48,13 +42,10 @@ class ParticleSystemComponentData {
         this.alignToMotion = false;
         this.depthSoftening = 0;
         /** @type {import('../../../framework/asset/asset.js').Asset} */
-        // @ts-ignore
         this.renderAsset = null;
         /** @type {import('../../../framework/asset/asset.js').Asset} */
-        // @ts-ignore
         this.meshAsset = null;
         /** @type {import('../../../scene/mesh.js').Mesh} */
-        // @ts-ignore
         this.mesh = null;                       // Mesh to be used as particle. Vertex buffer is supposed to hold vertex position in first 3 floats of each vertex
                                                 // Leave undefined to use simple quads
         this.depthWrite = false;
@@ -75,52 +66,38 @@ class ParticleSystemComponentData {
 
         // Time-dependent parameters
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.scaleGraph = null;
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.scaleGraph2 = null;
 
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.colorGraph = null;
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.colorGraph2 = null;
 
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.alphaGraph = null;
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.alphaGraph2 = null;
 
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.localVelocityGraph = null;
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.localVelocityGraph2 = null;
 
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.velocityGraph = null;
         /** @type {import('../../../core/math/curve-set.js').CurveSet} */
-        // @ts-ignore
         this.velocityGraph2 = null;
 
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.rotationSpeedGraph = null;
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.rotationSpeedGraph2 = null;
 
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.radialSpeedGraph = null;
         /** @type {import('../../../core/math/curve.js').Curve} */
-        // @ts-ignore
         this.radialSpeedGraph2 = null;
 
         this.blendType = BLEND_NORMAL;
