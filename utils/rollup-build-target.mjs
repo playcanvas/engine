@@ -11,7 +11,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { shaderChunks } from './rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './rollup-import-validation.mjs';
 import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
-import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './rollup-dynamic-import-transform.mjs';
+import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress, dynamicImportWebpackSupress } from './rollup-dynamic-import-transform.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
@@ -183,7 +183,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
             engineLayerImportValidation(input, buildType === 'debug'),
             buildType !== 'debug' ? strip(stripOptions) : undefined,
             babel(babelOptions[moduleFormat]),
-            moduleFormat === 'es6' && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
+            moduleFormat === 'es6' && buildType !== 'debug' ? dynamicImportWebpackSupress() : undefined,
             spacesToTabs(buildType !== 'debug')
         ]
     };

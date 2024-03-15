@@ -48,3 +48,27 @@ export function dynamicImportViteSupress() {
         }
     };
 }
+
+/**
+ * This rollup plugin transform code with import statements and adds a \/* webpackIgnore: true *\/ comment to supress webpack shenanigans.
+ * generated from dynamic-import-vars {@link https://github.com/rollup/plugins/tree/master/packages/dynamic-import-vars#limitations}
+ *
+ * @returns {import('rollup').Plugin} The rollup plugin
+ */
+export function dynamicImportWebpackSupress() {
+    return {
+        name: 'dynamic-import-webpack-suppress',
+        transform(code, id) {
+            /**
+             * Transforms the code by replacing `import(` with `import(\/* webpackIgnore: true *\/(`.
+             * @param {string} code - The code to transform.
+             * @param {string} id - The id of the code.
+             * @returns {object} - The transformed code and map.
+             */
+            return {
+                code: code.replace(/([^\w])import\(/g, '$1import(/* webpackIgnore: true */'),
+                map: null
+            };
+        }
+    };
+}
