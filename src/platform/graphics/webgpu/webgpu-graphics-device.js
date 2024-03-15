@@ -245,11 +245,20 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
             }
         };
 
+        DebugHelper.setLabel(deviceDescr, 'PlayCanvasWebGPUDevice');
+
         /**
          * @type {GPUDevice}
          * @private
          */
         this.wgpu = await this.gpuAdapter.requestDevice(deviceDescr);
+
+        this.wgpu.lost?.then((info) => {
+            // reason is 'destroyed' if we intentionally destroy the device
+            if (info.reason !== 'destroyed') {
+                Debug.warn(`WebGPU device was lost: ${info.message}, this needs to be handled`);
+            }
+        });
 
         this.initDeviceCaps();
 
@@ -363,7 +372,9 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         // submit scheduled command buffers
         this.submit();
 
-        this.gpuProfiler.request();
+        if (!this.contextLost) {
+            this.gpuProfiler.request();
+        }
     }
 
     createUniformBufferImpl(uniformBuffer) {

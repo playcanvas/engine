@@ -479,6 +479,58 @@ class GraphicsDevice extends EventHandler {
         this.canvas = null;
     }
 
+    /**
+     * Called when the device context was lost. It releases all context related resources.
+     *
+     * @ignore
+     */
+    loseContext() {
+
+        this.contextLost = true;
+
+        // force the back-buffer to be recreated on restore
+        this.backBufferSize.set(-1, -1);
+
+        // release textures
+        for (const texture of this.textures) {
+            texture.loseContext();
+        }
+
+        // release vertex and index buffers
+        for (const buffer of this.buffers) {
+            buffer.loseContext();
+        }
+
+        // Reset all render targets so they'll be recreated as required.
+        // TODO: a solution for the case where a render target contains something
+        // that was previously generated that needs to be re-rendered.
+        for (const target of this.targets) {
+            target.loseContext();
+        }
+
+        this.gpuProfiler?.loseContext();
+    }
+
+    /**
+     * Called when the device context is restored. It reinitializes all context related resources.
+     *
+     * @ignore
+     */
+    restoreContext() {
+
+        this.contextLost = false;
+
+        this.initializeRenderState();
+        this.initializeContextCaches();
+
+        // Recreate buffer objects and reupload buffer data to the GPU
+        for (const buffer of this.buffers) {
+            buffer.unlock();
+        }
+
+        this.gpuProfiler?.restoreContext?.();
+    }
+
     // don't stringify GraphicsDevice to JSON by JSON.stringify
     toJSON(key) {
         return undefined;
