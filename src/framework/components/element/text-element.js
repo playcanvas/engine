@@ -137,6 +137,8 @@ class TextElement {
         this._fontAsset.on('change', this._onFontChange, this);
         this._fontAsset.on('remove', this._onFontRemove, this);
 
+        /** @type {import('../../../framework/font/font.js').Font | import('../../../framework/font/canvas-font.js').CanvasFont} */
+        // @ts-ignore
         this._font = null;
 
         this._color = new Color(1, 1, 1, 1);

@@ -12,10 +12,17 @@ class LocalizedAsset extends EventHandler {
         this._autoLoad = false;
         this._disableLocalization = false;
 
+        /** @type {number} */
+        // @ts-ignore
         this._defaultAsset = null;
+        /** @type {number} */
+        // @ts-ignore
         this._localizedAsset = null;
     }
 
+    /**
+     * @param {Asset | number} value - The asset or id.
+     */
     set defaultAsset(value) {
         const id = value instanceof Asset ? value.id : value;
 
@@ -39,6 +46,9 @@ class LocalizedAsset extends EventHandler {
         return this._defaultAsset;
     }
 
+    /**
+     * @param {Asset | number} value - The asset or id.
+     */
     set localizedAsset(value) {
         const id = value instanceof Asset ? value.id : value;
         if (this._localizedAsset === id) {
@@ -48,7 +58,6 @@ class LocalizedAsset extends EventHandler {
         if (this._localizedAsset) {
             this._app.assets.off('add:' + this._localizedAsset, this._onLocalizedAssetAdd, this);
             this._unbindLocalizedAsset();
-            this._localizedAsset = null;
         }
 
         this._localizedAsset = id;
