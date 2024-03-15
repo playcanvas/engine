@@ -31,7 +31,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     options: [
                         { v: pc.DITHER_NONE, t: 'None' },
                         { v: pc.DITHER_BAYER8, t: 'Bayer8' },
-                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' },
+                        { v: pc.DITHER_IGNNOISE, t: 'IGNNoise' }
                     ]
                 })
             ),
@@ -45,7 +46,8 @@ export function controls({ observer, ReactPCUI, React, jsx, fragment }) {
                     options: [
                         { v: pc.DITHER_NONE, t: 'None' },
                         { v: pc.DITHER_BAYER8, t: 'Bayer8' },
-                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' }
+                        { v: pc.DITHER_BLUENOISE, t: 'BlueNoise' },
+                        { v: pc.DITHER_IGNNOISE, t: 'IGNNoise' }
                     ]
                 })
             ),

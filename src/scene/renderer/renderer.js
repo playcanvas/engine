@@ -38,7 +38,7 @@ import { ShadowRendererDirectional } from './shadow-renderer-directional.js';
 import { ShadowRenderer } from './shadow-renderer.js';
 import { WorldClustersAllocator } from './world-clusters-allocator.js';
 import { RenderPassUpdateClustered } from './render-pass-update-clustered.js';
-import { getBlueNoiseTexture } from '../graphics/blue-noise-texture.js';
+import { getBlueNoiseTexture } from '../graphics/noise-textures.js';
 import { BlueNoise } from '../../core/math/blue-noise.js';
 
 let _skinUpdateIndex = 0;

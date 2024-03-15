@@ -384,7 +384,8 @@ let _params = new Set();
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
- * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+ * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {boolean} opacityShadowDither Used to specify whether shadow opacity is dithered, which
@@ -392,7 +393,8 @@ let _params = new Set();
  *
  * - {@link DITHER_NONE}: Opacity dithering is disabled.
  * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
- * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise texture.
+ * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+ * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
  *
  * Defaults to {@link DITHER_NONE}.
  * @property {number} alphaFade Used to fade out materials when
