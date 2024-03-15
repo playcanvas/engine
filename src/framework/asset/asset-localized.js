@@ -13,10 +13,8 @@ class LocalizedAsset extends EventHandler {
         this._disableLocalization = false;
 
         /** @type {number} */
-        // @ts-ignore
         this._defaultAsset = null;
         /** @type {number} */
-        // @ts-ignore
         this._localizedAsset = null;
     }
 
