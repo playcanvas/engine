@@ -534,15 +534,15 @@ class CameraComponent extends Component {
         return this._camera.orthoHeight;
     }
 
-    get postEffects() {
-        return this._postEffects;
-    }
-
     /**
      * The post effects queue for this camera. Use this to add or remove post effects from the camera.
      *
      * @type {PostEffectQueue}
      */
+    get postEffects() {
+        return this._postEffects;
+    }
+
     get postEffectsEnabled() {
         return this._postEffects.enabled;
     }
