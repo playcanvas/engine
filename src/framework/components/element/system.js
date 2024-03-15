@@ -10,7 +10,6 @@ import { Texture } from '../../../platform/graphics/texture.js';
 import { BLEND_PREMULTIPLIED, SPRITE_RENDERMODE_SLICED, SPRITE_RENDERMODE_TILED } from '../../../scene/constants.js';
 import { StandardMaterial } from '../../../scene/materials/standard-material.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ELEMENTTYPE_IMAGE, ELEMENTTYPE_TEXT } from './constants.js';
@@ -597,7 +596,5 @@ class ElementComponentSystem extends ComponentSystem {
         return this._rtlReorder;
     }
 }
-
-Component._buildAccessors(ElementComponent.prototype, _schema);
 
 export { ElementComponentSystem };

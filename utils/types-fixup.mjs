@@ -19,61 +19,6 @@ const getDeclarations = (properties) => {
 
 let path, dts;
 
-const elementComponentProps = [
-    ['alignment', 'Vec2'],
-    ['autoFitHeight', 'boolean'],
-    ['autoFitWidth', 'boolean'],
-    ['autoHeight', 'boolean'],
-    ['autoWidth', 'boolean'],
-    ['color', 'Color'],
-    ['enableMarkup', 'boolean'],
-    ['font', 'Font|CanvasFont'],
-    ['fontAsset', 'number'],
-    ['fontSize', 'number'],
-    ['key', 'string'],
-    ['lineHeight', 'number'],
-    ['mask', 'boolean'],
-    ['material', 'Material'],
-    ['materialAsset', 'number'],
-    ['maxFontSize', 'number'],
-    ['maxLines', 'number'],
-    ['minFontSize', 'number'],
-    ['opacity', 'number'],
-    ['outlineColor', 'Color'],
-    ['outlineThickness', 'number'],
-    ['pixelsPerUnit', 'number'],
-    ['rangeEnd', 'number'],
-    ['rangeStart', 'number'],
-    ['rect', 'Vec4'],
-    ['rtlReorder', 'boolean'],
-    ['shadowColor', 'Color'],
-    ['shadowOffset', 'number'],
-    ['spacing', 'number'],
-    ['sprite', 'Sprite'],
-    ['spriteAsset', 'number'],
-    ['spriteFrame', 'number'],
-    ['text', 'string'],
-    ['texture', 'Texture'],
-    ['textureAsset', 'number'],
-    ['unicodeConverter', 'boolean'],
-    ['wrapLines', 'boolean']
-];
-
-path = './types/framework/components/element/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(elementComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Color } from '../../../core/math/color.js';
-import { Texture } from '../../../platform/graphics/texture.js';
-import { Sprite } from '../../../scene/sprite.js';
-import { Material } from '../../../scene/materials/material.js';
-import { Entity } from '../../../framework/entity.js';
-import { CanvasFont } from '../../../framework/font/canvas-font.js';
-import { Font } from '../../../framework/font/font.js';
-`;
-fs.writeFileSync(path, dts);
-
 const scrollbarComponentProps = [
     ['handleEntity', 'Entity'],
     ['handleSize', 'number'],
