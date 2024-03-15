@@ -876,7 +876,9 @@ class ElementComponent extends Component {
      * @type {boolean}
      */
     set useInput(value) {
-        if (this._useInput === value) return;
+        if (this._useInput === value) {
+            return;
+        }
 
         this._useInput = value;
 
