@@ -22,7 +22,7 @@ import { XrAnchor } from './xr-anchor.js';
  *     anchors: true
  * });
  * ```
- * @augments EventHandler
+ *
  * @category XR
  */
 class XrAnchors extends EventHandler {

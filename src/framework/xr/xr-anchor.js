@@ -25,7 +25,6 @@ import { Quat } from '../../core/math/quat.js';
  * scene in a way that helps with maintaining the illusion that the placed objects are really
  * present in the user’s environment.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrAnchor extends EventHandler {

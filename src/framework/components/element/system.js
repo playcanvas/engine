@@ -21,7 +21,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link ElementComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ElementComponentSystem extends ComponentSystem {

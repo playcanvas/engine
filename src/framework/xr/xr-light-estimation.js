@@ -18,7 +18,6 @@ const mat4B = new Mat4();
  * Spherical Harmonics data. And the most simple level of light estimation is the most prominent
  * directional light, its rotation, intensity and color.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrLightEstimation extends EventHandler {

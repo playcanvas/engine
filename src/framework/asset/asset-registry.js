@@ -38,7 +38,6 @@ import { Asset } from './asset.js';
  * Container for all assets that are available to this application. Note that PlayCanvas scripts
  * are provided with an AssetRegistry instance as `app.assets`.
  *
- * @augments EventHandler
  * @category Asset
  */
 class AssetRegistry extends EventHandler {

@@ -39,7 +39,6 @@ STATES_TO_SPRITE_FRAME_NAMES[VisualState.INACTIVE] = 'inactiveSpriteFrame';
  * A ButtonComponent enables a group of entities to behave like a button, with different visual
  * states for hover and press interactions.
  *
- * @augments Component
  * @category User Interface
  */
 class ButtonComponent extends Component {

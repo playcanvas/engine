@@ -7,7 +7,6 @@ import { Quat } from '../../core/math/quat.js';
  * list from {@link XrImageTracking#images}. It contains information about the tracking state as
  * well as the position and rotation of the tracked image.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrTrackedImage extends EventHandler {

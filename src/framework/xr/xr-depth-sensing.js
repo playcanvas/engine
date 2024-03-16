@@ -2,7 +2,6 @@ import { EventHandler } from '../../core/event-handler.js';
 import { Mat4 } from '../../core/math/mat4.js';
 
 /**
- * @augments EventHandler
  * @category XR
  * @deprecated
  * @ignore

@@ -33,7 +33,6 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
- * @augments Component
  * @category Graphics
  */
 class LightComponent extends Component {

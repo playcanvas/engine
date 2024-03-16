@@ -14,7 +14,6 @@ const MAX_ITERATIONS = 100;
 /**
  * Manages creation of {@link LayoutGroupComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class LayoutGroupComponentSystem extends ComponentSystem {

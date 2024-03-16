@@ -5,7 +5,6 @@ import { EventHandler } from '../../core/event-handler.js';
  * PlayCanvas scripts can access the Script Registry from inside the application with
  * {@link AppBase#scripts}.
  *
- * @augments EventHandler
  * @category Script
  */
 class ScriptRegistry extends EventHandler {

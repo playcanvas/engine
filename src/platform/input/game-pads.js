@@ -771,7 +771,6 @@ class GamePad {
 /**
  * Input handler for accessing GamePad input.
  *
- * @augments EventHandler
  * @category Input
  */
 class GamePads extends EventHandler {

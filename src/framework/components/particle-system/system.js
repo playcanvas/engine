@@ -78,7 +78,6 @@ const _schema = [
 /**
  * Allows an Entity to render a particle system.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class ParticleSystemComponentSystem extends ComponentSystem {

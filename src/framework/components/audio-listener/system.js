@@ -11,7 +11,6 @@ const _schema = ['enabled'];
 /**
  * Component System for adding and removing {@link AudioListenerComponent} objects to Entities.
  *
- * @augments ComponentSystem
  * @category Sound
  */
 class AudioListenerComponentSystem extends ComponentSystem {

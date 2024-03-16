@@ -18,7 +18,6 @@ let ids = 0;
  * are not limited to: handheld controllers, optically tracked hands, touch screen taps, and
  * gaze-based input methods that operate on the viewer's pose.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrInputSource extends EventHandler {

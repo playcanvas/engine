@@ -24,7 +24,7 @@ import { EntityReference } from '../../utils/entity-reference.js';
  * height of the track.
  * @property {import('../../entity.js').Entity} handleEntity The entity to be used as the scrollbar
  * handle. This entity must have a Scrollbar component.
- * @augments Component
+ *
  * @category User Interface
  */
 class ScrollbarComponent extends Component {

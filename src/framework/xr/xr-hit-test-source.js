@@ -31,7 +31,7 @@ const poolQuat = [];
  *     }
  * });
  * ```
- * @augments EventHandler
+ *
  * @category XR
  */
 class XrHitTestSource extends EventHandler {

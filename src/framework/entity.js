@@ -23,8 +23,6 @@ const _enableList = [];
  * e.g. the ability to render a model or play a sound. Components are specific to an instance of an
  * Entity and are attached (e.g. `this.entity.model`) ComponentSystems allow access to all Entities
  * and Components and are attached to the {@link AppBase}.
- *
- * @augments GraphNode
  */
 class Entity extends GraphNode {
     /**

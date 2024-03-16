@@ -95,7 +95,6 @@ let depthLayer;
  * time. Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way
  * each particle will pick a random value in-between.
  *
- * @augments Component
  * @category Graphics
  */
 class ParticleSystemComponent extends Component {

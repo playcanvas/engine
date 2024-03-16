@@ -26,7 +26,6 @@ import { StencilParameters } from './stencil-parameters.js';
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class GraphicsDevice extends EventHandler {

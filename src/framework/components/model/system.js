@@ -20,7 +20,6 @@ const _schema = ['enabled'];
  * Allows an Entity to render a model or a primitive shape like a box, capsule, sphere, cylinder,
  * cone etc.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class ModelComponentSystem extends ComponentSystem {
