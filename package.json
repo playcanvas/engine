@@ -125,8 +125,10 @@
     "global-jsdom": "^24.0.0",
     "jsdom": "^24.0.0",
     "karma": "^6.4.3",
+    "karma-chai": "^0.1.0",
     "karma-chrome-launcher": "^3.2.0",
-    "karma-mocha": "2.0.1",
+    "karma-mocha": "^2.0.1",
+    "karma-sinon": "^1.0.5",
     "karma-spec-reporter": "^0.0.36",
     "mocha": "^10.3.0",
     "publint": "^0.2.7",
@@ -172,7 +174,7 @@
     "serve": "serve build -l 51000",
     "test": "mocha --recursive --require test/fixtures.mjs",
     "test:coverage": "c8 npm test",
-    "test:karma": "karma start tests/karma.conf.cjs -- --single-run --release",
+    "test:karma": "karma start tests/karma.conf.cjs -- --single-run",
     "test:types": "tsc --pretty false build/playcanvas.d.ts"
   }
 }
