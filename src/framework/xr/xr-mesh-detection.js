@@ -102,7 +102,7 @@ class XrMeshDetection extends EventHandler {
      * Create a new XrMeshDetection instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

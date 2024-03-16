@@ -57,7 +57,7 @@ class XrDepthSensing extends EventHandler {
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - manager
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

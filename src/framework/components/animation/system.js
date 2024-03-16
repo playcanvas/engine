@@ -18,7 +18,7 @@ class AnimationComponentSystem extends ComponentSystem {
      * Create an AnimationComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application managing this system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

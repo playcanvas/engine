@@ -150,7 +150,7 @@ class XrInput extends EventHandler {
      * Create a new XrInput instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

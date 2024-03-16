@@ -624,7 +624,7 @@ class CollisionComponentSystem extends ComponentSystem {
      * Creates a new CollisionComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

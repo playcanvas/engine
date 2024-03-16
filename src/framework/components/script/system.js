@@ -27,7 +27,7 @@ class ScriptComponentSystem extends ComponentSystem {
      * Create a new ScriptComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

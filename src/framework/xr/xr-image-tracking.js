@@ -52,7 +52,7 @@ class XrImageTracking extends EventHandler {
      * their estimate sizes.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

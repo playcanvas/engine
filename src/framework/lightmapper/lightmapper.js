@@ -71,7 +71,7 @@ class Lightmapper {
      * renderer.
      * @param {import('../asset/asset-registry.js').AssetRegistry} assets - Registry of assets to
      * lightmap.
-     * @hideconstructor
+     * @ignore
      */
     constructor(device, root, scene, renderer, assets) {
         this.device = device;

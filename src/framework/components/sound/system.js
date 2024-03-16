@@ -20,7 +20,7 @@ class SoundComponentSystem extends ComponentSystem {
      * Create a SoundComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

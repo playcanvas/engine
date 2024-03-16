@@ -85,7 +85,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
      * Create a new ParticleSystemComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
