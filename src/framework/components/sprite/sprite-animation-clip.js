@@ -9,7 +9,6 @@ import { SPRITE_RENDERMODE_SIMPLE } from '../../../scene/constants.js';
 /**
  * Handles playing of sprite animations and loading of relevant sprite assets.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class SpriteAnimationClip extends EventHandler {

@@ -99,7 +99,6 @@ export const SHAPEAXIS_FACE = 'face';
 /**
  * The base class for all transform gizmos.
  *
- * @augments Gizmo
  * @category Gizmo
  */
 class TransformGizmo extends Gizmo {

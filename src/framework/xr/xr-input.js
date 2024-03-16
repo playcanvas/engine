@@ -11,7 +11,6 @@ import { XrInputSource } from './xr-input-source.js';
  * - hands - with their individual joints
  * - transient sources - such as touch screen taps and voice commands
  *
- * @augments EventHandler
  * @category XR
  */
 class XrInput extends EventHandler {

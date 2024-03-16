@@ -88,8 +88,6 @@ function findNode(node, test) {
 
 /**
  * A hierarchical scene node.
- *
- * @augments EventHandler
  */
 class GraphNode extends EventHandler {
     /**

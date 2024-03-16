@@ -14,7 +14,6 @@ const _schema = ['enabled'];
  * Used to add and remove {@link CameraComponent}s from Entities. It also holds an array of all
  * active cameras.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class CameraComponentSystem extends ComponentSystem {

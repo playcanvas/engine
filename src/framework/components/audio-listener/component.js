@@ -4,7 +4,6 @@ import { Component } from '../component.js';
  * Represents the audio listener in the 3D world, so that 3D positioned audio sources are heard
  * correctly.
  *
- * @augments Component
  * @category Sound
  */
 class AudioListenerComponent extends Component {

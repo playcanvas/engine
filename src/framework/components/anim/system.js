@@ -12,7 +12,6 @@ const _schema = [
 /**
  * The AnimComponentSystem manages creating and deleting AnimComponents.
  *
- * @augments ComponentSystem
  * @category Animation
  */
 class AnimComponentSystem extends ComponentSystem {

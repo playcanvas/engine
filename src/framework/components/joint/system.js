@@ -9,7 +9,6 @@ const _schema = ['enabled'];
 /**
  * Creates and manages physics joint components.
  *
- * @augments ComponentSystem
  * @ignore
  */
 class JointComponentSystem extends ComponentSystem {

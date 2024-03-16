@@ -30,7 +30,6 @@ const _schema = [
  * Controls playback of an audio sample. This class will be deprecated in favor of
  * {@link SoundComponentSystem}.
  *
- * @augments ComponentSystem
  * @ignore
  */
 class AudioSourceComponentSystem extends ComponentSystem {

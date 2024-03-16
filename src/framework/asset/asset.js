@@ -44,7 +44,6 @@ const VARIANT_DEFAULT_PRIORITY = ['pvr', 'dxt', 'etc2', 'etc1', 'basis'];
  *
  * See the {@link AssetRegistry} for details on loading resources from assets.
  *
- * @augments EventHandler
  * @category Asset
  */
 class Asset extends EventHandler {

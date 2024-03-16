@@ -21,7 +21,6 @@ const _properties = [
 /**
  * Allows an Entity to render a gsplat.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {

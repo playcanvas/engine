@@ -251,7 +251,6 @@ function testTextureFloatHighPrecision(device) {
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments GraphicsDevice
  * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {

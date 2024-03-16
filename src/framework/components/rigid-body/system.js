@@ -253,7 +253,6 @@ const _schema = ['enabled'];
  * valid if 3D Physics is enabled in your application. You can enable this in the application
  * settings for your project.
  *
- * @augments ComponentSystem
  * @category Physics
  */
 class RigidBodyComponentSystem extends ComponentSystem {
