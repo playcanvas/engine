@@ -102,7 +102,7 @@ class XrPlaneDetection extends EventHandler {
      * Create a new XrPlaneDetection instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

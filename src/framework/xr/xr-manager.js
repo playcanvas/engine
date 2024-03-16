@@ -292,7 +292,7 @@ class XrManager extends EventHandler {
      * Create a new XrManager instance.
      *
      * @param {import('../app-base.js').AppBase} app - The main application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super();

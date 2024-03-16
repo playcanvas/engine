@@ -18,7 +18,7 @@ class AudioListenerComponentSystem extends ComponentSystem {
      * Create a new AudioListenerComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application managing this system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

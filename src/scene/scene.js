@@ -219,7 +219,7 @@ class Scene extends EventHandler {
      *
      * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} graphicsDevice -
      * The graphics device used to manage this scene.
-     * @hideconstructor
+     * @ignore
      */
     constructor(graphicsDevice) {
         super();

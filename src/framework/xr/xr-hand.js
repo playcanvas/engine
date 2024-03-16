@@ -108,7 +108,7 @@ class XrHand extends EventHandler {
      *
      * @param {import('./xr-input-source.js').XrInputSource} inputSource - Input Source that hand
      * is related to.
-     * @hideconstructor
+     * @ignore
      */
     constructor(inputSource) {
         super();

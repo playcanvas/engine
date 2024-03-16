@@ -107,7 +107,7 @@ class XrViews extends EventHandler {
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

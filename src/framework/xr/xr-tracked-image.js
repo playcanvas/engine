@@ -104,7 +104,7 @@ class XrTrackedImage extends EventHandler {
      * repeating patterns will reduce tracking stability.
      * @param {number} width - Width (in meters) of image in real world. Providing this value as
      * close to the real value will improve tracking quality.
-     * @hideconstructor
+     * @ignore
      */
     constructor(image, width) {
         super();

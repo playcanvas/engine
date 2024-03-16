@@ -27,7 +27,7 @@ class SpriteComponentSystem extends ComponentSystem {
      * Create a new SpriteComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

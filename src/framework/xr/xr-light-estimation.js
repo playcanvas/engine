@@ -102,7 +102,7 @@ class XrLightEstimation extends EventHandler {
      * Create a new XrLightEstimation instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

@@ -27,7 +27,7 @@ class ModelComponentSystem extends ComponentSystem {
      * Create a new ModelComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

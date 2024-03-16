@@ -37,7 +37,7 @@ class AudioSourceComponentSystem extends ComponentSystem {
      * Create a new AudioSourceComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application managing this system.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

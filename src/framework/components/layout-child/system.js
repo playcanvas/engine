@@ -16,7 +16,7 @@ class LayoutChildComponentSystem extends ComponentSystem {
      * Create a new LayoutChildComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

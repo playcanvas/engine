@@ -105,7 +105,7 @@ class XrAnchor extends EventHandler {
      * @param {import('./xr-anchors.js').XrAnchors} anchors - Anchor manager.
      * @param {object} xrAnchor - native XRAnchor object that is provided by WebXR API
      * @param {string|null} uuid - ID string associated with a persistent anchor
-     * @hideconstructor
+     * @ignore
      */
     constructor(anchors, xrAnchor, uuid = null) {
         super();

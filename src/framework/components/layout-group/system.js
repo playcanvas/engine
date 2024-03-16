@@ -21,7 +21,7 @@ class LayoutGroupComponentSystem extends ComponentSystem {
      * Create a new LayoutGroupComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

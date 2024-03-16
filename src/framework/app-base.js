@@ -152,8 +152,6 @@ class AppBase extends EventHandler {
      *
      * // Start the application's main loop
      * app.start();
-     *
-     * @hideconstructor
      */
     constructor(canvas) {
         super();
