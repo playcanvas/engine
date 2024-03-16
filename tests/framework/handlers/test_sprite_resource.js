@@ -30,7 +30,7 @@ describe("pc.SpriteHandler", function () {
                 expect(asset.resource.atlas).to.exist;
 
                 expect(asset.loaded).to.be.true;
-                
+
                 expect(asset.data.renderMode).to.equal(0);
                 expect(asset.data.pixelsPerUnit).to.equal(100);
                 expect(asset.data.textureAtlasAsset).to.equal(atlasAsset.id);
