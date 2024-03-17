@@ -78,7 +78,7 @@ class UniformFormat {
     /**
      * True if this is an array of elements (i.e. count > 0)
      *
-     * @type {number}
+     * @type {boolean}
      */
     get isArrayType() {
         return this.count > 0;
@@ -212,10 +212,10 @@ class UniformBufferFormat {
     }
 
     /**
-     * Returns format of a uniform with specified name.
+     * Returns format of a uniform with specified name. Returns undefined if the uniform is not found.
      *
      * @param {string} name - The name of the uniform.
-     * @returns {UniformFormat} - The format of the uniform.
+     * @returns {UniformFormat|undefined} - The format of the uniform.
      */
     get(name) {
         return this.map.get(name);

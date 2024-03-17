@@ -9,6 +9,18 @@ import { EventHandler } from '../../core/event-handler.js';
  */
 class ScriptRegistry extends EventHandler {
     /**
+     * @type {Object<string, typeof import('./script-type.js').ScriptType>}
+     * @private
+     */
+    _scripts = {};
+
+    /**
+     * @type {typeof import('./script-type.js').ScriptType[]}
+     * @private
+     */
+    _list = [];
+
+    /**
      * Create a new ScriptRegistry instance.
      *
      * @param {import('../app-base.js').AppBase} app - Application to attach registry to.
@@ -17,8 +29,6 @@ class ScriptRegistry extends EventHandler {
         super();
 
         this.app = app;
-        this._scripts = { };
-        this._list = [];
     }
 
     destroy() {
