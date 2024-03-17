@@ -41,12 +41,6 @@ class AnimComponentLayer {
      */
     _blendType;
 
-    /**
-     * @type {boolean}
-     * @private
-     */
-    _normalizedWeight;
-
     /** @private */
     _mask = null;
 
@@ -72,17 +66,14 @@ class AnimComponentLayer {
      * a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
-     * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized
-     * using the total weight of all layers.
      * @ignore
      */
-    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE, normalizedWeight = true) {
+    constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE) {
         this._name = name;
         this._controller = controller;
         this._component = component;
         this._weight = weight;
         this._blendType = blendType;
-        this._normalizedWeight = normalizedWeight;
     }
 
     /**
