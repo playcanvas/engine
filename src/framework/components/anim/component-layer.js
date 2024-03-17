@@ -12,6 +12,57 @@ import { ANIM_LAYER_OVERWRITE } from '../../anim/controller/constants.js';
  */
 class AnimComponentLayer {
     /**
+     * @type {string}
+     * @private
+     */
+    _name;
+
+    /**
+     * @type {import('../../anim/controller/anim-controller.js').AnimController}
+     * @private
+     */
+    _controller;
+
+    /**
+     * @type {import('./component.js').AnimComponent}
+     * @private
+     */
+    _component;
+
+    /**
+     * @type {number}
+     * @private
+     */
+    _weight;
+
+    /**
+     * @type {string}
+     * @private
+     */
+    _blendType;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _normalizedWeight;
+
+    /** @private */
+    _mask = null;
+
+    /** @private */
+    _blendTime = 0;
+
+    /** @private */
+    _blendTimeElapsed = 0;
+
+    /** @private */
+    _startingWeight = 0;
+
+    /** @private */
+    _targetWeight = 0;
+
+    /**
      * Create a new AnimComponentLayer instance.
      *
      * @param {string} name - The name of the layer.
@@ -32,11 +83,6 @@ class AnimComponentLayer {
         this._weight = weight;
         this._blendType = blendType;
         this._normalizedWeight = normalizedWeight;
-        this._mask = null;
-        this._blendTime = 0;
-        this._blendTimeElapsed = 0;
-        this._startingWeight = 0;
-        this._targetWeight = 0;
     }
 
     /**
