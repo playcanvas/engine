@@ -15,13 +15,15 @@ class AnimComponentLayer {
      * Create a new AnimComponentLayer instance.
      *
      * @param {string} name - The name of the layer.
-     * @param {object} controller - The controller to manage this layers animations.
+     * @param {import('../../anim/controller/anim-controller.js').AnimController} controller - The
+     * controller to manage this layers animations.
      * @param {import('./component.js').AnimComponent} component - The component that this layer is
      * a member of.
      * @param {number} [weight] - The weight of this layer. Defaults to 1.
      * @param {string} [blendType] - The blend type of this layer. Defaults to {@link ANIM_LAYER_OVERWRITE}.
      * @param {boolean} [normalizedWeight] - Whether the weight of this layer should be normalized
      * using the total weight of all layers.
+     * @ignore
      */
     constructor(name, controller, component, weight = 1, blendType = ANIM_LAYER_OVERWRITE, normalizedWeight = true) {
         this._name = name;
@@ -49,7 +51,7 @@ class AnimComponentLayer {
     /**
      * Whether this layer is currently playing.
      *
-     * @type {string}
+     * @type {boolean}
      */
     set playing(value) {
         this._controller.playing = value;
@@ -63,7 +65,7 @@ class AnimComponentLayer {
      * Returns true if a state graph has been loaded and all states in the graph have been assigned
      * animation tracks.
      *
-     * @type {string}
+     * @type {boolean}
      */
     get playable() {
         return this._controller.playable;
@@ -81,14 +83,14 @@ class AnimComponentLayer {
     /**
      * Returns the previously active state name.
      *
-     * @type {string}
+     * @type {string|null}
      */
     get previousState() {
         return this._controller.previousStateName;
     }
 
     /**
-     * Returns the currently active states progress as a value normalized by the states animation
+     * Returns the currently active state's progress as a value normalized by the state's animation
      * duration. Looped animations will return values greater than 1.
      *
      * @type {number}
