@@ -309,7 +309,7 @@ class AnimComponentLayer {
      * animation should be associated with. Each section of a blend tree path is split using a
      * period (`.`) therefore state names should not include this character (e.g "MyStateName" or
      * "MyStateName.BlendTreeNode").
-     * @param {object} animTrack - The animation track that will be assigned to this state and
+     * @param {AnimTrack} animTrack - The animation track that will be assigned to this state and
      * played whenever this state is active.
      * @param {number} [speed] - Update the speed of the state you are assigning an animation to.
      * Defaults to 1.
