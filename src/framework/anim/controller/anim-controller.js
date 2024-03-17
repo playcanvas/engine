@@ -62,7 +62,7 @@ class AnimController {
     /** @private */
     _playing = false;
 
-    /** 
+    /**
      * @type {boolean}
      * @private
      */
