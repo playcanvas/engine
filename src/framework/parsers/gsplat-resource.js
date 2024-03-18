@@ -30,7 +30,7 @@ class GSplatResource {
     /**
      * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device.
      * @param {import('../../scene/gsplat/gsplat-data.js').GSplatData} splatData - The splat data.
-     * @hideconstructor
+     * @ignore
      */
     constructor(device, splatData) {
         this.device = device;

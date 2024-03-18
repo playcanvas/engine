@@ -4,7 +4,6 @@ import { EventHandler } from '../../core/event-handler.js';
  * A utility class for untaring archives from a fetch request. It processes files from a tar file
  * in a streamed manner, so asset parsing can happen in parallel instead of all at once at the end.
  *
- * @augments EventHandler
  * @ignore
  */
 class Untar extends EventHandler {

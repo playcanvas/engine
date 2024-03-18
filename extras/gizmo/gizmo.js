@@ -422,7 +422,7 @@ class Gizmo extends EventHandler {
     /**
      * Attach an array of graph nodes to the gizmo.
      *
-     * @param {import('playcanvas').GraphNode} [nodes] - The graph nodes. Defaults to [].
+     * @param {import('playcanvas').GraphNode[]} [nodes] - The graph nodes. Defaults to [].
      * @example
      * const gizmo = new pcx.Gizmo(app, camera, layer);
      * gizmo.attach([boxA, boxB]);

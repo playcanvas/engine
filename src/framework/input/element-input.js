@@ -164,7 +164,6 @@ class ElementInputEvent {
 /**
  * Represents a Mouse event fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
  * @category User Interface
  */
 class ElementMouseEvent extends ElementInputEvent {
@@ -259,7 +258,6 @@ class ElementMouseEvent extends ElementInputEvent {
 /**
  * Represents a TouchEvent fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
  * @category User Interface
  */
 class ElementTouchEvent extends ElementInputEvent {
@@ -306,7 +304,6 @@ class ElementTouchEvent extends ElementInputEvent {
 /**
  * Represents a XRInputSourceEvent fired on a {@link ElementComponent}.
  *
- * @augments ElementInputEvent
  * @category User Interface
  */
 class ElementSelectEvent extends ElementInputEvent {

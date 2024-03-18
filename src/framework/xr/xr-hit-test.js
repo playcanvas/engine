@@ -18,7 +18,6 @@ import { XrHitTestSource } from './xr-hit-test-source.js';
  * sources: the view, input sources, or an arbitrary ray in space. Results reflect the underlying
  * AR system's understanding of the real world.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrHitTest extends EventHandler {
@@ -123,7 +122,7 @@ class XrHitTest extends EventHandler {
      * Create a new XrHitTest instance.
      *
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

@@ -12,10 +12,8 @@ class CollisionComponentData {
         this.axis = 1;
         this.height = 2;
         /** @type {import('../../../framework/asset/asset.js').Asset | number} */
-        // @ts-ignore
         this.asset = null;
         /** @type {import('../../../framework/asset/asset.js').Asset | number} */
-        // @ts-ignore
         this.renderAsset = null;
         this.checkVertexDuplicates = true;
 

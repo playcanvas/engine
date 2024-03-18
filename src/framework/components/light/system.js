@@ -12,7 +12,6 @@ import { properties, LightComponentData } from './data.js';
 /**
  * A Light Component is used to dynamically light the scene.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class LightComponentSystem extends ComponentSystem {
@@ -20,7 +19,7 @@ class LightComponentSystem extends ComponentSystem {
      * Create a new LightComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

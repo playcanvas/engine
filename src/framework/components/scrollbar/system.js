@@ -15,7 +15,6 @@ const _schema = [
 /**
  * Manages creation of {@link ScrollbarComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ScrollbarComponentSystem extends ComponentSystem {
@@ -23,7 +22,7 @@ class ScrollbarComponentSystem extends ComponentSystem {
      * Create a new ScrollbarComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

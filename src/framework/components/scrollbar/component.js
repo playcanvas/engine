@@ -11,7 +11,6 @@ import { EntityReference } from '../../utils/entity-reference.js';
 /**
  * A ScrollbarComponent enables a group of entities to behave like a draggable scrollbar.
  *
- * @augments Component
  * @category User Interface
  */
 class ScrollbarComponent extends Component {

@@ -617,7 +617,6 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 /**
  * Manages creation of {@link CollisionComponent}s.
  *
- * @augments ComponentSystem
  * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
@@ -625,7 +624,7 @@ class CollisionComponentSystem extends ComponentSystem {
      * Creates a new CollisionComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

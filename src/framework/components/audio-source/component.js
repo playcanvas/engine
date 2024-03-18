@@ -30,7 +30,7 @@ import { Component } from '../component.js';
  * stops. Note the volume of the audio is not 0 after this distance, but just doesn't fall off
  * anymore.
  * @property {number} rollOffFactor The factor used in the falloff equation.
- * @augments Component
+ *
  * @ignore
  */
 class AudioSourceComponent extends Component {

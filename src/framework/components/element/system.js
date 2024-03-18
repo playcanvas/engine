@@ -21,7 +21,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link ElementComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ElementComponentSystem extends ComponentSystem {
@@ -29,7 +28,7 @@ class ElementComponentSystem extends ComponentSystem {
      * Create a new ElementComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

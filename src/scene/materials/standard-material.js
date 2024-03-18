@@ -553,7 +553,7 @@ let _params = new Set();
  * split into two sections, generic standard material options and lit options. Properties of the
  * standard material options are {@link StandardMaterialOptions} and the options for the lit options
  * are {@link LitShaderOptions}.
- * @augments Material
+ *
  * @category Graphics
  */
 class StandardMaterial extends Material {

@@ -22,7 +22,7 @@ import { XrAnchor } from './xr-anchor.js';
  *     anchors: true
  * });
  * ```
- * @augments EventHandler
+ *
  * @category XR
  */
 class XrAnchors extends EventHandler {
@@ -148,7 +148,7 @@ class XrAnchors extends EventHandler {
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();

@@ -105,8 +105,6 @@ let app = null;
  *
  * If you are using the Engine without the Editor, you have to create the application instance
  * manually.
- *
- * @augments EventHandler
  */
 class AppBase extends EventHandler {
     /**
@@ -154,8 +152,6 @@ class AppBase extends EventHandler {
      *
      * // Start the application's main loop
      * app.start();
-     *
-     * @hideconstructor
      */
     constructor(canvas) {
         super();

@@ -36,7 +36,6 @@ import { XrViews } from './xr-views.js';
 /**
  * Manage and update XR session and its states.
  *
- * @augments EventHandler
  * @category XR
  */
 class XrManager extends EventHandler {
@@ -293,7 +292,7 @@ class XrManager extends EventHandler {
      * Create a new XrManager instance.
      *
      * @param {import('../app-base.js').AppBase} app - The main application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super();

@@ -24,7 +24,6 @@ const _schema = [
 /**
  * Manages creation of {@link ButtonComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ButtonComponentSystem extends ComponentSystem {
@@ -32,7 +31,7 @@ class ButtonComponentSystem extends ComponentSystem {
      * Create a new ButtonComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

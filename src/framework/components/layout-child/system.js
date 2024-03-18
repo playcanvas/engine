@@ -9,7 +9,6 @@ const _schema = ['enabled'];
 /**
  * Manages creation of {@link LayoutChildComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class LayoutChildComponentSystem extends ComponentSystem {
@@ -17,7 +16,7 @@ class LayoutChildComponentSystem extends ComponentSystem {
      * Create a new LayoutChildComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

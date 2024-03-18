@@ -78,7 +78,6 @@ const _schema = [
 /**
  * Allows an Entity to render a particle system.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class ParticleSystemComponentSystem extends ComponentSystem {
@@ -86,7 +85,7 @@ class ParticleSystemComponentSystem extends ComponentSystem {
      * Create a new ParticleSystemComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);

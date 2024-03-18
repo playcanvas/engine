@@ -9,7 +9,6 @@ import { TransformGizmo } from "./transform-gizmo.js";
 /**
  * Scaling gizmo.
  *
- * @augments TransformGizmo
  * @category Gizmo
  */
 class ScaleGizmo extends TransformGizmo {

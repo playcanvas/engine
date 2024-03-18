@@ -21,7 +21,6 @@ const _properties = [
 /**
  * Allows an Entity to render a gsplat.
  *
- * @augments ComponentSystem
  * @category Graphics
  */
 class GSplatComponentSystem extends ComponentSystem {
@@ -29,7 +28,7 @@ class GSplatComponentSystem extends ComponentSystem {
      * Create a new GSplatComponentSystem.
      *
      * @param {import('../../app-base.js').AppBase} app - The Application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
