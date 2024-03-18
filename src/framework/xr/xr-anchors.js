@@ -1,5 +1,7 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
+import { Vec3 } from '../../core/math/vec3.js';
+import { Quat } from '../../core/math/quat.js';
 import { XrAnchor } from './xr-anchor.js';
 
 /**
@@ -100,6 +102,12 @@ class XrAnchors extends EventHandler {
      * @private
      */
     _available = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
+    _checkingAvailability = false;
 
     /**
      * @type {boolean}
@@ -380,8 +388,24 @@ class XrAnchors extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._available)
+        if (!this._available) {
+            // enabledFeatures - is not available, requires alternative way to check feature availability
+            if (!this.manager.session.enabledFeatures && !this._checkingAvailability) {
+                this._checkingAvailability = true;
+
+                frame.createAnchor(new XRRigidTransform(new Vec3(), new Quat()), this.manager._referenceSpace) // eslint-disable-line no-undef
+                    .then((xrAnchor) => {
+                        // successfully created an anchor - feature is available
+                        xrAnchor.delete();
+                        if (this.manager.active) {
+                            this._available = true;
+                            this.fire('available');
+                        }
+                    })
+                    .catch(() => { }); // stay unavailable
+            }
             return;
+        }
 
         // check if need to create anchors
         if (this._creationQueue.length) {
