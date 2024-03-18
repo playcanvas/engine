@@ -8,11 +8,9 @@ class ScrollbarComponentData {
     value = 0;
 
     /** @type {number} */
-    // @ts-ignore
     handleSize;
 
     /** @type {import('../../../framework/entity').Entity} */
-    // @ts-ignore
     handleEntity;
 }
 
