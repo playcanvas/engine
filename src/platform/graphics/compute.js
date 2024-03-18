@@ -1,4 +1,16 @@
 /**
+ * A helper class storing a parameter value as well as its scope ID.
+ *
+ * @ignore
+ */
+class ComputeParameter {
+    value;
+
+    /** @type {import('./scope-id.js').ScopeId} */
+    scopeId = null;
+}
+
+/**
  * A representation of a compute shader with the associated data, that can be executed on the GPU.
  *
  * @ignore
@@ -11,6 +23,9 @@ class Compute {
      * @ignore
      */
     shader = null;
+
+    /** @type {Map<string, ComputeParameter>} */
+    parameters = new Map();
 
     /**
      * Create a compute instance. Note that this is supported on WebGPU only and is a no-op on
@@ -30,6 +45,43 @@ class Compute {
     }
 
     /**
+     * Sets a shader parameter on a compute instance.
+     *
+     * @param {string} name - The name of the parameter to set.
+     * @param {number|number[]|Float32Array|import('./texture.js').Texture} value - The value for
+     * the specified parameter.
+     */
+    setParameter(name, value) {
+        let param = this.parameters.get(name);
+        if (!param) {
+            param = new ComputeParameter();
+            param.scopeId = this.device.scope.resolve(name);
+            this.parameters.set(name, param);
+        }
+        param.value = value;
+    }
+
+    /**
+     * Deletes a shader parameter from the compute instance.
+     *
+     * @param {string} name - The name of the parameter to delete.
+     */
+    deleteParameter(name) {
+        this.parameters.delete(name);
+    }
+
+    /**
+     * Apply the parameters to the scope.
+     *
+     * @ignore
+     */
+    applyParameters() {
+        for (const [, param] of this.parameters) {
+            param.scopeId.setValue(param.value);
+        }
+    }
+
+    /**
      * Dispatch the compute work.
      *
      * @param {number} x - X dimension of the grid of work-groups to dispatch.
@@ -37,6 +89,7 @@ class Compute {
      * @param {number} [z] - Z dimension of the grid of work-groups to dispatch.
      */
     dispatch(x, y, z) {
+        this.applyParameters();
         this.impl?.dispatch(x, y, z);
     }
 }
