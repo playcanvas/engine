@@ -1,8 +1,5 @@
 import fs from 'fs';
 
-// A regex that matches a string starting with 'constructor' and ending with ');'
-const regexConstructor = /constructor(.*?)\);/g;
-
 // Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
     let declarations = '';
