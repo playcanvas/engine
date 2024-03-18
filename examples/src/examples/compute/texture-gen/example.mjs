@@ -87,13 +87,6 @@ assetListLoader.load(() => {
         storage: true
     });
 
-    // a compute shader that will tint the input texture and write the result to the storage texture
-    const shader = new pc.Shader(device, {
-        name: 'ComputeShader',
-        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
-        cshader: files['compute-shader.wgsl']
-    });
-
     // bind group for the compute shader - this needs to match the bindings in the shader
     const buffers = [];
     const textures = [
@@ -102,8 +95,16 @@ assetListLoader.load(() => {
     const storageTextures = [
         new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
     ];
-    shader.impl.computeBindGroupFormat = new pc.BindGroupFormat(device, buffers, textures, storageTextures, {
-        compute: true
+
+    // a compute shader that will tint the input texture and write the result to the storage texture
+    const shader = new pc.Shader(device, {
+        name: 'ComputeShader',
+        shaderLanguage: pc.SHADERLANGUAGE_WGSL,
+        cshader: files['compute-shader.wgsl'],
+
+        computeBindGroupFormat: new pc.BindGroupFormat(device, buffers, textures, storageTextures, {
+            compute: true
+        })
     });
 
     // create an instance of the compute shader, and set the input and output textures
