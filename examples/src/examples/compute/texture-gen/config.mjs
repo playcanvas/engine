@@ -5,7 +5,7 @@ export default {
     HIDDEN: true,
     WEBGPU_REQUIRED: true,
     FILES: {
-        'compute-shader.wgsl': `
+        'compute-shader.wgsl': /* wgsl */`
             @group(0) @binding(0) var inputTexture: texture_2d<f32>;
             // @group(0) @binding(1) is a sampler of the inputTexture, but we don't need it in the shader.
             @group(0) @binding(2) var outputTexture: texture_storage_2d<rgba8unorm, write>;
