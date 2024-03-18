@@ -56,7 +56,8 @@
       "twgsl": "readonly",
       "webkitAudioContext": "readonly",
       "XRRay": "readonly",
-      "XRWebGLLayer": "readonly"
+      "XRWebGLLayer": "readonly",
+      "XRRigidTransform": "readonly"
     },
     "parser": "@babel/eslint-parser",
     "parserOptions": {

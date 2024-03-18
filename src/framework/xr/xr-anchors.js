@@ -1,7 +1,5 @@
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
-import { Vec3 } from '../../core/math/vec3.js';
-import { Quat } from '../../core/math/quat.js';
 import { XrAnchor } from './xr-anchor.js';
 
 /**
@@ -291,7 +289,7 @@ class XrAnchors extends EventHandler {
                 });
         } else {
             this._creationQueue.push({
-                transform: new XRRigidTransform(position, rotation), // eslint-disable-line no-undef
+                transform: new XRRigidTransform(position, rotation),
                 callback: callback
             });
         }
@@ -393,7 +391,7 @@ class XrAnchors extends EventHandler {
             if (!this.manager.session.enabledFeatures && !this._checkingAvailability) {
                 this._checkingAvailability = true;
 
-                frame.createAnchor(new XRRigidTransform(new Vec3(), new Quat()), this.manager._referenceSpace) // eslint-disable-line no-undef
+                frame.createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
                     .then((xrAnchor) => {
                         // successfully created an anchor - feature is available
                         xrAnchor.delete();
