@@ -547,12 +547,15 @@ class Entity extends GraphNode {
     }
 
     /**
-     * Remove all components from the Entity and detach it from the Entity hierarchy. Then
-     * recursively destroy all ancestor Entities.
+     * Destroy the entity and all of its descendants. First, all of the entity's components are
+     * disabled and then removed. Then, it is removed from the hierarchy. This is then repeated
+     * recursively for all descendants of the entity.
+     *
+     * The last thing the entity does is fire the `destroy` event.
      *
      * @example
      * const firstChild = this.entity.children[0];
-     * firstChild.destroy(); // delete child, all components and remove from hierarchy
+     * firstChild.destroy(); // destroy child and all of its descendants
      */
     destroy() {
         this._destroying = true;
