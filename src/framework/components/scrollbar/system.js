@@ -1,4 +1,3 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ScrollbarComponent } from './component.js';
