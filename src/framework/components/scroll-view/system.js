@@ -1,4 +1,3 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ScrollViewComponent } from './component.js';
@@ -90,7 +89,5 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ScrollViewComponent.prototype, _schema);
 
 export { ScrollViewComponentSystem };

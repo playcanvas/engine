@@ -1,4 +1,3 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ScrollbarComponent } from './component.js';
@@ -45,7 +44,5 @@ class ScrollbarComponentSystem extends ComponentSystem {
         component.onRemove();
     }
 }
-
-Component._buildAccessors(ScrollbarComponent.prototype, _schema);
 
 export { ScrollbarComponentSystem };

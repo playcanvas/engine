@@ -1,8 +1,5 @@
 import fs from 'fs';
 
-// A regex that matches a string starting with 'constructor' and ending with ');'
-const regexConstructor = /constructor(.*?)\);/g;
-
 // Generate TS declarations for getter/setter pairs
 const getDeclarations = (properties) => {
     let declarations = '';
@@ -18,46 +15,6 @@ const getDeclarations = (properties) => {
 };
 
 let path, dts;
-
-const scrollbarComponentProps = [
-    ['handleEntity', 'Entity'],
-    ['handleSize', 'number'],
-    ['orientation', 'number']
-];
-
-path = './types/framework/components/scrollbar/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollbarComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Entity } from '../../../framework/entity.js';
-`;
-fs.writeFileSync(path, dts);
-
-const scrollViewComponentProps = [
-    ['bounceAmount', 'number'],
-    ['contentEntity', 'Entity'],
-    ['friction', 'number'],
-    ['horizontal', 'boolean'],
-    ['horizontalScrollbarEntity', 'Entity'],
-    ['horizontalScrollbarVisibility', 'number'],
-    ['mouseWheelSensitivity', 'Vec2'],
-    ['scrollMode', 'number'],
-    ['useMouseWheel', 'boolean'],
-    ['vertical', 'boolean'],
-    ['verticalScrollbarEntity', 'Entity'],
-    ['verticalScrollbarVisibility', 'number'],
-    ['viewportEntity', 'Entity']
-];
-
-path = './types/framework/components/scroll-view/component.d.ts';
-dts = fs.readFileSync(path, 'utf8');
-dts = dts.replace(regexConstructor, '$&\n' + getDeclarations(scrollViewComponentProps));
-// We need to import types that are newly introduced in the property list above
-dts += `
-import { Entity } from '../../../framework/entity.js';
-`;
-fs.writeFileSync(path, dts);
 
 const standardMaterialProps = [
     ['alphaFade', 'boolean'],
