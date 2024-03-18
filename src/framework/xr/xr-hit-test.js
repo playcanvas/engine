@@ -112,6 +112,12 @@ class XrHitTest extends EventHandler {
     _available = false;
 
     /**
+     * @type {boolean}
+     * @private
+     */
+    _checkingAvailability = false;
+
+    /**
      * List of active {@link XrHitTestSource}.
      *
      * @type {XrHitTestSource[]}
@@ -137,10 +143,29 @@ class XrHitTest extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        const available = this.manager.session.enabledFeatures.indexOf('hit-test') !== -1;
-        if (!available) return;
-        this._available = available;
-        this.fire('available');
+        if (this.manager.session.enabledFeatures) {
+            const available = this.manager.session.enabledFeatures.indexOf('hit-test') !== -1;
+            if (!available) return;
+            this._available = available;
+            this.fire('available');
+        } else if (!this._checkingAvailability) {
+            this._checkingAvailability = true;
+
+            // enabledFeatures - is not available, requires alternative way to check feature availability
+
+            this.manager.session.requestReferenceSpace(XRSPACE_VIEWER).then((referenceSpace) => {
+                this.manager.session.requestHitTestSource({
+                    space: referenceSpace
+                }).then((hitTestSource) => {
+                    hitTestSource.cancel();
+
+                    if (this.manager.active) {
+                        this._available = true;
+                        this.fire('available');
+                    }
+                }).catch(() => { });
+            }).catch(() => {});
+        }
     }
 
     /** @private */
@@ -316,6 +341,9 @@ class XrHitTest extends EventHandler {
      * @ignore
      */
     update(frame) {
+        if (!this._available)
+            return;
+
         for (let i = 0; i < this.sources.length; i++) {
             this.sources[i].update(frame);
         }

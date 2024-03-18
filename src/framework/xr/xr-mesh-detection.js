@@ -120,8 +120,14 @@ class XrMeshDetection extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._supported || !this._available)
-            return;
+        if (!this._available) {
+            if (!this._manager.session.enabledFeatures && frame.detectedMeshes.size) {
+                this._available = true;
+                this.fire('available');
+            } else {
+                return;
+            }
+        }
 
         // add meshes
         for (const xrMesh of frame.detectedMeshes) {
@@ -159,10 +165,12 @@ class XrMeshDetection extends EventHandler {
 
     /** @private */
     _onSessionStart() {
-        const available = this._manager.session.enabledFeatures.indexOf('mesh-detection') !== -1;
-        if (!available) return;
-        this._available = available;
-        this.fire('available');
+        if (this._manager.session.enabledFeatures) {
+            const available = this._manager.session.enabledFeatures.indexOf('mesh-detection') !== -1;
+            if (!available) return;
+            this._available = available;
+            this.fire('available');
+        }
     }
 
     /** @private */

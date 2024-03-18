@@ -261,6 +261,9 @@ class XrViews extends EventHandler {
         if (this._manager.type !== XRTYPE_AR)
             return;
 
+        if (!this._manager.session.enabledFeatures)
+            return;
+
         this._availableColor = this._manager.session.enabledFeatures.indexOf('camera-access') !== -1;
         this._availableDepth = this._manager.session.enabledFeatures.indexOf('depth-sensing') !== -1;
 
