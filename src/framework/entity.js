@@ -548,8 +548,8 @@ class Entity extends GraphNode {
 
     /**
      * Destroy the entity and all of its descendants. First, all of the entity's components are
-     * disabled and then removed. Then, it is removed from the hierarchy. This is then repeated
-     * recursively for all descendants of the entity.
+     * disabled and then removed. Then, the entity is removed from the hierarchy. This is then
+     * repeated recursively for all descendants of the entity.
      *
      * The last thing the entity does is fire the `destroy` event.
      *
