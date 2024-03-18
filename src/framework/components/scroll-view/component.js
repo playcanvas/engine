@@ -301,6 +301,11 @@ class ScrollViewComponent extends Component {
         return this.data.verticalScrollbarEntity;
     }
 
+    /**
+     * Set scroll value.
+     *
+     * @type {Vec2}
+     */
     set scroll(value) {
         this._onSetScroll(value.x, value.y);
     }
