@@ -31,7 +31,7 @@ const poolQuat = [];
  *     }
  * });
  * ```
- * @augments EventHandler
+ *
  * @category XR
  */
 class XrHitTestSource extends EventHandler {
@@ -92,7 +92,7 @@ class XrHitTestSource extends EventHandler {
      * @param {*} xrHitTestSource - XRHitTestSource object that is created by WebXR API.
      * @param {boolean} transient - True if XRHitTestSource created for input source profile.
      * @param {null|import('./xr-input-source.js').XrInputSource} inputSource - Input Source for which hit test is created for, or null.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager, xrHitTestSource, transient, inputSource = null) {
         super();

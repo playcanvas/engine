@@ -9,7 +9,6 @@ import { SEMANTIC_POSITION } from '../../../platform/graphics/constants.js';
 import { GraphNode } from '../../../scene/graph-node.js';
 import { Model } from '../../../scene/model.js';
 
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { CollisionComponent } from './component.js';
@@ -618,7 +617,6 @@ class CollisionCompoundSystemImpl extends CollisionSystemImpl {
 /**
  * Manages creation of {@link CollisionComponent}s.
  *
- * @augments ComponentSystem
  * @category Physics
  */
 class CollisionComponentSystem extends ComponentSystem {
@@ -626,7 +624,7 @@ class CollisionComponentSystem extends ComponentSystem {
      * Creates a new CollisionComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -887,7 +885,5 @@ class CollisionComponentSystem extends ComponentSystem {
         super.destroy();
     }
 }
-
-Component._buildAccessors(CollisionComponent.prototype, _schema);
 
 export { CollisionComponentSystem };

@@ -22,7 +22,7 @@ import { XrAnchor } from './xr-anchor.js';
  *     anchors: true
  * });
  * ```
- * @augments EventHandler
+ *
  * @category XR
  */
 class XrAnchors extends EventHandler {
@@ -105,6 +105,12 @@ class XrAnchors extends EventHandler {
      * @type {boolean}
      * @private
      */
+    _checkingAvailability = false;
+
+    /**
+     * @type {boolean}
+     * @private
+     */
     _persistence = platform.browser && !!window?.XRSession?.prototype.restorePersistentAnchor;
 
     /**
@@ -148,7 +154,7 @@ class XrAnchors extends EventHandler {
 
     /**
      * @param {import('./xr-manager.js').XrManager} manager - WebXR Manager.
-     * @hideconstructor
+     * @ignore
      */
     constructor(manager) {
         super();
@@ -283,7 +289,7 @@ class XrAnchors extends EventHandler {
                 });
         } else {
             this._creationQueue.push({
-                transform: new XRRigidTransform(position, rotation), // eslint-disable-line no-undef
+                transform: new XRRigidTransform(position, rotation),
                 callback: callback
             });
         }
@@ -380,8 +386,24 @@ class XrAnchors extends EventHandler {
      * @ignore
      */
     update(frame) {
-        if (!this._available)
+        if (!this._available) {
+            // enabledFeatures - is not available, requires alternative way to check feature availability
+            if (!this.manager.session.enabledFeatures && !this._checkingAvailability) {
+                this._checkingAvailability = true;
+
+                frame.createAnchor(new XRRigidTransform(), this.manager._referenceSpace)
+                    .then((xrAnchor) => {
+                        // successfully created an anchor - feature is available
+                        xrAnchor.delete();
+                        if (this.manager.active) {
+                            this._available = true;
+                            this.fire('available');
+                        }
+                    })
+                    .catch(() => { }); // stay unavailable
+            }
             return;
+        }
 
         // check if need to create anchors
         if (this._creationQueue.length) {

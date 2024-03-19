@@ -6,6 +6,14 @@
  */
 class ObjectPool {
     /**
+     * The constructor function for the objects in the pool.
+     *
+     * @type {new (...args: any[]) => any}
+     * @private
+     */
+    _constructor;
+
+    /**
      * Array of object instances.
      *
      * @type {object[]}
@@ -22,7 +30,8 @@ class ObjectPool {
     _count = 0;
 
     /**
-     * @param {Function} constructorFunc - The constructor function for the objects in the pool.
+     * @param {new (...args: any[]) => any} constructorFunc - The constructor function for the
+     * objects in the pool.
      * @param {number} size - The initial number of object instances to allocate.
      */
     constructor(constructorFunc, size) {

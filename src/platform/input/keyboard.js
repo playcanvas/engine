@@ -56,7 +56,6 @@ const _keyCodeToKeyIdentifier = {
  * A Keyboard device bound to an Element. Allows you to detect the state of the key presses. Note
  * that the Keyboard object must be attached to an Element before it can detect any key presses.
  *
- * @augments EventHandler
  * @category Input
  */
 class Keyboard extends EventHandler {

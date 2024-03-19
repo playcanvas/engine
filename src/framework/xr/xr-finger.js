@@ -33,7 +33,7 @@ class XrFinger {
      *
      * @param {number} index - Index of a finger.
      * @param {import('./xr-hand.js').XrHand} hand - Hand that finger relates to.
-     * @hideconstructor
+     * @ignore
      */
     constructor(index, hand) {
         this._index = index;

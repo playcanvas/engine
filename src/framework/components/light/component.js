@@ -33,7 +33,6 @@ import { properties } from './data.js';
  * entity.light.range = 20;
  * ```
  *
- * @augments Component
  * @category Graphics
  */
 class LightComponent extends Component {
@@ -57,6 +56,7 @@ class LightComponent extends Component {
     // TODO: Remove this override in upgrading component
     /**
      * @type {import('./data.js').LightComponentData}
+     * @ignore
      */
     get data() {
         const record = this.system.store[this.entity.getGuid()];

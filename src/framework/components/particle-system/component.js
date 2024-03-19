@@ -76,12 +76,7 @@ const GRAPH_PROPERTIES = [
     'radialSpeedGraph2'
 ];
 
-const ASSET_PROPERTIES = [
-    'colorMapAsset',
-    'normalMapAsset',
-    'meshAsset',
-    'renderAsset'
-];
+const ASSET_PROPERTIES = ['colorMapAsset', 'normalMapAsset', 'meshAsset', 'renderAsset'];
 
 let depthLayer;
 
@@ -100,159 +95,6 @@ let depthLayer;
  * time. Most of the curve parameters can also be specified by 2 minimum/maximum curves, this way
  * each particle will pick a random value in-between.
  *
- * @property {boolean} autoPlay Controls whether the particle system plays automatically on
- * creation. If set to false, it is necessary to call {@link ParticleSystemComponent#play} for the
- * particle system to play. Defaults to true.
- * @property {boolean} loop Enables or disables respawning of particles.
- * @property {boolean} preWarm If enabled, the particle system will be initialized as though it had
- * already completed a full cycle. This only works with looping particle systems.
- * @property {boolean} lighting If enabled, particles will be lit by ambient and directional
- * lights.
- * @property {boolean} halfLambert Enabling Half Lambert lighting avoids particles looking too flat
- * in shadowed areas. It is a completely non-physical lighting model but can give more pleasing
- * visual results.
- * @property {boolean} alignToMotion Orient particles in their direction of motion.
- * @property {boolean} depthWrite If enabled, the particles will write to the depth buffer. If
- * disabled, the depth buffer is left unchanged and particles will be guaranteed to overwrite one
- * another in the order in which they are rendered.
- * @property {boolean} noFog Disable fogging.
- * @property {boolean} localSpace Binds particles to emitter transformation rather then world
- * space.
- * @property {boolean} screenSpace Renders particles in 2D screen space. This needs to be set when
- * particle system is part of hierarchy with {@link ScreenComponent} as its ancestor, and allows
- * particle system to integrate with the rendering of {@link ElementComponent}s. Note that an
- * entity with ParticleSystem component cannot be parented directly to {@link ScreenComponent}, but
- * has to be a child of a {@link ElementComponent}, for example {@link LayoutGroupComponent}.
- * @property {number} numParticles Maximum number of simulated particles.
- * @property {number} rate Minimal interval in seconds between particle births.
- * @property {number} rate2 Maximal interval in seconds between particle births.
- * @property {number} startAngle Minimal initial Euler angle of a particle.
- * @property {number} startAngle2 Maximal initial Euler angle of a particle.
- * @property {number} lifetime The length of time in seconds between a particle's birth and its
- * death.
- * @property {number} stretch A value in world units that controls the amount by which particles
- * are stretched based on their velocity. Particles are stretched from their center towards their
- * previous position.
- * @property {number} intensity Color multiplier.
- * @property {boolean} animLoop Controls whether the sprite sheet animation plays once or loops
- * continuously.
- * @property {number} animTilesX Number of horizontal tiles in the sprite sheet.
- * @property {number} animTilesY Number of vertical tiles in the sprite sheet.
- * @property {number} animNumAnimations Number of sprite sheet animations contained within the
- * current sprite sheet. The number of animations multiplied by number of frames should be a value
- * less than animTilesX multiplied by animTilesY.
- * @property {number} animNumFrames Number of sprite sheet frames in the current sprite sheet
- * animation. The number of animations multiplied by number of frames should be a value less than
- * animTilesX multiplied by animTilesY.
- * @property {number} animStartFrame The sprite sheet frame that the animation should begin playing
- * from. Indexed from the start of the current animation.
- * @property {number} animIndex When animNumAnimations is greater than 1, the sprite sheet
- * animation index determines which animation the particle system should play.
- * @property {number} randomizeAnimIndex Each particle emitted by the system will play a random
- * animation from the sprite sheet, up to animNumAnimations.
- * @property {number} animSpeed Sprite sheet animation speed. 1 = particle lifetime, 2 = twice
- * during lifetime etc...
- * @property {number} depthSoftening Controls fading of particles near their intersections with
- * scene geometry. This effect, when it's non-zero, requires scene depth map to be rendered.
- * Multiple depth-dependent effects can share the same map, but if you only use it for particles,
- * bear in mind that it can double engine draw calls.
- * @property {number} initialVelocity Defines magnitude of the initial emitter velocity. Direction
- * is given by emitter shape.
- * @property {import('../../../core/math/vec3.js').Vec3} emitterExtents (Only for EMITTERSHAPE_BOX)
- * The extents of a local space bounding box within which particles are spawned at random positions.
- * @property {import('../../../core/math/vec3.js').Vec3} emitterExtentsInner (Only for
- * EMITTERSHAPE_BOX) The exception of extents of a local space bounding box within which particles
- * are not spawned. Aligned to the center of EmitterExtents.
- * @property {number} emitterRadius (Only for EMITTERSHAPE_SPHERE) The radius within which
- * particles are spawned at random positions.
- * @property {number} emitterRadiusInner (Only for EMITTERSHAPE_SPHERE) The inner radius within
- * which particles are not spawned.
- * @property {import('../../../core/math/vec3.js').Vec3} wrapBounds The half extents of a world
- * space box volume centered on the owner entity's position. If a particle crosses the boundary of
- * one side of the volume, it teleports to the opposite side.
- * @property {Asset} colorMapAsset The {@link Asset} used to set the colorMap.
- * @property {Asset} normalMapAsset The {@link Asset} used to set the normalMap.
- * @property {Asset} meshAsset The {@link Asset} used to set the mesh.
- * @property {Asset} renderAsset The Render {@link Asset} used to set the mesh.
- * @property {Texture} colorMap The color map texture to apply to all particles in the system. If
- * no texture is assigned, a default spot texture is used.
- * @property {Texture} normalMap The normal map texture to apply to all particles in the system. If
- * no texture is assigned, an approximate spherical normal is calculated for each vertex.
- * @property {number} emitterShape Shape of the emitter. Defines the bounds inside which particles
- * are spawned. Also affects the direction of initial velocity.
- *
- * - {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is
- * directed towards local Z axis.
- * - {@link EMITTERSHAPE_SPHERE}: Sphere shape parameterized by emitterRadius. Initial velocity is
- * directed outwards from the center.
- *
- * @property {number} sort Sorting mode. Forces CPU simulation, so be careful.
- *
- * - {@link PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be
- * simulated on GPU.
- * - {@link PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
- * - {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
- * - {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
- *
- * @property {Mesh} mesh Triangular mesh to be used as a particle. Only first vertex/index buffer
- * is used. Vertex buffer must contain local position at first 3 floats of each vertex.
- * @property {number} blendType Controls how particles are blended when being written to the currently
- * active render target. Can be:
- *
- * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
- * fragment and write the result to the frame buffer.
- * - {@link BLEND_ADDITIVE}: Add the color of the source fragment to the destination fragment and
- * write the result to the frame buffer.
- * - {@link BLEND_NORMAL}: Enable simple translucency for materials such as glass. This is
- * equivalent to enabling a source blend mode of {@link BLENDMODE_SRC_ALPHA} and a destination
- * blend mode of {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}.
- * - {@link BLEND_NONE}: Disable blending.
- * - {@link BLEND_PREMULTIPLIED}: Similar to {@link BLEND_NORMAL} expect the source fragment is
- * assumed to have already been multiplied by the source alpha value.
- * - {@link BLEND_MULTIPLICATIVE}: Multiply the color of the source fragment by the color of the
- * destination fragment and write the result to the frame buffer.
- * - {@link BLEND_ADDITIVEALPHA}: Same as {@link BLEND_ADDITIVE} except the source RGB is
- * multiplied by the source alpha.
- *
- * @property {number} orientation Sorting mode. Forces CPU simulation, so be careful.
- *
- * - {@link PARTICLEORIENTATION_SCREEN}: Particles are facing camera.
- * - {@link PARTICLEORIENTATION_WORLD}: User defines world space normal (particleNormal) to set
- * planes orientation.
- * - {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by
- * emitter (entity) transformation.
- *
- * @property {import('../../../core/math/vec3.js').Vec3} particleNormal (Only for
- * PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER) The exception of extents of a local
- * space bounding box within which particles are not spawned. Aligned to the center of
- * EmitterExtents.
- * @property {import('../../../core/math/curve-set.js').CurveSet} localVelocityGraph Velocity
- * relative to emitter over lifetime.
- * @property {import('../../../core/math/curve-set.js').CurveSet} localVelocityGraph2 If not null,
- * particles pick random values between localVelocityGraph and localVelocityGraph2.
- * @property {import('../../../core/math/curve-set.js').CurveSet} velocityGraph World-space
- * velocity over lifetime.
- * @property {import('../../../core/math/curve-set.js').CurveSet} velocityGraph2 If not null,
- * particles pick random values between velocityGraph and velocityGraph2.
- * @property {import('../../../core/math/curve-set.js').CurveSet} colorGraph Color over lifetime.
- * @property {import('../../../core/math/curve.js').Curve} rotationSpeedGraph Rotation speed over
- * lifetime.
- * @property {import('../../../core/math/curve.js').Curve} rotationSpeedGraph2 If not null,
- * particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
- * @property {import('../../../core/math/curve.js').Curve} radialSpeedGraph Radial speed over
- * lifetime, velocity vector points from emitter origin to particle pos.
- * @property {import('../../../core/math/curve.js').Curve} radialSpeedGraph2 If not null, particles
- * pick random values between radialSpeedGraph and radialSpeedGraph2.
- * @property {import('../../../core/math/curve.js').Curve} scaleGraph Scale over lifetime.
- * @property {import('../../../core/math/curve.js').Curve} scaleGraph2 If not null, particles pick
- * random values between scaleGraph and scaleGraph2.
- * @property {import('../../../core/math/curve.js').Curve} alphaGraph Alpha over lifetime.
- * @property {import('../../../core/math/curve.js').Curve} alphaGraph2 If not null, particles pick
- * random values between alphaGraph and alphaGraph2.
- * @property {number[]} layers An array of layer IDs ({@link Layer#id}) to which this particle
- * system should belong. Don't push/pop/splice or modify this array, if you want to change it - set
- * a new one instead.
- * @augments Component
  * @category Graphics
  */
 class ParticleSystemComponent extends Component {
@@ -295,6 +137,906 @@ class ParticleSystemComponent extends Component {
         });
     }
 
+    // TODO: Remove this override in upgrading component
+    /**
+     * @type {import('./data.js').ParticleSystemComponentData}
+     * @ignore
+     */
+    get data() {
+        const record = this.system.store[this.entity.getGuid()];
+        return record ? record.data : null;
+    }
+
+    /**
+     * @type {boolean}
+     */
+    set enabled(arg) {
+        this._setValue('enabled', arg);
+    }
+
+    get enabled() {
+        return this.data.enabled;
+    }
+
+    /**
+     * Controls whether the particle system plays automatically on creation.
+     * If set to false, it is necessary to call {@link ParticleSystemComponent#play} for
+     * the particle system to play. Defaults to true.
+     *
+     * @type {boolean}
+     */
+    set autoPlay(arg) {
+        this._setValue('autoPlay', arg);
+    }
+
+    get autoPlay() {
+        return this.data.autoPlay;
+    }
+
+    /**
+     * Maximum number of simulated particles.
+     *
+     * @type {number}
+     */
+    set numParticles(arg) {
+        this._setValue('numParticles', arg);
+    }
+
+    get numParticles() {
+        return this.data.numParticles;
+    }
+
+    /**
+     * The length of time in seconds between a particle's birth and its death.
+     *
+     * @type {number}
+     */
+    set lifetime(arg) {
+        this._setValue('lifetime', arg);
+    }
+
+    get lifetime() {
+        return this.data.lifetime;
+    }
+
+    /**
+     * Minimal interval in seconds between particle births.
+     *
+     * @type {number}
+     */
+    set rate(arg) {
+        this._setValue('rate', arg);
+    }
+
+    get rate() {
+        return this.data.rate;
+    }
+
+    /**
+     * Maximal interval in seconds between particle births.
+     *
+     * @type {number}
+     */
+    set rate2(arg) {
+        this._setValue('rate2', arg);
+    }
+
+    get rate2() {
+        return this.data.rate2;
+    }
+
+    /**
+     * Minimal initial Euler angle of a particle.
+     *
+     * @type {number}
+     */
+    set startAngle(arg) {
+        this._setValue('startAngle', arg);
+    }
+
+    get startAngle() {
+        return this.data.startAngle;
+    }
+
+    /**
+     * Maximal initial Euler angle of a particle.
+     *
+     * @type {number}
+     */
+    set startAngle2(arg) {
+        this._setValue('startAngle2', arg);
+    }
+
+    get startAngle2() {
+        return this.data.startAngle2;
+    }
+
+    /**
+     * Enables or disables respawning of particles.
+     *
+     * @type {boolean}
+     */
+    set loop(arg) {
+        this._setValue('loop', arg);
+    }
+
+    get loop() {
+        return this.data.loop;
+    }
+
+    /**
+     * If enabled, the particle system will be initialized as though it had already completed a full
+     * cycle. This only works with looping particle systems.
+     *
+     * @type {boolean}
+     */
+    set preWarm(arg) {
+        this._setValue('preWarm', arg);
+    }
+
+    get preWarm() {
+        return this.data.preWarm;
+    }
+
+    /**
+     * If enabled, particles will be lit by ambient and directional lights.
+     *
+     * @type {boolean}
+     */
+    set lighting(arg) {
+        this._setValue('lighting', arg);
+    }
+
+    get lighting() {
+        return this.data.lighting;
+    }
+
+    /**
+     * Enabling Half Lambert lighting avoids particles looking too flat in shadowed areas. It is a
+     * completely non-physical lighting model but can give more pleasing visual results.
+     *
+     * @type {boolean}
+     */
+    set halfLambert(arg) {
+        this._setValue('halfLambert', arg);
+    }
+
+    get halfLambert() {
+        return this.data.halfLambert;
+    }
+
+    /**
+     * Color multiplier.
+     *
+     * @type {number}
+     */
+    set intensity(arg) {
+        this._setValue('intensity', arg);
+    }
+
+    get intensity() {
+        return this.data.intensity;
+    }
+
+    /**
+     * If enabled, the particles will write to the depth buffer. If disabled, the depth buffer is
+     * left unchanged and particles will be guaranteed to overwrite one another in the order in
+     * which they are rendered.
+     *
+     * @type {boolean}
+     */
+    set depthWrite(arg) {
+        this._setValue('depthWrite', arg);
+    }
+
+    get depthWrite() {
+        return this.data.depthWrite;
+    }
+
+    /**
+     * Disable fogging.
+     *
+     * @type {boolean}
+     */
+    set noFog(arg) {
+        this._setValue('noFog', arg);
+    }
+
+    get noFog() {
+        return this.data.noFog;
+    }
+
+    /**
+     * Controls fading of particles near their intersections with scene geometry. This effect, when
+     * it's non-zero, requires scene depth map to be rendered. Multiple depth-dependent effects can
+     * share the same map, but if you only use it for particles, bear in mind that it can double
+     * engine draw calls.
+     *
+     * @type {number}
+     */
+    set depthSoftening(arg) {
+        this._setValue('depthSoftening', arg);
+    }
+
+    get depthSoftening() {
+        return this.data.depthSoftening;
+    }
+
+    /**
+     * Sorting mode. Forces CPU simulation, so be careful.
+     *
+     * - {@link PARTICLESORT_NONE}: No sorting, particles are drawn in arbitrary order. Can be
+     * simulated on GPU.
+     * - {@link PARTICLESORT_DISTANCE}: Sorting based on distance to the camera. CPU only.
+     * - {@link PARTICLESORT_NEWER_FIRST}: Newer particles are drawn first. CPU only.
+     * - {@link PARTICLESORT_OLDER_FIRST}: Older particles are drawn first. CPU only.
+     *
+     * @type {number}
+     */
+    set sort(arg) {
+        this._setValue('sort', arg);
+    }
+
+    get sort() {
+        return this.data.sort;
+    }
+
+    /**
+     * Controls how particles are blended when being written to the currently active render target.
+     * Can be:
+     *
+     * - {@link BLEND_SUBTRACTIVE}: Subtract the color of the source fragment from the destination
+     * fragment and write the result to the frame buffer.
+     * - {@link BLEND_ADDITIVE}: Add the color of the source fragment to the destination fragment and
+     * write the result to the frame buffer.
+     * - {@link BLEND_NORMAL}: Enable simple translucency for materials such as glass. This is
+     * equivalent to enabling a source blend mode of {@link BLENDMODE_SRC_ALPHA} and
+     * a destination
+     * blend mode of {@link BLENDMODE_ONE_MINUS_SRC_ALPHA}.
+     * - {@link BLEND_NONE}: Disable blending.
+     * - {@link BLEND_PREMULTIPLIED}: Similar to {@link BLEND_NORMAL} expect
+     * the source fragment is
+     * assumed to have already been multiplied by the source alpha value.
+     * - {@link BLEND_MULTIPLICATIVE}: Multiply the color of the source fragment by the color of the
+     * destination fragment and write the result to the frame buffer.
+     * - {@link BLEND_ADDITIVEALPHA}: Same as {@link BLEND_ADDITIVE} except
+     * the source RGB is
+     * multiplied by the source alpha.
+     *
+     * @type {number}
+     */
+    set blendType(arg) {
+        this._setValue('blendType', arg);
+    }
+
+    get blendType() {
+        return this.data.blendType;
+    }
+
+    /**
+     * A value in world units that controls the amount by which particles are stretched based on
+     * their velocity. Particles are stretched from their center towards their previous position.
+     *
+     * @type {number}
+     */
+    set stretch(arg) {
+        this._setValue('stretch', arg);
+    }
+
+    get stretch() {
+        return this.data.stretch;
+    }
+
+    /**
+     * Orient particles in their direction of motion.
+     *
+     * @type {boolean}
+     */
+    set alignToMotion(arg) {
+        this._setValue('alignToMotion', arg);
+    }
+
+    get alignToMotion() {
+        return this.data.alignToMotion;
+    }
+
+    /**
+     * Shape of the emitter. Defines the bounds inside which particles are spawned. Also affects the
+     * direction of initial velocity.
+     *
+     * - {@link EMITTERSHAPE_BOX}: Box shape parameterized by emitterExtents. Initial velocity is
+     * directed towards local Z axis.
+     * - {@link EMITTERSHAPE_SPHERE}: Sphere shape parameterized by emitterRadius. Initial velocity is
+     * directed outwards from the center.
+     *
+     * @type {number}
+     */
+    set emitterShape(arg) {
+        this._setValue('emitterShape', arg);
+    }
+
+    get emitterShape() {
+        return this.data.emitterShape;
+    }
+
+    /**
+     * (Only for EMITTERSHAPE_BOX)
+     * The extents of a local space bounding box within which particles are spawned at random positions.
+     *
+     * @type {import('../../../core/math/vec3.js').Vec3}
+     */
+    set emitterExtents(arg) {
+        this._setValue('emitterExtents', arg);
+    }
+
+    get emitterExtents() {
+        return this.data.emitterExtents;
+    }
+
+    /**
+     * (Only for EMITTERSHAPE_BOX)
+     * The exception of extents of a local space bounding box within
+     * which particles are not spawned. Aligned to the center of EmitterExtents.
+     *
+     * @type {import('../../../core/math/vec3.js').Vec3}
+     */
+    set emitterExtentsInner(arg) {
+        this._setValue('emitterExtentsInner', arg);
+    }
+
+    get emitterExtentsInner() {
+        return this.data.emitterExtentsInner;
+    }
+
+    /**
+     * (Only for EMITTERSHAPE_SPHERE)
+     * The radius within which particles are spawned at random positions.
+     *
+     * @type {number}
+     */
+    set emitterRadius(arg) {
+        this._setValue('emitterRadius', arg);
+    }
+
+    get emitterRadius() {
+        return this.data.emitterRadius;
+    }
+
+    /**
+     * (Only for EMITTERSHAPE_SPHERE)
+     * The inner radius within which particles are not spawned.
+     *
+     * @type {number}
+     */
+    set emitterRadiusInner(arg) {
+        this._setValue('emitterRadiusInner', arg);
+    }
+
+    get emitterRadiusInner() {
+        return this.data.emitterRadiusInner;
+    }
+
+    /**
+     * Defines magnitude of the initial emitter velocity. Direction is given by emitter shape.
+     *
+     * @type {number}
+     */
+    set initialVelocity(arg) {
+        this._setValue('initialVelocity', arg);
+    }
+
+    get initialVelocity() {
+        return this.data.initialVelocity;
+    }
+
+    /**
+     * Enable particle wrapping.
+     *
+     * @type {boolean}
+     */
+    set wrap(arg) {
+        this._setValue('wrap', arg);
+    }
+
+    get wrap() {
+        return this.data.wrap;
+    }
+
+    /**
+     * The half extents of a world space box volume centered on the owner entity's position.
+     * If a particle crosses the boundary of one side of the volume, it teleports to the
+     * opposite side.
+     *
+     * @type {import('../../../core/math/vec3.js').Vec3}
+     */
+    set wrapBounds(arg) {
+        this._setValue('wrapBounds', arg);
+    }
+
+    get wrapBounds() {
+        return this.data.wrapBounds;
+    }
+
+    /**
+     * Binds particles to emitter transformation rather then world space.
+     *
+     * @type {boolean}
+     */
+    set localSpace(arg) {
+        this._setValue('localSpace', arg);
+    }
+
+    get localSpace() {
+        return this.data.localSpace;
+    }
+
+    /**
+     * Renders particles in 2D screen space. This needs to be set when particle system is part of
+     * hierarchy with {@link ScreenComponent} as its ancestor, and allows particle system to
+     * integrate with the rendering of {@link ElementComponent}s. Note that an entity with
+     * ParticleSystem component cannot be parented directly to {@link ScreenComponent}, but has to
+     * be a child of a {@link ElementComponent}, for example {@link LayoutGroupComponent}.
+     *
+     * @type {boolean}
+     */
+    set screenSpace(arg) {
+        this._setValue('screenSpace', arg);
+    }
+
+    get screenSpace() {
+        return this.data.screenSpace;
+    }
+
+    /**
+     * The {@link Asset} used to set the colorMap.
+     *
+     * @type {Asset}
+     */
+    set colorMapAsset(arg) {
+        this._setValue('colorMapAsset', arg);
+    }
+
+    get colorMapAsset() {
+        return this.data.colorMapAsset;
+    }
+
+    /**
+     * The {@link Asset} used to set the normalMap.
+     *
+     * @type {Asset}
+     */
+    set normalMapAsset(arg) {
+        this._setValue('normalMapAsset', arg);
+    }
+
+    get normalMapAsset() {
+        return this.data.normalMapAsset;
+    }
+
+    /**
+     * Triangular mesh to be used as a particle. Only first vertex/index buffer is used. Vertex buffer
+     * must contain local position at first 3 floats of each vertex.
+     *
+     * @type {Mesh}
+     */
+    set mesh(arg) {
+        this._setValue('mesh', arg);
+    }
+
+    get mesh() {
+        return this.data.mesh;
+    }
+
+    /**
+     * The {@link Asset} used to set the mesh.
+     *
+     * @type {Asset}
+     */
+    set meshAsset(arg) {
+        this._setValue('meshAsset', arg);
+    }
+
+    get meshAsset() {
+        return this.data.meshAsset;
+    }
+
+    /**
+     * The Render {@link Asset} used to set the mesh.
+     *
+     * @type {Asset}
+     */
+    set renderAsset(arg) {
+        this._setValue('renderAsset', arg);
+    }
+
+    get renderAsset() {
+        return this.data.renderAsset;
+    }
+
+    /**
+     * Sorting mode. Forces CPU simulation, so be careful.
+     *
+     * - {@link PARTICLEORIENTATION_SCREEN}: Particles are facing camera.
+     * - {@link PARTICLEORIENTATION_WORLD}: User defines world space normal (particleNormal) to set
+     * planes orientation.
+     * - {@link PARTICLEORIENTATION_EMITTER}: Similar to previous, but the normal is affected by
+     * emitter (entity) transformation.
+     *
+     * @type {number}
+     */
+    set orientation(arg) {
+        this._setValue('orientation', arg);
+    }
+
+    get orientation() {
+        return this.data.orientation;
+    }
+
+    /**
+     * (Only for PARTICLEORIENTATION_WORLD and PARTICLEORIENTATION_EMITTER)
+     * The exception of extents of a local space bounding box within which particles are not spawned.
+     * Aligned to the center of EmitterExtents.
+     *
+     * @type {import('../../../core/math/vec3.js').Vec3}
+     */
+    set particleNormal(arg) {
+        this._setValue('particleNormal', arg);
+    }
+
+    get particleNormal() {
+        return this.data.particleNormal;
+    }
+
+    /**
+     * Velocity relative to emitter over lifetime.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set localVelocityGraph(arg) {
+        this._setValue('localVelocityGraph', arg);
+    }
+
+    get localVelocityGraph() {
+        return this.data.localVelocityGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between localVelocityGraph and localVelocityGraph2.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set localVelocityGraph2(arg) {
+        this._setValue('localVelocityGraph2', arg);
+    }
+
+    get localVelocityGraph2() {
+        return this.data.localVelocityGraph2;
+    }
+
+    /**
+     * World-space velocity over lifetime.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set velocityGraph(arg) {
+        this._setValue('velocityGraph', arg);
+    }
+
+    get velocityGraph() {
+        return this.data.velocityGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between velocityGraph and velocityGraph2.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set velocityGraph2(arg) {
+        this._setValue('velocityGraph2', arg);
+    }
+
+    get velocityGraph2() {
+        return this.data.velocityGraph2;
+    }
+
+    /**
+     * Rotation speed over lifetime.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set rotationSpeedGraph(arg) {
+        this._setValue('rotationSpeedGraph', arg);
+    }
+
+    get rotationSpeedGraph() {
+        return this.data.rotationSpeedGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between rotationSpeedGraph and rotationSpeedGraph2.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set rotationSpeedGraph2(arg) {
+        this._setValue('rotationSpeedGraph2', arg);
+    }
+
+    get rotationSpeedGraph2() {
+        return this.data.rotationSpeedGraph2;
+    }
+
+    /**
+     * Radial speed over lifetime, velocity vector points from emitter origin to particle pos.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set radialSpeedGraph(arg) {
+        this._setValue('radialSpeedGraph', arg);
+    }
+
+    get radialSpeedGraph() {
+        return this.data.radialSpeedGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between radialSpeedGraph and radialSpeedGraph2.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set radialSpeedGraph2(arg) {
+        this._setValue('radialSpeedGraph2', arg);
+    }
+
+    get radialSpeedGraph2() {
+        return this.data.radialSpeedGraph2;
+    }
+
+    /**
+     * Scale over lifetime.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set scaleGraph(arg) {
+        this._setValue('scaleGraph', arg);
+    }
+
+    get scaleGraph() {
+        return this.data.scaleGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between scaleGraph and scaleGraph2.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set scaleGraph2(arg) {
+        this._setValue('scaleGraph2', arg);
+    }
+
+    get scaleGraph2() {
+        return this.data.scaleGraph2;
+    }
+
+    /**
+     * Color over lifetime.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set colorGraph(arg) {
+        this._setValue('colorGraph', arg);
+    }
+
+    get colorGraph() {
+        return this.data.colorGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between colorGraph and colorGraph2.
+     *
+     * @type {import('../../../core/math/curve-set.js').CurveSet}
+     */
+    set colorGraph2(arg) {
+        this._setValue('colorGraph2', arg);
+    }
+
+    get colorGraph2() {
+        return this.data.colorGraph2;
+    }
+
+    /**
+     * Alpha over lifetime.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set alphaGraph(arg) {
+        this._setValue('alphaGraph', arg);
+    }
+
+    get alphaGraph() {
+        return this.data.alphaGraph;
+    }
+
+    /**
+     * If not null, particles pick random values between alphaGraph and alphaGraph2.
+     *
+     * @type {import('../../../core/math/curve.js').Curve}
+     */
+    set alphaGraph2(arg) {
+        this._setValue('alphaGraph2', arg);
+    }
+
+    get alphaGraph2() {
+        return this.data.alphaGraph2;
+    }
+
+    /**
+     * The color map texture to apply to all particles in the system. If no texture is assigned, a
+     * default spot texture is used.
+     *
+     * @type {import('../../../platform/graphics/texture.js').Texture}
+     */
+    set colorMap(arg) {
+        this._setValue('colorMap', arg);
+    }
+
+    get colorMap() {
+        return this.data.colorMap;
+    }
+
+    /**
+     * The normal map texture to apply to all particles in the system. If no texture is assigned,
+     * an approximate spherical normal is calculated for each vertex.
+     *
+     * @type {import('../../../platform/graphics/texture.js').Texture}
+     */
+    set normalMap(arg) {
+        this._setValue('normalMap', arg);
+    }
+
+    get normalMap() {
+        return this.data.normalMap;
+    }
+
+    /**
+     * Number of horizontal tiles in the sprite sheet.
+     *
+     * @type {number}
+     */
+    set animTilesX(arg) {
+        this._setValue('animTilesX', arg);
+    }
+
+    get animTilesX() {
+        return this.data.animTilesX;
+    }
+
+    /**
+     * Number of vertical tiles in the sprite sheet.
+     *
+     * @type {number}
+     */
+    set animTilesY(arg) {
+        this._setValue('animTilesY', arg);
+    }
+
+    get animTilesY() {
+        return this.data.animTilesY;
+    }
+
+    /**
+     * The sprite sheet frame that the animation should begin playing from. Indexed from the start
+     * of the current animation.
+     *
+     * @type {number}
+     */
+    set animStartFrame(arg) {
+        this._setValue('animStartFrame', arg);
+    }
+
+    get animStartFrame() {
+        return this.data.animStartFrame;
+    }
+
+    /**
+     * Number of sprite sheet frames in the current sprite sheet animation. The number of animations
+     * multiplied by number of frames should be a value less than animTilesX multiplied by animTilesY.
+     *
+     * @type {number}
+     */
+    set animNumFrames(arg) {
+        this._setValue('animNumFrames', arg);
+    }
+
+    get animNumFrames() {
+        return this.data.animNumFrames;
+    }
+
+    /**
+     * Number of sprite sheet animations contained within the current sprite sheet. The number of
+     * animations multiplied by number of frames should be a value less than animTilesX multiplied
+     * by animTilesY.
+     *
+     * @type {number}
+     */
+    set animNumAnimations(arg) {
+        this._setValue('animNumAnimations', arg);
+    }
+
+    get animNumAnimations() {
+        return this.data.animNumAnimations;
+    }
+
+    /**
+     * When animNumAnimations is greater than 1, the sprite sheet animation index determines which
+     * animation the particle system should play.
+     *
+     * @type {number}
+     */
+    set animIndex(arg) {
+        this._setValue('animIndex', arg);
+    }
+
+    get animIndex() {
+        return this.data.animIndex;
+    }
+
+    /**
+     * Each particle emitted by the system will play a random animation from the sprite sheet, up to
+     * animNumAnimations.
+     *
+     * @type {number}
+     */
+    set randomizeAnimIndex(arg) {
+        this._setValue('randomizeAnimIndex', arg);
+    }
+
+    get randomizeAnimIndex() {
+        return this.data.randomizeAnimIndex;
+    }
+
+    /**
+     * Sprite sheet animation speed. 1 = particle lifetime, 2 = twice during lifetime etc.
+     *
+     * @type {number}
+     */
+    set animSpeed(arg) {
+        this._setValue('animSpeed', arg);
+    }
+
+    get animSpeed() {
+        return this.data.animSpeed;
+    }
+
+    /**
+     * Controls whether the sprite sheet animation plays once or loops continuously.
+     *
+     * @type {boolean}
+     */
+    set animLoop(arg) {
+        this._setValue('animLoop', arg);
+    }
+
+    get animLoop() {
+        return this.data.animLoop;
+    }
+
+    /**
+     * An array of layer IDs ({@link Layer#id}) to which this particle system should belong. Don't
+     * push/pop/splice or modify this array, if you want to change it - set a new one instead.
+     *
+     * @type {number[]}
+     */
+    set layers(arg) {
+        this._setValue('layers', arg);
+    }
+
+    get layers() {
+        return this.data.layers;
+    }
+
+    /**
+     * @type {number}
+     */
     set drawOrder(drawOrder) {
         this._drawOrder = drawOrder;
         if (this.emitter) {
@@ -304,6 +1046,14 @@ class ParticleSystemComponent extends Component {
 
     get drawOrder() {
         return this._drawOrder;
+    }
+
+    /** @ignore */
+    _setValue(name, value) {
+        const data = this.data;
+        const oldValue = data[name];
+        data[name] = value;
+        this.fire('set', name, oldValue, value);
     }
 
     addMeshInstanceToLayers() {
@@ -396,8 +1146,7 @@ class ParticleSystemComponent extends Component {
         this._onColorMapAssetUnload(asset);
     }
 
-    _onColorMapAssetChange(asset) {
-    }
+    _onColorMapAssetChange(asset) {}
 
     onSetColorMapAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
@@ -461,8 +1210,7 @@ class ParticleSystemComponent extends Component {
         this._onNormalMapAssetUnload(asset);
     }
 
-    _onNormalMapAssetChange(asset) {
-    }
+    _onNormalMapAssetChange(asset) {}
 
     onSetNormalMapAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
@@ -527,8 +1275,7 @@ class ParticleSystemComponent extends Component {
         this._onMeshAssetUnload(asset);
     }
 
-    _onMeshAssetChange(asset) {
-    }
+    _onMeshAssetChange(asset) {}
 
     onSetMeshAsset(name, oldValue, newValue) {
         const assets = this.system.app.assets;
@@ -771,8 +1518,9 @@ class ParticleSystemComponent extends Component {
 
             // mesh might be an asset id of an asset
             // that hasn't been loaded yet
-            if (!(mesh instanceof Mesh))
+            if (!(mesh instanceof Mesh)) {
                 mesh = null;
+            }
 
             this.emitter = new ParticleEmitter(this.system.app.graphicsDevice, {
                 numParticles: data.numParticles,

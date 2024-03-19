@@ -30,7 +30,6 @@ const funcNameRegex = new RegExp('^\\s*function(?:\\s|\\s*\\/\\*.*\\*\\/\\s*)+([
  * new ScriptType has a `swap` method in its prototype, then it will be executed to perform hot-
  * reload at runtime.
  *
- * @augments EventHandler
  * @category Script
  */
 class ScriptType extends EventHandler {

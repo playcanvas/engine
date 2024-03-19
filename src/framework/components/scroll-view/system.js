@@ -1,4 +1,3 @@
-import { Component } from '../component.js';
 import { ComponentSystem } from '../system.js';
 
 import { ScrollViewComponent } from './component.js';
@@ -29,7 +28,6 @@ const DEFAULT_DRAG_THRESHOLD = 10;
 /**
  * Manages creation of {@link ScrollViewComponent}s.
  *
- * @augments ComponentSystem
  * @category User Interface
  */
 class ScrollViewComponentSystem extends ComponentSystem {
@@ -37,7 +35,7 @@ class ScrollViewComponentSystem extends ComponentSystem {
      * Create a new ScrollViewComponentSystem instance.
      *
      * @param {import('../../app-base.js').AppBase} app - The application.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
         super(app);
@@ -91,7 +89,5 @@ class ScrollViewComponentSystem extends ComponentSystem {
         this.app.systems.off('update', this.onUpdate, this);
     }
 }
-
-Component._buildAccessors(ScrollViewComponent.prototype, _schema);
 
 export { ScrollViewComponentSystem };

@@ -10,7 +10,6 @@ import { RenderAction } from './render-action.js';
  * Layer Composition is a collection of {@link Layer} that is fed to {@link Scene#layers} to define
  * rendering order.
  *
- * @augments EventHandler
  * @category Graphics
  */
 class LayerComposition extends EventHandler {

@@ -251,7 +251,6 @@ function testTextureFloatHighPrecision(device) {
  * specific canvas HTML element. It is valid to have more than one canvas element per page and
  * create a new graphics device against each.
  *
- * @augments GraphicsDevice
  * @category Graphics
  */
 class WebglGraphicsDevice extends GraphicsDevice {
@@ -1321,34 +1320,12 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     loseContext() {
 
-        this.contextLost = true;
-
-        // force the backbuffer to be recreated on restore
-        this.backBufferSize.set(-1, -1);
+        super.loseContext();
 
         // release shaders
         for (const shader of this.shaders) {
             shader.loseContext();
         }
-
-        // release textures
-        for (const texture of this.textures) {
-            texture.loseContext();
-        }
-
-        // release vertex and index buffers
-        for (const buffer of this.buffers) {
-            buffer.loseContext();
-        }
-
-        // Reset all render targets so they'll be recreated as required.
-        // TODO: a solution for the case where a render target contains something
-        // that was previously generated that needs to be re-rendered.
-        for (const target of this.targets) {
-            target.loseContext();
-        }
-
-        this.gpuProfiler?.loseContext();
     }
 
     /**
@@ -1358,24 +1335,15 @@ class WebglGraphicsDevice extends GraphicsDevice {
      */
     restoreContext() {
 
-        this.contextLost = false;
-
         this.initializeExtensions();
         this.initializeCapabilities();
-        this.initializeRenderState();
-        this.initializeContextCaches();
+
+        super.restoreContext();
 
         // Recompile all shaders
         for (const shader of this.shaders) {
             shader.restoreContext();
         }
-
-        // Recreate buffer objects and reupload buffer data to the GPU
-        for (const buffer of this.buffers) {
-            buffer.unlock();
-        }
-
-        this.gpuProfiler?.restoreContext();
     }
 
     /**

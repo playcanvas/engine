@@ -65,12 +65,8 @@ const deviceCache = new DeviceCache();
  */
 class VertexFormat {
     /**
-     * Create a new VertexFormat instance.
-     *
-     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
-     * used to manage this vertex format.
-     * @param {object[]} description - An array of vertex attribute descriptions.
-     * @param {string} description[].semantic - The meaning of the vertex element. This is used to
+     * @typedef {object} AttributeDescription
+     * @property {string} semantic - The meaning of the vertex element. This is used to
      * link the vertex data to a shader input. Can be:
      *
      * - {@link SEMANTIC_POSITION}
@@ -90,9 +86,9 @@ class VertexFormat {
      *
      * If vertex data has a meaning other that one of those listed above, use the user-defined
      * semantics: {@link SEMANTIC_ATTR0} to {@link SEMANTIC_ATTR15}.
-     * @param {number} description[].components - The number of components of the vertex attribute.
+     * @property {number} components - The number of components of the vertex attribute.
      * Can be 1, 2, 3 or 4.
-     * @param {number} description[].type - The data type of the attribute. Can be:
+     * @property {number} type - The data type of the attribute. Can be:
      *
      * - {@link TYPE_INT8}
      * - {@link TYPE_UINT8}
@@ -103,13 +99,21 @@ class VertexFormat {
      * - {@link TYPE_FLOAT16}
      * - {@link TYPE_FLOAT32}
      *
-     * @param {boolean} [description[].normalize] - If true, vertex attribute data will be mapped
+     * @property {boolean} [normalize] - If true, vertex attribute data will be mapped
      * from a 0 to 255 range down to 0 to 1 when fed to a shader. If false, vertex attribute data
      * is left unchanged. If this property is unspecified, false is assumed. This property is
      * ignored when asInt is true.
-     * @param {boolean} [description[].asInt] - If true, vertex attribute data will be accessible
+     * @property {boolean} [asInt] - If true, vertex attribute data will be accessible
      * as integer numbers in shader code. Defaults to false, which means that vertex attribute data
      * will be accessible as floating point numbers. Can be only used with INT and UINT data types.
+     */
+
+    /**
+     * Create a new VertexFormat instance.
+     *
+     * @param {import('./graphics-device.js').GraphicsDevice} graphicsDevice - The graphics device
+     * used to manage this vertex format.
+     * @param {AttributeDescription[]} description - An array of vertex attribute descriptions.
      * @param {number} [vertexCount] - When specified, vertex format will be set up for
      * non-interleaved format with a specified number of vertices. (example: PPPPNNNNCCCC), where
      * arrays of individual attributes will be stored one right after the other (subject to
