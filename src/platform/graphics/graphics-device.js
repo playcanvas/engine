@@ -894,6 +894,15 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
+     * Dispatch multiple compute shaders inside a single compute shader pass.
+     *
+     * @param {Array<import('./compute.js').Compute>} computes - An array of compute shaders to
+     * dispatch.
+     */
+    computeDispatch(computes) {
+    }
+
+    /**
      * Get a renderable HDR pixel format supported by the graphics device.
      *
      * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:

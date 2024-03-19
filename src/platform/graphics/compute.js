@@ -24,8 +24,29 @@ class Compute {
      */
     shader = null;
 
-    /** @type {Map<string, ComputeParameter>} */
+    /**
+     * @type {Map<string, ComputeParameter>}
+     * @ignore
+     */
     parameters = new Map();
+
+    /**
+     * @type {number}
+     * @ignore
+     */
+    countX = 1;
+
+    /**
+     * @type {number|undefined}
+     * @ignore
+     */
+    countY;
+
+    /**
+     * @type {number|undefined}
+     * @ignore
+     */
+    countZ;
 
     /**
      * Create a compute instance. Note that this is supported on WebGPU only and is a no-op on
@@ -93,15 +114,16 @@ class Compute {
     }
 
     /**
-     * Dispatch the compute work.
+     * Prepare the compute work dispatch.
      *
      * @param {number} x - X dimension of the grid of work-groups to dispatch.
      * @param {number} [y] - Y dimension of the grid of work-groups to dispatch.
      * @param {number} [z] - Z dimension of the grid of work-groups to dispatch.
      */
-    dispatch(x, y, z) {
-        this.applyParameters();
-        this.impl?.dispatch(x, y, z);
+    setupDispatch(x, y, z) {
+        this.countX = x;
+        this.countY = y;
+        this.countZ = z;
     }
 }
 

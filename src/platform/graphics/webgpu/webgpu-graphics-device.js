@@ -721,6 +721,26 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         WebgpuDebug.end(this);
     }
 
+    computeDispatch(computes) {
+
+        this.startComputePass();
+
+        // update uniform buffers and bind groups
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.applyParameters();
+            compute.impl.updateBindGroup();
+        }
+
+        // dispatch
+        for (let i = 0; i < computes.length; i++) {
+            const compute = computes[i];
+            compute.impl.dispatch(compute.countX, compute.countY, compute.countZ);
+        }
+
+        this.endComputePass();
+    }
+
     addCommandBuffer(commandBuffer, front = false) {
         if (front) {
             this.commandBuffers.unshift(commandBuffer);

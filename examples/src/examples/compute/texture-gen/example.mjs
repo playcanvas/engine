@@ -175,19 +175,22 @@ assetListLoader.load(() => {
         time += dt;
 
         if (device.supportsCompute) {
+
+            // set uniform buffer parameters
             compute1.setParameter('offset', 20 * time);
             compute1.setParameter('frequency', 0.1);
             compute1.setParameter('tint', [Math.sin(time) * 0.5 + 0.5, 1, 0, 1]);
-
-            // run the compute shader each frame to update the texture
-            compute1.dispatch(srcTexture.width, srcTexture.height);
 
             compute2.setParameter('offset', 10 * time);
             compute2.setParameter('frequency', 0.03);
             compute2.setParameter('tint', [1, 0, Math.sin(time) * 0.5 + 0.5, 1]);
 
-            // run the compute shader each frame to update the texture
-            compute2.dispatch(srcTexture.width, srcTexture.height);
+            // set up both dispatches
+            compute1.setupDispatch(srcTexture.width, srcTexture.height);
+            compute2.setupDispatch(srcTexture.width, srcTexture.height);
+
+            // dispatch both compute shaders in a single compute pass
+            device.computeDispatch([compute1, compute2]);
 
             // debug render the generated textures
             app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));
