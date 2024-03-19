@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from "../../../core/debug.js";
 import { BindGroup } from "../bind-group.js";
+import { UniformBuffer } from "../uniform-buffer.js";
 
 /**
  * A WebGPU implementation of the Compute.
@@ -13,9 +14,15 @@ class WebgpuCompute {
         const { device, shader } = compute;
 
         // create bind group
-        const { computeBindGroupFormat } = shader.impl;
+        const { computeBindGroupFormat, computeUniformBufferFormat } = shader.impl;
         Debug.assert(computeBindGroupFormat, 'Compute shader does not have computeBindGroupFormat specified', shader);
-        this.bindGroup = new BindGroup(device, computeBindGroupFormat);
+
+        if (computeUniformBufferFormat) {
+            // TODO: investigate implications of using a non-persistent uniform buffer
+            this.uniformBuffer = new UniformBuffer(device, computeUniformBufferFormat, true);
+        }
+
+        this.bindGroup = new BindGroup(device, computeBindGroupFormat, this.uniformBuffer);
         DebugHelper.setName(this.bindGroup, `Compute-BindGroup_${this.bindGroup.id}`);
 
         // pipeline
@@ -31,6 +38,7 @@ class WebgpuCompute {
 
         // bind group data
         const { bindGroup } = this;
+        bindGroup.defaultUniformBuffer?.update();
         bindGroup.update();
         device.setBindGroup(0, bindGroup);
 
