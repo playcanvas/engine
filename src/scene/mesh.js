@@ -223,7 +223,7 @@ class Mesh extends RefCountedObject {
          * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
          * currently set index buffer.
          *
-         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         * @type {Array.<{type: number, base: number, count: number, indexed?: boolean}>}
          */
         this.primitive = [{
             type: 0,

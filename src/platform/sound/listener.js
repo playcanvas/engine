@@ -9,6 +9,30 @@ import { Vec3 } from '../../core/math/vec3.js';
  */
 class Listener {
     /**
+     * @type {import('./manager.js').SoundManager}
+     * @private
+     */
+    _manager;
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    position = new Vec3();
+
+    /**
+     * @type {Vec3}
+     * @private
+     */
+    velocity = new Vec3();
+
+    /**
+     * @type {Mat4}
+     * @private
+     */
+    orientation = new Mat4();
+
+    /**
      * Create a new listener instance.
      *
      * @param {import('./manager.js').SoundManager} manager - The sound manager.
@@ -19,22 +43,6 @@ class Listener {
          * @private
          */
         this._manager = manager;
-
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.position = new Vec3();
-        /**
-         * @type {Vec3}
-         * @private
-         */
-        this.velocity = new Vec3();
-        /**
-         * @type {Mat4}
-         * @private
-         */
-        this.orientation = new Mat4();
     }
 
     /**
