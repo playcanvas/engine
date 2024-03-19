@@ -86,7 +86,7 @@ assetListLoader.load(() => {
     };
 
     // a compute shader that will tint the input texture and write the result to the storage texture
-    const shader = new pc.Shader(device, {
+    const shader = device.supportsCompute ? new pc.Shader(device, {
         name: 'ComputeShader',
         shaderLanguage: pc.SHADERLANGUAGE_WGSL,
         cshader: files['compute-shader.wgsl'],
@@ -111,11 +111,14 @@ assetListLoader.load(() => {
         ], {
             compute: true
         })
-    });
+    }) : null;
 
     // helper function, which creates a cube entity, and an instance of the compute shader that will
     // update its texture each frame
     const createCubeInstance = (/** @type {pc.Vec3} */position) => {
+
+        if (!device.supportsCompute)
+            return null;
 
         // create a storage texture, that the compute shader will write to. Make it the same dimensions
         // as the loaded input texture
@@ -171,28 +174,26 @@ assetListLoader.load(() => {
     app.on('update', function (/** @type {number} */ dt) {
         time += dt;
 
-        compute1.setParameter('offset', 20 * time);
-        compute1.setParameter('frequency', 0.1);
-        compute1.setParameter('tint', [Math.sin(time) * 0.5 + 0.5, 1, 0, 1]);
+        if (device.supportsCompute) {
+            compute1.setParameter('offset', 20 * time);
+            compute1.setParameter('frequency', 0.1);
+            compute1.setParameter('tint', [Math.sin(time) * 0.5 + 0.5, 1, 0, 1]);
 
-        // run the compute shader each frame to update the texture
-        compute1.dispatch(srcTexture.width, srcTexture.height);
+            // run the compute shader each frame to update the texture
+            compute1.dispatch(srcTexture.width, srcTexture.height);
 
-        compute2.setParameter('offset', 10 * time);
-        compute2.setParameter('frequency', 0.03);
-        compute2.setParameter('tint', [1, 0, Math.sin(time) * 0.5 + 0.5, 1]);
+            compute2.setParameter('offset', 10 * time);
+            compute2.setParameter('frequency', 0.03);
+            compute2.setParameter('tint', [1, 0, Math.sin(time) * 0.5 + 0.5, 1]);
 
-        // run the compute shader each frame to update the texture
-        compute2.dispatch(srcTexture.width, srcTexture.height);
+            // run the compute shader each frame to update the texture
+            compute2.dispatch(srcTexture.width, srcTexture.height);
 
-
-
-
-        // debug render the generated textures
-        app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));
-        app.drawTexture(0.6, -0.5, 0.6, 0.3, compute2.getParameter('outTexture'));
+            // debug render the generated textures
+            app.drawTexture(0.6, 0.5, 0.6, 0.3, compute1.getParameter('outTexture'));
+            app.drawTexture(0.6, -0.5, 0.6, 0.3, compute2.getParameter('outTexture'));
+        }
     });
-
 });
 
 export { app };
