@@ -87,7 +87,7 @@ class Http {
      * pc.http.get("http://example.com/", {
      *     "retry": true,
      *     "maxRetries": 5
-     * }, function (err, response) {
+     * }, (err, response) => {
      *     console.log(response);
      * });
      * @returns {XMLHttpRequest} The request object.
