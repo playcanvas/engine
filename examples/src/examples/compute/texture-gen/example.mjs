@@ -142,7 +142,7 @@ assetListLoader.load(() => {
         compute.setParameter('inTexture', assets.texture.resource);
         compute.setParameter('outTexture', storageTexture);
 
-        // // add a box in the scene, using the storage texture as a material
+        // add a box in the scene, using the storage texture as a material
         const material = new pc.StandardMaterial();
         material.diffuseMap = storageTexture;
         material.gloss = 0.6;
