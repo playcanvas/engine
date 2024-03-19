@@ -59,7 +59,6 @@ import { DepthState } from '../platform/graphics/depth-state.js';
 
 import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
-import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
 import { ForwardRenderer } from '../scene/renderer/forward-renderer.js';
 import { GraphNode } from '../scene/graph-node.js';
@@ -727,7 +726,6 @@ export const PhongMaterial = StandardMaterial;
 export const LitOptions = LitShaderOptions;
 
 export const scene = {
-    partitionSkin: partitionSkin,
     procedural: {
         calculateTangents: calculateTangents,
         createMesh: createMesh,
