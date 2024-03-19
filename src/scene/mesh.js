@@ -172,6 +172,7 @@ class Mesh extends RefCountedObject {
      * aabb representing object space bounds of the mesh.
      *
      * @type {BoundingBox}
+     * @private
      */
     _aabb = new BoundingBox();
 
@@ -223,7 +224,7 @@ class Mesh extends RefCountedObject {
          * - `indexed` specifies whether to interpret the primitive as indexed, thereby using the
          * currently set index buffer.
          *
-         * @type {Array.<{type: number, base: number, count: number, indexed: boolean|undefined}>}
+         * @type {{type: number, base: number, count: number, indexed?: boolean}[]}
          */
         this.primitive = [{
             type: 0,
