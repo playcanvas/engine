@@ -38,10 +38,6 @@ class Listener {
      * @param {import('./manager.js').SoundManager} manager - The sound manager.
      */
     constructor(manager) {
-        /**
-         * @type {import('./manager.js').SoundManager}
-         * @private
-         */
         this._manager = manager;
     }
 
