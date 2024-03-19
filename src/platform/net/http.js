@@ -125,7 +125,7 @@ class Http {
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
      * pc.http.post("http://example.com/", {
-     *     "name": "Alex" 
+     *     "name": "Alex"
      * }, {
      *     "retry": true,
      *     "maxRetries": 5
@@ -169,7 +169,7 @@ class Http {
      * Object, ArrayBuffer, XML) and err is the error code.
      * @example
      * pc.http.put("http://example.com/", {
-     *     "name": "Alex" 
+     *     "name": "Alex"
      * }, {
      *     "retry": true,
      *     "maxRetries": 5
