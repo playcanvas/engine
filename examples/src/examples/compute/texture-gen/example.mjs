@@ -108,9 +108,7 @@ assetListLoader.load(() => {
         ], [
             // output storage textures
             new pc.BindStorageTextureFormat('outTexture', pc.PIXELFORMAT_RGBA8, pc.TEXTUREDIMENSION_2D)
-        ], {
-            compute: true
-        })
+        ])
     }) : null;
 
     // helper function, which creates a cube entity, and an instance of the compute shader that will
