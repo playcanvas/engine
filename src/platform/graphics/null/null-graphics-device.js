@@ -91,6 +91,10 @@ class NullGraphicsDevice extends GraphicsDevice {
         return new NullIndexBuffer(indexBuffer);
     }
 
+    createBufferImpl(options) {
+        return null;
+    }
+
     createShaderImpl(shader) {
         return new NullShader(shader);
     }

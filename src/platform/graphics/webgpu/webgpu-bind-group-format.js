@@ -93,6 +93,7 @@ class WebgpuBindGroupFormat {
         // - sampler: GPUSamplerBindingLayout, resource type is GPUSampler
         // - texture: GPUTextureBindingLayout, resource type is GPUTextureView
         // - storageTexture: GPUStorageTextureBindingLayout, resource type is GPUTextureView
+        // - storageBuffer: GPUStorageBufferBindingLayout, resource type is GPUBufferBinding
         // - externalTexture: GPUExternalTextureBindingLayout, resource type is GPUExternalTexture
         const entries = [];
 
@@ -195,6 +196,20 @@ class WebgpuBindGroupFormat {
                     // Indicates the required dimension for texture views bound to this binding.
                     // "1d", "2d", "2d-array", "cube", "cube-array", "3d"
                     viewDimension: textureDimension
+                }
+            });
+        });
+
+        // storage buffers
+        bindGroupFormat.storageBufferFormats.forEach((bufferFormat) => {
+
+            key += `#${index}SB:`;
+
+            entries.push({
+                binding: index++,
+                visibility: GPUShaderStage.COMPUTE,
+                buffer: {
+                    type: 'storage'
                 }
             });
         });

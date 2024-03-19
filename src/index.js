@@ -91,6 +91,7 @@ export { UniformBufferFormat, UniformFormat } from './platform/graphics/uniform-
 export { VertexBuffer } from './platform/graphics/vertex-buffer.js';
 export { VertexFormat } from './platform/graphics/vertex-format.js';
 export { VertexIterator } from './platform/graphics/vertex-iterator.js';
+export { Buffer } from './platform/graphics/buffer.js';
 
 // PLATFORM / GRAPHICS / webgl
 export { WebglGraphicsDevice } from './platform/graphics/webgl/webgl-graphics-device.js';

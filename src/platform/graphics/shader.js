@@ -34,6 +34,12 @@ class Shader {
     meshBindGroupFormat;
 
     /**
+     * Format of the bind group for the compute bind group.
+     * @type {import('./bind-group-format.js').BindGroupFormat}
+     */
+    computeBindGroupFormat;
+
+    /**
      * Creates a new Shader instance.
      *
      * Consider {@link createShaderFromCode} as a simpler and more powerful way to create

@@ -13,11 +13,20 @@ class WebgpuBuffer {
      */
     buffer = null;
 
+    init(device, options) {
+        this.buffer = device.wgpu.createBuffer(options);
+    }
+
     destroy(device) {
         if (this.buffer) {
+            this.buffer.unmap();
             this.buffer.destroy();
             this.buffer = null;
         }
+    }
+
+    get size() {
+        return this.buffer ? this.buffer.size : 0;
     }
 
     get initialized() {
@@ -83,6 +92,41 @@ class WebgpuBuffer {
 
         // TODO: handle usage types:
         // - BUFFER_STATIC, BUFFER_DYNAMIC, BUFFER_STREAM, BUFFER_GPUDYNAMIC
+    }
+
+    /**
+     * Map the buffer to CPU memory for reading or writing. After the promise is resolved, the buffer
+     * is mapped and can be accessed through the `getMappedRange` method.
+     *
+     * @param {boolean} write - Map for writing, otherwise map for reading, default is false.
+     * @returns {Promise<void>} The mapped range.
+     */
+    async mapAsync(write) {
+        if (this.buffer) {
+            await this.buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ);
+        }
+    }
+
+    /**
+     * Unmap the buffer from CPU memory so it can be used by the GPU.
+     */
+    unmap() {
+        if (this.buffer) {
+            this.buffer.unmap();
+        }
+    }
+
+    /**
+     * Returns a mapped range of the underlying buffer.
+     *
+     * @returns {ArrayBuffer|undefined} The mapped range.
+     */
+    getMappedRange() {
+        if (!this.buffer) {
+            return;
+        }
+
+        return this.buffer.getMappedRange();
     }
 }
 
