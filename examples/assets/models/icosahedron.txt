@@ -1,0 +1,8 @@
+Model Information:
+* title:	UXR Icosahedron
+* source:	https://sketchfab.com/3d-models/uxr-icosahedron-66c69bd0538a455197aebe81ae3a4961
+* author:	enealefons 
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
