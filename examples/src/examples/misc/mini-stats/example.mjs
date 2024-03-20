@@ -125,7 +125,7 @@ options.stats = [
 ];
 
 // create mini-stats system
-const miniStats = new pcx.MiniStats(app, options);
+const miniStats = new pcx.MiniStats(app, options); // eslint-disable-line no-unused-vars
 
 // add directional lights to the scene
 const light = new pc.Entity();
@@ -145,11 +145,12 @@ camera.setLocalPosition(20, 10, 10);
 camera.lookAt(pc.Vec3.ZERO);
 
 /**
- * helper function to create a primitive with shape type, position, scale
- * @param {string} primitiveType
- * @param {number | pc.Vec3} position
- * @param {number | pc.Vec3} scale
- * @returns {pc.Entity}
+ * Helper function to create a primitive with shape type, position, scale.
+ *
+ * @param {string} primitiveType - The primitive type.
+ * @param {number | pc.Vec3} position - The position.
+ * @param {number | pc.Vec3} scale - The scale.
+ * @returns {pc.Entity} The new primitive entity.
  */
 function createPrimitive(primitiveType, position, scale) {
     // create material of random color

@@ -7,8 +7,6 @@ import { jsx } from '../jsx.mjs';
 import { iframe } from '../iframe.mjs';
 import { removeRedundantSpaces } from '../strings.mjs';
 import { playcanvasTheme } from '../monaco/theme.mjs';
-import * as glsl from '../monaco/languages/glsl.mjs';
-import * as wgsl from '../monaco/languages/wgsl.mjs';
 import * as languages from '../monaco/languages/index.mjs';
 
 import '../events.js';

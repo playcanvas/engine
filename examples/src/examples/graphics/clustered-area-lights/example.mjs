@@ -92,13 +92,14 @@ assetListLoader.load(() => {
     groundMaterial.metalness = 0.7;
     groundMaterial.useMetalness = true;
 
-    // helper function to create a primitive with shape type, position, scale, color
     /**
-     * @param {string} primitiveType
-     * @param {pc.Vec3} position
-     * @param {pc.Vec3} scale
-     * @param {*} assetManifest
-     * @returns
+     * Helper function to create a primitive with shape type, position, scale and color.
+     *
+     * @param {string} primitiveType - The type of the primitive.
+     * @param {pc.Vec3} position - The position.
+     * @param {pc.Vec3} scale - The scale.
+     * @param {*} assetManifest - The asset manifest.
+     * @returns {pc.Entity} The new primitive entity.
      */
     function createPrimitive(primitiveType, position, scale, assetManifest) {
         if (assetManifest) {
@@ -130,6 +131,7 @@ assetListLoader.load(() => {
 
     /**
      * Helper function to create area light including its visual representation in the world.
+     *
      * @param {string} type - The light component's type.
      * @param {number} shape - The light component's shape.
      * @param {pc.Vec3} position - The position.

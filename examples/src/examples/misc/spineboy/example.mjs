@@ -41,11 +41,8 @@ app.on('destroy', () => {
 });
 
 const assetListLoader = new pc.AssetListLoader(Object.values(assets), app.assets);
-assetListLoader.load(async () => {
+assetListLoader.load(() => {
     app.start();
-
-    // globalThis.pc = pc;
-    // await import("/static/scripts/spine/playcanvas-spine.3.8.js");
 
     // create camera entity
     const camera = new pc.Entity('camera');
@@ -54,10 +51,11 @@ assetListLoader.load(async () => {
     });
     app.root.addChild(camera);
     camera.translateLocal(0, 7, 20);
+
     /**
-     * @param {pc.Vec3} position
-     * @param {pc.Vec3} scale
-     * @param {number} timeScale
+     * @param {pc.Vec3} position - The local-space position.
+     * @param {pc.Vec3} scale - The local-space scale.
+     * @param {number} timeScale - The animation time scale.
      */
     const createSpineInstance = (position, scale, timeScale) => {
         const spineEntity = new pc.Entity();
@@ -72,7 +70,6 @@ assetListLoader.load(async () => {
 
         // play spine animation
         // @ts-ignore
-        // debugger;
         spineEntity.spine.state.setAnimation(0, 'portal', true);
 
         // @ts-ignore

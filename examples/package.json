@@ -13,42 +13,30 @@
     "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
-    "lint": "eslint . --ext .js,.ts,.tsx",
+    "lint": "eslint . --ext .js,.mjs",
     "serve": "serve dist -l 5000 --no-request-logging --config ../serve.json",
     "watch": "npm run -s build:pre && cross-env NODE_ENV=development rollup -c -w"
   },
   "eslintConfig": {
     "root": true,
-    "parser": "@typescript-eslint/parser",
-    "plugins": [
-      "@typescript-eslint"
-    ],
     "extends": [
-      "@playcanvas/eslint-config",
-      "plugin:@typescript-eslint/eslint-recommended",
-      "plugin:@typescript-eslint/recommended"
+      "@playcanvas/eslint-config"
     ],
+    "globals": {
+      "ObjModelParser": "readonly",
+      "OutlineEffect": "readonly",
+      "pcx": "readonly"
+    },
     "rules": {
-      "@typescript-eslint/ban-ts-comment": 0,
-      "@typescript-eslint/no-explicit-any": 0,
-      "@typescript-eslint/explicit-module-boundary-types": 0,
-      "radix": 0,
-      "lines-between-class-members": [
-        "error",
-        "always",
-        {
-          "exceptAfterSingleLine": true
-        }
-      ]
+      "import/no-unresolved": "off"
     },
     "settings": {
       "import/resolver": {
         "node": {
           "extensions": [
             ".js",
-            ".jsx",
-            ".ts",
-            ".tsx"
+            ".mjs",
+            ".jsx"
           ]
         }
       }
@@ -74,11 +62,8 @@
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7",
     "@types/react-router-dom": "^5.3.3",
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
     "concurrently": "^7.6.0",
     "cross-env": "^7.0.2",
-    "date-and-time": "^3.0.2",
     "eslint": "^8.46.0",
     "fflate": "^0.8.0",
     "fs-extra": "^10.1.0",
@@ -98,7 +83,6 @@
     "serve": "^14.2.0",
     "sharp": "^0.32.6",
     "tslib": "^2.6.1",
-    "typescript": "^5.1.6",
     "url-search-params-polyfill": "^8.2.4",
     "whatwg-fetch": "^3.6.17"
   },

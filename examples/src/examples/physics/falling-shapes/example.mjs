@@ -70,8 +70,8 @@ assetListLoader.load(() => {
     // Set the gravity for our rigid bodies
     app.systems.rigidbody.gravity.set(0, -9.81, 0);
     /**
-     * @param {pc.Color} color
-     * @returns {pc.StandardMaterial}
+     * @param {pc.Color} color - The color of the material.
+     * @returns {pc.StandardMaterial} The new material.
      */
     function createMaterial(color) {
         const material = new pc.StandardMaterial();
@@ -148,12 +148,12 @@ assetListLoader.load(() => {
     camera.lookAt(0, 2, 0);
 
     /**
-     * helper function which creates a template for a collider
+     * Helper function which creates a template for a collider.
      *
-     * @param {any} type
-     * @param {any} collisionOptions
-     * @param {any} [template]
-     * @returns
+     * @param {string} type - The render component type.
+     * @param {object} collisionOptions - The options for the collision component.
+     * @param {pc.Entity} [template] - The template entity to use.
+     * @returns {pc.Entity} The new template entity.
      */
     const createTemplate = function (type, collisionOptions, template) {
         // add a render component (visible mesh)

@@ -56,7 +56,7 @@ class MainLayout extends TypedComponent {
     /**
      * @param {boolean} value - Show MiniStats state.
      */
-    updateShowMiniStats = value => {
+    updateShowMiniStats = (value) => {
         iframe.fire('stats', { state: value });
     };
 

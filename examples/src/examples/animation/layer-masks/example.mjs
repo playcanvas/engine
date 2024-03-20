@@ -190,11 +190,11 @@ assetListLoader.load(() => {
             upperBodyLayer.weight = value;
         }
     });
+
     /**
-     * @param {pc.Entity} entity
-     * @param {pc.Color} color
+     * @param {pc.Entity} entity - The entity to draw the skeleton for.
      */
-    const drawSkeleton = (entity, color) => {
+    const drawSkeleton = (entity) => {
         entity.children.forEach((/** @type {pc.Entity} */ c) => {
             const target = modelEntity.anim._targets[entity.path + '/graph/localPosition'];
             if (target) {
@@ -205,7 +205,7 @@ assetListLoader.load(() => {
                     false
                 );
             }
-            drawSkeleton(c, color);
+            drawSkeleton(c);
         });
     };
 

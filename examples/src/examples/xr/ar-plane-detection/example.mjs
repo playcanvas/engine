@@ -132,6 +132,13 @@ assetListLoader.load(() => {
             }
         });
 
+        const material = new pc.StandardMaterial();
+        material.blendType = pc.BLEND_PREMULTIPLIED;
+        material.opacity = 0.5;
+
+        const materialWireframe = new pc.StandardMaterial();
+        materialWireframe.emissive = new pc.Color(1, 1, 1);
+
         const updateMesh = (xrPlane, entity) => {
             let created = false;
             let mesh = entity.render.meshInstances[0]?.mesh;
@@ -193,13 +200,6 @@ assetListLoader.load(() => {
         };
 
         const entities = new Map();
-
-        const material = new pc.StandardMaterial();
-        material.blendType = pc.BLEND_PREMULTIPLIED;
-        material.opacity = 0.5;
-
-        const materialWireframe = new pc.StandardMaterial();
-        materialWireframe.emissive = new pc.Color(1, 1, 1);
 
         app.xr.planeDetection.on('add', (xrPlane) => {
             // entity
