@@ -70,21 +70,15 @@
     "monaco-editor": "^0.33.0",
     "playcanvas": "file:..",
     "playcanvas-extras": "file:../extras",
-    "prettier": "^2.8.8",
-    "promise-polyfill": "^8.3.0",
     "prop-types": "^15.7.2",
     "puppeteer": "^20.9.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-es6": "^1.0.0",
     "react-router-dom": "^5.3.4",
-    "resize-observer-polyfill": "^1.5.1",
     "rollup": "^2.79.1",
     "serve": "^14.2.0",
-    "sharp": "^0.32.6",
-    "tslib": "^2.6.1",
-    "url-search-params-polyfill": "^8.2.4",
-    "whatwg-fetch": "^3.6.17"
+    "sharp": "^0.32.6"
   },
   "author": "PlayCanvas <support@playcanvas.com>",
   "license": "MIT"
