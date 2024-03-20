@@ -13,7 +13,7 @@
     "build:thumbnails": "node ./scripts/thumbnails.mjs",
     "clean": "node ./scripts/clean.mjs",
     "develop": "cross-env NODE_ENV=development concurrently --kill-others \"npm run watch\" \"npm run serve\"",
-    "lint": "eslint . --ext .js,.mjs",
+    "lint": "eslint --ext .js,.mjs .",
     "serve": "serve dist -l 5000 --no-request-logging --config ../serve.json",
     "watch": "npm run -s build:pre && cross-env NODE_ENV=development rollup -c -w"
   },
@@ -29,17 +29,6 @@
     },
     "rules": {
       "import/no-unresolved": "off"
-    },
-    "settings": {
-      "import/resolver": {
-        "node": {
-          "extensions": [
-            ".js",
-            ".mjs",
-            ".jsx"
-          ]
-        }
-      }
     }
   },
   "eslintIgnore": [
