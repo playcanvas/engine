@@ -1,28 +1,34 @@
 import * as pc from 'playcanvas';
+import files from '@examples/files';
 
 const canvas = document.getElementById('application-canvas');
 if (!(canvas instanceof HTMLCanvasElement)) {
     throw new Error('No canvas found');
 }
 
+// create UI
+// html
+const div = document.createElement('div');
+div.innerHTML = files['ui.html'];
+document.body.appendChild(div);
+// css
+const css = document.createElement('style');
+css.innerHTML = files['ui.css'];
+document.head.appendChild(css);
+
 /**
  * @param {string} msg - The message.
  */
 const message = function (msg) {
-    /** @type {HTMLDivElement} */
-    let el = document.querySelector('.message');
-    if (!el) {
-        el = document.createElement('div');
-        el.classList.add('message');
-        document.body.append(el);
-    }
-    el.textContent = msg;
+    document.querySelector('.message').textContent = msg;
 };
 
+// application
 const app = new pc.Application(canvas, {
     mouse: new pc.Mouse(canvas),
     touch: new pc.TouchDevice(canvas),
-    keyboard: new pc.Keyboard(window)
+    keyboard: new pc.Keyboard(window),
+    graphicsDeviceOptions: { alpha: true }
 });
 app.setCanvasFillMode(pc.FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(pc.RESOLUTION_AUTO);
@@ -41,12 +47,15 @@ app.scene.ambientLight = new pc.Color(0.1, 0.1, 0.1);
 
 app.start();
 
+const colorCamera = new pc.Color(44 / 255, 62 / 255, 80 / 255);
+const colorTransparent = new pc.Color(0, 0, 0, 0);
+
 // create camera
-const c = new pc.Entity();
-c.addComponent('camera', {
-    clearColor: new pc.Color(44 / 255, 62 / 255, 80 / 255)
+const cameraEntity = new pc.Entity();
+cameraEntity.addComponent('camera', {
+    clearColor: colorCamera
 });
-app.root.addChild(c);
+app.root.addChild(cameraEntity);
 
 const l = new pc.Entity();
 l.addComponent('light', {
@@ -54,6 +63,7 @@ l.addComponent('light', {
 });
 l.setEulerAngles(45, 135, 0);
 app.root.addChild(l);
+
 /**
  * @param {number} x - The x coordinate.
  * @param {number} y - The y coordinate.
@@ -65,7 +75,8 @@ const createCube = function (x, y, z) {
         type: 'box',
         material: new pc.StandardMaterial()
     });
-    cube.translate(x, y, z);
+    cube.setLocalPosition(x, y, z);
+    cube.setLocalScale(0.5, 0.5, 0.5);
     app.root.addChild(cube);
 };
 
@@ -133,43 +144,52 @@ const createController = function (inputSource) {
 };
 
 // create a grid of cubes
-const SIZE = 4;
+const SIZE = 2;
 for (let x = 0; x <= SIZE; x++) {
     for (let y = 0; y <= SIZE; y++) {
-        createCube(2 * x - SIZE, -1.5, 2 * y - SIZE);
+        createCube((2 * x - SIZE) * 0.5, 0.25, (2 * y - SIZE) * 0.5);
     }
 }
 
-if (app.xr.supported) {
-    const activate = function () {
-        if (app.xr.isAvailable(pc.XRTYPE_VR)) {
-            c.camera.startXr(pc.XRTYPE_VR, pc.XRSPACE_LOCAL, {
-                callback: function (err) {
-                    if (err) message('Immersive VR failed to start: ' + err.message);
-                }
-            });
-        } else {
-            message('Immersive VR is not available');
-        }
-    };
+// reusable vector
+const vec3A = new pc.Vec3();
 
-    app.mouse.on('mousedown', function () {
-        if (!app.xr.active) activate();
+if (app.xr.supported) {
+    // XR availability
+    document.querySelector(`.container > .button[data-xr="immersive-ar"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_AR));
+    document.querySelector(`.container > .button[data-xr="immersive-vr"]`)?.classList.toggle('active', app.xr.isAvailable(pc.XRTYPE_VR));
+
+    // XR availability events
+    app.xr.on('available', (type, available) => {
+        const element = document.querySelector(`.container > .button[data-xr="${type}"]`);
+        element?.classList.toggle('active', available);
     });
 
-    if (app.touch) {
-        app.touch.on('touchend', function (evt) {
-            if (!app.xr.active) {
-                // if not in VR, activate
-                activate();
-            } else {
-                // otherwise reset camera
-                c.camera.endXr();
-            }
+    // reset camera color on XR end
+    app.xr.on('end', () => {
+        cameraEntity.camera.clearColor = colorCamera;
+    });
 
-            evt.event.preventDefault();
-            evt.event.stopPropagation();
+    // button handler
+    const onXrButtonClick = function() {
+        if (!this.classList.contains('active'))
+            return;
+
+        const type = this.getAttribute('data-xr');
+
+        cameraEntity.camera.clearColor = type === pc.XRTYPE_AR ? colorTransparent : colorCamera;
+
+        app.xr.start(cameraEntity.camera, type, pc.XRSPACE_LOCALFLOOR, {
+            callback: function (err) {
+                if (err) message(`XR ${type} failed to start: ${err.message}`);
+            }
         });
+    }
+
+    // button clicks
+    const buttons = document.querySelectorAll('.container > .button');
+    for(let i = 0; i < buttons.length; i++) {
+        buttons[i].addEventListener('click', onXrButtonClick);
     }
 
     // end session by keyboard ESC
@@ -186,7 +206,7 @@ if (app.xr.supported) {
     });
 
     if (window.XRHand) {
-        message('Tap on screen to enter VR, and switch to hand input');
+        message('Choose XR mode, and switch to hand input');
     } else {
         message('WebXR Hands Input is not supported by your platform');
     }
@@ -215,6 +235,13 @@ if (app.xr.supported) {
             } else {
                 // some controllers cannot be gripped
                 controllers[i].enabled = false;
+            }
+
+            // draw ray
+            if (inputSource.targetRayMode === pc.XRTARGETRAY_POINTER) {
+                vec3A.copy(inputSource.getDirection()).add(inputSource.getOrigin());
+                const color = inputSource.selecting ? pc.Color.GREEN : pc.Color.WHITE;
+                app.drawLine(inputSource.getOrigin(), vec3A, color);
             }
         }
     });
