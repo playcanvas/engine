@@ -815,14 +815,10 @@ class WebglGraphicsDevice extends GraphicsDevice {
         numUniforms -= 4 * 4; // Up to 4 texture transforms
         this.boneLimit = Math.floor(numUniforms / 3);   // each bone uses 3 uniforms
 
-        // Put a limit on the number of supported bones before skin partitioning must be performed
+        // Put a limit on the number of supported bones when texture skinning is not supported.
         // Some GPUs have demonstrated performance issues if the number of vectors allocated to the
         // skin matrix palette is left unbounded
         this.boneLimit = Math.min(this.boneLimit, 128);
-
-        if (this.unmaskedRenderer === 'Mali-450 MP') {
-            this.boneLimit = 34;
-        }
 
         this.constantTexSource = this.scope.resolve("source");
 

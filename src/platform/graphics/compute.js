@@ -62,6 +62,17 @@ class Compute {
     }
 
     /**
+     * Returns the value of a shader parameter from the compute instance.
+     *
+     * @param {string} name - The name of the parameter to get.
+     * @returns {number|number[]|Float32Array|import('./texture.js').Texture|undefined} The value of the
+     * specified parameter.
+     */
+    getParameter(name) {
+        return this.parameters.get(name)?.value;
+    }
+
+    /**
      * Deletes a shader parameter from the compute instance.
      *
      * @param {string} name - The name of the parameter to delete.
