@@ -8,7 +8,7 @@ export default {
         'compute-shader.wgsl': /* wgsl */`
 
             struct ub_compute {
-                tint : vec4<f32>,
+                tint : vec4f,
                 offset: f32,
                 frequency: f32
             }
@@ -28,16 +28,16 @@ export default {
                 var texColor = textureLoad(inputTexture, uv, 0);
 
                 // tint it
-                var tintColor: vec4<f32> = ubCompute.tint;
+                var tintColor: vec4f = ubCompute.tint;
                 texColor *= tintColor;
 
                 // scroll a darkness effect over the texture
-                let uvFloat = vec2<f32>(f32(uv.x), f32(uv.y));
+                let uvFloat = vec2f(f32(uv.x), f32(uv.y));
                 var darkness: f32 = sin(ubCompute.offset + ubCompute.frequency * length(uvFloat)) * 0.2 + 0.8;
                 texColor *= darkness;
 
                 // write it to the output texture
-                textureStore(outputTexture, vec2<i32>(global_id.xy), texColor);
+                textureStore(outputTexture, vec2i(global_id.xy), texColor);
             }
         `
     }
