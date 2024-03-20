@@ -29,25 +29,24 @@ class WebgpuCompute {
         this.pipeline = device.computePipeline.get(shader, computeBindGroupFormat);
     }
 
-    dispatch(x, y, z) {
-
-        // TODO: currently each dispatch is a separate compute pass, which is not optimal, and we should
-        // batch multiple dispatches into a single compute pass
-        const device = this.compute.device;
-        device.startComputePass();
+    updateBindGroup() {
 
         // bind group data
         const { bindGroup } = this;
         bindGroup.defaultUniformBuffer?.update();
         bindGroup.update();
-        device.setBindGroup(0, bindGroup);
+    }
+
+    dispatch(x, y, z) {
+
+        // bind group
+        const device = this.compute.device;
+        device.setBindGroup(0, this.bindGroup);
 
         // dispatch
         const passEncoder = device.passEncoder;
         passEncoder.setPipeline(this.pipeline);
         passEncoder.dispatchWorkgroups(x, y, z);
-
-        device.endComputePass();
     }
 }
 
