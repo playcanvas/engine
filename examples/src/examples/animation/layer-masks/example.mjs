@@ -213,7 +213,7 @@ assetListLoader.load(() => {
 
     app.on('update', () => {
         if (data.get('options.skeleton')) {
-            drawSkeleton(modelEntity, new pc.Color(1, 0, 0, modelEntity.anim.baseLayer.weight * 0.5));
+            drawSkeleton(modelEntity);
         }
     });
 });
