@@ -111,6 +111,7 @@ assetListLoader.load(() => {
      * @param {pc.Asset} asset - The asset.
      * @param {number} animTilesX - The anim tiles X coordinate.
      * @param {number} animTilesY - The anim tiles Y coordinate.
+     * @returns {object} The particle system component options.
      */
     const particleSystemConfiguration = function (asset, animTilesX, animTilesY) {
         return {

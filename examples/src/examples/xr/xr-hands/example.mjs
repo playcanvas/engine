@@ -171,7 +171,7 @@ if (app.xr.supported) {
     });
 
     // button handler
-    const onXrButtonClick = function() {
+    const onXrButtonClick = function () {
         if (!this.classList.contains('active'))
             return;
 
@@ -184,11 +184,11 @@ if (app.xr.supported) {
                 if (err) message(`XR ${type} failed to start: ${err.message}`);
             }
         });
-    }
+    };
 
     // button clicks
     const buttons = document.querySelectorAll('.container > .button');
-    for(let i = 0; i < buttons.length; i++) {
+    for (let i = 0; i < buttons.length; i++) {
         buttons[i].addEventListener('click', onXrButtonClick);
     }
 

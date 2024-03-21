@@ -8,8 +8,10 @@ export function controls({ React, jsx, fragment }) {
     const { createRef, Component } = React;
     class JsxControls extends Component {
         position = new pc.Vec2();
+
         /** @type {React.RefObject<HTMLCanvasElement>} */
         refCanvas = createRef();
+
         mouseEvent(e) {
             const { position, modelEntity, width, canvas } = this;
             if (e.targetTouches) {

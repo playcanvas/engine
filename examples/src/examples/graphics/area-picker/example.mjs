@@ -89,7 +89,8 @@ assetListLoader.load(() => {
     const picker = new pc.Picker(app, canvas.clientWidth * pickerScale, canvas.clientHeight * pickerScale);
 
     /**
-     * helper function to create a primitive with shape type, position, scale
+     * Helper function to create a primitive with shape type, position, scale.
+     *
      * @param {string} primitiveType - The primitive type.
      * @param {pc.Vec3} position - The position.
      * @param {pc.Vec3} scale - The scale.
@@ -136,7 +137,8 @@ assetListLoader.load(() => {
     app.root.addChild(camera);
 
     /**
-     * function to draw a 2D rectangle in the screen space coordinates
+     * Function to draw a 2D rectangle in the screen space coordinates.
+     *
      * @param {number} x - The x coordinate.
      * @param {number} y - The y coordinate.
      * @param {number} w - The width.
@@ -158,9 +160,10 @@ assetListLoader.load(() => {
     }
 
     /**
-     * sets material emissive color to specified color
-     * @param {pc.StandardMaterial} material
-     * @param {pc.Color} color
+     * Sets material emissive color to specified color.
+     *
+     * @param {pc.StandardMaterial} material - The material to highlight.
+     * @param {pc.Color} color - The color to highlight with.
      */
     function highlightMaterial(material, color) {
         material.emissive = color;

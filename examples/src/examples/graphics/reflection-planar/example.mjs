@@ -58,14 +58,15 @@ assetListLoader.load(() => {
     app.scene.skyboxIntensity = 1.7; // make it brighter
 
     /**
-     * helper function to create a primitive with shape type, position, scale, color and layer
-     * @param {string} primitiveType
-     * @param {pc.Vec3} position
-     * @param {pc.Vec3} scale
-     * @param {pc.Color} color
-     * @param {number[]} layer
-     * @param {pc.Material | pc.StandardMaterial | null} [material]
-     * @returns
+     * Helper function to create a primitive with shape type, position, scale, color and layer.
+     *
+     * @param {string} primitiveType - Type of the primitive to create.
+     * @param {pc.Vec3} position - The position of the primitive.
+     * @param {pc.Vec3} scale - The scale of the primitive.
+     * @param {pc.Color} color - The color of the primitive.
+     * @param {number[]} layer - The layer to render the primitive into.
+     * @param {pc.Material | pc.StandardMaterial | null} [material] - The material to use for the primitive.
+     * @returns {pc.Entity} The created entity.
      */
     function createPrimitive(primitiveType, position, scale, color, layer, material = null) {
         // create material of specified color
