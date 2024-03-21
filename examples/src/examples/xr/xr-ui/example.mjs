@@ -128,7 +128,7 @@ assetListLoader.load(() => {
         });
 
         // button handler
-        const onXrButtonClick = function() {
+        const onXrButtonClick = function () {
             if (!this.classList.contains('active'))
                 return;
 
@@ -141,11 +141,11 @@ assetListLoader.load(() => {
                     if (err) message(`XR ${type} failed to start: ${err.message}`);
                 }
             });
-        }
+        };
 
         // button clicks
         const buttons = document.querySelectorAll('.container > .button');
-        for(let i = 0; i < buttons.length; i++) {
+        for (let i = 0; i < buttons.length; i++) {
             buttons[i].addEventListener('click', onXrButtonClick);
         }
 
