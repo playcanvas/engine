@@ -58,6 +58,8 @@ class StandardMaterial extends Material {
 
     static CUBEMAP_PARAMETERS = standardMaterialCubemapParameters;
 
+    _disableSetter = true;
+
     userAttributes = new Map();
 
     /**
@@ -1713,6 +1715,9 @@ class StandardMaterial extends Material {
         this.shaderOptBuilder = new StandardMaterialOptionsBuilder();
 
         this.reset();
+
+        // enable setters
+        this._disableSetter = false;
     }
 
     reset() {
@@ -2052,7 +2057,11 @@ const definePropInternal = (name, constructorFunc, setterFunc, getterFunc) => {
         get: getterFunc || function () {
             return this[`_${name}`];
         },
-        set: setterFunc
+        set(arg) {
+            if (!this._disableSetter) {
+                setterFunc.apply(this, [arg]);
+            }
+        }
     });
 
     _props[name] = {
@@ -2083,9 +2092,9 @@ const defineAggProp = (prop) => {
 
     const setterFunc = function (value) {
         const oldValue = this[internalName];
-        if (!oldValue?.equals(value)) {
+        if (!oldValue.equals(value)) {
             this._dirtyShader = this._dirtyShader || dirtyShaderFunc(oldValue, value);
-            this[internalName] = oldValue ? oldValue.copy(value) : value;
+            this[internalName] = oldValue.copy(value);
         }
     };
 
