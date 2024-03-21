@@ -492,7 +492,7 @@ class StandardMaterial extends Material {
      * The world space axis-aligned bounding box defining the box-projection used for the cubeMap
      * property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
      *
-     * @type {BoundingBox}
+     * @type {import('../../core/shape/bounding-box.js').BoundingBox}
      */
     cubeMapProjectionBox;
 
