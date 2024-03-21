@@ -36,11 +36,13 @@ let _params = new Set();
  * Callback used by {@link StandardMaterial#onUpdateShader}.
  *
  * @callback UpdateShaderCallback
- * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object with shader generator settings (based on current
- * material and scene properties), that you can change and then return. Properties of the object passed
- * into this function are documented in {@link StandardMaterial}. Also contains a member named litOptions
- * which holds some of the options only used by the lit shader backend {@link LitShaderOptions}.
- * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings will be used by the shader.
+ * @param {import('./standard-material-options.js').StandardMaterialOptions} options - An object
+ * with shader generator settings (based on current material and scene properties), that you can
+ * change and then return. Properties of the object passed into this function are documented in
+ * {@link StandardMaterial}. Also contains a member named litOptions which holds some of the options
+ * only used by the lit shader backend {@link LitShaderOptions}.
+ * @returns {import('./standard-material-options.js').StandardMaterialOptions} Returned settings
+ * will be used by the shader.
  */
 
 /**
@@ -67,7 +69,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The ambient color of the material. This color value is 3-component (RGB), where each component is between 0 and 1.
+     * The ambient color of the material. This color value is 3-component (RGB), where each
+     * component is between 0 and 1.
      *
      * @type {Color}
      */
@@ -83,7 +86,14 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to true. - When anisotropy == 0, specular is isotropic. - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy increases as the anisotropy value decreases to minimum of -1. - When anisotropy > 0, anisotropy direction aligns with the bi-normal, and specular anisotropy increases as anisotropy value increases to maximum of 1.
+     * Defines amount of anisotropy. Requires {@link StandardMaterial#enableGGXSpecular} is set to
+     * true.
+     *
+     * - When anisotropy == 0, specular is isotropic.
+     * - When anisotropy < 0, anisotropy direction aligns with the tangent, and specular anisotropy
+     * increases as the anisotropy value decreases to minimum of -1. - When anisotropy > 0,
+     * anisotropy direction aligns with the bi-normal, and specular anisotropy increases as
+     * anisotropy value increases to maximum of 1.
      *
      * @type {number}
      */
@@ -91,7 +101,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The main (primary) baked ambient occlusion (AO) map (default is null). Modulates ambient color.
+     * The main (primary) baked ambient occlusion (AO) map (default is null). Modulates ambient
+     * color.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -139,7 +150,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The detail (secondary) baked ambient occlusion (AO) map of the material (default is null). Will only be used if main (primary) ao map is non-null.
+     * The detail (secondary) baked ambient occlusion (AO) map of the material (default is null).
+     * Will only be used if main (primary) ao map is non-null.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -147,7 +159,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the detail (secondary) AO map to use. Can be "r", "g", "b" or "a" (default is "g").
+     * Color channels of the detail (secondary) AO map to use. Can be "r", "g", "b" or "a"
+     * (default is "g").
      *
      * @type {string}
      */
@@ -187,7 +200,20 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Determines how the main (primary) and detail (secondary) AO maps are blended together. Can be: - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors. - {@link DETAILMODE_ADD}: Add together the primary and secondary colors. - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}. - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color. - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise. - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise. Defaults to {@link DETAILMODE_MUL}.
+     * Determines how the main (primary) and detail (secondary) AO maps are blended together.
+     * Can be:
+     *
+     * - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+     * - {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+     * - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+     * - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary
+     * color.
+     * - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker,
+     * component-wise.
+     * - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter,
+     * component-wise.
+     *
+     * Defaults to {@link DETAILMODE_MUL}.
      *
      * @type {string}
      */
@@ -211,7 +237,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The bumpiness of the material. This value scales the assigned main (primary) normal map. It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     * The bumpiness of the material. This value scales the assigned main (primary) normal map. It
+     * should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to
+     * e.g. 2 to give even more pronounced bump effect.
      *
      * @type {number}
      */
@@ -219,7 +247,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer is disabled when clearCoat == 0. Default value is 0 (disabled).
+     * Defines intensity of clearcoat layer from 0 to 1. Clearcoat layer is disabled when
+     * clearCoat == 0. Default value is 0 (disabled).
      *
      * @type {number}
      */
@@ -227,7 +256,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The bumpiness of the clearcoat layer. This value scales the assigned main clearcoat normal map. It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     * The bumpiness of the clearcoat layer. This value scales the assigned main clearcoat normal
+     * map. It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be
+     * set to e.g. 2 to give even more pronounced bump effect.
      *
      * @type {number}
      */
@@ -235,7 +266,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Invert the clearcoat gloss component (default is false). Enabling this flag results in material treating the clear coat gloss members as roughness.
+     * Invert the clearcoat gloss component (default is false). Enabling this flag results in
+     * material treating the clear coat gloss members as roughness.
      *
      * @type {boolean}
      */
@@ -243,7 +275,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Monochrome clearcoat glossiness map (default is null). If specified, will be multiplied by normalized 'clearCoatGloss' value and/or vertex colors.
+     * Monochrome clearcoat glossiness map (default is null). If specified, will be multiplied by
+     * normalized 'clearCoatGloss' value and/or vertex colors.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -291,7 +324,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for clearcoat glossiness. If clearCoatGlossMap is set, it'll be multiplied by vertex colors.
+     * Use mesh vertex colors for clearcoat glossiness. If clearCoatGlossMap is set, it'll be
+     * multiplied by vertex colors.
      *
      * @type {boolean}
      */
@@ -315,7 +349,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Monochrome clearcoat intensity map (default is null). If specified, will be multiplied by normalized 'clearCoat' value and/or vertex colors.
+     * Monochrome clearcoat intensity map (default is null). If specified, will be multiplied by
+     * normalized 'clearCoat' value and/or vertex colors.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -363,7 +398,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The clearcoat normal map of the material (default is null). The texture must contains normalized, tangent space normals.
+     * The clearcoat normal map of the material (default is null). The texture must contains
+     * normalized, tangent space normals.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -403,7 +439,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for clearcoat intensity. If clearCoatMap is set, it'll be multiplied by vertex colors.
+     * Use mesh vertex colors for clearcoat intensity. If clearCoatMap is set, it'll be multiplied
+     * by vertex colors.
      *
      * @type {boolean}
      */
@@ -419,7 +456,10 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines how diffuse and specular components are combined when Fresnel is on. It is recommended that you leave this option enabled, although you may want to disable it in case when all reflection comes only from a few light sources, and you don't use an environment map, therefore having mostly black reflection.
+     * Defines how diffuse and specular components are combined when Fresnel is on. It is recommended
+     * that you leave this option enabled, although you may want to disable it in case when all
+     * reflection comes only from a few light sources, and you don't use an environment map,
+     * therefore having mostly black reflection.
      *
      * @type {boolean}
      */
@@ -427,7 +467,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The cubic environment map of the material (default is null). This setting overrides sphereMap and will replace the scene lighting environment.
+     * The cubic environment map of the material (default is null). This setting overrides sphereMap
+     * and will replace the scene lighting environment.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -435,7 +476,12 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The type of projection applied to the cubeMap property: - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away. - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box. Defaults to {@link CUBEPROJ_NONE}.
+     * The type of projection applied to the cubeMap property:
+     *
+     * - {@link CUBEPROJ_NONE}: The cube map is treated as if it is infinitely far away.
+     * - {@link CUBEPROJ_BOX}: Box-projection based on a world space axis-aligned bounding box.
+     *
+     * Defaults to {@link CUBEPROJ_NONE}.
      *
      * @type {number}
      */
@@ -443,7 +489,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The world space axis-aligned bounding box defining the box-projection used for the cubeMap property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
+     * The world space axis-aligned bounding box defining the box-projection used for the cubeMap
+     * property. Only used when cubeMapProjection is set to {@link CUBEPROJ_BOX}.
      *
      * @type {BoundingBox}
      */
@@ -451,7 +498,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The diffuse color of the material. This color value is 3-component (RGB), where each component is between 0 and 1. Defines basic surface color (aka albedo).
+     * The diffuse color of the material. This color value is 3-component (RGB), where each
+     * component is between 0 and 1. Defines basic surface color (aka albedo).
      *
      * @type {Color}
      */
@@ -459,7 +507,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The detail (secondary) diffuse map of the material (default is null). Will only be used if main (primary) diffuse map is non-null.
+     * The detail (secondary) diffuse map of the material (default is null). Will only be used if
+     * main (primary) diffuse map is non-null.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -467,7 +516,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the detail (secondary) diffuse map to use. Can be "r", "g", "b", "a", "rgb"
+     * or any swizzled combination.
      *
      * @type {string}
      */
@@ -475,7 +525,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and 1.
+     * Controls the 2D offset of the detail (secondary) diffuse map. Each component is between 0 and
+     * 1.
      *
      * @type {Vec2}
      */
@@ -507,7 +558,16 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Determines how the main (primary) and detail (secondary) diffuse maps are blended together. Can be: - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors. - {@link DETAILMODE_ADD}: Add together the primary and secondary colors. - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}. - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary color. - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker, component-wise. - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary colors is lighter, component-wise. Defaults to {@link DETAILMODE_MUL}.
+     * Determines how the main (primary) and detail (secondary) diffuse maps are blended together.
+     * Can be: - {@link DETAILMODE_MUL}: Multiply together the primary and secondary colors.
+     *
+     * - {@link DETAILMODE_ADD}: Add together the primary and secondary colors.
+     * - {@link DETAILMODE_SCREEN}: Softer version of {@link DETAILMODE_ADD}.
+     * - {@link DETAILMODE_OVERLAY}: Multiplies or screens the colors, depending on the primary
+     * color.
+     * - {@link DETAILMODE_MIN}: Select whichever of the primary and secondary colors is darker,
+     * component-wise. - {@link DETAILMODE_MAX}: Select whichever of the primary and secondary
+     * colors is lighter, component-wise. Defaults to {@link DETAILMODE_MUL}.
      *
      * @type {string}
      */
@@ -523,7 +583,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the main (primary) diffuse map to use. Can be "r", "g", "b", "a", "rgb" or
+     * any swizzled combination.
      *
      * @type {string}
      */
@@ -563,7 +624,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Multiply main (primary) diffuse map and/or diffuse vertex color by the constant diffuse value.
+     * Multiply main (primary) diffuse map and/or diffuse vertex color by the constant diffuse
+     * value.
      *
      * @type {boolean}
      */
@@ -571,7 +633,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be multiplied by vertex colors.
+     * Use mesh vertex colors for diffuse. If diffuseMap or are diffuseTint are set, they'll be
+     * multiplied by vertex colors.
      *
      * @type {boolean}
      */
@@ -579,7 +642,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Vertex color channels to use for diffuse. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -587,7 +651,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The emissive color of the material. This color value is 3-component (RGB), where each component is between 0 and 1.
+     * The emissive color of the material. This color value is 3-component (RGB), where each
+     * component is between 0 and 1.
      *
      * @type {Color}
      */
@@ -611,7 +676,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the emissive map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -659,7 +725,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be multiplied by vertex colors.
+     * Use mesh vertex colors for emission. If emissiveMap or emissiveTint are set, they'll be
+     * multiplied by vertex colors.
      *
      * @type {boolean}
      */
@@ -667,7 +734,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Vertex color channels to use for emission. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -675,7 +743,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set material anisotropy.
+     * Enables GGX specular. Also enables {@link StandardMaterial#anisotropy}  parameter to set
+     * material anisotropy.
      *
      * @type {boolean}
      */
@@ -683,7 +752,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The prefiltered environment lighting atlas (default is null). This setting overrides cubeMap and sphereMap and will replace the scene lighting environment.
+     * The prefiltered environment lighting atlas (default is null). This setting overrides cubeMap
+     * and sphereMap and will replace the scene lighting environment.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -691,7 +761,14 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines the formula used for Fresnel effect. As a side-effect, enabling any Fresnel model changes the way diffuse and reflection components are combined. When Fresnel is off, legacy non energy-conserving combining is used. When it is on, combining behavior is defined by conserveEnergy parameter. - {@link FRESNEL_NONE}: No Fresnel. - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by specular color.
+     * Defines the formula used for Fresnel effect. As a side-effect, enabling any Fresnel model
+     * changes the way diffuse and reflection components are combined. When Fresnel is off, legacy
+     * non energy-conserving combining is used. When it is on, combining behavior is defined by
+     * conserveEnergy parameter.
+     *
+     * - {@link FRESNEL_NONE}: No Fresnel.
+     * - {@link FRESNEL_SCHLICK}: Schlick's approximation of Fresnel (recommended). Parameterized by
+     * specular color.
      *
      * @type {number}
      */
@@ -707,7 +784,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Invert the gloss component (default is false). Enabling this flag results in material treating the gloss members as roughness.
+     * Invert the gloss component (default is false). Enabling this flag results in material treating
+     * the gloss members as roughness.
      *
      * @type {boolean}
      */
@@ -715,7 +793,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Gloss map (default is null). If specified, will be multiplied by normalized gloss value and/or vertex colors.
+     * Gloss map (default is null). If specified, will be multiplied by normalized gloss value and/or
+     * vertex colors.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -763,7 +842,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex colors.
+     * Use mesh vertex colors for glossiness. If glossMap is set, it'll be multiplied by vertex
+     * colors.
      *
      * @type {boolean}
      */
@@ -779,7 +859,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The height map of the material (default is null). Used for a view-dependent parallax effect. The texture must represent the height of the surface where darker pixels are lower and lighter pixels are higher. It is recommended to use it together with a normal map.
+     * The height map of the material (default is null). Used for a view-dependent parallax effect.
+     * The texture must represent the height of the surface where darker pixels are lower and
+     * lighter pixels are higher. It is recommended to use it together with a normal map.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -835,7 +917,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * A custom lightmap of the material (default is null). Lightmaps are textures that contain pre-rendered lighting. Can be HDR.
+     * A custom lightmap of the material (default is null). Lightmaps are textures that contain
+     * pre-rendered lighting. Can be HDR.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -843,7 +926,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the lightmap to use. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -891,7 +975,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Vertex color channels to use for baked lighting. Can be "r", "g", "b", "a", "rgb" or any
+     * swizzled combination.
      *
      * @type {string}
      */
@@ -955,7 +1040,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex colors.
+     * Use mesh vertex colors for metalness. If metalnessMap is set, it'll be multiplied by vertex
+     * colors.
      *
      * @type {boolean}
      */
@@ -971,7 +1057,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The detail (secondary) normal map of the material (default is null). Will only be used if main (primary) normal map is non-null.
+     * The detail (secondary) normal map of the material (default is null). Will only be used if
+     * main (primary) normal map is non-null.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -979,7 +1066,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The bumpiness of the material. This value scales the assigned detail (secondary) normal map. It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set to e.g. 2 to give even more pronounced bump effect.
+     * The bumpiness of the material. This value scales the assigned detail (secondary) normal map.
+     * It should be normally between 0 (no bump mapping) and 1 (full bump mapping), but can be set
+     * to e.g. 2 to give even more pronounced bump effect.
      *
      * @type {number}
      */
@@ -987,7 +1076,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and 1.
+     * Controls the 2D offset of the detail (secondary) normal map. Each component is between 0 and
+     * 1.
      *
      * @type {Vec2}
      */
@@ -1019,7 +1109,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The main (primary) normal map of the material (default is null). The texture must contains normalized, tangent space normals.
+     * The main (primary) normal map of the material (default is null). The texture must contains
+     * normalized, tangent space normals.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -1067,7 +1158,13 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular occlusion is view-dependent. However, it can be better than nothing. - {@link SPECOCC_NONE}: No specular occlusion - {@link SPECOCC_AO}: Use AO directly to occlude specular. - {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to occlude specular.
+     * Uses ambient occlusion to darken specular/reflection. It's a hack, because real specular
+     * occlusion is view-dependent. However, it can be better than nothing.
+     *
+     * - {@link SPECOCC_NONE}: No specular occlusion
+     * - {@link SPECOCC_AO}: Use AO directly to occlude specular.
+     * - {@link SPECOCC_GLOSSDEPENDENT}: Modify AO based on material glossiness/view angle to
+     * occlude specular.
      *
      * @type {number}
      */
@@ -1083,7 +1180,16 @@ class StandardMaterial extends Material {
 
 
     /**
-     * A custom function that will be called after all shader generator properties are collected and before shader code is generated. This function will receive an object with shader generator settings (based on current material and scene properties), that you can change and then return. Returned value will be used instead. This is mostly useful when rendering the same set of objects, but with different shader variations based on the same material. For example, you may wish to render a depth or normal pass using textures assigned to the material, a reflection pass with simpler shaders and so on. These properties are split into two sections, generic standard material options and lit options. Properties of the standard material options are {@link StandardMaterialOptions} and the options for the lit options are {@link LitShaderOptions}.
+     * A custom function that will be called after all shader generator properties are collected and
+     * before shader code is generated. This function will receive an object with shader generator
+     * settings (based on current material and scene properties), that you can change and then
+     * return. Returned value will be used instead. This is mostly useful when rendering the same
+     * set of objects, but with different shader variations based on the same material. For example,
+     * you may wish to render a depth or normal pass using textures assigned to the material, a
+     * reflection pass with simpler shaders and so on. These properties are split into two sections,
+     * generic standard material options and lit options. Properties of the standard material
+     * options are {@link StandardMaterialOptions} and the options for the lit options are
+     * {@link LitShaderOptions}.
      *
      * @type {UpdateShaderCallback}
      */
@@ -1091,7 +1197,11 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The opacity of the material. This value can be between 0 and 1, where 0 is fully transparent and 1 is fully opaque. If you want the material to be semi-transparent you also need to set the {@link Material#blendType} to {@link BLEND_NORMAL}, {@link BLEND_ADDITIVE} or any other mode. Also note that for most semi-transparent objects you want {@link Material#depthWrite} to be false, otherwise they can fully occlude objects behind them.
+     * The opacity of the material. This value can be between 0 and 1, where 0 is fully transparent
+     * and 1 is fully opaque. If you want the material to be semi-transparent you also need to set
+     * the {@link Material#blendType} to {@link BLEND_NORMAL}, {@link BLEND_ADDITIVE} or any other
+     * mode. Also note that for most semi-transparent objects you want {@link Material#depthWrite}
+     * to be false, otherwise they can fully occlude objects behind them.
      *
      * @type {number}
      */
@@ -1099,7 +1209,15 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Used to specify whether opacity is dithered, which allows transparency without alpha blending. Can be: - {@link DITHER_NONE}: Opacity dithering is disabled. - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix. - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise. - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise. Defaults to {@link DITHER_NONE}.
+     * Used to specify whether opacity is dithered, which allows transparency without alpha
+     * blending. Can be:
+     *
+     * - {@link DITHER_NONE}: Opacity dithering is disabled.
+     * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+     * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+     * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
+     *
+     * Defaults to {@link DITHER_NONE}.
      *
      * @type {string}
      */
@@ -1107,7 +1225,15 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Used to specify whether shadow opacity is dithered, which allows shadow transparency without alpha blending.  Can be: - {@link DITHER_NONE}: Opacity dithering is disabled. - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix. - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise. - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise. Defaults to {@link DITHER_NONE}.
+     * Used to specify whether shadow opacity is dithered, which allows shadow transparency without
+     * alpha blending.  Can be:
+     *
+     * - {@link DITHER_NONE}: Opacity dithering is disabled.
+     * - {@link DITHER_BAYER8}: Opacity is dithered using a Bayer 8 matrix.
+     * - {@link DITHER_BLUENOISE}: Opacity is dithered using a blue noise.
+     * - {@link DITHER_IGNNOISE}: Opacity is dithered using an interleaved gradient noise.
+     *
+     * Defaults to {@link DITHER_NONE}.
      *
      * @type {string}
      */
@@ -1115,7 +1241,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Used to specify whether specular and reflections are faded out using {@link StandardMaterial#opacity}. Default is true. When set to false use {@link Material#alphaFade} to fade out materials.
+     * Used to specify whether specular and reflections are faded out using
+     * {@link StandardMaterial#opacity}. Default is true. When set to false use
+     * {@link Material#alphaFade} to fade out materials.
      *
      * @type {boolean}
      */
@@ -1171,7 +1299,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex colors.
+     * Use mesh vertex colors for opacity. If opacityMap is set, it'll be multiplied by vertex
+     * colors.
      *
      * @type {boolean}
      */
@@ -1203,7 +1332,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines the visibility of refraction. Material can refract the same cube map as used for reflections.
+     * Defines the visibility of refraction. Material can refract the same cube map as used for
+     * reflections.
      *
      * @type {number}
      */
@@ -1211,7 +1341,10 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines the index of refraction, i.e. The amount of distortion. The value is calculated as (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the object and the one of its own surface. In most situations outer medium is air, so outerIor will be approximately 1. Then you only need to do (1.0 / surfaceIor).
+     * Defines the index of refraction, i.e. The amount of distortion. The value is calculated as
+     * (outerIor / surfaceIor), where inputs are measured indices of refraction, the one around the
+     * object and the one of its own surface. In most situations outer medium is air, so outerIor
+     * will be approximately 1. Then you only need to do (1.0 / surfaceIor).
      *
      * @type {number}
      */
@@ -1219,7 +1352,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The strength of the angular separation of colors (chromatic aberration) transmitting through a volume. Defaults to 0, which is equivalent to no dispersion.
+     * The strength of the angular separation of colors (chromatic aberration) transmitting through
+     * a volume. Defaults to 0, which is equivalent to no dispersion.
      *
      * @type {number}
      */
@@ -1227,7 +1361,11 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Defines the shading model. - {@link SPECULAR_PHONG}: Phong without energy conservation. You should only use it as a backwards compatibility with older projects. - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
+     * Defines the shading model.
+     *
+     * - {@link SPECULAR_PHONG}: Phong without energy conservation. You
+     * should only use it as a backwards compatibility with older projects.
+     * - {@link SPECULAR_BLINN}: Energy-conserving Blinn-Phong.
      *
      * @type {number}
      */
@@ -1235,7 +1373,9 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The specular color of the material. This color value is 3-component (RGB), where each component is between 0 and 1. Defines surface reflection/specular color. Affects specular intensity and tint.
+     * The specular color of the material. This color value is 3-component (RGB), where each
+     * component is between 0 and 1. Defines surface reflection/specular color. Affects specular
+     * intensity and tint.
      *
      * @type {Color}
      */
@@ -1251,7 +1391,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the specular map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -1299,7 +1440,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be multiplied by vertex colors.
+     * Use mesh vertex colors for specular. If specularMap or are specularTint are set, they'll be
+     * multiplied by vertex colors.
      *
      * @type {boolean}
      */
@@ -1379,7 +1521,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The specular color of the sheen (fabric) microfiber structure. This color value is 3-component (RGB), where each component is between 0 and 1.
+     * The specular color of the sheen (fabric) microfiber structure. This color value is 3-component
+     * (RGB), where each component is between 0 and 1.
      *
      * @type {Color}
      */
@@ -1395,7 +1538,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Color channels of the sheen map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled combination.
+     * Color channels of the sheen map to use. Can be "r", "g", "b", "a", "rgb" or any swizzled
+     * combination.
      *
      * @type {string}
      */
@@ -1443,7 +1587,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use mesh vertex colors for sheen. If sheen map or sheen tint are set, they'll be multiplied by vertex colors.
+     * Use mesh vertex colors for sheen. If sheen map or sheen tint are set, they'll be multiplied
+     * by vertex colors.
      *
      * @type {boolean}
      */
@@ -1459,7 +1604,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * The spherical environment map of the material (default is null). This will replace the scene lighting environment.
+     * The spherical environment map of the material (default is null). This will replace the scene
+     * lighting environment.
      *
      * @type {import('../../platform/graphics/texture.js').Texture | null}
      */
@@ -1499,7 +1645,11 @@ class StandardMaterial extends Material {
 
 
     /**
-     * Use metalness properties instead of specular. When enabled, diffuse colors also affect specular instead of the dedicated specular map. This can be used as alternative to specular color to save space. With metalness == 0, the pixel is assumed to be dielectric and diffuse color is used as normal. With metalness == 1, the pixel is fully metallic, and diffuse color is used as specular color instead.
+     * Use metalness properties instead of specular. When enabled, diffuse colors also affect
+     * specular instead of the dedicated specular map. This can be used as alternative to specular
+     * color to save space. With metalness == 0, the pixel is assumed to be dielectric and diffuse
+     * color is used as normal. With metalness == 1, the pixel is fully metallic, and diffuse color
+     * is used as specular color instead.
      *
      * @type {boolean}
      */
@@ -1507,7 +1657,8 @@ class StandardMaterial extends Material {
 
 
     /**
-     * When metalness is enabled, use the specular map to apply color tint to specular reflections. at direct angles.
+     * When metalness is enabled, use the specular map to apply color tint to specular reflections.
+     * at direct angles.
      *
      * @type {boolean}
      */
@@ -1567,6 +1718,8 @@ class StandardMaterial extends Material {
     reset() {
         // set default values
         Object.keys(_props).forEach((name) => {
+            // remove existing undefined values (will force class to use set/get instead)
+            delete this[name];
             this[`_${name}`] = _props[name].value();
         });
 
