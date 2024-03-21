@@ -56,6 +56,7 @@ class StandardMaterial extends Material {
     _disableSetter = true;
 
     userAttributes = new Map();
+
     /**
      * Used to fade out materials when {@link StandardMaterial#opacityFadesSpecular} is set to false.
      *
@@ -1485,6 +1486,7 @@ class StandardMaterial extends Material {
      * @type {boolean}
      */
     useSkybox;
+
     /**
      * Create a new StandardMaterial instance.
      *
@@ -1543,15 +1545,18 @@ class StandardMaterial extends Material {
         this._chunks = { };
         this._uniformCache = { };
     }
+
     /** @ignore */
     set shader(shader) {
         Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
     }
+
     /** @ignore */
     get shader() {
         Debug.warn('StandardMaterial#shader property is not implemented, and should not be used.');
         return null;
     }
+
     /**
      * Object containing custom shader chunks that will replace default ones.
      *
@@ -1566,6 +1571,7 @@ class StandardMaterial extends Material {
         this._dirtyShader = true;
         return this._chunks;
     }
+
     /**
      * Copy a `StandardMaterial`.
      *
@@ -1586,6 +1592,7 @@ class StandardMaterial extends Material {
 
         return this;
     }
+
     /**
      * Sets a vertex shader attribute on a material.
      *
@@ -1637,6 +1644,7 @@ class StandardMaterial extends Material {
             }
         }
     }
+
     // allocate a uniform if it doesn't already exist in the uniform cache
     _allocUniform(name, allocFunc) {
         let uniform = this._uniformCache[name];
@@ -1826,6 +1834,7 @@ class StandardMaterial extends Material {
         this._dirtyShader = false;
         return shader;
     }
+
     /**
      * Removes this material from the scene and possibly frees up memory from its shaders (if there
      * are no other materials using it).
