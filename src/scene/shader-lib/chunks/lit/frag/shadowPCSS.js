@@ -65,7 +65,7 @@ float PCSSBlockerDistance(TEXTURE_ACCEPT(shadowMap), vec2 sampleCoords[PCSS_SAMP
     #endif        
         float isBlocking = step(blocker, z);
         blockers += isBlocking;
-        averageBlocker += blocker * isBlocking;        
+        averageBlocker += blocker * isBlocking;
     }
 
     if (blockers > 0.0)
