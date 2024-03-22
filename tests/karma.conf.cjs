@@ -9,6 +9,8 @@ module.exports = function (config) {
 
         // list of files / patterns to load in the browser
         files: [
+            { pattern: 'node_modules/chai/chai.js', type: 'module' },
+            { pattern: 'tests/setup.js', type: 'module' },
             'build/playcanvas.js',
 
             // test files - change this to a specific file in order to run a single suite
@@ -37,11 +39,10 @@ module.exports = function (config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks: ['mocha', 'chai', 'sinon'],
+        frameworks: ['mocha', 'sinon'],
 
         plugins: [
             'karma-mocha',
-            'karma-chai',
             'karma-sinon',
             'karma-chrome-launcher',
             'karma-spec-reporter'
