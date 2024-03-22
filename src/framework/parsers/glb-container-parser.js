@@ -20,6 +20,7 @@ class GlbContainerParser {
             if (err) {
                 callback(err);
             } else {
+                asset.fire('parse', asset);
                 GlbParser.parse(
                     this._getUrlWithoutParams(url.original),
                     path.extractPath(url.load),
