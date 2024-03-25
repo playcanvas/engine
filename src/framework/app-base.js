@@ -1743,8 +1743,9 @@ class AppBase extends EventHandler {
      *
      * @param {number[]} positions - An array of points to draw lines between. Each point is
      * represented by 3 numbers - x, y and z coordinate.
-     * @param {number[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {number[]|Color} colors - A single color for all lines, or an array of colors to color
+     * the lines. If an array is specified, number of colors it stores must match the number of
+     * positions provided.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
