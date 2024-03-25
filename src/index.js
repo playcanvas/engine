@@ -71,7 +71,7 @@ export * from './platform/audio/constants.js';
 // PLATFORM / GRAPHICS
 export * from './platform/graphics/constants.js';
 export { createGraphicsDevice } from './platform/graphics/graphics-device-create.js';
-export { BindGroupFormat, BindBufferFormat, BindTextureFormat, BindStorageTextureFormat } from './platform/graphics/bind-group-format.js';
+export { BindGroupFormat, BindBufferFormat, BindTextureFormat, BindStorageTextureFormat, BindStorageBufferFormat } from './platform/graphics/bind-group-format.js';
 export { BlendState } from './platform/graphics/blend-state.js';
 export { Compute } from './platform/graphics/compute.js';
 export { DepthState } from './platform/graphics/depth-state.js';
@@ -84,6 +84,7 @@ export { ScopeSpace } from './platform/graphics/scope-space.js';
 export { Shader } from './platform/graphics/shader.js';
 export { ShaderProcessorOptions } from './platform/graphics/shader-processor-options.js';   // used by splats in extras
 export { ShaderUtils } from './platform/graphics/shader-utils.js';  // used by splats in extras
+export { StorageBuffer } from './platform/graphics/storage-buffer.js';
 export { Texture } from './platform/graphics/texture.js';
 export { TextureUtils } from './platform/graphics/texture-utils.js';
 export { TransformFeedback } from './platform/graphics/transform-feedback.js';
