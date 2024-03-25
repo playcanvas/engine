@@ -433,7 +433,8 @@ class MeshInstance {
 
                 toWorldSpace = true;
 
-            } else if (this.node._aabbVer !== this._aabbVer || this.mesh._aabbVer !== this._aabbMeshVer) {
+            // @Magnopus patched - guard against this.mesh being undefined
+            } else if (this.node._aabbVer !== this._aabbVer || this.mesh?._aabbVer !== this._aabbMeshVer) {
 
                 // local space bounding box - either from mesh or empty
                 // @magnopus patched
