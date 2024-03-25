@@ -1,16 +1,12 @@
 import { ChunkBuilder } from '../chunk-builder.js';
 import { LitShader } from './lit-shader.js';
 import { LitOptionsUtils } from './lit-options-utils.js';
+import { ShaderGenerator } from './shader-generator.js';
 
 const dummyUvs = [0, 1, 2, 3, 4, 5, 6, 7];
 
-/**
- * @ignore
- */
-const lit = {
-
-    /** @type {Function} */
-    generateKey: function (options) {
+class ShaderGeneratorLit extends ShaderGenerator {
+    generateKey(options) {
         const key = "lit" +
             dummyUvs.map((dummy, index) => {
                 return options.usedUvs[index] ? "1" : "0";
@@ -19,7 +15,7 @@ const lit = {
             LitOptionsUtils.generateKey(options.litOptions);
 
         return key;
-    },
+    }
 
     /**
      * @param {import('../../../platform/graphics/graphics-device.js').GraphicsDevice} device - The
@@ -28,7 +24,7 @@ const lit = {
      * @returns {object} Returns the created shader definition.
      * @ignore
      */
-    createShaderDefinition: function (device, options) {
+    createShaderDefinition(device, options) {
         const litShader = new LitShader(device, options.litOptions);
 
         const decl = new ChunkBuilder();
@@ -50,6 +46,8 @@ const lit = {
 
         return litShader.getDefinition();
     }
-};
+}
+
+const lit = new ShaderGeneratorLit();
 
 export { lit };

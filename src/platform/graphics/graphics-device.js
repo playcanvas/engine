@@ -2,14 +2,16 @@ import { Debug } from '../../core/debug.js';
 import { EventHandler } from '../../core/event-handler.js';
 import { platform } from '../../core/platform.js';
 import { now } from '../../core/time.js';
+import { Vec2 } from '../../core/math/vec2.js';
 import { Tracing } from '../../core/tracing.js';
+import { Color } from '../../core/math/color.js';
 import { TRACEID_TEXTURES } from '../../core/constants.js';
 
 import {
     BUFFER_STATIC,
     CULLFACE_BACK,
     CLEARFLAG_COLOR, CLEARFLAG_DEPTH,
-    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32
+    PRIMITIVE_POINTS, PRIMITIVE_TRIFAN, SEMANTIC_POSITION, TYPE_FLOAT32, PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F
 } from './constants.js';
 import { BlendState } from './blend-state.js';
 import { DepthState } from './depth-state.js';
@@ -29,6 +31,17 @@ import { StencilParameters } from './stencil-parameters.js';
  */
 class GraphicsDevice extends EventHandler {
     /**
+     * Fired when the canvas is resized. The handler is passed the new width and height as number
+     * parameters.
+     *
+     * @event
+     * @example
+     * graphicsDevice.on('resizecanvas', (width, height) => {
+     *     console.log(`The canvas was resized to ${width}x${height}`);
+     * });
+     */
+
+    /**
      * The canvas DOM element that provides the underlying WebGL context used by the graphics device.
      *
      * @type {HTMLCanvasElement}
@@ -37,12 +50,58 @@ class GraphicsDevice extends EventHandler {
     canvas;
 
     /**
+     * The render target representing the main back-buffer.
+     *
+     * @type {import('./render-target.js').RenderTarget|null}
+     * @ignore
+     */
+    backBuffer = null;
+
+    /**
+     * The dimensions of the back buffer.
+     *
+     * @ignore
+     */
+    backBufferSize = new Vec2();
+
+    /**
+     * The pixel format of the back buffer. Typically PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8 or
+     * PIXELFORMAT_RGB8.
+     *
+     * @ignore
+     */
+    backBufferFormat;
+
+    /**
+     * True if the back buffer should use anti-aliasing.
+     *
+     * @type {boolean}
+     */
+    backBufferAntialias = false;
+
+    /**
      * True if the deviceType is WebGPU
      *
      * @type {boolean}
      * @readonly
      */
     isWebGPU = false;
+
+    /**
+     * True if the deviceType is WebGL1
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGL1 = false;
+
+    /**
+     * True if the deviceType is WebGL2
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    isWebGL2 = false;
 
     /**
      * The scope namespace for shader attributes and variables.
@@ -143,12 +202,44 @@ class GraphicsDevice extends EventHandler {
     supportsVolumeTextures = false;
 
     /**
+     * True if the device supports compute shaders.
+     *
+     * @readonly
+     * @type {boolean}
+     */
+    supportsCompute = false;
+
+    /**
      * Currently active render target.
      *
-     * @type {import('./render-target.js').RenderTarget}
+     * @type {import('./render-target.js').RenderTarget|null}
      * @ignore
      */
     renderTarget = null;
+
+    /**
+     * Array of objects that need to be re-initialized after a context restore event
+     *
+     * @type {import('./shader.js').Shader[]}
+     * @ignore
+     */
+    shaders = [];
+
+    /**
+     * An array of currently created textures.
+     *
+     * @type {import('./texture.js').Texture[]}
+     * @ignore
+     */
+    textures = [];
+
+    /**
+     * A set of currently created render targets.
+     *
+     * @type {Set<import('./render-target.js').RenderTarget>}
+     * @ignore
+     */
+    targets = new Set();
 
     /**
      * A version number that is incremented every frame. This is used to detect if some object were
@@ -201,6 +292,22 @@ class GraphicsDevice extends EventHandler {
       * @readonly
       */
     textureHalfFloatRenderable;
+
+     /**
+      * True if filtering can be applied when sampling float textures.
+      *
+      * @type {boolean}
+      * @readonly
+      */
+    textureFloatFilterable = false;
+
+    /**
+     * True if filtering can be applied when sampling 16-bit float textures.
+     *
+     * @type {boolean}
+     * @readonly
+     */
+    textureHalfFloatFilterable = false;
 
     /**
      * A vertex buffer representing a quad.
@@ -281,25 +388,11 @@ class GraphicsDevice extends EventHandler {
         this.initOptions.antialias ??= true;
         this.initOptions.powerPreference ??= 'high-performance';
 
-        // local width/height without pixelRatio applied
-        this._width = 0;
-        this._height = 0;
-
         // Some devices window.devicePixelRatio can be less than one
         // eg Oculus Quest 1 which returns a window.devicePixelRatio of 0.8
         this._maxPixelRatio = platform.browser ? Math.min(1, window.devicePixelRatio) : 1;
 
-        // Array of objects that need to be re-initialized after a context restore event
-        /** @type {import('./shader.js').Shader[]} */
-        this.shaders = [];
-
         this.buffers = [];
-
-        /** @type {import('./texture.js').Texture[]} */
-        this.textures = [];
-
-        /** @type {import('./render-target.js').RenderTarget[]} */
-        this.targets = [];
 
         this._vram = {
             // #if _PROFILER
@@ -354,14 +447,6 @@ class GraphicsDevice extends EventHandler {
     }
 
     /**
-     * Fired when the canvas is resized.
-     *
-     * @event GraphicsDevice#resizecanvas
-     * @param {number} width - The new width of the canvas in pixels.
-     * @param {number} height - The new height of the canvas in pixels.
-     */
-
-    /**
      * Destroy the graphics device.
      */
     destroy() {
@@ -403,6 +488,8 @@ class GraphicsDevice extends EventHandler {
         this.indexBuffer = null;
         this.vertexBuffers = [];
         this.shader = null;
+        this.shaderValid = undefined;
+        this.shaderAsyncCompile = false;
         this.renderTarget = null;
     }
 
@@ -415,6 +502,8 @@ class GraphicsDevice extends EventHandler {
         // Cached viewport and scissor dimensions
         this.vx = this.vy = this.vw = this.vh = 0;
         this.sx = this.sy = this.sw = this.sh = 0;
+
+        this.blendColor = new Color(0, 0, 0, 0);
     }
 
     /**
@@ -436,6 +525,20 @@ class GraphicsDevice extends EventHandler {
      * @param {BlendState} blendState - New blend state.
      */
     setBlendState(blendState) {
+        Debug.assert(false);
+    }
+
+    /**
+     * Sets the constant blend color and alpha values used with {@link BLENDMODE_CONSTANT} and
+     * {@link BLENDMODE_ONE_MINUS_CONSTANT} factors specified in {@link BlendState}. Defaults to
+     * [0, 0, 0, 0].
+     *
+     * @param {number} r - The value for red.
+     * @param {number} g - The value for green.
+     * @param {number} b - The value for blue.
+     * @param {number} a - The value for alpha.
+     */
+    setBlendColor(r, g, b, a) {
         Debug.assert(false);
     }
 
@@ -466,7 +569,7 @@ class GraphicsDevice extends EventHandler {
      * Sets the specified render target on the device. If null is passed as a parameter, the back
      * buffer becomes the current target for all rendering operations.
      *
-     * @param {import('./render-target.js').RenderTarget} renderTarget - The render target to
+     * @param {import('./render-target.js').RenderTarget|null} renderTarget - The render target to
      * activate.
      * @example
      * // Set a render target to receive all rendering output
@@ -539,7 +642,7 @@ class GraphicsDevice extends EventHandler {
         // #endif
 
         target.init();
-        this.targets.push(target);
+        this.targets.add(target);
 
         // #if _PROFILER
         this._renderTargetCreationTime += now() - startTime;
@@ -584,6 +687,12 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     resizeCanvas(width, height) {
+        const pixelRatio = Math.min(this._maxPixelRatio, platform.browser ? window.devicePixelRatio : 1);
+        const w = Math.floor(width * pixelRatio);
+        const h = Math.floor(height * pixelRatio);
+        if (w !== this.canvas.width || h !== this.canvas.height) {
+            this.setResolution(w, h);
+        }
     }
 
     /**
@@ -595,8 +704,6 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     setResolution(width, height) {
-        this._width = width;
-        this._height = height;
         this.canvas.width = width;
         this.canvas.height = height;
         this.fire(GraphicsDevice.EVENT_RESIZE, width, height);
@@ -612,7 +719,6 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get width() {
-        Debug.error("GraphicsDevice.width is not implemented on current device.");
         return this.canvas.width;
     }
 
@@ -622,7 +728,6 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     get height() {
-        Debug.error("GraphicsDevice.height is not implemented on current device.");
         return this.canvas.height;
     }
 
@@ -646,10 +751,7 @@ class GraphicsDevice extends EventHandler {
      * @type {number}
      */
     set maxPixelRatio(ratio) {
-        if (this._maxPixelRatio !== ratio) {
-            this._maxPixelRatio = ratio;
-            this.resizeCanvas(this._width, this._height);
-        }
+        this._maxPixelRatio = ratio;
     }
 
     get maxPixelRatio() {
@@ -691,6 +793,18 @@ class GraphicsDevice extends EventHandler {
         this.boneLimit = maxBones;
     }
 
+    startRenderPass(renderPass) {
+    }
+
+    endRenderPass(renderPass) {
+    }
+
+    startComputePass() {
+    }
+
+    endComputePass() {
+    }
+
     /**
      * Function which executes at the start of the frame. This should not be called manually, as
      * it is handled by the AppBase instance.
@@ -726,6 +840,47 @@ class GraphicsDevice extends EventHandler {
      * @ignore
      */
     frameEnd() {
+    }
+
+    /**
+     * Get a renderable HDR pixel format supported by the graphics device.
+     *
+     * @param {number[]} [formats] - An array of pixel formats to check for support. Can contain:
+     *
+     * - {@link PIXELFORMAT_111110F}
+     * - {@link PIXELFORMAT_RGBA16F}
+     * - {@link PIXELFORMAT_RGBA32F}
+     *
+     * @param {boolean} [filterable] - If true, the format also needs to be filterable. Defaults to
+     * true.
+     * @returns {number|undefined} The first supported renderable HDR format or undefined if none is
+     * supported.
+     */
+    getRenderableHdrFormat(formats = [PIXELFORMAT_111110F, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], filterable = true) {
+        for (let i = 0; i < formats.length; i++) {
+            const format = formats[i];
+            switch (format) {
+
+                case PIXELFORMAT_111110F: {
+                    if (this.textureRG11B10Renderable)
+                        return format;
+                    break;
+                }
+
+                case PIXELFORMAT_RGBA16F:
+                    if (this.textureHalfFloatRenderable && (!filterable || this.textureHalfFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+
+                case PIXELFORMAT_RGBA32F:
+                    if (this.textureFloatRenderable && (!filterable || this.textureFloatFilterable)) {
+                        return format;
+                    }
+                    break;
+            }
+        }
+        return undefined;
     }
 }
 

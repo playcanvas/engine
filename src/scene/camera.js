@@ -10,6 +10,9 @@ import {
     ASPECT_AUTO, PROJECTION_PERSPECTIVE,
     LAYERID_WORLD, LAYERID_DEPTH, LAYERID_SKYBOX, LAYERID_UI, LAYERID_IMMEDIATE
 } from './constants.js';
+import { RenderPassColorGrab } from './graphics/render-pass-color-grab.js';
+import { RenderPassDepthGrab } from './graphics/render-pass-depth-grab.js';
+import { RenderPassDepth } from './graphics/render-pass-depth.js';
 
 // pre-allocated temp variables
 const _deviceCoord = new Vec3();
@@ -27,7 +30,28 @@ class Camera {
     /**
      * @type {import('./shader-pass.js').ShaderPassInfo|null}
      */
-    shaderPassInfo;
+    shaderPassInfo = null;
+
+    /**
+     * @type {RenderPassColorGrab|null}
+     */
+    renderPassColorGrab = null;
+
+    /**
+     * @type {import('../platform/graphics/render-pass.js').RenderPass|null}
+     */
+    renderPassDepthGrab = null;
+
+    /**
+     * Render passes used to render this camera. If empty, the camera will render using the default
+     * render passes.
+     *
+     * @type {import('../platform/graphics/render-pass.js').RenderPass[]}
+     */
+    renderPasses = [];
+
+    /** @type {number} */
+    jitter = 0;
 
     constructor() {
         this._aspectRatio = 16 / 9;
@@ -69,6 +93,13 @@ class Camera {
         this._viewProjMat = new Mat4();
         this._viewProjMatDirty = true;
 
+        // storage of actual matrices used by the shaders, needed by TAA
+        this._shaderMatricesVersion = 0;
+        this._viewProjInverse = new Mat4();     // inverse view projection matrix from the current frame
+        this._viewProjCurrent = null;           // view projection matrix from the current frame
+        this._viewProjPrevious = new Mat4();    // view projection matrix from the previous frame
+        this._jitters = [0, 0, 0, 0];            // jitter values for TAA, 0-1 - current frame, 2-3 - previous frame
+
         this.frustum = new Frustum();
 
         // Set by XrManager
@@ -80,6 +111,36 @@ class Camera {
             farClip: this._farClip,
             nearClip: this._nearClip
         };
+    }
+
+    destroy() {
+
+        this.renderPassColorGrab?.destroy();
+        this.renderPassColorGrab = null;
+
+        this.renderPassDepthGrab?.destroy();
+        this.renderPassDepthGrab = null;
+
+        this.renderPasses.length = 0;
+    }
+
+    /**
+     * Store camera matrices required by TAA. Only update them once per frame.
+     */
+    _storeShaderMatrices(viewProjMat, jitterX, jitterY, renderVersion) {
+        if (this._shaderMatricesVersion !== renderVersion) {
+            this._shaderMatricesVersion = renderVersion;
+
+            this._viewProjPrevious.copy(this._viewProjCurrent ?? viewProjMat);
+            this._viewProjCurrent ??= new Mat4();
+            this._viewProjCurrent.copy(viewProjMat);
+            this._viewProjInverse.invert(viewProjMat);
+
+            this._jitters[2] = this._jitters[0];
+            this._jitters[3] = this._jitters[1];
+            this._jitters[0] = jitterX;
+            this._jitters[1] = jitterY;
+        }
     }
 
     /**
@@ -425,10 +486,35 @@ class Camera {
         this.sensitivity = other.sensitivity;
 
         this.shaderPassInfo = other.shaderPassInfo;
+        this.jitter = other.jitter;
 
         this._projMatDirty = true;
 
         return this;
+    }
+
+    _enableRenderPassColorGrab(device, enable) {
+        if (enable) {
+            if (!this.renderPassColorGrab) {
+                this.renderPassColorGrab = new RenderPassColorGrab(device);
+            }
+        } else {
+            this.renderPassColorGrab?.destroy();
+            this.renderPassColorGrab = null;
+        }
+    }
+
+    _enableRenderPassDepthGrab(device, renderer, enable) {
+        if (enable) {
+            if (!this.renderPassDepthGrab) {
+                this.renderPassDepthGrab = device.isWebGL1 ?
+                    new RenderPassDepth(device, renderer, this) :
+                    new RenderPassDepthGrab(device, this);
+            }
+        } else {
+            this.renderPassDepthGrab?.destroy();
+            this.renderPassDepthGrab = null;
+        }
     }
 
     _updateViewProjMat() {

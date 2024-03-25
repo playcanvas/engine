@@ -5,7 +5,7 @@ import { http } from '../../platform/net/http.js';
 
 import { Font } from '../font/font.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 function upgradeDataSchema(data) {
     // convert v1 and v2 to v3 font data schema
@@ -34,24 +34,18 @@ function upgradeDataSchema(data) {
 /**
  * Resource handler used for loading {@link Font} resources.
  *
- * @implements {ResourceHandler}
  * @category User Interface
  */
-class FontHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "font";
-
+class FontHandler extends ResourceHandler {
     /**
      * Create a new FontHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
+        super(app, 'font');
+
         this._loader = app.loader;
         this.maxRetries = 0;
     }
@@ -75,12 +69,14 @@ class FontHandler {
                 if (!err) {
                     const data = upgradeDataSchema(response);
                     self._loadTextures(url.load.replace('.json', '.png'), data, function (err, textures) {
-                        if (err) return callback(err);
-
-                        callback(null, {
-                            data: data,
-                            textures: textures
-                        });
+                        if (err) {
+                            callback(err);
+                        } else {
+                            callback(null, {
+                                data: data,
+                                textures: textures
+                            });
+                        }
                     });
                 } else {
                     callback(`Error loading font resource: ${url.original} [${err}]`);
@@ -110,7 +106,8 @@ class FontHandler {
 
                 if (err) {
                     error = err;
-                    return callback(err);
+                    callback(err);
+                    return;
                 }
 
                 texture.upload();

@@ -95,7 +95,7 @@ describe('Quat', function () {
             expect(q1.equals(q2)).to.be.false;
         });
 
-        it('checks for equality of two different quaternions that are close enough', function () {
+        it('checks for equality of different quaternions that are close enough', function () {
             const q1 = new Quat(0.1, 0.2, 0.3, 0.4);
             const q2 = new Quat(0.10000000000000001, 0.2, 0.3, 0.4);
             const epsilon = 0.000001;

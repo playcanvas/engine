@@ -1,11 +1,8 @@
-import { Debug, DebugHelper } from '../../core/debug.js';
+import { Debug } from '../../core/debug.js';
 import { Vec4 } from '../../core/math/vec4.js';
 
-import { CULLFACE_NONE } from '../../platform/graphics/constants.js';
-import { DebugGraphics } from '../../platform/graphics/debug-graphics.js';
-import { DepthState } from '../../platform/graphics/depth-state.js';
-import { RenderPass } from '../../platform/graphics/render-pass.js';
 import { QuadRender } from './quad-render.js';
+import { RenderPassQuad } from './render-pass-quad.js';
 
 const _tempRect = new Vec4();
 
@@ -14,7 +11,7 @@ const _tempRect = new Vec4();
  *
  * @param {import('../../platform/graphics/graphics-device.js').GraphicsDevice} device - The graphics device used to draw
  * the quad.
- * @param {import('../../platform/graphics/render-target.js').RenderTarget|undefined} target - The destination render
+ * @param {import('../../platform/graphics/render-target.js').RenderTarget|null} target - The destination render
  * target. If undefined, target is the frame buffer.
  * @param {import('../../platform/graphics/shader.js').Shader} shader - The shader used for rendering the quad. Vertex
  * shader should contain `attribute vec2 vertex_position`.
@@ -22,6 +19,7 @@ const _tempRect = new Vec4();
  * pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle of the
  * quad, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @category Graphics
  */
 function drawQuadWithShader(device, target, shader, rect, scissorRect) {
 
@@ -34,10 +32,6 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
             Debug.warnOnce('pc.drawQuadWithShader no longer accepts useBlend parameter, and blending state needs to be set up using GraphicsDevice.setBlendState.');
         }
     });
-
-    device.setCullMode(CULLFACE_NONE);
-    device.setDepthState(DepthState.NODEPTH);
-    device.setStencilState(null, null);
 
     // prepare the quad for rendering with the shader
     const quad = new QuadRender(shader);
@@ -52,12 +46,7 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     }
 
     // prepare a render pass to render the quad to the render target
-    const renderPass = new RenderPass(device, () => {
-        DebugGraphics.pushGpuMarker(device, "drawQuadWithShader");
-        quad.render(rect, scissorRect);
-        DebugGraphics.popGpuMarker(device);
-    });
-    DebugHelper.setName(renderPass, `RenderPass-drawQuadWithShader${target ? `-${target.name}` : 'Framebuffer'}`);
+    const renderPass = new RenderPassQuad(device, quad, rect, scissorRect);
     renderPass.init(target);
     renderPass.colorOps.clear = false;
     renderPass.depthStencilOps.clearDepth = false;
@@ -67,10 +56,8 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
     // in a separate render pass B (e.g. rendering UI). Those two render passes need to be merged into one, as they both render into
     // the same framebuffer. The workaround here is to store multi-sampled color buffer, instead of only resolving it, which is wasted
     // memory bandwidth. Without this we end up with a black result (or just UI), as multi-sampled color buffer is never written to.
-    if (device.isWebGPU && target === null) {
-        const samples = target?.samples ?? device.samples;
-        if (samples > 1)
-            renderPass.colorOps.store = true;
+    if (device.isWebGPU && target === null && device.samples > 1) {
+        renderPass.colorOps.store = true;
     }
 
     renderPass.render();
@@ -87,12 +74,12 @@ function drawQuadWithShader(device, target, shader, rect, scissorRect) {
  * `uniform sampler2D * source` in shader.
  * @param {import('../../platform/graphics/render-target.js').RenderTarget} [target] - The destination render target.
  * Defaults to the frame buffer.
- * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The shader used for rendering the texture.
- * Defaults to {@link GraphicsDevice#getCopyShader}.
+ * @param {import('../../platform/graphics/shader.js').Shader} [shader] - The optional custom shader used for rendering the texture.
  * @param {import('../../core/math/vec4.js').Vec4} [rect] - The viewport rectangle to use for the
  * texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
  * @param {import('../../core/math/vec4.js').Vec4} [scissorRect] - The scissor rectangle to use for
  * the texture, in pixels. Defaults to fullscreen (`0, 0, target.width, target.height`).
+ * @category Graphics
  */
 function drawTexture(device, texture, target, shader, rect, scissorRect) {
     Debug.assert(!device.isWebGPU, 'pc.drawTexture is not currently supported on WebGPU platform.');

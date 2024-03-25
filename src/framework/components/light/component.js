@@ -63,8 +63,8 @@ const _lightPropsDefault = [];
  * - {@link LIGHTSHAPE_SPHERE}: Sphere shape.
  *
  * Defaults to pc.LIGHTSHAPE_PUNCTUAL.
- * @property {boolean} affectSpecularity If enabled and the light type is pc.LIGHTTYPE_DIRECTIONAL, material specularity
- * will not be affected by this light. Defaults to true.
+ * @property {boolean} affectSpecularity If enabled, material specularity will be affected by this light.
+ * Ignored for lights other than {@link LIGHTTYPE_DIRECTIONAL}. Defaults to true.
  * @property {boolean} castShadows If enabled the light will cast shadows. Defaults to false.
  * @property {number} shadowDistance The distance from the viewpoint beyond which shadows are no
  * longer rendered. Affects directional lights only. Defaults to 40.
@@ -183,6 +183,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     }
@@ -192,6 +193,7 @@ class LightComponent extends Component {
             const layer = this.system.app.scene.layers.getLayerById(this.layers[i]);
             if (layer) {
                 layer.removeLight(this);
+                this.light.removeLayer(layer);
             }
         }
     }
@@ -210,6 +212,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0 && this.enabled && this.entity.enabled) {
             layer.addLight(this);
+            this.light.addLayer(layer);
         }
     }
 
@@ -217,6 +220,7 @@ class LightComponent extends Component {
         const index = this.layers.indexOf(layer.id);
         if (index >= 0) {
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
     }
 
@@ -558,12 +562,14 @@ function _defineProps() {
             const layer = this.system.app.scene.layers.getLayerById(oldValue[i]);
             if (!layer) continue;
             layer.removeLight(this);
+            this.light.removeLayer(layer);
         }
         for (let i = 0; i < newValue.length; i++) {
             const layer = this.system.app.scene.layers.getLayerById(newValue[i]);
             if (!layer) continue;
             if (this.enabled && this.entity.enabled) {
                 layer.addLight(this);
+                this.light.addLayer(layer);
             }
         }
     });

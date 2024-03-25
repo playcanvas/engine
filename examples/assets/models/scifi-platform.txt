@@ -1,0 +1,5 @@
+The model has been obtained from this address:
+https://sketchfab.com/3d-models/scifi-platform-stage-scene-baked-64adb59a716d43e5a8705ff6fe86c0ce
+
+It's distributed under CC license:
+https://creativecommons.org/licenses/by/4.0/

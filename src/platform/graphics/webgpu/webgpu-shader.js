@@ -1,5 +1,6 @@
 import { Debug, DebugHelper } from '../../../core/debug.js';
 import { SHADERLANGUAGE_WGSL } from '../constants.js';
+import { DebugGraphics } from '../debug-graphics.js';
 
 import { ShaderProcessor } from '../shader-processor.js';
 import { WebgpuDebug } from './webgpu-debug.js';
@@ -13,16 +14,23 @@ class WebgpuShader {
     /**
      * Transpiled vertex shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _vertexCode;
+    _vertexCode = null;
 
     /**
      * Transpiled fragment shader code.
      *
-     * @type {Uint32Array | string}
+     * @type {string|null}
      */
-    _fragmentCode;
+    _fragmentCode = null;
+
+    /**
+     * Compute shader code.
+     *
+     * @type {string|null}
+     */
+    _computeCode = null;
 
     /**
      * Name of the vertex entry point function.
@@ -33,6 +41,11 @@ class WebgpuShader {
      * Name of the fragment entry point function.
      */
     fragmentEntryPoint = 'main';
+
+    /**
+     * Name of the compute entry point function.
+     */
+    computeEntryPoint = 'main';
 
     /**
      * @param {import('../shader.js').Shader} shader - The shader.
@@ -46,8 +59,11 @@ class WebgpuShader {
 
         if (definition.shaderLanguage === SHADERLANGUAGE_WGSL) {
 
-            this._vertexCode = definition.vshader;
-            this._fragmentCode = definition.fshader;
+            this._vertexCode = definition.vshader ?? null;
+            this._fragmentCode = definition.fshader ?? null;
+            this._computeCode = definition.cshader ?? null;
+            this.meshUniformBufferFormat = definition.meshUniformBufferFormat;
+            this.meshBindGroupFormat = definition.meshBindGroupFormat;
             this.vertexEntryPoint = 'vertexMain';
             this.fragmentEntryPoint = 'fragmentMain';
             shader.ready = true;
@@ -98,6 +114,10 @@ class WebgpuShader {
         return this.createShaderModule(this._fragmentCode, 'Fragment');
     }
 
+    getComputeShaderModule() {
+        return this.createShaderModule(this._computeCode, 'Compute');
+    }
+
     process() {
         const shader = this.shader;
 
@@ -127,7 +147,7 @@ class WebgpuShader {
             const spirv = this.shader.device.glslang.compileGLSL(src, shaderType);
             return this.shader.device.twgsl.convertSpirV2WGSL(spirv);
         } catch (err) {
-            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}]`, {
+            console.error(`Failed to transpile webgl ${shaderType} shader [${this.shader.label}] to WebGPU: [${err.message}] while rendering ${DebugGraphics.toString()}`, {
                 processed: src,
                 original: originalSrc,
                 shader: this.shader

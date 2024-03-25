@@ -8,6 +8,7 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBE, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR, TEXTURETYPE_RGBP
 } from '../../platform/graphics/constants.js';
 import { Texture } from '../../platform/graphics/texture.js';
+import { TextureUtils } from '../../platform/graphics/texture-utils.js';
 
 import { BasisParser } from '../parsers/texture/basis.js';
 import { ImgParser } from '../parsers/texture/img.js';
@@ -16,7 +17,7 @@ import { Ktx2Parser } from '../parsers/texture/ktx2.js';
 import { DdsParser } from '../parsers/texture/dds.js';
 import { HdrParser } from '../parsers/texture/hdr.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 const JSON_ADDRESS_MODE = {
     'repeat': ADDRESS_REPEAT,
@@ -93,7 +94,7 @@ class TextureParser {
 // NOTE: this function only resamples RGBA8 and RGBAFloat32 data.
 const _completePartialMipmapChain = function (texture) {
 
-    const requiredMipLevels = Math.log2(Math.max(texture._width, texture._height)) + 1;
+    const requiredMipLevels = TextureUtils.calcMipLevelsCount(texture._width, texture._height);
 
     const isHtmlElement = function (object) {
         return (object instanceof HTMLCanvasElement) ||
@@ -158,24 +159,18 @@ const _completePartialMipmapChain = function (texture) {
 /**
  * Resource handler used for loading 2D and 3D {@link Texture} resources.
  *
- * @implements {ResourceHandler}
  * @category Graphics
  */
-class TextureHandler {
-    /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
-     */
-    handlerType = "texture";
-
+class TextureHandler extends ResourceHandler {
     /**
      * Create a new TextureHandler instance.
      *
      * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
-     * @hideconstructor
+     * @ignore
      */
     constructor(app) {
+        super(app, 'texture');
+
         const assets = app.assets;
         const device = app.graphicsDevice;
 

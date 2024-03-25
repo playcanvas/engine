@@ -287,7 +287,6 @@ class ParticleEmitter {
         this._gpuUpdater = new ParticleGPUUpdater(this, gd);
         this._cpuUpdater = new ParticleCPUUpdater(this);
 
-        this.constantLightCube = gd.scope.resolve('lightCube[0]');
         this.emitterPosUniform = new Float32Array(3);
         this.wrapBoundsUniform = new Float32Array(3);
         this.emitterScaleUniform = new Float32Array([1, 1, 1]);
@@ -313,15 +312,6 @@ class ParticleEmitter {
 
         setProperty('radialSpeedGraph', default0Curve);
         setProperty('radialSpeedGraph2', this.radialSpeedGraph);
-
-        this.lightCube = new Float32Array(6 * 3);
-        this.lightCubeDir = new Array(6);
-        this.lightCubeDir[0] = new Vec3(-1, 0, 0);
-        this.lightCubeDir[1] = new Vec3(1, 0, 0);
-        this.lightCubeDir[2] = new Vec3(0, -1, 0);
-        this.lightCubeDir[3] = new Vec3(0, 1, 0);
-        this.lightCubeDir[4] = new Vec3(0, 0, -1);
-        this.lightCubeDir[5] = new Vec3(0, 0, 1);
 
         this.animTilesParams = new Float32Array(2);
         this.animParams = new Float32Array(4);
@@ -711,7 +701,6 @@ class ParticleEmitter {
         this.meshInstance.pick = false;
         this.meshInstance.updateKey(); // shouldn't be here?
         this.meshInstance.cull = true;
-        this.meshInstance._noDepthDrawGl1 = true;
         if (this.localSpace) {
             this.meshInstance.aabb.setFromTransformedAabb(this.worldBounds, this.node.getWorldTransform());
         } else {

@@ -7,16 +7,51 @@
  */
 
 /**
- * @interface
- * @name ResourceHandler
- * @description Interface for ResourceHandlers used by {@link ResourceLoader}.
+ * Base class for ResourceHandlers used by {@link ResourceLoader}.
  */
 class ResourceHandler {
     /**
-     * @function
-     * @name ResourceHandler#load
-     * @description Load a resource from a remote URL. When loaded (or failed),
-     * use the callback to return an the raw resource data (or error).
+     * Type of the resource the handler handles.
+     *
+     * @type {string}
+     */
+    handlerType = '';
+
+    /**
+     * The running app instance.
+     *
+     * @type {import('../app-base').AppBase}
+     */
+    _app;
+
+    /** @private */
+    _maxRetries = 0;
+
+    /**
+     * @param {import('../app-base').AppBase} app - The running {@link AppBase}.
+     * @param {string} handlerType - The type of the resource the handler handles.
+     */
+    constructor(app, handlerType) {
+        this._app = app;
+        this.handlerType = handlerType;
+    }
+
+    /**
+     * The number of times to retry a failed request for the resource.
+     *
+     * @type {number}
+     */
+    set maxRetries(value) {
+        this._maxRetries = value;
+    }
+
+    get maxRetries() {
+        return this._maxRetries;
+    }
+
+    /**
+     * Load a resource from a remote URL. The base implementation does nothing.
+     *
      * @param {string|object} url - Either the URL of the resource to load or a structure
      * containing the load and original URL.
      * @param {string} [url.load] - The URL to be used for loading the resource.
@@ -28,15 +63,13 @@ class ResourceHandler {
      * ResourceLoader.
      */
     load(url, callback, asset) {
-        throw new Error('not implemented');
+        // do nothing
     }
 
-    /* eslint-disable jsdoc/require-returns-check */
     /**
-     * @function
-     * @name ResourceHandler#open
-     * @description Convert raw resource data into a resource instance. E.g. Take 3D model format
-     * JSON and return a {@link Model}.
+     * The open function is passed the raw resource data. The handler can then process the data
+     * into a format that can be used at runtime. The base implementation simply returns the data.
+     *
      * @param {string} url - The URL of the resource to open.
      * @param {*} data - The raw resource data passed by callback from {@link ResourceHandler#load}.
      * @param {import('../asset/asset.js').Asset} [asset] - Optional asset that is passed by
@@ -44,20 +77,18 @@ class ResourceHandler {
      * @returns {*} The parsed resource data.
      */
     open(url, data, asset) {
-        throw new Error('not implemented');
+        return data;
     }
-    /* eslint-enable jsdoc/require-returns-check */
 
     /**
-     * @function
-     * @name ResourceHandler#[patch]
-     * @description Optional function to perform any operations on a resource, that requires a
-     * dependency on its asset data or any other asset data.
+     * The patch function performs any operations on a resource that requires a dependency on its
+     * asset data or any other asset data. The base implementation does nothing.
+     *
      * @param {import('../asset/asset.js').Asset} asset - The asset to patch.
      * @param {import('../asset/asset-registry.js').AssetRegistry} assets - The asset registry.
      */
     patch(asset, assets) {
-        // optional function
+        // do nothing
     }
 }
 

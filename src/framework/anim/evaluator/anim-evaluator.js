@@ -192,7 +192,8 @@ class AnimEvaluator {
      *
      * @param {number} deltaTime - The amount of time that has passed since the last update, in
      * seconds.
-     * @param {number} outputAnimation - Whether the evaluator should output the results of the update to the bound animation targets.
+     * @param {boolean} [outputAnimation] - Whether the evaluator should output the results of the
+     * update to the bound animation targets.
      */
     update(deltaTime, outputAnimation = true) {
         // copy clips

@@ -16,68 +16,63 @@ import {
     VertexBuffer,
     VertexFormat,
     BlendState,
-    DepthState
+    DepthState,
+    Mesh,
+    MeshInstance,
+    Material,
+    GraphNode
 } from 'playcanvas';
+
+const vertexShader = /* glsl */ `
+attribute vec3 vertex_position;         // unnormalized xy, word flag
+attribute vec4 vertex_texCoord0;        // unnormalized texture space uv, normalized uv
+
+varying vec4 uv0;
+varying float wordFlag;
+
+void main(void) {
+    gl_Position = vec4(vertex_position.xy * 2.0 - 1.0, 0.5, 1.0);
+    uv0 = vertex_texCoord0;
+    wordFlag = vertex_position.z;
+}`;
+
+// this fragment shader renders the bits required for text and graphs. The text is identified
+// in the texture by white color. The graph data is specified as a single row of pixels
+// where the R channel denotes the height of the 1st graph and the G channel the height
+// of the second graph and B channel the height of the last graph
+const fragmentShader = /* glsl */ `
+varying vec4 uv0;
+varying float wordFlag;
+
+uniform vec4 clr;
+uniform sampler2D graphTex;
+uniform sampler2D wordsTex;
+
+void main (void) {
+    vec4 graphSample = texture2D(graphTex, uv0.xy);
+
+    vec4 graph;
+    if (uv0.w < graphSample.r)
+        graph = vec4(0.7, 0.2, 0.2, 1.0);
+    else if (uv0.w < graphSample.g)
+        graph = vec4(0.2, 0.7, 0.2, 1.0);
+    else if (uv0.w < graphSample.b)
+        graph = vec4(0.2, 0.2, 0.7, 1.0);
+    else
+        graph = vec4(0.0, 0.0, 0.0, 1.0 - 0.25 * sin(uv0.w * 3.14159));
+
+    vec4 words = texture2D(wordsTex, vec2(uv0.x, 1.0 - uv0.y));
+
+    gl_FragColor = mix(graph, words, wordFlag) * clr;
+}`;
 
 // render 2d textured quads
 class Render2d {
-    constructor(device, colors, maxQuads = 512) {
-        const vertexShader =
-            'attribute vec3 vertex_position;\n' +       // unnormalized
-            'attribute vec4 vertex_texCoord0;\n' +      // unnormalized texture space uv, normalized uv
-            'uniform vec4 screenAndTextureSize;\n' +    // xy: screen size, zw: texture size
-            'varying vec4 uv0;\n' +
-            'varying float enabled;\n' +
-            'void main(void) {\n' +
-            '    vec2 pos = vertex_position.xy / screenAndTextureSize.xy;\n' +
-            '    gl_Position = vec4(pos * 2.0 - 1.0, 0.5, 1.0);\n' +
-            '    uv0 = vec4(vertex_texCoord0.xy / screenAndTextureSize.zw, vertex_texCoord0.zw);\n' +
-            '    enabled = vertex_position.z;\n' +
-            '}\n';
-
-        // this fragment shader renders the bits required for text and graphs. The text is identified
-        // in the texture by white color. The graph data is specified as a single row of pixels
-        // where the R channel denotes the height of the 1st graph and the G channel the height
-        // of the second graph and B channel the height of the last graph
-        const fragmentShader =
-            'varying vec4 uv0;\n' +
-            'varying float enabled;\n' +
-            'uniform vec4 clr;\n' +
-            'uniform vec4 col0;\n' +
-            'uniform vec4 col1;\n' +
-            'uniform vec4 col2;\n' +
-            'uniform vec4 watermark;\n' +
-            'uniform float watermarkSize;\n' +
-            'uniform vec4 background;\n' +
-            'uniform sampler2D source;\n' +
-            'void main (void) {\n' +
-            '    vec4 tex = texture2D(source, uv0.xy);\n' +
-            '    if (!(tex.rgb == vec3(1.0, 1.0, 1.0))) {\n' +  // pure white is text
-            '       if (enabled < 0.5)\n' +
-            '           tex = background;\n' +
-            '       else if (abs(uv0.w - tex.a) < watermarkSize)\n' +
-            '           tex = watermark;\n' +
-            '       else if (uv0.w < tex.r)\n' +
-            '           tex = col0;\n' +
-            '       else if (uv0.w < tex.g)\n' +
-            '           tex = col1;\n' +
-            '       else if (uv0.w < tex.b)\n' +
-            '           tex = col2;\n' +
-            '       else\n' +
-            '           tex = background;\n' +
-            '    }\n' +
-            '    gl_FragColor = tex * clr;\n' +
-            '}\n';
-
-        const format = new VertexFormat(device, [{
-            semantic: SEMANTIC_POSITION,
-            components: 3,
-            type: TYPE_FLOAT32
-        }, {
-            semantic: SEMANTIC_TEXCOORD0,
-            components: 4,
-            type: TYPE_FLOAT32
-        }]);
+    constructor(device, maxQuads = 512) {
+        const format = new VertexFormat(device, [
+            { semantic: SEMANTIC_POSITION, components: 3, type: TYPE_FLOAT32 },
+            { semantic: SEMANTIC_TEXCOORD0, components: 4, type: TYPE_FLOAT32 }
+        ]);
 
         // generate quad indices
         const indices = new Uint16Array(maxQuads * 6);
@@ -90,130 +85,93 @@ class Render2d {
             indices[i * 6 + 5] = i * 4 + 3;
         }
 
+        const shader = shaderChunks.createShaderFromCode(device, vertexShader, fragmentShader, 'mini-stats');
+
         this.device = device;
-        this.shader = shaderChunks.createShaderFromCode(device,
-                                                        vertexShader,
-                                                        fragmentShader,
-                                                        'mini-stats');
         this.buffer = new VertexBuffer(device, format, maxQuads * 4, BUFFER_STREAM);
         this.data = new Float32Array(this.buffer.numBytes / 4);
-
         this.indexBuffer = new IndexBuffer(device, INDEXFORMAT_UINT16, maxQuads * 6, BUFFER_STATIC, indices);
-
-        this.prims = [];
-        this.prim = null;
-        this.primIndex = -1;
+        this.prim = {
+            type: PRIMITIVE_TRIANGLES,
+            indexed: true,
+            base: 0,
+            count: 0
+        };
         this.quads = 0;
 
-        // colors
-        const setupColor = (name, value) => {
-            this[name] = new Float32Array([value.r, value.g, value.b, value.a]);
-            this[name + 'Id'] = device.scope.resolve(name);
+        this.mesh = new Mesh(device);
+        this.mesh.vertexBuffer = this.buffer;
+        this.mesh.indexBuffer[0] = this.indexBuffer;
+        this.mesh.primitive = [this.prim];
+
+        const material = new Material();
+        this.material = material;
+        material.cull = CULLFACE_NONE;
+        material.shader = shader;
+        material.depthState = DepthState.NODEPTH;
+        material.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
+                                             BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        material.update();
+
+        this.meshInstance = new MeshInstance(this.mesh, material, new GraphNode('MiniStatsMesh'));
+
+        this.uniforms = {
+            clr: new Float32Array(4)
         };
-        setupColor('col0', colors.graph0);
-        setupColor('col1', colors.graph1);
-        setupColor('col2', colors.graph2);
-        setupColor('watermark', colors.watermark);
-        setupColor('background', colors.background);
 
-        this.watermarkSizeId = device.scope.resolve('watermarkSize');
-        this.clrId = device.scope.resolve('clr');
-        this.clr = new Float32Array(4);
-
-        this.screenTextureSizeId = device.scope.resolve('screenAndTextureSize');
-        this.screenTextureSize = new Float32Array(4);
-
-        this.blendState = new BlendState(true, BLENDEQUATION_ADD, BLENDMODE_SRC_ALPHA, BLENDMODE_ONE_MINUS_SRC_ALPHA,
-                                         BLENDEQUATION_ADD, BLENDMODE_ONE, BLENDMODE_ONE);
+        this.targetSize = {
+            width: device.width,
+            height: device.height
+        };
     }
 
-    quad(texture, x, y, w, h, u, v, uw, uh, enabled) {
-        const quad = this.quads++;
+    quad(x, y, w, h, u, v, uw, uh, texture, wordFlag = 0) {
+        const rw = this.targetSize.width;
+        const rh = this.targetSize.height;
+        const x0 = x / rw;
+        const y0 = y / rh;
+        const x1 = (x + w) / rw;
+        const y1 = (y + h) / rh;
 
-        // update primitive
-        let prim = this.prim;
-        if (prim && prim.texture === texture) {
-            prim.count += 6;
-        } else {
-            this.primIndex++;
-            if (this.primIndex === this.prims.length) {
-                prim = {
-                    type: PRIMITIVE_TRIANGLES,
-                    indexed: true,
-                    base: quad * 6,
-                    count: 6,
-                    texture: texture
-                };
-                this.prims.push(prim);
-            } else {
-                prim = this.prims[this.primIndex];
-                prim.base = quad * 6;
-                prim.count = 6;
-                prim.texture = texture;
-            }
-            this.prim = prim;
-        }
+        const tw = texture.width;
+        const th = texture.height;
+        const u0 = u / tw;
+        const v0 = v / th;
+        const u1 = (u + (uw ?? w)) / tw;
+        const v1 = (v + (uh ?? h)) / th;
 
-        const x1 = x + w;
-        const y1 = y + h;
-        const u1 = u + (uw === undefined ? w : uw);
-        const v1 = v + (uh === undefined ? h : uh);
-
-        const colorize = enabled ? 1 : 0;
         this.data.set([
-            x,  y,  colorize, u,  v,  0, 0,
-            x1, y,  colorize, u1, v,  1, 0,
-            x1, y1, colorize, u1, v1, 1, 1,
-            x,  y1, colorize, u,  v1, 0, 1
-        ], 4 * 7 * quad);
+            x0, y0, wordFlag, u0, v0, 0, 0,
+            x1, y0, wordFlag, u1, v0, 1, 0,
+            x1, y1, wordFlag, u1, v1, 1, 1,
+            x0, y1, wordFlag, u0, v1, 0, 1
+        ], 4 * 7 * this.quads);
+
+        this.quads++;
+        this.prim.count += 6;
     }
 
-    render(clr, height) {
-        const device = this.device;
-        const buffer = this.buffer;
+    startFrame() {
+        this.quads = 0;
+        this.prim.count = 0;
+
+        this.targetSize.width = this.device.canvas.scrollWidth;
+        this.targetSize.height = this.device.canvas.scrollHeight;
+    }
+
+    render(app, layer, graphTexture, wordsTexture, clr, height) {
 
         // set vertex data (swap storage)
-        buffer.setData(this.data.buffer);
+        this.buffer.setData(this.data.buffer);
 
-        device.updateBegin();
-        device.setCullMode(CULLFACE_NONE);
-        device.setBlendState(this.blendState);
-        device.setDepthState(DepthState.NODEPTH);
-        device.setStencilState(null, null);
+        this.uniforms.clr.set(clr, 0);
 
-        device.setVertexBuffer(buffer, 0);
-        device.setIndexBuffer(this.indexBuffer);
-        device.setShader(this.shader);
+        // material params
+        this.material.setParameter('clr', this.uniforms.clr);
+        this.material.setParameter('graphTex', graphTexture);
+        this.material.setParameter('wordsTex', wordsTexture);
 
-        // set shader uniforms
-        this.clr.set(clr, 0);
-        this.clrId.setValue(this.clr);
-        this.screenTextureSize[0] = device.canvas.scrollWidth;
-        this.screenTextureSize[1] = device.canvas.scrollHeight;
-
-        // colors
-        this.col0Id.setValue(this.col0);
-        this.col1Id.setValue(this.col1);
-        this.col2Id.setValue(this.col2);
-        this.watermarkId.setValue(this.watermark);
-        this.backgroundId.setValue(this.background);
-
-        for (let i = 0; i <= this.primIndex; ++i) {
-            const prim = this.prims[i];
-            this.screenTextureSize[2] = prim.texture.width;
-            this.screenTextureSize[3] = prim.texture.height;
-            this.screenTextureSizeId.setValue(this.screenTextureSize);
-            device.constantTexSource.setValue(prim.texture);
-            this.watermarkSizeId.setValue(0.5 / height);
-            device.draw(prim);
-        }
-
-        device.updateEnd();
-
-        // reset
-        this.prim = null;
-        this.primIndex = -1;
-        this.quads = 0;
+        app.drawMeshInstance(this.meshInstance, layer);
     }
 }
 

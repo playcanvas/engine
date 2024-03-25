@@ -196,7 +196,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         "    float occlusion = 0.0;",
 
         // webgl1 does not handle non-constant loop, work around it
-        graphicsDevice.webgl2 ? (
+        graphicsDevice.isWebGL2 ? (
             "    for (float i = 0.0; i < uSampleCount.x; i += 1.0) {"
         ) : (
             "   const float maxSampleCount = 256.0;" +
@@ -290,7 +290,7 @@ function SSAOEffect(graphicsDevice, ssaoScript) {
         "",
 
         // webgl1 does not handle non-constant loop, work around it
-        graphicsDevice.webgl2 ? (
+        graphicsDevice.isWebGL2 ? (
             "    for (int x = -uBilatSampleCount; x <= uBilatSampleCount; x++) {" +
             "       for (int y = -uBilatSampleCount; y < uBilatSampleCount; y++) {"
         ) : (

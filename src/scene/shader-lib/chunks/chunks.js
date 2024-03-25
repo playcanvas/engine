@@ -14,6 +14,7 @@ import baseVS from './lit/vert/base.js';
 import baseNineSlicedPS from './lit/frag/baseNineSliced.js';
 import baseNineSlicedVS from './lit/vert/baseNineSliced.js';
 import baseNineSlicedTiledPS from './lit/frag/baseNineSlicedTiled.js';
+import bayerPS from './common/frag/bayer.js';
 import biasConstPS from './lit/frag/biasConst.js';
 import blurVSMPS from './lit/frag/blurVSM.js';
 import clearCoatPS from './standard/frag/clearCoat.js';
@@ -91,6 +92,7 @@ import normalSkinnedVS from './lit/vert/normalSkinned.js';
 import normalXYPS from './standard/frag/normalXY.js';
 import normalXYZPS from './standard/frag/normalXYZ.js';
 import opacityPS from './standard/frag/opacity.js';
+import opacityDitherPS from './standard/frag/opacity-dither.js';
 import outputPS from './lit/frag/output.js';
 import outputAlphaPS from './lit/frag/outputAlpha.js';
 import outputAlphaOpaquePS from './lit/frag/outputAlphaOpaque.js';
@@ -147,11 +149,11 @@ import reflectionCubePS from './lit/frag/reflectionCube.js';
 import reflectionEnvHQPS from './lit/frag/reflectionEnvHQ.js';
 import reflectionEnvPS from './lit/frag/reflectionEnv.js';
 import reflectionSpherePS from './lit/frag/reflectionSphere.js';
-import reflectionSphereLowPS from './lit/frag/reflectionSphereLow.js';
 import reflectionSheenPS from './lit/frag/reflectionSheen.js';
 import refractionCubePS from './lit/frag/refractionCube.js';
 import refractionDynamicPS from './lit/frag/refractionDynamic.js';
 import reprojectPS from './common/frag/reproject.js';
+import sampleCatmullRomPS from './common/frag/sampleCatmullRom.js';
 import screenDepthPS from './common/frag/screenDepth.js';
 import shadowCascadesPS from './lit/frag/shadowCascades.js';
 import shadowEVSMPS from './lit/frag/shadowEVSM.js';
@@ -205,11 +207,10 @@ import webgpuPS from '../../../platform/graphics/shader-chunks/frag/webgpu.js';
 import webgpuVS from '../../../platform/graphics/shader-chunks/vert/webgpu.js';
 
 /**
- * @static
- * @readonly
+ * Object containing all default shader chunks used by shader generators.
+ *
  * @type {object}
- * @name shaderChunks
- * @description Object containing all default shader chunks used by shader generators.
+ * @category Graphics
  */
 const shaderChunks = {
     alphaTestPS,
@@ -228,6 +229,7 @@ const shaderChunks = {
     baseNineSlicedPS,
     baseNineSlicedVS,
     baseNineSlicedTiledPS,
+    bayerPS,
     biasConstPS,
     blurVSMPS,
     clearCoatPS,
@@ -305,6 +307,7 @@ const shaderChunks = {
     normalXYPS,
     normalXYZPS,
     opacityPS,
+    opacityDitherPS,
     outputPS,
     outputAlphaPS,
     outputAlphaOpaquePS,
@@ -361,11 +364,11 @@ const shaderChunks = {
     reflectionEnvHQPS,
     reflectionEnvPS,
     reflectionSpherePS,
-    reflectionSphereLowPS,
     reflectionSheenPS,
     refractionCubePS,
     refractionDynamicPS,
     reprojectPS,
+    sampleCatmullRomPS,
     screenDepthPS,
     shadowCascadesPS,
     shadowEVSMPS,

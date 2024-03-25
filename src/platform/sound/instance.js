@@ -28,6 +28,61 @@ function capTime(time, duration) {
  */
 class SoundInstance extends EventHandler {
     /**
+     * Fired when the instance starts playing its source.
+     *
+     * @event
+     * @example
+     * instance.on('play', () => {
+     *     console.log('Instance started playing');
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when the instance is paused.
+     *
+     * @event
+     * @example
+     * instance.on('pause', () => {
+     *     console.log('Instance paused');
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when the instance is resumed.
+     *
+     * @event
+     * @example
+     * instance.on('resume', () => {
+     *     console.log('Instance resumed');
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when the instance is stopped.
+     *
+     * @event
+     * @example
+     * instance.on('stop', () => {
+     *     console.log('Instance stopped');
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when the sound currently played by the instance ends.
+     *
+     * @event
+     * @example
+     * instance.on('end', () => {
+     *     console.log('Instance ended');
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
      * Gets the source that plays the sound resource. If the Web Audio API is not supported the
      * type of source is [Audio](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/audio).
      * Source is only available after calling play.
@@ -42,19 +97,19 @@ class SoundInstance extends EventHandler {
      * @param {import('./manager.js').SoundManager} manager - The sound manager.
      * @param {import('./sound.js').Sound} sound - The sound to play.
      * @param {object} options - Options for the instance.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - Whether the sound should loop when it reaches the
-     * end or not.
-     * @param {number} [options.startTime=0] - The time from which the playback will start in
-     * seconds. Default is 0 to start at the beginning.
-     * @param {number} [options.duration=0] - The total time after the startTime in seconds when
-     * playback will stop or restart if loop is true.
-     * @param {Function} [options.onPlay=null] - Function called when the instance starts playing.
-     * @param {Function} [options.onPause=null] - Function called when the instance is paused.
-     * @param {Function} [options.onResume=null] - Function called when the instance is resumed.
-     * @param {Function} [options.onStop=null] - Function called when the instance is stopped.
-     * @param {Function} [options.onEnd=null] - Function called when the instance ends.
+     * @param {number} [options.volume] - The playback volume, between 0 and 1. Defaults to 1.
+     * @param {number} [options.pitch] - The relative pitch. Defaults to 1 (plays at normal pitch).
+     * @param {boolean} [options.loop] - Whether the sound should loop when it reaches the end or
+     * not. Defaults to false.
+     * @param {number} [options.startTime] - The time from which the playback will start in
+     * seconds. Default is 0 to start at the beginning. Defaults to 0.
+     * @param {number} [options.duration] - The total time after the startTime in seconds when
+     * playback will stop or restart if loop is true. Defaults to 0.
+     * @param {Function} [options.onPlay] - Function called when the instance starts playing.
+     * @param {Function} [options.onPause] - Function called when the instance is paused.
+     * @param {Function} [options.onResume] - Function called when the instance is resumed.
+     * @param {Function} [options.onStop] - Function called when the instance is stopped.
+     * @param {Function} [options.onEnd] - Function called when the instance ends.
      */
     constructor(manager, sound, options) {
         super();
@@ -243,36 +298,6 @@ class SoundInstance extends EventHandler {
             this._createSource();
         }
     }
-
-    /**
-     * Fired when the instance starts playing its source.
-     *
-     * @event SoundInstance#play
-     */
-
-    /**
-     * Fired when the instance is paused.
-     *
-     * @event SoundInstance#pause
-     */
-
-    /**
-     * Fired when the instance is resumed.
-     *
-     * @event SoundInstance#resume
-     */
-
-    /**
-     * Fired when the instance is stopped.
-     *
-     * @event SoundInstance#stop
-     */
-
-    /**
-     * Fired when the sound currently played by the instance ends.
-     *
-     * @event SoundInstance#end
-     */
 
     /**
      * Gets or sets the current time of the sound that is playing. If the value provided is bigger

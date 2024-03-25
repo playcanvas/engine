@@ -310,9 +310,8 @@ Tween.prototype.start = function (idx) {
 };
 
 // We have to update the tween.js engine somewhere once a frame...
-var app = pc.Application.getApplication();
-if (app) {
-    app.on('update', function (dt) {
+if (pc.Application.getApplication()) {
+    pc.Application.getApplication().on('update', function (dt) {
         TWEEN.update();
     });
 }

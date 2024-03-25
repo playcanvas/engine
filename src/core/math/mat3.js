@@ -91,6 +91,36 @@ class Mat3 {
     }
 
     /**
+     * Extracts the x-axis from the specified matrix.
+     *
+     * @param {Vec3} [x] - The vector to receive the x axis of the matrix.
+     * @returns {Vec3} The x-axis of the specified matrix.
+     */
+    getX(x = new Vec3()) {
+        return x.set(this.data[0], this.data[1], this.data[2]);
+    }
+
+    /**
+     * Extracts the y-axis from the specified matrix.
+     *
+     * @param {Vec3} [y] - The vector to receive the y axis of the matrix.
+     * @returns {Vec3} The y-axis of the specified matrix.
+     */
+    getY(y = new Vec3()) {
+        return y.set(this.data[3], this.data[4], this.data[5]);
+    }
+
+    /**
+     * Extracts the z-axis from the specified matrix.
+     *
+     * @param {Vec3} [z] - The vector to receive the z axis of the matrix.
+     * @returns {Vec3} The z-axis of the specified matrix.
+     */
+    getZ(z = new Vec3()) {
+        return z.set(this.data[6], this.data[7], this.data[8]);
+    }
+
+    /**
      * Reports whether two matrices are equal.
      *
      * @param {Mat3} rhs - The other matrix.
@@ -177,6 +207,7 @@ class Mat3 {
     /**
      * Generates the transpose of the specified 3x3 matrix.
      *
+     * @param {Mat3} [src] - The matrix to transpose. If not set, the matrix is transposed in-place.
      * @returns {Mat3} Self for chaining.
      * @example
      * const m = new pc.Mat3();
@@ -184,13 +215,26 @@ class Mat3 {
      * // Transpose in place
      * m.transpose();
      */
-    transpose() {
-        const m = this.data;
+    transpose(src = this) {
+        const s = src.data;
+        const t = this.data;
 
-        let tmp;
-        tmp = m[1]; m[1] = m[3]; m[3] = tmp;
-        tmp = m[2]; m[2] = m[6]; m[6] = tmp;
-        tmp = m[5]; m[5] = m[7]; m[7] = tmp;
+        if (s === t) {
+            let tmp;
+            tmp = s[1]; t[1] = s[3]; t[3] = tmp;
+            tmp = s[2]; t[2] = s[6]; t[6] = tmp;
+            tmp = s[5]; t[5] = s[7]; t[7] = tmp;
+        } else {
+            t[0] = s[0];
+            t[1] = s[3];
+            t[2] = s[6];
+            t[3] = s[1];
+            t[4] = s[4];
+            t[5] = s[7];
+            t[6] = s[2];
+            t[7] = s[5];
+            t[8] = s[8];
+        }
 
         return this;
     }
@@ -216,6 +260,60 @@ class Mat3 {
         dst[6] = src[8];
         dst[7] = src[9];
         dst[8] = src[10];
+
+        return this;
+    }
+
+    /**
+     * Set the matrix to the inverse of the specified 4x4 matrix.
+     *
+     * @param {import('./mat4.js').Mat4} src - The 4x4 matrix to invert.
+     * @returns {Mat3} Self for chaining.
+     *
+     * @ignore
+     */
+    invertMat4(src) {
+        const s = src.data;
+
+        const a0 = s[0];
+        const a1 = s[1];
+        const a2 = s[2];
+
+        const a4 = s[4];
+        const a5 = s[5];
+        const a6 = s[6];
+
+        const a8 = s[8];
+        const a9 = s[9];
+        const a10 = s[10];
+
+        const b11 =  a10 * a5 - a6 * a9;
+        const b21 = -a10 * a1 + a2 * a9;
+        const b31 =  a6  * a1 - a2 * a5;
+        const b12 = -a10 * a4 + a6 * a8;
+        const b22 =  a10 * a0 - a2 * a8;
+        const b32 = -a6  * a0 + a2 * a4;
+        const b13 =  a9  * a4 - a5 * a8;
+        const b23 = -a9  * a0 + a1 * a8;
+        const b33 =  a5  * a0 - a1 * a4;
+
+        const det =  a0 * b11 + a1 * b12 + a2 * b13;
+        if (det === 0) {
+            this.setIdentity();
+        } else {
+            const invDet = 1 / det;
+            const t = this.data;
+
+            t[0] = b11 * invDet;
+            t[1] = b21 * invDet;
+            t[2] = b31 * invDet;
+            t[3] = b12 * invDet;
+            t[4] = b22 * invDet;
+            t[5] = b32 * invDet;
+            t[6] = b13 * invDet;
+            t[7] = b23 * invDet;
+            t[8] = b33 * invDet;
+        }
 
         return this;
     }

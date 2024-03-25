@@ -343,6 +343,17 @@ describe('Mat4', function () {
             expect(m.data).to.deep.equal(new Float32Array(result));
         });
 
+        it('inverts a translation matrix to the inverse translation matrix given a source matrix', function () {
+            const m = new Mat4();
+            m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 10, 20, 30, 1]);
+
+            const n = new Mat4();
+            n.invert(m);
+
+            const result = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -10, -20, -30, 1];
+            expect(n.data).to.deep.equal(new Float32Array(result));
+        });
+
         it('returns this', function () {
             const m = new Mat4();
             expect(m.invert()).to.equal(m);
@@ -997,6 +1008,17 @@ describe('Mat4', function () {
             m.transpose();
             const result = [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16];
             expect(m.data).to.deep.equal(new Float32Array(result));
+        });
+
+        it('flips a matrix along its top-left to bottom-right diagonal given a source matrix', function () {
+            const m = new Mat4();
+            m.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
+
+            const n = new Mat4();
+            n.transpose(m);
+
+            const result = [1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12, 16];
+            expect(n.data).to.deep.equal(new Float32Array(result));
         });
 
         it('returns this', function () {

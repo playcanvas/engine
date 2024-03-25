@@ -389,7 +389,7 @@ class AnimComponent extends Component {
         let containsBlendTree = false;
         for (let i = 0; i < stateGraph.layers.length; i++) {
             const layer = stateGraph.layers[i];
-            this._addLayer.bind(this)({ ...layer });
+            this._addLayer({ ...layer });
             if (layer.states.some(state => state.blendTree)) {
                 containsBlendTree = true;
             }

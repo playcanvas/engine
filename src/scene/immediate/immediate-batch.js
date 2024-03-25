@@ -96,8 +96,7 @@ class ImmediateBatch {
             this.colors.length = 0;
 
             // inject mesh instance into visible list to be rendered
-            visibleList.list.push(this.meshInstance);
-            visibleList.length++;
+            visibleList.push(this.meshInstance);
         }
     }
 }

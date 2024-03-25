@@ -21,6 +21,7 @@ import { GraphNode } from './graph-node.js';
 import { getDefaultMaterial } from './materials/default-material.js';
 import { LightmapCache } from './graphics/lightmap-cache.js';
 
+let id = 0;
 const _tmpAabb = new BoundingBox();
 const _tempBoneAabb = new BoundingBox();
 const _tempSphere = new BoundingSphere();
@@ -40,22 +41,6 @@ class InstancingData {
      */
     constructor(numObjects) {
         this.count = numObjects;
-    }
-}
-
-class Command {
-    constructor(layer, blendType, command) {
-        this._key = [];
-        this._key[SORTKEY_FORWARD] = getKey(layer, blendType, true, 0);
-        this.command = command;
-    }
-
-    set key(val) {
-        this._key[SORTKEY_FORWARD] = val;
-    }
-
-    get key() {
-        return this._key[SORTKEY_FORWARD];
     }
 }
 
@@ -194,8 +179,20 @@ class MeshInstance {
      * value stores all shaders and bind groups for the shader pass for various light combinations.
      *
      * @type {Array<ShaderCacheEntry|null>}
+     * @private
      */
     _shaderCache = [];
+
+    /** @ignore */
+    id = id++;
+
+    /**
+     * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    pick = true;
 
     /**
      * Create a new MeshInstance instance.
@@ -254,7 +251,6 @@ class MeshInstance {
         this._renderStyle = RENDERSTYLE_SOLID;
         this._receiveShadow = true;
         this._screenSpace = false;
-        this._noDepthDrawGl1 = false;
 
         /**
          * Controls whether the mesh instance can be culled by frustum culling
@@ -263,14 +259,6 @@ class MeshInstance {
          * @type {boolean}
          */
         this.cull = true;
-
-        /**
-         * True if the mesh instance is pickable by the {@link Picker}. Defaults to true.
-         *
-         * @type {boolean}
-         * @ignore
-         */
-        this.pick = true;
 
         this._updateAabb = true;
         this._updateAabbFunc = null;
@@ -291,6 +279,12 @@ class MeshInstance {
          */
         this._morphInstance = null;
 
+        /**
+         * @type {import('./gsplat/gsplat-instance.js').GSplatInstance|null}
+         * @ignore
+         */
+        this.gsplatInstance = null;
+
         this.instancingData = null;
 
         /**
@@ -302,6 +296,7 @@ class MeshInstance {
         // World space AABB
         this.aabb = new BoundingBox();
         this._aabbVer = -1;
+        this._aabbMeshVer = -1;
 
         /**
          * Use this value to affect rendering order of mesh instances. Only used when mesh
@@ -438,9 +433,11 @@ class MeshInstance {
 
                 toWorldSpace = true;
 
-            } else if (this.node._aabbVer !== this._aabbVer) {
+            // @Magnopus patched - guard against this.mesh being undefined
+            } else if (this.node._aabbVer !== this._aabbVer || this.mesh?._aabbVer !== this._aabbMeshVer) {
 
                 // local space bounding box - either from mesh or empty
+                // @magnopus patched
                 if (this.mesh?.aabb) {
                     localAabb.center.copy(this.mesh.aabb.center);
                     localAabb.halfExtents.copy(this.mesh.aabb.halfExtents);
@@ -457,6 +454,7 @@ class MeshInstance {
 
                 toWorldSpace = true;
                 this._aabbVer = this.node._aabbVer;
+                this._aabbMeshVer = this.mesh._aabbVer;
             }
         }
 
@@ -563,17 +561,6 @@ class MeshInstance {
             this.transparent = material.transparent;
 
             this.updateKey();
-
-            // if blend type of the material changes
-            const prevBlend = prevMat && prevMat.transparent;
-            if (material.transparent !== prevBlend) {
-                const scene = this._material._scene || prevMat?._scene;
-                if (scene) {
-                    scene.layers._dirtyBlend = true;
-                } else {
-                    material._dirtyBlend = true;
-                }
-            }
         }
     }
 
@@ -787,19 +774,36 @@ class MeshInstance {
     }
 
     updateKey() {
+
+        // render alphatest/atoc after opaque
         const material = this.material;
-        this._key[SORTKEY_FORWARD] = getKey(this.layer,
-                                            (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType, // render alphatest/atoc after opaque
-                                            false, material.id);
+        const blendType = (material.alphaToCoverage || material.alphaTest) ? BLEND_NORMAL : material.blendType;
+
+        // Key definition:
+        // Bit
+        // 31      : sign bit (leave)
+        // 27 - 30 : layer
+        // 26      : translucency type (opaque/transparent)
+        // 25      : unused
+        // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
+        this._key[SORTKEY_FORWARD] =
+            ((this.layer & 0x0f) << 27) |
+            ((blendType === BLEND_NONE ? 1 : 0) << 26) |
+            ((material.id & 0x1ffffff) << 0);
     }
 
     /**
      * Sets up {@link MeshInstance} to be rendered using Hardware Instancing.
      *
-     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer - Vertex buffer to hold per-instance vertex data
-     * (usually world matrices). Pass null to turn off hardware instancing.
+     * @param {import('../platform/graphics/vertex-buffer.js').VertexBuffer|null} vertexBuffer -
+     * Vertex buffer to hold per-instance vertex data (usually world matrices). Pass null to turn
+     * off hardware instancing.
+     * @param {boolean} cull - Whether to perform frustum culling on this instance. If true, the whole
+     * instance will be culled by the  camera frustum. This often involves setting
+     * {@link RenderComponent#customAabb} containing all instances. Defaults to false, which means
+     * the whole instance is always rendered.
      */
-    setInstancing(vertexBuffer) {
+    setInstancing(vertexBuffer, cull = false) {
         if (vertexBuffer) {
             this.instancingData = new InstancingData(vertexBuffer.numVertices);
             this.instancingData.vertexBuffer = vertexBuffer;
@@ -807,8 +811,8 @@ class MeshInstance {
             // mark vertex buffer as instancing data
             vertexBuffer.format.instancing = true;
 
-            // turn off culling - we do not do per-instance culling, all instances are submitted to GPU
-            this.cull = false;
+            // set up culling
+            this.cull = cull;
         } else {
             this.instancingData = null;
             this.cull = true;
@@ -968,18 +972,4 @@ class MeshInstance {
     }
 }
 
-function getKey(layer, blendType, isCommand, materialId) {
-    // Key definition:
-    // Bit
-    // 31      : sign bit (leave)
-    // 27 - 30 : layer
-    // 26      : translucency type (opaque/transparent)
-    // 25      : Command bit (1: this key is for a command, 0: it's a mesh instance)
-    // 0 - 24  : Material ID (if opaque) or 0 (if transparent - will be depth)
-    return ((layer & 0x0f) << 27) |
-           ((blendType === BLEND_NONE ? 1 : 0) << 26) |
-           ((isCommand ? 1 : 0) << 25) |
-           ((materialId & 0x1ffffff) << 0);
-}
-
-export { Command, MeshInstance };
+export { MeshInstance };

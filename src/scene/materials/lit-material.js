@@ -1,5 +1,5 @@
 import { ShaderProcessorOptions } from '../../platform/graphics/shader-processor-options.js';
-import { FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from "../constants.js";
+import { DITHER_NONE, FRESNEL_SCHLICK, SPECOCC_AO, SPECULAR_BLINN } from "../constants.js";
 import { Material } from './material.js';
 import { LitMaterialOptions } from './lit-material-options.js';
 import { LitMaterialOptionsBuilder } from './lit-material-options-builder.js';
@@ -52,6 +52,10 @@ class LitMaterial extends Material {
     occludeSpecularIntensity = 1;
 
     opacityFadesSpecular = true;
+
+    opacityDither = DITHER_NONE;
+
+    opacityShadowDither = DITHER_NONE;
 
     conserveEnergy = true;
 

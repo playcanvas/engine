@@ -34,6 +34,7 @@ import { ZoneComponentSystem } from './components/zone/system.js';
 import { CameraComponentSystem } from './components/camera/system.js';
 import { LightComponentSystem } from './components/light/system.js';
 import { ScriptComponentSystem } from './components/script/system.js';
+import { GSplatComponentSystem } from './components/gsplat/system.js';
 
 import { RenderHandler } from './handlers/render.js';
 import { AnimationHandler } from './handlers/animation.js';
@@ -46,6 +47,7 @@ import { CssHandler } from './handlers/css.js';
 import { CubemapHandler } from './handlers/cubemap.js';
 import { FolderHandler } from './handlers/folder.js';
 import { FontHandler } from './handlers/font.js';
+import { GSplatHandler } from './handlers/gsplat.js';
 import { HierarchyHandler } from './handlers/hierarchy.js';
 import { HtmlHandler } from './handlers/html.js';
 import { JsonHandler } from './handlers/json.js';
@@ -106,6 +108,9 @@ class Application extends AppBase {
      * handler for input.
      * @param {string} [options.scriptPrefix] - Prefix to apply to script urls before loading.
      * @param {string} [options.assetPrefix] - Prefix to apply to asset urls before loading.
+     * @param {import('../platform/graphics/graphics-device.js').GraphicsDevice} [options.graphicsDevice] - The
+     * graphics device used by the application. If not provided, a WebGl graphics device will be
+     * created.
      * @param {object} [options.graphicsDeviceOptions] - Options object that is passed into the
      * {@link GraphicsDevice} constructor.
      * @param {string[]} [options.scriptsOrder] - Scripts in order of loading first.
@@ -121,7 +126,7 @@ class Application extends AppBase {
 
         const appOptions = new AppOptions();
 
-        appOptions.graphicsDevice = this.createDevice(canvas, options);
+        appOptions.graphicsDevice = options.graphicsDevice ?? this.createDevice(canvas, options);
         this.addComponentSystems(appOptions);
         this.addResourceHandles(appOptions);
 
@@ -180,7 +185,8 @@ class Application extends AppBase {
             SpriteComponentSystem,
             LayoutGroupComponentSystem,
             LayoutChildComponentSystem,
-            ZoneComponentSystem
+            ZoneComponentSystem,
+            GSplatComponentSystem
         ];
     }
 
@@ -209,7 +215,8 @@ class Application extends AppBase {
             TextureAtlasHandler,
             SpriteHandler,
             TemplateHandler,
-            ContainerHandler
+            ContainerHandler,
+            GSplatHandler
         ];
     }
 }

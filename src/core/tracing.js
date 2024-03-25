@@ -2,6 +2,8 @@
  * Log tracing functionality, allowing for tracing of the internal functionality of the engine.
  * Note that the trace logging only takes place in the debug build of the engine and is stripped
  * out in other builds.
+ *
+ * @category Debug
  */
 class Tracing {
     /**
@@ -37,6 +39,7 @@ class Tracing {
      * - {@link TRACEID_VRAM_VB}
      * - {@link TRACEID_VRAM_IB}
      * - {@link TRACEID_RENDERPIPELINE_ALLOC}
+     * - {@link TRACEID_COMPUTEPIPELINE_ALLOC}
      * - {@link TRACEID_PIPELINELAYOUT_ALLOC}
      * - {@link TRACEID_TEXTURES}
      * - {@link TRACEID_GPU_TIMINGS}

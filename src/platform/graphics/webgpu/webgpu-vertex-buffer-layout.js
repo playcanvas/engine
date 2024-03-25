@@ -1,6 +1,6 @@
 import {
     semanticToLocation,
-    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32
+    TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, TYPE_FLOAT16
 } from '../constants.js';
 
 // map of TYPE_*** to GPUVertexFormat
@@ -12,6 +12,7 @@ gpuVertexFormats[TYPE_UINT16] = 'uint16';
 gpuVertexFormats[TYPE_INT32] = 'sint32';
 gpuVertexFormats[TYPE_UINT32] = 'uint32';
 gpuVertexFormats[TYPE_FLOAT32] = 'float32';
+gpuVertexFormats[TYPE_FLOAT16] = 'float16';
 
 const gpuVertexFormatsNormalized = [];
 gpuVertexFormatsNormalized[TYPE_INT8] = 'snorm8';
@@ -21,6 +22,7 @@ gpuVertexFormatsNormalized[TYPE_UINT16] = 'unorm16';
 gpuVertexFormatsNormalized[TYPE_INT32] = 'sint32';     // there is no 32bit normalized signed int
 gpuVertexFormatsNormalized[TYPE_UINT32] = 'uint32';    // there is no 32bit normalized unsigned int
 gpuVertexFormatsNormalized[TYPE_FLOAT32] = 'float32';  // there is no 32bit normalized float
+gpuVertexFormatsNormalized[TYPE_FLOAT16] = 'float16';  // there is no 16bit normalized half-float
 
 /**
  * @ignore

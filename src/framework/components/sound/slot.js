@@ -36,6 +36,66 @@ const instanceOptions = {
  */
 class SoundSlot extends EventHandler {
     /**
+     * Fired when a {@link SoundInstance} starts playing on a slot. The handler is passed the sound
+     * instance that started playing.
+     *
+     * @event
+     * @example
+     * slot.on('play', (instance) => {
+     *     console.log('Sound instance started playing');
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when a {@link SoundInstance} is paused on a slot. The handler is passed the sound
+     * instance that is paused.
+     *
+     * @event
+     * @example
+     * slot.on('pause', (instance) => {
+     *     console.log('Sound instance paused');
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when a {@link SoundInstance} is resumed on a slot. The handler is passed the sound
+     * instance that is resumed.
+     *
+     * @event
+     * @example
+     * slot.on('resume', (instance) => {
+     *     console.log('Sound instance resumed');
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when a {@link SoundInstance} is stopped on a slot. The handler is passed the sound
+     * instance that is stopped.
+     *
+     * @event
+     * @example
+     * slot.on('stop', (instance) => {
+     *     console.log('Sound instance stopped');
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when the sound {@link Asset} assigned to the slot is loaded. The handler is passed the
+     * loaded {@link Sound} resource.
+     *
+     * @event
+     * @example
+     * slot.on('load', (sound) => {
+     *     console.log('Sound resource loaded');
+     * });
+     */
+    static EVENT_LOAD = 'load';
+
+    /**
      * The name of the slot.
      *
      * @type {string}
@@ -56,21 +116,20 @@ class SoundSlot extends EventHandler {
      * slot.
      * @param {string} [name] - The name of the slot. Defaults to 'Untitled'.
      * @param {object} [options] - Settings for the slot.
-     * @param {number} [options.volume=1] - The playback volume, between 0 and 1.
-     * @param {number} [options.pitch=1] - The relative pitch, default of 1, plays at normal pitch.
-     * @param {boolean} [options.loop=false] - If true the sound will restart when it reaches the
-     * end.
-     * @param {number} [options.startTime=0] - The start time from which the sound will start
+     * @param {number} [options.volume] - The playback volume, between 0 and 1.
+     * @param {number} [options.pitch] - The relative pitch, default of 1, plays at normal pitch.
+     * @param {boolean} [options.loop] - If true the sound will restart when it reaches the end.
+     * @param {number} [options.startTime] - The start time from which the sound will start
      * playing.
-     * @param {number} [options.duration=null] - The duration of the sound that the slot will play
+     * @param {number} [options.duration] - The duration of the sound that the slot will play
      * starting from startTime.
-     * @param {boolean} [options.overlap=false] - If true then sounds played from slot will be
-     * played independently of each other. Otherwise the slot will first stop the current sound
-     * before starting the new one.
-     * @param {boolean} [options.autoPlay=false] - If true the slot will start playing as soon as
-     * its audio asset is loaded.
-     * @param {number} [options.asset=null] - The asset id of the audio asset that is going to be
-     * played by this slot.
+     * @param {boolean} [options.overlap] - If true then sounds played from slot will be played
+     * independently of each other. Otherwise the slot will first stop the current sound before
+     * starting the new one.
+     * @param {boolean} [options.autoPlay] - If true the slot will start playing as soon as its
+     * audio asset is loaded.
+     * @param {number} [options.asset] - The asset id of the audio asset that is going to be played
+     * by this slot.
      */
     constructor(component, name = 'Untitled', options = {}) {
         super();
@@ -102,42 +161,6 @@ class SoundSlot extends EventHandler {
         this._onInstanceStopHandler = this._onInstanceStop.bind(this);
         this._onInstanceEndHandler = this._onInstanceEnd.bind(this);
     }
-
-    /**
-     * Fired when a sound instance starts playing.
-     *
-     * @event SoundSlot#play
-     * @param {SoundInstance} instance - The instance that started playing.
-     */
-
-    /**
-     * Fired when a sound instance is paused.
-     *
-     * @event SoundSlot#pause
-     * @param {SoundInstance} instance - The instance that was paused created to play the sound.
-     */
-
-    /**
-     * Fired when a sound instance is resumed.
-     *
-     * @event SoundSlot#resume
-     * @param {SoundInstance} instance - The instance that was resumed.
-     */
-
-    /**
-     * Fired when a sound instance is stopped.
-     *
-     * @event SoundSlot#stop
-     * @param {SoundInstance} instance - The instance that was stopped.
-     */
-
-    /**
-     * Fired when the asset assigned to the slot is loaded.
-     *
-     * @event SoundSlot#load
-     * @param {import('../../../platform/sound/sound.js').Sound} sound - The sound resource that
-     * was loaded.
-     */
 
     /**
      * Plays a sound. If {@link SoundSlot#overlap} is true the new sound instance will be played

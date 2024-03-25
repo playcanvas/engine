@@ -74,10 +74,11 @@ class Quat {
         return new cstr(this.x, this.y, this.z, this.w);
     }
 
-    conjugate() {
-        this.x *= -1;
-        this.y *= -1;
-        this.z *= -1;
+    conjugate(src = this) {
+        this.x = src.x * -1;
+        this.y = src.y * -1;
+        this.z = src.z * -1;
+        this.w = src.w;
 
         return this;
     }
@@ -120,7 +121,8 @@ class Quat {
      * Reports whether two quaternions are equal using an absolute error tolerance.
      *
      * @param {Quat} rhs - The quaternion to be compared against.
-     * @param {number} [epsilon=1e-6] - The maximum difference between each component of the two quaternions. Defaults to 1e-6.
+     * @param {number} [epsilon] - The maximum difference between each component of the two
+     * quaternions. Defaults to 1e-6.
      * @returns {boolean} True if the quaternions are equal and false otherwise.
      * @example
      * const a = new pc.Quat();
@@ -211,6 +213,7 @@ class Quat {
     /**
      * Generates the inverse of the specified quaternion.
      *
+     * @param {Quat} [src] - The quaternion to invert. If not set, the operation is done in place.
      * @returns {Quat} Self for chaining.
      * @example
      * // Create a quaternion rotated 180 degrees around the y-axis
@@ -219,8 +222,8 @@ class Quat {
      * // Invert in place
      * rot.invert();
      */
-    invert() {
-        return this.conjugate().normalize();
+    invert(src = this) {
+        return this.conjugate(src).normalize();
     }
 
     /**
@@ -324,6 +327,7 @@ class Quat {
     /**
      * Returns the specified quaternion converted in place to a unit quaternion.
      *
+     * @param {Quat} [src] - The quaternion to normalize. If not set, the operation is done in place.
      * @returns {Quat} The result of the normalization.
      * @example
      * const v = new pc.Quat(0, 0, 0, 5);
@@ -333,17 +337,17 @@ class Quat {
      * // Outputs 0, 0, 0, 1
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize() {
-        let len = this.length();
+    normalize(src = this) {
+        let len = src.length();
         if (len === 0) {
             this.x = this.y = this.z = 0;
             this.w = 1;
         } else {
             len = 1 / len;
-            this.x *= len;
-            this.y *= len;
-            this.z *= len;
-            this.w *= len;
+            this.x = src.x * len;
+            this.y = src.y * len;
+            this.z = src.z * len;
+            this.w = src.w * len;
         }
 
         return this;

@@ -2,6 +2,7 @@
  * Math API.
  *
  * @namespace
+ * @category Math
  */
 const math = {
     /**
@@ -26,7 +27,7 @@ const math = {
      * @param {number} max - Max value.
      * @returns {number} The clamped value.
      */
-    clamp: function (value, min, max) {
+    clamp(value, min, max) {
         if (value >= max) return max;
         if (value <= min) return min;
         return value;
@@ -41,7 +42,7 @@ const math = {
      * // Set bytes to [0x11, 0x22, 0x33]
      * const bytes = pc.math.intToBytes24(0x112233);
      */
-    intToBytes24: function (i) {
+    intToBytes24(i) {
         const r = (i >> 16) & 0xff;
         const g = (i >> 8) & 0xff;
         const b = (i) & 0xff;
@@ -58,7 +59,7 @@ const math = {
      * // Set bytes to [0x11, 0x22, 0x33, 0x44]
      * const bytes = pc.math.intToBytes32(0x11223344);
      */
-    intToBytes32: function (i) {
+    intToBytes32(i) {
         const r = (i >> 24) & 0xff;
         const g = (i >> 16) & 0xff;
         const b = (i >> 8) & 0xff;
@@ -81,7 +82,7 @@ const math = {
      * // Set result2 to 0x112233 from 3 discrete values
      * const result2 = pc.math.bytesToInt24(0x11, 0x22, 0x33);
      */
-    bytesToInt24: function (r, g, b) {
+    bytesToInt24(r, g, b) {
         if (r.length) {
             b = r[2];
             g = r[1];
@@ -105,7 +106,7 @@ const math = {
      * // Set result2 to 0x11223344 from 4 discrete values
      * const result2 = pc.math.bytesToInt32(0x11, 0x22, 0x33, 0x44);
      */
-    bytesToInt32: function (r, g, b, a) {
+    bytesToInt32(r, g, b, a) {
         if (r.length) {
             a = r[3];
             b = r[2];
@@ -116,7 +117,7 @@ const math = {
         // Why ((r << 24)>>>0)?
         // << operator uses signed 32 bit numbers, so 128<<24 is negative.
         // >>> used unsigned so >>>0 converts back to an unsigned.
-        // See http://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
+        // See https://stackoverflow.com/questions/1908492/unsigned-integer-in-javascript
         return ((r << 24) | (g << 16) | (b << 8) | a) >>> 0;
     },
 
@@ -130,7 +131,7 @@ const math = {
      * between a and b is returned. alpha is clamped between 0 and 1.
      * @returns {number} The linear interpolation of two numbers.
      */
-    lerp: function (a, b, alpha) {
+    lerp(a, b, alpha) {
         return a + (b - a) * math.clamp(alpha, 0, 1);
     },
 
@@ -145,7 +146,7 @@ const math = {
      * between a and b is returned. alpha is clamped between 0 and 1.
      * @returns {number} The linear interpolation of two angles.
      */
-    lerpAngle: function (a, b, alpha) {
+    lerpAngle(a, b, alpha) {
         if (b - a > 180) {
             b -= 360;
         }
@@ -161,7 +162,7 @@ const math = {
      * @param {number} x - Number to check for power-of-two property.
      * @returns {boolean} true if power-of-two and false otherwise.
      */
-    powerOfTwo: function (x) {
+    powerOfTwo(x) {
         return ((x !== 0) && !(x & (x - 1)));
     },
 
@@ -171,7 +172,7 @@ const math = {
      * @param {number} val - The value for which to calculate the next power of 2.
      * @returns {number} The next power of 2.
      */
-    nextPowerOfTwo: function (val) {
+    nextPowerOfTwo(val) {
         val--;
         val |= (val >> 1);
         val |= (val >> 2);
@@ -188,7 +189,7 @@ const math = {
      * @param {number} val - The value for which to calculate the nearest power of 2.
      * @returns {number} The nearest power of 2.
      */
-    nearestPowerOfTwo: function (val) {
+    nearestPowerOfTwo(val) {
         return Math.pow(2, Math.round(Math.log(val) / Math.log(2)));
     },
 
@@ -200,7 +201,7 @@ const math = {
      * @param {number} max - Upper bound for range.
      * @returns {number} Pseudo-random number between the supplied range.
      */
-    random: function (min, max) {
+    random(min, max) {
         const diff = max - min;
         return Math.random() * diff + min;
     },
@@ -213,14 +214,14 @@ const math = {
      * it easy to create a sequence of transitions using smoothstep to interpolate each segment
      * rather than using a more sophisticated or expensive interpolation technique.
      *
-     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * See https://en.wikipedia.org/wiki/Smoothstep for more details.
      *
      * @param {number} min - The lower bound of the interpolation range.
      * @param {number} max - The upper bound of the interpolation range.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      */
-    smoothstep: function (min, max, x) {
+    smoothstep(min, max, x) {
         if (x <= min) return 0;
         if (x >= max) return 1;
 
@@ -233,14 +234,14 @@ const math = {
      * An improved version of the {@link math.smoothstep} function which has zero 1st and 2nd order
      * derivatives at t=0 and t=1.
      *
-     * See http://en.wikipedia.org/wiki/Smoothstep for more details.
+     * See https://en.wikipedia.org/wiki/Smoothstep#Variations for more details.
      *
      * @param {number} min - The lower bound of the interpolation range.
      * @param {number} max - The upper bound of the interpolation range.
      * @param {number} x - The value to interpolate.
      * @returns {number} The smoothly interpolated value clamped between zero and one.
      */
-    smootherstep: function (min, max, x) {
+    smootherstep(min, max, x) {
         if (x <= min) return 0;
         if (x >= max) return 1;
 
@@ -256,7 +257,7 @@ const math = {
      * @param {number} multiple - The multiple to round up to.
      * @returns {number} A number rounded up to nearest multiple.
      */
-    roundUp: function (numToRound, multiple) {
+    roundUp(numToRound, multiple) {
         if (multiple === 0)
             return numToRound;
         return Math.ceil(numToRound / multiple) * multiple;
@@ -272,7 +273,7 @@ const math = {
      * @returns {boolean} true if between or false otherwise.
      * @ignore
      */
-    between: function (num, a, b, inclusive) {
+    between(num, a, b, inclusive) {
         const min = Math.min(a, b);
         const max = Math.max(a, b);
         return inclusive ? num >= min && num <= max : num > min && num < max;

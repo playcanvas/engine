@@ -31,7 +31,7 @@ vec3 vogelSphere(int sampleIndex, float count, float phi, float r) {
 
 float noise(vec2 screenPos) {
     const float PHI = 1.61803398874989484820459;  // Φ = Golden Ratio   
-    return fract(tan(distance(screenPos * PHI, screenPos)) * screenPos.x);
+    return fract(sin(dot(screenPos * PHI, screenPos)) * screenPos.x);
 }
 
 #ifndef UNPACKFLOAT

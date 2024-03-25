@@ -35,11 +35,12 @@ import {
     TEXTURETYPE_DEFAULT, TEXTURETYPE_RGBM, TEXTURETYPE_SWIZZLEGGGR,
     TYPE_INT8, TYPE_UINT8, TYPE_INT16, TYPE_UINT16, TYPE_INT32, TYPE_UINT32, TYPE_FLOAT32, SEMANTIC_TEXCOORD2, SEMANTIC_TEXCOORD3, SEMANTIC_TEXCOORD4
 } from '../platform/graphics/constants.js';
-import { begin, end, fogCode, gammaCode, skinCode, tonemapCode } from '../scene/shader-lib/programs/common.js';
+import { ShaderGenerator } from '../scene/shader-lib/programs/shader-generator.js';
 import { drawQuadWithShader } from '../scene/graphics/quad-render-utils.js';
 import { shaderChunks } from '../scene/shader-lib/chunks/chunks.js';
 import { GraphicsDevice } from '../platform/graphics/graphics-device.js';
 import { IndexBuffer } from '../platform/graphics/index-buffer.js';
+import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { PostEffect } from '../scene/graphics/post-effect.js';
 import { PostEffectQueue } from '../framework/components/camera/post-effect-queue.js';
 import { ProgramLibrary } from '../scene/shader-lib/program-library.js';
@@ -53,11 +54,10 @@ import { VertexBuffer } from '../platform/graphics/vertex-buffer.js';
 import { VertexFormat } from '../platform/graphics/vertex-format.js';
 import { VertexIterator } from '../platform/graphics/vertex-iterator.js';
 import { ShaderUtils } from '../platform/graphics/shader-utils.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { BlendState } from '../platform/graphics/blend-state.js';
 import { DepthState } from '../platform/graphics/depth-state.js';
 
-import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LINEBATCH_OVERLAY, LAYERID_WORLD } from '../scene/constants.js';
+import { PROJECTION_ORTHOGRAPHIC, PROJECTION_PERSPECTIVE, LAYERID_IMMEDIATE, LAYERID_WORLD } from '../scene/constants.js';
 import { calculateTangents, createBox, createCapsule, createCone, createCylinder, createMesh, createPlane, createSphere, createTorus } from '../scene/procedural.js';
 import { partitionSkin } from '../scene/skin-partition.js';
 import { BasicMaterial } from '../scene/materials/basic-material.js';
@@ -66,7 +66,7 @@ import { GraphNode } from '../scene/graph-node.js';
 import { Material } from '../scene/materials/material.js';
 import { Mesh } from '../scene/mesh.js';
 import { Morph } from '../scene/morph.js';
-import { MeshInstance, Command } from '../scene/mesh-instance.js';
+import { MeshInstance } from '../scene/mesh-instance.js';
 import { Model } from '../scene/model.js';
 import { ParticleEmitter } from '../scene/particle-system/particle-emitter.js';
 import { Picker } from '../framework/graphics/picker.js';
@@ -120,6 +120,9 @@ import { basisInitialize } from '../framework/handlers/basis.js';
 import { LitShader } from '../scene/shader-lib/programs/lit-shader.js';
 
 // CORE
+export const LINEBATCH_WORLD = 0;
+export const LINEBATCH_OVERLAY = 1;
+export const LINEBATCH_GIZMO = 2;
 
 export const log = {
     write: function (text) {
@@ -368,14 +371,14 @@ export function ContextCreationError(message) {
 ContextCreationError.prototype = Error.prototype;
 
 export const programlib = {
-    begin: begin,
+    begin: ShaderGenerator.begin,
     dummyFragmentCode: ShaderUtils.dummyFragmentCode,
-    end: end,
-    fogCode: fogCode,
-    gammaCode: gammaCode,
+    end: ShaderGenerator.end,
+    fogCode: ShaderGenerator.fogCode,
+    gammaCode: ShaderGenerator.gammaCode,
     precisionCode: ShaderUtils.precisionCode,
-    skinCode: skinCode,
-    tonemapCode: tonemapCode,
+    skinCode: ShaderGenerator.skinCode,
+    tonemapCode: ShaderGenerator.tonemapCode,
     versionCode: ShaderUtils.versionCode
 };
 
@@ -567,8 +570,8 @@ Object.defineProperties(RenderTarget.prototype, {
 
 Object.defineProperty(VertexFormat, 'defaultInstancingFormat', {
     get: function () {
-        Debug.deprecated('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
-        return VertexFormat.getDefaultInstancingFormat(GraphicsDeviceAccess.get());
+        Debug.assert('pc.VertexFormat.defaultInstancingFormat is deprecated, use pc.VertexFormat.getDefaultInstancingFormat(graphicsDevice).');
+        return null;
     }
 });
 
@@ -611,6 +614,13 @@ Object.defineProperties(Texture.prototype, {
             Debug.deprecated('pc.Texture#autoMipmap is deprecated, use pc.Texture#mipmaps instead.');
             this._mipmaps = value;
         }
+    }
+});
+
+Object.defineProperty(GraphicsDevice.prototype, 'webgl2', {
+    get: function () {
+        Debug.deprecated('pc.GraphicsDevice#webgl2 is deprecated, use pc.GraphicsDevice#isWebGL2 instead.');
+        return this.isWebGL2;
     }
 });
 
@@ -733,7 +743,6 @@ export const scene = {
         createBox: createBox
     },
     BasicMaterial: BasicMaterial,
-    Command: Command,
     ForwardRenderer: ForwardRenderer,
     GraphNode: GraphNode,
     Material: Material,
@@ -756,6 +765,20 @@ Object.defineProperty(Scene.prototype, 'defaultMaterial', {
     get: function () {
         Debug.deprecated('pc.Scene#defaultMaterial is deprecated.');
         return getDefaultMaterial(getApplication().graphicsDevice);
+    }
+});
+
+Object.defineProperty(LayerComposition.prototype, '_meshInstances', {
+    get: function () {
+        Debug.deprecated('pc.LayerComposition#_meshInstances is deprecated.');
+        return null;
+    }
+});
+
+Object.defineProperty(Scene.prototype, 'drawCalls', {
+    get: function () {
+        Debug.deprecated('pc.Scene#drawCalls is deprecated and no longer provides mesh instances.');
+        return null;
     }
 });
 
@@ -787,18 +810,12 @@ Object.defineProperty(Layer.prototype, 'renderTarget', {
     set: function (rt) {
         Debug.deprecated(`pc.Layer#renderTarget is deprecated. Set the render target on the camera instead.`);
         this._renderTarget = rt;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     },
     get: function () {
         return this._renderTarget;
     }
 });
-
-// This can be removed when 1.56 is out and the Editor no longer calls this
-Scene.prototype._updateSkybox = function (device) {
-    Debug.deprecated(`pc.Scene#_updateSkybox is deprecated. Use pc.Scene#_updateSky instead.`);
-    this._updateSky(device);
-};
 
 Scene.prototype.addModel = function (model) {
     Debug.deprecated('pc.Scene#addModel is deprecated.');

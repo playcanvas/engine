@@ -35,6 +35,78 @@ const PARAM_ATLAS_RECT = 'atlasRect';
  */
 class SpriteComponent extends Component {
     /**
+     * Fired when an animation clip starts playing. The handler is passed the
+     * {@link SpriteAnimationClip} that started playing.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('play', (clip) => {
+     *     console.log(`Animation clip ${clip.name} started playing.`);
+     * });
+     */
+    static EVENT_PLAY = 'play';
+
+    /**
+     * Fired when an animation clip is paused. The handler is passed the
+     * {@link SpriteAnimationClip} that was paused.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('pause', (clip) => {
+     *     console.log(`Animation clip ${clip.name} paused.`);
+     * });
+     */
+    static EVENT_PAUSE = 'pause';
+
+    /**
+     * Fired when an animation clip is resumed. The handler is passed the
+     * {@link SpriteAnimationClip} that was resumed.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('resume', (clip) => {
+     *     console.log(`Animation clip ${clip.name} resumed.`);
+     * });
+     */
+    static EVENT_RESUME = 'resume';
+
+    /**
+     * Fired when an animation clip is stopped. The handler is passed the
+     * {@link SpriteAnimationClip} that was stopped.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('stop', (clip) => {
+     *     console.log(`Animation clip ${clip.name} stopped.`);
+     * });
+     */
+    static EVENT_STOP = 'stop';
+
+    /**
+     * Fired when an animation clip stops playing because it reached its end. The handler is passed
+     * the {@link SpriteAnimationClip} that ended.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('end', (clip) => {
+     *     console.log(`Animation clip ${clip.name} ended.`);
+     * });
+     */
+    static EVENT_END = 'end';
+
+    /**
+     * Fired when an animation clip reached the end of its current loop. The handler is passed the
+     * {@link SpriteAnimationClip} that looped.
+     *
+     * @event
+     * @example
+     * entity.sprite.on('loop', (clip) => {
+     *     console.log(`Animation clip ${clip.name} looped.`);
+     * });
+     */
+    static EVENT_LOOP = 'loop';
+
+    /**
      * Create a new SpriteComponent instance.
      *
      * @param {import('./system.js').SpriteComponentSystem} system - The ComponentSystem that
@@ -108,48 +180,6 @@ class SpriteComponent extends Component {
          */
         this._currentClip = this._defaultClip;
     }
-
-    /**
-     * Fired when an animation clip starts playing.
-     *
-     * @event SpriteComponent#play
-     * @param {SpriteAnimationClip} clip - The clip that started playing.
-     */
-
-    /**
-     * Fired when an animation clip is paused.
-     *
-     * @event SpriteComponent#pause
-     * @param {SpriteAnimationClip} clip - The clip that was paused.
-     */
-
-    /**
-     * Fired when an animation clip is resumed.
-     *
-     * @event SpriteComponent#resume
-     * @param {SpriteAnimationClip} clip - The clip that was resumed.
-     */
-
-    /**
-     * Fired when an animation clip is stopped.
-     *
-     * @event SpriteComponent#stop
-     * @param {SpriteAnimationClip} clip - The clip that was stopped.
-     */
-
-    /**
-     * Fired when an animation clip stops playing because it reached its ending.
-     *
-     * @event SpriteComponent#end
-     * @param {SpriteAnimationClip} clip - The clip that ended.
-     */
-
-    /**
-     * Fired when an animation clip reached the end of its current loop.
-     *
-     * @event SpriteComponent#loop
-     * @param {SpriteAnimationClip} clip - The clip.
-     */
 
     /**
      * The type of the SpriteComponent. Can be:

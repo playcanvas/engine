@@ -1,18 +1,18 @@
 import { http } from '../../platform/net/http.js';
-
 import { Template } from '../template.js';
+import { ResourceHandler } from './handler.js';
 
-class TemplateHandler {
+class TemplateHandler extends ResourceHandler {
     /**
-     * Type of the resource the handler handles.
+     * TextDecoder for decoding binary data.
      *
-     * @type {string}
+     * @type {TextDecoder|null}
+     * @private
      */
-    handlerType = "template";
+    decoder = null;
 
     constructor(app) {
-        this._app = app;
-        this.maxRetries = 0;
+        super(app, 'template');
     }
 
     load(url, callback) {
@@ -40,6 +40,17 @@ class TemplateHandler {
 
     open(url, data) {
         return new Template(this._app, data);
+    }
+
+    /**
+     * Parses raw DataView and returns string.
+     *
+     * @param {DataView} data - The raw data as a DataView
+     * @returns {Template} The parsed resource data.
+     */
+    openBinary(data) {
+        this.decoder ??= new TextDecoder('utf-8');
+        return new Template(this._app, JSON.parse(this.decoder.decode(data)));
     }
 }
 

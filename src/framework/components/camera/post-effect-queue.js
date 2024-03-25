@@ -1,11 +1,11 @@
-import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_111110F, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
+import { ADDRESS_CLAMP_TO_EDGE, FILTER_NEAREST, PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8 } from '../../../platform/graphics/constants.js';
 import { DebugGraphics } from '../../../platform/graphics/debug-graphics.js';
 import { RenderTarget } from '../../../platform/graphics/render-target.js';
 import { Texture } from '../../../platform/graphics/texture.js';
 
 import { LAYERID_DEPTH } from '../../../scene/constants.js';
 
-class PostEffect {
+class PostEffectEntry {
     constructor(effect, inputTarget) {
         this.effect = effect;
         this.inputTarget = inputTarget;
@@ -42,7 +42,7 @@ class PostEffectQueue {
         /**
          * All of the post effects in the queue.
          *
-         * @type {PostEffect[]}
+         * @type {PostEffectEntry[]}
          * @ignore
          */
         this.effects = [];
@@ -72,10 +72,13 @@ class PostEffectQueue {
      */
     _allocateColorBuffer(format, name) {
         const rect = this.camera.rect;
-        const width = Math.floor(rect.z * (this.camera.renderTarget?.width ?? this.app.graphicsDevice.width));
-        const height = Math.floor(rect.w * (this.camera.renderTarget?.height ?? this.app.graphicsDevice.height));
+        const renderTarget = this.destinationRenderTarget;
+        const device = this.app.graphicsDevice;
 
-        const colorBuffer = new Texture(this.app.graphicsDevice, {
+        const width = Math.floor(rect.z * (renderTarget?.width ?? device.width));
+        const height = Math.floor(rect.w * (renderTarget?.height ?? device.height));
+
+        const colorBuffer = new Texture(device, {
             name: name,
             format: format,
             width: width,
@@ -101,7 +104,7 @@ class PostEffectQueue {
     _createOffscreenTarget(useDepth, hdr) {
 
         const device = this.app.graphicsDevice;
-        const format = hdr && device.getHdrFormat(false, true, false, false, hdr === PIXELFORMAT_111110F) || PIXELFORMAT_RGBA8;
+        const format = hdr && device.getRenderableHdrFormat([PIXELFORMAT_RGBA16F, PIXELFORMAT_RGBA32F], true) || PIXELFORMAT_RGBA8;
         const name = this.camera.entity.name + '-posteffect-' + this.effects.length;
 
         const colorBuffer = this._allocateColorBuffer(format, name);
@@ -133,7 +136,8 @@ class PostEffectQueue {
      * Adds a post effect to the queue. If the queue is disabled adding a post effect will
      * automatically enable the queue.
      *
-     * @param {PostEffect} effect - The post effect to add to the queue.
+     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post
+     * effect to add to the queue.
      */
     addEffect(effect) {
         // first rendering of the scene requires depth buffer
@@ -141,7 +145,7 @@ class PostEffectQueue {
         const isFirstEffect = effects.length === 0;
 
         const inputTarget = this._createOffscreenTarget(isFirstEffect, effect.hdr);
-        const newEntry = new PostEffect(effect, inputTarget);
+        const newEntry = new PostEffectEntry(effect, inputTarget);
         effects.push(newEntry);
 
         this._sourceTarget = newEntry.inputTarget;
@@ -165,7 +169,8 @@ class PostEffectQueue {
      * Removes a post effect from the queue. If the queue becomes empty it will be disabled
      * automatically.
      *
-     * @param {PostEffect} effect - The post effect to remove.
+     * @param {import('../../../scene/graphics/post-effect.js').PostEffect} effect - The post effect
+     * to remove.
      */
     removeEffect(effect) {
 
@@ -345,17 +350,25 @@ class PostEffectQueue {
      */
     _onCanvasResized(width, height) {
         const rect = this.camera.rect;
-        const device = this.app.graphicsDevice;
-        this.camera.camera.aspectRatio = (device.width * rect.z) / (device.height * rect.w);
+        const renderTarget = this.destinationRenderTarget;
+
+        width = renderTarget?.width ?? width;
+        height = renderTarget?.height ?? height;
+
+        this.camera.camera.aspectRatio = (width * rect.z) / (height * rect.w);
 
         this.resizeRenderTargets();
     }
 
     resizeRenderTargets() {
+        const device = this.app.graphicsDevice;
+        const renderTarget = this.destinationRenderTarget;
+        const width = renderTarget?.width ?? device.width;
+        const height = renderTarget?.height ?? device.height;
 
         const rect = this.camera.rect;
-        const desiredWidth = Math.floor(rect.z * this.app.graphicsDevice.width);
-        const desiredHeight = Math.floor(rect.w * this.app.graphicsDevice.height);
+        const desiredWidth = Math.floor(rect.z * width);
+        const desiredHeight = Math.floor(rect.w * height);
 
         const effects = this.effects;
 

@@ -10,27 +10,23 @@ import { AnimEvents } from '../anim/evaluator/anim-events.js';
 
 import { GlbParser } from '../parsers/glb-parser.js';
 
-/** @typedef {import('./handler.js').ResourceHandler} ResourceHandler */
+import { ResourceHandler } from './handler.js';
 
 /**
  * Resource handler used for loading {@link Animation} resources.
  *
- * @implements {ResourceHandler}
  * @category Animation
  */
-class AnimationHandler {
+class AnimationHandler extends ResourceHandler {
     /**
-     * Type of the resource the handler handles.
-     *
-     * @type {string}
+     * @param {import('../app-base.js').AppBase} app - The running {@link AppBase}.
+     * @ignore
      */
-    handlerType = "animation";
-
-    /** @hideconstructor */
     constructor(app) {
+        super(app, 'animation');
+
         this.device = app.graphicsDevice;
         this.assets = app.assets;
-        this.maxRetries = 0;
     }
 
     load(url, callback, asset) {
@@ -84,9 +80,6 @@ class AnimationHandler {
 
     open(url, data, asset) {
         return data;
-    }
-
-    patch(asset, assets) {
     }
 
     _parseAnimationV3(data) {

@@ -40,7 +40,7 @@ describe('BatchManager', function () {
         this.app.batcher.generate();
 
         const layer = this.app.scene.layers.getLayerById(LAYERID_WORLD);
-        const instances = layer.opaqueMeshInstances;
+        const instances = layer.meshInstances;
 
         expect(instances.length).to.equal(1);
         expect(instances[0]).not.to.equal(e1.model.meshInstances[0]);

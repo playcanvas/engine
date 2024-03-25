@@ -3,7 +3,6 @@ import { hash32Fnv1a } from '../core/hash.js';
 
 import {
     LIGHTTYPE_DIRECTIONAL,
-    BLEND_NONE,
     LAYER_FX,
     SHADER_FORWARD,
     SORTKEY_FORWARD,
@@ -34,60 +33,26 @@ function sortFrontToBack(drawCallA, drawCallB) {
 
 const sortCallbacks = [null, sortManual, sortMaterialMesh, sortBackToFront, sortFrontToBack];
 
-function sortLights(lightA, lightB) {
-    return lightB.key - lightA.key;
-}
-
 // Layers
 let layerCounter = 0;
 
 const lightKeys = [];
+const _tempMaterials = new Set();
 
-class VisibleInstanceList {
-    constructor() {
-        this.list = [];
-        this.length = 0;
-        this.done = false;
-    }
-}
+class CulledInstances {
+    /**
+     * Visible opaque mesh instances.
+     *
+     * @type {import('./mesh-instance.js').MeshInstance[]}
+     */
+    opaque = [];
 
-class InstanceList {
-    constructor() {
-        this.opaqueMeshInstances = [];
-        this.transparentMeshInstances = [];
-        this.shadowCasters = [];
-
-        // arrays of VisibleInstanceList for each camera of this layer
-        this.visibleOpaque = [];
-        this.visibleTransparent = [];
-    }
-
-    // prepare for culling of camera with specified index
-    prepare(index) {
-
-        // make sure visibility lists are allocated
-        if (!this.visibleOpaque[index]) {
-            this.visibleOpaque[index] = new VisibleInstanceList();
-        }
-
-        if (!this.visibleTransparent[index]) {
-            this.visibleTransparent[index] = new VisibleInstanceList();
-        }
-
-        // mark them as not processed yet
-        this.visibleOpaque[index].done = false;
-        this.visibleTransparent[index].done = false;
-    }
-
-    // delete entry for a camera with specified index
-    delete(index) {
-        if (index < this.visibleOpaque.length) {
-            this.visibleOpaque.splice(index, 1);
-        }
-        if (index < this.visibleTransparent.length) {
-            this.visibleTransparent.splice(index, 1);
-        }
-    }
+    /**
+     * Visible transparent mesh instances.
+     *
+     * @type {import('./mesh-instance.js').MeshInstance[]}
+     */
+    transparent = [];
 }
 
 /**
@@ -98,6 +63,117 @@ class InstanceList {
  * @category Graphics
  */
 class Layer {
+    /**
+     * Mesh instances assigned to this layer.
+     *
+     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @ignore
+     */
+    meshInstances = [];
+
+    /**
+     * Mesh instances assigned to this layer, stored in a set.
+     *
+     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @ignore
+     */
+    meshInstancesSet = new Set();
+
+    /**
+     * Shadow casting instances assigned to this layer.
+     *
+     * @type {import('./mesh-instance.js').MeshInstance[]}
+     * @ignore
+     */
+    shadowCasters = [];
+
+    /**
+     * Shadow casting instances assigned to this layer, stored in a set.
+     *
+     * @type {Set<import('./mesh-instance.js').MeshInstance>}
+     * @ignore
+     */
+    shadowCastersSet = new Set();
+
+    /**
+     * Visible (culled) mesh instances assigned to this layer. Looked up by the Camera.
+     *
+     * @type {WeakMap<import('./camera.js').Camera, CulledInstances>}
+     * @private
+     */
+    _visibleInstances = new WeakMap();
+
+    /**
+     * All lights assigned to a layer.
+     *
+     * @type {import('./light.js').Light[]}
+     * @private
+     */
+    _lights = [];
+
+    /**
+     * All lights assigned to a layer stored in a set.
+     *
+     * @type {Set<import('./light.js').Light>}
+     * @private
+     */
+
+    _lightsSet = new Set();
+
+    /**
+     * Set of light used by clustered lighting (omni and spot, but no directional).
+     *
+     * @type {Set<import('./light.js').Light>}
+     * @private
+     */
+    _clusteredLightsSet = new Set();
+
+    /**
+     * Lights separated by light type. Lights in the individual arrays are sorted by the key,
+     * to match their order in _lightIdHash, so that their order matches the order expected by the
+     * generated shader code.
+     *
+     * @type {import('./light.js').Light[][]}
+     * @private
+     */
+    _splitLights = [[], [], []];
+
+    /**
+     * True if _splitLights needs to be updated, which means if lights were added or removed from
+     * the layer, or their key changed.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _splitLightsDirty = true;
+
+    /**
+     * True if the objects rendered on the layer require light cube (emitters with lighting do).
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    requiresLightCube = false;
+
+    /**
+     * @type {import('../framework/components/camera/component.js').CameraComponent[]}
+     * @ignore
+     */
+    cameras = [];
+
+    /**
+     * @type {Set<import('./camera.js').Camera>}
+     * @ignore
+     */
+    camerasSet = new Set();
+
+    /**
+     * True if the composition is invalidated.
+     *
+     * @ignore
+     */
+    _dirtyComposition = false;
+
     /**
      * Create a new Layer instance.
      *
@@ -189,15 +265,6 @@ class Layer {
          */
         this.shaderPass = options.shaderPass ?? SHADER_FORWARD;
 
-        /**
-         * Tells that this layer is simple and needs to just render a bunch of mesh instances
-         * without lighting, skinning and morphing (faster). Used for UI and Gizmo layers (the
-         * layer doesn't use lights, shadows, culling, etc).
-         *
-         * @type {boolean}
-         */
-        this.passThrough = options.passThrough ?? false;
-
         // clear flags
         /**
          * @type {boolean}
@@ -228,6 +295,7 @@ class Layer {
          * @type {Function}
          */
         this.onPreCull = options.onPreCull;
+
         /**
          * Custom function that is called before this layer is rendered. Useful, for example, for
          * reacting on screen size changes. This function is called before the first occurrence of
@@ -238,6 +306,7 @@ class Layer {
          * @type {Function}
          */
         this.onPreRender = options.onPreRender;
+
         /**
          * Custom function that is called before opaque mesh instances (not semi-transparent) in
          * this layer are rendered. This function will receive camera index as the only argument.
@@ -247,6 +316,7 @@ class Layer {
          * @type {Function}
          */
         this.onPreRenderOpaque = options.onPreRenderOpaque;
+
         /**
          * Custom function that is called before semi-transparent mesh instances in this layer are
          * rendered. This function will receive camera index as the only argument. You can get the
@@ -266,6 +336,7 @@ class Layer {
          * @type {Function}
          */
         this.onPostCull = options.onPostCull;
+
         /**
          * Custom function that is called after this layer is rendered. Useful to revert changes
          * made in {@link Layer#onPreRender}. This function is called after the last occurrence of this
@@ -276,6 +347,7 @@ class Layer {
          * @type {Function}
          */
         this.onPostRender = options.onPostRender;
+
         /**
          * Custom function that is called after opaque mesh instances (not semi-transparent) in
          * this layer are rendered. This function will receive camera index as the only argument.
@@ -285,6 +357,7 @@ class Layer {
          * @type {Function}
          */
         this.onPostRenderOpaque = options.onPostRenderOpaque;
+
         /**
          * Custom function that is called after semi-transparent mesh instances in this layer are
          * rendered. This function will receive camera index as the only argument. You can get the
@@ -302,6 +375,7 @@ class Layer {
          * @type {Function}
          */
         this.onDrawCall = options.onDrawCall;
+
         /**
          * Custom function that is called after the layer has been enabled. This happens when:
          *
@@ -314,6 +388,7 @@ class Layer {
          * @type {Function}
          */
         this.onEnable = options.onEnable;
+
         /**
          * Custom function that is called after the layer has been disabled. This happens when:
          *
@@ -336,13 +411,6 @@ class Layer {
          * @type {Layer}
          */
         this.layerReference = options.layerReference; // should use the same camera
-
-        /**
-         * @type {InstanceList}
-         * @ignore
-         */
-        this.instances = options.layerReference ? options.layerReference.instances : new InstanceList();
-
         /**
          * Visibility bit mask that interacts with {@link MeshInstance#mask}. Especially useful
          * when combined with layerReference, allowing for the filtering of some objects, while
@@ -351,23 +419,6 @@ class Layer {
          * @type {number}
          */
         this.cullingMask = options.cullingMask ? options.cullingMask : 0xFFFFFFFF;
-
-        /**
-         * @type {import('./mesh-instance.js').MeshInstance[]}
-         * @ignore
-         */
-        this.opaqueMeshInstances = this.instances.opaqueMeshInstances;
-        /**
-         * @type {import('./mesh-instance.js').MeshInstance[]}
-         * @ignore
-         */
-        this.transparentMeshInstances = this.instances.transparentMeshInstances;
-        /**
-         * @type {import('./mesh-instance.js').MeshInstance[]}
-         * @ignore
-         */
-        this.shadowCasters = this.instances.shadowCasters;
-
         /**
          * @type {Function|null}
          * @ignore
@@ -379,45 +430,13 @@ class Layer {
          */
         this.customCalculateSortValues = null;
 
-        /**
-         * @type {import('./light.js').Light[]}
-         * @private
-         */
-        this._lights = [];
-        /**
-         * @type {Set<import('./light.js').Light>}
-         * @private
-         */
-        this._lightsSet = new Set();
-
-        /**
-         * Set of light used by clustered lighting (omni and spot, but no directional).
-         *
-         * @type {Set<import('./light.js').Light>}
-         * @private
-         */
-        this._clusteredLightsSet = new Set();
-
-        /**
-         * Lights separated by light type.
-         *
-         * @type {import('./light.js').Light[][]}
-         * @ignore
-         */
-        this._splitLights = [[], [], []];
-
-        /**
-         * @type {import('../framework/components/camera/component.js').CameraComponent[]}
-         * @ignore
-         */
-        this.cameras = [];
-
-        this._dirty = false;
-        this._dirtyLights = false;
-        this._dirtyCameras = false;
-
+        // light hash based on the light keys
         this._lightHash = 0;
         this._lightHashDirty = false;
+
+        // light hash based on light ids
+        this._lightIdHash = 0;
+        this._lightIdHashDirty = false;
 
         // #if _PROFILER
         this.skipRenderAfter = Number.MAX_VALUE;
@@ -429,22 +448,6 @@ class Layer {
         // #endif
 
         this._shaderVersion = -1;
-
-        /**
-         * @type {Float32Array}
-         * @ignore
-         */
-        this._lightCube = null;
-    }
-
-    /**
-     * True if the layer contains omni or spot lights
-     *
-     * @type {boolean}
-     * @ignore
-     */
-    get hasClusteredLights() {
-        return this._clusteredLightsSet.size > 0;
     }
 
     /**
@@ -454,6 +457,7 @@ class Layer {
      */
     set enabled(val) {
         if (val !== this._enabled) {
+            this._dirtyComposition = true;
             this._enabled = val;
             if (val) {
                 this.incrementCounter();
@@ -476,7 +480,7 @@ class Layer {
      */
     set clearColorBuffer(val) {
         this._clearColorBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearColorBuffer() {
@@ -490,7 +494,7 @@ class Layer {
      */
     set clearDepthBuffer(val) {
         this._clearDepthBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearDepthBuffer() {
@@ -504,11 +508,21 @@ class Layer {
      */
     set clearStencilBuffer(val) {
         this._clearStencilBuffer = val;
-        this._dirtyCameras = true;
+        this._dirtyComposition = true;
     }
 
     get clearStencilBuffer() {
         return this._clearStencilBuffer;
+    }
+
+    /**
+     * True if the layer contains omni or spot lights
+     *
+     * @type {boolean}
+     * @ignore
+     */
+    get hasClusteredLights() {
+        return this._clusteredLightsSet.size > 0;
     }
 
     /**
@@ -561,56 +575,47 @@ class Layer {
 
     /**
      * Adds an array of mesh instances to this layer.
-     *1
      *
      * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
      * {@link MeshInstance}.
      * @param {boolean} [skipShadowCasters] - Set it to true if you don't want these mesh instances
-     * to cast shadows in this layer.
+     * to cast shadows in this layer. Defaults to false.
      */
     addMeshInstances(meshInstances, skipShadowCasters) {
-        const sceneShaderVer = this._shaderVersion;
 
-        const casters = this.shadowCasters;
+        const destMeshInstances = this.meshInstances;
+        const destMeshInstancesSet = this.meshInstancesSet;
+
+        // add mesh instances to the layer's array and the set
         for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
-            const mat = m.material;
-            const arr = mat.blendType === BLEND_NONE ? this.opaqueMeshInstances : this.transparentMeshInstances;
-
-            // test for meshInstance in both arrays, as material's alpha could have changed since LayerComposition's update to avoid duplicates
-            // TODO - following uses of indexOf are expensive, to add 5000 meshInstances costs about 70ms on Mac. Consider using Set.
-            if (this.opaqueMeshInstances.indexOf(m) < 0 && this.transparentMeshInstances.indexOf(m) < 0) {
-                arr.push(m);
-            }
-
-            if (!skipShadowCasters && m.castShadow && casters.indexOf(m) < 0) casters.push(m);
-
-            // clear old shader variants if necessary
-            if (!this.passThrough && sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer) {
-
-                // skip this for materials not using variants
-                if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
-                    // clear shader variants on the material and also on mesh instances that use it
-                    mat.clearVariants();
-                }
-                mat._shaderVersion = sceneShaderVer;
+            const mi = meshInstances[i];
+            if (!destMeshInstancesSet.has(mi)) {
+                destMeshInstances.push(mi);
+                destMeshInstancesSet.add(mi);
+                _tempMaterials.add(mi.material);
             }
         }
-        if (!this.passThrough) this._dirty = true;
-    }
 
-    /**
-     * Internal function to remove a mesh instance from an array.
-     *
-     * @param {import('./mesh-instance.js').MeshInstance} m - Mesh instance to remove.
-     * @param {import('./mesh-instance.js').MeshInstance[]} arr - Array of mesh instances to remove
-     * from.
-     * @private
-     */
-    removeMeshInstanceFromArray(m, arr) {
-        const i = arr.indexOf(m);
-        if (i >= 0)
-            arr.splice(i, 1);
+        // shadow casters
+        if (!skipShadowCasters) {
+            this.addShadowCasters(meshInstances);
+        }
+
+        // clear old shader variants if necessary
+        if (_tempMaterials.size > 0) {
+            const sceneShaderVer = this._shaderVersion;
+            _tempMaterials.forEach((mat) => {
+                if (sceneShaderVer >= 0 && mat._shaderVersion !== sceneShaderVer)  {
+                    // skip this for materials not using variants
+                    if (mat.getShaderVariant !== Material.prototype.getShaderVariant) {
+                        // clear shader variants on the material and also on mesh instances that use it
+                        mat.clearVariants();
+                    }
+                    mat._shaderVersion = sceneShaderVer;
+                }
+            });
+            _tempMaterials.clear();
+        }
     }
 
     /**
@@ -619,48 +624,96 @@ class Layer {
      * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
      * {@link MeshInstance}. If they were added to this layer, they will be removed.
      * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
-     * removed mesh instances or if they never did cast shadows before.
+     * removed mesh instances or if they never did cast shadows before. Defaults to false.
      */
     removeMeshInstances(meshInstances, skipShadowCasters) {
 
-        const opaque = this.opaqueMeshInstances;
-        const transparent = this.transparentMeshInstances;
-        const casters = this.shadowCasters;
+        const destMeshInstances = this.meshInstances;
+        const destMeshInstancesSet = this.meshInstancesSet;
 
+        // mesh instances
         for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
+            const mi = meshInstances[i];
 
-            // remove from opaque
-            this.removeMeshInstanceFromArray(m, opaque);
-
-            // remove from transparent
-            this.removeMeshInstanceFromArray(m, transparent);
-
-            // remove from casters
-            if (!skipShadowCasters) {
-                const j = casters.indexOf(m);
-                if (j >= 0)
-                    casters.splice(j, 1);
+            // remove from mesh instances list
+            if (destMeshInstancesSet.has(mi)) {
+                destMeshInstancesSet.delete(mi);
+                const j = destMeshInstances.indexOf(mi);
+                if (j >= 0) {
+                    destMeshInstances.splice(j, 1);
+                }
             }
         }
 
-        this._dirty = true;
+        // shadow casters
+        if (!skipShadowCasters) {
+            this.removeShadowCasters(meshInstances);
+        }
+    }
+
+    /**
+     * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
+     * rendered anywhere, but only cast shadows on other objects).
+     *
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}.
+     */
+    addShadowCasters(meshInstances) {
+        const shadowCasters = this.shadowCasters;
+        const shadowCastersSet = this.shadowCastersSet;
+
+        for (let i = 0; i < meshInstances.length; i++) {
+            const mi = meshInstances[i];
+            if (mi.castShadow && !shadowCastersSet.has(mi)) {
+                shadowCastersSet.add(mi);
+                shadowCasters.push(mi);
+            }
+        }
+    }
+
+    /**
+     * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
+     * will stop casting shadows.
+     *
+     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
+     * {@link MeshInstance}. If they were added to this layer, they will be removed.
+     */
+    removeShadowCasters(meshInstances) {
+        const shadowCasters = this.shadowCasters;
+        const shadowCastersSet = this.shadowCastersSet;
+
+        for (let i = 0; i < meshInstances.length; i++) {
+            const mi = meshInstances[i];
+            if (shadowCastersSet.has(mi)) {
+                shadowCastersSet.delete(mi);
+                const j = shadowCasters.indexOf(mi);
+                if (j >= 0) {
+                    shadowCasters.splice(j, 1);
+                }
+            }
+        }
     }
 
     /**
      * Removes all mesh instances from this layer.
      *
-     * @param {boolean} [skipShadowCasters] - Set it to true if you want to still cast shadows from
-     * removed mesh instances or if they never did cast shadows before.
+     * @param {boolean} [skipShadowCasters] - Set it to true if you want to continue the existing mesh
+     * instances to cast shadows. Defaults to false, which removes shadow casters as well.
      */
-    clearMeshInstances(skipShadowCasters) {
-        if (this.opaqueMeshInstances.length === 0 && this.transparentMeshInstances.length === 0) {
-            if (skipShadowCasters || this.shadowCasters.length === 0) return;
+    clearMeshInstances(skipShadowCasters = false) {
+        this.meshInstances.length = 0;
+        this.meshInstancesSet.clear();
+
+        if (!skipShadowCasters) {
+            this.shadowCasters.length = 0;
+            this.shadowCastersSet.clear();
         }
-        this.opaqueMeshInstances.length = 0;
-        this.transparentMeshInstances.length = 0;
-        if (!skipShadowCasters) this.shadowCasters.length = 0;
-        if (!this.passThrough) this._dirty = true;
+    }
+
+    markLightsDirty() {
+        this._lightHashDirty = true;
+        this._lightIdHashDirty = true;
+        this._splitLightsDirty = true;
     }
 
     /**
@@ -677,8 +730,7 @@ class Layer {
             this._lightsSet.add(l);
 
             this._lights.push(l);
-            this._dirtyLights = true;
-            this._lightHashDirty = true;
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -699,8 +751,7 @@ class Layer {
             this._lightsSet.delete(l);
 
             this._lights.splice(this._lights.indexOf(l), 1);
-            this._dirtyLights = true;
-            this._lightHashDirty = true;
+            this.markLightsDirty();
         }
 
         if (l.type !== LIGHTTYPE_DIRECTIONAL) {
@@ -712,73 +763,94 @@ class Layer {
      * Removes all lights from this layer.
      */
     clearLights() {
+
+        // notify lights
+        this._lightsSet.forEach(light => light.removeLayer(this));
+
         this._lightsSet.clear();
         this._clusteredLightsSet.clear();
         this._lights.length = 0;
-        this._dirtyLights = true;
+        this.markLightsDirty();
     }
 
-    /**
-     * Adds an array of mesh instances to this layer, but only as shadow casters (they will not be
-     * rendered anywhere, but only cast shadows on other objects).
-     *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}.
-     */
-    addShadowCasters(meshInstances) {
-        const arr = this.shadowCasters;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const m = meshInstances[i];
-            if (!m.castShadow) continue;
-            if (arr.indexOf(m) < 0) arr.push(m);
+    get splitLights() {
+
+        if (this._splitLightsDirty) {
+            this._splitLightsDirty = false;
+
+            const splitLights = this._splitLights;
+            for (let i = 0; i < splitLights.length; i++)
+                splitLights[i].length = 0;
+
+            const lights = this._lights;
+            for (let i = 0; i < lights.length; i++) {
+                const light = lights[i];
+                if (light.enabled) {
+                    splitLights[light._type].push(light);
+                }
+            }
+
+            // sort the lights by their key, as the order of lights is used to generate shader generation key,
+            // and this avoids new shaders being generated when lights are reordered
+            for (let i = 0; i < splitLights.length; i++)
+                splitLights[i].sort((a, b) => a.key - b.key);
         }
-        this._dirtyLights = true;
+
+        return this._splitLights;
     }
 
-    /**
-     * Removes multiple mesh instances from the shadow casters list of this layer, meaning they
-     * will stop casting shadows.
-     *
-     * @param {import('./mesh-instance.js').MeshInstance[]} meshInstances - Array of
-     * {@link MeshInstance}. If they were added to this layer, they will be removed.
-     */
-    removeShadowCasters(meshInstances) {
-        const arr = this.shadowCasters;
-        for (let i = 0; i < meshInstances.length; i++) {
-            const id = arr.indexOf(meshInstances[i]);
-            if (id >= 0) arr.splice(id, 1);
+    evaluateLightHash(localLights, directionalLights, useIds) {
+
+        let hash = 0;
+
+        // select local/directional lights based on request
+        const lights = this._lights;
+        for (let i = 0; i < lights.length; i++) {
+
+            const isLocalLight = lights[i].type !== LIGHTTYPE_DIRECTIONAL;
+
+            if ((localLights && isLocalLight) || (directionalLights && !isLocalLight)) {
+                lightKeys.push(useIds ? lights[i].id : lights[i].key);
+            }
         }
-        this._dirtyLights = true;
+
+        if (lightKeys.length > 0) {
+
+            // sort the keys to make sure the hash is the same for the same set of lights
+            lightKeys.sort();
+
+            hash = hash32Fnv1a(lightKeys);
+            lightKeys.length = 0;
+        }
+
+        return hash;
     }
+
 
     getLightHash(isClustered) {
         if (this._lightHashDirty) {
             this._lightHashDirty = false;
 
-            // generate hash to check if layers have the same set of lights independent of their order
-            this._lightHash = 0;
-
-            const lights = this._lights;
-            if (lights.length > 0) {
-                lights.sort(sortLights);
-
-                for (let i = 0; i < lights.length; i++) {
-
-                    // only directional lights affect the shader generation for clustered lighting
-                    if (isClustered && lights[i].type !== LIGHTTYPE_DIRECTIONAL)
-                        continue;
-
-                    lightKeys.push(lights[i].key);
-                }
-
-                if (lightKeys.length > 0) {
-                    this._lightHash = hash32Fnv1a(lightKeys);
-                    lightKeys.length = 0;
-                }
-            }
+            // Generate hash to check if layers have the same set of lights independent of their order.
+            // Always use directional lights. Additionally use local lights if clustered lighting is disabled.
+            // (only directional lights affect the shader generation for clustered lighting)
+            this._lightHash = this.evaluateLightHash(!isClustered, true, false);
         }
 
         return this._lightHash;
+    }
+
+    // This is only used in clustered lighting mode
+    getLightIdHash() {
+        if (this._lightIdHashDirty) {
+            this._lightIdHashDirty = false;
+
+            // Generate hash based on Ids of lights sorted by ids, to check if the layers have the same set of lights
+            // Only use local lights (directional lights are not used for clustered lighting)
+            this._lightIdHash = this.evaluateLightHash(true, false, true);
+        }
+
+        return this._lightIdHash;
     }
 
     /**
@@ -788,9 +860,11 @@ class Layer {
      * {@link CameraComponent}.
      */
     addCamera(camera) {
-        if (this.cameras.indexOf(camera) >= 0) return;
-        this.cameras.push(camera);
-        this._dirtyCameras = true;
+        if (!this.camerasSet.has(camera.camera)) {
+            this.camerasSet.add(camera.camera);
+            this.cameras.push(camera);
+            this._dirtyComposition = true;
+        }
     }
 
     /**
@@ -800,13 +874,11 @@ class Layer {
      * {@link CameraComponent}.
      */
     removeCamera(camera) {
-        const index = this.cameras.indexOf(camera);
-        if (index >= 0) {
+        if (this.camerasSet.has(camera.camera)) {
+            this.camerasSet.delete(camera.camera);
+            const index = this.cameras.indexOf(camera);
             this.cameras.splice(index, 1);
-            this._dirtyCameras = true;
-
-            // delete the visible list for this camera
-            this.instances.delete(index);
+            this._dirtyComposition = true;
         }
     }
 
@@ -815,7 +887,8 @@ class Layer {
      */
     clearCameras() {
         this.cameras.length = 0;
-        this._dirtyCameras = true;
+        this.camerasSet.clear();
+        this._dirtyComposition = true;
     }
 
     /**
@@ -828,7 +901,6 @@ class Layer {
     _calculateSortDistances(drawCalls, drawCallsCount, camPos, camFwd) {
         for (let i = 0; i < drawCallsCount; i++) {
             const drawCall = drawCalls[i];
-            if (drawCall.command) continue;
             if (drawCall.layer <= LAYER_FX) continue; // Only alpha sort mesh instances in the main world (backwards comp)
             if (drawCall.calculateSortDistance) {
                 drawCall.zdist = drawCall.calculateSortDistance(drawCall, camPos, camFwd);
@@ -843,47 +915,56 @@ class Layer {
     }
 
     /**
-     * @param {boolean} transparent - True if transparent sorting should be used.
-     * @param {import('./graph-node.js').GraphNode} cameraNode - Graph node that the camera is
-     * attached to.
-     * @param {number} cameraPass - Camera pass.
+     * Get access to culled mesh instances for the provided camera.
+     *
+     * @param {import('./camera.js').Camera} camera - The camera.
+     * @returns {CulledInstances} The culled mesh instances.
      * @ignore
      */
-    _sortVisible(transparent, cameraNode, cameraPass) {
-        const objects = this.instances;
-        const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
-        if (sortMode === SORTMODE_NONE) return;
+    getCulledInstances(camera) {
+        let instances = this._visibleInstances.get(camera);
+        if (!instances) {
+            instances = new CulledInstances();
+            this._visibleInstances.set(camera, instances);
+        }
+        return instances;
+    }
 
-        const visible = transparent ? objects.visibleTransparent[cameraPass] : objects.visibleOpaque[cameraPass];
+    /**
+     * @param {import('./camera.js').Camera} camera - The camera to sort the visible mesh instances
+     * for.
+     * @param {boolean} transparent - True if transparent sorting should be used.
+     * @ignore
+     */
+    sortVisible(camera, transparent) {
+        const sortMode = transparent ? this.transparentSortMode : this.opaqueSortMode;
+        if (sortMode === SORTMODE_NONE)
+            return;
+
+        const culledInstances = this.getCulledInstances(camera);
+        const instances = transparent ? culledInstances.transparent : culledInstances.opaque;
+        const cameraNode = camera.node;
 
         if (sortMode === SORTMODE_CUSTOM) {
             const sortPos = cameraNode.getPosition();
             const sortDir = cameraNode.forward;
             if (this.customCalculateSortValues) {
-                this.customCalculateSortValues(visible.list, visible.length, sortPos, sortDir);
-            }
-
-            if (visible.list.length !== visible.length) {
-                visible.list.length = visible.length;
+                this.customCalculateSortValues(instances, instances.length, sortPos, sortDir);
             }
 
             if (this.customSortCallback) {
-                visible.list.sort(this.customSortCallback);
+                instances.sort(this.customSortCallback);
             }
         } else {
             if (sortMode === SORTMODE_BACK2FRONT || sortMode === SORTMODE_FRONT2BACK) {
                 const sortPos = cameraNode.getPosition();
                 const sortDir = cameraNode.forward;
-                this._calculateSortDistances(visible.list, visible.length, sortPos, sortDir);
+                this._calculateSortDistances(instances, instances.length, sortPos, sortDir);
             }
 
-            if (visible.list.length !== visible.length) {
-                visible.list.length = visible.length;
-            }
-
-            visible.list.sort(sortCallbacks[sortMode]);
+            instances.sort(sortCallbacks[sortMode]);
         }
     }
 }
 
-export { Layer };
+export { Layer, CulledInstances };

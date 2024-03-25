@@ -1,9 +1,10 @@
 // Magnopus patched file
 
 import {
+    ADDRESS_REPEAT,
     FILTER_NEAREST,
+    LAYERID_UI,
     math,
-    Color,
     Texture
 } from 'playcanvas';
 import { CpuTimer } from './cpu-timer.js';
@@ -13,74 +14,71 @@ import { Graph } from './graph.js';
 import { WordAtlas } from './word-atlas.js';
 import { Render2d } from './render2d.js';
 
-// MiniStats rendering of CPU and GPU timing information
+/**
+ * MiniStats is a small graphical overlay that displays realtime performance metrics. By default,
+ * it shows CPU and GPU utilization, frame timings and draw call count. It can also be configured
+ * to display additional graphs based on data collected into {@link AppBase#stats}.
+ */
 class MiniStats {
+    /**
+     * Create a new MiniStats instance.
+     *
+     * @param {import('../..').AppBase} app - The application.
+     * @param {object} [options] - Options for the MiniStats instance.
+     * @param {object[]} [options.sizes] - Sizes of area to render individual graphs in and spacing
+     * between individual graphs.
+     * @param {number} [options.sizes[].width] - Width of the graph area.
+     * @param {number} [options.sizes[].height] - Height of the graph area.
+     * @param {number} [options.sizes[].spacing] - Spacing between graphs.
+     * @param {boolean} [options.sizes[].graphs] - Whether to show graphs.
+     * @param {number} [options.startSizeIndex] - Index into sizes array for initial setting.
+     * @param {number} [options.textRefreshRate] - Refresh rate of text stats in ms.
+     * @param {object} [options.cpu] - CPU graph options.
+     * @param {boolean} [options.cpu.enabled] - Whether to show the CPU graph.
+     * @param {number} [options.cpu.watermark] - Watermark - shown as a line on the graph, useful for
+     * displaying a budget.
+     * @param {object} [options.gpu] - GPU graph options.
+     * @param {boolean} [options.gpu.enabled] - Whether to show the GPU graph.
+     * @param {number} [options.gpu.watermark] - Watermark - shown as a line on the graph, useful for
+     * displaying a budget.
+     * @param {object[]} [options.stats] - Array of options to render additional graphs based on
+     * stats collected into {@link AppBase#stats}.
+     * @param {string} [options.stats[].name] - Display name.
+     * @param {string[]} options.stats[].stats - Path to data inside {@link AppBase#stats}.
+     * @param {number} [options.stats[].decimalPlaces] - Number of decimal places (defaults to none).
+     * @param {string} [options.stats[].unitsName] - Units (defaults to "").
+     * @param {number} [options.stats[].watermark] - Watermark - shown as a line on the graph, useful
+     * for displaying a budget.
+     * @example
+     * // create a new MiniStats instance using default options
+     * const miniStats = new pcx.MiniStats(app);
+     */
     constructor(app, options) {
-
         const device = app.graphicsDevice;
 
-        // handle context lost
-        this._contextLostHandler = (event) => {
-            event.preventDefault();
-
-            if (this.graphs) {
-                for (let i = 0; i < this.graphs.length; i++) {
-                    this.graphs[i].loseContext();
-                }
-            }
-        };
-        device.canvas.addEventListener('webglcontextlost', this._contextLostHandler, false);
-
         options = options || MiniStats.getDefaultOptions();
-
         // Magnopus patched
         this.xOffset = options?.xOffset ?? 64;
+        // create graphs
+        this.initGraphs(app, device, options);
 
-        // create graphs based on options
-        const graphs = this.initGraphs(app, device, options);
+        // extract list of words
+        const words = new Set(
+            ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.']
+                .concat(this.graphs.map(graph => graph.name))
+                .concat(options.stats ? options.stats.map(stat => stat.unitsName) : [])
+                .filter(item => !!item)
+        );
 
-        // extract words needed
-        let words = ['', 'ms', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
-
-        // graph names
-        graphs.forEach((graph) => {
-            words.push(graph.name);
-        });
-
-        // stats units
-        if (options.stats) {
-            options.stats.forEach((stat) => {
-                if (stat.unitsName)
-                    words.push(stat.unitsName);
-            });
-        }
-
-        // remove duplicates
-        words = words.filter((item, index) => {
-            return words.indexOf(item) >= index;
-        });
-
-        // create word atlas
-        const maxWidth = options.sizes.reduce((max, v) => {
-            return v.width > max ? v.width : max;
-        }, 0);
-        const wordAtlasData = this.initWordAtlas(device, words, maxWidth, graphs.length);
-        const texture = wordAtlasData.texture;
-
-        // assign texture to graphs
-        graphs.forEach((graph, i) => {
-            graph.texture = texture;
-            graph.yOffset = i;
-        });
-
+        this.wordAtlas = new WordAtlas(device, words);
         this.sizes = options.sizes;
         this._activeSizeIndex = options.startSizeIndex;
 
         // create click region so we can resize
         const div = document.createElement('div');
+        div.setAttribute('id', 'mini-stats');
         // Magnopus patched
         div.style.cssText = `position:fixed;bottom:0;left:${this.xOffset}px;background:transparent;`;
-
         document.body.appendChild(div);
 
         div.addEventListener('mouseenter', (event) => {
@@ -88,7 +86,7 @@ class MiniStats {
         });
 
         div.addEventListener('mouseleave', (event) => {
-            this.opacity = 0.5;
+            this.opacity = 0.7;
         });
 
         div.addEventListener('click', (event) => {
@@ -99,21 +97,14 @@ class MiniStats {
             }
         });
 
-        device.on('resizecanvas', () => {
-            this.updateDiv();
-        });
+        device.on('resizecanvas', this.updateDiv, this);
+        device.on('losecontext', this.loseContext, this);
+        app.on('postrender', this.postRender, this);
 
-        app.on('postrender', () => {
-            if (this._enabled) {
-                this.render();
-            }
-        });
-
+        this.app = app;
+        this.drawLayer = app.scene.layers.getLayerById(LAYERID_UI);
         this.device = device;
-        this.texture = texture;
-        this.wordAtlas = wordAtlasData.atlas;
-        this.render2d = new Render2d(device, options.colors);
-        this.graphs = graphs;
+        this.render2d = new Render2d(device);
         this.div = div;
 
         this.width = 0;
@@ -127,6 +118,35 @@ class MiniStats {
         this.activeSizeIndex = this._activeSizeIndex;
     }
 
+    /**
+     * Destroy the MiniStats instance.
+     *
+     * @example
+     * miniStats.destroy();
+     */
+    destroy() {
+        this.device.off('resizecanvas', this.updateDiv, this);
+        this.device.off('losecontext', this.loseContext, this);
+        this.app.off('postrender', this.postRender, this);
+
+        this.graphs.forEach(graph => graph.destroy());
+        this.wordAtlas.destroy();
+        this.texture.destroy();
+    }
+
+    /**
+     * Returns the default options for MiniStats. The default options configure the overlay to
+     * show the following graphs:
+     *
+     * - CPU utilization
+     * - GPU utilization
+     * - Overall frame time
+     * - Draw call count
+     *
+     * @returns {object} The default options for MiniStats.
+     * @example
+     * const options = pcx.MiniStats.getDefaultOptions();
+     */
     static getDefaultOptions() {
         return {
 
@@ -142,15 +162,6 @@ class MiniStats {
 
             // refresh rate of text stats in ms
             textRefreshRate: 500,
-
-            // colors used to render graphs
-            colors: {
-                graph0: new Color(0.7, 0.2, 0.2, 1),
-                graph1: new Color(0.2, 0.7, 0.2, 1),
-                graph2: new Color(0.2, 0.2, 0.7, 1),
-                watermark: new Color(0.4, 0.4, 0.2, 1),
-                background: new Color(0, 0, 0, 1.0)
-            },
 
             // cpu graph options
             cpu: {
@@ -193,30 +204,51 @@ class MiniStats {
         };
     }
 
+    /**
+     * Get/set the active size index. Setting the active size index will resize the overlay to the
+     * size specified by the corresponding entry in the sizes array.
+     *
+     * @ignore
+     */
     set activeSizeIndex(value) {
         this._activeSizeIndex = value;
         this.gspacing = this.sizes[value].spacing;
         this.resize(this.sizes[value].width, this.sizes[value].height, this.sizes[value].graphs);
     }
 
+    /** @ignore */
     get activeSizeIndex() {
         return this._activeSizeIndex;
     }
 
+    /**
+     * Get/set the opacity of the MiniStats overlay.
+     *
+     * @ignore
+     */
     set opacity(value) {
         this.clr[3] = value;
     }
 
+    /** @ignore */
     get opacity() {
         return this.clr[3];
     }
 
+    /**
+     * Get the overall height of the MiniStats overlay.
+     *
+     * @ignore
+     */
     get overallHeight() {
         const graphs = this.graphs;
         const spacing = this.gspacing;
         return this.height * graphs.length + spacing * (graphs.length - 1);
     }
 
+    /**
+     * Get/set the enabled state of the MiniStats overlay.
+     */
     set enabled(value) {
         if (value !== this._enabled) {
             this._enabled = value;
@@ -231,58 +263,64 @@ class MiniStats {
         return this._enabled;
     }
 
-    initWordAtlas(device, words, maxWidth, numGraphs) {
-
-        // create the texture for storing word atlas and graph data
-        const texture = new Texture(device, {
-            name: 'mini-stats',
-            width: math.nextPowerOfTwo(maxWidth),
-            height: 64,
-            mipmaps: false,
-            minFilter: FILTER_NEAREST,
-            magFilter: FILTER_NEAREST
-        });
-
-        const wordAtlas = new WordAtlas(texture, words);
-
-        const dest = texture.lock();
-        for (let i = 0; i < texture.width * numGraphs; ++i) {
-            dest.set([0, 0, 0, 255], i * 4);
-        }
-        texture.unlock();
-
-        // ensure texture is uploaded
-        device.setTexture(texture, 0);
-
-        return { atlas: wordAtlas, texture: texture };
-    }
-
+    /**
+     * Create the graphs requested by the user and add them to the MiniStats instance.
+     *
+     * @param {import('../..').AppBase} app - The application.
+     * @param {import('../..').GraphicsDevice} device - The graphics device.
+     * @param {object} options - Options for the MiniStats instance.
+     * @private
+     */
     initGraphs(app, device, options) {
-        const graphs = [];
+        this.graphs = [];
 
         if (options.cpu.enabled) {
             const timer = new CpuTimer(app);
             const graph = new Graph('CPU', app, options.cpu.watermark, options.textRefreshRate, timer);
-            graphs.push(graph);
+            this.graphs.push(graph);
         }
 
         if (options.gpu.enabled) {
             const timer = new GpuTimer(device);
             const graph = new Graph('GPU', app, options.gpu.watermark, options.textRefreshRate, timer);
-            graphs.push(graph);
+            this.graphs.push(graph);
         }
 
         if (options.stats) {
             options.stats.forEach((entry) => {
                 const timer = new StatsTimer(app, entry.stats, entry.decimalPlaces, entry.unitsName, entry.multiplier);
                 const graph = new Graph(entry.name, app, entry.watermark, options.textRefreshRate, timer);
-                graphs.push(graph);
+                this.graphs.push(graph);
             });
         }
 
-        return graphs;
+        const maxWidth = options.sizes.reduce((max, v) => {
+            return v.width > max ? v.width : max;
+        }, 0);
+
+        this.texture = new Texture(device, {
+            name: 'mini-stats-graph-texture',
+            width: math.nextPowerOfTwo(maxWidth),
+            height: math.nextPowerOfTwo(this.graphs.length),
+            mipmaps: false,
+            minFilter: FILTER_NEAREST,
+            magFilter: FILTER_NEAREST,
+            addressU: ADDRESS_REPEAT,
+            addressV: ADDRESS_REPEAT
+        });
+
+        this.graphs.forEach((graph, i) => {
+            graph.texture = this.texture;
+            graph.yOffset = i;
+        });
     }
 
+    /**
+     * Render the MiniStats overlay. This is called automatically when the `postrender` event is
+     * fired by the application.
+     *
+     * @private
+     */
     render() {
         const graphs = this.graphs;
         const wordAtlas = this.wordAtlas;
@@ -290,6 +328,8 @@ class MiniStats {
         const width = this.width;
         const height = this.height;
         const gspacing = this.gspacing;
+
+        render2d.startFrame();
 
         for (let i = 0; i < graphs.length; ++i) {
             const graph = graphs[i];
@@ -321,9 +361,17 @@ class MiniStats {
             }
         }
 
-        render2d.render(this.clr, height);
+        render2d.render(this.app, this.drawLayer, this.texture, this.wordAtlas.texture, this.clr, height);
     }
 
+    /**
+     * Resize the MiniStats overlay.
+     *
+     * @param {number} width - The new width.
+     * @param {number} height - The new height.
+     * @param {boolean} showGraphs - Whether to show the graphs.
+     * @private
+     */
     resize(width, height, showGraphs) {
         const graphs = this.graphs;
         for (let i = 0; i < graphs.length; ++i) {
@@ -336,6 +384,12 @@ class MiniStats {
         this.updateDiv();
     }
 
+    /**
+     * Update the size and position of the MiniStats overlay. This is called automatically when the
+     * `resizecanvas` event is fired by the graphics device.
+     *
+     * @private
+     */
     updateDiv() {
         const rect = this.device.canvas.getBoundingClientRect();
         // Magnopus patched
@@ -343,6 +397,26 @@ class MiniStats {
         this.div.style.bottom = (window.innerHeight - rect.bottom) + 'px';
         this.div.style.width = this.width + 'px';
         this.div.style.height = this.overallHeight + 'px';
+    }
+
+    /**
+     * Called when the graphics device is lost.
+     *
+     * @private
+     */
+    loseContext() {
+        this.graphs.forEach(graph => graph.loseContext());
+    }
+
+    /**
+     * Called when the `postrender` event is fired by the application.
+     *
+     * @private
+     */
+    postRender() {
+        if (this._enabled) {
+            this.render();
+        }
     }
 }
 

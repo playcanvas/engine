@@ -9,7 +9,10 @@ import { createShaderFromCode } from '../shader-lib/utils.js';
 import { shaderChunks } from '../shader-lib/chunks/chunks.js';
 import { ImmediateBatches } from './immediate-batches.js';
 
+import { Vec3 } from '../../core/math/vec3.js';
+
 const tempPoints = [];
+const vec = new Vec3();
 
 class Immediate {
     constructor(device) {
@@ -84,7 +87,7 @@ class Immediate {
     getShader(id, fragment) {
         if (!this[id]) {
             // shared vertex shader for textured quad rendering
-            const vertex = `
+            const vertex = /* glsl */ `
                 attribute vec2 vertex_position;
                 uniform mat4 matrix_model;
                 varying vec2 uv0;
@@ -101,7 +104,7 @@ class Immediate {
 
     // shader used to display texture
     getTextureShader() {
-        return this.getShader('textureShader', `
+        return this.getShader('textureShader', /* glsl */ `
             varying vec2 uv0;
             uniform sampler2D colorMap;
             void main (void) {
@@ -112,7 +115,7 @@ class Immediate {
 
     // shader used to display infilterable texture sampled using texelFetch
     getUnfilterableTextureShader() {
-        return this.getShader('textureShaderUnfilterable', `
+        return this.getShader('textureShaderUnfilterable', /* glsl */ `
             varying vec2 uv0;
             uniform highp sampler2D colorMap;
             void main (void) {
@@ -124,11 +127,11 @@ class Immediate {
 
     // shader used to display depth texture
     getDepthTextureShader() {
-        return this.getShader('depthTextureShader', `
+        return this.getShader('depthTextureShader', /* glsl */ `
             ${shaderChunks.screenDepthPS}
             varying vec2 uv0;
             void main() {
-                float depth = getLinearScreenDepth(uv0) * camera_params.x;
+                float depth = getLinearScreenDepth(getImageEffectUV(uv0)) * camera_params.x;
                 gl_FragColor = vec4(vec3(depth), 1.0);
             }
         `);
@@ -167,21 +170,42 @@ class Immediate {
         layerMeshInstances.push(meshInstance);
     }
 
-    drawWireAlignedBox(min, max, color, depthTest, layer) {
-        tempPoints.push(
-            min.x, min.y, min.z, min.x, max.y, min.z,
-            min.x, max.y, min.z, max.x, max.y, min.z,
-            max.x, max.y, min.z, max.x, min.y, min.z,
-            max.x, min.y, min.z, min.x, min.y, min.z,
-            min.x, min.y, max.z, min.x, max.y, max.z,
-            min.x, max.y, max.z, max.x, max.y, max.z,
-            max.x, max.y, max.z, max.x, min.y, max.z,
-            max.x, min.y, max.z, min.x, min.y, max.z,
-            min.x, min.y, min.z, min.x, min.y, max.z,
-            min.x, max.y, min.z, min.x, max.y, max.z,
-            max.x, max.y, min.z, max.x, max.y, max.z,
-            max.x, min.y, min.z, max.x, min.y, max.z
-        );
+    drawWireAlignedBox(min, max, color, depthTest, layer, mat) {
+        if (mat) {
+            const mulPoint = (x, y, z) => {
+                vec.set(x, y, z);
+                mat.transformPoint(vec, vec);
+                tempPoints.push(vec.x, vec.y, vec.z);
+            };
+
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, max.y, min.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(max.x, max.y, min.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, min.y, min.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(min.x, min.y, min.z);
+            mulPoint(min.x, min.y, max.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(min.x, max.y, max.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, max.y, max.z); mulPoint(max.x, min.y, max.z);
+            mulPoint(max.x, min.y, max.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, min.y, min.z); mulPoint(min.x, min.y, max.z);
+            mulPoint(min.x, max.y, min.z); mulPoint(min.x, max.y, max.z);
+            mulPoint(max.x, max.y, min.z); mulPoint(max.x, max.y, max.z);
+            mulPoint(max.x, min.y, min.z); mulPoint(max.x, min.y, max.z);
+        } else {
+            tempPoints.push(
+                min.x, min.y, min.z, min.x, max.y, min.z,
+                min.x, max.y, min.z, max.x, max.y, min.z,
+                max.x, max.y, min.z, max.x, min.y, min.z,
+                max.x, min.y, min.z, min.x, min.y, min.z,
+                min.x, min.y, max.z, min.x, max.y, max.z,
+                min.x, max.y, max.z, max.x, max.y, max.z,
+                max.x, max.y, max.z, max.x, min.y, max.z,
+                max.x, min.y, max.z, min.x, min.y, max.z,
+                min.x, min.y, min.z, min.x, min.y, max.z,
+                min.x, max.y, min.z, min.x, max.y, max.z,
+                max.x, max.y, min.z, max.x, max.y, max.z,
+                max.x, min.y, min.z, max.x, min.y, max.z
+            );
+        }
 
         const batch = this.getBatch(layer, depthTest);
         batch.addLinesArrays(tempPoints, color);
@@ -240,9 +264,8 @@ class Immediate {
             const meshInstances = this.layerMeshInstances.get(layer);
             if (meshInstances) {
                 for (let i = 0; i < meshInstances.length; i++) {
-                    visibleList.list[visibleList.length + i] = meshInstances[i];
+                    visibleList.push(meshInstances[i]);
                 }
-                visibleList.length += meshInstances.length;
                 meshInstances.length = 0;
             }
         }

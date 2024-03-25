@@ -16,7 +16,6 @@ import { Vec3 } from '../core/math/vec3.js';
 import {
     PRIMITIVE_TRIANGLES, PRIMITIVE_TRIFAN, PRIMITIVE_TRISTRIP, CULLFACE_NONE
 } from '../platform/graphics/constants.js';
-import { GraphicsDeviceAccess } from '../platform/graphics/graphics-device-access.js';
 import { DebugGraphics } from '../platform/graphics/debug-graphics.js';
 import { http } from '../platform/net/http.js';
 
@@ -33,7 +32,6 @@ import { Layer } from '../scene/layer.js';
 import { LayerComposition } from '../scene/composition/layer-composition.js';
 import { Scene } from '../scene/scene.js';
 import { Material } from '../scene/materials/material.js';
-import { LightsBuffer } from '../scene/lighting/lights-buffer.js';
 import { StandardMaterial } from '../scene/materials/standard-material.js';
 import { setDefaultMaterial } from '../scene/materials/default-material.js';
 
@@ -41,7 +39,6 @@ import { Asset } from './asset/asset.js';
 import { AssetRegistry } from './asset/asset-registry.js';
 import { BundleRegistry } from './bundle/bundle-registry.js';
 import { ComponentSystemRegistry } from './components/registry.js';
-import { SceneGrab } from '../scene/graphics/scene-grab.js';
 import { BundleHandler } from './handlers/bundle.js';
 import { ResourceLoader } from './handlers/loader.js';
 import { I18n } from './i18n/i18n.js';
@@ -78,19 +75,11 @@ class Progress {
 }
 
 /**
- * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
- * an error occurs).
+ * Gets the current application, if any.
  *
- * @callback ConfigureAppCallback
- * @param {string|null} err - The error message in the case where the loading or parsing fails.
+ * @type {AppBase|null}
+ * @ignore
  */
-
-/**
- * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
- *
- * @callback PreloadAppCallback
- */
-
 let app = null;
 
 /**
@@ -120,6 +109,39 @@ let app = null;
  * @augments EventHandler
  */
 class AppBase extends EventHandler {
+    /**
+     * Callback used by {@link AppBase#configure} when configuration file is loaded and parsed (or
+     * an error occurs).
+     *
+     * @callback ConfigureAppCallback
+     * @param {string|null} err - The error message in the case where the loading or parsing fails.
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#preload} when all assets (marked as 'preload') are loaded.
+     *
+     * @callback PreloadAppCallback
+     * @returns {void}
+     */
+
+    /**
+     * Callback used by {@link AppBase#start} and itself to request
+     * the rendering of a new animation frame.
+     *
+     * @callback MakeTickCallback
+     * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
+     * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
+     * @returns {void}
+     */
+
+    /**
+     * A request id returned by requestAnimationFrame, allowing us to cancel it.
+     *
+     * @ignore
+     */
+    frameRequestId;
+
     /**
      * Create a new AppBase instance.
      *
@@ -261,7 +283,6 @@ class AppBase extends EventHandler {
          * @type {import('../platform/graphics/graphics-device.js').GraphicsDevice}
          */
         this.graphicsDevice = device;
-        GraphicsDeviceAccess.set(device);
 
         this._initDefaultMaterial();
         this._initProgramLibrary();
@@ -279,8 +300,6 @@ class AppBase extends EventHandler {
          * @type {ResourceLoader}
          */
         this.loader = new ResourceLoader(this);
-
-        LightsBuffer.init(device);
 
         /**
          * Stores all entities that have been created for this app by guid.
@@ -367,35 +386,11 @@ class AppBase extends EventHandler {
          */
         this.scenes = new SceneRegistry(this);
 
-        const self = this;
-        this.defaultLayerWorld = new Layer({
-            name: "World",
-            id: LAYERID_WORLD
-        });
-
-        this.sceneGrab = new SceneGrab(this.graphicsDevice, this.scene);
-        this.defaultLayerDepth = this.sceneGrab.layer;
-
-        this.defaultLayerSkybox = new Layer({
-            enabled: true,
-            name: "Skybox",
-            id: LAYERID_SKYBOX,
-            opaqueSortMode: SORTMODE_NONE
-        });
-        this.defaultLayerUi = new Layer({
-            enabled: true,
-            name: "UI",
-            id: LAYERID_UI,
-            transparentSortMode: SORTMODE_MANUAL,
-            passThrough: false
-        });
-        this.defaultLayerImmediate = new Layer({
-            enabled: true,
-            name: "Immediate",
-            id: LAYERID_IMMEDIATE,
-            opaqueSortMode: SORTMODE_NONE,
-            passThrough: true
-        });
+        this.defaultLayerWorld = new Layer({ name: "World", id: LAYERID_WORLD });
+        this.defaultLayerDepth = new Layer({ name: "Depth", id: LAYERID_DEPTH, enabled: false, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerSkybox = new Layer({ name: "Skybox", id: LAYERID_SKYBOX, opaqueSortMode: SORTMODE_NONE });
+        this.defaultLayerUi = new Layer({ name: "UI", id: LAYERID_UI, transparentSortMode: SORTMODE_MANUAL });
+        this.defaultLayerImmediate = new Layer({ name: "Immediate", id: LAYERID_IMMEDIATE, opaqueSortMode: SORTMODE_NONE });
 
         const defaultLayerComposition = new LayerComposition("default");
         defaultLayerComposition.pushOpaque(this.defaultLayerWorld);
@@ -406,26 +401,6 @@ class AppBase extends EventHandler {
         defaultLayerComposition.pushTransparent(this.defaultLayerImmediate);
         defaultLayerComposition.pushTransparent(this.defaultLayerUi);
         this.scene.layers = defaultLayerComposition;
-
-        // Default layers patch
-        this.scene.on('set:layers', function (oldComp, newComp) {
-            const list = newComp.layerList;
-            let layer;
-            for (let i = 0; i < list.length; i++) {
-                layer = list[i];
-                switch (layer.id) {
-                    case LAYERID_DEPTH:
-                        self.sceneGrab.patch(layer);
-                        break;
-                    case LAYERID_UI:
-                        layer.passThrough = self.defaultLayerUi.passThrough;
-                        break;
-                    case LAYERID_IMMEDIATE:
-                        layer.passThrough = self.defaultLayerImmediate.passThrough;
-                        break;
-                }
-            }
-        });
 
         // placeholder texture for area light LUTs
         AreaLightLuts.createPlaceholder(device);
@@ -615,14 +590,6 @@ class AppBase extends EventHandler {
         /* eslint-disable-next-line no-use-before-define */
         this.tick = makeTick(this); // Circular linting issue as makeTick and Application reference each other
     }
-
-    /**
-     * @private
-     * @static
-     * @name app
-     * @type {AppBase|undefined}
-     * @description Gets the current application, if any.
-     */
 
     static _applications = {};
 
@@ -1739,8 +1706,9 @@ class AppBase extends EventHandler {
      *
      * @param {Vec3[]} positions - An array of points to draw lines between. The length of the
      * array must be a multiple of 2.
-     * @param {Color[]} colors - An array of colors to color the lines. This must be the same
-     * length as the position array. The length of the array must also be a multiple of 2.
+     * @param {Color[] | Color} colors - An array of colors or a single color. If an array is
+     * specified, this must be the same length as the position array. The length of the array
+     * must also be a multiple of 2.
      * @param {boolean} [depthTest] - Specifies if the lines are depth tested against the depth
      * buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the lines into. Defaults to {@link LAYERID_IMMEDIATE}.
@@ -1839,6 +1807,7 @@ class AppBase extends EventHandler {
      * @param {boolean} [depthTest] - Specifies if the sphere lines are depth tested against the
      * depth buffer. Defaults to true.
      * @param {Layer} [layer] - The layer to render the sphere into. Defaults to {@link LAYERID_IMMEDIATE}.
+     * @param {Mat4} [mat] - Matrix to transform the box before rendering.
      * @example
      * // Render a red wire aligned box
      * const min = new pc.Vec3(-1, -1, -1);
@@ -1846,8 +1815,8 @@ class AppBase extends EventHandler {
      * app.drawWireAlignedBox(min, max, pc.Color.RED);
      * @ignore
      */
-    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer) {
-        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer);
+    drawWireAlignedBox(minPoint, maxPoint, color = Color.WHITE, depthTest = true, layer = this.scene.defaultDrawLayer, mat) {
+        this.scene.immediate.drawWireAlignedBox(minPoint, maxPoint, color, depthTest, layer, mat);
     }
 
     /**
@@ -1970,6 +1939,7 @@ class AppBase extends EventHandler {
 
         const canvasId = this.graphicsDevice.canvas.id;
 
+        this.fire('destroy', this); // fire destroy event
         this.off('librariesloaded');
 
         if (typeof document !== 'undefined') {
@@ -2097,6 +2067,15 @@ class AppBase extends EventHandler {
         if (getApplication() === this) {
             setApplication(null);
         }
+
+        AppBase.cancelTick(this);
+    }
+
+    static cancelTick(app) {
+        if (app.frameRequestId) {
+            window.cancelAnimationFrame(app.frameRequestId);
+            app.frameRequestId = undefined;
+        }
     }
 
     /**
@@ -2123,16 +2102,6 @@ class AppBase extends EventHandler {
 const _frameEndData = {};
 
 /**
- * Callback used by {@link AppBase#start} and itself to request
- * the rendering of a new animation frame.
- *
- * @callback MakeTickCallback
- * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
- * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
- * @ignore
- */
-
-/**
  * Create tick function to be wrapped in closure.
  *
  * @param {AppBase} _app - The application.
@@ -2141,7 +2110,6 @@ const _frameEndData = {};
  */
 const makeTick = function (_app) {
     const application = _app;
-    let frameRequest;
     /**
      * @param {number} [timestamp] - The timestamp supplied by requestAnimationFrame.
      * @param {*} [frame] - XRFrame from requestAnimationFrame callback.
@@ -2150,12 +2118,10 @@ const makeTick = function (_app) {
         if (!application.graphicsDevice)
             return;
 
-        setApplication(application);
+        application.frameRequestId = null;
+        application._inFrameUpdate = true;
 
-        if (frameRequest) {
-            window.cancelAnimationFrame(frameRequest);
-            frameRequest = null;
-        }
+        setApplication(application);
 
         // have current application pointer in pc
         app = application;
@@ -2170,9 +2136,9 @@ const makeTick = function (_app) {
 
         // Submit a request to queue up a new animation frame immediately
         if (application.xr?.session) {
-            frameRequest = application.xr.session.requestAnimationFrame(application.tick);
+            application.frameRequestId = application.xr.session.requestAnimationFrame(application.tick);
         } else {
-            frameRequest = platform.browser ? window.requestAnimationFrame(application.tick) : null;
+            application.frameRequestId = platform.browser ? window.requestAnimationFrame(application.tick) : null;
         }
 
         if (application.graphicsDevice.contextLost)
@@ -2184,7 +2150,6 @@ const makeTick = function (_app) {
         application._fillFrameStats();
         // #endif
 
-        application._inFrameUpdate = true;
         application.fire("frameupdate", ms);
 
         let shouldRenderFrame = true;

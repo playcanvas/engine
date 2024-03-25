@@ -3,12 +3,30 @@ varying vec3 vViewDir;
 
 uniform samplerCube texture_cubeMap;
 
+#ifdef SKYMESH
+
+    varying vec3 vWorldPos;
+    uniform mat3 cubeMapRotationMatrix;
+    uniform vec3 projectedSkydomeCenter;
+
+#endif
+
 void main(void) {
-    vec3 dir=vViewDir;
+
+    #ifdef SKYMESH
+
+        // get vector from world space pos to tripod origin
+        vec3 envDir = normalize(vWorldPos - projectedSkydomeCenter);
+        vec3 dir = envDir * cubeMapRotationMatrix;
+
+    #else
+
+        vec3 dir = vViewDir;
+
+    #endif
+
     dir.x *= -1.0;
-
     vec3 linear = $DECODE(textureCube(texture_cubeMap, fixSeamsStatic(dir, $FIXCONST)));
-
     gl_FragColor = vec4(gammaCorrectOutput(toneMap(processEnvironment(linear))), 1.0);
 }
 `;

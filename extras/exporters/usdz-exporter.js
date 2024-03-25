@@ -64,30 +64,40 @@ def Xform "${nodeName}" (
 
 const materialValueTemplate = (type, name, value) => `                    ${type} inputs:${name} = ${value}`;
 
+/**
+ * Implementation of the USDZ format exporter. Note that ASCII version of the format (USDA) is used.
+ *
+ * @category Exporter
+ */
 class UsdzExporter extends CoreExporter {
     /**
      * Maps a mesh to a reference (path) inside the usdz container
      *
-     * @type {Map<Mesh, string>}
+     * @type {Map<import('playcanvas').Mesh, string>}
+     * @ignore
      */
     meshMap;
 
     /**
      * Maps a material to a reference (path) inside the usdz container
      *
-     * @type {Map<Material, string>}
+     * @type {Map<import('playcanvas').Material, string>}
+     * @ignore
      */
     materialMap;
 
     /**
      * A list of generated material usda contents, which are processed at the end
+     *
+     * @ignore
      */
     materials;
 
     /**
      * A map of texture requests
      *
-     * @type {Map<Texture, string>}
+     * @type {Map<import('playcanvas').Texture, string>}
+     * @ignore
      */
     textureMap;
 
@@ -95,6 +105,7 @@ class UsdzExporter extends CoreExporter {
      * A set of used node names. Used in order to keep them unique.
      *
      * @type {Set<string>}
+     * @ignore
      */
     nodeNames;
 
@@ -103,6 +114,7 @@ class UsdzExporter extends CoreExporter {
      * zip up the data.
      *
      * @type {object}
+     * @ignore
      */
     files;
 
@@ -127,9 +139,10 @@ class UsdzExporter extends CoreExporter {
     /**
      * Converts a hierarchy of entities to USDZ format.
      *
-     * @param {Entity} entity - The root of the entity hierarchy to convert.
+     * @param {import('playcanvas').Entity} entity - The root of the entity hierarchy to convert.
      * @param {object} options - Object for passing optional arguments.
-     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over the size.
+     * @param {number} [options.maxTextureSize] - Maximum texture size. Texture is resized if over
+     * the size.
      * @returns {Promise<ArrayBuffer>} - The USDZ file content.
      */
     build(entity, options = {}) {

@@ -63,6 +63,8 @@ class LitMaterialOptionsBuilder {
 
         litOptions.alphaToCoverage = material.alphaToCoverage;
         litOptions.opacityFadesSpecular = material.opacityFadesSpecular;
+        litOptions.opacityDither = material.opacityDither;
+        litOptions.opacityShadowDither = material.opacityShadowDither;
 
         litOptions.cubeMapProjection = CUBEPROJ_NONE;
 
@@ -158,11 +160,6 @@ class LitMaterialOptionsBuilder {
             const light = lights[i];
             if (light.enabled) {
                 if (light.mask & mask) {
-                    if (lType !== LIGHTTYPE_DIRECTIONAL) {
-                        if (light.isStatic) {
-                            continue;
-                        }
-                    }
                     lightsFiltered.push(light);
                 }
             }

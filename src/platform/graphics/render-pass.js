@@ -2,7 +2,6 @@ import { Debug } from '../../core/debug.js';
 import { Tracing } from '../../core/tracing.js';
 import { Color } from '../../core/math/color.js';
 import { TRACEID_RENDER_PASS, TRACEID_RENDER_PASS_DETAIL } from '../../core/constants.js';
-import { DebugGraphics } from '../graphics/debug-graphics.js';
 
 class ColorAttachmentOps {
     /**
@@ -91,10 +90,42 @@ class DepthStencilAttachmentOps {
  */
 class RenderPass {
     /** @type {string} */
-    name;
+    _name;
 
-    /** @type {import('../graphics/render-target.js').RenderTarget} */
+    /**
+     * The graphics device.
+     *
+     * @type {import('../graphics/graphics-device.js').GraphicsDevice}
+     */
+    device;
+
+    /**
+     * True if the render pass is enabled.
+     *
+     * @type {boolean}
+     * @private
+     */
+    _enabled = true;
+
+    /**
+     * True if the render pass is enabled and execute function will be called. Note that before and
+     * after functions are called regardless of this flag.
+     */
+    executeEnabled = true;
+
+    /**
+     * The render target for this render pass:
+     *  - `undefined`: render pass does not render to any render target
+     *  - `null`: render pass renders to the backbuffer
+     *  - Otherwise, renders to the provided RT.
+     * @type {import('../graphics/render-target.js').RenderTarget|null|undefined}
+     */
     renderTarget;
+
+    /**
+     * The options specified when the render target was initialized.
+     */
+    _options;
 
     /**
      * Number of samples. 0 if no render target, otherwise number of samples from the render target,
@@ -141,50 +172,66 @@ class RenderPass {
     fullSizeClearRect = true;
 
     /**
-     * Custom function that is called to render the pass.
+     * Render passes which need to be executed before this pass.
      *
-     * @type {Function}
+     * @type {RenderPass[]}
      */
-    execute;
+    beforePasses = [];
 
     /**
-     * Custom function that is called before the pass has started.
+     * Render passes which need to be executed after this pass.
      *
-     * @type {Function}
+     * @type {RenderPass[]}
      */
-    before;
-
-    /**
-     * Custom function that is called after the pass has fnished.
-     *
-     * @type {Function}
-     */
-    after;
+    afterPasses = [];
 
     /**
      * Creates an instance of the RenderPass.
      *
      * @param {import('../graphics/graphics-device.js').GraphicsDevice} graphicsDevice - The
      * graphics device.
-     * @param {Function} [execute] - Custom function that is called to render the pass.
      */
-    constructor(graphicsDevice, execute) {
+    constructor(graphicsDevice) {
+        Debug.assert(graphicsDevice);
         this.device = graphicsDevice;
+    }
 
-        /** @type {Function} */
-        this.execute = execute;
+    set name(value) {
+        this._name = value;
+    }
+
+    get name() {
+        if (!this._name)
+            this._name = this.constructor.name;
+        return this._name;
+    }
+
+    set options(value) {
+        this._options = value;
+
+        // sanitize options
+        if (value) {
+            this._options.scaleX = this._options.scaleX ?? 1;
+            this._options.scaleY = this._options.scaleY ?? 1;
+        }
+    }
+
+    get options() {
+        return this._options;
     }
 
     /**
-     * @param {import('../graphics/render-target.js').RenderTarget} renderTarget - The render
+     * @param {import('../graphics/render-target.js').RenderTarget|null} [renderTarget] - The render
      * target to render into (output). This function should be called only for render passes which
      * use render target, or passes which render directly into the default framebuffer, in which
      * case a null or undefined render target is expected.
      */
-    init(renderTarget) {
+    init(renderTarget = null, options = null) {
+
+        this.options = options;
 
         // null represents the default framebuffer
-        this.renderTarget = renderTarget || null;
+        this.renderTarget = renderTarget;
 
         // defaults depend on multisampling
         this.samples = Math.max(this.renderTarget ? this.renderTarget.samples : this.device.samples, 1);
@@ -193,6 +240,8 @@ class RenderPass {
         this.depthStencilOps = new DepthStencilAttachmentOps();
 
         const numColorOps = renderTarget ? renderTarget._colorBuffers?.length : 1;
+
+        this.colorArrayOps.length = 0;
         for (let i = 0; i < numColorOps; i++) {
             const colorOps = new ColorAttachmentOps();
             this.colorArrayOps[i] = colorOps;
@@ -208,12 +257,61 @@ class RenderPass {
                 colorOps.mipmaps = true;
             }
         }
+
+        this.postInit();
+    }
+
+    destroy() {
+    }
+
+    postInit() {
+    }
+
+    frameUpdate() {
+        // resize the render target if needed
+        if (this._options && this.renderTarget) {
+            const resizeSource = this._options.resizeSource ?? this.device.backBuffer;
+            const width = Math.floor(resizeSource.width * this._options.scaleX);
+            const height = Math.floor(resizeSource.height * this._options.scaleY);
+            this.renderTarget.resize(width, height);
+        }
+    }
+
+    before() {
+    }
+
+    execute() {
+    }
+
+    after() {
+    }
+
+    onEnable() {
+    }
+
+    onDisable() {
+    }
+
+    set enabled(value) {
+        if (this._enabled !== value) {
+            this._enabled = value;
+            if (value) {
+                this.onEnable();
+            } else {
+                this.onDisable();
+            }
+        }
+    }
+
+    get enabled() {
+        return this._enabled;
     }
 
     /**
      * Mark render pass as clearing the full color buffer.
      *
-     * @param {Color} color - The color to clear to.
+     * @param {Color|undefined} color - The color to clear to, or undefined to preserve the existing
+     * content.
      */
     setClearColor(color) {
 
@@ -222,29 +320,34 @@ class RenderPass {
         const count = this.colorArrayOps.length;
         for (let i = 0; i < count; i++) {
             const colorOps = this.colorArrayOps[i];
-            colorOps.clearValue.copy(color);
-            colorOps.clear = true;
+            if (color)
+                colorOps.clearValue.copy(color);
+            colorOps.clear = !!color;
         }
     }
 
     /**
      * Mark render pass as clearing the full depth buffer.
      *
-     * @param {number} depthValue - The depth value to clear to.
+     * @param {number|undefined} depthValue - The depth value to clear to, or undefined to preserve
+     * the existing content.
      */
     setClearDepth(depthValue) {
-        this.depthStencilOps.clearDepthValue = depthValue;
-        this.depthStencilOps.clearDepth = true;
+        if (depthValue)
+            this.depthStencilOps.clearDepthValue = depthValue;
+        this.depthStencilOps.clearDepth = depthValue !== undefined;
     }
 
     /**
      * Mark render pass as clearing the full stencil buffer.
      *
-     * @param {number} stencilValue - The stencil value to clear to.
+     * @param {number|undefined} stencilValue - The stencil value to clear to, or undefined to preserve the
+     * existing content.
      */
     setClearStencil(stencilValue) {
-        this.depthStencilOps.clearStencilValue = stencilValue;
-        this.depthStencilOps.clearStencil = true;
+        if (stencilValue)
+            this.depthStencilOps.clearStencilValue = stencilValue;
+        this.depthStencilOps.clearStencil = stencilValue !== undefined;
     }
 
     /**
@@ -252,53 +355,55 @@ class RenderPass {
      */
     render() {
 
-        const device = this.device;
-        const realPass = this.renderTarget !== undefined;
-        DebugGraphics.pushGpuMarker(device, `Pass:${this.name}`);
+        if (this.enabled) {
 
-        Debug.call(() => {
-            this.log(device, device.renderPassIndex);
-        });
+            const device = this.device;
+            const realPass = this.renderTarget !== undefined;
 
-        this.before?.();
+            Debug.call(() => {
+                this.log(device, device.renderPassIndex);
+            });
 
-        if (realPass) {
-            device.startPass(this);
+            this.before();
+
+            if (this.executeEnabled) {
+
+                if (realPass) {
+                    device.startRenderPass(this);
+                }
+
+                this.execute();
+
+                if (realPass) {
+                    device.endRenderPass(this);
+                }
+            }
+
+            this.after();
+
+            device.renderPassIndex++;
         }
-
-        this.execute?.();
-
-        if (realPass) {
-            device.endPass(this);
-        }
-
-        this.after?.();
-
-        device.renderPassIndex++;
-
-        DebugGraphics.popGpuMarker(device);
-
     }
 
     // #if _DEBUG
     log(device, index) {
         if (Tracing.get(TRACEID_RENDER_PASS) || Tracing.get(TRACEID_RENDER_PASS_DETAIL)) {
 
-            let rt = this.renderTarget;
-            if (rt === null && device.isWebGPU) {
-                rt = device.frameBuffer;
-            }
-            const numColor = rt?._colorBuffers?.length ?? (rt?.impl.assignedColorTexture ? 1 : 0);
+            const rt = this.renderTarget ?? (this.renderTarget === null ? device.backBuffer : null);
+            const isBackBuffer = !!rt?.impl.assignedColorTexture || rt?.impl.suppliedColorFramebuffer !== undefined;
+            const numColor = rt?._colorBuffers?.length ?? (isBackBuffer ? 1 : 0);
             const hasDepth = rt?.depth;
             const hasStencil = rt?.stencil;
-            const rtInfo = rt === undefined ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
+            const rtInfo = !rt ? '' : ` RT: ${(rt ? rt.name : 'NULL')} ` +
                 `${numColor > 0 ? `[Color${numColor > 1 ? ` x ${numColor}` : ''}]` : ''}` +
                 `${hasDepth ? '[Depth]' : ''}` +
                 `${hasStencil ? '[Stencil]' : ''}` +
+                ` ${rt.width} x ${rt.height}` +
                 `${(this.samples > 0 ? ' samples: ' + this.samples : '')}`;
 
             Debug.trace(TRACEID_RENDER_PASS,
                         `${index.toString().padEnd(2, ' ')}: ${this.name.padEnd(20, ' ')}` +
+                        `${this.executeEnabled ? '' : ' DISABLED '}` +
                         rtInfo.padEnd(30));
 
             for (let i = 0; i < numColor; i++) {

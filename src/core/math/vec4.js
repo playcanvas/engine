@@ -128,6 +128,29 @@ class Vec4 {
     }
 
     /**
+     * Adds a 4-dimensional vector scaled by scalar value. Does not modify the vector being added.
+     *
+     * @param {Vec4} rhs - The vector to add to the specified vector.
+     * @param {number} scalar - The number to multiply the added vector with.
+     * @returns {Vec4} Self for chaining.
+     * @example
+     * const vec = new pc.Vec4(1, 2, 3, 4);
+     *
+     * vec.addScaled(pc.Vec4.ONE, 2);
+     *
+     * // Outputs [3, 4, 5, 6]
+     * console.log("The result of the addition is: " + vec.toString());
+     */
+    addScaled(rhs, scalar) {
+        this.x += rhs.x * scalar;
+        this.y += rhs.y * scalar;
+        this.z += rhs.z * scalar;
+        this.w += rhs.w * scalar;
+
+        return this;
+    }
+
+    /**
      * Returns an identical copy of the specified 4-dimensional vector.
      *
      * @returns {this} A 4-dimensional vector containing the result of the cloning.
@@ -265,6 +288,25 @@ class Vec4 {
     }
 
     /**
+     * Reports whether two vectors are equal using an absolute error tolerance.
+     *
+     * @param {Vec4} rhs - The vector to be compared against.
+     * @param {number} [epsilon] - The maximum difference between each component of the two
+     * vectors. Defaults to 1e-6.
+     * @returns {boolean} True if the vectors are equal and false otherwise.
+     * @example
+     * const a = new pc.Vec4();
+     * const b = new pc.Vec4();
+     * console.log("The two vectors are approximately " + (a.equalsApprox(b, 1e-9) ? "equal" : "different"));
+     */
+    equalsApprox(rhs, epsilon = 1e-6) {
+        return (Math.abs(this.x - rhs.x) < epsilon) &&
+            (Math.abs(this.y - rhs.y) < epsilon) &&
+            (Math.abs(this.z - rhs.z) < epsilon) &&
+            (Math.abs(this.w - rhs.w) < epsilon);
+    }
+
+    /**
      * Returns the magnitude of the specified 4-dimensional vector.
      *
      * @returns {number} The magnitude of the specified 4-dimensional vector.
@@ -393,6 +435,7 @@ class Vec4 {
      * Returns this 4-dimensional vector converted to a unit vector in place. If the vector has a
      * length of zero, the vector's elements will be set to zero.
      *
+     * @param {Vec4} [src] - The vector to normalize. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      * @example
      * const v = new pc.Vec4(25, 0, 0, 0);
@@ -402,14 +445,14 @@ class Vec4 {
      * // Outputs 1, 0, 0, 0
      * console.log("The result of the vector normalization is: " + v.toString());
      */
-    normalize() {
-        const lengthSq = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+    normalize(src = this) {
+        const lengthSq = src.x * src.x + src.y * src.y + src.z * src.z + src.w * src.w;
         if (lengthSq > 0) {
             const invLength = 1 / Math.sqrt(lengthSq);
-            this.x *= invLength;
-            this.y *= invLength;
-            this.z *= invLength;
-            this.w *= invLength;
+            this.x = src.x * invLength;
+            this.y = src.y * invLength;
+            this.z = src.z * invLength;
+            this.w = src.w * invLength;
         }
 
         return this;
@@ -418,39 +461,42 @@ class Vec4 {
     /**
      * Each element is set to the largest integer less than or equal to its value.
      *
+     * @param {Vec4} [src] - The vector to floor. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    floor() {
-        this.x = Math.floor(this.x);
-        this.y = Math.floor(this.y);
-        this.z = Math.floor(this.z);
-        this.w = Math.floor(this.w);
+    floor(src = this) {
+        this.x = Math.floor(src.x);
+        this.y = Math.floor(src.y);
+        this.z = Math.floor(src.z);
+        this.w = Math.floor(src.w);
         return this;
     }
 
     /**
      * Each element is rounded up to the next largest integer.
      *
+     * @param {Vec4} [src] - The vector to ceil. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    ceil() {
-        this.x = Math.ceil(this.x);
-        this.y = Math.ceil(this.y);
-        this.z = Math.ceil(this.z);
-        this.w = Math.ceil(this.w);
+    ceil(src = this) {
+        this.x = Math.ceil(src.x);
+        this.y = Math.ceil(src.y);
+        this.z = Math.ceil(src.z);
+        this.w = Math.ceil(src.w);
         return this;
     }
 
     /**
      * Each element is rounded up or down to the nearest integer.
      *
+     * @param {Vec4} [src] - The vector to round. If not set, the operation is done in place.
      * @returns {Vec4} Self for chaining.
      */
-    round() {
-        this.x = Math.round(this.x);
-        this.y = Math.round(this.y);
-        this.z = Math.round(this.z);
-        this.w = Math.round(this.w);
+    round(src = this) {
+        this.x = Math.round(src.x);
+        this.y = Math.round(src.y);
+        this.z = Math.round(src.z);
+        this.w = Math.round(src.w);
         return this;
     }
 
