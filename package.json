@@ -1,6 +1,6 @@
 {
   "name": "playcanvas",
-  "version": "1.69.2",
+  "version": "1.69.2_MAG_OW1596",
   "author": "PlayCanvas <support@playcanvas.com>",
   "homepage": "https://playcanvas.com",
   "description": "PlayCanvas WebGL game engine",
@@ -144,7 +144,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "deploy": "npm run build:es6_release && npm run build:types && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && cp LICENSE ../oly-web-client/libs/overrides/playcanvas && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cat package.json | sed -e 's?\"module\": \"build/playcanvas.mjs/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../oly-web-client/libs/overrides/playcanvas/package.json",
+    "deploy": "npm run build:profiler && npm run build:types && cp -rf build/playcanvas.d.ts ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.d.ts && cp -rf build/playcanvas.mjs ../oly-web-client/libs/overrides/playcanvas/build/playcanvas.mjs && cp LICENSE ../oly-web-client/libs/overrides/playcanvas && rm -rf ../oly-web-client/libs/overrides/playcanvas/scripts && cp -rf scripts ../oly-web-client/libs/overrides/playcanvas && cat package.json | sed -e 's?\"module\": \"build/playcanvas.mjs/index.js\"?\"module\": \"build/playcanvas.mjs\"?' > ../oly-web-client/libs/overrides/playcanvas/package.json",
     "build:release": "rollup -c --environment target:release",
     "build:debug": "rollup -c --environment target:debug",
     "build:dts": "tsc --project tsconfig.engine.json",
