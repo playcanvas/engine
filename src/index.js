@@ -53,6 +53,7 @@ export { FloatPacking } from './core/math/float-packing.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
+export { Tri } from './core/math/tri.js';
 export { Vec2 } from './core/math/vec2.js';
 export { Vec3 } from './core/math/vec3.js';
 export { Vec4 } from './core/math/vec4.js';

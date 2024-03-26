@@ -2,10 +2,9 @@ import {
     Mesh,
     Mat4,
     Quat,
+    Tri,
     Vec3
 } from 'playcanvas';
-
-import { Tri } from './tri.js';
 
 // temporary variables
 const tmpV1 = new Vec3();
@@ -37,7 +36,7 @@ class MeshTriData {
     /**
      * The array of triangles for the mesh.
      *
-     * @type {import('./tri.js').Tri[]}
+     * @type {Tri[]}
      */
     tris;
 
