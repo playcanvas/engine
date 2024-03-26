@@ -54,7 +54,7 @@ class WebgpuBuffer {
 
         if (!this.buffer) {
             // size needs to be a multiple of 4
-            // note: based on specs, descriptor.size must be a multiple of 4 If descriptor.mappedAtCreation is true
+            // note: based on specs, descriptor.size must be a multiple of 4 if descriptor.mappedAtCreation is true
             const size = (storage.byteLength + 3) & ~3;
 
             this.usageFlags |= GPUBufferUsage.COPY_DST;
