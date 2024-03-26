@@ -7,7 +7,7 @@ let id = 0;
 /**
  * A storage buffer represents a memory which both the CPU and the GPU can access. Typically it is
  * used to provide data for compute shader, and to store the result of the computation.
- * Note that this class is only supported on WebGPU platform.
+ * Note that this class is only supported on the WebGPU platform.
  *
  * @category Graphics
  */
