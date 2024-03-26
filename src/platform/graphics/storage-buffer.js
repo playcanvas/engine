@@ -57,8 +57,8 @@ class StorageBuffer {
         vram.sb += size;
     }
 
-    read(offset = 0, size = this.byteSize) {
-        return this.impl.read(this.device, offset, size);
+    read(offset = 0, size = this.byteSize, data = null) {
+        return this.impl.read(this.device, offset, size, data);
     }
 
     clear(offset = 0, size = this.byteSize) {

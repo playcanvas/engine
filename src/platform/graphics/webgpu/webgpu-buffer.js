@@ -94,8 +94,8 @@ class WebgpuBuffer {
         wgpu.queue.writeBuffer(this.buffer, 0, data, 0, data.length);
     }
 
-    read(device, offset, size) {
-        return device.readStorageBuffer(this, offset, size);
+    read(device, offset, size, data) {
+        return device.readStorageBuffer(this, offset, size, data);
     }
 
     clear(device, offset, size) {

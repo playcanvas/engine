@@ -853,14 +853,18 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} [offset] - The offset of data to read. Defaults to 0.
      * @param {number} [size] - The size of data to read. Defaults to the full size of the buffer.
+     * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
+     * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
+     * partial data is copied. If not specified, a data is returned in an Uint8Array. Defaults to
+     * null.
      * @param {boolean} [immediate] - If true, the read operation will be executed as soon as
      * possible. This has a performance impact, so it should be used only when necessary. Defaults
      * to false.
-     * @returns {Promise<ArrayBuffer>} A promise that resolves with the data read from the storage
+     * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the storage
      * buffer.
      * @ignore
      */
-    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize, immediate = false) {
+    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize, data = null, immediate = false) {
 
         // create a temporary staging buffer
         const stagingBuffer = this.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
@@ -888,11 +892,15 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
                 destBuffer?.mapAsync(GPUMapMode.READ).then(() => {
 
-                    const destArrayBuffer = destBuffer.getMappedRange(0, size);
+                    // copy data to a buffer
+                    data ??= new Uint8Array(size);
+                    const copySrc = destBuffer.getMappedRange(0, size);
 
-                    const data = new Uint32Array(size / 4);
-                    data.set(new Uint32Array(destArrayBuffer));
+                    // use the same type as the target
+                    const srcType = data.constructor;
+                    data.set(new srcType(copySrc));
 
+                    // release staging buffer
                     destBuffer.unmap();
                     stagingBuffer.destroy(this);
 

@@ -157,7 +157,8 @@ assetListLoader.load(() => {
             // Read back the histogram data from the storage buffer. None that the returned promise
             // will be resolved later, when the GPU is done running it, and so the histogram on the
             // screen will be up to few frames behind.
-            histogramStorageBuffer.read().then(
+            const histogramData = new Uint32Array(numBins);
+            histogramStorageBuffer.read(0, undefined, histogramData).then(
                 (data) => {
                     // render the histogram using lines
                     const scale = 1 / 50000;
