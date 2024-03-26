@@ -824,7 +824,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
-     * Clear the content of a storage buffer.
+     * Clear the content of a storage buffer to 0.
      *
      * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
      * @param {number} [offset] - The offset of data to clear. Defaults to 0.
