@@ -23,7 +23,6 @@ export default {
                 let color = textureLoad(inputTexture, position, 0);
                 let v = luminance(color.rgb);
                 let bin = min(u32(v * numBins), lastBinIndex);
-                //bins[bin] += 1;
                 atomicAdd(&bins[bin], 1u);
             }
         `
