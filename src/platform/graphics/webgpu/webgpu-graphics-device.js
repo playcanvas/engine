@@ -855,7 +855,7 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
      * @param {number} [size] - The size of data to read. Defaults to the full size of the buffer.
      * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
      * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
-     * partial data is copied. If not specified, a data is returned in an Uint8Array. Defaults to
+     * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
      * null.
      * @param {boolean} [immediate] - If true, the read operation will be executed as soon as
      * possible. This has a performance impact, so it should be used only when necessary. Defaults
