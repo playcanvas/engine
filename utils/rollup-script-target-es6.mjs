@@ -12,7 +12,7 @@ import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
 /**
  * Build an ES6 target that rollup is supposed to build.
  *
- * @param {string} name - The name, like `pcx` or `VoxParser`.
+ * @param {string} name - The name, like `pcx`.
  * @param {string} input - The input file, like `extras/index.js`.
  * @param {string} output - The output file, like `build/playcanvas-extras.mjs`.
  * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
