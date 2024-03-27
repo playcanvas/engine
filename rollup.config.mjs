@@ -84,13 +84,14 @@ if (envTarget === null || envTarget === 'extras') {
 BUILD_TYPES.forEach((t) => {
     MODULE_VERSION.forEach((m) => {
         if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-            // bundled
-            targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
-
             // unbundled
             if (m === 'es6' && t !== 'min') {
                 targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
             }
+
+            // bundled
+            targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
+
         }
     });
 });
