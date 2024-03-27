@@ -156,7 +156,7 @@
     "build:treemap": "npm run build:es5 -- --environment treemap",
     "build:treenet": "npm run build:es5 -- --environment treenet",
     "build:treesun": "npm run build:es5 -- --environment treesun",
-    "build:types": "rollup -c --environment target:types && tsc --project tsconfig.extras.json",
+    "build:types": "rollup -c --environment target:types",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run build:types && npm run publint",
     "watch": "npm run build -- -w",

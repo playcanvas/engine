@@ -21,7 +21,7 @@ class MiniStats {
     /**
      * Create a new MiniStats instance.
      *
-     * @param {import('../..').AppBase} app - The application.
+     * @param {import('playcanvas').AppBase} app - The application.
      * @param {object} [options] - Options for the MiniStats instance.
      * @param {object[]} [options.sizes] - Sizes of area to render individual graphs in and spacing
      * between individual graphs.
@@ -262,8 +262,8 @@ class MiniStats {
     /**
      * Create the graphs requested by the user and add them to the MiniStats instance.
      *
-     * @param {import('../..').AppBase} app - The application.
-     * @param {import('../..').GraphicsDevice} device - The graphics device.
+     * @param {import('playcanvas').AppBase} app - The application.
+     * @param {import('playcanvas').GraphicsDevice} device - The graphics device.
      * @param {object} options - Options for the MiniStats instance.
      * @private
      */

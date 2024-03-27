@@ -191,7 +191,7 @@ const STANDARD_MAT_PROPS = [
 ];
 
 const REPLACEMENTS = [{
-    path: `./types/scene/materials/standard-material.d.ts`,
+    path: `./build/playcanvas/scene/materials/standard-material.d.ts`,
     replacement: {
         from: 'reset(): void;',
         to: `reset(): void;
@@ -207,7 +207,7 @@ import { Texture } from '../../platform/graphics/texture.js';
 `
     }
 }, {
-    path: `./types/framework/script/script-type.d.ts`,
+    path: `./build/playcanvas/framework/script/script-type.d.ts`,
     replacement: {
         from: 'get enabled(): boolean;',
         to: `get enabled(): boolean;

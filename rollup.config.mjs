@@ -27,7 +27,7 @@ const EXTRAS_TARGETS = [
  * @type {RollupOptions[]}
  */
 const TYPES_TARGET = [{
-    input: 'types/index.d.ts',
+    input: 'build/playcanvas/index.d.ts',
     output: [{
         file: 'build/playcanvas.d.ts',
         footer: 'export as namespace pc;',
@@ -38,6 +38,17 @@ const TYPES_TARGET = [{
         typesFixup(),
         dts()
     ]
+}, {
+    input: 'build/playcanvas-extras/index.d.ts',
+    output: [{
+        file: 'build/playcanvas-extras.d.ts',
+        format: 'es'
+    }],
+    plugins: [
+        runTsc('tsconfig.extras.json'),
+        dts()
+    ],
+    external: ['playcanvas']
 }];
 
 /**
