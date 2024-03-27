@@ -14,6 +14,16 @@ import dts from 'rollup-plugin-dts';
 console.log(`Building PlayCanvas Engine v${version} revision ${revision}`);
 
 /**
+ * @type {['release', 'debug', 'profiler', 'min']}
+ */
+const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
+
+/**
+ * @type {['es6', 'es5']}
+ */
+const MODULE_VERSION = ['es6', 'es5'];
+
+/**
  * @type {RollupOptions[]}
  */
 const EXTRAS_TARGETS = [
@@ -52,23 +62,13 @@ const TYPES_TARGET = [{
 }];
 
 /**
- * @type {['release', 'debug', 'profiler', 'min']}
- */
-const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
-
-/**
- * @type {['es6', 'es5']}
- */
-const MODULE_VERSION = ['es6', 'es5'];
-
-/**
  * @type {RollupOptions[]}
  */
 const targets = [];
 
 const envTarget = process.env.target ? process.env.target.toLowerCase() : null;
 
-if ((envTarget === null) && fs.existsSync('build')) {
+if (envTarget === null && fs.existsSync('build')) {
     // no targets specified, clean build directory
     fs.rmSync('build', { recursive: true });
 }
