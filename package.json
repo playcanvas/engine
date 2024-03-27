@@ -96,6 +96,7 @@
     "build/playcanvas-extras.js",
     "build/playcanvas-extras.mjs",
     "build/playcanvas-extras/index.js",
+    "build/playcanvas-extras.d.ts",
     "scripts",
     "LICENSE",
     "package.json",
