@@ -664,6 +664,7 @@ class GraphicsDevice extends EventHandler {
     /**
      * Clears the vertex buffer set on the graphics device. This is called automatically by the
      * renderer.
+     * @ignore
      */
     clearVertexBuffer() {
         this.vertexBuffers.length = 0;
