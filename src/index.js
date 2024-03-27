@@ -53,7 +53,6 @@ export { FloatPacking } from './core/math/float-packing.js';
 export { Mat3 } from './core/math/mat3.js';
 export { Mat4 } from './core/math/mat4.js';
 export { Quat } from './core/math/quat.js';
-export { Tri } from './core/math/tri.js';
 export { Vec2 } from './core/math/vec2.js';
 export { Vec3 } from './core/math/vec3.js';
 export { Vec4 } from './core/math/vec4.js';
@@ -64,6 +63,7 @@ export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
 export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
+export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
 // PLATFORM / AUDIO
