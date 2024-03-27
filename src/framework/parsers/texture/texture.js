@@ -1,10 +1,8 @@
 /**
- * @interface
- * @name TextureParser
- * @description Interface to a texture parser. Implementations of this interface handle the loading
+ * Interface to a texture parser. Implementations of this interface handle the loading
  * and opening of texture assets.
  *
- * @category Graphics
+ * @ignore
  */
 class TextureParser {
     /* eslint-disable jsdoc/require-returns-check */

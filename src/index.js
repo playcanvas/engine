@@ -345,7 +345,6 @@ export { ElementInput, ElementInputEvent, ElementMouseEvent, ElementSelectEvent,
 
 // FRAMEWORK / PARSERS
 export { JsonStandardMaterialParser } from './framework/parsers/material/json-standard-material.js';
-export { TextureParser } from './framework/parsers/texture/texture.js';
 
 // FRAMEWORK /SCRIPTS
 export { createScript, registerScript, getReservedScriptNames } from './framework/script/script.js';
