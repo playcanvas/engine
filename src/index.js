@@ -63,6 +63,7 @@ export { BoundingSphere } from './core/shape/bounding-sphere.js';
 export { Frustum } from './core/shape/frustum.js';
 export { OrientedBox } from './core/shape/oriented-box.js';
 export { Plane } from './core/shape/plane.js';
+export { Tri } from './core/shape/tri.js';
 export { Ray } from './core/shape/ray.js';
 
 // PLATFORM / AUDIO
