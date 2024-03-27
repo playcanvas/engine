@@ -11,7 +11,7 @@ let content = fs.readFileSync('build/playcanvas.d.ts', 'utf8');
  */
 const seenTypes = new Set();
 
-const debug = false;
+const debug = true;
 
 /**
  * This regular expression matches code like:
@@ -70,7 +70,7 @@ for (const seenType of longestTypesFirst) {
 
 if (debug) {
     longestTypesFirst.forEach((seenType, i) => {
-        console.log(`longestTypesFirst[${i.toString().padStart(3)}] = ${seenType}`);
+        console.log(`longestTypesFirst[${i}] = ${seenType}`);
     });
 }
 
