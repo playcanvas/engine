@@ -29,8 +29,7 @@ const MODULE_VERSION = ['es6', 'es5'];
 const EXTRAS_TARGETS = [
     scriptTarget('pcx', 'extras/index.js', 'build/playcanvas-extras.js'),
     scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras', false),
-    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs', true),
-    scriptTarget('VoxParser', 'scripts/parsers/vox-parser.mjs')
+    scriptTargetEs6('pcx', 'extras/index.js', 'build/playcanvas-extras.mjs', true)
 ];
 
 /**
