@@ -158,7 +158,7 @@
     "build:treemap": "npm run build:es5 -- --environment treemap",
     "build:treenet": "npm run build:es5 -- --environment treenet",
     "build:treesun": "npm run build:es5 -- --environment treesun",
-    "build:types": "npm run build:dts && node utils/types-fixup.mjs && rollup -c --environment target:types && node utils/types-undollar.mjs && npm run build:types:extras",
+    "build:types": "npm run build:dts && node utils/types-fixup.mjs && rollup -c --environment target:types && npm run build:types:extras",
     "build:types:extras": "npm run build:dts:extras",
     "build:sourcemaps": "npm run build -- -m",
     "build:publish": "npm run build && npm run build:types && npm run publint",
