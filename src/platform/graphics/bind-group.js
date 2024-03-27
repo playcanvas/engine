@@ -6,8 +6,8 @@ import { DebugGraphics } from './debug-graphics.js';
 let id = 0;
 
 /**
- * A bind group represents an collection of {@link UniformBuffer} and {@link Texture} instance,
- * which can be bind on a GPU for rendering.
+ * A bind group represents a collection of {@link UniformBuffer}, {@link Texture} and
+ * {@link StorageBuffer} instanced, which can be bind on a GPU for rendering.
  *
  * @ignore
  */
@@ -50,6 +50,7 @@ class BindGroup {
 
         this.textures = [];
         this.storageTextures = [];
+        this.storageBuffers = [];
         this.uniformBuffers = [];
 
         /** @type {import('./uniform-buffer.js').UniformBuffer} */
@@ -83,6 +84,22 @@ class BindGroup {
         Debug.assert(index !== undefined, `Setting a uniform [${name}] on a bind group with id ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`, this);
         if (this.uniformBuffers[index] !== uniformBuffer) {
             this.uniformBuffers[index] = uniformBuffer;
+            this.dirty = true;
+        }
+    }
+
+    /**
+     * Assign a storage buffer to a slot.
+     *
+     * @param {string} name - The name of the storage buffer slot.
+     * @param {import('./storage-buffer.js').StorageBuffer} storageBuffer - The storage buffer to
+     * assign to the slot.
+     */
+    setStorageBuffer(name, storageBuffer) {
+        const index = this.format.storageBufferFormatsMap.get(name);
+        Debug.assert(index !== undefined, `Setting a storage buffer [${name}] on a bind group with id: ${this.id} which does not contain in, while rendering [${DebugGraphics.toString()}]`, this);
+        if (this.storageBuffers[index] !== storageBuffer) {
+            this.storageBuffers[index] = storageBuffer;
             this.dirty = true;
         }
     }
@@ -129,7 +146,7 @@ class BindGroup {
     update() {
 
         // TODO: implement faster version of this, which does not call SetTexture, which does a map lookup
-        const { textureFormats, storageTextureFormats } = this.format;
+        const { textureFormats, storageTextureFormats, storageBufferFormats } = this.format;
 
         for (let i = 0; i < textureFormats.length; i++) {
             const textureFormat = textureFormats[i];
@@ -143,6 +160,13 @@ class BindGroup {
             const value = storageTextureFormat.scopeId.value;
             Debug.assert(value, `Value was not set when assigning storage texture slot [${storageTextureFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
             this.setStorageTexture(storageTextureFormat.name, value);
+        }
+
+        for (let i = 0; i < storageBufferFormats.length; i++) {
+            const storageBufferFormat = storageBufferFormats[i];
+            const value = storageBufferFormat.scopeId.value;
+            Debug.assert(value, `Value was not set when assigning storage buffer slot [${storageBufferFormat.name}] to a bind group, while rendering [${DebugGraphics.toString()}]`, this);
+            this.setStorageBuffer(storageBufferFormat.name, value);
         }
 
         // update uniform buffer offsets

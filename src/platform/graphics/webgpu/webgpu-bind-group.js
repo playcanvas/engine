@@ -128,6 +128,24 @@ class WebgpuBindGroup {
             });
         });
 
+        // storage buffers
+        bindGroup.storageBuffers.forEach((buffer, bufferIndex) => {
+            /** @type {GPUBuffer} */
+            const wgpuBuffer = buffer.impl.buffer;
+
+            Debug.assert(wgpuBuffer, 'NULL storage buffer cannot be used by the bind group');
+            Debug.call(() => {
+                this.debugFormat += `${index}: SB\n`;
+            });
+
+            entries.push({
+                binding: index++,
+                resource: {
+                    buffer: wgpuBuffer
+                }
+            });
+        });
+
         const descr = {
             layout: bindGroup.format.impl.bindGroupLayout,
             entries: entries

@@ -1,3 +1,4 @@
+import { BUFFERUSAGE_UNIFORM } from "../constants.js";
 import { WebgpuBuffer } from "./webgpu-buffer.js";
 
 /**
@@ -7,21 +8,13 @@ import { WebgpuBuffer } from "./webgpu-buffer.js";
  */
 class WebgpuUniformBuffer extends WebgpuBuffer {
     constructor(uniformBuffer) {
-        super();
-    }
-
-    destroy(device) {
-
-        super.destroy(device);
-
-
-        // TODO: clear up bound uniform buffers
+        super(BUFFERUSAGE_UNIFORM);
     }
 
     unlock(uniformBuffer) {
 
         const device = uniformBuffer.device;
-        super.unlock(device, undefined, GPUBufferUsage.UNIFORM, uniformBuffer.storageInt32.buffer);
+        super.unlock(device, uniformBuffer.storageInt32.buffer);
     }
 }
 

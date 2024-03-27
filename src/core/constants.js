@@ -96,6 +96,14 @@ export const TRACEID_VRAM_VB = 'VRAM.Vb';
 export const TRACEID_VRAM_IB = 'VRAM.Ib';
 
 /**
+ * Logs the vram use by the storage buffers.
+ *
+ * @type {string}
+ * @category Debug
+ */
+export const TRACEID_VRAM_SB = 'VRAM.Sb';
+
+/**
  * Logs the creation of bind groups.
  *
  * @type {string}

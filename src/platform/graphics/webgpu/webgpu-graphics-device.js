@@ -3,7 +3,8 @@ import { Debug, DebugHelper } from '../../../core/debug.js';
 import { path } from '../../../core/path.js';
 
 import {
-    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU
+    PIXELFORMAT_RGBA32F, PIXELFORMAT_RGBA8, PIXELFORMAT_BGRA8, DEVICETYPE_WEBGPU,
+    BUFFERUSAGE_READ, BUFFERUSAGE_COPY_DST
 } from '../constants.js';
 import { GraphicsDevice } from '../graphics-device.js';
 import { DebugGraphics } from '../debug-graphics.js';
@@ -27,6 +28,7 @@ import { WebgpuDynamicBuffers } from './webgpu-dynamic-buffers.js';
 import { WebgpuGpuProfiler } from './webgpu-gpu-profiler.js';
 import { WebgpuResolver } from './webgpu-resolver.js';
 import { WebgpuCompute } from './webgpu-compute.js';
+import { WebgpuBuffer } from './webgpu-buffer.js';
 
 class WebgpuGraphicsDevice extends GraphicsDevice {
     /**
@@ -375,6 +377,10 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
         if (!this.contextLost) {
             this.gpuProfiler.request();
         }
+    }
+
+    createBufferImpl(usageFlags) {
+        return new WebgpuBuffer(usageFlags);
     }
 
     createUniformBufferImpl(uniformBuffer) {
@@ -818,6 +824,104 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
     }
 
     /**
+     * Clear the content of a storage buffer to 0.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} [offset] - The offset of data to clear. Defaults to 0.
+     * @param {number} [size] - The size of data to clear. Defaults to the full size of the buffer.
+     * @ignore
+     */
+    clearStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize) {
+
+        // use existing or create new encoder
+        const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+
+        commandEncoder.clearBuffer(storageBuffer.buffer, offset, size);
+
+        // if we created the encoder
+        if (!this.commandEncoder) {
+            DebugHelper.setLabel(commandEncoder, 'ReadStorageBuffer-Encoder');
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'ReadStorageBuffer-CommandBuffer');
+            this.addCommandBuffer(cb);
+        }
+    }
+
+    /**
+     * Read a content of a storage buffer.
+     *
+     * @param {import('./webgpu-buffer.js').WebgpuBuffer} storageBuffer - The storage buffer.
+     * @param {number} [offset] - The offset of data to read. Defaults to 0.
+     * @param {number} [size] - The size of data to read. Defaults to the full size of the buffer.
+     * @param {ArrayBufferView} [data] - Typed array to populate with the data read from the storage
+     * buffer. When typed array is supplied, enough space needs to be reserved, otherwise only
+     * partial data is copied. If not specified, the data is returned in an Uint8Array. Defaults to
+     * null.
+     * @param {boolean} [immediate] - If true, the read operation will be executed as soon as
+     * possible. This has a performance impact, so it should be used only when necessary. Defaults
+     * to false.
+     * @returns {Promise<ArrayBufferView>} A promise that resolves with the data read from the storage
+     * buffer.
+     * @ignore
+     */
+    readStorageBuffer(storageBuffer, offset = 0, size = storageBuffer.byteSize, data = null, immediate = false) {
+
+        // create a temporary staging buffer
+        const stagingBuffer = this.createBufferImpl(BUFFERUSAGE_READ | BUFFERUSAGE_COPY_DST);
+        stagingBuffer.allocate(this, size);
+        const destBuffer = stagingBuffer.buffer;
+
+        // use existing or create new encoder
+        const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
+
+        // copy the GPU buffer to the staging buffer
+        commandEncoder.copyBufferToBuffer(storageBuffer.buffer, offset, destBuffer, 0, size);
+
+        // if we created new encoder
+        if (!this.commandEncoder) {
+            DebugHelper.setLabel(commandEncoder, 'ReadStorageBuffer-Encoder');
+            const cb = commandEncoder.finish();
+            DebugHelper.setLabel(cb, 'ReadStorageBuffer-CommandBuffer');
+            this.addCommandBuffer(cb);
+        }
+
+        // return a promise that resolves with the data
+        return new Promise((resolve, reject) => {
+
+            const read = () => {
+
+                destBuffer?.mapAsync(GPUMapMode.READ).then(() => {
+
+                    // copy data to a buffer
+                    data ??= new Uint8Array(size);
+                    const copySrc = destBuffer.getMappedRange(0, size);
+
+                    // use the same type as the target
+                    const srcType = data.constructor;
+                    data.set(new srcType(copySrc));
+
+                    // release staging buffer
+                    destBuffer.unmap();
+                    stagingBuffer.destroy(this);
+
+                    resolve(data);
+                });
+            };
+
+            if (immediate) {
+                // submit the command buffer immediately
+                this.submit();
+                read();
+            } else {
+                // map the buffer during the next event handling cycle, when the command buffer is submitted
+                setTimeout(() => {
+                    read();
+                });
+            }
+        });
+    }
+
+    /**
      * Copies source render target into destination render target. Mostly used by post-effects.
      *
      * @param {RenderTarget} [source] - The source render target. Defaults to frame buffer.
@@ -837,7 +941,6 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // use existing or create new encoder if not in a render pass
         const commandEncoder = this.commandEncoder ?? this.wgpu.createCommandEncoder();
-        DebugHelper.setLabel(commandEncoder, 'CopyRenderTarget-Encoder');
 
         DebugGraphics.pushGpuMarker(this, 'COPY-RT');
 
@@ -899,6 +1002,8 @@ class WebgpuGraphicsDevice extends GraphicsDevice {
 
         // if we created the encoder
         if (!this.commandEncoder) {
+
+            DebugHelper.setLabel(commandEncoder, 'CopyRenderTarget-Encoder');
 
             // copy operation runs next
             const cb = commandEncoder.finish();
