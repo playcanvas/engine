@@ -172,6 +172,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
 
     const jsccParam = jsccOptions[buildType] || jsccOptions.release;
     if (moduleFormat === 'es5') jsccParam.values._IS_UMD = 1;
+    jsccParam.asloader = false;
 
     return {
         input,
