@@ -338,7 +338,7 @@ export { ShaderHandler } from './framework/handlers/shader.js';
 export { SpriteHandler } from './framework/handlers/sprite.js';
 export { TemplateHandler } from './framework/handlers/template.js';
 export { TextHandler } from './framework/handlers/text.js';
-export { TextureHandler, TextureParser } from './framework/handlers/texture.js';
+export { TextureHandler } from './framework/handlers/texture.js';
 export { TextureAtlasHandler } from './framework/handlers/texture-atlas.js';
 
 // FRAMEWORK / INPUT
