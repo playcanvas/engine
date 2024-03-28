@@ -168,7 +168,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
-            dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
+            dir: !bundled ? `${dir}/${OUT_PREFIX[buildType]}` : undefined
         },
         plugins: [
             jscc(getJSCCOptions(buildType, isES5)),
