@@ -1,5 +1,4 @@
 import { Debug } from '../../core/debug.js';
-import { EventHandler } from '../../core/event-handler.js';
 
 import { script } from '../script.js';
 import { AppBase } from '../app-base.js';
@@ -65,19 +64,13 @@ function createScript(name, app) {
     if (reservedScriptNames.has(name))
         throw new Error(`Script name '${name}' is reserved, please rename the script`);
 
-    const scriptType = function (args) {
-        EventHandler.prototype.initEventHandler.call(this);
-        ScriptType.prototype.initScriptType.call(this, args);
-    };
+    class ScriptTypeWithAttributes extends ScriptType {
+        // @ts-ignore
+        attributes = new ScriptAttributes(this);
+    }
 
-    scriptType.prototype = Object.create(ScriptType.prototype);
-    scriptType.prototype.constructor = scriptType;
-
-    scriptType.extend = ScriptType.extend;
-    scriptType.attributes = new ScriptAttributes(scriptType);
-
-    registerScript(scriptType, name, app);
-    return scriptType;
+    registerScript(ScriptTypeWithAttributes, name, app);
+    return ScriptTypeWithAttributes;
 }
 
 // Editor uses this - migrate to ScriptAttributes.reservedNames and delete this
