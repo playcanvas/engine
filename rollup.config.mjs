@@ -83,12 +83,7 @@ if (envTarget === null || envTarget === 'extras') {
 BUILD_TYPES.forEach((type) => {
     MODULE_FORMAT.forEach((format) => {
         if (envTarget === null || envTarget === type || envTarget === format || envTarget === `${type}_${format}`) {
-            const bundledOnly = format === 'es5' || type === 'min';
-
-            targets.push(buildTarget(type, format, 'src/index.js', 'build', bundledOnly));
-            if (!bundledOnly) {
-                targets.push(buildTarget(type, format, 'src/index.js', 'build', false));
-            }
+            targets.push(...buildTarget(type, format, 'src/index.js', 'build'));
         }
     });
 });

@@ -145,24 +145,53 @@ function getOutPlugins() {
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @param {string} input - Only used for Examples to change it to `../src/index.js`.
  * @param {string} [dir] - Only used for examples to change the output location.
- * @param {Boolean} [bundled] - Whether the target should be bundled.
- * @returns {RollupOptions} One rollup target.
+ * @returns {RollupOptions[]} One rollup target.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'build', bundled = true) {
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'build') {
     const isES5 = moduleFormat === 'es5';
+    const bundled = isES5 || buildType === 'min';
 
-    // enforce bundling for es5
-    bundled ||= isES5;
+    const targets = [];
 
     /**
      * @type {RollupOptions}
      */
-    let target;
+    const target = {
+        input,
+        output: {
+            banner: bundled ? getBanner(BANNER[buildType]) : undefined,
+            plugins: buildType === 'min' ? getOutPlugins() : undefined,
+            format: isES5 ? 'umd' : 'es',
+            indent: '\t',
+            sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
+            name: 'pc',
+            preserveModules: !bundled,
+            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
+            dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
+        },
+        plugins: [
+            jscc(getJSCCOptions(buildType, isES5)),
+            isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
+            shaderChunks({ enabled: buildType !== 'debug' }),
+            engineLayerImportValidation(input, buildType === 'debug'),
+            buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
+            babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
+            !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
+            spacesToTabs(buildType !== 'debug')
+        ]
+    };
+
+    HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
+    targets.push(target);
 
     // check if unbundled target is in history
     if (HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
         const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
-        target = {
+
+        /**
+         * @type {RollupOptions}
+         */
+        const target = {
             input: `${unbundled.output.dir}/index.js`,
             output: {
                 banner: getBanner(BANNER[buildType]),
@@ -174,36 +203,13 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
                 file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
             }
         };
-    } else {
-        target = {
-            input,
-            output: {
-                banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-                plugins: buildType === 'min' ? getOutPlugins() : undefined,
-                format: isES5 ? 'umd' : 'es',
-                indent: '\t',
-                sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
-                name: 'pc',
-                preserveModules: !bundled,
-                file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
-                dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
-            },
-            plugins: [
-                jscc(getJSCCOptions(buildType, isES5)),
-                isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
-                shaderChunks({ enabled: buildType !== 'debug' }),
-                engineLayerImportValidation(input, buildType === 'debug'),
-                buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-                babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
-                !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
-                spacesToTabs(buildType !== 'debug')
-            ]
-        };
+
+        HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
+        targets.push(target);
     }
 
 
-    HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
-    return target;
+    return targets;
 }
 
 export { buildTarget };
