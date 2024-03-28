@@ -139,7 +139,7 @@ function getOutPlugins() {
 }
 
 /**
- * Build a target that rollup is supposed to build.
+ * Build a target that rollup is supposed to build (bundled and unbundled).
  *
  * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
  * @param {'es5'|'es6'} moduleFormat - The module format.
@@ -148,8 +148,10 @@ function getOutPlugins() {
  * @returns {RollupOptions[]} One rollup target.
  */
 function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'build') {
+    const isDebug = buildType === 'debug';
+    const isMin = buildType === 'min';
     const isES5 = moduleFormat === 'es5';
-    const bundled = isES5 || buildType === 'min';
+    const bundled = isES5 || isMin;
 
     const targets = [];
 
@@ -160,10 +162,10 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
         input,
         output: {
             banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: buildType === 'min' ? getOutPlugins() : undefined,
+            plugins: isMin ? getOutPlugins() : undefined,
             format: isES5 ? 'umd' : 'es',
             indent: '\t',
-            sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
+            sourcemap: bundled && isDebug ? 'inline' : undefined,
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
@@ -172,12 +174,12 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
         plugins: [
             jscc(getJSCCOptions(buildType, isES5)),
             isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
-            shaderChunks({ enabled: buildType !== 'debug' }),
-            engineLayerImportValidation(input, buildType === 'debug'),
-            buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
-            !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
-            spacesToTabs(buildType !== 'debug')
+            !isDebug ? shaderChunks() : undefined,
+            isDebug ? engineLayerImportValidation(input) : undefined,
+            !isDebug ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
+            babel(isES5 ? es5Options(buildType) : moduleOptions(buildType)),
+            !isES5 && !isDebug ? dynamicImportViteSupress() : undefined,
+            !isDebug ? spacesToTabs() : undefined
         ]
     };
 

@@ -11,12 +11,6 @@ export function dynamicImportLegacyBrowserSupport() {
     return {
         name: 'dynamic-import-old-browsers',
         transform(code, id) {
-            /**
-             * Transforms the code by replacing `import(` with `new Function("return import")(`.
-             * @param {string} code - The code to transform.
-             * @param {string} id - The id of the code.
-             * @returns {object} - The transformed code and map.
-             */
             return {
                 code: code.replace(/([^\w])import\(/g, '$1new Function("modulePath", "return import(modulePath)")('),
                 map: null
@@ -35,12 +29,6 @@ export function dynamicImportViteSupress() {
     return {
         name: 'dynamic-import-vite-suppress',
         transform(code, id) {
-            /**
-             * Transforms the code by replacing `import(` with `import(\/* vite-ignore *\/(`.
-             * @param {string} code - The code to transform.
-             * @param {string} id - The id of the code.
-             * @returns {object} - The transformed code and map.
-             */
             return {
                 code: code.replace(/([^\w])import\(/g, '$1import(/* @vite-ignore */'),
                 map: null
