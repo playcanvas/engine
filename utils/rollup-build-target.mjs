@@ -64,7 +64,7 @@ const OUT_PREFIX = {
     min: 'playcanvas.min'
 };
 
-const cache = new Map();
+const HISTORY = new Map();
 
 /**
  * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
@@ -106,6 +106,39 @@ function getJSCCOptions(buildType, isES5) {
 }
 
 /**
+ * @returns {OutputOptions['plugins']} - The output plugins.
+ */
+function getOutPlugins() {
+    const plugins = [
+        terser()
+    ];
+
+    if (process.env.treemap) {
+        plugins.push(visualizer({
+            filename: 'treemap.html',
+            brotliSize: true,
+            gzipSize: true
+        }));
+    }
+
+    if (process.env.treenet) {
+        plugins.push(visualizer({
+            filename: 'treenet.html',
+            template: 'network'
+        }));
+    }
+
+    if (process.env.treesun) {
+        plugins.push(visualizer({
+            filename: 'treesun.html',
+            template: 'sunburst'
+        }));
+    }
+
+    return plugins;
+}
+
+/**
  * Build a target that rollup is supposed to build.
  *
  * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
@@ -121,124 +154,56 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
     // enforce bundling for es5
     bundled ||= isES5;
 
-    const outputPlugins = {
-        release: [],
-        min: [
-            terser()
-        ]
-    };
-
-    if (process.env.treemap) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treemap.html',
-            brotliSize: true,
-            gzipSize: true
-        }));
-    }
-
-    if (process.env.treenet) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treenet.html',
-            template: 'network'
-        }));
-    }
-
-    if (process.env.treesun) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treesun.html',
-            template: 'sunburst'
-        }));
-    }
-
     /**
      * @type {RollupOptions}
      */
-    const target = {
-        input,
-        output: {
-            banner: bundled ? getBanner(BANNER[buildType]) : undefined,
-            plugins: outputPlugins[buildType || outputPlugins.release],
-            format: isES5 ? 'umd' : 'es',
-            indent: '\t',
-            sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
-            name: 'pc',
-            preserveModules: !bundled,
-            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
-            dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
-        },
-        plugins: [
-            jscc(getJSCCOptions(buildType, isES5)),
-            isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
-            shaderChunks({ enabled: buildType !== 'debug' }),
-            engineLayerImportValidation(input, buildType === 'debug'),
-            buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
-            babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
-            !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
-            spacesToTabs(buildType !== 'debug')
-        ]
-    };
+    let target;
 
-    cache.set(`${buildType}-${moduleFormat}`, target);
+    // check if unbundled target is in history
+    if (HISTORY.has(`${buildType}-${moduleFormat}-false`)) {
+        const unbundled = HISTORY.get(`${buildType}-${moduleFormat}-false`);
+        target = {
+            input: `${unbundled.output.dir}/index.js`,
+            output: {
+                banner: getBanner(BANNER[buildType]),
+                format: 'es',
+                indent: '\t',
+                sourcemap: buildType === 'debug' ? 'inline' : undefined,
+                name: 'pc',
+                preserveModules: false,
+                file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+            }
+        };
+    } else {
+        target = {
+            input,
+            output: {
+                banner: bundled ? getBanner(BANNER[buildType]) : undefined,
+                plugins: buildType === 'min' ? getOutPlugins() : undefined,
+                format: isES5 ? 'umd' : 'es',
+                indent: '\t',
+                sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
+                name: 'pc',
+                preserveModules: !bundled,
+                file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
+                dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
+            },
+            plugins: [
+                jscc(getJSCCOptions(buildType, isES5)),
+                isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
+                shaderChunks({ enabled: buildType !== 'debug' }),
+                engineLayerImportValidation(input, buildType === 'debug'),
+                buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
+                babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
+                !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
+                spacesToTabs(buildType !== 'debug')
+            ]
+        };
+    }
 
+
+    HISTORY.set(`${buildType}-${moduleFormat}-${bundled}`, target);
     return target;
 }
 
-/**
- * Build a target that rollup is supposed to build.
- *
- * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
- * @param {string} input - Only used for Examples to change it to `../src/index.js`.
- * @param {string} [dir] - Only used for examples to change the output location.
- * @returns {RollupOptions} One rollup target.
- */
-function buildBundleTarget(buildType, input = 'src/index.js', dir = 'build') {
-    const outputPlugins = {
-        release: [],
-        min: [
-            terser()
-        ]
-    };
-
-    if (process.env.treemap) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treemap.html',
-            brotliSize: true,
-            gzipSize: true
-        }));
-    }
-
-    if (process.env.treenet) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treenet.html',
-            template: 'network'
-        }));
-    }
-
-    if (process.env.treesun) {
-        outputPlugins.min.push(visualizer({
-            filename: 'treesun.html',
-            template: 'sunburst'
-        }));
-    }
-
-    const sourceMap = {
-        debug: 'inline',
-        release: null
-    };
-
-    return {
-        input,
-        output: {
-            banner: getBanner(BANNER[buildType]),
-            plugins: outputPlugins[buildType || outputPlugins.release],
-            format: 'es',
-            indent: '\t',
-            sourcemap: sourceMap[buildType] || sourceMap.release,
-            name: 'pc',
-            preserveModules: false,
-            file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
-        }
-    };
-}
-
-export { buildTarget, buildBundleTarget };
+export { buildTarget };

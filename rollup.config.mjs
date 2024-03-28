@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
-import { buildTarget, buildBundleTarget } from './utils/rollup-build-target.mjs';
+import { buildTarget } from './utils/rollup-build-target.mjs';
 import { scriptTarget } from './utils/rollup-script-target.mjs';
 import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
 import { runTsc } from './utils/rollup-run-tsc.mjs';
@@ -85,15 +85,9 @@ BUILD_TYPES.forEach((type) => {
         if (envTarget === null || envTarget === type || envTarget === format || envTarget === `${type}_${format}`) {
             const bundledOnly = format === 'es5' || type === 'min';
 
-            // bundled/unbundled
-            const target = buildTarget(type, format, 'src/index.js', 'build', bundledOnly);
-            targets.push(target);
-
-            // bundle
+            targets.push(buildTarget(type, format, 'src/index.js', 'build', bundledOnly));
             if (!bundledOnly) {
-                // @ts-ignore
-                const input = target.output.dir + '/index.js';
-                targets.push(buildBundleTarget(type, input));
+                targets.push(buildTarget(type, format, 'src/index.js', 'build', false));
             }
         }
     });
