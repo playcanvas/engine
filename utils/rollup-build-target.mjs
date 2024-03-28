@@ -164,7 +164,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
             plugins: isMin ? getOutPlugins() : undefined,
             format: isES5 ? 'umd' : 'es',
             indent: '\t',
-            sourcemap: bundled && isDebug ? 'inline' : undefined,
+            sourcemap: bundled && isDebug && 'inline',
             name: 'pc',
             preserveModules: !bundled,
             file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
@@ -198,7 +198,7 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'bui
                 banner: getBanner(BANNER[buildType]),
                 format: 'es',
                 indent: '\t',
-                sourcemap: buildType === 'debug' ? 'inline' : undefined,
+                sourcemap: isDebug && 'inline',
                 name: 'pc',
                 preserveModules: false,
                 file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
