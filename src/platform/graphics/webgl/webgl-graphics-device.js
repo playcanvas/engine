@@ -2047,7 +2047,7 @@ class WebglGraphicsDevice extends GraphicsDevice {
         }
 
         // empty array of vertex buffers
-        this.vertexBuffers.length = 0;
+        this.clearVertexBuffer();
 
         // Set the active index buffer object
         // Note: we don't cache this state and set it only when it changes, as VAO captures last bind buffer in it
