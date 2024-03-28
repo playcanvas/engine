@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { version, revision } from './utils/rollup-version-revision.mjs';
-import { buildTarget } from './utils/rollup-build-target.mjs';
+import { buildTarget, buildBundleTarget } from './utils/rollup-build-target.mjs';
 import { scriptTarget } from './utils/rollup-script-target.mjs';
 import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
 import { runTsc } from './utils/rollup-run-tsc.mjs';
@@ -21,7 +21,7 @@ const BUILD_TYPES = ['release', 'debug', 'profiler', 'min'];
 /**
  * @type {['es6', 'es5']}
  */
-const MODULE_VERSION = ['es6', 'es5'];
+const MODULE_FORMAT = ['es6', 'es5'];
 
 /**
  * @type {RollupOptions[]}
@@ -80,17 +80,21 @@ if (envTarget === null || envTarget === 'extras') {
     targets.push(...EXTRAS_TARGETS);
 }
 
-BUILD_TYPES.forEach((t) => {
-    MODULE_VERSION.forEach((m) => {
-        if (envTarget === null || envTarget === t || envTarget === m || envTarget === `${t}_${m}`) {
-            // unbundled
-            if (m === 'es6' && t !== 'min') {
-                targets.push(buildTarget(t, 'es6', 'src/index.js', 'build', false));
+BUILD_TYPES.forEach((type) => {
+    MODULE_FORMAT.forEach((format) => {
+        if (envTarget === null || envTarget === type || envTarget === format || envTarget === `${type}_${format}`) {
+            const bundledOnly = format === 'es5' || type === 'min';
+
+            // bundled/unbundled
+            const target = buildTarget(type, format, 'src/index.js', 'build', bundledOnly);
+            targets.push(target);
+
+            // bundle
+            if (!bundledOnly) {
+                // @ts-ignore
+                const input = target.output.dir + '/index.js';
+                targets.push(buildBundleTarget(type, input));
             }
-
-            // bundled
-            targets.push(buildTarget(t, m, 'src/index.js', 'build', true));
-
         }
     });
 });

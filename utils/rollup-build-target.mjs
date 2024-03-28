@@ -23,7 +23,7 @@ import { moduleOptions } from './rollup-module-options.mjs';
 /** @typedef {import('rollup').ModuleFormat} ModuleFormat */
 /** @typedef {import('@rollup/plugin-strip').RollupStripOptions} RollupStripOptions */
 
-const stripFunctions = [
+const STRIP_FUNCTIONS = [
     'Debug.assert',
     'Debug.assertDeprecated',
     'Debug.assertDestroyed',
@@ -50,23 +50,76 @@ const stripFunctions = [
     'WorldClustersDebug.render'
 ];
 
+const BANNER = {
+    debug: ' (DEBUG)',
+    release: ' (RELEASE)',
+    profiler: ' (PROFILE)',
+    min: ' (RELEASE)'
+};
+
+const OUT_PREFIX = {
+    debug: 'playcanvas.dbg',
+    release: 'playcanvas',
+    profiler: 'playcanvas.prf',
+    min: 'playcanvas.min'
+};
+
+const cache = new Map();
+
+/**
+ * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {boolean} isES5 - Whether the build is for ES5.
+ * @returns {object} - The JSCC options.
+ */
+function getJSCCOptions(buildType, isES5) {
+    const options = {
+        debug: {
+            values: {
+                _CURRENT_SDK_VERSION: version,
+                _CURRENT_SDK_REVISION: revision,
+                _IS_UMD: +isES5,
+                _DEBUG: 1,
+                _PROFILER: 1
+            },
+            asloader: true,
+            keepLines: true
+        },
+        release: {
+            values: {
+                _CURRENT_SDK_VERSION: version,
+                _CURRENT_SDK_REVISION: revision,
+                _IS_UMD: +isES5
+            },
+            asloader: true
+        },
+        profiler: {
+            values: {
+                _CURRENT_SDK_VERSION: version,
+                _CURRENT_SDK_REVISION: revision,
+                _IS_UMD: +isES5,
+                _PROFILER: 1
+            },
+            asloader: true
+        }
+    };
+    return options[buildType] || options.release;
+}
+
 /**
  * Build a target that rollup is supposed to build.
  *
  * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
  * @param {'es5'|'es6'} moduleFormat - The module format.
  * @param {string} input - Only used for Examples to change it to `../src/index.js`.
- * @param {string} [buildDir] - Only used for examples to change the output location.
- * @param {Boolean} [shouldBundle] - Whether the target should be bundled.
+ * @param {string} [dir] - Only used for examples to change the output location.
+ * @param {Boolean} [bundled] - Whether the target should be bundled.
  * @returns {RollupOptions} One rollup target.
  */
-function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir = 'build', shouldBundle = true) {
-    const banner = {
-        debug: ' (DEBUG)',
-        release: ' (RELEASE)',
-        profiler: ' (PROFILE)',
-        min: ' (RELEASE)'
-    };
+function buildTarget(buildType, moduleFormat, input = 'src/index.js', dir = 'build', bundled = true) {
+    const isES5 = moduleFormat === 'es5';
+
+    // enforce bundling for es5
+    bundled ||= isES5;
 
     const outputPlugins = {
         release: [],
@@ -97,97 +150,95 @@ function buildTarget(buildType, moduleFormat, input = 'src/index.js', buildDir =
         }));
     }
 
-    const outputFile = {
-        debug: 'playcanvas.dbg',
-        release: 'playcanvas',
-        profiler: 'playcanvas.prf',
-        min: 'playcanvas.min'
+    /**
+     * @type {RollupOptions}
+     */
+    const target = {
+        input,
+        output: {
+            banner: bundled ? getBanner(BANNER[buildType]) : undefined,
+            plugins: outputPlugins[buildType || outputPlugins.release],
+            format: isES5 ? 'umd' : 'es',
+            indent: '\t',
+            sourcemap: bundled && buildType === 'debug' ? 'inline' : undefined,
+            name: 'pc',
+            preserveModules: !bundled,
+            file: bundled ? `${dir}/${OUT_PREFIX[buildType]}${isES5 ? '.js' : '.mjs'}` : undefined,
+            dir: bundled ? undefined : `${dir}/${OUT_PREFIX[buildType]}`
+        },
+        plugins: [
+            jscc(getJSCCOptions(buildType, isES5)),
+            isES5 ? dynamicImportLegacyBrowserSupport() : undefined,
+            shaderChunks({ enabled: buildType !== 'debug' }),
+            engineLayerImportValidation(input, buildType === 'debug'),
+            buildType !== 'debug' ? strip({ functions: STRIP_FUNCTIONS }) : undefined,
+            babel(moduleFormat === 'es5' ? es5Options(buildType) : moduleOptions(buildType)),
+            !isES5 && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
+            spacesToTabs(buildType !== 'debug')
+        ]
     };
 
-    const outputExtension = {
-        es5: '.js',
-        es6: shouldBundle ? '.mjs' : ''
+    cache.set(`${buildType}-${moduleFormat}`, target);
+
+    return target;
+}
+
+/**
+ * Build a target that rollup is supposed to build.
+ *
+ * @param {'debug'|'release'|'profiler'|'min'} buildType - The build type.
+ * @param {string} input - Only used for Examples to change it to `../src/index.js`.
+ * @param {string} [dir] - Only used for examples to change the output location.
+ * @returns {RollupOptions} One rollup target.
+ */
+function buildBundleTarget(buildType, input = 'src/index.js', dir = 'build') {
+    const outputPlugins = {
+        release: [],
+        min: [
+            terser()
+        ]
     };
 
-    /** @type {Record<string, ModuleFormat>} */
-    const outputFormat = {
-        es5: 'umd',
-        es6: 'es'
-    };
+    if (process.env.treemap) {
+        outputPlugins.min.push(visualizer({
+            filename: 'treemap.html',
+            brotliSize: true,
+            gzipSize: true
+        }));
+    }
+
+    if (process.env.treenet) {
+        outputPlugins.min.push(visualizer({
+            filename: 'treenet.html',
+            template: 'network'
+        }));
+    }
+
+    if (process.env.treesun) {
+        outputPlugins.min.push(visualizer({
+            filename: 'treesun.html',
+            template: 'sunburst'
+        }));
+    }
 
     const sourceMap = {
         debug: 'inline',
         release: null
     };
-    /** @type {OutputOptions} */
-    const outputOptions = {
-        banner: (moduleFormat === 'es5' || shouldBundle) ? getBanner(banner[buildType]) : undefined,
-        plugins: outputPlugins[buildType || outputPlugins.release],
-        format: outputFormat[moduleFormat],
-        indent: '\t',
-        sourcemap: shouldBundle && (sourceMap[buildType] || sourceMap.release),
-        name: 'pc',
-        preserveModules: !shouldBundle
-    };
-
-    const loc = `${buildDir}/${outputFile[buildType]}${outputExtension[moduleFormat]}`;
-    outputOptions[shouldBundle ? 'file' : 'dir'] = loc;
-
-    const sdkVersion = {
-        _CURRENT_SDK_VERSION: version,
-        _CURRENT_SDK_REVISION: revision
-    };
-
-    const jsccOptions = {
-        debug: {
-            values: {
-                ...sdkVersion,
-                _DEBUG: 1,
-                _PROFILER: 1
-            },
-            keepLines: true
-        },
-        release: {
-            values: sdkVersion
-        },
-        profiler: {
-            values: {
-                ...sdkVersion,
-                _PROFILER: 1
-            }
-        }
-    };
-
-    /**
-     * @type {RollupStripOptions}
-     */
-    const stripOptions = {
-        functions: stripFunctions
-    };
-
-    const babelOptions = {
-        es5: es5Options(buildType),
-        es6: moduleOptions(buildType)
-    };
-
-    const jsccParam = jsccOptions[buildType] || jsccOptions.release;
-    if (moduleFormat === 'es5') jsccParam.values._IS_UMD = 1;
-    jsccParam.asloader = false;
 
     return {
         input,
-        output: outputOptions,
-        plugins: [
-            jscc(jsccParam),
-            moduleFormat === 'es5' ? dynamicImportLegacyBrowserSupport() : undefined,
-            shaderChunks({ enabled: buildType !== 'debug' }),
-            engineLayerImportValidation(input, buildType === 'debug'),
-            buildType !== 'debug' ? strip(stripOptions) : undefined,
-            babel(babelOptions[moduleFormat]),
-            moduleFormat === 'es6' && buildType !== 'debug' ? dynamicImportViteSupress() : undefined,
-            spacesToTabs(buildType !== 'debug')
-        ]
+        output: {
+            banner: getBanner(BANNER[buildType]),
+            plugins: outputPlugins[buildType || outputPlugins.release],
+            format: 'es',
+            indent: '\t',
+            sourcemap: sourceMap[buildType] || sourceMap.release,
+            name: 'pc',
+            preserveModules: false,
+            file: `${dir}/${OUT_PREFIX[buildType]}.mjs`
+        }
     };
 }
 
-export { buildTarget };
+export { buildTarget, buildBundleTarget };
