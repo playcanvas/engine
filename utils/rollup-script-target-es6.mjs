@@ -4,7 +4,7 @@ import resolve from '@rollup/plugin-node-resolve';
 
 import { getBanner } from './rollup-get-banner.mjs';
 import { moduleOptions } from './rollup-module-options.mjs';
-import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
+import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs/index.js';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */

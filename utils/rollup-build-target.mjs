@@ -1,22 +1,21 @@
-// 1st party Rollup plugins
+// official package plugins
 import { babel } from '@rollup/plugin-babel';
 import strip from '@rollup/plugin-strip';
 import terser from '@rollup/plugin-terser';
 
-// 3rd party Rollup plugins
+// unoffical package plugins
 import jscc from 'rollup-plugin-jscc';
 import { visualizer } from 'rollup-plugin-visualizer';
 
-// custom Rollup plugins
-import { shaderChunks } from './rollup-shader-chunks.mjs';
+// custom plugins
+import { shaderChunks } from './plugins/rollup-shader-chunks.mjs';
 import { engineLayerImportValidation } from './rollup-import-validation.mjs';
-import { spacesToTabs } from './rollup-spaces-to-tabs.mjs';
-import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './rollup-dynamic-import-transform.mjs';
+import { spacesToTabs } from './plugins/rollup-spaces-to-tabs.mjs';
+import { dynamicImportLegacyBrowserSupport, dynamicImportViteSupress } from './plugins/rollup-dynamic.mjs';
 
 import { version, revision } from './rollup-version-revision.mjs';
 import { getBanner } from './rollup-get-banner.mjs';
-import { es5Options } from './rollup-es5-options.mjs';
-import { moduleOptions } from './rollup-module-options.mjs';
+import { es5Options, moduleOptions } from './rollup-babel-options.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 /** @typedef {import('rollup').OutputOptions} OutputOptions */

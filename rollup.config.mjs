@@ -3,11 +3,13 @@ import { version, revision } from './utils/rollup-version-revision.mjs';
 import { buildTarget } from './utils/rollup-build-target.mjs';
 import { scriptTarget } from './utils/rollup-script-target.mjs';
 import { scriptTargetEs6 } from './utils/rollup-script-target-es6.mjs';
-import { runTsc } from './utils/rollup-run-tsc.mjs';
-import { typesFixup } from './utils/rollup-types-fixup.mjs';
 
-// 3rd party Rollup plugins
+// unofficial package plugins
 import dts from 'rollup-plugin-dts';
+
+// custom plugins
+import { runTsc } from './utils/plugins/rollup-run-tsc.mjs';
+import { typesFixup } from './utils/plugins/rollup-types-fixup.mjs';
 
 /** @typedef {import('rollup').RollupOptions} RollupOptions */
 
